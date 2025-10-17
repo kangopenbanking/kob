@@ -32,6 +32,9 @@ const Index = () => {
             <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
               Register
             </Link>
+            <Link to="/auth">
+              <Button variant="outline" size="sm">Sign In</Button>
+            </Link>
             <Link to="/admin">
               <Button variant="outline" size="sm">Admin Portal</Button>
             </Link>

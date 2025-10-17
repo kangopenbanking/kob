@@ -4,29 +4,115 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Building2, ArrowLeft, CheckCircle2, Shield } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Register = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const [institutionType, setInstitutionType] = useState("");
+  const [formData, setFormData] = useState({
+    institutionName: "",
+    registrationNumber: "",
+    phone: "",
+    website: "",
+    address: "",
+  });
+
+  useEffect(() => {
+    // Check if user is logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        toast({
+          variant: "destructive",
+          title: "Authentication Required",
+          description: "Please sign in to register your institution",
+        });
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      if (!user) {
+        throw new Error("You must be signed in to register an institution");
+      }
+
+      const { data, error } = await supabase
+        .from("institutions")
+        .insert([{
+          user_id: user.id,
+          institution_name: formData.institutionName,
+          institution_type: institutionType as any,
+          registration_number: formData.registrationNumber,
+          address: formData.address,
+          phone: formData.phone,
+          website: formData.website || null,
+          status: "pending" as any,
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Assign institution role to user
+      const { error: roleError } = await supabase
+        .from("user_roles")
+        .insert([{
+          user_id: user.id,
+          role: "institution" as any,
+        }]);
+
+      if (roleError && roleError.code !== "23505") { // Ignore duplicate key errors
+        throw roleError;
+      }
+
       toast({
-        title: "Registration Submitted",
-        description: "We'll review your application and contact you within 2 business days.",
+        title: "Registration Submitted Successfully",
+        description: "Your application is pending review. We'll contact you within 2 business days.",
       });
-    }, 2000);
+
+      navigate("/developer");
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      toast({
+        variant: "destructive",
+        title: "Registration Failed",
+        description: error.message || "Failed to submit registration. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,7 +195,7 @@ const Register = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="bank">Bank</SelectItem>
-                      <SelectItem value="credit-union">Credit Union</SelectItem>
+                      <SelectItem value="credit_union">Credit Union</SelectItem>
                       <SelectItem value="fintech">Fintech Company</SelectItem>
                     </SelectContent>
                   </Select>
@@ -122,6 +208,8 @@ const Register = () => {
                     <Input
                       id="institutionName"
                       placeholder="e.g., Cameroon Commercial Bank"
+                      value={formData.institutionName}
+                      onChange={(e) => setFormData({ ...formData, institutionName: e.target.value })}
                       required
                     />
                   </div>
@@ -130,6 +218,8 @@ const Register = () => {
                     <Input
                       id="registrationNumber"
                       placeholder="Official registration number"
+                      value={formData.registrationNumber}
+                      onChange={(e) => setFormData({ ...formData, registrationNumber: e.target.value })}
                       required
                     />
                   </div>
@@ -138,21 +228,24 @@ const Register = () => {
                 {/* Contact Information */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Official Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="contact@institution.cm"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input
                       id="phone"
                       type="tel"
                       placeholder="+237 XXX XXX XXX"
+                      value={formData.phone}
+                      onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="website">Website (Optional)</Label>
+                    <Input
+                      id="website"
+                      type="url"
+                      placeholder="https://institution.cm"
+                      value={formData.website}
+                      onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                     />
                   </div>
                 </div>
@@ -164,72 +257,10 @@ const Register = () => {
                     id="address"
                     placeholder="Complete physical address in Cameroon"
                     rows={3}
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                     required
                   />
-                </div>
-
-                {/* Technical Contact */}
-                <div className="border-t pt-6">
-                  <h3 className="font-semibold text-lg mb-4">Technical Contact Person</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="techName">Full Name *</Label>
-                      <Input
-                        id="techName"
-                        placeholder="Technical lead name"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="techEmail">Email *</Label>
-                      <Input
-                        id="techEmail"
-                        type="email"
-                        placeholder="tech@institution.cm"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="techPhone">Phone *</Label>
-                      <Input
-                        id="techPhone"
-                        type="tel"
-                        placeholder="+237 XXX XXX XXX"
-                        required
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="techRole">Role/Position *</Label>
-                      <Input
-                        id="techRole"
-                        placeholder="e.g., CTO, IT Manager"
-                        required
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Business Details */}
-                <div className="border-t pt-6">
-                  <h3 className="font-semibold text-lg mb-4">Business Information</h3>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="services">Services Offered</Label>
-                      <Textarea
-                        id="services"
-                        placeholder="Describe the financial services your institution provides"
-                        rows={3}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="apiUsage">Intended API Usage</Label>
-                      <Textarea
-                        id="apiUsage"
-                        placeholder="How do you plan to use Kang Open Banking API?"
-                        rows={3}
-                      />
-                    </div>
-                  </div>
                 </div>
 
                 {/* Compliance */}
