@@ -14,16 +14,201 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      api_credentials: {
+        Row: {
+          api_key: string
+          api_secret: string
+          created_at: string
+          environment: string
+          id: string
+          institution_id: string
+          is_active: boolean
+          last_used_at: string | null
+        }
+        Insert: {
+          api_key: string
+          api_secret: string
+          created_at?: string
+          environment?: string
+          id?: string
+          institution_id: string
+          is_active?: boolean
+          last_used_at?: string | null
+        }
+        Update: {
+          api_key?: string
+          api_secret?: string
+          created_at?: string
+          environment?: string
+          id?: string
+          institution_id?: string
+          is_active?: boolean
+          last_used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_credentials_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institutions: {
+        Row: {
+          address: string
+          approved_at: string | null
+          approved_by: string | null
+          country: string
+          created_at: string
+          id: string
+          institution_name: string
+          institution_type: Database["public"]["Enums"]["institution_type"]
+          phone: string
+          registration_number: string
+          status: Database["public"]["Enums"]["institution_status"]
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          address: string
+          approved_at?: string | null
+          approved_by?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          institution_name: string
+          institution_type: Database["public"]["Enums"]["institution_type"]
+          phone: string
+          registration_number: string
+          status?: Database["public"]["Enums"]["institution_status"]
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          address?: string
+          approved_at?: string | null
+          approved_by?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          institution_name?: string
+          institution_type?: Database["public"]["Enums"]["institution_type"]
+          phone?: string
+          registration_number?: string
+          status?: Database["public"]["Enums"]["institution_status"]
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number | null
+          created_at: string
+          currency: string
+          id: string
+          institution_id: string
+          metadata: Json | null
+          status: string
+          transaction_type: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          institution_id: string
+          metadata?: Json | null
+          status: string
+          transaction_type: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          currency?: string
+          id?: string
+          institution_id?: string
+          metadata?: Json | null
+          status?: string
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "institution"
+      institution_status: "pending" | "approved" | "rejected" | "suspended"
+      institution_type: "bank" | "credit_union" | "fintech"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +335,10 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "institution"],
+      institution_status: ["pending", "approved", "rejected", "suspended"],
+      institution_type: ["bank", "credit_union", "fintech"],
+    },
   },
 } as const
