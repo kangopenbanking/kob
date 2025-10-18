@@ -368,7 +368,7 @@ const Index = () => {
             </p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center opacity-60">
-            <div className="text-center text-2xl font-bold">Afriland First Bank</div>
+            <div className="text-center text-2xl font-bold">Banks</div>
             <div className="text-center text-2xl font-bold">Orange Money</div>
             <div className="text-center text-2xl font-bold">MTN MoMo</div>
             <div className="text-center text-2xl font-bold">CamCCUL</div>
