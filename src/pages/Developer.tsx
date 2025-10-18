@@ -227,7 +227,7 @@ const Developer = () => {
         </div>
 
         <Tabs defaultValue="testing" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="testing">
               <TestTube className="mr-2 h-4 w-4" />
               API Testing
@@ -239,6 +239,10 @@ const Developer = () => {
             <TabsTrigger value="endpoints">
               <FileText className="mr-2 h-4 w-4" />
               Endpoints
+            </TabsTrigger>
+            <TabsTrigger value="postman">
+              <BookOpen className="mr-2 h-4 w-4" />
+              Postman
             </TabsTrigger>
             <TabsTrigger value="security">
               <Shield className="mr-2 h-4 w-4" />
@@ -502,6 +506,235 @@ const Developer = () => {
                       </Button>
                     </div>
                   ))}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="postman" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Postman Collection</CardTitle>
+                <CardDescription>Import our pre-configured Postman collection for quick API testing</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start gap-4 p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                  <BookOpen className="h-6 w-6 text-accent mt-1" />
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2">KOB API Collection</h4>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Complete collection with all AISP and PISP endpoints pre-configured with example requests and environment variables.
+                    </p>
+                    <Button
+                      onClick={() => {
+                        const collection = {
+                          info: {
+                            name: "KOB - Kang Open Banking API",
+                            description: "Unified Banking API for Cameroon - AISP & PISP endpoints",
+                            schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+                          },
+                          variable: [
+                            { key: "base_url", value: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1` },
+                            { key: "access_token", value: "YOUR_ACCESS_TOKEN" },
+                            { key: "consent_id", value: "YOUR_CONSENT_ID" }
+                          ],
+                          item: [
+                            {
+                              name: "AISP - Account Information",
+                              item: [
+                                {
+                                  name: "Get Accounts",
+                                  request: {
+                                    method: "GET",
+                                    header: [
+                                      { key: "Authorization", value: "Bearer {{access_token}}" },
+                                      { key: "x-consent-id", value: "{{consent_id}}" }
+                                    ],
+                                    url: { raw: "{{base_url}}/aisp-accounts", host: ["{{base_url}}"], path: ["aisp-accounts"] }
+                                  }
+                                },
+                                {
+                                  name: "Get Account Balances",
+                                  request: {
+                                    method: "GET",
+                                    header: [
+                                      { key: "Authorization", value: "Bearer {{access_token}}" },
+                                      { key: "x-consent-id", value: "{{consent_id}}" }
+                                    ],
+                                    url: { raw: "{{base_url}}/aisp-balances/ACCOUNT_ID", host: ["{{base_url}}"], path: ["aisp-balances", "ACCOUNT_ID"] }
+                                  }
+                                },
+                                {
+                                  name: "Get Transactions",
+                                  request: {
+                                    method: "GET",
+                                    header: [
+                                      { key: "Authorization", value: "Bearer {{access_token}}" },
+                                      { key: "x-consent-id", value: "{{consent_id}}" }
+                                    ],
+                                    url: { raw: "{{base_url}}/aisp-transactions/ACCOUNT_ID", host: ["{{base_url}}"], path: ["aisp-transactions", "ACCOUNT_ID"] }
+                                  }
+                                }
+                              ]
+                            },
+                            {
+                              name: "PISP - Payment Initiation",
+                              item: [
+                                {
+                                  name: "Create Domestic Payment",
+                                  request: {
+                                    method: "POST",
+                                    header: [
+                                      { key: "Authorization", value: "Bearer {{access_token}}" },
+                                      { key: "Content-Type", value: "application/json" }
+                                    ],
+                                    body: {
+                                      mode: "raw",
+                                      raw: JSON.stringify({
+                                        consent_id: "{{consent_id}}",
+                                        instructed_amount: { amount: "10000", currency: "XAF" },
+                                        creditor_account: { identification: "237123456789", name: "John Doe" },
+                                        remittance_information: "Payment for services",
+                                        reference: "REF-001"
+                                      }, null, 2)
+                                    },
+                                    url: { raw: "{{base_url}}/pisp-domestic-payment", host: ["{{base_url}}"], path: ["pisp-domestic-payment"] }
+                                  }
+                                }
+                              ]
+                            }
+                          ]
+                        };
+                        
+                        const blob = new Blob([JSON.stringify(collection, null, 2)], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = 'KOB-API-Collection.postman_collection.json';
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        
+                        toast({
+                          title: "Collection Downloaded",
+                          description: "Import the JSON file into Postman to get started"
+                        });
+                      }}
+                    >
+                      <Code className="mr-2 h-4 w-4" />
+                      Download Collection
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <h4 className="font-semibold">Environment Variables</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div className="flex-1">
+                        <code className="text-sm font-mono">base_url</code>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {import.meta.env.VITE_SUPABASE_URL}/functions/v1
+                        </p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1`, 'base-url')}
+                      >
+                        {copiedId === 'base-url' ? <CheckCircle2 className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>cURL Examples</CardTitle>
+                <CardDescription>Copy these commands to test APIs from your terminal</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-semibold">Get Accounts</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-accounts' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'x-consent-id: YOUR_CONSENT_ID'`,
+                        'curl-accounts'
+                      )}
+                    >
+                      {copiedId === 'curl-accounts' ? <CheckCircle2 className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <pre className="text-xs font-mono overflow-x-auto">
+{`curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-accounts' \\
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
+  -H 'x-consent-id: YOUR_CONSENT_ID'`}
+                    </pre>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-semibold">Get Account Balances</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-balances/ACCOUNT_ID' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'x-consent-id: YOUR_CONSENT_ID'`,
+                        'curl-balances'
+                      )}
+                    >
+                      {copiedId === 'curl-balances' ? <CheckCircle2 className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <pre className="text-xs font-mono overflow-x-auto">
+{`curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-balances/ACCOUNT_ID' \\
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
+  -H 'x-consent-id: YOUR_CONSENT_ID'`}
+                    </pre>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-semibold">Create Payment</Label>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `curl -X POST '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"consent_id":"YOUR_CONSENT_ID","instructed_amount":{"amount":"10000","currency":"XAF"},"creditor_account":{"identification":"237123456789","name":"John Doe"},"remittance_information":"Payment for services","reference":"REF-001"}'`,
+                        'curl-payment'
+                      )}
+                    >
+                      {copiedId === 'curl-payment' ? <CheckCircle2 className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
+                  <div className="bg-muted p-3 rounded-lg">
+                    <pre className="text-xs font-mono overflow-x-auto">
+{`curl -X POST '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment' \\
+  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
+  -H 'Content-Type: application/json' \\
+  -d '{
+    "consent_id": "YOUR_CONSENT_ID",
+    "instructed_amount": {
+      "amount": "10000",
+      "currency": "XAF"
+    },
+    "creditor_account": {
+      "identification": "237123456789",
+      "name": "John Doe"
+    },
+    "remittance_information": "Payment for services",
+    "reference": "REF-001"
+  }'`}
+                    </pre>
+                  </div>
                 </div>
               </CardContent>
             </Card>
