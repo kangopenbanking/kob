@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@4.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,7 +11,7 @@ interface CommunicationRequest {
   template_key: string;
   recipient_email?: string;
   recipient_phone?: string;
-  recipient_id?: uuid;
+  recipient_id?: string;
   variables: Record<string, any>;
 }
 

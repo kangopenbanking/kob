@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "npm:resend@4.0.0";
+import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -150,13 +150,12 @@ serve(async (req) => {
       );
     }
 
-    // Send emails in background
-    EdgeRuntime.waitUntil((async () => {
-      const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-      let sentCount = 0;
-      let failedCount = 0;
+    // Send emails in background (Note: Deno Deploy doesn't support waitUntil, processing synchronously)
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+    let sentCount = 0;
+    let failedCount = 0;
 
-      for (const recipient of recipients) {
+    for (const recipient of recipients) {
         try {
           const email = recipient.profiles?.email || recipient.email;
           const name = recipient.profiles?.full_name || recipient.full_name || recipient.institution_name;
@@ -208,11 +207,11 @@ serve(async (req) => {
         } catch (error: any) {
           failedCount++;
           console.error('Error sending to recipient:', error);
-        }
       }
+    }
 
-      // Update bulk communication record
-      await supabaseClient
+    // Update bulk communication record
+    await supabaseClient
         .from('bulk_communications')
         .update({
           sent_count: sentCount,
@@ -220,10 +219,9 @@ serve(async (req) => {
           status: 'completed',
           completed_at: new Date().toISOString(),
         })
-        .eq('id', bulkComm.id);
+      .eq('id', bulkComm.id);
 
-      console.log(`Bulk communication completed: ${sentCount} sent, ${failedCount} failed`);
-    })());
+    console.log(`Bulk communication completed: ${sentCount} sent, ${failedCount} failed`);
 
     return new Response(
       JSON.stringify({ 
