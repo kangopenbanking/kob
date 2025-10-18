@@ -12,6 +12,7 @@ import Developer from "./pages/Developer";
 import Auth from "./pages/Auth";
 import TPPRegistration from "./pages/TPPRegistration";
 import ConsentManagement from "./pages/ConsentManagement";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/developer" element={<Layout><Developer /></Layout>} />
           <Route path="/tpp-registration" element={<Layout><TPPRegistration /></Layout>} />
           <Route path="/consents" element={<Layout><ConsentManagement /></Layout>} />
+          <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
           <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<Layout><NotFound /></Layout>} />

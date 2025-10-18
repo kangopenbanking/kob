@@ -65,3 +65,9 @@ verify_jwt = false
 
 [functions.pisp-payment-submission]
 verify_jwt = false
+
+# Phase 6 Edge Functions - Webhooks & Analytics
+
+# Webhook Delivery System
+[functions.webhook-delivery]
+verify_jwt = false

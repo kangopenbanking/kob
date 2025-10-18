@@ -274,6 +274,53 @@ export type Database = {
           },
         ]
       }
+      api_usage_metrics: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          institution_id: string | null
+          ip_address: unknown | null
+          method: string
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          institution_id?: string | null
+          ip_address?: unknown | null
+          method: string
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          institution_id?: string | null
+          ip_address?: unknown | null
+          method?: string
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_usage_metrics_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       authorization_codes: {
         Row: {
           client_id: string
@@ -1099,6 +1146,109 @@ export type Database = {
         }
         Relationships: []
       }
+      webhook_deliveries: {
+        Row: {
+          attempt_count: number | null
+          created_at: string | null
+          delivered_at: string | null
+          event_data: Json
+          event_type: string
+          http_status: number | null
+          id: string
+          response_body: string | null
+          status: string
+          webhook_id: string
+        }
+        Insert: {
+          attempt_count?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          event_data: Json
+          event_type: string
+          http_status?: number | null
+          id?: string
+          response_body?: string | null
+          status: string
+          webhook_id: string
+        }
+        Update: {
+          attempt_count?: number | null
+          created_at?: string | null
+          delivered_at?: string | null
+          event_data?: Json
+          event_type?: string
+          http_status?: number | null
+          id?: string
+          response_body?: string | null
+          status?: string
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      webhooks: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          events: string[]
+          failure_count: number | null
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          last_failure_at: string | null
+          last_failure_reason: string | null
+          last_triggered_at: string | null
+          secret: string
+          updated_at: string | null
+          webhook_url: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          events: string[]
+          failure_count?: number | null
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          last_failure_at?: string | null
+          last_failure_reason?: string | null
+          last_triggered_at?: string | null
+          secret: string
+          updated_at?: string | null
+          webhook_url: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          events?: string[]
+          failure_count?: number | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          last_failure_at?: string | null
+          last_failure_reason?: string | null
+          last_triggered_at?: string | null
+          secret?: string
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "webhooks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1144,6 +1294,10 @@ export type Database = {
       }
       make_user_admin: {
         Args: { _user_id: string }
+        Returns: undefined
+      }
+      trigger_webhooks: {
+        Args: { _client_id?: string; _event_data: Json; _event_type: string }
         Returns: undefined
       }
     }

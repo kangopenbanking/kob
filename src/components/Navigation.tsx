@@ -23,6 +23,9 @@ export const Navigation = () => {
           <Link to="/consents" className="text-sm font-medium hover:text-primary transition-colors">
             Consents
           </Link>
+          <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
+            Analytics
+          </Link>
           <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
             Register
           </Link>
@@ -56,6 +59,9 @@ export const Navigation = () => {
               </Link>
               <Link to="/consents" className="text-sm font-medium hover:text-primary transition-colors">
                 Consents
+              </Link>
+              <Link to="/analytics" className="text-sm font-medium hover:text-primary transition-colors">
+                Analytics
               </Link>
               <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
                 Register
