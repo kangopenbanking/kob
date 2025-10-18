@@ -425,6 +425,278 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_connections: {
+        Row: {
+          auth_endpoint: string | null
+          auto_reconcile: boolean | null
+          bank_code: string
+          bank_name: string
+          base_url: string | null
+          connection_config: Json
+          connection_type: string
+          created_at: string | null
+          file_format: string | null
+          host: string | null
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          last_sync_at: string | null
+          last_sync_status: string | null
+          port: number | null
+          reconciliation_frequency: string | null
+          sync_error_message: string | null
+          updated_at: string | null
+          username: string | null
+        }
+        Insert: {
+          auth_endpoint?: string | null
+          auto_reconcile?: boolean | null
+          bank_code: string
+          bank_name: string
+          base_url?: string | null
+          connection_config?: Json
+          connection_type: string
+          created_at?: string | null
+          file_format?: string | null
+          host?: string | null
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          port?: number | null
+          reconciliation_frequency?: string | null
+          sync_error_message?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Update: {
+          auth_endpoint?: string | null
+          auto_reconcile?: boolean | null
+          bank_code?: string
+          bank_name?: string
+          base_url?: string | null
+          connection_config?: Json
+          connection_type?: string
+          created_at?: string | null
+          file_format?: string | null
+          host?: string | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          last_sync_at?: string | null
+          last_sync_status?: string | null
+          port?: number | null
+          reconciliation_frequency?: string | null
+          sync_error_message?: string | null
+          updated_at?: string | null
+          username?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_connections_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_reconciliations: {
+        Row: {
+          bank_connection_id: string
+          completed_at: string | null
+          created_at: string | null
+          discrepancies: Json | null
+          id: string
+          matched_count: number | null
+          processed_by: string | null
+          reconciliation_date: string
+          reconciliation_report: Json | null
+          started_at: string | null
+          status: string
+          total_bank_transactions: number | null
+          total_system_transactions: number | null
+          unmatched_bank_count: number | null
+          unmatched_system_count: number | null
+        }
+        Insert: {
+          bank_connection_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          discrepancies?: Json | null
+          id?: string
+          matched_count?: number | null
+          processed_by?: string | null
+          reconciliation_date: string
+          reconciliation_report?: Json | null
+          started_at?: string | null
+          status?: string
+          total_bank_transactions?: number | null
+          total_system_transactions?: number | null
+          unmatched_bank_count?: number | null
+          unmatched_system_count?: number | null
+        }
+        Update: {
+          bank_connection_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          discrepancies?: Json | null
+          id?: string
+          matched_count?: number | null
+          processed_by?: string | null
+          reconciliation_date?: string
+          reconciliation_report?: Json | null
+          started_at?: string | null
+          status?: string
+          total_bank_transactions?: number | null
+          total_system_transactions?: number | null
+          unmatched_bank_count?: number | null
+          unmatched_system_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_reconciliations_bank_connection_id_fkey"
+            columns: ["bank_connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_statements: {
+        Row: {
+          bank_connection_id: string
+          closing_balance: number | null
+          created_at: string | null
+          file_format: string | null
+          file_name: string
+          file_path: string | null
+          file_size: number | null
+          id: string
+          is_processed: boolean | null
+          opening_balance: number | null
+          processed_at: string | null
+          statement_date: string
+          statement_period_end: string | null
+          statement_period_start: string | null
+          total_credits: number | null
+          total_debits: number | null
+          transaction_count: number | null
+        }
+        Insert: {
+          bank_connection_id: string
+          closing_balance?: number | null
+          created_at?: string | null
+          file_format?: string | null
+          file_name: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          is_processed?: boolean | null
+          opening_balance?: number | null
+          processed_at?: string | null
+          statement_date: string
+          statement_period_end?: string | null
+          statement_period_start?: string | null
+          total_credits?: number | null
+          total_debits?: number | null
+          transaction_count?: number | null
+        }
+        Update: {
+          bank_connection_id?: string
+          closing_balance?: number | null
+          created_at?: string | null
+          file_format?: string | null
+          file_name?: string
+          file_path?: string | null
+          file_size?: number | null
+          id?: string
+          is_processed?: boolean | null
+          opening_balance?: number | null
+          processed_at?: string | null
+          statement_date?: string
+          statement_period_end?: string | null
+          statement_period_start?: string | null
+          total_credits?: number | null
+          total_debits?: number | null
+          transaction_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_statements_bank_connection_id_fkey"
+            columns: ["bank_connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_transaction_imports: {
+        Row: {
+          bank_connection_id: string
+          completed_at: string | null
+          created_at: string | null
+          duplicate_records: number | null
+          error_details: Json | null
+          error_message: string | null
+          failed_imports: number | null
+          file_name: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string
+          import_data: Json | null
+          imported_by: string | null
+          status: string
+          successful_imports: number | null
+          total_records: number | null
+        }
+        Insert: {
+          bank_connection_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          duplicate_records?: number | null
+          error_details?: Json | null
+          error_message?: string | null
+          failed_imports?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          import_data?: Json | null
+          imported_by?: string | null
+          status?: string
+          successful_imports?: number | null
+          total_records?: number | null
+        }
+        Update: {
+          bank_connection_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          duplicate_records?: number | null
+          error_details?: Json | null
+          error_message?: string | null
+          failed_imports?: number | null
+          file_name?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          import_data?: Json | null
+          imported_by?: string | null
+          status?: string
+          successful_imports?: number | null
+          total_records?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transaction_imports_bank_connection_id_fkey"
+            columns: ["bank_connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       beneficiaries: {
         Row: {
           account_id: string
@@ -2173,6 +2445,14 @@ export type Database = {
       }
       trigger_webhooks: {
         Args: { _client_id?: string; _event_data: Json; _event_type: string }
+        Returns: undefined
+      }
+      update_bank_sync_status: {
+        Args: {
+          _connection_id: string
+          _error_message?: string
+          _status: string
+        }
         Returns: undefined
       }
     }
