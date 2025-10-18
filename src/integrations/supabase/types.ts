@@ -602,6 +602,69 @@ export type Database = {
         }
         Relationships: []
       }
+      payments: {
+        Row: {
+          client_id: string
+          consent_id: string
+          created_at: string | null
+          creditor_account: Json
+          debtor_account: Json | null
+          expected_execution_date: string | null
+          expected_settlement_date: string | null
+          id: string
+          instructed_amount: Json
+          merchant_category_code: string | null
+          merchant_customer_identification: string | null
+          payment_context_code: string | null
+          payment_id: string
+          reference: string | null
+          remittance_information: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          client_id: string
+          consent_id: string
+          created_at?: string | null
+          creditor_account: Json
+          debtor_account?: Json | null
+          expected_execution_date?: string | null
+          expected_settlement_date?: string | null
+          id?: string
+          instructed_amount: Json
+          merchant_category_code?: string | null
+          merchant_customer_identification?: string | null
+          payment_context_code?: string | null
+          payment_id: string
+          reference?: string | null
+          remittance_information?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          consent_id?: string
+          created_at?: string | null
+          creditor_account?: Json
+          debtor_account?: Json | null
+          expected_execution_date?: string | null
+          expected_settlement_date?: string | null
+          id?: string
+          instructed_amount?: Json
+          merchant_category_code?: string | null
+          merchant_customer_identification?: string | null
+          payment_context_code?: string | null
+          payment_id?: string
+          reference?: string | null
+          remittance_information?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       pisp_consents: {
         Row: {
           authorization_code: string | null

@@ -563,6 +563,142 @@ print_r($data);`
           </CardContent>
         </Card>
 
+        {/* PISP API Endpoints */}
+        <Card className="border-accent mb-8">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              PISP API Endpoints
+            </CardTitle>
+            <CardDescription>
+              Payment Initiation Service Provider APIs - UK Open Banking v4.0 aligned (XAF currency)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h4 className="font-semibold mb-3">Available Endpoints</h4>
+              <div className="space-y-3">
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default">POST</Badge>
+                      <span className="font-mono text-sm font-medium">/pisp-domestic-payment</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment`,
+                        'pisp-payment'
+                      )}
+                    >
+                      {copiedId === 'pisp-payment' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Create a domestic payment request with authorized PISP consent
+                  </p>
+                  <code className="text-xs text-muted-foreground break-all block mt-2">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment
+                  </code>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">GET</Badge>
+                      <span className="font-mono text-sm font-medium">/pisp-payment-details/:id</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-details`,
+                        'pisp-details'
+                      )}
+                    >
+                      {copiedId === 'pisp-details' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Get details of a specific payment by payment_id
+                  </p>
+                  <code className="text-xs text-muted-foreground break-all block mt-2">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-details/:id
+                  </code>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="default">POST</Badge>
+                      <span className="font-mono text-sm font-medium">/pisp-payment-submission</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-submission`,
+                        'pisp-submission'
+                      )}
+                    >
+                      {copiedId === 'pisp-submission' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Submit a payment for execution (after consent authorization)
+                  </p>
+                  <code className="text-xs text-muted-foreground break-all block mt-2">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-submission
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-3">Payment Features</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>Domestic Payments:</strong> XAF currency support for Cameroon</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>Consent-Based:</strong> Requires authorized PISP consent</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>Status Tracking:</strong> Real-time payment status updates</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>Risk Assessment:</strong> Support for merchant and payment context codes</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Link to="/documentation">
+                <Button variant="outline" className="w-full">
+                  View Full API Documentation →
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Resources */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="hover:border-primary/50 transition-all cursor-pointer">

@@ -53,3 +53,15 @@ verify_jwt = false
 
 [functions.aisp-direct-debits]
 verify_jwt = false
+
+# Phase 4 Edge Functions - PISP Resource Server
+
+# Payment Initiation APIs
+[functions.pisp-domestic-payment]
+verify_jwt = false
+
+[functions.pisp-payment-details]
+verify_jwt = false
+
+[functions.pisp-payment-submission]
+verify_jwt = false
