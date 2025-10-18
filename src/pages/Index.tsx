@@ -19,13 +19,18 @@ import {
   BarChart3,
 } from "lucide-react";
 import heroImage from "@/assets/hero-banking.jpg";
+import heroBanner from "@/assets/hero-banner-kob.png";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
+      <section className="relative overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat" 
+          style={{ backgroundImage: `url(${heroBanner})` }}
+        ></div>
+        <div className="absolute inset-0 bg-background/80"></div>
         <div className="container mx-auto px-4 py-20 md:py-32 relative">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="space-y-8 animate-fade-in">
