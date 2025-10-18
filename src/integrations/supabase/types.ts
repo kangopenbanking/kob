@@ -53,6 +53,74 @@ export type Database = {
         }
         Relationships: []
       }
+      aisp_consents: {
+        Row: {
+          account_ids: Json | null
+          authorization_code: string | null
+          authorization_url: string | null
+          authorized_at: string | null
+          client_id: string
+          consent_id: string
+          created_at: string | null
+          expiration_date: string
+          id: string
+          permissions: Json
+          revocation_reason: string | null
+          revoked_at: string | null
+          status: Database["public"]["Enums"]["consent_status"]
+          transaction_from_date: string | null
+          transaction_to_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_ids?: Json | null
+          authorization_code?: string | null
+          authorization_url?: string | null
+          authorized_at?: string | null
+          client_id: string
+          consent_id: string
+          created_at?: string | null
+          expiration_date: string
+          id?: string
+          permissions?: Json
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          status?: Database["public"]["Enums"]["consent_status"]
+          transaction_from_date?: string | null
+          transaction_to_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_ids?: Json | null
+          authorization_code?: string | null
+          authorization_url?: string | null
+          authorized_at?: string | null
+          client_id?: string
+          consent_id?: string
+          created_at?: string | null
+          expiration_date?: string
+          id?: string
+          permissions?: Json
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          status?: Database["public"]["Enums"]["consent_status"]
+          transaction_from_date?: string | null
+          transaction_to_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aisp_consents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "tpp_registrations"
+            referencedColumns: ["client_id"]
+          },
+        ]
+      }
       api_credentials: {
         Row: {
           api_key: string
@@ -101,6 +169,7 @@ export type Database = {
           code_challenge: string | null
           code_challenge_method: string | null
           consent_id: string | null
+          consent_type: string | null
           created_at: string | null
           expires_at: string
           id: string
@@ -116,6 +185,7 @@ export type Database = {
           code_challenge?: string | null
           code_challenge_method?: string | null
           consent_id?: string | null
+          consent_type?: string | null
           created_at?: string | null
           expires_at: string
           id?: string
@@ -131,6 +201,7 @@ export type Database = {
           code_challenge?: string | null
           code_challenge_method?: string | null
           consent_id?: string | null
+          consent_type?: string | null
           created_at?: string | null
           expires_at?: string
           id?: string
@@ -187,6 +258,45 @@ export type Database = {
           updated_at?: string | null
           valid_from?: string
           valid_until?: string
+        }
+        Relationships: []
+      }
+      consent_events: {
+        Row: {
+          client_id: string | null
+          consent_id: string
+          consent_type: string
+          created_at: string | null
+          event_type: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          consent_id: string
+          consent_type: string
+          created_at?: string | null
+          event_type: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          consent_id?: string
+          consent_type?: string
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -273,6 +383,86 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      pisp_consents: {
+        Row: {
+          authorization_code: string | null
+          authorization_url: string | null
+          authorized_at: string | null
+          client_id: string
+          consent_id: string
+          created_at: string | null
+          creditor: Json
+          debtor_account: Json | null
+          expires_at: string
+          id: string
+          instructed_amount: Json
+          payment_id: string | null
+          payment_type: Database["public"]["Enums"]["payment_type"]
+          reference: string | null
+          remittance_information: string | null
+          revocation_reason: string | null
+          revoked_at: string | null
+          risk: Json | null
+          status: Database["public"]["Enums"]["consent_status"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          authorization_code?: string | null
+          authorization_url?: string | null
+          authorized_at?: string | null
+          client_id: string
+          consent_id: string
+          created_at?: string | null
+          creditor: Json
+          debtor_account?: Json | null
+          expires_at: string
+          id?: string
+          instructed_amount: Json
+          payment_id?: string | null
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          reference?: string | null
+          remittance_information?: string | null
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          risk?: Json | null
+          status?: Database["public"]["Enums"]["consent_status"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          authorization_code?: string | null
+          authorization_url?: string | null
+          authorized_at?: string | null
+          client_id?: string
+          consent_id?: string
+          created_at?: string | null
+          creditor?: Json
+          debtor_account?: Json | null
+          expires_at?: string
+          id?: string
+          instructed_amount?: Json
+          payment_id?: string | null
+          payment_type?: Database["public"]["Enums"]["payment_type"]
+          reference?: string | null
+          remittance_information?: string | null
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          risk?: Json | null
+          status?: Database["public"]["Enums"]["consent_status"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pisp_consents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "tpp_registrations"
+            referencedColumns: ["client_id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -533,6 +723,10 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      expire_old_consents: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -540,11 +734,39 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_consent_valid: {
+        Args: { _consent_id: string; _consent_type: string }
+        Returns: boolean
+      }
+      log_consent_event: {
+        Args: {
+          _client_id?: string
+          _consent_id: string
+          _consent_type: string
+          _event_type: string
+          _metadata?: Json
+          _user_id?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "institution"
+      consent_status:
+        | "AwaitingAuthorisation"
+        | "Authorised"
+        | "Rejected"
+        | "Revoked"
+        | "Expired"
+        | "Consumed"
       institution_status: "pending" | "approved" | "rejected" | "suspended"
       institution_type: "bank" | "credit_union" | "fintech"
+      payment_type:
+        | "domestic"
+        | "international"
+        | "scheduled"
+        | "standing_order"
+        | "vrp"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -673,8 +895,23 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "institution"],
+      consent_status: [
+        "AwaitingAuthorisation",
+        "Authorised",
+        "Rejected",
+        "Revoked",
+        "Expired",
+        "Consumed",
+      ],
       institution_status: ["pending", "approved", "rejected", "suspended"],
       institution_type: ["bank", "credit_union", "fintech"],
+      payment_type: [
+        "domestic",
+        "international",
+        "scheduled",
+        "standing_order",
+        "vrp",
+      ],
     },
   },
 } as const

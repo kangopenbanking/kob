@@ -15,3 +15,20 @@ verify_jwt = false
 
 [functions.dcr-register]
 verify_jwt = false
+
+# Phase 2 Edge Functions - Consent Management
+
+# AISP consent endpoints (require user authentication)
+[functions.aisp-create-consent]
+verify_jwt = false
+
+# PISP consent endpoints (require user authentication)
+[functions.pisp-create-consent]
+verify_jwt = false
+
+# Consent authorization and revocation
+[functions.consent-authorize]
+verify_jwt = false
+
+[functions.consent-revoke]
+verify_jwt = false
