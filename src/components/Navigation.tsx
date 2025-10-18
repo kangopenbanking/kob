@@ -17,6 +17,9 @@ export const Navigation = () => {
           <Link to="/documentation" className="text-sm font-medium hover:text-primary transition-colors">
             Documentation
           </Link>
+          <Link to="/tpp-registration" className="text-sm font-medium hover:text-primary transition-colors">
+            TPP Registration
+          </Link>
           <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
             Register
           </Link>
@@ -44,6 +47,9 @@ export const Navigation = () => {
             <div className="flex flex-col gap-4 mt-8">
               <Link to="/documentation" className="text-sm font-medium hover:text-primary transition-colors">
                 Documentation
+              </Link>
+              <Link to="/tpp-registration" className="text-sm font-medium hover:text-primary transition-colors">
+                TPP Registration
               </Link>
               <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
                 Register

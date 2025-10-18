@@ -1,1 +1,17 @@
 project_id = "ftwbtzbeqkqrdmxmyvvz"
+
+# Phase 1 Edge Functions - FAPI 1.0 Advanced Implementation
+
+# Public endpoints (no JWT verification required)
+[functions.jwks-endpoint]
+verify_jwt = false
+
+[functions.oidc-config]
+verify_jwt = false
+
+# OAuth2 endpoints (handled by edge function logic)
+[functions.par-endpoint]
+verify_jwt = false
+
+[functions.dcr-register]
+verify_jwt = false

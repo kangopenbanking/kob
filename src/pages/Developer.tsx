@@ -281,6 +281,151 @@ print_r($data);`
           </CardContent>
         </Card>
 
+        {/* FAPI 1.0 Advanced & OAuth2 Endpoints */}
+        <Card className="border-accent">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              FAPI 1.0 Advanced Security Profile
+            </CardTitle>
+            <CardDescription>
+              Kang Open Banking implements Financial-grade API (FAPI) 1.0 Advanced security profile with OAuth2 + OpenID Connect
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h4 className="font-semibold mb-3">Authentication Endpoints</h4>
+              <div className="space-y-3">
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">JWKS (Public Keys)</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jwks-endpoint`,
+                        'jwks'
+                      )}
+                    >
+                      {copiedId === 'jwks' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-xs text-muted-foreground break-all">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/jwks-endpoint
+                  </code>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">OpenID Configuration</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oidc-config`,
+                        'oidc'
+                      )}
+                    >
+                      {copiedId === 'oidc' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-xs text-muted-foreground break-all">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/oidc-config
+                  </code>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">PAR (Pushed Authorization Requests)</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/par-endpoint`,
+                        'par'
+                      )}
+                    >
+                      {copiedId === 'par' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-xs text-muted-foreground break-all">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/par-endpoint
+                  </code>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">DCR (Dynamic Client Registration)</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dcr-register`,
+                        'dcr'
+                      )}
+                    >
+                      {copiedId === 'dcr' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <code className="text-xs text-muted-foreground break-all">
+                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/dcr-register
+                  </code>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-3">Security Features</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>mTLS:</strong> Mutual TLS authentication for all API calls</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>JAR:</strong> JWT-secured authorization requests with signature validation</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>PAR:</strong> Pushed authorization requests for enhanced security</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>DCR:</strong> Dynamic client registration with Software Statement Assertions</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><strong>Strict JWT Validation:</strong> nbf/exp temporal claims enforcement</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Link to="/tpp-registration">
+                <Button className="w-full">
+                  Register as TPP →
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Resources */}
         <div className="grid md:grid-cols-3 gap-6">
           <Card className="hover:border-primary/50 transition-all cursor-pointer">
