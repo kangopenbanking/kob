@@ -273,6 +273,141 @@ const Documentation = () => {
             </Card>
           </section>
 
+          {/* Communication API Section */}
+          <section className="mb-12">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">Communication API</CardTitle>
+                <CardDescription>Send emails and SMS notifications using templates</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Send Individual Communication</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Send a single email or SMS to a recipient using a predefined template
+                  </p>
+                  <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-4">
+                    <pre className="font-mono text-sm">{`POST /functions/v1/send-communication
+Authorization: Bearer YOUR_ACCESS_TOKEN
+Content-Type: application/json
+
+{
+  "template_key": "user_welcome",
+  "recipient_email": "user@example.com",
+  "variables": {
+    "user_name": "John Doe",
+    "platform_name": "Kang Open Banking"
+  }
+}`}</pre>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => copyToClipboard(`curl -X POST "https://YOUR_PROJECT.supabase.co/functions/v1/send-communication" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "template_key": "user_welcome",
+    "recipient_email": "user@example.com",
+    "variables": {
+      "user_name": "John Doe",
+      "platform_name": "Kang Open Banking"
+    }
+  }'`, 'send-comm')}
+                  >
+                    {copiedId === 'send-comm' ? (
+                      <><CheckCircle2 className="h-4 w-4" /> Copied</>
+                    ) : (
+                      <><Copy className="h-4 w-4" /> Copy Example</>
+                    )}
+                  </Button>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Send Bulk Communication</h3>
+                  <p className="text-muted-foreground mb-4">
+                    Send emails to multiple institutions (Admin only)
+                  </p>
+                  <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-4">
+                    <pre className="font-mono text-sm">{`POST /functions/v1/send-bulk-communication
+Authorization: Bearer YOUR_ADMIN_TOKEN
+Content-Type: application/json
+
+{
+  "template_key": "institution_approved",
+  "recipient_filter": {
+    "type": "all_institutions"
+  },
+  "variables": {
+    "platform_name": "Kang Open Banking",
+    "docs_link": "https://docs.kangopenbanking.com"
+  }
+}`}</pre>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2"
+                    onClick={() => copyToClipboard(`curl -X POST "https://YOUR_PROJECT.supabase.co/functions/v1/send-bulk-communication" \\
+  -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "template_key": "institution_approved",
+    "recipient_filter": {
+      "type": "all_institutions"
+    },
+    "variables": {
+      "platform_name": "Kang Open Banking",
+      "docs_link": "https://docs.kangopenbanking.com"
+    }
+  }'`, 'send-bulk')}
+                  >
+                    {copiedId === 'send-bulk' ? (
+                      <><CheckCircle2 className="h-4 w-4" /> Copied</>
+                    ) : (
+                      <><Copy className="h-4 w-4" /> Copy Example</>
+                    )}
+                  </Button>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3">Available Templates</h3>
+                  <div className="space-y-2">
+                    <div className="border rounded-lg p-3">
+                      <p className="font-medium">user_welcome</p>
+                      <p className="text-sm text-muted-foreground">Welcome email for new users</p>
+                      <p className="text-xs text-muted-foreground mt-1">Variables: user_name, platform_name</p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="font-medium">institution_approved</p>
+                      <p className="text-sm text-muted-foreground">Approval notification for institutions</p>
+                      <p className="text-xs text-muted-foreground mt-1">Variables: contact_name, institution_name, portal_link, docs_link, platform_name</p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="font-medium">consent_created</p>
+                      <p className="text-sm text-muted-foreground">Consent request notification</p>
+                      <p className="text-xs text-muted-foreground mt-1">Variables: user_name, institution_name, permissions_list, expiry_date, authorization_link</p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="font-medium">payment_initiated</p>
+                      <p className="text-sm text-muted-foreground">Payment initiation notification</p>
+                      <p className="text-xs text-muted-foreground mt-1">Variables: user_name, amount, currency, recipient_name, reference, payment_id</p>
+                    </div>
+                    <div className="border rounded-lg p-3">
+                      <p className="font-medium">mfa_code (SMS)</p>
+                      <p className="text-sm text-muted-foreground">Two-factor authentication code</p>
+                      <p className="text-xs text-muted-foreground mt-1">Variables: platform_name, code, expiry_minutes</p>
+                    </div>
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    View all available templates in the Communications Management page
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
           {/* Support */}
           <section>
             <Card className="bg-gradient-to-br from-primary/5 to-accent/5 border-2">
