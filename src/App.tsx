@@ -1,4 +1,3 @@
-import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -30,31 +29,29 @@ const queryClient = new QueryClient({
 
 function App() {
   return (
-    <React.StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <Routes>
-              <Route path="/" element={<Layout><Index /></Layout>} />
-              <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
-              <Route path="/register" element={<Layout><Register /></Layout>} />
-              <Route path="/admin" element={<Layout><Admin /></Layout>} />
-              <Route path="/developer" element={<Layout><Developer /></Layout>} />
-              <Route path="/tpp-registration" element={<Layout><TPPRegistration /></Layout>} />
-              <Route path="/consents" element={<Layout><ConsentManagement /></Layout>} />
-              <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
-              <Route path="/monitoring" element={<Layout><SystemMonitoring /></Layout>} />
-              <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-              <Route path="/security" element={<Layout><SecuritySettings /></Layout>} />
-              <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
-              <Route path="*" element={<Layout><NotFound /></Layout>} />
-            </Routes>
-          </TooltipProvider>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <Routes>
+            <Route path="/" element={<Layout><Index /></Layout>} />
+            <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
+            <Route path="/register" element={<Layout><Register /></Layout>} />
+            <Route path="/admin" element={<Layout><Admin /></Layout>} />
+            <Route path="/developer" element={<Layout><Developer /></Layout>} />
+            <Route path="/tpp-registration" element={<Layout><TPPRegistration /></Layout>} />
+            <Route path="/consents" element={<Layout><ConsentManagement /></Layout>} />
+            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
+            <Route path="/monitoring" element={<Layout><SystemMonitoring /></Layout>} />
+            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
+            <Route path="/security" element={<Layout><SecuritySettings /></Layout>} />
+            <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="*" element={<Layout><NotFound /></Layout>} />
+          </Routes>
+        </TooltipProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 }
 
