@@ -14,6 +14,7 @@ import TPPRegistration from "./pages/TPPRegistration";
 import ConsentManagement from "./pages/ConsentManagement";
 import Analytics from "./pages/Analytics";
 import SystemMonitoring from "./pages/SystemMonitoring";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
           <Route path="/consents" element={<Layout><ConsentManagement /></Layout>} />
           <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
           <Route path="/monitoring" element={<Layout><SystemMonitoring /></Layout>} />
+          <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
           <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<Layout><NotFound /></Layout>} />

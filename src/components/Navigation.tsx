@@ -20,6 +20,9 @@ export const Navigation = () => {
           <Link to="/tpp-registration" className="text-sm font-medium hover:text-primary transition-colors">
             TPP Registration
           </Link>
+          <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
+            My Dashboard
+          </Link>
           <Link to="/consents" className="text-sm font-medium hover:text-primary transition-colors">
             Consents
           </Link>
@@ -59,6 +62,9 @@ export const Navigation = () => {
               </Link>
               <Link to="/tpp-registration" className="text-sm font-medium hover:text-primary transition-colors">
                 TPP Registration
+              </Link>
+              <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors">
+                My Dashboard
               </Link>
               <Link to="/consents" className="text-sm font-medium hover:text-primary transition-colors">
                 Consents
