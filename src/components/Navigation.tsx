@@ -38,6 +38,9 @@ export const Navigation = () => {
           <Link to="/communications" className="text-sm font-medium hover:text-primary transition-colors">
             Communications
           </Link>
+          <Link to="/mobile-money" className="text-sm font-medium hover:text-primary transition-colors">
+            Mobile Money
+          </Link>
           <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
             Register
           </Link>
@@ -86,6 +89,9 @@ export const Navigation = () => {
               </Link>
               <Link to="/communications" className="text-sm font-medium hover:text-primary transition-colors">
                 Communications
+              </Link>
+              <Link to="/mobile-money" className="text-sm font-medium hover:text-primary transition-colors">
+                Mobile Money
               </Link>
               <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
                 Register

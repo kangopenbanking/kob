@@ -17,6 +17,7 @@ import SystemMonitoring from "./pages/SystemMonitoring";
 import Dashboard from "./pages/Dashboard";
 import SecuritySettings from "./pages/SecuritySettings";
 import Communications from "./pages/Communications";
+import MobileMoney from "./pages/MobileMoney";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -48,6 +49,7 @@ function App() {
             <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
             <Route path="/security" element={<Layout><SecuritySettings /></Layout>} />
             <Route path="/communications" element={<Layout><Communications /></Layout>} />
+            <Route path="/mobile-money" element={<Layout><MobileMoney /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>

@@ -1015,6 +1015,110 @@ export type Database = {
         }
         Relationships: []
       }
+      mobile_money_accounts: {
+        Row: {
+          account_name: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_verified: boolean | null
+          phone_number: string
+          provider: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          phone_number: string
+          provider: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_verified?: boolean | null
+          phone_number?: string
+          provider?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mobile_money_transactions: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string | null
+          currency: string
+          description: string | null
+          error_message: string | null
+          flutterwave_ref: string | null
+          id: string
+          metadata: Json | null
+          mobile_account_id: string | null
+          phone_number: string
+          provider: string
+          status: string
+          transaction_ref: string
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          error_message?: string | null
+          flutterwave_ref?: string | null
+          id?: string
+          metadata?: Json | null
+          mobile_account_id?: string | null
+          phone_number: string
+          provider: string
+          status?: string
+          transaction_ref: string
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          error_message?: string | null
+          flutterwave_ref?: string | null
+          id?: string
+          metadata?: Json | null
+          mobile_account_id?: string | null
+          phone_number?: string
+          provider?: string
+          status?: string
+          transaction_ref?: string
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mobile_money_transactions_mobile_account_id_fkey"
+            columns: ["mobile_account_id"]
+            isOneToOne: false
+            referencedRelation: "mobile_money_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       par_requests: {
         Row: {
           client_id: string
