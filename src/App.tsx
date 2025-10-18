@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
+import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
@@ -32,6 +33,7 @@ import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import Status from "./pages/Status";
 import NotFound from "./pages/NotFound";
+import FIPortal from "./pages/FIPortal";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -45,11 +47,12 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
+      <LanguageProvider>
+        <BrowserRouter>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Routes>
             <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
@@ -76,11 +79,13 @@ function App() {
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/faq" element={<Layout><FAQ /></Layout>} />
             <Route path="/status" element={<Layout><Status /></Layout>} />
+            <Route path="/fi-portal" element={<Layout><FIPortal /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>
         </TooltipProvider>
       </BrowserRouter>
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

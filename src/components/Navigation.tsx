@@ -9,8 +9,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import kobLogo from "@/assets/kob-logo.png";
+import { LanguageSwitcher } from "./LanguageSwitcher";
+import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export const Navigation = () => {
+  const { t } = useLanguage();
+  
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
@@ -42,6 +46,9 @@ export const Navigation = () => {
               <DropdownMenuItem asChild>
                 <Link to="/dashboard" className="cursor-pointer">My Dashboard</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/fi-portal" className="cursor-pointer">FI Portal</Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -66,12 +73,14 @@ export const Navigation = () => {
             <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
             Status
           </Link>
+
+          <LanguageSwitcher />
           
           <Link to="/auth">
-            <Button variant="outline" size="sm">Sign In</Button>
+            <Button variant="outline" size="sm">{t('signIn')}</Button>
           </Link>
           <Link to="/register">
-            <Button size="sm">Get Started</Button>
+            <Button size="sm">{t('getStarted')}</Button>
           </Link>
         </div>
 
@@ -102,6 +111,9 @@ export const Navigation = () => {
                   </Link>
                   <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors block">
                     My Dashboard
+                  </Link>
+                  <Link to="/fi-portal" className="text-sm font-medium hover:text-primary transition-colors block">
+                    FI Portal
                   </Link>
                 </div>
               </div>

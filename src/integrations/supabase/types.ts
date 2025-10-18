@@ -22,6 +22,7 @@ export type Database = {
           expires_at: string
           id: string
           is_revoked: boolean | null
+          refresh_token_id: string | null
           revoked_at: string | null
           scope: string
           token_hash: string
@@ -34,6 +35,7 @@ export type Database = {
           expires_at: string
           id?: string
           is_revoked?: boolean | null
+          refresh_token_id?: string | null
           revoked_at?: string | null
           scope: string
           token_hash: string
@@ -46,12 +48,21 @@ export type Database = {
           expires_at?: string
           id?: string
           is_revoked?: boolean | null
+          refresh_token_id?: string | null
           revoked_at?: string | null
           scope?: string
           token_hash?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "access_tokens_refresh_token_id_fkey"
+            columns: ["refresh_token_id"]
+            isOneToOne: false
+            referencedRelation: "refresh_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       account_balances: {
         Row: {
@@ -230,6 +241,56 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tpp_registrations"
             referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      api_clients: {
+        Row: {
+          client_id: string
+          client_name: string
+          client_secret_hash: string
+          created_at: string | null
+          grant_types: Json
+          id: string
+          institution_id: string | null
+          is_active: boolean | null
+          redirect_uris: Json
+          scopes: Json
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          client_secret_hash: string
+          created_at?: string | null
+          grant_types?: Json
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          redirect_uris?: Json
+          scopes?: Json
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          client_secret_hash?: string
+          created_at?: string | null
+          grant_types?: Json
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          redirect_uris?: Json
+          scopes?: Json
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_clients_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1668,6 +1729,61 @@ export type Database = {
           },
         ]
       }
+      sandbox_accounts: {
+        Row: {
+          account_holder_name: string
+          account_id: string
+          account_subtype: Database["public"]["Enums"]["account_subtype"] | null
+          account_type: Database["public"]["Enums"]["account_type"] | null
+          balance: number | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          id: string
+          identification_scheme:
+            | Database["public"]["Enums"]["account_scheme"]
+            | null
+          identification_value: string
+          is_active: boolean | null
+        }
+        Insert: {
+          account_holder_name: string
+          account_id: string
+          account_subtype?:
+            | Database["public"]["Enums"]["account_subtype"]
+            | null
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          balance?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          id?: string
+          identification_scheme?:
+            | Database["public"]["Enums"]["account_scheme"]
+            | null
+          identification_value: string
+          is_active?: boolean | null
+        }
+        Update: {
+          account_holder_name?: string
+          account_id?: string
+          account_subtype?:
+            | Database["public"]["Enums"]["account_subtype"]
+            | null
+          account_type?: Database["public"]["Enums"]["account_type"] | null
+          balance?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          id?: string
+          identification_scheme?:
+            | Database["public"]["Enums"]["account_scheme"]
+            | null
+          identification_value?: string
+          is_active?: boolean | null
+        }
+        Relationships: []
+      }
       sandbox_data: {
         Row: {
           created_at: string | null
@@ -2199,6 +2315,30 @@ export type Database = {
           last_used_at?: string | null
           os?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          created_at: string | null
+          id: string
+          language: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          language?: string | null
+          updated_at?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
