@@ -46,7 +46,7 @@ const Developer = () => {
   const codeExamples = [
     {
       language: "JavaScript",
-      code: `const response = await fetch('https://sandbox.kangopenbanking.cm/v1/accounts', {
+      code: `const response = await fetch('https://sandbox.kangopenbanking.com/v1/accounts', {
   method: 'GET',
   headers: {
     'Authorization': 'Bearer YOUR_API_KEY',
@@ -67,7 +67,7 @@ headers = {
 }
 
 response = requests.get(
-    'https://sandbox.kangopenbanking.cm/v1/accounts',
+    'https://sandbox.kangopenbanking.com/v1/accounts',
     headers=headers
 )
 
@@ -80,7 +80,7 @@ print(data)`
 $curl = curl_init();
 
 curl_setopt_array($curl, [
-    CURLOPT_URL => "https://sandbox.kangopenbanking.cm/v1/accounts",
+    CURLOPT_URL => "https://sandbox.kangopenbanking.com/v1/accounts",
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_HTTPHEADER => [
         "Authorization: Bearer YOUR_API_KEY",

@@ -24,7 +24,7 @@ const Documentation = () => {
       method: "GET",
       endpoint: "/api/v1/accounts",
       description: "Retrieve account information",
-      example: `curl -X GET "https://api.kangopenbanking.cm/v1/accounts" \\
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/accounts" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"`
     },
@@ -32,7 +32,7 @@ const Documentation = () => {
       method: "POST",
       endpoint: "/api/v1/payments/initiate",
       description: "Initiate a payment transaction",
-      example: `curl -X POST "https://api.kangopenbanking.cm/v1/payments/initiate" \\
+      example: `curl -X POST "https://api.kangopenbanking.com/v1/payments/initiate" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -46,7 +46,7 @@ const Documentation = () => {
       method: "GET",
       endpoint: "/api/v1/transactions",
       description: "List transactions for an account",
-      example: `curl -X GET "https://api.kangopenbanking.cm/v1/transactions?account_id=ACC123" \\
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/transactions?account_id=ACC123" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json"`
     },
@@ -54,7 +54,7 @@ const Documentation = () => {
       method: "POST",
       endpoint: "/api/v1/transfers",
       description: "Transfer funds between accounts",
-      example: `curl -X POST "https://api.kangopenbanking.cm/v1/transfers" \\
+      example: `curl -X POST "https://api.kangopenbanking.com/v1/transfers" \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -138,11 +138,11 @@ const Documentation = () => {
                 <div>
                   <div className="font-semibold mb-2">Production</div>
                   <div className="bg-muted/50 p-3 rounded-lg font-mono text-sm flex items-center justify-between">
-                    <code>https://api.kangopenbanking.cm/v1</code>
+                    <code>https://api.kangopenbanking.com/v1</code>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard("https://api.kangopenbanking.cm/v1", "prod")}
+                      onClick={() => copyToClipboard("https://api.kangopenbanking.com/v1", "prod")}
                     >
                       {copiedId === "prod" ? (
                         <CheckCircle2 className="h-4 w-4 text-accent" />
@@ -155,11 +155,11 @@ const Documentation = () => {
                 <div>
                   <div className="font-semibold mb-2">Sandbox</div>
                   <div className="bg-muted/50 p-3 rounded-lg font-mono text-sm flex items-center justify-between">
-                    <code>https://sandbox.kangopenbanking.cm/v1</code>
+                    <code>https://sandbox.kangopenbanking.com/v1</code>
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => copyToClipboard("https://sandbox.kangopenbanking.cm/v1", "sandbox")}
+                      onClick={() => copyToClipboard("https://sandbox.kangopenbanking.com/v1", "sandbox")}
                     >
                       {copiedId === "sandbox" ? (
                         <CheckCircle2 className="h-4 w-4 text-accent" />
