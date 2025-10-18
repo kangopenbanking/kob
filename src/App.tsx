@@ -19,6 +19,18 @@ import SecuritySettings from "./pages/SecuritySettings";
 import Communications from "./pages/Communications";
 import MobileMoney from "./pages/MobileMoney";
 import BankingOps from "./pages/BankingOps";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Cookies from "./pages/Cookies";
+import SecurityPolicy from "./pages/SecurityPolicy";
+import CompliancePage from "./pages/CompliancePage";
+import SLA from "./pages/SLA";
+import AUP from "./pages/AUP";
+import DataProtection from "./pages/DataProtection";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
+import FAQ from "./pages/FAQ";
+import Status from "./pages/Status";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -52,6 +64,18 @@ function App() {
             <Route path="/communications" element={<Layout><Communications /></Layout>} />
             <Route path="/mobile-money" element={<Layout><MobileMoney /></Layout>} />
             <Route path="/banking-ops" element={<Layout><BankingOps /></Layout>} />
+            <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
+            <Route path="/terms" element={<Layout><Terms /></Layout>} />
+            <Route path="/cookies" element={<Layout><Cookies /></Layout>} />
+            <Route path="/security-policy" element={<Layout><SecurityPolicy /></Layout>} />
+            <Route path="/compliance" element={<Layout><CompliancePage /></Layout>} />
+            <Route path="/sla" element={<Layout><SLA /></Layout>} />
+            <Route path="/aup" element={<Layout><AUP /></Layout>} />
+            <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
+            <Route path="/about" element={<Layout><About /></Layout>} />
+            <Route path="/contact" element={<Layout><Contact /></Layout>} />
+            <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+            <Route path="/status" element={<Layout><Status /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>
