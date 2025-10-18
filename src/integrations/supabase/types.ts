@@ -1142,6 +1142,10 @@ export type Database = {
         }
         Returns: string
       }
+      make_user_admin: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN"
