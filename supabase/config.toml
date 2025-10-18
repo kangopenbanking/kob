@@ -32,3 +32,24 @@ verify_jwt = false
 
 [functions.consent-revoke]
 verify_jwt = false
+
+# Phase 3 Edge Functions - AISP Resource Server
+
+# Account Information APIs
+[functions.aisp-accounts]
+verify_jwt = false
+
+[functions.aisp-balances]
+verify_jwt = false
+
+[functions.aisp-transactions]
+verify_jwt = false
+
+[functions.aisp-beneficiaries]
+verify_jwt = false
+
+[functions.aisp-standing-orders]
+verify_jwt = false
+
+[functions.aisp-direct-debits]
+verify_jwt = false

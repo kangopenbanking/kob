@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { 
   Building2, 
@@ -12,7 +13,8 @@ import {
   EyeOff,
   RefreshCw,
   CheckCircle2,
-  Shield
+  Shield,
+  FileText
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -420,6 +422,141 @@ print_r($data);`
               <Link to="/tpp-registration">
                 <Button className="w-full">
                   Register as TPP →
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* AISP API Endpoints */}
+        <Card className="border-accent">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              AISP API Endpoints
+            </CardTitle>
+            <CardDescription>
+              Account Information Service Provider APIs - UK Open Banking v4.0 aligned (XAF currency)
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div>
+              <h4 className="font-semibold mb-3">Available Endpoints</h4>
+              <div className="space-y-3">
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">GET /aisp-accounts</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyToClipboard(
+                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-accounts`,
+                        'aisp-accounts'
+                      )}
+                    >
+                      {copiedId === 'aisp-accounts' ? (
+                        <CheckCircle2 className="h-4 w-4 text-accent" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">List all authorized accounts</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>Required:</strong> ReadAccountsBasic permission
+                  </p>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/balances</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Get account balances</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>Required:</strong> ReadBalances permission
+                  </p>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/transactions</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Get account transactions with date filtering</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>Required:</strong> ReadTransactionsBasic or ReadTransactionsDetail
+                  </p>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/beneficiaries</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Get account beneficiaries</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>Required:</strong> ReadBeneficiariesBasic permission
+                  </p>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/standing-orders</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Get standing orders</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>Required:</strong> ReadStandingOrdersBasic permission
+                  </p>
+                </div>
+
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/direct-debits</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Get direct debits</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    <strong>Required:</strong> ReadDirectDebits permission
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-3">Required Headers</h4>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><code className="bg-muted px-1 rounded">Authorization: Bearer &lt;access_token&gt;</code></span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                  <span><code className="bg-muted px-1 rounded">x-consent-id: &lt;consent_id&gt;</code></span>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-semibold mb-3">Standard Permissions</h4>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  'ReadAccountsBasic',
+                  'ReadAccountsDetail',
+                  'ReadBalances',
+                  'ReadTransactionsBasic',
+                  'ReadTransactionsDetail',
+                  'ReadBeneficiariesBasic',
+                  'ReadStandingOrdersBasic',
+                  'ReadDirectDebits'
+                ].map((permission, idx) => (
+                  <Badge key={idx} variant="secondary" className="font-mono text-xs">
+                    {permission}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-4 border-t">
+              <Link to="/documentation">
+                <Button variant="outline" className="w-full">
+                  View Full API Documentation →
                 </Button>
               </Link>
             </div>

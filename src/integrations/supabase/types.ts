@@ -53,6 +53,118 @@ export type Database = {
         }
         Relationships: []
       }
+      account_balances: {
+        Row: {
+          account_id: string
+          amount: number
+          balance_datetime: string
+          balance_type: string
+          created_at: string | null
+          credit_debit_indicator: string
+          credit_line: Json | null
+          currency: string
+          id: string
+          updated_at: string | null
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          balance_datetime: string
+          balance_type: string
+          created_at?: string | null
+          credit_debit_indicator: string
+          credit_line?: Json | null
+          currency?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          balance_datetime?: string
+          balance_type?: string
+          created_at?: string | null
+          credit_debit_indicator?: string
+          credit_line?: Json | null
+          currency?: string
+          id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_balances_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      accounts: {
+        Row: {
+          account_holder_name: string
+          account_id: string
+          account_subtype: Database["public"]["Enums"]["account_subtype"]
+          account_type: Database["public"]["Enums"]["account_type"]
+          created_at: string | null
+          currency: string
+          id: string
+          identification_scheme: Database["public"]["Enums"]["account_scheme"]
+          identification_value: string
+          institution_id: string | null
+          is_active: boolean | null
+          nickname: string | null
+          opened_date: string | null
+          secondary_identification: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_holder_name: string
+          account_id: string
+          account_subtype?: Database["public"]["Enums"]["account_subtype"]
+          account_type?: Database["public"]["Enums"]["account_type"]
+          created_at?: string | null
+          currency?: string
+          id?: string
+          identification_scheme?: Database["public"]["Enums"]["account_scheme"]
+          identification_value: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          nickname?: string | null
+          opened_date?: string | null
+          secondary_identification?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_holder_name?: string
+          account_id?: string
+          account_subtype?: Database["public"]["Enums"]["account_subtype"]
+          account_type?: Database["public"]["Enums"]["account_type"]
+          created_at?: string | null
+          currency?: string
+          id?: string
+          identification_scheme?: Database["public"]["Enums"]["account_scheme"]
+          identification_value?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          nickname?: string | null
+          opened_date?: string | null
+          secondary_identification?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "accounts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       aisp_consents: {
         Row: {
           account_ids: Json | null
@@ -213,6 +325,53 @@ export type Database = {
         }
         Relationships: []
       }
+      beneficiaries: {
+        Row: {
+          account_id: string
+          beneficiary_name: string
+          created_at: string | null
+          id: string
+          identification_scheme: Database["public"]["Enums"]["account_scheme"]
+          identification_value: string
+          is_active: boolean | null
+          reference: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          beneficiary_name: string
+          created_at?: string | null
+          id?: string
+          identification_scheme: Database["public"]["Enums"]["account_scheme"]
+          identification_value: string
+          is_active?: boolean | null
+          reference?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          beneficiary_name?: string
+          created_at?: string | null
+          id?: string
+          identification_scheme?: Database["public"]["Enums"]["account_scheme"]
+          identification_value?: string
+          is_active?: boolean | null
+          reference?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "beneficiaries_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_certificates: {
         Row: {
           certificate_pem: string
@@ -299,6 +458,65 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      direct_debits: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          currency: string
+          direct_debit_id: string
+          direct_debit_status: string
+          id: string
+          identification_scheme: string | null
+          identification_value: string | null
+          mandate_identification: string
+          name: string
+          previous_payment_amount: number | null
+          previous_payment_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          currency?: string
+          direct_debit_id: string
+          direct_debit_status?: string
+          id?: string
+          identification_scheme?: string | null
+          identification_value?: string | null
+          mandate_identification: string
+          name: string
+          previous_payment_amount?: number | null
+          previous_payment_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          currency?: string
+          direct_debit_id?: string
+          direct_debit_status?: string
+          id?: string
+          identification_scheme?: string | null
+          identification_value?: string | null
+          mandate_identification?: string
+          name?: string
+          previous_payment_amount?: number | null
+          previous_payment_date?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "direct_debits_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institutions: {
         Row: {
@@ -574,6 +792,80 @@ export type Database = {
         }
         Relationships: []
       }
+      standing_orders: {
+        Row: {
+          account_id: string
+          created_at: string | null
+          creditor_identification_scheme: Database["public"]["Enums"]["account_scheme"]
+          creditor_identification_value: string
+          creditor_name: string
+          currency: string
+          final_payment_amount: number | null
+          final_payment_date: string | null
+          first_payment_amount: number
+          first_payment_date: string
+          frequency: string
+          id: string
+          next_payment_amount: number | null
+          next_payment_date: string | null
+          reference: string | null
+          standing_order_id: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string | null
+          creditor_identification_scheme: Database["public"]["Enums"]["account_scheme"]
+          creditor_identification_value: string
+          creditor_name: string
+          currency?: string
+          final_payment_amount?: number | null
+          final_payment_date?: string | null
+          first_payment_amount: number
+          first_payment_date: string
+          frequency: string
+          id?: string
+          next_payment_amount?: number | null
+          next_payment_date?: string | null
+          reference?: string | null
+          standing_order_id: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string | null
+          creditor_identification_scheme?: Database["public"]["Enums"]["account_scheme"]
+          creditor_identification_value?: string
+          creditor_name?: string
+          currency?: string
+          final_payment_amount?: number | null
+          final_payment_date?: string | null
+          first_payment_amount?: number
+          first_payment_date?: string
+          frequency?: string
+          id?: string
+          next_payment_amount?: number | null
+          next_payment_date?: string | null
+          reference?: string | null
+          standing_order_id?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "standing_orders_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tpp_registrations: {
         Row: {
           client_id: string
@@ -650,36 +942,70 @@ export type Database = {
       }
       transactions: {
         Row: {
+          account_id: string | null
           amount: number | null
+          balance_after: Json | null
+          booking_datetime: string | null
           created_at: string
+          credit_debit_indicator: string | null
+          creditor_account: Json | null
           currency: string
+          debtor_account: Json | null
           id: string
           institution_id: string
+          merchant_details: Json | null
           metadata: Json | null
           status: string
+          transaction_information: string | null
           transaction_type: string
+          value_datetime: string | null
         }
         Insert: {
+          account_id?: string | null
           amount?: number | null
+          balance_after?: Json | null
+          booking_datetime?: string | null
           created_at?: string
+          credit_debit_indicator?: string | null
+          creditor_account?: Json | null
           currency?: string
+          debtor_account?: Json | null
           id?: string
           institution_id: string
+          merchant_details?: Json | null
           metadata?: Json | null
           status: string
+          transaction_information?: string | null
           transaction_type: string
+          value_datetime?: string | null
         }
         Update: {
+          account_id?: string | null
           amount?: number | null
+          balance_after?: Json | null
+          booking_datetime?: string | null
           created_at?: string
+          credit_debit_indicator?: string | null
+          creditor_account?: Json | null
           currency?: string
+          debtor_account?: Json | null
           id?: string
           institution_id?: string
+          merchant_details?: Json | null
           metadata?: Json | null
           status?: string
+          transaction_information?: string | null
           transaction_type?: string
+          value_datetime?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "transactions_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "transactions_institution_id_fkey"
             columns: ["institution_id"]
@@ -715,6 +1041,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_aisp_permission: {
+        Args: { _consent_id: string; _permission: string; _user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_auth_codes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -751,6 +1081,9 @@ export type Database = {
       }
     }
     Enums: {
+      account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN"
+      account_subtype: "Current" | "Savings" | "CreditCard" | "Loan"
+      account_type: "Business" | "Personal"
       app_role: "admin" | "institution"
       consent_status:
         | "AwaitingAuthorisation"
@@ -894,6 +1227,9 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      account_scheme: ["LOCAL_BANK", "MOMO", "IBAN"],
+      account_subtype: ["Current", "Savings", "CreditCard", "Loan"],
+      account_type: ["Business", "Personal"],
       app_role: ["admin", "institution"],
       consent_status: [
         "AwaitingAuthorisation",
