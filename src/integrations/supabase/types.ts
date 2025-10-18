@@ -472,6 +472,62 @@ export type Database = {
           },
         ]
       }
+      bulk_communications: {
+        Row: {
+          body: string
+          completed_at: string | null
+          created_at: string | null
+          created_by: string | null
+          failed_count: number | null
+          id: string
+          recipient_filter: Json | null
+          sent_count: number | null
+          started_at: string | null
+          status: string
+          subject: string
+          template_id: string | null
+          total_recipients: number | null
+        }
+        Insert: {
+          body: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          id?: string
+          recipient_filter?: Json | null
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          subject: string
+          template_id?: string | null
+          total_recipients?: number | null
+        }
+        Update: {
+          body?: string
+          completed_at?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          failed_count?: number | null
+          id?: string
+          recipient_filter?: Json | null
+          sent_count?: number | null
+          started_at?: string | null
+          status?: string
+          subject?: string
+          template_id?: string | null
+          total_recipients?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bulk_communications_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "communication_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       client_certificates: {
         Row: {
           certificate_pem: string
@@ -517,6 +573,125 @@ export type Database = {
           updated_at?: string | null
           valid_from?: string
           valid_until?: string
+        }
+        Relationships: []
+      }
+      communication_logs: {
+        Row: {
+          body: string
+          communication_type: Database["public"]["Enums"]["template_type"]
+          created_at: string | null
+          created_by: string | null
+          delivered_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          recipient_email: string | null
+          recipient_id: string | null
+          recipient_phone: string | null
+          recipient_type: string
+          sent_at: string | null
+          status: string
+          subject: string | null
+          template_id: string | null
+        }
+        Insert: {
+          body: string
+          communication_type: Database["public"]["Enums"]["template_type"]
+          created_at?: string | null
+          created_by?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string | null
+          recipient_id?: string | null
+          recipient_phone?: string | null
+          recipient_type: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+        }
+        Update: {
+          body?: string
+          communication_type?: Database["public"]["Enums"]["template_type"]
+          created_at?: string | null
+          created_by?: string | null
+          delivered_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          recipient_email?: string | null
+          recipient_id?: string | null
+          recipient_phone?: string | null
+          recipient_type?: string
+          sent_at?: string | null
+          status?: string
+          subject?: string | null
+          template_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communication_logs_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "communication_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      communication_templates: {
+        Row: {
+          body: string
+          category: Database["public"]["Enums"]["template_category"]
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          is_system: boolean | null
+          name: string
+          subject: string | null
+          template_key: string
+          template_type: Database["public"]["Enums"]["template_type"]
+          updated_at: string | null
+          updated_by: string | null
+          variables: Json | null
+        }
+        Insert: {
+          body: string
+          category: Database["public"]["Enums"]["template_category"]
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name: string
+          subject?: string | null
+          template_key: string
+          template_type: Database["public"]["Enums"]["template_type"]
+          updated_at?: string | null
+          updated_by?: string | null
+          variables?: Json | null
+        }
+        Update: {
+          body?: string
+          category?: Database["public"]["Enums"]["template_category"]
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string
+          subject?: string | null
+          template_key?: string
+          template_type?: Database["public"]["Enums"]["template_type"]
+          updated_at?: string | null
+          updated_by?: string | null
+          variables?: Json | null
         }
         Relationships: []
       }
@@ -1917,6 +2092,15 @@ export type Database = {
         | "scheduled"
         | "standing_order"
         | "vrp"
+      template_category:
+        | "user_auth"
+        | "institution_management"
+        | "consent_management"
+        | "payment_notifications"
+        | "security_alerts"
+        | "system_notifications"
+        | "api_notifications"
+      template_type: "email" | "sms"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2065,6 +2249,16 @@ export const Constants = {
         "standing_order",
         "vrp",
       ],
+      template_category: [
+        "user_auth",
+        "institution_management",
+        "consent_management",
+        "payment_notifications",
+        "security_alerts",
+        "system_notifications",
+        "api_notifications",
+      ],
+      template_type: ["email", "sms"],
     },
   },
 } as const
