@@ -39,7 +39,7 @@ const Index = () => {
               </Badge>
               <h1 className="text-4xl md:text-6xl font-bold leading-tight">
                 Unified Banking API for{" "}
-                <span className="text-primary">Central Africa</span>
+                <span className="text-primary">Cameroon</span>
               </h1>
               <p className="text-xl text-muted-foreground leading-relaxed">
                 Connect to banks, credit unions, and mobile money operators across Cameroon with a single, secure API. COBAC & BEAC compliant.
