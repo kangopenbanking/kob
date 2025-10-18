@@ -520,6 +520,60 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_reports: {
+        Row: {
+          active_consents: number | null
+          created_at: string | null
+          generated_by: string | null
+          id: string
+          report_data: Json | null
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          revoked_consents: number | null
+          total_api_calls: number | null
+          total_consents: number | null
+          total_payments: number | null
+          total_transactions: number | null
+          unique_tpps: number | null
+          unique_users: number | null
+        }
+        Insert: {
+          active_consents?: number | null
+          created_at?: string | null
+          generated_by?: string | null
+          id?: string
+          report_data?: Json | null
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          revoked_consents?: number | null
+          total_api_calls?: number | null
+          total_consents?: number | null
+          total_payments?: number | null
+          total_transactions?: number | null
+          unique_tpps?: number | null
+          unique_users?: number | null
+        }
+        Update: {
+          active_consents?: number | null
+          created_at?: string | null
+          generated_by?: string | null
+          id?: string
+          report_data?: Json | null
+          report_period_end?: string
+          report_period_start?: string
+          report_type?: string
+          revoked_consents?: number | null
+          total_api_calls?: number | null
+          total_consents?: number | null
+          total_payments?: number | null
+          total_transactions?: number | null
+          unique_tpps?: number | null
+          unique_users?: number | null
+        }
+        Relationships: []
+      }
       consent_events: {
         Row: {
           client_id: string | null
@@ -617,6 +671,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      incident_logs: {
+        Row: {
+          affected_services: string[] | null
+          assigned_to: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          incident_type: string
+          reported_by: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          severity: string
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          affected_services?: string[] | null
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          incident_type: string
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity: string
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          affected_services?: string[] | null
+          assigned_to?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          incident_type?: string
+          reported_by?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          severity?: string
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       institutions: {
         Row: {
@@ -869,6 +971,39 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          limit_exceeded: boolean | null
+          request_count: number | null
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          limit_exceeded?: boolean | null
+          request_count?: number | null
+          window_end: string
+          window_start: string
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          limit_exceeded?: boolean | null
+          request_count?: number | null
+          window_end?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       refresh_tokens: {
         Row: {
           access_token_id: string | null
@@ -1093,6 +1228,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      system_alerts: {
+        Row: {
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          details: Json | null
+          id: string
+          is_acknowledged: boolean | null
+          message: string
+          severity: string
+        }
+        Insert: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          is_acknowledged?: boolean | null
+          message: string
+          severity: string
+        }
+        Update: {
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          details?: Json | null
+          id?: string
+          is_acknowledged?: boolean | null
+          message?: string
+          severity?: string
+        }
+        Relationships: []
+      }
+      system_health_checks: {
+        Row: {
+          checked_at: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          response_time_ms: number | null
+          service_name: string
+          status: string
+        }
+        Insert: {
+          checked_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number | null
+          service_name: string
+          status: string
+        }
+        Update: {
+          checked_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number | null
+          service_name?: string
+          status?: string
+        }
+        Relationships: []
       }
       tpp_registrations: {
         Row: {
@@ -1376,6 +1580,15 @@ export type Database = {
         Args: { _consent_id: string; _permission: string; _user_id: string }
         Returns: boolean
       }
+      check_rate_limit: {
+        Args: {
+          _client_id: string
+          _endpoint: string
+          _limit: number
+          _window_minutes: number
+        }
+        Returns: boolean
+      }
       cleanup_expired_auth_codes: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -1387,6 +1600,10 @@ export type Database = {
       expire_old_consents: {
         Args: Record<PropertyKey, never>
         Returns: undefined
+      }
+      generate_compliance_report: {
+        Args: { _end_date: string; _report_type: string; _start_date: string }
+        Returns: string
       }
       has_role: {
         Args: {

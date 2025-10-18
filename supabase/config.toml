@@ -71,3 +71,9 @@ verify_jwt = false
 # Webhook Delivery System
 [functions.webhook-delivery]
 verify_jwt = false
+
+# Phase 8 Edge Functions - Production Readiness & Monitoring
+
+# System Health Check
+[functions.system-health-check]
+verify_jwt = false
