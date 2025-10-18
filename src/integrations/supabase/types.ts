@@ -14,6 +14,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_tokens: {
+        Row: {
+          client_id: string
+          consent_id: string | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_revoked: boolean | null
+          revoked_at: string | null
+          scope: string
+          token_hash: string
+          user_id: string | null
+        }
+        Insert: {
+          client_id: string
+          consent_id?: string | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_revoked?: boolean | null
+          revoked_at?: string | null
+          scope: string
+          token_hash: string
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          consent_id?: string | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_revoked?: boolean | null
+          revoked_at?: string | null
+          scope?: string
+          token_hash?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       api_credentials: {
         Row: {
           api_key: string
@@ -54,6 +93,102 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      authorization_codes: {
+        Row: {
+          client_id: string
+          code: string
+          code_challenge: string | null
+          code_challenge_method: string | null
+          consent_id: string | null
+          created_at: string | null
+          expires_at: string
+          id: string
+          redirect_uri: string
+          scope: string
+          used: boolean | null
+          used_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id: string
+          code: string
+          code_challenge?: string | null
+          code_challenge_method?: string | null
+          consent_id?: string | null
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          redirect_uri: string
+          scope: string
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          code?: string
+          code_challenge?: string | null
+          code_challenge_method?: string | null
+          consent_id?: string | null
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          redirect_uri?: string
+          scope?: string
+          used?: boolean | null
+          used_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      client_certificates: {
+        Row: {
+          certificate_pem: string
+          client_id: string
+          created_at: string | null
+          fingerprint: string
+          id: string
+          is_revoked: boolean | null
+          issuer_dn: string
+          revocation_reason: string | null
+          revoked_at: string | null
+          subject_dn: string
+          updated_at: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          certificate_pem: string
+          client_id: string
+          created_at?: string | null
+          fingerprint: string
+          id?: string
+          is_revoked?: boolean | null
+          issuer_dn: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          subject_dn: string
+          updated_at?: string | null
+          valid_from: string
+          valid_until: string
+        }
+        Update: {
+          certificate_pem?: string
+          client_id?: string
+          created_at?: string | null
+          fingerprint?: string
+          id?: string
+          is_revoked?: boolean | null
+          issuer_dn?: string
+          revocation_reason?: string | null
+          revoked_at?: string | null
+          subject_dn?: string
+          updated_at?: string | null
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: []
       }
       institutions: {
         Row: {
@@ -106,6 +241,39 @@ export type Database = {
         }
         Relationships: []
       }
+      par_requests: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          request_object: string
+          request_uri: string
+          used: boolean | null
+          used_at: string | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          request_object: string
+          request_uri: string
+          used?: boolean | null
+          used_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          request_object?: string
+          request_uri?: string
+          used?: boolean | null
+          used_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -129,6 +297,166 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      refresh_tokens: {
+        Row: {
+          access_token_id: string | null
+          client_id: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          is_revoked: boolean | null
+          revoked_at: string | null
+          token_hash: string
+          user_id: string | null
+        }
+        Insert: {
+          access_token_id?: string | null
+          client_id: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          is_revoked?: boolean | null
+          revoked_at?: string | null
+          token_hash: string
+          user_id?: string | null
+        }
+        Update: {
+          access_token_id?: string | null
+          client_id?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          is_revoked?: boolean | null
+          revoked_at?: string | null
+          token_hash?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refresh_tokens_access_token_id_fkey"
+            columns: ["access_token_id"]
+            isOneToOne: false
+            referencedRelation: "access_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signing_keys: {
+        Row: {
+          alg: string
+          created_at: string | null
+          e: string
+          id: string
+          is_active: boolean | null
+          kid: string
+          kty: string
+          n: string
+          private_key: string
+          rotated_at: string | null
+          use: string
+        }
+        Insert: {
+          alg?: string
+          created_at?: string | null
+          e: string
+          id?: string
+          is_active?: boolean | null
+          kid: string
+          kty?: string
+          n: string
+          private_key: string
+          rotated_at?: string | null
+          use?: string
+        }
+        Update: {
+          alg?: string
+          created_at?: string | null
+          e?: string
+          id?: string
+          is_active?: boolean | null
+          kid?: string
+          kty?: string
+          n?: string
+          private_key?: string
+          rotated_at?: string | null
+          use?: string
+        }
+        Relationships: []
+      }
+      tpp_registrations: {
+        Row: {
+          client_id: string
+          client_name: string
+          client_secret: string
+          created_at: string | null
+          environment: string
+          grant_types: string[]
+          id: string
+          institution_id: string | null
+          is_active: boolean | null
+          jwks: Json | null
+          jwks_uri: string | null
+          redirect_uris: string[]
+          response_types: string[]
+          scope: string
+          software_id: string
+          software_roles: string[]
+          software_statement: string
+          token_endpoint_auth_method: string
+          updated_at: string | null
+        }
+        Insert: {
+          client_id: string
+          client_name: string
+          client_secret: string
+          created_at?: string | null
+          environment?: string
+          grant_types?: string[]
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          jwks?: Json | null
+          jwks_uri?: string | null
+          redirect_uris: string[]
+          response_types?: string[]
+          scope?: string
+          software_id: string
+          software_roles: string[]
+          software_statement: string
+          token_endpoint_auth_method?: string
+          updated_at?: string | null
+        }
+        Update: {
+          client_id?: string
+          client_name?: string
+          client_secret?: string
+          created_at?: string | null
+          environment?: string
+          grant_types?: string[]
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          jwks?: Json | null
+          jwks_uri?: string | null
+          redirect_uris?: string[]
+          response_types?: string[]
+          scope?: string
+          software_id?: string
+          software_roles?: string[]
+          software_statement?: string
+          token_endpoint_auth_method?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tpp_registrations_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transactions: {
         Row: {
@@ -197,6 +525,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_expired_auth_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_par_requests: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
