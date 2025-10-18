@@ -99,27 +99,7 @@ print_r($data);`
   const [selectedLanguage, setSelectedLanguage] = useState(0);
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">Kang Open Banking</span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link to="/documentation">
-              <Button variant="outline" size="sm">
-                <BookOpen className="mr-2 h-4 w-4" />
-                Docs
-              </Button>
-            </Link>
-            <Button variant="outline" size="sm">Logout</Button>
-          </div>
-        </div>
-      </nav>
-
-      <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
@@ -351,7 +331,6 @@ print_r($data);`
           </Card>
         </div>
       </div>
-    </div>
   );
 };
 

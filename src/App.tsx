@@ -3,6 +3,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Layout } from "@/components/Layout";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
@@ -20,14 +21,14 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/documentation" element={<Documentation />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/developer" element={<Developer />} />
-          <Route path="/auth" element={<Auth />} />
+          <Route path="/" element={<Layout><Index /></Layout>} />
+          <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
+          <Route path="/register" element={<Layout><Register /></Layout>} />
+          <Route path="/admin" element={<Layout><Admin /></Layout>} />
+          <Route path="/developer" element={<Layout><Developer /></Layout>} />
+          <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
+          <Route path="*" element={<Layout><NotFound /></Layout>} />
         </Routes>
       </BrowserRouter>
     </TooltipProvider>

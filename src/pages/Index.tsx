@@ -17,36 +17,7 @@ import heroImage from "@/assets/hero-banking.jpg";
 
 const Index = () => {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Building2 className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">Kang Open Banking</span>
-          </div>
-          <div className="hidden md:flex items-center gap-6">
-            <Link to="/documentation" className="text-sm font-medium hover:text-primary transition-colors">
-              Documentation
-            </Link>
-            <Link to="/register" className="text-sm font-medium hover:text-primary transition-colors">
-              Register
-            </Link>
-            <Link to="/auth">
-              <Button variant="outline" size="sm">Sign In</Button>
-            </Link>
-            <Link to="/admin">
-              <Button variant="outline" size="sm">Admin Portal</Button>
-            </Link>
-            <Link to="/developer">
-              <Button size="sm" className="bg-gradient-to-r from-primary to-primary-light">
-                Developer Portal
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </nav>
-
+    <>
       {/* Hero Section */}
       <section className="relative overflow-hidden">
         <div 
@@ -263,51 +234,7 @@ const Index = () => {
           </Card>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="border-t py-12 bg-card">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 className="h-6 w-6 text-primary" />
-                <span className="font-bold text-lg">Kang Open Banking</span>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Unified banking API for Cameroon's financial ecosystem
-              </p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><Link to="/documentation" className="hover:text-primary">Documentation</Link></li>
-                <li><Link to="/developer" className="hover:text-primary">API Reference</Link></li>
-                <li><a href="#" className="hover:text-primary">Sandbox</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary">About</a></li>
-                <li><a href="#" className="hover:text-primary">Contact</a></li>
-                <li><a href="#" className="hover:text-primary">Support</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Legal</h3>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li><a href="#" className="hover:text-primary">Privacy</a></li>
-                <li><a href="#" className="hover:text-primary">Terms</a></li>
-                <li><a href="#" className="hover:text-primary">Security</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t mt-8 pt-8 text-center text-sm text-muted-foreground">
-            © 2025 Kang Open Banking. All rights reserved.
-          </div>
-        </div>
-      </footer>
-    </div>
+    </>
   );
 };
 
