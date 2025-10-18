@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Building2, Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   DropdownMenu,
@@ -8,14 +8,15 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import kobLogo from "@/assets/kob-logo.png";
 
 export const Navigation = () => {
   return (
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <Building2 className="h-7 w-7 text-primary" />
-          <span className="text-xl font-bold">Kang Open Banking</span>
+          <img src={kobLogo} alt="KOB Logo" className="h-8 w-8" />
+          <span className="text-xl font-bold">KOB</span>
         </Link>
         
         {/* Desktop Navigation */}
