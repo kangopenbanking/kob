@@ -274,6 +274,59 @@ export type Database = {
           },
         ]
       }
+      api_test_requests: {
+        Row: {
+          client_id: string
+          created_at: string | null
+          endpoint: string
+          id: string
+          institution_id: string
+          method: string
+          request_body: Json | null
+          request_headers: Json | null
+          response_body: Json | null
+          response_headers: Json | null
+          response_status: number | null
+          response_time_ms: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string | null
+          endpoint: string
+          id?: string
+          institution_id: string
+          method: string
+          request_body?: Json | null
+          request_headers?: Json | null
+          response_body?: Json | null
+          response_headers?: Json | null
+          response_status?: number | null
+          response_time_ms?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string | null
+          endpoint?: string
+          id?: string
+          institution_id?: string
+          method?: string
+          request_body?: Json | null
+          request_headers?: Json | null
+          response_body?: Json | null
+          response_headers?: Json | null
+          response_status?: number | null
+          response_time_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_test_requests_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_usage_metrics: {
         Row: {
           client_id: string
@@ -859,6 +912,71 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sandbox_data: {
+        Row: {
+          created_at: string | null
+          data: Json
+          data_type: string
+          id: string
+          institution_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          data: Json
+          data_type: string
+          id?: string
+          institution_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          data?: Json
+          data_type?: string
+          id?: string
+          institution_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_data_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sandbox_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          template_data: Json
+          template_name: string
+          template_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          template_data: Json
+          template_name: string
+          template_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          template_data?: Json
+          template_name?: string
+          template_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       signing_keys: {
         Row: {

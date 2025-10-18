@@ -1,754 +1,594 @@
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "react-router-dom";
-import { 
-  Building2, 
-  Key, 
-  Code, 
-  BookOpen, 
-  Copy,
-  Eye,
-  EyeOff,
-  RefreshCw,
-  CheckCircle2,
-  Shield,
-  FileText
-} from "lucide-react";
-import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Code, Database, TestTube, Send, Loader2, FileText, Shield, Key, BookOpen, CheckCircle2, Copy } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Developer = () => {
   const { toast } = useToast();
-  const [showSandboxKey, setShowSandboxKey] = useState(false);
-  const [showProductionKey, setShowProductionKey] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [selectedInstitution, setSelectedInstitution] = useState("");
+  
+  // API Testing State
+  const [endpoint, setEndpoint] = useState("/aisp-accounts");
+  const [method, setMethod] = useState("GET");
+  const [headers, setHeaders] = useState('{\n  "Authorization": "Bearer YOUR_TOKEN",\n  "x-consent-id": "CONSENT_ID"\n}');
+  const [body, setBody] = useState("{}");
+  const [response, setResponse] = useState("");
+  
+  // Sandbox Data State
+  const [dataType, setDataType] = useState("account");
+  const [sandboxData, setSandboxData] = useState<any[]>([]);
+  
+  // API Keys state
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const sandboxKey = "sk_test_51KangOpenBanking_sandbox_1234567890abcdef";
-  const productionKey = "sk_live_51KangOpenBanking_prod_abcdef1234567890";
+  useEffect(() => {
+    fetchInstitutions();
+    fetchSandboxData();
+  }, []);
+
+  const fetchInstitutions = async () => {
+    const { data } = await supabase
+      .from("institutions")
+      .select("*")
+      .eq("status", "approved");
+    if (data) setInstitutions(data);
+  };
+
+  const fetchSandboxData = async () => {
+    const { data } = await supabase
+      .from("sandbox_data")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (data) setSandboxData(data);
+  };
+
+  const handleTestRequest = async () => {
+    if (!selectedInstitution) {
+      toast({
+        title: "Institution Required",
+        description: "Please select an institution first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: registration } = await supabase
+        .from("tpp_registrations")
+        .select("client_id")
+        .eq("institution_id", selectedInstitution)
+        .single();
+
+      const parsedHeaders = JSON.parse(headers);
+      const startTime = Date.now();
+
+      // Simulate API request
+      const testResponse = {
+        status: 200,
+        headers: { "content-type": "application/json" },
+        body: {
+          Data: {
+            Account: [
+              {
+                AccountId: "account-001",
+                Status: "Enabled",
+                Currency: "XAF",
+                AccountType: "Personal",
+                AccountSubType: "Current"
+              }
+            ]
+          }
+        }
+      };
+
+      const responseTime = Date.now() - startTime;
+
+      await supabase.from("api_test_requests").insert({
+        institution_id: selectedInstitution,
+        client_id: registration?.client_id || "unknown",
+        endpoint,
+        method,
+        request_headers: parsedHeaders,
+        request_body: method !== "GET" ? JSON.parse(body) : null,
+        response_status: testResponse.status,
+        response_headers: testResponse.headers,
+        response_body: testResponse.body,
+        response_time_ms: responseTime
+      });
+
+      setResponse(JSON.stringify(testResponse, null, 2));
+      
+      toast({
+        title: "Request Successful",
+        description: `Response received in ${responseTime}ms`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Request Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      setResponse(JSON.stringify({ error: error.message }, null, 2));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateSandboxData = async () => {
+    if (!selectedInstitution) {
+      toast({
+        title: "Institution Required",
+        description: "Please select an institution first",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      let testData: any = {};
+      
+      switch (dataType) {
+        case "account":
+          testData = {
+            account_id: `TEST-${Date.now()}`,
+            currency: "XAF",
+            account_type: "Personal",
+            account_subtype: "Current",
+            nickname: "Test Account",
+            balance: 150000
+          };
+          break;
+        case "transaction":
+          testData = {
+            transaction_id: `TXN-${Date.now()}`,
+            amount: 25000,
+            currency: "XAF",
+            type: "Credit",
+            status: "Booked",
+            description: "Test Transaction"
+          };
+          break;
+        case "payment":
+          testData = {
+            payment_id: `PAY-${Date.now()}`,
+            amount: 10000,
+            currency: "XAF",
+            status: "Pending",
+            creditor: "Test Creditor"
+          };
+          break;
+      }
+
+      const { error } = await supabase.from("sandbox_data").insert({
+        institution_id: selectedInstitution,
+        user_id: user.id,
+        data_type: dataType,
+        data: testData
+      });
+
+      if (error) throw error;
+
+      await fetchSandboxData();
+      
+      toast({
+        title: "Sandbox Data Generated",
+        description: `Created test ${dataType} successfully`
+      });
+    } catch (error: any) {
+      toast({
+        title: "Generation Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const copyToClipboard = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
     setCopiedId(id);
     toast({
       title: "Copied to clipboard",
-      description: "API key copied successfully",
+      description: "Content copied successfully",
     });
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const regenerateKey = (type: string) => {
-    toast({
-      title: "Key Regenerated",
-      description: `Your ${type} API key has been regenerated successfully.`,
-    });
-  };
-
-  const codeExamples = [
-    {
-      language: "JavaScript",
-      code: `const response = await fetch('https://sandbox.kangopenbanking.com/v1/accounts', {
-  method: 'GET',
-  headers: {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
-  }
-});
-
-const data = await response.json();
-console.log(data);`
-    },
-    {
-      language: "Python",
-      code: `import requests
-
-headers = {
-    'Authorization': 'Bearer YOUR_API_KEY',
-    'Content-Type': 'application/json'
-}
-
-response = requests.get(
-    'https://sandbox.kangopenbanking.com/v1/accounts',
-    headers=headers
-)
-
-data = response.json()
-print(data)`
-    },
-    {
-      language: "PHP",
-      code: `<?php
-$curl = curl_init();
-
-curl_setopt_array($curl, [
-    CURLOPT_URL => "https://sandbox.kangopenbanking.com/v1/accounts",
-    CURLOPT_RETURNTRANSFER => true,
-    CURLOPT_HTTPHEADER => [
-        "Authorization: Bearer YOUR_API_KEY",
-        "Content-Type: application/json"
-    ]
-]);
-
-$response = curl_exec($curl);
-curl_close($curl);
-
-$data = json_decode($response);
-print_r($data);`
-    }
-  ];
-
-  const [selectedLanguage, setSelectedLanguage] = useState(0);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+    <div className="min-h-screen bg-background">
+      <div className="container mx-auto py-8 px-4">
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
             <Code className="h-4 w-4 text-accent" />
             <span className="text-sm font-medium text-accent">Developer Portal</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">API Keys & Integration</h1>
+          <h1 className="text-4xl font-bold mb-2">Developer Portal</h1>
           <p className="text-muted-foreground">
-            Manage your API credentials and access code examples
+            Test APIs, generate sandbox data, and access integration resources
           </p>
         </div>
 
-        {/* API Keys Section */}
-        <div className="grid lg:grid-cols-2 gap-6 mb-8">
-          {/* Sandbox Keys */}
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
-                    Sandbox API Key
-                  </CardTitle>
-                  <CardDescription>For testing and development</CardDescription>
-                </div>
-                <Shield className="h-6 w-6 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Input
-                    type={showSandboxKey ? "text" : "password"}
-                    value={sandboxKey}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowSandboxKey(!showSandboxKey)}
-                  >
-                    {showSandboxKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(sandboxKey, "sandbox")}
-                  >
-                    {copiedId === "sandbox" ? (
-                      <CheckCircle2 className="h-4 w-4 text-accent" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => regenerateKey("sandbox")}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Regenerate
-                </Button>
-              </div>
-              <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3">
-                <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                  <strong>Sandbox Mode:</strong> No real transactions. Use test data only.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+        <Tabs defaultValue="testing" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="testing">
+              <TestTube className="mr-2 h-4 w-4" />
+              API Testing
+            </TabsTrigger>
+            <TabsTrigger value="sandbox">
+              <Database className="mr-2 h-4 w-4" />
+              Sandbox Data
+            </TabsTrigger>
+            <TabsTrigger value="endpoints">
+              <FileText className="mr-2 h-4 w-4" />
+              Endpoints
+            </TabsTrigger>
+            <TabsTrigger value="security">
+              <Shield className="mr-2 h-4 w-4" />
+              Security
+            </TabsTrigger>
+          </TabsList>
 
-          {/* Production Keys */}
-          <Card className="border-2">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-accent"></div>
-                    Production API Key
-                  </CardTitle>
-                  <CardDescription>For live transactions</CardDescription>
-                </div>
-                <Shield className="h-6 w-6 text-muted-foreground" />
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <Input
-                    type={showProductionKey ? "text" : "password"}
-                    value={productionKey}
-                    readOnly
-                    className="font-mono text-sm"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setShowProductionKey(!showProductionKey)}
-                  >
-                    {showProductionKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => copyToClipboard(productionKey, "production")}
-                  >
-                    {copiedId === "production" ? (
-                      <CheckCircle2 className="h-4 w-4 text-accent" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                  onClick={() => regenerateKey("production")}
-                >
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Regenerate
-                </Button>
-              </div>
-              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                <p className="text-sm text-destructive">
-                  <strong>Warning:</strong> Keep this key secret. Never expose it in client-side code.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Code Examples */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Code className="h-5 w-5" />
-              Quick Start Code Examples
-            </CardTitle>
-            <CardDescription>Copy and paste these examples to get started</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2 mb-4">
-              {codeExamples.map((example, index) => (
-                <Button
-                  key={index}
-                  variant={selectedLanguage === index ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setSelectedLanguage(index)}
-                >
-                  {example.language}
-                </Button>
-              ))}
+          <TabsContent value="testing" className="space-y-6">
+            <div className="mb-6">
+              <Label>Select Institution</Label>
+              <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose your institution" />
+                </SelectTrigger>
+                <SelectContent>
+                  {institutions.map((inst) => (
+                    <SelectItem key={inst.id} value={inst.id}>
+                      {inst.institution_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto relative">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="absolute top-2 right-2"
-                onClick={() => copyToClipboard(codeExamples[selectedLanguage].code, `code-${selectedLanguage}`)}
-              >
-                {copiedId === `code-${selectedLanguage}` ? (
-                  <CheckCircle2 className="h-4 w-4 text-accent" />
-                ) : (
-                  <Copy className="h-4 w-4" />
+
+            <Card>
+              <CardHeader>
+                <CardTitle>API Request Builder</CardTitle>
+                <CardDescription>Test API endpoints in the sandbox environment</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-1">
+                    <Label>Method</Label>
+                    <Select value={method} onValueChange={setMethod}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="GET">GET</SelectItem>
+                        <SelectItem value="POST">POST</SelectItem>
+                        <SelectItem value="PUT">PUT</SelectItem>
+                        <SelectItem value="DELETE">DELETE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label>Endpoint</Label>
+                    <Select value={endpoint} onValueChange={setEndpoint}>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="/aisp-accounts">GET /aisp-accounts</SelectItem>
+                        <SelectItem value="/aisp-balances">GET /aisp-balances</SelectItem>
+                        <SelectItem value="/aisp-transactions">GET /aisp-transactions</SelectItem>
+                        <SelectItem value="/pisp-domestic-payment">POST /pisp-domestic-payment</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label>Headers (JSON)</Label>
+                  <Textarea
+                    value={headers}
+                    onChange={(e) => setHeaders(e.target.value)}
+                    rows={4}
+                    className="font-mono text-sm"
+                  />
+                </div>
+
+                {method !== "GET" && (
+                  <div>
+                    <Label>Body (JSON)</Label>
+                    <Textarea
+                      value={body}
+                      onChange={(e) => setBody(e.target.value)}
+                      rows={6}
+                      className="font-mono text-sm"
+                    />
+                  </div>
                 )}
-              </Button>
-              <pre className="font-mono text-sm whitespace-pre-wrap">
-                {codeExamples[selectedLanguage].code}
-              </pre>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* FAPI 1.0 Advanced & OAuth2 Endpoints */}
-        <Card className="border-accent">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              FAPI 1.0 Advanced Security Profile
-            </CardTitle>
-            <CardDescription>
-              Kang Open Banking implements Financial-grade API (FAPI) 1.0 Advanced security profile with OAuth2 + OpenID Connect
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h4 className="font-semibold mb-3">Authentication Endpoints</h4>
-              <div className="space-y-3">
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">JWKS (Public Keys)</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/jwks-endpoint`,
-                        'jwks'
-                      )}
-                    >
-                      {copiedId === 'jwks' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <code className="text-xs text-muted-foreground break-all">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/jwks-endpoint
-                  </code>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">OpenID Configuration</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oidc-config`,
-                        'oidc'
-                      )}
-                    >
-                      {copiedId === 'oidc' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <code className="text-xs text-muted-foreground break-all">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/oidc-config
-                  </code>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">PAR (Pushed Authorization Requests)</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/par-endpoint`,
-                        'par'
-                      )}
-                    >
-                      {copiedId === 'par' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <code className="text-xs text-muted-foreground break-all">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/par-endpoint
-                  </code>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">DCR (Dynamic Client Registration)</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/dcr-register`,
-                        'dcr'
-                      )}
-                    >
-                      {copiedId === 'dcr' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <code className="text-xs text-muted-foreground break-all">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/dcr-register
-                  </code>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3">Security Features</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>mTLS:</strong> Mutual TLS authentication for all API calls</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>JAR:</strong> JWT-secured authorization requests with signature validation</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>PAR:</strong> Pushed authorization requests for enhanced security</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>DCR:</strong> Dynamic client registration with Software Statement Assertions</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>Strict JWT Validation:</strong> nbf/exp temporal claims enforcement</span>
-                </li>
-              </ul>
-            </div>
-
-            <div className="pt-4 border-t">
-              <Link to="/tpp-registration">
-                <Button className="w-full">
-                  Register as TPP →
+                <Button onClick={handleTestRequest} disabled={loading}>
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Send className="mr-2 h-4 w-4" />
+                  )}
+                  Send Request
                 </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* AISP API Endpoints */}
-        <Card className="border-accent">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              AISP API Endpoints
-            </CardTitle>
-            <CardDescription>
-              Account Information Service Provider APIs - UK Open Banking v4.0 aligned (XAF currency)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h4 className="font-semibold mb-3">Available Endpoints</h4>
-              <div className="space-y-3">
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">GET /aisp-accounts</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-accounts`,
-                        'aisp-accounts'
-                      )}
-                    >
-                      {copiedId === 'aisp-accounts' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
+                {response && (
+                  <div>
+                    <Label>Response</Label>
+                    <Textarea
+                      value={response}
+                      readOnly
+                      rows={12}
+                      className="font-mono text-sm"
+                    />
                   </div>
-                  <p className="text-xs text-muted-foreground">List all authorized accounts</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>Required:</strong> ReadAccountsBasic permission
-                  </p>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="sandbox" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Generate Test Data</CardTitle>
+                <CardDescription>Create sample data for testing your integration</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="mb-6">
+                  <Label>Select Institution</Label>
+                  <Select value={selectedInstitution} onValueChange={setSelectedInstitution}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose your institution" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {institutions.map((inst) => (
+                        <SelectItem key={inst.id} value={inst.id}>
+                          {inst.institution_name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/balances</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Get account balances</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>Required:</strong> ReadBalances permission
-                  </p>
+                <div>
+                  <Label>Data Type</Label>
+                  <Select value={dataType} onValueChange={setDataType}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="account">Account</SelectItem>
+                      <SelectItem value="transaction">Transaction</SelectItem>
+                      <SelectItem value="payment">Payment</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/transactions</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Get account transactions with date filtering</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>Required:</strong> ReadTransactionsBasic or ReadTransactionsDetail
-                  </p>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/beneficiaries</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Get account beneficiaries</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>Required:</strong> ReadBeneficiariesBasic permission
-                  </p>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/standing-orders</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Get standing orders</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>Required:</strong> ReadStandingOrdersBasic permission
-                  </p>
-                </div>
-
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <span className="font-mono text-sm font-medium">GET /aisp-accounts/:id/direct-debits</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Get direct debits</p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    <strong>Required:</strong> ReadDirectDebits permission
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3">Required Headers</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><code className="bg-muted px-1 rounded">Authorization: Bearer &lt;access_token&gt;</code></span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><code className="bg-muted px-1 rounded">x-consent-id: &lt;consent_id&gt;</code></span>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="font-semibold mb-3">Standard Permissions</h4>
-              <div className="flex flex-wrap gap-2">
-                {[
-                  'ReadAccountsBasic',
-                  'ReadAccountsDetail',
-                  'ReadBalances',
-                  'ReadTransactionsBasic',
-                  'ReadTransactionsDetail',
-                  'ReadBeneficiariesBasic',
-                  'ReadStandingOrdersBasic',
-                  'ReadDirectDebits'
-                ].map((permission, idx) => (
-                  <Badge key={idx} variant="secondary" className="font-mono text-xs">
-                    {permission}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-4 border-t">
-              <Link to="/documentation">
-                <Button variant="outline" className="w-full">
-                  View Full API Documentation →
+                <Button onClick={generateSandboxData} disabled={loading}>
+                  {loading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Database className="mr-2 h-4 w-4" />
+                  )}
+                  Generate {dataType}
                 </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* PISP API Endpoints */}
-        <Card className="border-accent mb-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              PISP API Endpoints
-            </CardTitle>
-            <CardDescription>
-              Payment Initiation Service Provider APIs - UK Open Banking v4.0 aligned (XAF currency)
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div>
-              <h4 className="font-semibold mb-3">Available Endpoints</h4>
-              <div className="space-y-3">
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default">POST</Badge>
-                      <span className="font-mono text-sm font-medium">/pisp-domestic-payment</span>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Sandbox Data</CardTitle>
+                <CardDescription>Your generated test data</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {sandboxData.map((item) => (
+                    <div key={item.id} className="flex items-start justify-between p-3 border rounded">
+                      <div className="flex-1">
+                        <Badge variant="outline" className="mb-2">{item.data_type}</Badge>
+                        <pre className="text-xs overflow-x-auto">{JSON.stringify(item.data, null, 2)}</pre>
+                      </div>
+                      <span className="text-sm text-muted-foreground ml-4">
+                        {new Date(item.created_at).toLocaleString()}
+                      </span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment`,
-                        'pisp-payment'
-                      )}
-                    >
-                      {copiedId === 'pisp-payment' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Create a domestic payment request with authorized PISP consent
-                  </p>
-                  <code className="text-xs text-muted-foreground break-all block mt-2">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment
-                  </code>
+                  ))}
+                  {sandboxData.length === 0 && (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      No sandbox data yet. Generate some test data to get started.
+                    </p>
+                  )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">GET</Badge>
-                      <span className="font-mono text-sm font-medium">/pisp-payment-details/:id</span>
+          <TabsContent value="endpoints" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>AISP Endpoints</CardTitle>
+                <CardDescription>Account Information Service Provider APIs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { method: "GET", path: "/aisp-accounts", desc: "Retrieve account information" },
+                    { method: "GET", path: "/aisp-balances/:accountId", desc: "Get account balances" },
+                    { method: "GET", path: "/aisp-transactions/:accountId", desc: "Fetch transactions" },
+                    { method: "GET", path: "/aisp-beneficiaries/:accountId", desc: "List beneficiaries" },
+                    { method: "GET", path: "/aisp-standing-orders/:accountId", desc: "Get standing orders" },
+                    { method: "GET", path: "/aisp-direct-debits/:accountId", desc: "List direct debits" }
+                  ].map((endpoint, i) => (
+                    <div key={i} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">{endpoint.method}</Badge>
+                          <code className="text-sm font-mono">{endpoint.path}</code>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{endpoint.desc}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(
+                          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1${endpoint.path}`,
+                          `endpoint-${i}`
+                        )}
+                      >
+                        {copiedId === `endpoint-${i}` ? (
+                          <CheckCircle2 className="h-4 w-4 text-accent" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-details`,
-                        'pisp-details'
-                      )}
-                    >
-                      {copiedId === 'pisp-details' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Get details of a specific payment by payment_id
-                  </p>
-                  <code className="text-xs text-muted-foreground break-all block mt-2">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-details/:id
-                  </code>
+                  ))}
                 </div>
+              </CardContent>
+            </Card>
 
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center justify-between mb-1">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="default">POST</Badge>
-                      <span className="font-mono text-sm font-medium">/pisp-payment-submission</span>
+            <Card>
+              <CardHeader>
+                <CardTitle>PISP Endpoints</CardTitle>
+                <CardDescription>Payment Initiation Service Provider APIs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {[
+                    { method: "POST", path: "/pisp-domestic-payment", desc: "Initiate a domestic payment" },
+                    { method: "GET", path: "/pisp-payment-details/:paymentId", desc: "Get payment details" },
+                    { method: "POST", path: "/pisp-payment-submission/:paymentId", desc: "Submit payment for processing" }
+                  ].map((endpoint, i) => (
+                    <div key={i} className="bg-muted/50 p-3 rounded-lg flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2 mb-1">
+                          <Badge variant="outline">{endpoint.method}</Badge>
+                          <code className="text-sm font-mono">{endpoint.path}</code>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{endpoint.desc}</p>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(
+                          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1${endpoint.path}`,
+                          `pisp-${i}`
+                        )}
+                      >
+                        {copiedId === `pisp-${i}` ? (
+                          <CheckCircle2 className="h-4 w-4 text-accent" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => copyToClipboard(
-                        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-submission`,
-                        'pisp-submission'
-                      )}
-                    >
-                      {copiedId === 'pisp-submission' ? (
-                        <CheckCircle2 className="h-4 w-4 text-accent" />
-                      ) : (
-                        <Copy className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-2">
-                    Submit a payment for execution (after consent authorization)
-                  </p>
-                  <code className="text-xs text-muted-foreground break-all block mt-2">
-                    {import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-payment-submission
-                  </code>
+                  ))}
                 </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-            <div>
-              <h4 className="font-semibold mb-3">Payment Features</h4>
-              <ul className="space-y-2 text-sm text-muted-foreground">
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>Domestic Payments:</strong> XAF currency support for Cameroon</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>Consent-Based:</strong> Requires authorized PISP consent</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>Status Tracking:</strong> Real-time payment status updates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-                  <span><strong>Risk Assessment:</strong> Support for merchant and payment context codes</span>
-                </li>
-              </ul>
-            </div>
+          <TabsContent value="security" className="space-y-6">
+            <Card className="border-accent">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  FAPI 1.0 Advanced Security Profile
+                </CardTitle>
+                <CardDescription>
+                  Financial-grade API security with OAuth2 + OpenID Connect
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div>
+                  <h4 className="font-semibold mb-3">Authentication Endpoints</h4>
+                  <div className="space-y-3">
+                    {[
+                      { name: "JWKS (Public Keys)", path: "/jwks-endpoint" },
+                      { name: "OpenID Configuration", path: "/oidc-config" },
+                      { name: "PAR (Pushed Authorization)", path: "/par-endpoint" },
+                      { name: "DCR (Dynamic Client Registration)", path: "/dcr-register" }
+                    ].map((endpoint, i) => (
+                      <div key={i} className="bg-muted/50 p-3 rounded-lg">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-mono text-sm font-medium">{endpoint.name}</span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(
+                              `${import.meta.env.VITE_SUPABASE_URL}/functions/v1${endpoint.path}`,
+                              `auth-${i}`
+                            )}
+                          >
+                            {copiedId === `auth-${i}` ? (
+                              <CheckCircle2 className="h-4 w-4 text-accent" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </div>
+                        <code className="text-xs text-muted-foreground break-all">
+                          {import.meta.env.VITE_SUPABASE_URL}/functions/v1{endpoint.path}
+                        </code>
+                      </div>
+                    ))}
+                  </div>
+                </div>
 
-            <div className="pt-4 border-t">
-              <Link to="/documentation">
-                <Button variant="outline" className="w-full">
-                  View Full API Documentation →
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+                <div>
+                  <h4 className="font-semibold mb-3">Security Features</h4>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span><strong>mTLS:</strong> Mutual TLS authentication for all API calls</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span><strong>JAR:</strong> JWT-secured authorization requests</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span><strong>PAR:</strong> Pushed authorization requests</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
+                      <span><strong>DCR:</strong> Dynamic client registration</span>
+                    </li>
+                  </ul>
+                </div>
 
-        {/* Resources */}
-        <div className="grid md:grid-cols-3 gap-6">
-          <Card className="hover:border-primary/50 transition-all cursor-pointer">
-            <CardContent className="pt-6">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <BookOpen className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">API Documentation</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Complete reference for all endpoints and features
-              </p>
-              <Link to="/documentation">
-                <Button variant="outline" size="sm" className="w-full">
-                  View Docs
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:border-primary/50 transition-all cursor-pointer">
-            <CardContent className="pt-6">
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center mb-4">
-                <Code className="h-6 w-6 text-accent" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Code Examples</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Sample implementations in multiple languages
-              </p>
-              <Button variant="outline" size="sm" className="w-full">
-                Browse Examples
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="hover:border-primary/50 transition-all cursor-pointer">
-            <CardContent className="pt-6">
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Security Guide</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Best practices for securing your integration
-              </p>
-              <Button variant="outline" size="sm" className="w-full">
-                Learn More
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                <div className="pt-4 border-t">
+                  <Link to="/tpp-registration">
+                    <Button className="w-full">
+                      Register as TPP →
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
       </div>
+    </div>
   );
 };
 
