@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
@@ -56,7 +57,7 @@ function App() {
             <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
-            <Route path="/admin" element={<Layout><Admin /></Layout>} />
+            <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
             <Route path="/developer" element={<Layout><Developer /></Layout>} />
             <Route path="/tpp-registration" element={<Layout><TPPRegistration /></Layout>} />
             <Route path="/consents" element={<Layout><ConsentManagement /></Layout>} />

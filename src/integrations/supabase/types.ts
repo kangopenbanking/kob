@@ -1452,6 +1452,51 @@ export type Database = {
           },
         ]
       }
+      oauth_sessions: {
+        Row: {
+          client_id: string
+          code_challenge: string | null
+          code_challenge_method: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          nonce: string | null
+          redirect_uri: string
+          scope: string | null
+          state: string
+          used: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          client_id: string
+          code_challenge?: string | null
+          code_challenge_method?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce?: string | null
+          redirect_uri: string
+          scope?: string | null
+          state: string
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          client_id?: string
+          code_challenge?: string | null
+          code_challenge_method?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nonce?: string | null
+          redirect_uri?: string
+          scope?: string | null
+          state?: string
+          used?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       par_requests: {
         Row: {
           client_id: string
@@ -2517,6 +2562,15 @@ export type Database = {
         Args: { _consent_id: string; _permission: string; _user_id: string }
         Returns: boolean
       }
+      check_aisp_permission_with_account: {
+        Args: {
+          _account_id?: string
+          _consent_id: string
+          _permission: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           _client_id: string
@@ -2531,6 +2585,10 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_auth_codes: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      cleanup_expired_oauth_sessions: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
@@ -2594,6 +2652,10 @@ export type Database = {
           _status: string
         }
         Returns: undefined
+      }
+      validate_pisp_consent: {
+        Args: { _amount: number; _consent_id: string; _user_id: string }
+        Returns: Json
       }
     }
     Enums: {

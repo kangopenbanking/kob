@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { generateSecureToken, verifySecret, checkRateLimit, rateLimitResponse } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -24,6 +25,12 @@ Deno.serve(async (req) => {
     const refresh_token = formData.get('refresh_token');
     const redirect_uri = formData.get('redirect_uri');
 
+    // Rate limiting - 100 requests per hour per client
+    const allowed = await checkRateLimit(supabase, client_id as string, '/oauth/token', 100, 60);
+    if (!allowed) {
+      return rateLimitResponse(corsHeaders);
+    }
+
     // Validate client credentials
     const { data: client, error: clientError } = await supabase
       .from('api_clients')
@@ -39,8 +46,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify client secret (in production, use proper hashing)
-    if (client.client_secret_hash !== client_secret) {
+    // Verify client secret with bcrypt
+    const secretValid = await verifySecret(client_secret as string, client.client_secret_hash);
+    if (!secretValid) {
       return new Response(
         JSON.stringify({ error: 'invalid_client', error_description: 'Invalid client secret' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -70,9 +78,9 @@ Deno.serve(async (req) => {
         .update({ used: true, used_at: new Date().toISOString() })
         .eq('id', authCode.id);
 
-      // Generate tokens
-      const access_token = crypto.randomUUID();
-      const new_refresh_token = crypto.randomUUID();
+      // Generate secure 256-bit tokens
+      const access_token = generateSecureToken();
+      const new_refresh_token = generateSecureToken();
       const expires_in = 3600; // 1 hour
 
       // Store refresh token
@@ -129,8 +137,8 @@ Deno.serve(async (req) => {
         );
       }
 
-      // Generate new access token
-      const access_token = crypto.randomUUID();
+      // Generate secure new access token
+      const access_token = generateSecureToken();
       const expires_in = 3600;
 
       await supabase
