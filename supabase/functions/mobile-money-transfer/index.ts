@@ -30,11 +30,17 @@ serve(async (req) => {
       throw new Error('Invalid authorization token');
     }
 
-    const { amount, phone_number, provider, description, beneficiary_name } = await req.json();
+    const { amount, phone_number, provider, description, beneficiary_name, currency = 'XAF' } = await req.json();
 
     // Validate required fields
     if (!amount || !phone_number || !provider) {
       throw new Error('Missing required fields: amount, phone_number, provider');
+    }
+
+    // Validate currency
+    const supportedCurrencies = ['XAF', 'NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR', 'RWF'];
+    if (!supportedCurrencies.includes(currency.toUpperCase())) {
+      throw new Error(`Currency ${currency} not supported for mobile money`);
     }
 
     // Validate provider
@@ -61,7 +67,7 @@ serve(async (req) => {
         transaction_type: 'transfer',
         provider: provider.toLowerCase(),
         amount,
-        currency: 'XAF',
+        currency: currency.toUpperCase(),
         phone_number,
         description: description || 'Mobile money transfer',
         status: 'pending'
@@ -86,7 +92,7 @@ serve(async (req) => {
         account_number: phone_number,
         amount: amount,
         narration: description || 'Mobile money transfer',
-        currency: 'XAF',
+        currency: currency.toUpperCase(),
         reference: transaction_ref,
         beneficiary_name: beneficiary_name || 'Beneficiary',
         callback_url: 'https://api.kangopenbanking.com/v1/mobile-money-verify',

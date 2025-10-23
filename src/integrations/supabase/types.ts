@@ -758,6 +758,69 @@ export type Database = {
           },
         ]
       }
+      bank_transfer_transactions: {
+        Row: {
+          account_name: string | null
+          account_number: string
+          amount: number
+          bank_code: string
+          bank_name: string
+          completed_at: string | null
+          created_at: string | null
+          currency: string
+          error_message: string | null
+          flutterwave_ref: string | null
+          id: string
+          metadata: Json | null
+          narration: string | null
+          status: string
+          transaction_ref: string
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number: string
+          amount: number
+          bank_code: string
+          bank_name: string
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          error_message?: string | null
+          flutterwave_ref?: string | null
+          id?: string
+          metadata?: Json | null
+          narration?: string | null
+          status?: string
+          transaction_ref: string
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string
+          amount?: number
+          bank_code?: string
+          bank_name?: string
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          error_message?: string | null
+          flutterwave_ref?: string | null
+          id?: string
+          metadata?: Json | null
+          narration?: string | null
+          status?: string
+          transaction_ref?: string
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       beneficiaries: {
         Row: {
           account_id: string
@@ -860,6 +923,75 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      card_payment_transactions: {
+        Row: {
+          amount: number
+          card_brand: string | null
+          card_country: string | null
+          card_last4: string | null
+          completed_at: string | null
+          created_at: string | null
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          description: string | null
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          status: string
+          stripe_charge_id: string | null
+          stripe_payment_intent_id: string | null
+          transaction_ref: string
+          transaction_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          card_brand?: string | null
+          card_country?: string | null
+          card_last4?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          transaction_ref: string
+          transaction_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          card_brand?: string | null
+          card_country?: string | null
+          card_last4?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          description?: string | null
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_payment_intent_id?: string | null
+          transaction_ref?: string
+          transaction_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       client_certificates: {
         Row: {
@@ -2110,6 +2242,54 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_cards: {
+        Row: {
+          billing_name: string | null
+          card_brand: string
+          card_country: string | null
+          card_exp_month: number
+          card_exp_year: number
+          card_last4: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          is_default: boolean | null
+          stripe_payment_method_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_name?: string | null
+          card_brand: string
+          card_country?: string | null
+          card_exp_month: number
+          card_exp_year: number
+          card_last4: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          stripe_payment_method_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_name?: string | null
+          card_brand?: string
+          card_country?: string | null
+          card_exp_month?: number
+          card_exp_year?: number
+          card_last4?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          is_default?: boolean | null
+          stripe_payment_method_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       security_audit_logs: {
         Row: {
           blocked: boolean | null
@@ -2270,6 +2450,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      supported_currencies: {
+        Row: {
+          code: string
+          created_at: string | null
+          is_active: boolean | null
+          name: string
+          provider: string
+          supported_countries: string[] | null
+          symbol: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          is_active?: boolean | null
+          name: string
+          provider: string
+          supported_countries?: string[] | null
+          symbol: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          is_active?: boolean | null
+          name?: string
+          provider?: string
+          supported_countries?: string[] | null
+          symbol?: string
+        }
+        Relationships: []
       }
       suspicious_activities: {
         Row: {

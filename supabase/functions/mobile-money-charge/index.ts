@@ -30,11 +30,17 @@ serve(async (req) => {
       throw new Error('Invalid authorization token');
     }
 
-    const { amount, phone_number, provider, description, email } = await req.json();
+    const { amount, phone_number, provider, description, email, currency = 'XAF' } = await req.json();
 
     // Validate required fields
     if (!amount || !phone_number || !provider) {
       throw new Error('Missing required fields: amount, phone_number, provider');
+    }
+
+    // Validate currency
+    const supportedCurrencies = ['XAF', 'NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR', 'RWF'];
+    if (!supportedCurrencies.includes(currency.toUpperCase())) {
+      throw new Error(`Currency ${currency} not supported for mobile money`);
     }
 
     // Validate provider
@@ -61,7 +67,7 @@ serve(async (req) => {
         transaction_type: 'charge',
         provider: provider.toLowerCase(),
         amount,
-        currency: 'XAF',
+        currency: currency.toUpperCase(),
         phone_number,
         description: description || 'Mobile money charge',
         status: 'pending'
@@ -84,7 +90,7 @@ serve(async (req) => {
       body: JSON.stringify({
         tx_ref: transaction_ref,
         amount: amount.toString(),
-        currency: 'XAF',
+        currency: currency.toUpperCase(),
         email: email || user.email,
         phone_number: phone_number,
         fullname: user.user_metadata?.full_name || 'Customer',

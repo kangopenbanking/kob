@@ -20,6 +20,7 @@ import Dashboard from "./pages/Dashboard";
 import SecuritySettings from "./pages/SecuritySettings";
 import Communications from "./pages/Communications";
 import MobileMoney from "./pages/MobileMoney";
+import Payments from "./pages/Payments";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -68,6 +69,7 @@ function App() {
             <Route path="/security" element={<Layout><SecuritySettings /></Layout>} />
             <Route path="/communications" element={<Layout><Communications /></Layout>} />
             <Route path="/mobile-money" element={<Layout><MobileMoney /></Layout>} />
+            <Route path="/payments" element={<Layout><Payments /></Layout>} />
             <Route path="/banking-ops" element={<Layout><BankingOps /></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
