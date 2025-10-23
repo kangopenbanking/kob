@@ -106,6 +106,33 @@ serve(async (req) => {
         })
         .eq('id', transactionData.id);
 
+      // Record transaction fee
+      try {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('institution_id')
+          .eq('id', user.id)
+          .single();
+
+        if (profile?.institution_id) {
+          await supabase.rpc('record_transaction_fee', {
+            _institution_id: profile.institution_id,
+            _transaction_type: 'mobile_money_charge',
+            _transaction_ref: transaction_ref,
+            _transaction_amount: parseFloat(amount),
+            _transaction_id: transactionData.id,
+            _metadata: {
+              provider,
+              phone_number,
+              flutterwave_ref: flutterwaveData.data.flw_ref
+            }
+          });
+          console.log('Transaction fee recorded successfully');
+        }
+      } catch (feeError) {
+        console.error('Error recording transaction fee:', feeError);
+      }
+
       return new Response(
         JSON.stringify({
           success: true,

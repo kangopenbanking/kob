@@ -99,6 +99,32 @@ serve(async (req) => {
       _metadata: { payment_id }
     });
 
+    // Record transaction fee
+    try {
+      const { data: account } = await supabase
+        .from('accounts')
+        .select('institution_id')
+        .eq('account_id', payment.debtor_account.identification)
+        .single();
+
+      if (account?.institution_id) {
+        await supabase.rpc('record_transaction_fee', {
+          _institution_id: account.institution_id,
+          _transaction_type: 'domestic_payment',
+          _transaction_ref: updatedPayment.payment_id,
+          _transaction_amount: parseFloat(updatedPayment.instructed_amount.amount),
+          _transaction_id: updatedPayment.id,
+          _metadata: {
+            payment_id: updatedPayment.payment_id,
+            consent_id: updatedPayment.consent_id
+          }
+        });
+        console.log('Transaction fee recorded successfully');
+      }
+    } catch (feeError) {
+      console.error('Error recording transaction fee:', feeError);
+    }
+
     // Return UK Open Banking v4.0 compliant response
     return new Response(
       JSON.stringify({

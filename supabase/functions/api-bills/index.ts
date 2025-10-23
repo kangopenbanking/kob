@@ -130,6 +130,27 @@ serve(async (req) => {
       .eq('account_id', account_id)
       .eq('balance_type', 'InterimAvailable');
 
+    // Record transaction fee
+    try {
+      if (account.institution_id) {
+        await supabase.rpc('record_transaction_fee', {
+          _institution_id: account.institution_id,
+          _transaction_type: 'bill_payment',
+          _transaction_ref: paymentRef,
+          _transaction_amount: parseFloat(amount),
+          _transaction_id: transaction.id,
+          _metadata: {
+            biller_name,
+            bill_reference,
+            bill_type: bill_type || 'utility'
+          }
+        });
+        console.log('Transaction fee recorded successfully');
+      }
+    } catch (feeError) {
+      console.error('Error recording transaction fee:', feeError);
+    }
+
     return new Response(JSON.stringify({
       success: true,
       payment_reference: paymentRef,
