@@ -75,7 +75,7 @@ verify_jwt = false
 [functions.flutterwave-transfer-webhook]
 verify_jwt = false
 
-[functions.bulk-transfers]
+[functions.generate-bank-statement]
 verify_jwt = false
 
 # Phase 8 Edge Functions - Production Readiness & Monitoring

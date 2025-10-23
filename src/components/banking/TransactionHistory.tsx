@@ -11,12 +11,12 @@ import { format } from "date-fns";
 
 interface Transaction {
   id: string;
-  transaction_reference: string;
+  transaction_reference?: string;
   amount: number;
   currency: string;
   status: string;
-  booking_date: string;
-  transaction_information: string;
+  booking_datetime: string;
+  transaction_information?: string;
   credit_debit_indicator: string;
 }
 
@@ -39,7 +39,7 @@ export function TransactionHistory() {
       let query = supabase
         .from('transactions')
         .select('*', { count: 'exact' })
-        .order('booking_date', { ascending: false })
+        .order('booking_datetime', { ascending: false })
         .range((page - 1) * pageSize, page * pageSize - 1);
 
       // Apply filters
@@ -50,10 +50,10 @@ export function TransactionHistory() {
         query = query.eq('credit_debit_indicator', filters.type);
       }
       if (filters.dateFrom) {
-        query = query.gte('booking_date', filters.dateFrom);
+        query = query.gte('booking_datetime', filters.dateFrom);
       }
       if (filters.dateTo) {
-        query = query.lte('booking_date', filters.dateTo);
+        query = query.lte('booking_datetime', filters.dateTo);
       }
 
       const { data, error, count } = await query;
@@ -203,14 +203,14 @@ export function TransactionHistory() {
             ) : (
               transactions.map((txn) => (
                 <TableRow key={txn.id}>
-                  <TableCell className="font-mono text-sm">{txn.transaction_reference}</TableCell>
-                  <TableCell>{format(new Date(txn.booking_date), 'dd MMM yyyy HH:mm')}</TableCell>
+                  <TableCell className="font-mono text-sm">{txn.transaction_reference || txn.id.slice(0, 8)}</TableCell>
+                  <TableCell>{format(new Date(txn.booking_datetime), 'dd MMM yyyy HH:mm')}</TableCell>
                   <TableCell>{getTypeBadge(txn.credit_debit_indicator)}</TableCell>
                   <TableCell className="font-semibold">
                     {txn.currency} {parseFloat(txn.amount.toString()).toLocaleString()}
                   </TableCell>
                   <TableCell>{getStatusBadge(txn.status)}</TableCell>
-                  <TableCell className="max-w-xs truncate">{txn.transaction_information}</TableCell>
+                  <TableCell className="max-w-xs truncate">{txn.transaction_information || 'N/A'}</TableCell>
                 </TableRow>
               ))
             )}

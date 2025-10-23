@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Building2, ArrowLeftRight, FileCheck, Upload, CreditCard } from "lucide-react";
@@ -13,6 +14,8 @@ import { BankTransferForm } from "@/components/payments/BankTransferForm";
 import { TransactionHistory } from "@/components/banking/TransactionHistory";
 import { BulkTransferProcessor } from "@/components/banking/BulkTransferProcessor";
 import { ReconciliationDetails } from "@/components/banking/ReconciliationDetails";
+import { BankStatementGenerator } from "@/components/banking/BankStatementGenerator";
+import { BankConnectionManager } from "@/components/banking/BankConnectionManager";
 
 export default function BankingOps() {
   const { toast } = useToast();
@@ -219,52 +222,12 @@ export default function BankingOps() {
           </TabsContent>
 
           <TabsContent value="reconciliation" className="space-y-6">
+            <BankStatementGenerator />
             <ReconciliationDetails />
           </TabsContent>
 
           <TabsContent value="banks" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Bank Integrations</CardTitle>
-                <CardDescription>
-                  Manage connections to partner banks and financial institutions
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {[
-                      { name: "Commercial Bank Cameroon", status: "connected", type: "H2H" },
-                      { name: "Afriland First Bank", status: "connected", type: "SFTP" },
-                      { name: "Société Générale", status: "pending", type: "REST API" },
-                    ].map((bank, index) => (
-                      <Card key={index}>
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <Building2 className="h-8 w-8 text-primary" />
-                            <Badge variant={bank.status === "connected" ? "default" : "secondary"}>
-                              {bank.status}
-                            </Badge>
-                          </div>
-                          <CardTitle className="text-lg">{bank.name}</CardTitle>
-                          <CardDescription>{bank.type}</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                          <Button variant="outline" size="sm" className="w-full">
-                            Configure
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  <Button className="w-full md:w-auto">
-                    <Building2 className="h-4 w-4 mr-2" />
-                    Add New Bank Connection
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <BankConnectionManager />
           </TabsContent>
 
           <TabsContent value="bulk" className="space-y-6">
