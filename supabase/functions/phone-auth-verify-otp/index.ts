@@ -83,10 +83,13 @@ serve(async (req) => {
         );
       }
 
+      // Generate temp email if none provided to satisfy Supabase Auth requirements
+      const userEmail = email || `${phone_number.replace(/[^0-9]/g, '')}@temp.kob.cm`;
+
       const { data: signupData, error: signupError } = await supabase.auth.admin.createUser({
         phone: phone_number,
         phone_confirm: true,
-        email: email || undefined,
+        email: userEmail,
         email_confirm: email ? true : false,
         user_metadata: {
           full_name,
@@ -97,6 +100,19 @@ serve(async (req) => {
 
       if (signupError) {
         console.error('Signup error:', signupError);
+        
+        // Handle email already exists error
+        if (signupError.message?.includes('email') && signupError.message?.includes('registered')) {
+          return new Response(
+            JSON.stringify({ 
+              error: 'email_exists', 
+              message: 'This email is already registered. Please use a different email or log in.',
+              details: signupError.message 
+            }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+          );
+        }
+        
         return new Response(
           JSON.stringify({ error: 'Failed to create user', details: signupError.message }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }

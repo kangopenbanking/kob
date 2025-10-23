@@ -328,9 +328,60 @@ export default function ProfileSettings() {
             Email Address
           </CardTitle>
           <CardDescription>
-            {profile?.email || 'No email address set (optional)'}
+            {profile?.email && !profile.email.includes('@temp.kob.cm')
+              ? 'Your email address for notifications' 
+              : 'Add an email address for notifications (optional)'}
           </CardDescription>
         </CardHeader>
+        <CardContent className="space-y-4">
+          {profile?.email && !profile.email.includes('@temp.kob.cm') ? (
+            <div className="space-y-2">
+              <Label>Current Email</Label>
+              <Input value={profile.email} disabled />
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Email Address</Label>
+                <Input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={profile?.email?.includes('@temp.kob.cm') ? '' : profile?.email || ''}
+                  onChange={async (e) => {
+                    const newEmail = e.target.value;
+                    if (newEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+                      try {
+                        const { data: { user } } = await supabase.auth.getUser();
+                        if (user) {
+                          await supabase
+                            .from('profiles')
+                            .update({ email: newEmail })
+                            .eq('id', user.id);
+                          
+                          toast({
+                            title: 'Success',
+                            description: 'Email address saved',
+                          });
+                          
+                          loadProfile();
+                        }
+                      } catch (error: any) {
+                        toast({
+                          title: 'Error',
+                          description: error.message || 'Failed to save email',
+                          variant: 'destructive',
+                        });
+                      }
+                    }
+                  }}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Enter a valid email and it will be saved automatically
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
       </Card>
     </div>
   );

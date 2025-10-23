@@ -227,7 +227,6 @@ export default function Auth() {
           otp_code: otpCode,
           otp_type: isLogin ? 'login' : 'signup',
           full_name: isLogin ? undefined : fullName,
-          email: email || undefined,
           pin_code: isLogin ? undefined : pinCode,
           country_code: countryCode,
         },
@@ -371,7 +370,7 @@ export default function Auth() {
                   ? 'Verify your phone and PIN to reset password'
                   : isLogin 
                     ? 'Sign in to your account using your phone number' 
-                    : 'Sign up with your phone number - email is optional'
+                    : 'Sign up with phone only - add email later from Profile Settings'
                 }
               </CardDescription>
             </div>
@@ -448,38 +447,22 @@ export default function Auth() {
               </div>
 
               {!isLogin && !showForgotPassword && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email (Optional)</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Email is optional but recommended for notifications
-                    </p>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="pin">Set 6-Digit PIN *</Label>
-                    <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
-                      <InputOTPGroup>
-                        <InputOTPSlot index={0} />
-                        <InputOTPSlot index={1} />
-                        <InputOTPSlot index={2} />
-                        <InputOTPSlot index={3} />
-                        <InputOTPSlot index={4} />
-                        <InputOTPSlot index={5} />
-                      </InputOTPGroup>
-                    </InputOTP>
-                    <p className="text-xs text-muted-foreground">
-                      Use this PIN to recover your password
-                    </p>
-                  </div>
-                </>
+                <div className="space-y-2">
+                  <Label htmlFor="pin">Set 6-Digit PIN *</Label>
+                  <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                  <p className="text-xs text-muted-foreground">
+                    Use this PIN to recover your password
+                  </p>
+                </div>
               )}
 
               {showForgotPassword && (
