@@ -54,7 +54,7 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [pinCode, setPinCode] = useState('');
   const [otpCode, setOtpCode] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('both');
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
   const [otpExpiresAt, setOtpExpiresAt] = useState('');
 
   // Check if user is already logged in
@@ -485,17 +485,22 @@ export default function Auth() {
                 <RadioGroup value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="sms" id="sms" />
-                    <Label htmlFor="sms" className="font-normal">SMS only</Label>
+                    <Label htmlFor="sms" className="font-normal flex items-center gap-2">
+                      SMS <span className="text-xs text-muted-foreground">(Recommended)</span>
+                    </Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="whatsapp" id="whatsapp" />
-                    <Label htmlFor="whatsapp" className="font-normal">WhatsApp only</Label>
+                    <Label htmlFor="whatsapp" className="font-normal">WhatsApp</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="both" id="both" />
-                    <Label htmlFor="both" className="font-normal">Both (Recommended)</Label>
+                    <Label htmlFor="both" className="font-normal">Both</Label>
                   </div>
                 </RadioGroup>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 WhatsApp delivery requires you to message our business number first. SMS is instant and reliable.
+                </p>
               </div>
 
               <Button 
