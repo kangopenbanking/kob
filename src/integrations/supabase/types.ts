@@ -1858,6 +1858,393 @@ export type Database = {
         }
         Relationships: []
       }
+      iso20022_account_statements: {
+        Row: {
+          account_currency: string
+          account_iban: string
+          account_number: string
+          closing_balance: number
+          created_at: string | null
+          id: string
+          message_id: string | null
+          number_of_entries: number | null
+          opening_balance: number
+          statement_date: string
+          statement_id: string
+          total_credit_entries: number | null
+          total_debit_entries: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          account_currency: string
+          account_iban: string
+          account_number: string
+          closing_balance: number
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          number_of_entries?: number | null
+          opening_balance: number
+          statement_date: string
+          statement_id: string
+          total_credit_entries?: number | null
+          total_debit_entries?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          account_currency?: string
+          account_iban?: string
+          account_number?: string
+          closing_balance?: number
+          created_at?: string | null
+          id?: string
+          message_id?: string | null
+          number_of_entries?: number | null
+          opening_balance?: number
+          statement_date?: string
+          statement_id?: string
+          total_credit_entries?: number | null
+          total_debit_entries?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iso20022_account_statements_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "iso20022_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iso20022_credit_transfers: {
+        Row: {
+          amount: number
+          category_purpose_code: string | null
+          charge_bearer: string | null
+          created_at: string | null
+          creditor_account: string
+          creditor_agent_bic: string | null
+          creditor_bic: string | null
+          creditor_iban: string | null
+          creditor_name: string
+          currency: string
+          end_to_end_id: string
+          id: string
+          instruction_id: string | null
+          message_id: string | null
+          payment_id: string
+          payment_instruction_id: string | null
+          purpose_code: string | null
+          remittance_information: string | null
+          status: string | null
+          status_reason: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount: number
+          category_purpose_code?: string | null
+          charge_bearer?: string | null
+          created_at?: string | null
+          creditor_account: string
+          creditor_agent_bic?: string | null
+          creditor_bic?: string | null
+          creditor_iban?: string | null
+          creditor_name: string
+          currency: string
+          end_to_end_id: string
+          id?: string
+          instruction_id?: string | null
+          message_id?: string | null
+          payment_id: string
+          payment_instruction_id?: string | null
+          purpose_code?: string | null
+          remittance_information?: string | null
+          status?: string | null
+          status_reason?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount?: number
+          category_purpose_code?: string | null
+          charge_bearer?: string | null
+          created_at?: string | null
+          creditor_account?: string
+          creditor_agent_bic?: string | null
+          creditor_bic?: string | null
+          creditor_iban?: string | null
+          creditor_name?: string
+          currency?: string
+          end_to_end_id?: string
+          id?: string
+          instruction_id?: string | null
+          message_id?: string | null
+          payment_id?: string
+          payment_instruction_id?: string | null
+          purpose_code?: string | null
+          remittance_information?: string | null
+          status?: string | null
+          status_reason?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iso20022_credit_transfers_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "iso20022_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "iso20022_credit_transfers_payment_instruction_id_fkey"
+            columns: ["payment_instruction_id"]
+            isOneToOne: false
+            referencedRelation: "iso20022_payment_instructions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iso20022_messages: {
+        Row: {
+          amount: number | null
+          business_message_id: string | null
+          created_at: string | null
+          creation_date_time: string
+          creditor_account: string | null
+          creditor_iban: string | null
+          creditor_name: string | null
+          currency: string | null
+          debtor_account: string | null
+          debtor_iban: string | null
+          debtor_name: string | null
+          direction: string
+          end_to_end_id: string | null
+          id: string
+          instruction_id: string | null
+          message_id: string
+          message_type: string
+          message_version: string
+          parsed_data: Json
+          payment_reference: string | null
+          processing_errors: Json | null
+          raw_xml: string
+          received_at: string | null
+          related_message_id: string | null
+          sent_at: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string | null
+          validation_errors: Json | null
+        }
+        Insert: {
+          amount?: number | null
+          business_message_id?: string | null
+          created_at?: string | null
+          creation_date_time: string
+          creditor_account?: string | null
+          creditor_iban?: string | null
+          creditor_name?: string | null
+          currency?: string | null
+          debtor_account?: string | null
+          debtor_iban?: string | null
+          debtor_name?: string | null
+          direction: string
+          end_to_end_id?: string | null
+          id?: string
+          instruction_id?: string | null
+          message_id: string
+          message_type: string
+          message_version: string
+          parsed_data: Json
+          payment_reference?: string | null
+          processing_errors?: Json | null
+          raw_xml: string
+          received_at?: string | null
+          related_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string | null
+          validation_errors?: Json | null
+        }
+        Update: {
+          amount?: number | null
+          business_message_id?: string | null
+          created_at?: string | null
+          creation_date_time?: string
+          creditor_account?: string | null
+          creditor_iban?: string | null
+          creditor_name?: string | null
+          currency?: string | null
+          debtor_account?: string | null
+          debtor_iban?: string | null
+          debtor_name?: string | null
+          direction?: string
+          end_to_end_id?: string | null
+          id?: string
+          instruction_id?: string | null
+          message_id?: string
+          message_type?: string
+          message_version?: string
+          parsed_data?: Json
+          payment_reference?: string | null
+          processing_errors?: Json | null
+          raw_xml?: string
+          received_at?: string | null
+          related_message_id?: string | null
+          sent_at?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string | null
+          validation_errors?: Json | null
+        }
+        Relationships: []
+      }
+      iso20022_payment_instructions: {
+        Row: {
+          batch_booking: boolean | null
+          charge_bearer: string | null
+          created_at: string | null
+          debtor_account: string
+          debtor_agent_bic: string | null
+          debtor_bic: string | null
+          debtor_iban: string | null
+          debtor_name: string
+          id: string
+          message_id: string | null
+          number_of_transactions: number
+          payment_information_id: string
+          payment_method: string
+          requested_execution_date: string | null
+          total_interbank_settlement_amount: number
+          total_interbank_settlement_currency: string
+          updated_at: string | null
+        }
+        Insert: {
+          batch_booking?: boolean | null
+          charge_bearer?: string | null
+          created_at?: string | null
+          debtor_account: string
+          debtor_agent_bic?: string | null
+          debtor_bic?: string | null
+          debtor_iban?: string | null
+          debtor_name: string
+          id?: string
+          message_id?: string | null
+          number_of_transactions: number
+          payment_information_id: string
+          payment_method: string
+          requested_execution_date?: string | null
+          total_interbank_settlement_amount: number
+          total_interbank_settlement_currency: string
+          updated_at?: string | null
+        }
+        Update: {
+          batch_booking?: boolean | null
+          charge_bearer?: string | null
+          created_at?: string | null
+          debtor_account?: string
+          debtor_agent_bic?: string | null
+          debtor_bic?: string | null
+          debtor_iban?: string | null
+          debtor_name?: string
+          id?: string
+          message_id?: string | null
+          number_of_transactions?: number
+          payment_information_id?: string
+          payment_method?: string
+          requested_execution_date?: string | null
+          total_interbank_settlement_amount?: number
+          total_interbank_settlement_currency?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iso20022_payment_instructions_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "iso20022_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      iso20022_statement_entries: {
+        Row: {
+          account_servicer_reference: string | null
+          amount: number
+          booking_date: string | null
+          created_at: string | null
+          credit_debit_indicator: string
+          creditor_account: string | null
+          creditor_name: string | null
+          currency: string
+          debtor_account: string | null
+          debtor_name: string | null
+          end_to_end_id: string | null
+          entry_reference: string | null
+          id: string
+          mandate_id: string | null
+          remittance_information: string | null
+          statement_id: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string | null
+          value_date: string | null
+        }
+        Insert: {
+          account_servicer_reference?: string | null
+          amount: number
+          booking_date?: string | null
+          created_at?: string | null
+          credit_debit_indicator: string
+          creditor_account?: string | null
+          creditor_name?: string | null
+          currency: string
+          debtor_account?: string | null
+          debtor_name?: string | null
+          end_to_end_id?: string | null
+          entry_reference?: string | null
+          id?: string
+          mandate_id?: string | null
+          remittance_information?: string | null
+          statement_id?: string | null
+          status: string
+          transaction_id?: string | null
+          updated_at?: string | null
+          value_date?: string | null
+        }
+        Update: {
+          account_servicer_reference?: string | null
+          amount?: number
+          booking_date?: string | null
+          created_at?: string | null
+          credit_debit_indicator?: string
+          creditor_account?: string | null
+          creditor_name?: string | null
+          currency?: string
+          debtor_account?: string | null
+          debtor_name?: string | null
+          end_to_end_id?: string | null
+          entry_reference?: string | null
+          id?: string
+          mandate_id?: string | null
+          remittance_information?: string | null
+          statement_id?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string | null
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "iso20022_statement_entries_statement_id_fkey"
+            columns: ["statement_id"]
+            isOneToOne: false
+            referencedRelation: "iso20022_account_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       kyc_verifications: {
         Row: {
           created_at: string | null
