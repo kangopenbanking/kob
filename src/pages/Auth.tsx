@@ -233,7 +233,15 @@ export default function Auth() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Extract error message from the response
+        const errorMsg = error.message || 'Verification failed';
+        throw new Error(errorMsg);
+      }
+
+      if (!data.success) {
+        throw new Error(data.error || 'Verification failed');
+      }
 
       toast({
         title: 'Success',
@@ -247,9 +255,19 @@ export default function Auth() {
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (error: any) {
       console.error('Verify OTP error:', error);
+      
+      // Provide helpful error messages
+      let errorMessage = error.message || 'Invalid or expired OTP code';
+      
+      if (errorMessage.includes('No account found')) {
+        errorMessage = 'No account found. Please sign up first using the link below.';
+      } else if (errorMessage.includes('Invalid or expired')) {
+        errorMessage = 'Invalid or expired code. Please request a new code.';
+      }
+      
       toast({
         title: 'Verification Failed',
-        description: error.message || 'Invalid or expired OTP code',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
