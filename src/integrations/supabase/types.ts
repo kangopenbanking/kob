@@ -395,7 +395,7 @@ export type Database = {
           endpoint: string
           id: string
           institution_id: string | null
-          ip_address: unknown | null
+          ip_address: unknown
           method: string
           response_time_ms: number | null
           status_code: number
@@ -407,7 +407,7 @@ export type Database = {
           endpoint: string
           id?: string
           institution_id?: string | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           method: string
           response_time_ms?: number | null
           status_code: number
@@ -419,7 +419,7 @@ export type Database = {
           endpoint?: string
           id?: string
           institution_id?: string | null
-          ip_address?: unknown | null
+          ip_address?: unknown
           method?: string
           response_time_ms?: number | null
           status_code?: number
@@ -1090,7 +1090,7 @@ export type Database = {
           created_at: string | null
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           metadata: Json | null
           user_agent: string | null
           user_id: string | null
@@ -1102,7 +1102,7 @@ export type Database = {
           created_at?: string | null
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           user_agent?: string | null
           user_id?: string | null
@@ -1114,7 +1114,7 @@ export type Database = {
           created_at?: string | null
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           metadata?: Json | null
           user_agent?: string | null
           user_id?: string | null
@@ -1216,6 +1216,130 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_structures: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          effective_from: string
+          effective_until: string | null
+          fee_model: string
+          fixed_amount: number | null
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          max_fee_amount: number | null
+          min_fee_amount: number | null
+          percentage_rate: number | null
+          tiered_rates: Json | null
+          transaction_type: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          fee_model: string
+          fixed_amount?: number | null
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          max_fee_amount?: number | null
+          min_fee_amount?: number | null
+          percentage_rate?: number | null
+          tiered_rates?: Json | null
+          transaction_type: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          effective_from?: string
+          effective_until?: string | null
+          fee_model?: string
+          fixed_amount?: number | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          max_fee_amount?: number | null
+          min_fee_amount?: number | null
+          percentage_rate?: number | null
+          tiered_rates?: Json | null
+          transaction_type?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_structures_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      fee_waivers: {
+        Row: {
+          applies_to_transaction_types: string[] | null
+          created_at: string | null
+          created_by: string | null
+          current_uses: number | null
+          discount_fixed_amount: number | null
+          discount_percentage: number | null
+          effective_from: string
+          effective_until: string
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          max_uses: number | null
+          reason: string
+          waiver_type: string
+        }
+        Insert: {
+          applies_to_transaction_types?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          discount_fixed_amount?: number | null
+          discount_percentage?: number | null
+          effective_from?: string
+          effective_until: string
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          reason: string
+          waiver_type: string
+        }
+        Update: {
+          applies_to_transaction_types?: string[] | null
+          created_at?: string | null
+          created_by?: string | null
+          current_uses?: number | null
+          discount_fixed_amount?: number | null
+          discount_percentage?: number | null
+          effective_from?: string
+          effective_until?: string
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          reason?: string
+          waiver_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fee_waivers_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       incident_logs: {
         Row: {
           affected_services: string[] | null
@@ -1263,6 +1387,98 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      institution_invoices: {
+        Row: {
+          admin_notes: string | null
+          billing_cycle: string
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          due_date: string
+          id: string
+          institution_id: string
+          invoice_number: string
+          notes: string | null
+          paid_at: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          pdf_url: string | null
+          period_end: string
+          period_start: string
+          sent_at: string | null
+          status: string | null
+          subtotal_amount: number
+          tax_amount: number | null
+          total_amount: number
+          total_transactions: number
+          total_waivers: number | null
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          billing_cycle: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          due_date: string
+          id?: string
+          institution_id: string
+          invoice_number: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          pdf_url?: string | null
+          period_end: string
+          period_start: string
+          sent_at?: string | null
+          status?: string | null
+          subtotal_amount?: number
+          tax_amount?: number | null
+          total_amount: number
+          total_transactions?: number
+          total_waivers?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          billing_cycle?: string
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          due_date?: string
+          id?: string
+          institution_id?: string
+          invoice_number?: string
+          notes?: string | null
+          paid_at?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          pdf_url?: string | null
+          period_end?: string
+          period_start?: string
+          sent_at?: string | null
+          status?: string | null
+          subtotal_amount?: number
+          tax_amount?: number | null
+          total_amount?: number
+          total_transactions?: number
+          total_waivers?: number | null
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_invoices_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institutions: {
         Row: {
@@ -1902,7 +2118,7 @@ export type Database = {
           event_category: string
           event_type: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           location: Json | null
           metadata: Json | null
           risk_score: number | null
@@ -1916,7 +2132,7 @@ export type Database = {
           event_category: string
           event_type: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           location?: Json | null
           metadata?: Json | null
           risk_score?: number | null
@@ -1930,7 +2146,7 @@ export type Database = {
           event_category?: string
           event_type?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           location?: Json | null
           metadata?: Json | null
           risk_score?: number | null
@@ -2062,7 +2278,7 @@ export type Database = {
           created_at: string | null
           description: string
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           resolved: boolean | null
           resolved_at: string | null
           resolved_by: string | null
@@ -2077,7 +2293,7 @@ export type Database = {
           created_at?: string | null
           description: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resolved?: boolean | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -2092,7 +2308,7 @@ export type Database = {
           created_at?: string | null
           description?: string
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           resolved?: boolean | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -2246,6 +2462,107 @@ export type Database = {
           },
         ]
       }
+      transaction_fees: {
+        Row: {
+          billed_at: string | null
+          billing_status: string | null
+          calculated_fee: number
+          created_at: string | null
+          fee_breakdown: Json | null
+          fee_model: string
+          fee_structure_id: string | null
+          final_fee: number
+          id: string
+          institution_id: string
+          invoice_id: string | null
+          metadata: Json | null
+          paid_at: string | null
+          transaction_amount: number
+          transaction_currency: string | null
+          transaction_date: string
+          transaction_id: string | null
+          transaction_ref: string
+          transaction_type: string
+          waived_amount: number | null
+          waiver_id: string | null
+        }
+        Insert: {
+          billed_at?: string | null
+          billing_status?: string | null
+          calculated_fee: number
+          created_at?: string | null
+          fee_breakdown?: Json | null
+          fee_model: string
+          fee_structure_id?: string | null
+          final_fee: number
+          id?: string
+          institution_id: string
+          invoice_id?: string | null
+          metadata?: Json | null
+          paid_at?: string | null
+          transaction_amount: number
+          transaction_currency?: string | null
+          transaction_date?: string
+          transaction_id?: string | null
+          transaction_ref: string
+          transaction_type: string
+          waived_amount?: number | null
+          waiver_id?: string | null
+        }
+        Update: {
+          billed_at?: string | null
+          billing_status?: string | null
+          calculated_fee?: number
+          created_at?: string | null
+          fee_breakdown?: Json | null
+          fee_model?: string
+          fee_structure_id?: string | null
+          final_fee?: number
+          id?: string
+          institution_id?: string
+          invoice_id?: string | null
+          metadata?: Json | null
+          paid_at?: string | null
+          transaction_amount?: number
+          transaction_currency?: string | null
+          transaction_date?: string
+          transaction_id?: string | null
+          transaction_ref?: string
+          transaction_type?: string
+          waived_amount?: number | null
+          waiver_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_fees_fee_structure_id_fkey"
+            columns: ["fee_structure_id"]
+            isOneToOne: false
+            referencedRelation: "fee_structures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_fees_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_fees_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "institution_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_fees_waiver_id_fkey"
+            columns: ["waiver_id"]
+            isOneToOne: false
+            referencedRelation: "fee_waivers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           account_id: string | null
@@ -2329,7 +2646,7 @@ export type Database = {
           device_name: string | null
           device_type: string | null
           id: string
-          ip_address: unknown | null
+          ip_address: unknown
           is_trusted: boolean | null
           last_used_at: string | null
           os: string | null
@@ -2342,7 +2659,7 @@ export type Database = {
           device_name?: string | null
           device_type?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_trusted?: boolean | null
           last_used_at?: string | null
           os?: string | null
@@ -2355,7 +2672,7 @@ export type Database = {
           device_name?: string | null
           device_type?: string | null
           id?: string
-          ip_address?: unknown | null
+          ip_address?: unknown
           is_trusted?: boolean | null
           last_used_at?: string | null
           os?: string | null
@@ -2555,9 +2872,40 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      daily_fee_summary: {
+        Row: {
+          average_fee_per_transaction: number | null
+          fee_date: string | null
+          institution_id: string | null
+          institution_name: string | null
+          total_calculated_fees: number | null
+          total_final_fees: number | null
+          total_transaction_volume: number | null
+          total_waivers: number | null
+          transaction_count: number | null
+          transaction_type: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_fees_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
+      calculate_transaction_fee: {
+        Args: {
+          _institution_id: string
+          _transaction_amount: number
+          _transaction_date?: string
+          _transaction_type: string
+        }
+        Returns: Json
+      }
       check_aisp_permission: {
         Args: { _consent_id: string; _permission: string; _user_id: string }
         Returns: boolean
@@ -2584,24 +2932,22 @@ export type Database = {
         Args: { _ip_address: unknown; _user_agent: string; _user_id: string }
         Returns: Json
       }
-      cleanup_expired_auth_codes: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_oauth_sessions: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      cleanup_expired_par_requests: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
-      expire_old_consents: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
-      }
+      cleanup_expired_auth_codes: { Args: never; Returns: undefined }
+      cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
+      cleanup_expired_par_requests: { Args: never; Returns: undefined }
+      expire_old_consents: { Args: never; Returns: undefined }
       generate_compliance_report: {
         Args: { _end_date: string; _report_type: string; _start_date: string }
+        Returns: string
+      }
+      generate_institution_invoice: {
+        Args: {
+          _admin_id: string
+          _billing_cycle: string
+          _institution_id: string
+          _period_end: string
+          _period_start: string
+        }
         Returns: string
       }
       has_role: {
@@ -2637,9 +2983,17 @@ export type Database = {
         }
         Returns: string
       }
-      make_user_admin: {
-        Args: { _user_id: string }
-        Returns: undefined
+      make_user_admin: { Args: { _user_id: string }; Returns: undefined }
+      record_transaction_fee: {
+        Args: {
+          _institution_id: string
+          _metadata?: Json
+          _transaction_amount: number
+          _transaction_id?: string
+          _transaction_ref: string
+          _transaction_type: string
+        }
+        Returns: string
       }
       trigger_webhooks: {
         Args: { _client_id?: string; _event_data: Json; _event_type: string }
