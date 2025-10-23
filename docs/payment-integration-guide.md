@@ -258,6 +258,64 @@ Fetched dynamically based on selected currency/country via Flutterwave API.
 
 ---
 
+### Mobile Money to Bank Transfers
+
+Transfer funds from mobile money wallets directly to bank accounts.
+
+**Supported Currencies:**
+- XAF (Central African CFA Franc) - Default
+- NGN (Nigerian Naira)
+- GHS (Ghanaian Cedi)
+- KES (Kenyan Shilling)
+- UGX (Ugandan Shilling)
+- TZS (Tanzanian Shilling)
+- ZAR (South African Rand)
+- RWF (Rwandan Franc)
+
+**Provider Support:**
+- **MTN**: XAF, NGN, GHS, UGX, RWF, ZAR
+- **Orange Money**: XAF, NGN, GHS
+
+**API Endpoint:**
+```
+POST /functions/v1/mobile-money-to-bank
+```
+
+**Request:**
+```json
+{
+  "source_mobile_account_id": "uuid",
+  "destination_account_id": "uuid",
+  "amount": 10000,
+  "currency": "XAF",
+  "description": "Savings deposit"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "mobile_transaction_id": "uuid",
+    "transaction_ref": "MMTB-xxx",
+    "payment_link": "https://...",
+    "status": "processing",
+    "message": "Payment link generated. Complete payment to credit your bank account."
+  }
+}
+```
+
+**Transaction Flow:**
+1. User initiates transfer via API
+2. System generates Flutterwave payment link
+3. User completes payment on mobile device
+4. Webhook confirms payment status
+5. Bank account automatically credited
+6. User receives confirmation notification
+
+---
+
 ## Fee Management
 
 All payment methods integrate with KOB's fee management system:

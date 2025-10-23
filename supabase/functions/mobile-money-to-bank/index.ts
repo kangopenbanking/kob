@@ -44,6 +44,14 @@ serve(async (req) => {
       throw new Error('Missing required fields');
     }
 
+    // Validate currency
+    const supportedCurrencies = ['XAF', 'NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR', 'RWF'];
+    const normalizedCurrency = (currency || 'XAF').toUpperCase();
+
+    if (!supportedCurrencies.includes(normalizedCurrency)) {
+      throw new Error(`Currency ${normalizedCurrency} not supported. Supported: ${supportedCurrencies.join(', ')}`);
+    }
+
     // Verify user owns both accounts
     const { data: mobileAccount, error: mobileError } = await supabase
       .from('mobile_money_accounts')
@@ -72,6 +80,16 @@ serve(async (req) => {
     // Generate unique transaction reference
     const transactionRef = `MMTB-${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
+    // Log transfer initiation
+    console.log('Initiating mobile-to-bank transfer:', {
+      transactionRef,
+      currency: normalizedCurrency,
+      amount,
+      provider: mobileAccount.provider,
+      phone: mobileAccount.phone_number.substring(0, 6) + '***',
+      destinationAccount: bankAccount.account_id
+    });
+
     // Create pending mobile money transaction
     const { data: mobileTransaction, error: insertError } = await supabase
       .from('mobile_money_transactions')
@@ -82,7 +100,7 @@ serve(async (req) => {
         transaction_ref: transactionRef,
         transaction_type: 'bank_deposit',
         amount: amount,
-        currency: currency || 'XAF',
+        currency: normalizedCurrency,
         status: 'pending',
         provider: mobileAccount.provider,
         phone_number: mobileAccount.phone_number,
@@ -111,7 +129,7 @@ serve(async (req) => {
       body: JSON.stringify({
         tx_ref: transactionRef,
         amount: amount,
-        currency: currency || 'XAF',
+        currency: normalizedCurrency,
         email: user.email,
         phone_number: mobileAccount.phone_number,
         fullname: user.user_metadata?.full_name || 'User',
@@ -163,10 +181,17 @@ serve(async (req) => {
     }
 
   } catch (error: any) {
-    console.error('Mobile money to bank error:', error);
+    console.error('Mobile money to bank error:', {
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
     return new Response(JSON.stringify({
       error: error.message,
-      success: false
+      success: false,
+      code: 'MOBILE_TO_BANK_ERROR',
+      details: {
+        supported_currencies: ['XAF', 'NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR', 'RWF']
+      }
     }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -37,6 +37,23 @@ interface Transaction {
   metadata: any;
 }
 
+const SUPPORTED_CURRENCIES = [
+  { code: 'XAF', name: 'Central African CFA Franc', flag: '🇨🇲' },
+  { code: 'NGN', name: 'Nigerian Naira', flag: '🇳🇬' },
+  { code: 'GHS', name: 'Ghanaian Cedi', flag: '🇬🇭' },
+  { code: 'KES', name: 'Kenyan Shilling', flag: '🇰🇪' },
+  { code: 'UGX', name: 'Ugandan Shilling', flag: '🇺🇬' },
+  { code: 'TZS', name: 'Tanzanian Shilling', flag: '🇹🇿' },
+  { code: 'ZAR', name: 'South African Rand', flag: '🇿🇦' },
+  { code: 'RWF', name: 'Rwandan Franc', flag: '🇷🇼' },
+];
+
+const PROVIDER_CURRENCIES: Record<string, string[]> = {
+  mtn: ['XAF', 'NGN', 'GHS', 'UGX', 'RWF', 'ZAR'],
+  orange: ['XAF', 'NGN', 'GHS'],
+  default: ['XAF', 'NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR', 'RWF']
+};
+
 export function MobileMoneyToBankTransfer() {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -57,6 +74,16 @@ export function MobileMoneyToBankTransfer() {
     fetchAccounts();
     fetchTransactions();
   }, []);
+
+  useEffect(() => {
+    // Reset currency if current one not supported by selected provider
+    if (formData.source_mobile_account_id) {
+      const available = getAvailableCurrencies();
+      if (!available.find(c => c.code === formData.currency)) {
+        setFormData(prev => ({ ...prev, currency: 'XAF' }));
+      }
+    }
+  }, [formData.source_mobile_account_id]);
 
   const fetchAccounts = async () => {
     try {
@@ -154,6 +181,23 @@ export function MobileMoneyToBankTransfer() {
     }
   };
 
+  const getAvailableCurrencies = () => {
+    if (!formData.source_mobile_account_id) {
+      return SUPPORTED_CURRENCIES;
+    }
+    
+    const selectedAccount = mobileAccounts.find(
+      acc => acc.id === formData.source_mobile_account_id
+    );
+    
+    if (!selectedAccount) return SUPPORTED_CURRENCIES;
+    
+    const provider = selectedAccount.provider.toLowerCase();
+    const allowedCodes = PROVIDER_CURRENCIES[provider] || PROVIDER_CURRENCIES.default;
+    
+    return SUPPORTED_CURRENCIES.filter(curr => allowedCodes.includes(curr.code));
+  };
+
   const getStatusBadge = (status: string) => {
     const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
       completed: "default",
@@ -236,22 +280,27 @@ export function MobileMoneyToBankTransfer() {
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="currency">Currency</Label>
-                <Select
-                  value={formData.currency}
-                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="XAF">XAF</SelectItem>
-                    <SelectItem value="USD">USD</SelectItem>
-                    <SelectItem value="EUR">EUR</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select
+                    value={formData.currency}
+                    onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getAvailableCurrencies().map((curr) => (
+                        <SelectItem key={curr.code} value={curr.code}>
+                          {curr.flag} {curr.code} - {curr.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Default: XAF (Central African CFA Franc)
+                  </p>
+                </div>
             </div>
 
             <div className="space-y-2">
