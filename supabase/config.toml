@@ -78,6 +78,9 @@ verify_jwt = false
 [functions.generate-bank-statement]
 verify_jwt = false
 
+[functions.mobile-money-to-bank]
+verify_jwt = false
+
 # Phase 8 Edge Functions - Production Readiness & Monitoring
 
 # System Health Check

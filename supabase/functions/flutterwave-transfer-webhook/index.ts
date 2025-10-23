@@ -59,7 +59,7 @@ serve(async (req) => {
 
     const { event, data } = payload;
     
-    // Handle transfer events
+    // Handle transfer and charge events
     if (event === 'transfer.completed' || event === 'charge.completed') {
       const transactionRef = data.reference || data.tx_ref;
       const status = data.status?.toLowerCase();
@@ -104,9 +104,27 @@ serve(async (req) => {
         });
 
       console.log(`Transaction ${transactionRef} updated to ${updateStatus}`);
+
+      // If this is a completed mobile money charge for bank deposit, trigger auto-credit
+      if (event === 'charge.completed' && updateStatus === 'completed') {
+        const { data: mobileTransaction } = await supabase
+          .from('mobile_money_transactions')
+          .select('*, destination_account_id, is_bank_deposit')
+          .eq('transaction_ref', transactionRef)
+          .single();
+
+        if (mobileTransaction?.is_bank_deposit && mobileTransaction.destination_account_id) {
+          console.log('Triggering auto-credit for bank deposit:', transactionRef);
+          
+          // Call the verify function to trigger auto-crediting
+          await supabase.functions.invoke('mobile-money-verify', {
+            body: { transaction_ref: transactionRef }
+          });
+        }
+      }
     }
 
-    return new Response(JSON.stringify({ 
+    return new Response(JSON.stringify({
       success: true,
       message: 'Webhook processed successfully' 
     }), {

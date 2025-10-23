@@ -2386,13 +2386,16 @@ export type Database = {
       mobile_money_transactions: {
         Row: {
           amount: number
+          bank_transaction_id: string | null
           completed_at: string | null
           created_at: string | null
           currency: string
           description: string | null
+          destination_account_id: string | null
           error_message: string | null
           flutterwave_ref: string | null
           id: string
+          is_bank_deposit: boolean | null
           metadata: Json | null
           mobile_account_id: string | null
           phone_number: string
@@ -2405,13 +2408,16 @@ export type Database = {
         }
         Insert: {
           amount: number
+          bank_transaction_id?: string | null
           completed_at?: string | null
           created_at?: string | null
           currency?: string
           description?: string | null
+          destination_account_id?: string | null
           error_message?: string | null
           flutterwave_ref?: string | null
           id?: string
+          is_bank_deposit?: boolean | null
           metadata?: Json | null
           mobile_account_id?: string | null
           phone_number: string
@@ -2424,13 +2430,16 @@ export type Database = {
         }
         Update: {
           amount?: number
+          bank_transaction_id?: string | null
           completed_at?: string | null
           created_at?: string | null
           currency?: string
           description?: string | null
+          destination_account_id?: string | null
           error_message?: string | null
           flutterwave_ref?: string | null
           id?: string
+          is_bank_deposit?: boolean | null
           metadata?: Json | null
           mobile_account_id?: string | null
           phone_number?: string
@@ -2442,6 +2451,20 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "mobile_money_transactions_bank_transaction_id_fkey"
+            columns: ["bank_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mobile_money_transactions_destination_account_id_fkey"
+            columns: ["destination_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "mobile_money_transactions_mobile_account_id_fkey"
             columns: ["mobile_account_id"]

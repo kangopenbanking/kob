@@ -16,6 +16,7 @@ import { BulkTransferProcessor } from "@/components/banking/BulkTransferProcesso
 import { ReconciliationDetails } from "@/components/banking/ReconciliationDetails";
 import { BankStatementGenerator } from "@/components/banking/BankStatementGenerator";
 import { BankConnectionManager } from "@/components/banking/BankConnectionManager";
+import { MobileMoneyToBankTransfer } from "@/components/banking/MobileMoneyToBankTransfer";
 import { TransactionImportPreview } from "@/components/banking/TransactionImportPreview";
 import { ErrorHandlingDashboard } from "@/components/banking/ErrorHandlingDashboard";
 
@@ -107,7 +108,7 @@ export default function BankingOps() {
         </div>
 
         <Tabs defaultValue="transfers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-8 lg:w-auto">
             <TabsTrigger value="transfers" className="gap-2">
               <ArrowLeftRight className="h-4 w-4" />
               Transfers
@@ -131,6 +132,10 @@ export default function BankingOps() {
             <TabsTrigger value="payments" className="gap-2">
               <CreditCard className="h-4 w-4" />
               Payments
+            </TabsTrigger>
+            <TabsTrigger value="mobile-to-bank" className="gap-2">
+              <ArrowLeftRight className="h-4 w-4" />
+              Mobile to Bank
             </TabsTrigger>
             <TabsTrigger value="monitoring" className="gap-2">
               <FileCheck className="h-4 w-4" />
@@ -273,6 +278,10 @@ export default function BankingOps() {
                 </Tabs>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="mobile-to-bank" className="space-y-6">
+            <MobileMoneyToBankTransfer />
           </TabsContent>
 
           <TabsContent value="monitoring" className="space-y-6">
