@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
+// bcrypt removed due to edge environment limitations
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,8 +69,26 @@ serve(async (req) => {
       );
     }
 
-    // Verify PIN
-    const pinValid = await bcrypt.compare(pin_code, profile.pin_code_hash);
+    // Verify PIN (support salted SHA-256 format: s2$<saltHex>$<hashHex>)
+    let pinValid = false;
+    const stored = profile.pin_code_hash as string;
+    if (stored.startsWith('s2$')) {
+      const parts = stored.split('$');
+      const saltHex = parts[1];
+      const storedHashHex = parts[2];
+      const salt = new Uint8Array(saltHex.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
+      const encoder = new TextEncoder();
+      const pinBytes = encoder.encode(pin_code);
+      const toHash = new Uint8Array(salt.length + pinBytes.length);
+      toHash.set(salt, 0);
+      toHash.set(pinBytes, salt.length);
+      const digest = await crypto.subtle.digest('SHA-256', toHash);
+      const computedHashHex = Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
+      pinValid = computedHashHex === storedHashHex;
+    } else {
+      console.warn('Unsupported PIN hash format for user:', profile.id);
+      pinValid = false;
+    }
 
     if (pinValid) {
       // Reset attempts

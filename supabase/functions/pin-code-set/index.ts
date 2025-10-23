@@ -1,6 +1,6 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
+// bcrypt removed due to edge environment limitations
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,8 +53,17 @@ serve(async (req) => {
       );
     }
 
-    // Hash the PIN
-    const pinHash = await bcrypt.hash(pin_code);
+    // Hash the PIN using Web Crypto (salted SHA-256)
+    const encoder = new TextEncoder();
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const pinBytes = encoder.encode(pin_code);
+    const toHash = new Uint8Array(salt.length + pinBytes.length);
+    toHash.set(salt, 0);
+    toHash.set(pinBytes, salt.length);
+    const digest = await crypto.subtle.digest('SHA-256', toHash);
+    const saltHex = Array.from(salt).map(b => b.toString(16).padStart(2, '0')).join('');
+    const hashHex = Array.from(new Uint8Array(digest)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const pinHash = `s2$${saltHex}$${hashHex}`;
 
     // Update profile with PIN
     const { error: updateError } = await supabase

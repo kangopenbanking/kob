@@ -11,7 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || '');
+const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
+  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
+  : null;
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
