@@ -89,11 +89,6 @@ const Register = () => {
       }
 
       toast({
-        title: "Registration Submitted Successfully",
-        description: "Your application is pending review. We'll contact you within 2 business days.",
-      });
-
-      toast({
         title: "Registration Submitted",
         description: "Your application is pending review. You'll be notified once approved.",
       });

@@ -150,19 +150,44 @@ const Admin = () => {
 
   const approveInstitution = async (institutionId: string) => {
     try {
+      // Get institution details to enable sandbox for developers
+      const { data: institution } = await supabase
+        .from('institutions')
+        .select('institution_type, user_id')
+        .eq('id', institutionId)
+        .single();
+
+      const updateData: any = { 
+        status: 'approved',
+        approved_at: new Date().toISOString()
+      };
+
+      // Auto-enable sandbox for developers
+      if (institution?.institution_type === 'developer') {
+        updateData.sandbox_access = true;
+      }
+
       const { error } = await supabase
         .from('institutions')
-        .update({ 
-          status: 'approved',
-          approved_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', institutionId);
 
       if (error) throw error;
 
+      // TODO: Send approval notification email/SMS
+      // await supabase.functions.invoke('send-communication', {
+      //   body: {
+      //     recipient_id: institution?.user_id,
+      //     type: 'institution_approved',
+      //     ...
+      //   }
+      // });
+
       toast({
         title: "Institution Approved",
-        description: "The institution has been approved successfully"
+        description: institution?.institution_type === 'developer' 
+          ? "Institution approved with sandbox access enabled"
+          : "Institution approved successfully"
       });
 
       loadDashboardData();
@@ -181,6 +206,13 @@ const Admin = () => {
     if (!reason) return;
 
     try {
+      // Get user_id for notification
+      const { data: institution } = await supabase
+        .from('institutions')
+        .select('user_id')
+        .eq('id', institutionId)
+        .single();
+
       const { error } = await supabase
         .from('institutions')
         .update({ 
@@ -190,6 +222,15 @@ const Admin = () => {
         .eq('id', institutionId);
 
       if (error) throw error;
+
+      // TODO: Send rejection notification email/SMS
+      // await supabase.functions.invoke('send-communication', {
+      //   body: {
+      //     recipient_id: institution?.user_id,
+      //     type: 'institution_rejected',
+      //     ...
+      //   }
+      // });
 
       toast({
         title: "Institution Rejected",
