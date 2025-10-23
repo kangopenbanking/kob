@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       },
       Risk: consent.risk,
       Links: {
-        Self: `${supabaseUrl}/functions/v1/pisp-consents/${consentId}`
+        Self: `https://api.kangopenbanking.com/v1/pisp-consents/${consentId}`
       },
       Meta: {}
     };

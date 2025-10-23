@@ -93,7 +93,7 @@ const SystemMonitoring = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/system-health-check`
+        'https://api.kangopenbanking.com/v1/system-health-check'
       );
       const result = await response.json();
       

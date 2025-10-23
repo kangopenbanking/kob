@@ -10,18 +10,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const issuer = `${supabaseUrl}/auth/v1`;
+    const apiBaseUrl = 'https://api.kangopenbanking.com';
+    const issuer = `${apiBaseUrl}/auth/v1`;
 
     // OpenID Connect Discovery document aligned with FAPI 1.0 Advanced
     const config = {
       issuer,
-      authorization_endpoint: `${supabaseUrl}/functions/v1/oauth-authorize`,
-      token_endpoint: `${supabaseUrl}/functions/v1/token-endpoint`,
-      userinfo_endpoint: `${supabaseUrl}/functions/v1/userinfo`,
-      jwks_uri: `${supabaseUrl}/functions/v1/jwks-endpoint`,
-      registration_endpoint: `${supabaseUrl}/functions/v1/dcr-register`,
-      pushed_authorization_request_endpoint: `${supabaseUrl}/functions/v1/par-endpoint`,
+      authorization_endpoint: `${apiBaseUrl}/v1/oauth-authorize`,
+      token_endpoint: `${apiBaseUrl}/v1/oauth-token`,
+      userinfo_endpoint: `${apiBaseUrl}/v1/userinfo`,
+      jwks_uri: `${apiBaseUrl}/v1/jwks-endpoint`,
+      registration_endpoint: `${apiBaseUrl}/v1/dcr-register`,
+      pushed_authorization_request_endpoint: `${apiBaseUrl}/v1/par-endpoint`,
       
       // Supported features
       scopes_supported: ['openid', 'accounts', 'payments', 'offline_access'],
@@ -48,8 +48,8 @@ Deno.serve(async (req) => {
       ],
       
       // Additional endpoints
-      revocation_endpoint: `${supabaseUrl}/functions/v1/token-revoke`,
-      introspection_endpoint: `${supabaseUrl}/functions/v1/token-introspect`,
+      revocation_endpoint: `${apiBaseUrl}/v1/token-revoke`,
+      introspection_endpoint: `${apiBaseUrl}/v1/token-introspect`,
       
       // Code challenge methods for PKCE
       code_challenge_methods_supported: ['S256', 'plain'],

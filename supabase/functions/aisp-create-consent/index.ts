@@ -150,7 +150,7 @@ Deno.serve(async (req) => {
       },
       Risk: {},
       Links: {
-        Self: `${supabaseUrl}/functions/v1/aisp-consents/${consentId}`
+        Self: `https://api.kangopenbanking.com/v1/aisp-consents/${consentId}`
       },
       Meta: {
         TotalPages: 1

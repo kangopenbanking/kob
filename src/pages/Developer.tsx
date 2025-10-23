@@ -12,6 +12,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Code, Database, TestTube, Send, Loader2, FileText, Shield, Key, BookOpen, CheckCircle2, Copy } from "lucide-react";
 import { Link } from "react-router-dom";
 
+const API_BASE_URL = 'https://api.kangopenbanking.com';
+
 const Developer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -454,7 +456,7 @@ const Developer = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(
-                          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1${endpoint.path}`,
+                          `${API_BASE_URL}/v1${endpoint.path}`,
                           `endpoint-${i}`
                         )}
                       >
@@ -494,7 +496,7 @@ const Developer = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => copyToClipboard(
-                          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1${endpoint.path}`,
+                          `${API_BASE_URL}/v1${endpoint.path}`,
                           `pisp-${i}`
                         )}
                       >
@@ -534,7 +536,7 @@ const Developer = () => {
                             schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
                           },
                           variable: [
-                            { key: "base_url", value: `${import.meta.env.VITE_SUPABASE_URL}/functions/v1` },
+                            { key: "base_url", value: `${API_BASE_URL}/v1` },
                             { key: "access_token", value: "YOUR_ACCESS_TOKEN" },
                             { key: "consent_id", value: "YOUR_CONSENT_ID" }
                           ],
@@ -633,13 +635,13 @@ const Developer = () => {
                       <div className="flex-1">
                         <code className="text-sm font-mono">base_url</code>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {import.meta.env.VITE_SUPABASE_URL}/functions/v1
+                          {API_BASE_URL}/v1
                         </p>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1`, 'base-url')}
+                        onClick={() => copyToClipboard(`${API_BASE_URL}/v1`, 'base-url')}
                       >
                         {copiedId === 'base-url' ? <CheckCircle2 className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
                       </Button>
@@ -662,7 +664,7 @@ const Developer = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => copyToClipboard(
-                        `curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-accounts' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'x-consent-id: YOUR_CONSENT_ID'`,
+                        `curl -X GET '${API_BASE_URL}/v1/aisp-accounts' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'x-consent-id: YOUR_CONSENT_ID'`,
                         'curl-accounts'
                       )}
                     >
@@ -671,7 +673,7 @@ const Developer = () => {
                   </div>
                   <div className="bg-muted p-3 rounded-lg">
                     <pre className="text-xs font-mono overflow-x-auto">
-{`curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-accounts' \\
+{`curl -X GET '${API_BASE_URL}/v1/aisp-accounts' \\
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
   -H 'x-consent-id: YOUR_CONSENT_ID'`}
                     </pre>
@@ -685,7 +687,7 @@ const Developer = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => copyToClipboard(
-                        `curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-balances/ACCOUNT_ID' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'x-consent-id: YOUR_CONSENT_ID'`,
+                        `curl -X GET '${API_BASE_URL}/v1/aisp-balances/ACCOUNT_ID' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'x-consent-id: YOUR_CONSENT_ID'`,
                         'curl-balances'
                       )}
                     >
@@ -694,7 +696,7 @@ const Developer = () => {
                   </div>
                   <div className="bg-muted p-3 rounded-lg">
                     <pre className="text-xs font-mono overflow-x-auto">
-{`curl -X GET '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/aisp-balances/ACCOUNT_ID' \\
+{`curl -X GET '${API_BASE_URL}/v1/aisp-balances/ACCOUNT_ID' \\
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
   -H 'x-consent-id: YOUR_CONSENT_ID'`}
                     </pre>
@@ -708,7 +710,7 @@ const Developer = () => {
                       variant="ghost"
                       size="sm"
                       onClick={() => copyToClipboard(
-                        `curl -X POST '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"consent_id":"YOUR_CONSENT_ID","instructed_amount":{"amount":"10000","currency":"XAF"},"creditor_account":{"identification":"237123456789","name":"John Doe"},"remittance_information":"Payment for services","reference":"REF-001"}'`,
+                        `curl -X POST '${API_BASE_URL}/v1/pisp-domestic-payment' \\\n  -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\\n  -H 'Content-Type: application/json' \\\n  -d '{"consent_id":"YOUR_CONSENT_ID","instructed_amount":{"amount":"10000","currency":"XAF"},"creditor_account":{"identification":"237123456789","name":"John Doe"},"remittance_information":"Payment for services","reference":"REF-001"}'`,
                         'curl-payment'
                       )}
                     >
@@ -717,7 +719,7 @@ const Developer = () => {
                   </div>
                   <div className="bg-muted p-3 rounded-lg">
                     <pre className="text-xs font-mono overflow-x-auto">
-{`curl -X POST '${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pisp-domestic-payment' \\
+{`curl -X POST '${API_BASE_URL}/v1/pisp-domestic-payment' \\
   -H 'Authorization: Bearer YOUR_ACCESS_TOKEN' \\
   -H 'Content-Type: application/json' \\
   -d '{

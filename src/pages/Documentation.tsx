@@ -304,7 +304,7 @@ Content-Type: application/json
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    onClick={() => copyToClipboard(`curl -X POST "https://YOUR_PROJECT.supabase.co/functions/v1/send-communication" \\
+                    onClick={() => copyToClipboard(`curl -X POST "https://api.kangopenbanking.com/v1/send-communication" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -349,7 +349,7 @@ Content-Type: application/json
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    onClick={() => copyToClipboard(`curl -X POST "https://YOUR_PROJECT.supabase.co/functions/v1/send-bulk-communication" \\
+                    onClick={() => copyToClipboard(`curl -X POST "https://api.kangopenbanking.com/v1/send-bulk-communication" \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{

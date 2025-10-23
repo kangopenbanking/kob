@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
         })) || []
       },
       Links: {
-        Self: `${supabaseUrl}/functions/v1/aisp-accounts/${accountId}/balances`
+        Self: `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/balances`
       },
       Meta: {
         TotalPages: 1
