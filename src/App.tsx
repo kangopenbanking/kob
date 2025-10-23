@@ -21,6 +21,8 @@ import SecuritySettings from "./pages/SecuritySettings";
 import Communications from "./pages/Communications";
 import MobileMoney from "./pages/MobileMoney";
 import Payments from "./pages/Payments";
+import ComplianceDashboard from "./pages/ComplianceDashboard";
+import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
@@ -41,7 +43,7 @@ import FeeManagement from "./pages/FeeManagement";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: 1000 * 60 * 5,
       refetchOnWindowFocus: false,
     },
   },
@@ -70,6 +72,8 @@ function App() {
             <Route path="/communications" element={<Layout><Communications /></Layout>} />
             <Route path="/mobile-money" element={<Layout><MobileMoney /></Layout>} />
             <Route path="/payments" element={<Layout><Payments /></Layout>} />
+            <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
+            <Route path="/kyc-verification" element={<Layout><KYCVerification /></Layout>} />
             <Route path="/banking-ops" element={<Layout><BankingOps /></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />

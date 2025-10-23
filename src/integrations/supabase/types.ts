@@ -1214,6 +1214,66 @@ export type Database = {
         }
         Relationships: []
       }
+      compliance_training: {
+        Row: {
+          certificate_url: string | null
+          completed_at: string | null
+          completion_status: string | null
+          created_at: string | null
+          expiry_date: string | null
+          id: string
+          passing_score: number | null
+          renewal_period_months: number | null
+          renewal_required: boolean | null
+          required_for_role: string[] | null
+          score: number | null
+          started_at: string | null
+          training_description: string | null
+          training_title: string
+          training_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          certificate_url?: string | null
+          completed_at?: string | null
+          completion_status?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          passing_score?: number | null
+          renewal_period_months?: number | null
+          renewal_required?: boolean | null
+          required_for_role?: string[] | null
+          score?: number | null
+          started_at?: string | null
+          training_description?: string | null
+          training_title: string
+          training_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          certificate_url?: string | null
+          completed_at?: string | null
+          completion_status?: string | null
+          created_at?: string | null
+          expiry_date?: string | null
+          id?: string
+          passing_score?: number | null
+          renewal_period_months?: number | null
+          renewal_required?: boolean | null
+          required_for_role?: string[] | null
+          score?: number | null
+          started_at?: string | null
+          training_description?: string | null
+          training_title?: string
+          training_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       consent_events: {
         Row: {
           client_id: string | null
@@ -1250,6 +1310,141 @@ export type Database = {
           metadata?: Json | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      customer_due_diligence: {
+        Row: {
+          beneficial_owners: Json | null
+          business_nature: string | null
+          country_of_residence: string | null
+          created_at: string | null
+          estimated_annual_income: number | null
+          expected_transaction_volume: number | null
+          id: string
+          last_screening_date: string | null
+          next_review_date: string | null
+          occupation: string | null
+          pep_details: Json | null
+          pep_status: boolean | null
+          purpose_of_account: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_category: string
+          risk_factors: Json | null
+          risk_score: number | null
+          sanctions_screening_status: string | null
+          source_of_income: string | null
+          tax_residency: string[] | null
+          tin: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          beneficial_owners?: Json | null
+          business_nature?: string | null
+          country_of_residence?: string | null
+          created_at?: string | null
+          estimated_annual_income?: number | null
+          expected_transaction_volume?: number | null
+          id?: string
+          last_screening_date?: string | null
+          next_review_date?: string | null
+          occupation?: string | null
+          pep_details?: Json | null
+          pep_status?: boolean | null
+          purpose_of_account?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_category?: string
+          risk_factors?: Json | null
+          risk_score?: number | null
+          sanctions_screening_status?: string | null
+          source_of_income?: string | null
+          tax_residency?: string[] | null
+          tin?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          beneficial_owners?: Json | null
+          business_nature?: string | null
+          country_of_residence?: string | null
+          created_at?: string | null
+          estimated_annual_income?: number | null
+          expected_transaction_volume?: number | null
+          id?: string
+          last_screening_date?: string | null
+          next_review_date?: string | null
+          occupation?: string | null
+          pep_details?: Json | null
+          pep_status?: boolean | null
+          purpose_of_account?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_category?: string
+          risk_factors?: Json | null
+          risk_score?: number | null
+          sanctions_screening_status?: string | null
+          source_of_income?: string | null
+          tax_residency?: string[] | null
+          tin?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      data_privacy_requests: {
+        Row: {
+          completion_deadline: string | null
+          created_at: string | null
+          data_categories: string[] | null
+          export_format: string | null
+          export_url: string | null
+          id: string
+          notes: string | null
+          processed_at: string | null
+          processed_by: string | null
+          rejection_reason: string | null
+          request_details: Json | null
+          request_type: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          completion_deadline?: string | null
+          created_at?: string | null
+          data_categories?: string[] | null
+          export_format?: string | null
+          export_url?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          request_details?: Json | null
+          request_type: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          completion_deadline?: string | null
+          created_at?: string | null
+          data_categories?: string[] | null
+          export_format?: string | null
+          export_url?: string | null
+          id?: string
+          notes?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          rejection_reason?: string | null
+          request_details?: Json | null
+          request_type?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1660,6 +1855,75 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website?: string | null
+        }
+        Relationships: []
+      }
+      kyc_verifications: {
+        Row: {
+          created_at: string | null
+          document_back_url: string | null
+          document_country: string | null
+          document_expiry_date: string | null
+          document_front_url: string | null
+          document_number: string | null
+          document_type: string | null
+          expiry_date: string | null
+          id: string
+          metadata: Json | null
+          rejection_reason: string | null
+          risk_level: string | null
+          selfie_url: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+          verification_method: string | null
+          verification_type: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          document_back_url?: string | null
+          document_country?: string | null
+          document_expiry_date?: string | null
+          document_front_url?: string | null
+          document_number?: string | null
+          document_type?: string | null
+          expiry_date?: string | null
+          id?: string
+          metadata?: Json | null
+          rejection_reason?: string | null
+          risk_level?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+          verification_method?: string | null
+          verification_type: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          document_back_url?: string | null
+          document_country?: string | null
+          document_expiry_date?: string | null
+          document_front_url?: string | null
+          document_number?: string | null
+          document_type?: string | null
+          expiry_date?: string | null
+          id?: string
+          metadata?: Json | null
+          rejection_reason?: string | null
+          risk_level?: string | null
+          selfie_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+          verification_method?: string | null
+          verification_type?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
@@ -2122,6 +2386,126 @@ export type Database = {
           },
         ]
       }
+      regulatory_reports: {
+        Row: {
+          acknowledgment_date: string | null
+          acknowledgment_received: boolean | null
+          created_at: string | null
+          created_by: string | null
+          id: string
+          regulator: string
+          report_data: Json | null
+          report_file_url: string | null
+          report_format: string
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          submission_reference: string | null
+          submission_status: string | null
+          submitted_at: string | null
+          submitted_by: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          acknowledgment_date?: string | null
+          acknowledgment_received?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          regulator: string
+          report_data?: Json | null
+          report_file_url?: string | null
+          report_format: string
+          report_period_end: string
+          report_period_start: string
+          report_type: string
+          submission_reference?: string | null
+          submission_status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          acknowledgment_date?: string | null
+          acknowledgment_received?: boolean | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          regulator?: string
+          report_data?: Json | null
+          report_file_url?: string | null
+          report_format?: string
+          report_period_end?: string
+          report_period_start?: string
+          report_type?: string
+          submission_reference?: string | null
+          submission_status?: string | null
+          submitted_at?: string | null
+          submitted_by?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sanctions_screening: {
+        Row: {
+          created_at: string | null
+          entity_data: Json
+          entity_name: string
+          entity_type: string
+          false_positive: boolean | null
+          id: string
+          match_score: number | null
+          matches: Json | null
+          next_screening_date: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          screened_lists: string[] | null
+          screening_provider: string | null
+          screening_status: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          entity_data: Json
+          entity_name: string
+          entity_type: string
+          false_positive?: boolean | null
+          id?: string
+          match_score?: number | null
+          matches?: Json | null
+          next_screening_date?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screened_lists?: string[] | null
+          screening_provider?: string | null
+          screening_status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          entity_data?: Json
+          entity_name?: string
+          entity_type?: string
+          false_positive?: boolean | null
+          id?: string
+          match_score?: number | null
+          matches?: Json | null
+          next_screening_date?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          screened_lists?: string[] | null
+          screening_provider?: string | null
+          screening_status?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       sandbox_accounts: {
         Row: {
           account_holder_name: string
@@ -2287,6 +2671,63 @@ export type Database = {
           stripe_payment_method_id?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      sca_challenges: {
+        Row: {
+          attempts: number | null
+          challenge_code: string | null
+          challenge_data: Json | null
+          challenge_type: string
+          created_at: string | null
+          device_fingerprint: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown
+          max_attempts: number | null
+          operation_id: string | null
+          operation_type: string
+          status: string
+          user_agent: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          challenge_code?: string | null
+          challenge_data?: Json | null
+          challenge_type: string
+          created_at?: string | null
+          device_fingerprint?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          max_attempts?: number | null
+          operation_id?: string | null
+          operation_type: string
+          status?: string
+          user_agent?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          challenge_code?: string | null
+          challenge_data?: Json | null
+          challenge_type?: string
+          created_at?: string | null
+          device_fingerprint?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          max_attempts?: number | null
+          operation_id?: string | null
+          operation_type?: string
+          status?: string
+          user_agent?: string | null
+          user_id?: string
+          verified_at?: string | null
         }
         Relationships: []
       }
@@ -2773,6 +3214,81 @@ export type Database = {
           },
         ]
       }
+      transaction_monitoring_alerts: {
+        Row: {
+          alert_description: string | null
+          alert_type: string
+          assigned_to: string | null
+          created_at: string | null
+          escalated_to: string | null
+          id: string
+          investigation_notes: string | null
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          risk_indicators: Json | null
+          rule_id: string | null
+          rule_name: string | null
+          sar_filed: boolean | null
+          sar_filed_at: string | null
+          sar_reference: string | null
+          severity: string
+          status: string
+          transaction_details: Json | null
+          transaction_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_description?: string | null
+          alert_type: string
+          assigned_to?: string | null
+          created_at?: string | null
+          escalated_to?: string | null
+          id?: string
+          investigation_notes?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          risk_indicators?: Json | null
+          rule_id?: string | null
+          rule_name?: string | null
+          sar_filed?: boolean | null
+          sar_filed_at?: string | null
+          sar_reference?: string | null
+          severity: string
+          status?: string
+          transaction_details?: Json | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_description?: string | null
+          alert_type?: string
+          assigned_to?: string | null
+          created_at?: string | null
+          escalated_to?: string | null
+          id?: string
+          investigation_notes?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          risk_indicators?: Json | null
+          rule_id?: string | null
+          rule_name?: string | null
+          sar_filed?: boolean | null
+          sar_filed_at?: string | null
+          sar_reference?: string | null
+          severity?: string
+          status?: string
+          transaction_details?: Json | null
+          transaction_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           account_id: string | null
@@ -3107,6 +3623,7 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_kyc_risk_score: { Args: { _user_id: string }; Returns: number }
       calculate_transaction_fee: {
         Args: {
           _institution_id: string
