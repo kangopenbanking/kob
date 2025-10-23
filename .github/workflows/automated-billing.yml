@@ -1,0 +1,45 @@
+name: Automated Billing Cron
+
+on:
+  schedule:
+    # Runs daily at 00:00 UTC (midnight)
+    - cron: '0 0 * * *'
+  
+  # Allows manual triggering from GitHub Actions UI
+  workflow_dispatch:
+
+jobs:
+  run-automated-billing:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Trigger automated billing edge function
+        run: |
+          echo "Triggering automated billing process..."
+          
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron \
+            -H "Content-Type: application/json" \
+            -d '{}')
+          
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+          
+          echo "Response body: $body"
+          echo "HTTP status code: $http_code"
+          
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
+            echo "✅ Automated billing completed successfully"
+            exit 0
+          else
+            echo "❌ Automated billing failed with status code $http_code"
+            exit 1
+          fi
+      
+      - name: Log completion
+        if: always()
+        run: |
+          echo "Billing run completed at $(date -u +"%Y-%m-%d %H:%M:%S UTC")"

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Activity, TrendingUp, Users, DollarSign } from "lucide-react";
+import { Activity, TrendingUp, Users, DollarSign, Receipt } from "lucide-react";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 
 export default function FIPortal() {
@@ -160,6 +160,7 @@ export default function FIPortal() {
           <TabsTrigger value="transactions">{t('transactions')}</TabsTrigger>
           <TabsTrigger value="analytics">{t('analytics')}</TabsTrigger>
           <TabsTrigger value="compliance">{t('compliance')}</TabsTrigger>
+          <TabsTrigger value="fees">Fees & Billing</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -222,7 +223,143 @@ export default function FIPortal() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="fees" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Transaction Fees & Billing</CardTitle>
+              <CardDescription>Your current fee structure and recent charges</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {institution?.id && <FeesDashboardWidget institutionId={institution.id} />}
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function FeesDashboardWidget({ institutionId }: { institutionId: string }) {
+  const [fees, setFees] = useState<any[]>([]);
+  const [structures, setStructures] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (institutionId) loadFeeData();
+  }, [institutionId]);
+
+  const loadFeeData = async () => {
+    setLoading(true);
+    const { data: feesData } = await supabase
+      .from('transaction_fees')
+      .select('*')
+      .eq('institution_id', institutionId)
+      .order('transaction_date', { ascending: false })
+      .limit(20);
+    
+    const { data: structuresData } = await supabase
+      .from('fee_structures')
+      .select('*')
+      .eq('institution_id', institutionId)
+      .eq('is_active', true);
+    
+    setFees(feesData || []);
+    setStructures(structuresData || []);
+    setLoading(false);
+  };
+
+  const totalFeesThisMonth = fees
+    .filter(f => new Date(f.transaction_date) >= new Date(new Date().getFullYear(), new Date().getMonth(), 1))
+    .reduce((sum, f) => sum + Number(f.final_fee), 0);
+
+  if (loading) {
+    return <div className="text-center py-8 text-muted-foreground">Loading fee data...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Receipt className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Fees This Month</p>
+            </div>
+            <p className="text-3xl font-bold">{totalFeesThisMonth.toLocaleString()} XAF</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="h-4 w-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Total Transactions</p>
+            </div>
+            <p className="text-3xl font-bold">{fees.length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Your Fee Structures</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {structures.map(structure => (
+              <div key={structure.id} className="p-4 border rounded-lg flex justify-between items-center hover:bg-muted/50 transition-colors">
+                <div>
+                  <p className="font-medium">{structure.transaction_type.replace(/_/g, ' ').toUpperCase()}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {structure.fee_model === 'fixed' && `Fixed: ${structure.fixed_amount} XAF`}
+                    {structure.fee_model === 'percentage' && `${structure.percentage_rate}%`}
+                    {structure.fee_model === 'hybrid' && `${structure.fixed_amount} XAF + ${structure.percentage_rate}%`}
+                    {structure.fee_model === 'tiered' && 'Tiered pricing'}
+                  </p>
+                </div>
+                <span className="text-xs bg-muted px-2 py-1 rounded">
+                  Since {new Date(structure.effective_from).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+            {structures.length === 0 && (
+              <p className="text-center text-muted-foreground py-4">No fee structures configured yet</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Recent Transaction Fees</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-2">
+            {fees.slice(0, 10).map(fee => (
+              <div key={fee.id} className="p-4 border rounded-lg flex justify-between items-center hover:bg-muted/50 transition-colors">
+                <div>
+                  <p className="font-medium">{fee.transaction_type.replace(/_/g, ' ')}</p>
+                  <p className="text-xs text-muted-foreground">{fee.transaction_ref}</p>
+                  <p className="text-xs text-muted-foreground">{new Date(fee.transaction_date).toLocaleDateString()}</p>
+                </div>
+                <div className="text-right">
+                  <p className="font-semibold">{Number(fee.final_fee).toLocaleString()} XAF</p>
+                  <span className={`text-xs px-2 py-1 rounded ${
+                    fee.billing_status === 'paid' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
+                    fee.billing_status === 'invoiced' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100' :
+                    'bg-muted text-muted-foreground'
+                  }`}>
+                    {fee.billing_status}
+                  </span>
+                </div>
+              </div>
+            ))}
+            {fees.length === 0 && (
+              <p className="text-center text-muted-foreground py-4">No transaction fees yet</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
