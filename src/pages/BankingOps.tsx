@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,8 +89,7 @@ export default function BankingOps() {
   };
 
   return (
-    <Layout>
-      <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Banking Operations</h1>
@@ -369,6 +367,5 @@ export default function BankingOps() {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
   );
 }
