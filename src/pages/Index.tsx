@@ -18,7 +18,6 @@ import {
   FileText,
   BarChart3,
 } from "lucide-react";
-import heroImage from "@/assets/hero-payment-terminal.gif";
 import heroBanner from "@/assets/hero-banner-kob.png";
 
 const Index = () => {
@@ -32,7 +31,7 @@ const Index = () => {
         ></div>
         <div className="absolute inset-0 bg-background/80"></div>
         <div className="container mx-auto px-4 py-20 md:py-32 relative">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="max-w-4xl mx-auto">
             <div className="space-y-8 animate-fade-in">
               <Badge variant="outline" className="w-fit">
                 🇨🇲 Proudly Cameroon's #1 Open Banking Platform
@@ -70,14 +69,6 @@ const Index = () => {
                   <span className="text-sm font-medium">PCI-DSS Certified</span>
                 </div>
               </div>
-            </div>
-            <div className="relative lg:block hidden">
-              <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-2xl blur-3xl"></div>
-              <img
-                src={heroImage}
-                alt="Banking Platform"
-                className="relative rounded-2xl shadow-2xl border"
-              />
             </div>
           </div>
         </div>
