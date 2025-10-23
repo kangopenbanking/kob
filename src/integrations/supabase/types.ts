@@ -3357,6 +3357,281 @@ export type Database = {
         }
         Relationships: []
       }
+      swift_messages: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          created_by: string | null
+          currency: string | null
+          direction: string
+          id: string
+          institution_id: string | null
+          message_content: string
+          message_type: string
+          parsed_data: Json | null
+          processed_at: string | null
+          receiver_bic: string | null
+          sender_bic: string | null
+          status: string
+          transaction_reference: string | null
+          validation_errors: Json | null
+          value_date: string | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          direction: string
+          id?: string
+          institution_id?: string | null
+          message_content: string
+          message_type: string
+          parsed_data?: Json | null
+          processed_at?: string | null
+          receiver_bic?: string | null
+          sender_bic?: string | null
+          status?: string
+          transaction_reference?: string | null
+          validation_errors?: Json | null
+          value_date?: string | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          currency?: string | null
+          direction?: string
+          id?: string
+          institution_id?: string | null
+          message_content?: string
+          message_type?: string
+          parsed_data?: Json | null
+          processed_at?: string | null
+          receiver_bic?: string | null
+          sender_bic?: string | null
+          status?: string
+          transaction_reference?: string | null
+          validation_errors?: Json | null
+          value_date?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swift_messages_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      swift_mt103_payments: {
+        Row: {
+          amount: number
+          bank_operation_code: string | null
+          beneficiary_customer: Json
+          beneficiary_institution: Json | null
+          created_at: string | null
+          currency: string
+          details_of_charges: string | null
+          id: string
+          ordering_customer: Json
+          ordering_institution: Json | null
+          receiver_correspondent: Json | null
+          regulatory_reporting: Json | null
+          related_reference: string | null
+          remittance_info: string | null
+          sender_correspondent: Json | null
+          sender_to_receiver_info: string | null
+          swift_message_id: string | null
+          transaction_reference: string
+          value_date: string
+        }
+        Insert: {
+          amount: number
+          bank_operation_code?: string | null
+          beneficiary_customer: Json
+          beneficiary_institution?: Json | null
+          created_at?: string | null
+          currency: string
+          details_of_charges?: string | null
+          id?: string
+          ordering_customer: Json
+          ordering_institution?: Json | null
+          receiver_correspondent?: Json | null
+          regulatory_reporting?: Json | null
+          related_reference?: string | null
+          remittance_info?: string | null
+          sender_correspondent?: Json | null
+          sender_to_receiver_info?: string | null
+          swift_message_id?: string | null
+          transaction_reference: string
+          value_date: string
+        }
+        Update: {
+          amount?: number
+          bank_operation_code?: string | null
+          beneficiary_customer?: Json
+          beneficiary_institution?: Json | null
+          created_at?: string | null
+          currency?: string
+          details_of_charges?: string | null
+          id?: string
+          ordering_customer?: Json
+          ordering_institution?: Json | null
+          receiver_correspondent?: Json | null
+          regulatory_reporting?: Json | null
+          related_reference?: string | null
+          remittance_info?: string | null
+          sender_correspondent?: Json | null
+          sender_to_receiver_info?: string | null
+          swift_message_id?: string | null
+          transaction_reference?: string
+          value_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swift_mt103_payments_swift_message_id_fkey"
+            columns: ["swift_message_id"]
+            isOneToOne: false
+            referencedRelation: "swift_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      swift_mt940_entries: {
+        Row: {
+          account_servicing_ref: string | null
+          amount: number
+          created_at: string | null
+          dc_indicator: string
+          entry_date: string | null
+          funds_code: string | null
+          id: string
+          mt940_statement_id: string | null
+          reference: string
+          supplementary_details: string | null
+          transaction_description: string | null
+          transaction_type: string
+          value_date: string
+        }
+        Insert: {
+          account_servicing_ref?: string | null
+          amount: number
+          created_at?: string | null
+          dc_indicator: string
+          entry_date?: string | null
+          funds_code?: string | null
+          id?: string
+          mt940_statement_id?: string | null
+          reference: string
+          supplementary_details?: string | null
+          transaction_description?: string | null
+          transaction_type: string
+          value_date: string
+        }
+        Update: {
+          account_servicing_ref?: string | null
+          amount?: number
+          created_at?: string | null
+          dc_indicator?: string
+          entry_date?: string | null
+          funds_code?: string | null
+          id?: string
+          mt940_statement_id?: string | null
+          reference?: string
+          supplementary_details?: string | null
+          transaction_description?: string | null
+          transaction_type?: string
+          value_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swift_mt940_entries_mt940_statement_id_fkey"
+            columns: ["mt940_statement_id"]
+            isOneToOne: false
+            referencedRelation: "swift_mt940_statements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      swift_mt940_statements: {
+        Row: {
+          account_identification: string
+          closing_available_balance: number | null
+          closing_available_balance_date: string | null
+          closing_balance: number
+          closing_balance_currency: string
+          closing_balance_date: string
+          closing_balance_dc_indicator: string
+          created_at: string | null
+          forward_available_balance: number | null
+          forward_available_balance_date: string | null
+          id: string
+          information_to_account_owner: string | null
+          opening_balance: number
+          opening_balance_currency: string
+          opening_balance_date: string
+          opening_balance_dc_indicator: string
+          sequence_number: string | null
+          statement_number: string
+          swift_message_id: string | null
+          transaction_reference: string
+        }
+        Insert: {
+          account_identification: string
+          closing_available_balance?: number | null
+          closing_available_balance_date?: string | null
+          closing_balance: number
+          closing_balance_currency: string
+          closing_balance_date: string
+          closing_balance_dc_indicator: string
+          created_at?: string | null
+          forward_available_balance?: number | null
+          forward_available_balance_date?: string | null
+          id?: string
+          information_to_account_owner?: string | null
+          opening_balance: number
+          opening_balance_currency: string
+          opening_balance_date: string
+          opening_balance_dc_indicator: string
+          sequence_number?: string | null
+          statement_number: string
+          swift_message_id?: string | null
+          transaction_reference: string
+        }
+        Update: {
+          account_identification?: string
+          closing_available_balance?: number | null
+          closing_available_balance_date?: string | null
+          closing_balance?: number
+          closing_balance_currency?: string
+          closing_balance_date?: string
+          closing_balance_dc_indicator?: string
+          created_at?: string | null
+          forward_available_balance?: number | null
+          forward_available_balance_date?: string | null
+          id?: string
+          information_to_account_owner?: string | null
+          opening_balance?: number
+          opening_balance_currency?: string
+          opening_balance_date?: string
+          opening_balance_dc_indicator?: string
+          sequence_number?: string | null
+          statement_number?: string
+          swift_message_id?: string | null
+          transaction_reference?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "swift_mt940_statements_swift_message_id_fkey"
+            columns: ["swift_message_id"]
+            isOneToOne: false
+            referencedRelation: "swift_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       system_alerts: {
         Row: {
           acknowledged_at: string | null

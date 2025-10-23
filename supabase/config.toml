@@ -91,3 +91,25 @@ verify_jwt = false
 # Automated billing cron job
 [functions.automated-billing-cron]
 verify_jwt = false
+
+# SWIFT Message Processing Functions
+
+# MT103 parser
+[functions.swift-mt103-parser]
+verify_jwt = false
+
+# MT940 parser
+[functions.swift-mt940-parser]
+verify_jwt = false
+
+# MT103 generator
+[functions.swift-mt103-generator]
+verify_jwt = false
+
+# IBAN validator
+[functions.validate-iban]
+verify_jwt = false
+
+# BIC validator
+[functions.validate-bic]
+verify_jwt = false
