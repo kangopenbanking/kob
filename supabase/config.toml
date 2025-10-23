@@ -77,3 +77,17 @@ verify_jwt = false
 # System Health Check
 [functions.system-health-check]
 verify_jwt = false
+
+# Fee Management System Edge Functions
+
+# Invoice generation and management (admin only)
+[functions.generate-invoice]
+verify_jwt = false
+
+# Automated invoice email delivery
+[functions.send-invoice-email]
+verify_jwt = false
+
+# Automated billing cron job
+[functions.automated-billing-cron]
+verify_jwt = false

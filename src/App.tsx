@@ -35,6 +35,7 @@ import FAQ from "./pages/FAQ";
 import Status from "./pages/Status";
 import NotFound from "./pages/NotFound";
 import FIPortal from "./pages/FIPortal";
+import FeeManagement from "./pages/FeeManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +82,7 @@ function App() {
             <Route path="/faq" element={<Layout><FAQ /></Layout>} />
             <Route path="/status" element={<Layout><Status /></Layout>} />
             <Route path="/fi-portal" element={<Layout><FIPortal /></Layout>} />
+            <Route path="/fee-management" element={<Layout><ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>

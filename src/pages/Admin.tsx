@@ -336,7 +336,7 @@ const Admin = () => {
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="registrations" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="registrations">
             <Building2 className="h-4 w-4 mr-2" />
             Registrations
@@ -348,6 +348,10 @@ const Admin = () => {
           <TabsTrigger value="payments">
             <DollarSign className="h-4 w-4 mr-2" />
             Payments
+          </TabsTrigger>
+          <TabsTrigger value="fees">
+            <DollarSign className="h-4 w-4 mr-2" />
+            Fee Management
           </TabsTrigger>
           <TabsTrigger value="audit">
             <Activity className="h-4 w-4 mr-2" />
@@ -549,6 +553,26 @@ const Admin = () => {
                   ))}
                 </div>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Fee Management */}
+        <TabsContent value="fees">
+          <Card>
+            <CardHeader>
+              <CardTitle>Fee Management System</CardTitle>
+              <CardDescription>
+                Configure transaction fees and manage billing for institutions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button onClick={() => navigate('/fee-management')}>
+                Open Fee Management Dashboard
+              </Button>
+              <p className="text-sm text-muted-foreground mt-4">
+                Manage fee structures, view transaction fees, generate invoices, and configure waivers for all institutions.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
