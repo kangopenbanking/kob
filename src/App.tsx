@@ -76,7 +76,7 @@ function App() {
             <Route path="/payments" element={<Layout><Payments /></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><KYCVerification /></Layout>} />
-            <Route path="/banking-ops" element={<Layout><BankingOps /></Layout>} />
+            <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
             <Route path="/cookies" element={<Layout><Cookies /></Layout>} />
