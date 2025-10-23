@@ -49,6 +49,7 @@ async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<bo
       return false;
     }
 
+    // Try sending as regular text message (works if conversation is active)
     const response = await fetch(
       `https://graph.facebook.com/v18.0/${phoneNumberId}/messages`,
       {
@@ -60,26 +61,26 @@ async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<bo
         body: JSON.stringify({
           messaging_product: 'whatsapp',
           to: phoneNumber,
-          type: 'template',
-          template: {
-            name: 'otp_verification',
-            language: { code: 'en' },
-            components: [
-              {
-                type: 'body',
-                parameters: [{ type: 'text', text: otpCode }]
-              }
-            ]
+          type: 'text',
+          text: {
+            preview_url: false,
+            body: `Your Kang Open Banking verification code is: ${otpCode}\n\nValid for 10 minutes. Do not share this code.\n\nIf you didn't request this, please ignore.`
           }
         })
       }
     );
 
     const result = await response.json();
-    console.log('WhatsApp message sent:', result);
-    return !!result.messages?.[0]?.id;
+    
+    if (result.messages?.[0]?.id) {
+      console.log('WhatsApp message sent successfully:', result.messages[0].id);
+      return true;
+    } else {
+      console.warn('WhatsApp send failed:', result);
+      return false;
+    }
   } catch (error) {
-    console.error('WhatsApp sending failed:', error);
+    console.error('WhatsApp sending failed:', error instanceof Error ? error.message : String(error));
     return false;
   }
 }
@@ -142,9 +143,10 @@ serve(async (req) => {
                      'unknown';
     const userAgent = req.headers.get('user-agent') || '';
 
-    // Send via selected delivery method(s)
+    // Send via selected delivery method(s) with automatic fallback
     let smsSent = false;
     let whatsappSent = false;
+    let actualDeliveryMethod = delivery_method;
 
     if (delivery_method === 'sms' || delivery_method === 'both') {
       smsSent = await sendViaSMS(phone_number, otpCode);
@@ -152,6 +154,15 @@ serve(async (req) => {
 
     if (delivery_method === 'whatsapp' || delivery_method === 'both') {
       whatsappSent = await sendViaWhatsApp(phone_number, otpCode);
+      
+      // Automatic fallback to SMS if WhatsApp fails and SMS wasn't already tried
+      if (!whatsappSent && delivery_method === 'whatsapp') {
+        console.log('WhatsApp failed, falling back to SMS');
+        smsSent = await sendViaSMS(phone_number, otpCode);
+        if (smsSent) {
+          actualDeliveryMethod = 'sms';
+        }
+      }
     }
 
     // Check if at least one delivery succeeded
@@ -159,7 +170,10 @@ serve(async (req) => {
 
     if (!deliverySuccessful) {
       return new Response(
-        JSON.stringify({ error: 'Failed to send OTP via any delivery method' }),
+        JSON.stringify({ 
+          error: 'Failed to send OTP via any delivery method',
+          details: 'Both SMS and WhatsApp delivery failed. Please check your phone number and try again.'
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
     }
@@ -171,7 +185,7 @@ serve(async (req) => {
         phone_number,
         otp_code: otpCode,
         otp_type,
-        delivery_method,
+        delivery_method: actualDeliveryMethod,
         expires_at: expiresAt,
         sms_sent: smsSent,
         sms_sent_at: smsSent ? new Date().toISOString() : null,
