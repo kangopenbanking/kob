@@ -40,6 +40,7 @@ import NotFound from "./pages/NotFound";
 import FIPortal from "./pages/FIPortal";
 import FeeManagement from "./pages/FeeManagement";
 import ISO20022Dashboard from "./pages/ISO20022Dashboard";
+import SWIFTDashboard from "./pages/SWIFTDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -91,6 +92,7 @@ function App() {
             <Route path="/fi-portal" element={<Layout><FIPortal /></Layout>} />
             <Route path="/fee-management" element={<Layout><ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
+            <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
           </Routes>
