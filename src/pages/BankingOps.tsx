@@ -5,14 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, ArrowLeftRight, FileCheck, Upload, Download, CreditCard } from "lucide-react";
+import { Building2, ArrowLeftRight, FileCheck, Upload, CreditCard } from "lucide-react";
 import { CardPaymentForm } from "@/components/payments/CardPaymentForm";
 import { BankTransferForm } from "@/components/payments/BankTransferForm";
+import { TransactionHistory } from "@/components/banking/TransactionHistory";
+import { BulkTransferProcessor } from "@/components/banking/BulkTransferProcessor";
+import { ReconciliationDetails } from "@/components/banking/ReconciliationDetails";
 
 export default function BankingOps() {
   const { toast } = useToast();
@@ -209,85 +209,17 @@ export default function BankingOps() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recent Transfers</CardTitle>
-                <CardDescription>View and track recent transfer operations</CardDescription>
+                <CardTitle>Transaction History</CardTitle>
+                <CardDescription>View and track all transaction operations</CardDescription>
               </CardHeader>
               <CardContent>
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Transaction Ref</TableHead>
-                      <TableHead>Source Account</TableHead>
-                      <TableHead>Destination</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell className="text-muted-foreground" colSpan={6}>
-                        No recent transfers
-                      </TableCell>
-                    </TableRow>
-                  </TableBody>
-                </Table>
+                <TransactionHistory />
               </CardContent>
             </Card>
           </TabsContent>
 
           <TabsContent value="reconciliation" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Transaction Reconciliation</CardTitle>
-                <CardDescription>
-                  Match and reconcile transactions across banking systems
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="recon_bank">Select Bank</Label>
-                    <Select value={selectedBank} onValueChange={setSelectedBank}>
-                      <SelectTrigger id="recon_bank">
-                        <SelectValue placeholder="Choose bank" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bank1">Commercial Bank Cameroon</SelectItem>
-                        <SelectItem value="bank2">Afriland First Bank</SelectItem>
-                        <SelectItem value="bank3">Société Générale</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="recon_from">From Date</Label>
-                    <Input id="recon_from" type="date" />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="recon_to">To Date</Label>
-                    <Input id="recon_to" type="date" />
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button disabled={!selectedBank}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Download Bank Statement
-                  </Button>
-                  <Button variant="outline" disabled={!selectedBank}>
-                    Start Reconciliation
-                  </Button>
-                </div>
-
-                <div className="border rounded-lg p-4 bg-muted/50">
-                  <p className="text-sm text-muted-foreground text-center py-8">
-                    Select a bank and date range to begin reconciliation
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
+            <ReconciliationDetails />
           </TabsContent>
 
           <TabsContent value="banks" className="space-y-6">
@@ -336,40 +268,7 @@ export default function BankingOps() {
           </TabsContent>
 
           <TabsContent value="bulk" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Bulk Transfer Upload</CardTitle>
-                <CardDescription>
-                  Upload CSV file for batch transfer processing
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                  <Upload className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Drop CSV file here or click to browse
-                  </p>
-                  <Input type="file" accept=".csv" className="max-w-xs mx-auto" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>CSV Format Requirements</Label>
-                  <div className="bg-muted p-4 rounded-lg">
-                    <code className="text-sm">
-                      source_account,destination_account,amount,description
-                      <br />
-                      ACC001,ACC002,10000.00,Salary Payment
-                      <br />
-                      ACC001,ACC003,5000.00,Vendor Payment
-                    </code>
-                  </div>
-                </div>
-
-                <Button disabled>
-                  Process Bulk Transfers
-                </Button>
-              </CardContent>
-            </Card>
+            <BulkTransferProcessor />
           </TabsContent>
 
           <TabsContent value="payments" className="space-y-6">

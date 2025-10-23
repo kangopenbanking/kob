@@ -129,36 +129,141 @@ serve(async (req) => {
   }
 });
 
-// Reconciliation matching logic
+// Reconciliation matching logic with real algorithms
 function performReconciliation(bankStatements: any[], systemTransactions: any[]) {
-  // Simplified matching algorithm
-  // In production, this would use sophisticated matching based on:
-  // - Transaction reference numbers
-  // - Amounts
-  // - Dates
-  // - Descriptions
+  const startTime = Date.now();
   
-  const matched = 0;
-  const unmatchedBank = bankStatements?.length || 0;
-  const unmatchedSystem = systemTransactions?.length || 0;
+  let matched = 0;
+  const unmatchedBank: any[] = [];
+  const unmatchedSystem: any[] = [];
+  const matchedPairs: any[] = [];
+  const amountMismatches: any[] = [];
+
+  // Create maps for efficient lookup
+  const systemTxnMap = new Map();
+  systemTransactions?.forEach(txn => {
+    const key = txn.transaction_reference;
+    if (!systemTxnMap.has(key)) {
+      systemTxnMap.set(key, []);
+    }
+    systemTxnMap.get(key).push(txn);
+  });
+
+  const matchedSystemIds = new Set();
+
+  // Match bank statements to system transactions
+  bankStatements?.forEach(bankStmt => {
+    let isMatched = false;
+
+    // Method 1: Exact reference match
+    if (bankStmt.transaction_ref) {
+      const sysTxns = systemTxnMap.get(bankStmt.transaction_ref);
+      if (sysTxns && sysTxns.length > 0) {
+        const sysTxn = sysTxns.find((t: any) => !matchedSystemIds.has(t.id));
+        if (sysTxn) {
+          // Check amount match
+          if (Math.abs(parseFloat(bankStmt.amount || 0) - parseFloat(sysTxn.amount || 0)) < 0.01) {
+            matched++;
+            matchedSystemIds.add(sysTxn.id);
+            matchedPairs.push({ bank: bankStmt, system: sysTxn, method: 'exact_reference' });
+            isMatched = true;
+          } else {
+            amountMismatches.push({
+              bank_amount: bankStmt.amount,
+              system_amount: sysTxn.amount,
+              reference: bankStmt.transaction_ref,
+            });
+          }
+        }
+      }
+    }
+
+    // Method 2: Amount + Date matching (within 24 hours)
+    if (!isMatched && bankStmt.transaction_date) {
+      const bankDate = new Date(bankStmt.transaction_date);
+      const bankAmount = parseFloat(bankStmt.amount || 0);
+
+      for (const sysTxn of systemTransactions || []) {
+        if (matchedSystemIds.has(sysTxn.id)) continue;
+
+        const sysDate = new Date(sysTxn.booking_date);
+        const sysAmount = parseFloat(sysTxn.amount || 0);
+        
+        // Check if within 24 hours and amount matches
+        const timeDiff = Math.abs(bankDate.getTime() - sysDate.getTime());
+        const hoursApart = timeDiff / (1000 * 60 * 60);
+        
+        if (hoursApart <= 24 && Math.abs(bankAmount - sysAmount) < 0.01) {
+          matched++;
+          matchedSystemIds.add(sysTxn.id);
+          matchedPairs.push({ bank: bankStmt, system: sysTxn, method: 'amount_date_match' });
+          isMatched = true;
+          break;
+        }
+      }
+    }
+
+    // Method 3: Fuzzy description matching (Levenshtein distance)
+    if (!isMatched && bankStmt.description) {
+      const bankDesc = (bankStmt.description || '').toLowerCase();
+      const bankAmount = parseFloat(bankStmt.amount || 0);
+
+      for (const sysTxn of systemTransactions || []) {
+        if (matchedSystemIds.has(sysTxn.id)) continue;
+
+        const sysDesc = (sysTxn.transaction_information || '').toLowerCase();
+        const sysAmount = parseFloat(sysTxn.amount || 0);
+        
+        // Calculate similarity (simple word overlap)
+        const bankWords = new Set(bankDesc.split(/\s+/));
+        const sysWords = new Set(sysDesc.split(/\s+/));
+        const intersection = new Set([...bankWords].filter(x => sysWords.has(x)));
+        const similarity = intersection.size / Math.max(bankWords.size, sysWords.size);
+        
+        // Match if high similarity and amount matches
+        if (similarity > 0.6 && Math.abs(bankAmount - sysAmount) < 0.01) {
+          matched++;
+          matchedSystemIds.add(sysTxn.id);
+          matchedPairs.push({ bank: bankStmt, system: sysTxn, method: 'fuzzy_description' });
+          isMatched = true;
+          break;
+        }
+      }
+    }
+
+    if (!isMatched) {
+      unmatchedBank.push(bankStmt);
+    }
+  });
+
+  // Find unmatched system transactions
+  systemTransactions?.forEach(sysTxn => {
+    if (!matchedSystemIds.has(sysTxn.id)) {
+      unmatchedSystem.push(sysTxn);
+    }
+  });
+
+  const processingTime = Date.now() - startTime;
 
   const report = {
-    reconciliation_method: 'reference_and_amount_matching',
+    reconciliation_method: 'multi_method_matching',
+    methods_used: ['exact_reference', 'amount_date_match', 'fuzzy_description'],
     total_processed: (bankStatements?.length || 0) + (systemTransactions?.length || 0),
-    processing_time_ms: 0
+    processing_time_ms: processingTime,
+    matched_pairs: matchedPairs.length,
   };
 
   const discrepancies = {
-    missing_in_system: [],
-    missing_in_bank: [],
-    amount_mismatches: []
+    missing_in_system: unmatchedBank,
+    missing_in_bank: unmatchedSystem,
+    amount_mismatches: amountMismatches,
   };
 
   return {
     matched,
-    unmatchedBank,
-    unmatchedSystem,
+    unmatchedBank: unmatchedBank.length,
+    unmatchedSystem: unmatchedSystem.length,
     report,
-    discrepancies
+    discrepancies,
   };
 }

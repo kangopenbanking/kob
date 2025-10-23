@@ -72,6 +72,12 @@ verify_jwt = false
 [functions.webhook-delivery]
 verify_jwt = false
 
+[functions.flutterwave-transfer-webhook]
+verify_jwt = false
+
+[functions.bulk-transfers]
+verify_jwt = false
+
 # Phase 8 Edge Functions - Production Readiness & Monitoring
 
 # System Health Check
