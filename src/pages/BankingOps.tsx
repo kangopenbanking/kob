@@ -19,6 +19,7 @@ import { BankConnectionManager } from "@/components/banking/BankConnectionManage
 import { MobileMoneyToBankTransfer } from "@/components/banking/MobileMoneyToBankTransfer";
 import { TransactionImportPreview } from "@/components/banking/TransactionImportPreview";
 import { ErrorHandlingDashboard } from "@/components/banking/ErrorHandlingDashboard";
+import MobileMoney from "./MobileMoney";
 
 export default function BankingOps() {
   const { toast } = useToast();
@@ -262,11 +263,16 @@ export default function BankingOps() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <Tabs defaultValue="card" className="w-full">
-                  <TabsList className="grid w-full grid-cols-2">
+                <Tabs defaultValue="mobile" className="w-full">
+                  <TabsList className="grid w-full grid-cols-3">
+                    <TabsTrigger value="mobile">Mobile Money</TabsTrigger>
                     <TabsTrigger value="card">Credit/Debit Card</TabsTrigger>
                     <TabsTrigger value="bank">Bank Transfer</TabsTrigger>
                   </TabsList>
+                  
+                  <TabsContent value="mobile" className="mt-6">
+                    <MobileMoney />
+                  </TabsContent>
                   
                   <TabsContent value="card" className="mt-6">
                     <CardPaymentForm />
