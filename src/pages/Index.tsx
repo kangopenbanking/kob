@@ -18,8 +18,8 @@ import {
   FileText,
   BarChart3,
 } from "lucide-react";
-import heroImage from "@/assets/hero-banking.jpg";
-import heroBanner from "@/assets/hero-cameroon-xaf.png";
+import heroImage from "@/assets/hero-cameroon-xaf.png";
+import heroBanner from "@/assets/hero-banner-kob.png";
 
 const Index = () => {
   return (
