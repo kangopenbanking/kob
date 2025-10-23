@@ -16,6 +16,8 @@ import { BulkTransferProcessor } from "@/components/banking/BulkTransferProcesso
 import { ReconciliationDetails } from "@/components/banking/ReconciliationDetails";
 import { BankStatementGenerator } from "@/components/banking/BankStatementGenerator";
 import { BankConnectionManager } from "@/components/banking/BankConnectionManager";
+import { TransactionImportPreview } from "@/components/banking/TransactionImportPreview";
+import { ErrorHandlingDashboard } from "@/components/banking/ErrorHandlingDashboard";
 
 export default function BankingOps() {
   const { toast } = useToast();
@@ -105,7 +107,7 @@ export default function BankingOps() {
         </div>
 
         <Tabs defaultValue="transfers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto">
             <TabsTrigger value="transfers" className="gap-2">
               <ArrowLeftRight className="h-4 w-4" />
               Transfers
@@ -116,15 +118,23 @@ export default function BankingOps() {
             </TabsTrigger>
             <TabsTrigger value="banks" className="gap-2">
               <Building2 className="h-4 w-4" />
-              Bank Connections
+              Banks
             </TabsTrigger>
             <TabsTrigger value="bulk" className="gap-2">
               <Upload className="h-4 w-4" />
-              Bulk Operations
+              Bulk
+            </TabsTrigger>
+            <TabsTrigger value="import" className="gap-2">
+              <Upload className="h-4 w-4" />
+              Import
             </TabsTrigger>
             <TabsTrigger value="payments" className="gap-2">
               <CreditCard className="h-4 w-4" />
-              Payment Processing
+              Payments
+            </TabsTrigger>
+            <TabsTrigger value="monitoring" className="gap-2">
+              <FileCheck className="h-4 w-4" />
+              Monitoring
             </TabsTrigger>
           </TabsList>
 
@@ -234,6 +244,10 @@ export default function BankingOps() {
             <BulkTransferProcessor />
           </TabsContent>
 
+          <TabsContent value="import" className="space-y-6">
+            <TransactionImportPreview />
+          </TabsContent>
+
           <TabsContent value="payments" className="space-y-6">
             <Card>
               <CardHeader>
@@ -259,6 +273,10 @@ export default function BankingOps() {
                 </Tabs>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="monitoring" className="space-y-6">
+            <ErrorHandlingDashboard />
           </TabsContent>
         </Tabs>
       </div>

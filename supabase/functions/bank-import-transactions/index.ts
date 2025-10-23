@@ -216,18 +216,114 @@ function parseCSV(data: string): any[] {
   return transactions;
 }
 
-// MT940 parser placeholder
+// MT940 Parser
 function parseMT940(data: string): any[] {
-  // MT940 is a SWIFT standard format
-  // In production, use a proper MT940 parser library
-  console.log('MT940 parsing not yet implemented');
-  return [];
+  const transactions: any[] = [];
+  const lines = data.split('\n').map(line => line.trim());
+  
+  let currentTransaction: any = {};
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Transaction line :61:
+    if (line.startsWith(':61:')) {
+      if (currentTransaction.reference) {
+        transactions.push(currentTransaction);
+      }
+      
+      const content = line.substring(4);
+      const dateMatch = content.match(/^(\d{6})(\d{4})?(C|D)(\d+,\d+)/);
+      
+      if (dateMatch) {
+        const [_, valueDate, bookDate, dcMark, amount] = dateMatch;
+        
+        const parseDate = (yymmdd: string) => {
+          const yy = yymmdd.substring(0, 2);
+          const mm = yymmdd.substring(2, 4);
+          const dd = yymmdd.substring(4, 6);
+          const year = parseInt(yy) > 50 ? `19${yy}` : `20${yy}`;
+          return `${year}-${mm}-${dd}T00:00:00Z`;
+        };
+        
+        currentTransaction = {
+          value_date: parseDate(valueDate),
+          booking_date: bookDate ? parseDate(valueDate.substring(0, 4) + bookDate) : parseDate(valueDate),
+          credit_debit_indicator: dcMark === 'C' ? 'Credit' : 'Debit',
+          amount: parseFloat(amount.replace(',', '.')),
+          reference: content.substring(dateMatch[0].length).trim() || `MT940-${Date.now()}-${i}`,
+        };
+      }
+    }
+    
+    // Transaction information :86:
+    if (line.startsWith(':86:')) {
+      if (currentTransaction) {
+        currentTransaction.description = line.substring(4);
+      }
+    }
+  }
+  
+  if (currentTransaction.reference) {
+    transactions.push(currentTransaction);
+  }
+  
+  return transactions.map(txn => ({
+    transaction_reference: txn.reference,
+    amount: txn.amount,
+    currency: 'XAF',
+    credit_debit_indicator: txn.credit_debit_indicator,
+    booking_date: txn.booking_date,
+    value_date: txn.value_date,
+    transaction_information: txn.description || 'MT940 Import',
+  }));
 }
 
-// CAMT053 parser placeholder
+// CAMT053 Parser
 function parseCAMT053(data: string): any[] {
-  // CAMT053 is an XML-based ISO 20022 format
-  // In production, use an XML parser and CAMT053 schema
-  console.log('CAMT053 parsing not yet implemented');
-  return [];
+  const transactions: any[] = [];
+  
+  try {
+    const entryRegex = /<Ntry>(.*?)<\/Ntry>/gs;
+    const entries = data.match(entryRegex);
+    
+    if (!entries) return [];
+    
+    entries.forEach((entry, index) => {
+      const amtMatch = entry.match(/<Amt[^>]*>([^<]+)<\/Amt>/);
+      const amount = amtMatch ? parseFloat(amtMatch[1]) : 0;
+      
+      const cdtDbtIndMatch = entry.match(/<CdtDbtInd>([^<]+)<\/CdtDbtInd>/);
+      const creditDebitIndicator = cdtDbtIndMatch && cdtDbtIndMatch[1] === 'CRDT' ? 'Credit' : 'Debit';
+      
+      const bookDtMatch = entry.match(/<BookgDt>.*?<Dt>([^<]+)<\/Dt>.*?<\/BookgDt>/s);
+      const bookingDate = bookDtMatch ? bookDtMatch[1] + 'T00:00:00Z' : new Date().toISOString();
+      
+      const valDtMatch = entry.match(/<ValDt>.*?<Dt>([^<]+)<\/Dt>.*?<\/ValDt>/s);
+      const valueDate = valDtMatch ? valDtMatch[1] + 'T00:00:00Z' : bookingDate;
+      
+      const refMatch = entry.match(/<AcctSvcrRef>([^<]+)<\/AcctSvcrRef>/);
+      const reference = refMatch ? refMatch[1] : `CAMT-${Date.now()}-${index}`;
+      
+      const addtlInfMatch = entry.match(/<AddtlNtryInf>([^<]+)<\/AddtlNtryInf>/);
+      const description = addtlInfMatch ? addtlInfMatch[1] : 'CAMT.053 Import';
+      
+      const ccyMatch = entry.match(/<Amt[^>]*Ccy="([^"]+)"/);
+      const currency = ccyMatch ? ccyMatch[1] : 'XAF';
+      
+      transactions.push({
+        transaction_reference: reference,
+        amount,
+        currency,
+        credit_debit_indicator: creditDebitIndicator,
+        booking_date: bookingDate,
+        value_date: valueDate,
+        transaction_information: description,
+      });
+    });
+  } catch (error) {
+    console.error('CAMT053 parsing error:', error);
+  }
+  
+  return transactions;
 }
