@@ -17,15 +17,58 @@ export default function KYCVerification() {
     document_country: '',
     document_expiry_date: '',
   });
+  const [files, setFiles] = useState<{
+    front: File | null;
+    back: File | null;
+    selfie: File | null;
+  }>({ front: null, back: null, selfie: null });
   const { toast } = useToast();
+
+  const uploadFile = async (file: File, type: string): Promise<string> => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${type}_${Date.now()}.${fileExt}`;
+    
+    const { error: uploadError } = await supabase.storage
+      .from('kyc-documents')
+      .upload(fileName, file);
+    
+    if (uploadError) throw uploadError;
+    
+    const { data: { publicUrl } } = supabase.storage
+      .from('kyc-documents')
+      .getPublicUrl(fileName);
+    
+    return publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      let document_front_url, document_back_url, selfie_url;
+      
+      // Upload files to storage
+      if (files.front) {
+        document_front_url = await uploadFile(files.front, 'front');
+      }
+      if (files.back) {
+        document_back_url = await uploadFile(files.back, 'back');
+      }
+      if (files.selfie) {
+        selfie_url = await uploadFile(files.selfie, 'selfie');
+      }
+
       const { data, error } = await supabase.functions.invoke('kyc-submit', {
-        body: formData
+        body: {
+          ...formData,
+          document_front_url,
+          document_back_url,
+          selfie_url
+        }
       });
 
       if (error) throw error;
@@ -43,6 +86,7 @@ export default function KYCVerification() {
         document_country: '',
         document_expiry_date: '',
       });
+      setFiles({ front: null, back: null, selfie: null });
     } catch (error: any) {
       console.error('Error submitting KYC:', error);
       toast({
@@ -143,30 +187,50 @@ export default function KYCVerification() {
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>Document Upload</Label>
-              <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-sm text-muted-foreground mb-4">
-                  Click to upload or drag and drop
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  PNG, JPG or PDF (max. 10MB)
-                </p>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="document-front">Document Front *</Label>
                 <Input
+                  id="document-front"
                   type="file"
                   accept="image/*,.pdf"
-                  className="hidden"
-                  id="file-upload"
+                  onChange={(e) => setFiles({ ...files, front: e.target.files?.[0] || null })}
                 />
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => document.getElementById('file-upload')?.click()}
-                >
-                  Choose File
-                </Button>
+                {files.front && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {files.front.name}
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="document-back">Document Back (if applicable)</Label>
+                <Input
+                  id="document-back"
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setFiles({ ...files, back: e.target.files?.[0] || null })}
+                />
+                {files.back && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {files.back.name}
+                  </p>
+                )}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="selfie">Selfie Photo *</Label>
+                <Input
+                  id="selfie"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setFiles({ ...files, selfie: e.target.files?.[0] || null })}
+                />
+                {files.selfie && (
+                  <p className="text-sm text-muted-foreground">
+                    Selected: {files.selfie.name}
+                  </p>
+                )}
               </div>
             </div>
 

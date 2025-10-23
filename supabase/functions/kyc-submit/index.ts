@@ -79,6 +79,27 @@ Deno.serve(async (req) => {
       _metadata: { verification_id: verification.id, verification_type }
     });
 
+    // Trigger automated sanctions screening
+    try {
+      const { data: userData } = await supabase
+        .from('profiles')
+        .select('full_name')
+        .eq('id', user.id)
+        .single();
+
+      await supabase.functions.invoke('sanctions-screen', {
+        body: {
+          full_name: userData?.full_name || user.email,
+          date_of_birth: document_expiry_date,
+          nationality: document_country,
+          document_number
+        }
+      });
+    } catch (screeningError) {
+      console.error('Sanctions screening error:', screeningError);
+      // Continue even if screening fails - will be flagged for manual review
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

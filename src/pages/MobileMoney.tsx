@@ -55,7 +55,8 @@ export default function MobileMoney() {
     amount: "",
     phone_number: "",
     provider: "mtn",
-    description: ""
+    description: "",
+    currency: "XAF"
   });
 
   const [transferForm, setTransferForm] = useState({
@@ -63,7 +64,8 @@ export default function MobileMoney() {
     phone_number: "",
     provider: "mtn",
     description: "",
-    beneficiary_name: ""
+    beneficiary_name: "",
+    currency: "XAF"
   });
 
   useEffect(() => {
@@ -180,6 +182,7 @@ export default function MobileMoney() {
         phone_number: chargeForm.phone_number,
         provider: chargeForm.provider,
         description: chargeForm.description || "Mobile money charge",
+        currency: chargeForm.currency
       },
     });
 
@@ -196,7 +199,7 @@ export default function MobileMoney() {
         title: "Success",
         description: data.data.message,
       });
-      setChargeForm({ amount: "", phone_number: "", provider: "mtn", description: "" });
+      setChargeForm({ amount: "", phone_number: "", provider: "mtn", description: "", currency: "XAF" });
       fetchTransactions();
     }
   };
@@ -219,6 +222,7 @@ export default function MobileMoney() {
         provider: transferForm.provider,
         description: transferForm.description || "Mobile money transfer",
         beneficiary_name: transferForm.beneficiary_name,
+        currency: transferForm.currency
       },
     });
 
@@ -235,7 +239,7 @@ export default function MobileMoney() {
         title: "Success",
         description: data.data.message,
       });
-      setTransferForm({ amount: "", phone_number: "", provider: "mtn", description: "", beneficiary_name: "" });
+      setTransferForm({ amount: "", phone_number: "", provider: "mtn", description: "", beneficiary_name: "", currency: "XAF" });
       fetchTransactions();
     }
   };
@@ -368,7 +372,28 @@ export default function MobileMoney() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="charge-amount">Amount (XAF)</Label>
+                <Label htmlFor="charge-currency">Currency</Label>
+                <Select
+                  value={chargeForm.currency}
+                  onValueChange={(value) => setChargeForm({ ...chargeForm, currency: value })}
+                >
+                  <SelectTrigger id="charge-currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="XAF">XAF (FCFA)</SelectItem>
+                    <SelectItem value="NGN">NGN (₦)</SelectItem>
+                    <SelectItem value="GHS">GHS (₵)</SelectItem>
+                    <SelectItem value="KES">KES (KSh)</SelectItem>
+                    <SelectItem value="UGX">UGX (USh)</SelectItem>
+                    <SelectItem value="TZS">TZS (TSh)</SelectItem>
+                    <SelectItem value="ZAR">ZAR (R)</SelectItem>
+                    <SelectItem value="RWF">RWF (RF)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="charge-amount">Amount ({chargeForm.currency})</Label>
                 <Input
                   id="charge-amount"
                   type="number"
@@ -426,7 +451,28 @@ export default function MobileMoney() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label htmlFor="transfer-amount">Amount (XAF)</Label>
+                <Label htmlFor="transfer-currency">Currency</Label>
+                <Select
+                  value={transferForm.currency}
+                  onValueChange={(value) => setTransferForm({ ...transferForm, currency: value })}
+                >
+                  <SelectTrigger id="transfer-currency">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="XAF">XAF (FCFA)</SelectItem>
+                    <SelectItem value="NGN">NGN (₦)</SelectItem>
+                    <SelectItem value="GHS">GHS (₵)</SelectItem>
+                    <SelectItem value="KES">KES (KSh)</SelectItem>
+                    <SelectItem value="UGX">UGX (USh)</SelectItem>
+                    <SelectItem value="TZS">TZS (TSh)</SelectItem>
+                    <SelectItem value="ZAR">ZAR (R)</SelectItem>
+                    <SelectItem value="RWF">RWF (RF)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="transfer-amount">Amount ({transferForm.currency})</Label>
                 <Input
                   id="transfer-amount"
                   type="number"

@@ -10,7 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, ArrowLeftRight, FileCheck, Upload, Download } from "lucide-react";
+import { Building2, ArrowLeftRight, FileCheck, Upload, Download, CreditCard } from "lucide-react";
+import { CardPaymentForm } from "@/components/payments/CardPaymentForm";
+import { BankTransferForm } from "@/components/payments/BankTransferForm";
 
 export default function BankingOps() {
   const { toast } = useToast();
@@ -100,7 +102,7 @@ export default function BankingOps() {
         </div>
 
         <Tabs defaultValue="transfers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto">
             <TabsTrigger value="transfers" className="gap-2">
               <ArrowLeftRight className="h-4 w-4" />
               Transfers
@@ -116,6 +118,10 @@ export default function BankingOps() {
             <TabsTrigger value="bulk" className="gap-2">
               <Upload className="h-4 w-4" />
               Bulk Operations
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="gap-2">
+              <CreditCard className="h-4 w-4" />
+              Payment Processing
             </TabsTrigger>
           </TabsList>
 
@@ -362,6 +368,33 @@ export default function BankingOps() {
                 <Button disabled>
                   Process Bulk Transfers
                 </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="payments" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Processing</CardTitle>
+                <CardDescription>
+                  Process payments via Mobile Money, Credit/Debit Cards, and Bank Transfers
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Tabs defaultValue="card" className="w-full">
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="card">Credit/Debit Card</TabsTrigger>
+                    <TabsTrigger value="bank">Bank Transfer</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="card" className="mt-6">
+                    <CardPaymentForm />
+                  </TabsContent>
+                  
+                  <TabsContent value="bank" className="mt-6">
+                    <BankTransferForm />
+                  </TabsContent>
+                </Tabs>
               </CardContent>
             </Card>
           </TabsContent>
