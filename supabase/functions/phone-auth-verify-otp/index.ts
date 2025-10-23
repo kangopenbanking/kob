@@ -193,7 +193,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('OTP verification error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to verify OTP', details: error.message }),
+      JSON.stringify({ error: 'Failed to verify OTP', details: error instanceof Error ? error.message : String(error) }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

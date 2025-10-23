@@ -142,7 +142,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: 'Failed to verify captcha',
-        details: error.message,
+        details: error instanceof Error ? error.message : String(error),
         verified: false 
       }),
       { 

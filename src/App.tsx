@@ -12,6 +12,7 @@ import Register from "./pages/Register";
 import Admin from "./pages/Admin";
 import Developer from "./pages/Developer";
 import Auth from "./pages/Auth";
+import ProfileSettings from "./pages/ProfileSettings";
 import TPPRegistration from "./pages/TPPRegistration";
 import ConsentManagement from "./pages/ConsentManagement";
 import Analytics from "./pages/Analytics";
@@ -77,6 +78,7 @@ function App() {
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><KYCVerification /></Layout>} />
             <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />
+            <Route path="/profile-settings" element={<Layout><ProtectedRoute><ProfileSettings /></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
             <Route path="/cookies" element={<Layout><Cookies /></Layout>} />
