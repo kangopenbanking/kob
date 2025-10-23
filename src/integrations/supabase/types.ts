@@ -924,6 +924,51 @@ export type Database = {
           },
         ]
       }
+      captcha_challenges: {
+        Row: {
+          attempts: number | null
+          challenge_answer: number
+          challenge_question: string
+          created_at: string | null
+          expires_at: string
+          id: string
+          ip_address: unknown
+          max_attempts: number | null
+          session_id: string
+          status: string | null
+          user_agent: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          challenge_answer: number
+          challenge_question: string
+          created_at?: string | null
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          max_attempts?: number | null
+          session_id: string
+          status?: string | null
+          user_agent?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          challenge_answer?: number
+          challenge_question?: string
+          created_at?: string | null
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          max_attempts?: number | null
+          session_id?: string
+          status?: string | null
+          user_agent?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       card_payment_transactions: {
         Row: {
           amount: number
@@ -2615,6 +2660,69 @@ export type Database = {
         }
         Relationships: []
       }
+      phone_otp_codes: {
+        Row: {
+          attempts: number | null
+          created_at: string | null
+          delivery_method: string
+          expires_at: string
+          id: string
+          ip_address: unknown
+          max_attempts: number | null
+          otp_code: string
+          otp_type: string
+          phone_number: string
+          sms_sent: boolean | null
+          sms_sent_at: string | null
+          status: string | null
+          user_agent: string | null
+          user_id: string | null
+          verified_at: string | null
+          whatsapp_sent: boolean | null
+          whatsapp_sent_at: string | null
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string | null
+          delivery_method: string
+          expires_at: string
+          id?: string
+          ip_address?: unknown
+          max_attempts?: number | null
+          otp_code: string
+          otp_type: string
+          phone_number: string
+          sms_sent?: boolean | null
+          sms_sent_at?: string | null
+          status?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          verified_at?: string | null
+          whatsapp_sent?: boolean | null
+          whatsapp_sent_at?: string | null
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string | null
+          delivery_method?: string
+          expires_at?: string
+          id?: string
+          ip_address?: unknown
+          max_attempts?: number | null
+          otp_code?: string
+          otp_type?: string
+          phone_number?: string
+          sms_sent?: boolean | null
+          sms_sent_at?: string | null
+          status?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+          verified_at?: string | null
+          whatsapp_sent?: boolean | null
+          whatsapp_sent_at?: string | null
+        }
+        Relationships: []
+      }
       pisp_consents: {
         Row: {
           authorization_code: string | null
@@ -2697,24 +2805,57 @@ export type Database = {
       }
       profiles: {
         Row: {
+          country_code: string | null
           created_at: string
-          email: string
+          email: string | null
           full_name: string | null
           id: string
+          migration_grace_period_ends: string | null
+          migration_required: boolean | null
+          phone_number: string | null
+          phone_verified: boolean | null
+          phone_verified_at: string | null
+          pin_attempts: number | null
+          pin_code_hash: string | null
+          pin_code_set_at: string | null
+          pin_locked_until: string | null
+          preferred_otp_method: string | null
           updated_at: string
         }
         Insert: {
+          country_code?: string | null
           created_at?: string
-          email: string
+          email?: string | null
           full_name?: string | null
           id: string
+          migration_grace_period_ends?: string | null
+          migration_required?: boolean | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          pin_attempts?: number | null
+          pin_code_hash?: string | null
+          pin_code_set_at?: string | null
+          pin_locked_until?: string | null
+          preferred_otp_method?: string | null
           updated_at?: string
         }
         Update: {
+          country_code?: string | null
           created_at?: string
-          email?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          migration_grace_period_ends?: string | null
+          migration_required?: boolean | null
+          phone_number?: string | null
+          phone_verified?: boolean | null
+          phone_verified_at?: string | null
+          pin_attempts?: number | null
+          pin_code_hash?: string | null
+          pin_code_set_at?: string | null
+          pin_locked_until?: string | null
+          preferred_otp_method?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -4345,6 +4486,7 @@ export type Database = {
         Returns: Json
       }
       cleanup_expired_auth_codes: { Args: never; Returns: undefined }
+      cleanup_expired_auth_records: { Args: never; Returns: undefined }
       cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
       cleanup_expired_par_requests: { Args: never; Returns: undefined }
       expire_old_consents: { Args: never; Returns: undefined }
