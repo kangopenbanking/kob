@@ -18,7 +18,7 @@ import {
   FileText,
   BarChart3,
 } from "lucide-react";
-import heroImage from "@/assets/hero-cameroon-xaf.png";
+import heroImage from "@/assets/hero-payment-terminal.gif";
 import heroBanner from "@/assets/hero-banner-kob.png";
 
 const Index = () => {
