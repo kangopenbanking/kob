@@ -70,12 +70,10 @@ serve(async (req) => {
       );
     }
 
-    // Defer marking OTP as verified until after successful processing
-
-    let authData;
+    let authData: any;
 
     if (otp_type === 'signup') {
-      // Create new user with phone number
+      // Create or link user with phone number; email optional (can be added later)
       if (!full_name) {
         return new Response(
           JSON.stringify({ error: 'full_name is required for signup' }),
@@ -83,56 +81,94 @@ serve(async (req) => {
         );
       }
 
-      // Generate temp email if none provided to satisfy Supabase Auth requirements
       const userEmail = email || `${phone_number.replace(/[^0-9]/g, '')}@temp.kob.cm`;
 
-      const { data: signupData, error: signupError } = await supabase.auth.admin.createUser({
-        phone: phone_number,
-        phone_confirm: true,
-        email: userEmail,
-        email_confirm: email ? true : false,
-        user_metadata: {
-          full_name,
-          phone_number,
-          country_code: country_code || '+237',
-        },
-      });
+      // Pre-check if phone already exists; if yes, treat as login
+      let targetUserId: string | undefined;
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', phone_number)
+        .single();
 
-      if (signupError) {
-        console.error('Signup error:', signupError);
-        
-        // Handle email already exists error
-        if (signupError.message?.includes('email') && signupError.message?.includes('registered')) {
+      if (existingProfile) {
+        // Mark phone verified and continue as login
+        await supabase
+          .from('profiles')
+          .update({
+            phone_number,
+            phone_verified: true,
+            phone_verified_at: new Date().toISOString(),
+            country_code: country_code || '+237',
+            migration_required: false,
+          })
+          .eq('id', existingProfile.id);
+
+        const { data: userData } = await supabase.auth.admin.getUserById(existingProfile.id);
+        authData = userData;
+        targetUserId = existingProfile.id;
+        console.log(`Phone already registered, treating as login: ${phone_number}`);
+      } else {
+        const { data: signupData, error: signupError }: any = await supabase.auth.admin.createUser({
+          phone: phone_number,
+          phone_confirm: true,
+          email: userEmail,
+          email_confirm: email ? true : false,
+          user_metadata: {
+            full_name,
+            phone_number,
+            country_code: country_code || '+237',
+          },
+        });
+
+        if (signupError) {
+          console.error('Signup error:', signupError);
+          const msg = (signupError.message || '').toLowerCase();
+          if (msg.includes('phone number already registered') || signupError.code === 'phone_exists') {
+            return new Response(
+              JSON.stringify({
+                error: 'phone_exists',
+                message: 'This phone number is already registered. Please switch to Login.',
+                details: signupError.message,
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+            );
+          }
+          if (msg.includes('email') && msg.includes('registered')) {
+            return new Response(
+              JSON.stringify({
+                error: 'email_exists',
+                message: 'This email is already registered. Please use a different email or log in.',
+                details: signupError.message,
+              }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+            );
+          }
           return new Response(
-            JSON.stringify({ 
-              error: 'email_exists', 
-              message: 'This email is already registered. Please use a different email or log in.',
-              details: signupError.message 
-            }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
+            JSON.stringify({ error: 'Failed to create user', details: signupError.message }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
           );
         }
-        
-        return new Response(
-          JSON.stringify({ error: 'Failed to create user', details: signupError.message }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-        );
+
+        // Update profile with phone verification for new user
+        await supabase
+          .from('profiles')
+          .update({
+            phone_number,
+            phone_verified: true,
+            phone_verified_at: new Date().toISOString(),
+            country_code: country_code || '+237',
+            migration_required: false,
+          })
+          .eq('id', signupData.user.id);
+
+        authData = signupData;
+        targetUserId = signupData.user.id;
+        console.log(`User created successfully: ${phone_number}`);
       }
 
-      // Update profile with phone verification
-      await supabase
-        .from('profiles')
-        .update({
-          phone_number,
-          phone_verified: true,
-          phone_verified_at: new Date().toISOString(),
-          country_code: country_code || '+237',
-          migration_required: false,
-        })
-        .eq('id', signupData.user.id);
-
       // Set PIN code if provided (use Web Crypto with salted SHA-256)
-      if (pin_code && pin_code.length === 6) {
+      if (pin_code && pin_code.length === 6 && targetUserId) {
         const encoder = new TextEncoder();
         const salt = crypto.getRandomValues(new Uint8Array(16));
         const pinBytes = encoder.encode(pin_code);
@@ -150,24 +186,8 @@ serve(async (req) => {
             pin_code_hash: pinHash,
             pin_code_set_at: new Date().toISOString(),
           })
-          .eq('id', signupData.user.id);
+          .eq('id', targetUserId);
       }
-
-      // Generate session for new user
-      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: email || `${phone_number.replace(/[^0-9]/g, '')}@temp.kob.cm`,
-        options: {
-          redirectTo: `${req.headers.get('origin') || 'http://localhost:8080'}/dashboard`,
-        },
-      });
-
-      if (sessionError) {
-        console.error('Session generation error:', sessionError);
-      }
-
-      authData = signupData;
-      console.log(`User created successfully: ${phone_number}`);
 
     } else if (otp_type === 'login') {
       // Find existing user by phone
@@ -184,7 +204,7 @@ serve(async (req) => {
         );
       }
 
-      // Generate auth session
+      // Generate auth session (not created here; client remains responsible for session)
       const { data: userData } = await supabase.auth.admin.getUserById(profile.id);
       
       if (!userData?.user) {
