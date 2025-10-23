@@ -251,7 +251,30 @@ export default function Auth() {
       await supabase.auth.refreshSession();
       
       setAuthStep('complete');
-      setTimeout(() => navigate('/dashboard'), 1000);
+      
+      // Check for institution registration status
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: institution } = await supabase
+          .from('institutions')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (!institution) {
+          // No institution registered - redirect to registration
+          setTimeout(() => navigate('/register'), 1000);
+        } else if (institution.status === 'pending') {
+          // Pending approval
+          setTimeout(() => navigate('/pending-approval'), 1000);
+        } else if (institution.status === 'approved') {
+          // Approved - go to portal
+          setTimeout(() => navigate('/fi-portal'), 1000);
+        } else {
+          // Rejected or other status
+          setTimeout(() => navigate('/pending-approval'), 1000);
+        }
+      }
     } catch (error: any) {
       console.error('Verify OTP error:', error);
       

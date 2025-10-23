@@ -1864,6 +1864,8 @@ export type Database = {
           institution_type: Database["public"]["Enums"]["institution_type"]
           phone: string
           registration_number: string
+          rejection_reason: string | null
+          sandbox_access: boolean | null
           status: Database["public"]["Enums"]["institution_status"]
           updated_at: string
           user_id: string
@@ -1880,6 +1882,8 @@ export type Database = {
           institution_type: Database["public"]["Enums"]["institution_type"]
           phone: string
           registration_number: string
+          rejection_reason?: string | null
+          sandbox_access?: boolean | null
           status?: Database["public"]["Enums"]["institution_status"]
           updated_at?: string
           user_id: string
@@ -1896,6 +1900,8 @@ export type Database = {
           institution_type?: Database["public"]["Enums"]["institution_type"]
           phone?: string
           registration_number?: string
+          rejection_reason?: string | null
+          sandbox_access?: boolean | null
           status?: Database["public"]["Enums"]["institution_status"]
           updated_at?: string
           user_id?: string
@@ -4579,7 +4585,7 @@ export type Database = {
         | "Expired"
         | "Consumed"
       institution_status: "pending" | "approved" | "rejected" | "suspended"
-      institution_type: "bank" | "credit_union" | "fintech"
+      institution_type: "bank" | "credit_union" | "fintech" | "developer"
       payment_type:
         | "domestic"
         | "international"
@@ -4735,7 +4741,7 @@ export const Constants = {
         "Consumed",
       ],
       institution_status: ["pending", "approved", "rejected", "suspended"],
-      institution_type: ["bank", "credit_union", "fintech"],
+      institution_type: ["bank", "credit_union", "fintech", "developer"],
       payment_type: [
         "domestic",
         "international",

@@ -177,17 +177,23 @@ const Admin = () => {
   };
 
   const rejectInstitution = async (institutionId: string) => {
+    const reason = prompt('Please provide a reason for rejection:');
+    if (!reason) return;
+
     try {
       const { error } = await supabase
         .from('institutions')
-        .update({ status: 'rejected' })
+        .update({ 
+          status: 'rejected',
+          rejection_reason: reason
+        })
         .eq('id', institutionId);
 
       if (error) throw error;
 
       toast({
         title: "Institution Rejected",
-        description: "The institution has been rejected"
+        description: "The institution has been rejected with reason provided"
       });
 
       loadDashboardData();

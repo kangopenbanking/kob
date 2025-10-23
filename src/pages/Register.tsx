@@ -93,7 +93,12 @@ const Register = () => {
         description: "Your application is pending review. We'll contact you within 2 business days.",
       });
 
-      navigate("/developer");
+      toast({
+        title: "Registration Submitted",
+        description: "Your application is pending review. You'll be notified once approved.",
+      });
+
+      navigate('/pending-approval');
     } catch (error: any) {
       console.error("Registration error:", error);
       toast({
@@ -176,11 +181,12 @@ const Register = () => {
                     <SelectTrigger id="institutionType">
                       <SelectValue placeholder="Select institution type" />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank">Bank</SelectItem>
-                      <SelectItem value="credit_union">Credit Union</SelectItem>
-                      <SelectItem value="fintech">Fintech Company</SelectItem>
-                    </SelectContent>
+              <SelectContent>
+                <SelectItem value="bank">Bank</SelectItem>
+                <SelectItem value="credit_union">Credit Union</SelectItem>
+                <SelectItem value="fintech">Fintech Company</SelectItem>
+                <SelectItem value="developer">Developer / Third Party</SelectItem>
+              </SelectContent>
                   </Select>
                 </div>
 

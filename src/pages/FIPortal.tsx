@@ -17,11 +17,16 @@ export default function FIPortal() {
     apiCalls: 0,
   });
 
-  useEffect(() => {
-    checkAuth();
-    loadInstitution();
-    loadMetrics();
-  }, []);
+  const checkAuthAndInstitution = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+
+    await loadInstitution();
+    await loadMetrics();
+  };
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -40,6 +45,20 @@ export default function FIPortal() {
       .select("*")
       .eq("user_id", user.id)
       .maybeSingle();
+
+    if (!data) {
+      navigate('/register');
+      return;
+    }
+
+    // Check institution status
+    if (data.status === 'pending') {
+      navigate('/pending-approval');
+      return;
+    } else if (data.status === 'rejected') {
+      navigate('/pending-approval');
+      return;
+    }
 
     setInstitution(data);
   };

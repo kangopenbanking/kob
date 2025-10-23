@@ -38,6 +38,7 @@ import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import Status from "./pages/Status";
 import NotFound from "./pages/NotFound";
+import PendingApproval from "./pages/PendingApproval";
 import FIPortal from "./pages/FIPortal";
 import FeeManagement from "./pages/FeeManagement";
 import ISO20022Dashboard from "./pages/ISO20022Dashboard";
@@ -64,6 +65,8 @@ function App() {
             <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
+            <Route path="/pending-approval" element={<Layout><PendingApproval /></Layout>} />
+            <Route path="/fi-portal" element={<Layout><FIPortal /></Layout>} />
             <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
             <Route path="/developer" element={<Layout><Developer /></Layout>} />
             <Route path="/tpp-registration" element={<Layout><TPPRegistration /></Layout>} />
@@ -91,7 +94,6 @@ function App() {
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/faq" element={<Layout><FAQ /></Layout>} />
             <Route path="/status" element={<Layout><Status /></Layout>} />
-            <Route path="/fi-portal" element={<Layout><FIPortal /></Layout>} />
             <Route path="/fee-management" element={<Layout><ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
