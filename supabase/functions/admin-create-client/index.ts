@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { generateSecureToken, hashSecret } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,9 +47,12 @@ Deno.serve(async (req) => {
       institution_id 
     } = await req.json();
 
-    // Generate client credentials
+    // Generate client credentials using secure 256-bit tokens
     const client_id = `client_${crypto.randomUUID()}`;
-    const client_secret = `secret_${crypto.randomUUID()}`;
+    const client_secret = generateSecureToken();
+    
+    // Hash the client secret before storing
+    const client_secret_hash = await hashSecret(client_secret);
 
     // Create API client
     const adminSupabase = createClient(
@@ -60,7 +64,7 @@ Deno.serve(async (req) => {
       .from('api_clients')
       .insert({
         client_id,
-        client_secret_hash: client_secret, // In production, hash this
+        client_secret_hash,
         client_name,
         redirect_uris: redirect_uris || [],
         scopes: scopes || ['accounts', 'transactions'],

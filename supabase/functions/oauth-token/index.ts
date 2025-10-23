@@ -57,6 +57,15 @@ Deno.serve(async (req) => {
 
     if (grant_type === 'authorization_code') {
       // Exchange authorization code for tokens
+      const code_verifier = formData.get('code_verifier');
+      
+      if (!code_verifier) {
+        return new Response(
+          JSON.stringify({ error: 'invalid_request', error_description: 'Missing code_verifier (PKCE required)' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
       const { data: authCode, error: codeError } = await supabase
         .from('authorization_codes')
         .select('*')
@@ -70,6 +79,25 @@ Deno.serve(async (req) => {
           JSON.stringify({ error: 'invalid_grant', error_description: 'Invalid or expired authorization code' }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
+      }
+
+      // Verify PKCE code_verifier
+      if (authCode.code_challenge && authCode.code_challenge_method === 'S256') {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(code_verifier as string);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const computedChallenge = btoa(String.fromCharCode(...hashArray))
+          .replace(/\+/g, '-')
+          .replace(/\//g, '_')
+          .replace(/=/g, '');
+
+        if (computedChallenge !== authCode.code_challenge) {
+          return new Response(
+            JSON.stringify({ error: 'invalid_grant', error_description: 'Invalid code_verifier' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
       }
 
       // Mark code as used

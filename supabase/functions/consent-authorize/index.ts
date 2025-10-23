@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { generateSecureToken } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +23,95 @@ Deno.serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    const contentType = req.headers.get('content-type') || '';
+    
+    // Handle form submission from oauth-authorize (PKCE flow)
+    if (contentType.includes('application/x-www-form-urlencoded')) {
+      const formData = await req.formData();
+      const session_id = formData.get('session_id') as string;
+      const csrf_token = formData.get('csrf_token') as string;
+      const action = formData.get('action') as string;
+
+      if (!session_id || !csrf_token || !action) {
+        return new Response('Missing required parameters', { status: 400 });
+      }
+
+      // Retrieve and validate OAuth session
+      const { data: session, error: sessionError } = await supabase
+        .from('oauth_sessions')
+        .select('*')
+        .eq('session_id', session_id)
+        .eq('csrf_token', csrf_token)
+        .single();
+
+      if (sessionError || !session) {
+        return new Response('Invalid or expired session', { status: 400 });
+      }
+
+      // Check session expiration
+      if (new Date(session.expires_at) < new Date()) {
+        return new Response('Session expired', { status: 400 });
+      }
+
+      // Handle user decision
+      if (action === 'approve') {
+        // Generate secure authorization code
+        const authCode = generateSecureToken();
+        const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+        // Store authorization code with PKCE challenge
+        await supabase
+          .from('authorization_codes')
+          .insert({
+            code: authCode,
+            client_id: session.client_id,
+            redirect_uri: session.redirect_uri,
+            scope: session.scope,
+            consent_id: session.consent_id,
+            code_challenge: session.code_challenge,
+            code_challenge_method: session.code_challenge_method,
+            expires_at: codeExpiresAt.toISOString(),
+            used: false,
+          });
+
+        // Delete used session
+        await supabase
+          .from('oauth_sessions')
+          .delete()
+          .eq('session_id', session_id);
+
+        // Redirect with authorization code
+        const redirectUrl = new URL(session.redirect_uri);
+        redirectUrl.searchParams.set('code', authCode);
+        if (session.state) {
+          redirectUrl.searchParams.set('state', session.state);
+        }
+
+        return new Response(null, {
+          status: 302,
+          headers: { Location: redirectUrl.toString() }
+        });
+      } else {
+        // User denied
+        await supabase
+          .from('oauth_sessions')
+          .delete()
+          .eq('session_id', session_id);
+
+        const redirectUrl = new URL(session.redirect_uri);
+        redirectUrl.searchParams.set('error', 'access_denied');
+        if (session.state) {
+          redirectUrl.searchParams.set('state', session.state);
+        }
+
+        return new Response(null, {
+          status: 302,
+          headers: { Location: redirectUrl.toString() }
+        });
+      }
+    }
+
+    // Handle API-based consent authorization (existing flow)
     // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {

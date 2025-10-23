@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { generateSecureToken } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,10 +19,27 @@ Deno.serve(async (req) => {
     const scope = url.searchParams.get('scope') || '';
     const state = url.searchParams.get('state');
     const consent_id = url.searchParams.get('consent_id');
+    const code_challenge = url.searchParams.get('code_challenge');
+    const code_challenge_method = url.searchParams.get('code_challenge_method');
 
     if (!client_id || !redirect_uri || !response_type) {
       return new Response(
         JSON.stringify({ error: 'invalid_request', error_description: 'Missing required parameters' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Require PKCE for security
+    if (!code_challenge || !code_challenge_method) {
+      return new Response(
+        JSON.stringify({ error: 'invalid_request', error_description: 'PKCE required: code_challenge and code_challenge_method are mandatory' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (code_challenge_method !== 'S256') {
+      return new Response(
+        JSON.stringify({ error: 'invalid_request', error_description: 'Only S256 code_challenge_method is supported' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -46,22 +64,77 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify redirect_uri
+    // Strict redirect URI validation
     const redirectUris = client.redirect_uris as string[];
-    if (!redirectUris.includes(redirect_uri)) {
+    let validRedirectUri = false;
+    
+    try {
+      const providedUrl = new URL(redirect_uri);
+      
+      // Check for exact match first
+      if (redirectUris.includes(redirect_uri)) {
+        // Additional security checks
+        
+        // Enforce HTTPS in production
+        const isProduction = Deno.env.get('ENVIRONMENT') === 'production';
+        if (isProduction && providedUrl.protocol !== 'https:') {
+          throw new Error('HTTPS required in production');
+        }
+        
+        // Check for path traversal
+        if (providedUrl.pathname.includes('..')) {
+          throw new Error('Path traversal not allowed');
+        }
+        
+        // Check for suspicious patterns
+        if (providedUrl.username || providedUrl.password) {
+          throw new Error('Credentials in URI not allowed');
+        }
+        
+        validRedirectUri = true;
+      }
+    } catch (error) {
+      console.error('Redirect URI validation error:', error);
+      validRedirectUri = false;
+    }
+    
+    if (!validRedirectUri) {
       return new Response(
         JSON.stringify({ error: 'invalid_request', error_description: 'Invalid redirect URI' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // For this implementation, we'll return an HTML page for user authorization
-    // In production, this would be a proper OAuth consent screen
+    // Generate server-side CSRF token
+    const csrfToken = generateSecureToken();
+
+    // Store authorization session with CSRF token and PKCE challenge
+    const sessionId = generateSecureToken();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    
+    await supabase
+      .from('oauth_sessions')
+      .insert({
+        session_id: sessionId,
+        client_id,
+        redirect_uri,
+        scope,
+        state,
+        consent_id,
+        code_challenge,
+        code_challenge_method,
+        csrf_token: csrfToken,
+        expires_at: expiresAt.toISOString(),
+      });
+
+    // Return HTML page with CSRF protection and form submission
     const authPage = `
 <!DOCTYPE html>
 <html>
 <head>
   <title>Authorization Request</title>
+  <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'none'">
+  <meta http-equiv="X-Frame-Options" content="DENY">
   <style>
     body { font-family: system-ui; max-width: 600px; margin: 50px auto; padding: 20px; }
     .card { border: 1px solid #ddd; border-radius: 8px; padding: 30px; }
@@ -83,26 +156,19 @@ Deno.serve(async (req) => {
         ${scope.split(' ').map(s => `<li>${s}</li>`).join('')}
       </ul>
     </div>
-    <div class="buttons">
-      <button class="approve" onclick="approve()">Authorize</button>
-      <button class="deny" onclick="deny()">Deny</button>
-    </div>
+    <form id="authForm" method="POST" action="${Deno.env.get('SUPABASE_URL')}/functions/v1/consent-authorize">
+      <input type="hidden" name="session_id" value="${sessionId}">
+      <input type="hidden" name="csrf_token" value="${csrfToken}">
+      <input type="hidden" name="action" id="actionInput">
+      <div class="buttons">
+        <button type="submit" class="approve" onclick="setAction('approve')">Authorize</button>
+        <button type="submit" class="deny" onclick="setAction('deny')">Deny</button>
+      </div>
+    </form>
   </div>
   <script>
-    async function approve() {
-      // Generate authorization code (in production, this would be done server-side)
-      const code = crypto.randomUUID();
-      const redirectUrl = new URL('${redirect_uri}');
-      redirectUrl.searchParams.set('code', code);
-      ${state ? `redirectUrl.searchParams.set('state', '${state}');` : ''}
-      window.location.href = redirectUrl.toString();
-    }
-    
-    function deny() {
-      const redirectUrl = new URL('${redirect_uri}');
-      redirectUrl.searchParams.set('error', 'access_denied');
-      ${state ? `redirectUrl.searchParams.set('state', '${state}');` : ''}
-      window.location.href = redirectUrl.toString();
+    function setAction(action) {
+      document.getElementById('actionInput').value = action;
     }
   </script>
 </body>
@@ -110,7 +176,12 @@ Deno.serve(async (req) => {
     `;
 
     return new Response(authPage, {
-      headers: { ...corsHeaders, 'Content-Type': 'text/html' }
+      headers: { 
+        ...corsHeaders, 
+        'Content-Type': 'text/html',
+        'Content-Security-Policy': "frame-ancestors 'none'",
+        'X-Frame-Options': 'DENY'
+      }
     });
 
   } catch (error) {

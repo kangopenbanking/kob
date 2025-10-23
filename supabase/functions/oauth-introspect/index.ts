@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { verifySecret } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -36,7 +37,16 @@ Deno.serve(async (req) => {
       .eq('is_active', true)
       .single();
 
-    if (clientError || !client || client.client_secret_hash !== client_secret) {
+    if (clientError || !client) {
+      return new Response(
+        JSON.stringify({ active: false }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Verify client secret using bcrypt
+    const secretValid = await verifySecret(client_secret as string, client.client_secret_hash);
+    if (!secretValid) {
       return new Response(
         JSON.stringify({ active: false }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

@@ -1,6 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import * as jose from 'https://deno.land/x/jose@v5.2.0/index.ts';
-import { encodeBase64 } from 'https://deno.land/std@0.224.0/encoding/base64.ts';
+import { generateSecureToken, hashSecret } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -69,9 +69,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate client credentials
+    // Generate client credentials using secure 256-bit tokens
     const clientId = `tpp_${crypto.randomUUID()}`;
-    const clientSecret = encodeBase64(crypto.getRandomValues(new Uint8Array(32)));
+    const clientSecret = generateSecureToken();
+    
+    // Hash the client secret before storing
+    const clientSecretHash = await hashSecret(clientSecret);
 
     // Check if institution exists for this software_id
     const { data: institution } = await supabase
@@ -85,7 +88,7 @@ Deno.serve(async (req) => {
       .from('tpp_registrations')
       .insert({
         client_id: clientId,
-        client_secret: clientSecret,
+        client_secret: clientSecretHash,
         institution_id: institution?.id || null,
         client_name: ssaPayload.software_client_name as string,
         software_id: ssaPayload.software_id as string,
