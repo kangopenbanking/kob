@@ -118,12 +118,69 @@ export default function FIPortal() {
     );
   }
 
+  const isDeveloper = institution.institution_type === 'developer';
+  const sandboxCreds = institution.sandbox_credentials as any;
+
   return (
     <div className="container mx-auto py-8">
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-2">{t('fiDashboard')}</h1>
         <p className="text-muted-foreground">{institution.institution_name}</p>
+        {isDeveloper && (
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Developer Mode Active</h3>
+            <p className="text-sm text-blue-800 dark:text-blue-200">
+              You have access to sandbox environment and API credentials
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Sandbox Credentials for Developers */}
+      {isDeveloper && sandboxCreds && (
+        <Card className="mb-8 border-blue-200 dark:border-blue-800">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Activity className="h-5 w-5 text-blue-600" />
+              Sandbox API Credentials
+            </CardTitle>
+            <CardDescription>
+              Use these credentials to test your integration in our sandbox environment
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Client ID</p>
+                  <code className="text-sm font-mono">{sandboxCreds.client_id}</code>
+                </div>
+                <div className="p-4 bg-muted rounded-lg">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1">Client Secret</p>
+                  <code className="text-sm font-mono">{sandboxCreds.client_secret}</code>
+                </div>
+              </div>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-xs font-semibold text-muted-foreground mb-1">Sandbox URL</p>
+                <code className="text-sm font-mono">{sandboxCreds.sandbox_url}</code>
+              </div>
+              <div className="flex gap-2 flex-wrap">
+                <a href="/documentation" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  📚 API Documentation
+                </a>
+                <span className="text-muted-foreground">•</span>
+                <a href="/developer" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  🔧 Developer Portal
+                </a>
+                <span className="text-muted-foreground">•</span>
+                <a href="https://github.com/kob-platform/examples" className="text-sm text-blue-600 dark:text-blue-400 hover:underline" target="_blank" rel="noopener">
+                  💻 Code Examples
+                </a>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Metrics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">

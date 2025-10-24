@@ -153,19 +153,33 @@ const Admin = () => {
       // Get institution details to enable sandbox for developers
       const { data: institution } = await supabase
         .from('institutions')
-        .select('institution_type, user_id')
+        .select('institution_type, user_id, institution_name')
         .eq('id', institutionId)
         .single();
 
+      // Get user email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', institution?.user_id)
+        .single();
+
+      if (!institution) throw new Error('Institution not found');
+
+      // Generate sandbox credentials for developers
+      const sandboxCredentials = institution.institution_type === 'developer' ? {
+        client_id: `dev_${crypto.randomUUID().replace(/-/g, '')}`,
+        client_secret: `sk_${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, ''),
+        sandbox_url: 'https://sandbox-api.kob.cm',
+        created_at: new Date().toISOString()
+      } : null;
+
       const updateData: any = { 
         status: 'approved',
-        approved_at: new Date().toISOString()
+        approved_at: new Date().toISOString(),
+        sandbox_access: institution.institution_type === 'developer',
+        sandbox_credentials: sandboxCredentials
       };
-
-      // Auto-enable sandbox for developers
-      if (institution?.institution_type === 'developer') {
-        updateData.sandbox_access = true;
-      }
 
       const { error } = await supabase
         .from('institutions')
@@ -174,19 +188,43 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // TODO: Send approval notification email/SMS
-      // await supabase.functions.invoke('send-communication', {
-      //   body: {
-      //     recipient_id: institution?.user_id,
-      //     type: 'institution_approved',
-      //     ...
-      //   }
-      // });
+      // Log audit event
+      await supabase.from('audit_logs').insert({
+        action_type: 'institution_approved',
+        entity_type: 'institution',
+        entity_id: institutionId,
+        performed_by: (await supabase.auth.getUser()).data.user?.id,
+        details: {
+          institution_name: institution.institution_name,
+          institution_type: institution.institution_type,
+          sandbox_enabled: institution.institution_type === 'developer'
+        }
+      });
+
+      // Send approval notification email
+      try {
+        await supabase.functions.invoke('send-communication', {
+          body: {
+            template_key: 'institution_approved',
+            recipient_email: profile?.email,
+            recipient_id: institution.user_id,
+            variables: {
+              institution_name: institution.institution_name,
+              portal_url: `${window.location.origin}/fi-portal`,
+              client_id: sandboxCredentials?.client_id || '',
+              client_secret: sandboxCredentials?.client_secret || '',
+              is_developer: institution.institution_type === 'developer'
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send approval email:', emailError);
+      }
 
       toast({
         title: "Institution Approved",
-        description: institution?.institution_type === 'developer' 
-          ? "Institution approved with sandbox access enabled"
+        description: institution.institution_type === 'developer' 
+          ? "Institution approved with sandbox credentials generated"
           : "Institution approved successfully"
       });
 

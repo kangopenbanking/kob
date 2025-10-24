@@ -8,7 +8,6 @@ import {
   Globe,
   Lock,
   CheckCircle,
-  ArrowRight,
   Code,
   Smartphone,
   Building2,
@@ -19,6 +18,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
+import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
 
 const Index = () => {
   return (
@@ -44,11 +44,7 @@ const Index = () => {
                 Connect to banks, credit unions, and mobile money operators across Cameroon with a single, secure API. COBAC & BEAC compliant.
               </p>
               <div className="flex flex-col sm:flex-row gap-4">
-                <Link to="/register">
-                  <Button size="lg" className="text-lg px-8">
-                    Get Started <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </Link>
+                <SmartGetStartedButton size="lg" className="text-lg px-8" />
                 <Link to="/documentation">
                   <Button size="lg" variant="outline" className="text-lg px-8">
                     View Documentation
@@ -377,11 +373,7 @@ const Index = () => {
             Join leading fintechs building on Cameroon's most reliable open banking platform
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/register">
-              <Button size="lg" variant="secondary" className="text-lg px-8">
-                Get Started Free
-              </Button>
-            </Link>
+            <SmartGetStartedButton size="lg" variant="secondary" className="text-lg px-8" />
             <Link to="/contact">
               <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                 Contact Sales

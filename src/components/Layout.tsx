@@ -1,4 +1,4 @@
-import { Navigation } from "./Navigation";
+import { DynamicNavigation } from "./DynamicNavigation";
 import { Footer } from "./Footer";
 
 interface LayoutProps {
@@ -9,7 +9,7 @@ interface LayoutProps {
 export const Layout = ({ children, showFooter = true }: LayoutProps) => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <Navigation />
+      <DynamicNavigation />
       <main className="flex-1">
         {children}
       </main>

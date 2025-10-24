@@ -435,6 +435,42 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action_type: string
+          created_at: string
+          details: Json | null
+          entity_id: string
+          entity_type: string
+          id: string
+          ip_address: string | null
+          performed_by: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          details?: Json | null
+          entity_id: string
+          entity_type: string
+          id?: string
+          ip_address?: string | null
+          performed_by?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          details?: Json | null
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          ip_address?: string | null
+          performed_by?: string | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       authorization_codes: {
         Row: {
           client_id: string
@@ -1866,6 +1902,7 @@ export type Database = {
           registration_number: string
           rejection_reason: string | null
           sandbox_access: boolean | null
+          sandbox_credentials: Json | null
           status: Database["public"]["Enums"]["institution_status"]
           updated_at: string
           user_id: string
@@ -1884,6 +1921,7 @@ export type Database = {
           registration_number: string
           rejection_reason?: string | null
           sandbox_access?: boolean | null
+          sandbox_credentials?: Json | null
           status?: Database["public"]["Enums"]["institution_status"]
           updated_at?: string
           user_id: string
@@ -1902,6 +1940,7 @@ export type Database = {
           registration_number?: string
           rejection_reason?: string | null
           sandbox_access?: boolean | null
+          sandbox_credentials?: Json | null
           status?: Database["public"]["Enums"]["institution_status"]
           updated_at?: string
           user_id?: string
