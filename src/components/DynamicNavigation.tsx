@@ -19,13 +19,15 @@ interface UserStatus {
   hasInstitution: boolean;
   institutionStatus?: 'pending' | 'approved' | 'rejected' | 'suspended';
   institutionType?: string;
+  isAdmin: boolean;
 }
 
 export const DynamicNavigation = () => {
   const { t } = useLanguage();
   const [userStatus, setUserStatus] = useState<UserStatus>({
     isAuthenticated: false,
-    hasInstitution: false
+    hasInstitution: false,
+    isAdmin: false
   });
 
   useEffect(() => {
@@ -45,7 +47,7 @@ export const DynamicNavigation = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        setUserStatus({ isAuthenticated: false, hasInstitution: false });
+        setUserStatus({ isAuthenticated: false, hasInstitution: false, isAdmin: false });
         return;
       }
 
@@ -55,11 +57,17 @@ export const DynamicNavigation = () => {
         .eq('user_id', user.id)
         .maybeSingle();
 
+      const { data: isAdmin } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+
       setUserStatus({
         isAuthenticated: true,
         hasInstitution: !!institution,
         institutionStatus: institution?.status,
-        institutionType: institution?.institution_type
+        institutionType: institution?.institution_type,
+        isAdmin: !!isAdmin
       });
     } catch (error) {
       console.error('Error checking user status:', error);
@@ -105,15 +113,23 @@ export const DynamicNavigation = () => {
       );
     }
 
-    // Always show these
-    links.push(
-      <DropdownMenuItem key="admin" asChild>
-        <Link to="/admin" className="cursor-pointer">Admin Portal</Link>
-      </DropdownMenuItem>,
-      <DropdownMenuItem key="banking" asChild>
-        <Link to="/banking-ops" className="cursor-pointer">Banking Ops</Link>
-      </DropdownMenuItem>
-    );
+    // Admin Portal - only for admins
+    if (userStatus.isAdmin) {
+      links.push(
+        <DropdownMenuItem key="admin" asChild>
+          <Link to="/admin" className="cursor-pointer">Admin Portal</Link>
+        </DropdownMenuItem>
+      );
+    }
+
+    // Banking Ops - only for authenticated users
+    if (userStatus.isAuthenticated) {
+      links.push(
+        <DropdownMenuItem key="banking" asChild>
+          <Link to="/banking-ops" className="cursor-pointer">Banking Ops</Link>
+        </DropdownMenuItem>
+      );
+    }
 
     return links;
   };
@@ -151,14 +167,23 @@ export const DynamicNavigation = () => {
       );
     }
 
-    links.push(
-      <Link key="admin" to="/admin" className="text-sm font-medium hover:text-primary transition-colors block py-2">
-        Admin Portal
-      </Link>,
-      <Link key="banking" to="/banking-ops" className="text-sm font-medium hover:text-primary transition-colors block py-2">
-        Banking Ops
-      </Link>
-    );
+    // Admin Portal - only for admins
+    if (userStatus.isAdmin) {
+      links.push(
+        <Link key="admin" to="/admin" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+          Admin Portal
+        </Link>
+      );
+    }
+
+    // Banking Ops - only for authenticated users
+    if (userStatus.isAuthenticated) {
+      links.push(
+        <Link key="banking" to="/banking-ops" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+          Banking Ops
+        </Link>
+      );
+    }
 
     return links;
   };
