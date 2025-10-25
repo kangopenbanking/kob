@@ -244,12 +244,21 @@ const Admin = () => {
     if (!reason) return;
 
     try {
-      // Get user_id for notification
+      // Get institution details and user email
       const { data: institution } = await supabase
         .from('institutions')
-        .select('user_id')
+        .select('user_id, institution_name, institution_type')
         .eq('id', institutionId)
         .single();
+
+      // Get user email from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', institution?.user_id)
+        .single();
+
+      if (!institution) throw new Error('Institution not found');
 
       const { error } = await supabase
         .from('institutions')
@@ -261,14 +270,37 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // TODO: Send rejection notification email/SMS
-      // await supabase.functions.invoke('send-communication', {
-      //   body: {
-      //     recipient_id: institution?.user_id,
-      //     type: 'institution_rejected',
-      //     ...
-      //   }
-      // });
+      // Log audit event
+      await supabase.from('audit_logs').insert({
+        action_type: 'institution_rejected',
+        entity_type: 'institution',
+        entity_id: institutionId,
+        performed_by: (await supabase.auth.getUser()).data.user?.id,
+        details: {
+          institution_name: institution.institution_name,
+          institution_type: institution.institution_type,
+          rejection_reason: reason
+        }
+      });
+
+      // Send rejection notification email
+      try {
+        await supabase.functions.invoke('send-communication', {
+          body: {
+            template_key: 'institution_rejected',
+            recipient_email: profile?.email,
+            recipient_id: institution.user_id,
+            variables: {
+              institution_name: institution.institution_name,
+              rejection_reason: reason,
+              support_email: 'support@kob.cm',
+              reapply_url: `${window.location.origin}/register`
+            }
+          }
+        });
+      } catch (emailError) {
+        console.error('Failed to send rejection email:', emailError);
+      }
 
       toast({
         title: "Institution Rejected",
