@@ -65,21 +65,21 @@ function App() {
             <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
-            <Route path="/pending-approval" element={<Layout><PendingApproval /></Layout>} />
-            <Route path="/fi-portal" element={<Layout><FIPortal /></Layout>} />
+            <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
             <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
-            <Route path="/developer" element={<Layout><Developer /></Layout>} />
-            <Route path="/tpp-registration" element={<Layout><TPPRegistration /></Layout>} />
-            <Route path="/consents" element={<Layout><ConsentManagement /></Layout>} />
-            <Route path="/analytics" element={<Layout><Analytics /></Layout>} />
-            <Route path="/monitoring" element={<Layout><SystemMonitoring /></Layout>} />
-            <Route path="/dashboard" element={<Layout><Dashboard /></Layout>} />
-            <Route path="/security" element={<Layout><SecuritySettings /></Layout>} />
-            <Route path="/communications" element={<Layout><Communications /></Layout>} />
-            <Route path="/mobile-money" element={<Layout><MobileMoney /></Layout>} />
-            <Route path="/payments" element={<Layout><Payments /></Layout>} />
+            <Route path="/developer" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
+            <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
+            <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
+            <Route path="/analytics" element={<Layout><ProtectedRoute><Analytics /></ProtectedRoute></Layout>} />
+            <Route path="/monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
+            <Route path="/dashboard" element={<Layout><ProtectedRoute><Dashboard /></ProtectedRoute></Layout>} />
+            <Route path="/security" element={<Layout><ProtectedRoute><SecuritySettings /></ProtectedRoute></Layout>} />
+            <Route path="/communications" element={<Layout><ProtectedRoute requiredRole="admin"><Communications /></ProtectedRoute></Layout>} />
+            <Route path="/mobile-money" element={<Layout><ProtectedRoute><MobileMoney /></ProtectedRoute></Layout>} />
+            <Route path="/payments" element={<Layout><ProtectedRoute><Payments /></ProtectedRoute></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
-            <Route path="/kyc-verification" element={<Layout><KYCVerification /></Layout>} />
+            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><KYCVerification /></ProtectedRoute></Layout>} />
             <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />
             <Route path="/profile-settings" element={<Layout><ProtectedRoute><ProfileSettings /></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />

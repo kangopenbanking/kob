@@ -118,6 +118,51 @@ export const DynamicNavigation = () => {
     return links;
   };
 
+  const getMobilePortalLinks = () => {
+    const links = [];
+
+    if (userStatus.isAuthenticated) {
+      if (userStatus.institutionStatus === 'approved') {
+        links.push(
+          <Link key="fi-portal" to="/fi-portal" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+            FI Portal
+          </Link>
+        );
+      } else if (userStatus.institutionStatus === 'pending' || userStatus.institutionStatus === 'rejected') {
+        links.push(
+          <Link key="status" to="/pending-approval" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+            📋 Application Status
+          </Link>
+        );
+      }
+      
+      if (userStatus.institutionType === 'developer' && userStatus.institutionStatus === 'approved') {
+        links.push(
+          <Link key="dev" to="/developer" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+            Developer Portal
+          </Link>
+        );
+      }
+
+      links.push(
+        <Link key="dashboard" to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+          My Dashboard
+        </Link>
+      );
+    }
+
+    links.push(
+      <Link key="admin" to="/admin" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+        Admin Portal
+      </Link>,
+      <Link key="banking" to="/banking-ops" className="text-sm font-medium hover:text-primary transition-colors block py-2">
+        Banking Ops
+      </Link>
+    );
+
+    return links;
+  };
+
   const getAuthButtons = () => {
     if (userStatus.isAuthenticated) {
       return (
@@ -215,10 +260,8 @@ export const DynamicNavigation = () => {
               
               <div className="border-t pt-4">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">PORTALS</p>
-                <div className="space-y-3 ml-2">
-                  {getPortalLinks().map((link, idx) => (
-                    <div key={idx}>{link}</div>
-                  ))}
+                <div className="space-y-1 ml-2">
+                  {getMobilePortalLinks()}
                 </div>
               </div>
 
