@@ -30,23 +30,38 @@ serve(async (req) => {
       throw new Error('Invalid authorization token');
     }
 
-    const { amount, phone_number, provider, description, beneficiary_name, currency = 'XAF' } = await req.json();
-
-    // Validate required fields
-    if (!amount || !phone_number || !provider) {
-      throw new Error('Missing required fields: amount, phone_number, provider');
+    // Security Fix: Import validation utilities
+    const { validateInput, mobileMoneyTransferSchema, sanitizeString } = 
+      await import('../_shared/validation.ts');
+    
+    const requestBody = await req.json();
+    
+    // Security Fix: Validate and sanitize input
+    const validation = validateInput(mobileMoneyTransferSchema, {
+      amount: requestBody.amount,
+      phone_number: requestBody.phone_number,
+      provider: requestBody.provider,
+      description: requestBody.description,
+      reference: requestBody.reference
+    });
+    
+    if (!validation.success) {
+      console.warn('[SECURITY] Validation failed:', validation.error);
+      return new Response(
+        JSON.stringify({
+          error: 'invalid_request',
+          error_description: validation.error
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
     }
-
-    // Validate currency
-    const supportedCurrencies = ['XAF', 'NGN', 'GHS', 'KES', 'UGX', 'TZS', 'ZAR', 'RWF'];
-    if (!supportedCurrencies.includes(currency.toUpperCase())) {
-      throw new Error(`Currency ${currency} not supported for mobile money`);
-    }
-
-    // Validate provider
-    if (!['mtn', 'orange'].includes(provider.toLowerCase())) {
-      throw new Error('Invalid provider. Must be mtn or orange');
-    }
+    
+    const { amount, phone_number, provider, description } = validation.data;
+    const beneficiary_name = requestBody.beneficiary_name || 'Beneficiary';
+    const currency = requestBody.currency || 'XAF';
 
     // Generate unique transaction reference
     const transaction_ref = `MMT_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -127,7 +142,7 @@ serve(async (req) => {
             _institution_id: profile.institution_id,
             _transaction_type: 'mobile_money_transfer',
             _transaction_ref: transaction_ref,
-            _transaction_amount: parseFloat(amount),
+            _transaction_amount: amount,
             _transaction_id: transactionData.id,
             _metadata: {
               provider,
@@ -171,18 +186,13 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('Error in mobile-money-transfer:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new Response(
-      JSON.stringify({ 
-        success: false,
-        error: errorMessage,
-        code: 'MOBILE_MONEY_TRANSFER_ERROR'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
-    );
+    // Security Fix: Generic error response with secure logging
+    const { logError, genericErrorResponse } = await import('../_shared/validation.ts');
+    const errorId = logError('mobile-money-transfer', error, {
+      endpoint: '/mobile-money-transfer',
+      timestamp: new Date().toISOString()
+    });
+    
+    return genericErrorResponse(corsHeaders, 500);
   }
 });

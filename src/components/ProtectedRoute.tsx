@@ -14,10 +14,19 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
 
   useEffect(() => {
     const checkAuth = async () => {
+      // Security Fix: Constant-time authentication check to prevent timing attacks
+      const startTime = Date.now();
+      const MIN_RESPONSE_TIME = 200; // Minimum response time in ms
+      
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
         if (!user) {
+          // Add artificial delay to match role check timing
+          const elapsed = Date.now() - startTime;
+          await new Promise(resolve => 
+            setTimeout(resolve, Math.max(0, MIN_RESPONSE_TIME - elapsed))
+          );
           setAuthorized(false);
           setLoading(false);
           return;
@@ -29,6 +38,12 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
             _role: requiredRole as 'admin' | 'institution'
           });
 
+          // Ensure consistent timing regardless of success/failure
+          const elapsed = Date.now() - startTime;
+          await new Promise(resolve => 
+            setTimeout(resolve, Math.max(0, MIN_RESPONSE_TIME - elapsed))
+          );
+
           if (error) {
             console.error('Role check error:', error);
             setAuthorized(false);
@@ -36,10 +51,20 @@ export const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) 
             setAuthorized(data);
           }
         } else {
+          // Ensure consistent timing for non-role checks too
+          const elapsed = Date.now() - startTime;
+          await new Promise(resolve => 
+            setTimeout(resolve, Math.max(0, MIN_RESPONSE_TIME - elapsed))
+          );
           setAuthorized(true);
         }
       } catch (error) {
         console.error('Auth check error:', error);
+        // Still maintain timing consistency on error
+        const elapsed = Date.now() - startTime;
+        await new Promise(resolve => 
+          setTimeout(resolve, Math.max(0, MIN_RESPONSE_TIME - elapsed))
+        );
         setAuthorized(false);
       } finally {
         setLoading(false);

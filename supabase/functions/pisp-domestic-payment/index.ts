@@ -29,26 +29,61 @@ serve(async (req) => {
       throw new Error('Invalid authorization token');
     }
 
+    // Security Fix: Import validation utilities
+    const { validateInput, domesticPaymentSchema, sanitizeString } = 
+      await import('../_shared/validation.ts');
+    
     const body = await req.json();
-    console.log('Creating domestic payment:', body);
+    console.log('[SECURE] Creating domestic payment for user:', user.id);
 
-    // Validate required fields
+    // Extract and validate required fields
     const { consent_id, instructed_amount, creditor_account, debtor_account, remittance_information, reference } = body;
     
     if (!consent_id) {
-      throw new Error('Missing consent_id');
+      return new Response(
+        JSON.stringify({
+          error: 'invalid_request',
+          error_description: 'Missing consent_id'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
     }
+
+    // Security Fix: Validate payment data structure
+    const validation = validateInput(domesticPaymentSchema, {
+      instructed_amount,
+      creditor_account,
+      remittance_information
+    });
     
-    if (!instructed_amount?.amount || !instructed_amount?.currency) {
-      throw new Error('Missing or invalid instructed_amount');
+    if (!validation.success) {
+      console.warn('[SECURITY] Payment validation failed:', validation.error);
+      return new Response(
+        JSON.stringify({
+          error: 'invalid_request',
+          error_description: validation.error
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
     }
     
     if (instructed_amount.currency !== 'XAF') {
-      throw new Error('Only XAF currency is supported');
-    }
-    
-    if (!creditor_account?.identification || !creditor_account?.name) {
-      throw new Error('Missing or invalid creditor_account');
+      return new Response(
+        JSON.stringify({
+          error: 'invalid_request',
+          error_description: 'Only XAF currency is supported'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
     }
 
     // Verify PISP consent exists and is valid
@@ -137,17 +172,13 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in pisp-domestic-payment:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        code: 'PISP_PAYMENT_ERROR'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
-    );
+    // Security Fix: Generic error response with secure logging
+    const { logError, genericErrorResponse } = await import('../_shared/validation.ts');
+    const errorId = logError('pisp-domestic-payment', error, {
+      endpoint: '/pisp-domestic-payment',
+      timestamp: new Date().toISOString()
+    });
+    
+    return genericErrorResponse(corsHeaders, 500);
   }
 });

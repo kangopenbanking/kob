@@ -4534,6 +4534,14 @@ export type Database = {
       cleanup_expired_auth_records: { Args: never; Returns: undefined }
       cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
       cleanup_expired_par_requests: { Args: never; Returns: undefined }
+      encrypt_sandbox_credentials: {
+        Args: {
+          _client_id: string
+          _client_secret: string
+          _institution_id: string
+        }
+        Returns: undefined
+      }
       expire_old_consents: { Args: never; Returns: undefined }
       generate_compliance_report: {
         Args: { _end_date: string; _report_type: string; _start_date: string }
@@ -4559,6 +4567,15 @@ export type Database = {
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
         Returns: boolean
+      }
+      log_audit_event: {
+        Args: {
+          _action_type: string
+          _details?: Json
+          _entity_id: string
+          _entity_type: string
+        }
+        Returns: string
       }
       log_consent_event: {
         Args: {
@@ -4609,6 +4626,14 @@ export type Database = {
       validate_pisp_consent: {
         Args: { _amount: number; _consent_id: string; _user_id: string }
         Returns: Json
+      }
+      verify_sandbox_credentials: {
+        Args: {
+          _client_id: string
+          _client_secret: string
+          _institution_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {

@@ -31,27 +31,53 @@ serve(async (req) => {
       throw new Error('Invalid authorization token');
     }
 
-    const { 
-      account_bank,
-      account_number,
-      amount,
-      currency = 'XAF',
-      narration,
-      beneficiary_name,
-      bank_name
-    } = await req.json();
-
-    console.log('Initiating bank transfer:', { 
-      account_bank, 
-      account_number, 
-      amount, 
-      currency, 
-      user_id: user.id 
+    // Security Fix: Import validation utilities
+    const { validateInput, bankTransferSchema, sanitizeString } = 
+      await import('../_shared/validation.ts');
+    
+    const requestBody = await req.json();
+    
+    // Security Fix: Validate and sanitize input
+    const validation = validateInput(bankTransferSchema, {
+      amount: requestBody.amount,
+      bank_code: requestBody.account_bank,
+      account_number: requestBody.account_number,
+      account_name: requestBody.beneficiary_name,
+      narration: requestBody.narration,
+      currency: requestBody.currency || 'XAF'
     });
-
-    if (!account_bank || !account_number || !amount || !bank_name) {
-      throw new Error('Missing required fields');
+    
+    if (!validation.success) {
+      console.warn('[SECURITY] Bank transfer validation failed:', validation.error);
+      return new Response(
+        JSON.stringify({
+          error: 'invalid_request',
+          error_description: validation.error
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
     }
+    
+    const { amount, bank_code: account_bank, account_number, account_name: beneficiary_name, narration, currency } = validation.data;
+    const bank_name = requestBody.bank_name;
+    
+    if (!bank_name) {
+      return new Response(
+        JSON.stringify({
+          error: 'invalid_request',
+          error_description: 'Bank name is required'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400
+        }
+      );
+    }
+
+    console.log('[SECURE] Initiating bank transfer for user:', user.id);
 
     // Generate transaction reference
     const transaction_ref = `BANK-${crypto.randomUUID()}`;
@@ -68,7 +94,7 @@ serve(async (req) => {
         account_number,
         account_name: beneficiary_name,
         amount,
-        currency: currency.toUpperCase(),
+        currency: currency,
         narration: narration || 'Bank transfer',
         status: 'pending',
       })
@@ -95,11 +121,11 @@ serve(async (req) => {
           account_bank,
           account_number,
           amount,
-          currency: currency.toUpperCase(),
+          currency: currency,
           narration: narration || 'Bank transfer',
           reference: transaction_ref,
           callback_url: `${supabaseUrl}/functions/v1/flutterwave-transfer-webhook`,
-          debit_currency: currency.toUpperCase(),
+          debit_currency: currency,
         })
       }
     );
@@ -174,17 +200,13 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in flutterwave-bank-transfer:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    return new Response(
-      JSON.stringify({ 
-        error: errorMessage,
-        code: 'FLUTTERWAVE_BANK_TRANSFER_ERROR'
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
-      }
-    );
+    // Security Fix: Generic error response with secure logging
+    const { logError, genericErrorResponse } = await import('../_shared/validation.ts');
+    const errorId = logError('flutterwave-bank-transfer', error, {
+      endpoint: '/flutterwave-bank-transfer',
+      timestamp: new Date().toISOString()
+    });
+    
+    return genericErrorResponse(corsHeaders, 500);
   }
 });

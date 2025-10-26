@@ -197,10 +197,24 @@ Deno.serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('Error in oauth-token:', error);
+    // Security Fix: Generic error response with secure logging
+    console.error('[SECURE] OAuth token error:', {
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString()
+    });
+    
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     return new Response(
-      JSON.stringify({ error: 'server_error', error_description: error instanceof Error ? error.message : 'Unknown error' }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({
+        error: 'server_error',
+        error_description: 'Unable to process token request. Please contact support.',
+        error_id: errorId
+      }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500
+      }
     );
   }
 });

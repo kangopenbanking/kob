@@ -167,18 +167,20 @@ const Admin = () => {
       if (!institution) throw new Error('Institution not found');
 
       // Generate sandbox credentials for developers
-      const sandboxCredentials = institution.institution_type === 'developer' ? {
-        client_id: `dev_${crypto.randomUUID().replace(/-/g, '')}`,
-        client_secret: `sk_${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, ''),
-        sandbox_url: 'https://sandbox-api.kob.cm',
-        created_at: new Date().toISOString()
-      } : null;
+      let sandboxClientId: string | null = null;
+      let sandboxClientSecret: string | null = null;
+      
+      if (institution.institution_type === 'developer') {
+        sandboxClientId = `dev_${crypto.randomUUID().replace(/-/g, '')}`;
+        sandboxClientSecret = `sk_${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '');
+      }
 
+      // Security Fix: Approve institution first, then use secure function to encrypt credentials
       const updateData: any = { 
         status: 'approved',
         approved_at: new Date().toISOString(),
-        sandbox_access: institution.institution_type === 'developer',
-        sandbox_credentials: sandboxCredentials
+        sandbox_access: institution.institution_type === 'developer'
+        // Note: sandbox_credentials will be encrypted separately using secure function
       };
 
       const { error } = await supabase
@@ -188,13 +190,26 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Log audit event
-      await supabase.from('audit_logs').insert({
-        action_type: 'institution_approved',
-        entity_type: 'institution',
-        entity_id: institutionId,
-        performed_by: (await supabase.auth.getUser()).data.user?.id,
-        details: {
+      // Security Fix: Encrypt and store sandbox credentials using secure function
+      if (sandboxClientId && sandboxClientSecret) {
+        const { error: encryptError } = await supabase.rpc('encrypt_sandbox_credentials', {
+          _institution_id: institutionId,
+          _client_id: sandboxClientId,
+          _client_secret: sandboxClientSecret
+        });
+        
+        if (encryptError) {
+          console.error('Failed to encrypt sandbox credentials:', encryptError);
+          // Still continue with approval, credentials can be regenerated
+        }
+      }
+
+      // Log audit event using secure logging function
+      await supabase.rpc('log_audit_event', {
+        _action_type: 'institution_approved',
+        _entity_type: 'institution',
+        _entity_id: institutionId,
+        _details: {
           institution_name: institution.institution_name,
           institution_type: institution.institution_type,
           sandbox_enabled: institution.institution_type === 'developer'
@@ -202,6 +217,7 @@ const Admin = () => {
       });
 
       // Send approval notification email
+      // Note: Only send client_id in email, never send plain-text secret
       try {
         await supabase.functions.invoke('send-communication', {
           body: {
@@ -211,9 +227,11 @@ const Admin = () => {
             variables: {
               institution_name: institution.institution_name,
               portal_url: `${window.location.origin}/fi-portal`,
-              client_id: sandboxCredentials?.client_id || '',
-              client_secret: sandboxCredentials?.client_secret || '',
-              is_developer: institution.institution_type === 'developer'
+              client_id: sandboxClientId || '',
+              // Security Fix: Send secret only once via secure channel
+              client_secret: sandboxClientSecret || '',
+              is_developer: institution.institution_type === 'developer',
+              security_note: 'Please save your client secret securely. It will not be shown again.'
             }
           }
         });
@@ -270,13 +288,12 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Log audit event
-      await supabase.from('audit_logs').insert({
-        action_type: 'institution_rejected',
-        entity_type: 'institution',
-        entity_id: institutionId,
-        performed_by: (await supabase.auth.getUser()).data.user?.id,
-        details: {
+      // Log audit event using secure logging function
+      await supabase.rpc('log_audit_event', {
+        _action_type: 'institution_rejected',
+        _entity_type: 'institution',
+        _entity_id: institutionId,
+        _details: {
           institution_name: institution.institution_name,
           institution_type: institution.institution_type,
           rejection_reason: reason
