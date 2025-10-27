@@ -9,6 +9,17 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
+import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+import DeveloperHome from "./pages/developer/DeveloperHome";
+import GettingStarted from "./pages/developer/GettingStarted";
+import AispReference from "./pages/developer/AispReference";
+import PispReference from "./pages/developer/PispReference";
+import MobileMoneyReference from "./pages/developer/MobileMoneyReference";
+import BankingReference from "./pages/developer/BankingReference";
+import ApiConsole from "./pages/developer/ApiConsole";
+import WebIntegration from "./pages/developer/WebIntegration";
+import MobileIntegration from "./pages/developer/MobileIntegration";
+import WebhooksGuide from "./pages/developer/WebhooksGuide";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -76,7 +87,23 @@ function App() {
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
             <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
-            <Route path="/developer" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
+            
+            {/* New Developer Portal */}
+            <Route path="/developer" element={<DeveloperLayout />}>
+              <Route index element={<DeveloperHome />} />
+              <Route path="getting-started" element={<GettingStarted />} />
+              <Route path="api/aisp" element={<AispReference />} />
+              <Route path="api/pisp" element={<PispReference />} />
+              <Route path="api/mobile-money" element={<MobileMoneyReference />} />
+              <Route path="api/banking" element={<BankingReference />} />
+              <Route path="api/webhooks" element={<WebhooksGuide />} />
+              <Route path="console" element={<ApiConsole />} />
+              <Route path="sandbox" element={<ApiConsole />} />
+              <Route path="examples" element={<ApiConsole />} />
+              <Route path="guides/web" element={<WebIntegration />} />
+              <Route path="guides/mobile" element={<MobileIntegration />} />
+            </Route>
+            <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
             <Route path="/analytics" element={<Layout><ProtectedRoute><Analytics /></ProtectedRoute></Layout>} />
