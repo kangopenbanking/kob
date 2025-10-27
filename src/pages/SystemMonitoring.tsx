@@ -92,10 +92,10 @@ const SystemMonitoring = () => {
   const runHealthCheck = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
-        'https://api.kangopenbanking.com/v1/system-health-check'
-      );
-      const result = await response.json();
+      const { data, error } = await supabase.functions.invoke('system-health-check');
+      
+      if (error) throw error;
+      const result = data;
       
       toast({
         title: "Health Check Complete",
