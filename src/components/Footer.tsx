@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { Building2 } from "lucide-react";
+import { BrandName } from "./BrandName";
 
 export const Footer = () => {
   return (
@@ -9,7 +10,7 @@ export const Footer = () => {
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">Kang Open Banking</span>
+              <BrandName className="text-lg" />
             </div>
             <p className="text-sm text-muted-foreground mb-4">
               Unified banking API for Cameroon's financial ecosystem
@@ -65,7 +66,7 @@ export const Footer = () => {
         </div>
         
         <div className="border-t mt-8 pt-8 flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-          <p>© 2025 Kang Open Banking. All rights reserved.</p>
+          <p>© 2025 Kang <span style={{ color: '#9fe870' }}>Open</span> Banking. All rights reserved.</p>
           <div className="flex gap-4">
             <Link to="/status" className="hover:text-primary transition-colors">Status</Link>
             <Link to="/security-policy" className="hover:text-primary transition-colors">Security</Link>

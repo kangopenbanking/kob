@@ -523,7 +523,7 @@ const Developer = () => {
                 <div className="flex items-start gap-4 p-4 bg-accent/10 border border-accent/20 rounded-lg">
                   <BookOpen className="h-6 w-6 text-accent mt-1" />
                   <div className="flex-1">
-                    <h4 className="font-semibold mb-2">KOB API Collection</h4>
+                    <h4 className="font-semibold mb-2">Kang <span style={{ color: '#9fe870' }}>Open</span> Banking API Collection</h4>
                     <p className="text-sm text-muted-foreground mb-4">
                       Complete collection with all AISP and PISP endpoints pre-configured with example requests and environment variables.
                     </p>
@@ -531,7 +531,7 @@ const Developer = () => {
                       onClick={() => {
                         const collection = {
                           info: {
-                            name: "KOB - Kang Open Banking API",
+                            name: "Kang Open Banking API",
                             description: "Unified Banking API for Cameroon - AISP & PISP endpoints",
                             schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
                           },
@@ -612,7 +612,7 @@ const Developer = () => {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement('a');
                         a.href = url;
-                        a.download = 'KOB-API-Collection.postman_collection.json';
+                        a.download = 'Kang-Open-Banking-API-Collection.postman_collection.json';
                         a.click();
                         URL.revokeObjectURL(url);
                         

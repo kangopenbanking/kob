@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import kobLogo from "@/assets/kob-logo.png";
 import { LanguageSwitcher } from "./LanguageSwitcher";
+import { BrandName } from "./BrandName";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -224,8 +225,8 @@ export const DynamicNavigation = () => {
     <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2">
-          <img src={kobLogo} alt="KOB Logo" className="h-8 w-8" />
-          <span className="text-xl font-bold">KOB</span>
+          <img src={kobLogo} alt="Kang Open Banking Logo" className="h-8 w-8" />
+          <BrandName className="text-xl" />
         </Link>
         
         {/* Desktop Navigation */}

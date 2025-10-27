@@ -383,7 +383,7 @@ export default function Auth() {
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <div className="flex items-center gap-4 mb-4">
-            <img src="/kob-logo.png" alt="KOB Logo" className="h-12 w-12" />
+            <img src="/kob-logo.png" alt="Kang Open Banking Logo" className="h-12 w-12" />
             <div>
               <CardTitle className="text-2xl font-bold">
                 {showForgotPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Create Account'}

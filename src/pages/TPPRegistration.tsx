@@ -93,7 +93,7 @@ const TPPRegistration = () => {
                 className="font-mono text-sm"
               />
               <p className="text-xs text-muted-foreground">
-                The SSA is a signed JWT containing your software metadata. Contact the KOB Directory to obtain one.
+                The SSA is a signed JWT containing your software metadata. Contact the Kang Open Banking Directory to obtain one.
               </p>
             </div>
 

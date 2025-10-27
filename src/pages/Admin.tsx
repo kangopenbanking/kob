@@ -310,7 +310,7 @@ const Admin = () => {
             variables: {
               institution_name: institution.institution_name,
               rejection_reason: reason,
-              support_email: 'support@kob.cm',
+              support_email: 'support@kangopenbanking.cm',
               reapply_url: `${window.location.origin}/register`
             }
           }

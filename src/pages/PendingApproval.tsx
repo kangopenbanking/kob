@@ -231,7 +231,7 @@ export default function PendingApproval() {
                 If you have questions about your application, please contact our support team:
               </p>
               <div className="flex gap-4">
-                <Button variant="outline" size="sm" onClick={() => window.location.href = 'mailto:support@kob.cm'}>
+                <Button variant="outline" size="sm" onClick={() => window.location.href = 'mailto:support@kangopenbanking.cm'}>
                   <Mail className="mr-2 h-4 w-4" />
                   Email Support
                 </Button>
