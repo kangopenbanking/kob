@@ -13,7 +13,10 @@ import {
   FileText,
   XCircle,
   AlertCircle,
-  TrendingUp
+  TrendingUp,
+  ArrowLeft,
+  Key,
+  TestTube
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -797,6 +800,7 @@ const Admin = () => {
           </Card>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };
