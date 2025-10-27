@@ -67,9 +67,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -118,9 +120,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -169,9 +173,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -226,9 +232,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -276,7 +284,7 @@ export default function SDKsPage() {
               </div>
               
               <div className="bg-muted p-3 rounded font-mono text-sm">
-                https://github.com/kob/ios-sdk
+                https://github.com/kangopenbanking/KangOpenBanking-KOB
               </div>
 
               <div className="flex gap-2">
@@ -284,9 +292,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Documentation
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -335,9 +345,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Documentation
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -386,9 +398,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   Install
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
@@ -437,9 +451,11 @@ export default function SDKsPage() {
                   <Download className="mr-2 h-4 w-4" />
                   pub.dev
                 </Button>
-                <Button variant="outline">
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  GitHub
+                <Button variant="outline" asChild>
+                  <a href="https://github.com/kangopenbanking/KangOpenBanking-KOB" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    GitHub
+                  </a>
                 </Button>
               </div>
 
