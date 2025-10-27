@@ -9,6 +9,10 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
+import AISP from "./pages/guides/AISP";
+import PISP from "./pages/guides/PISP";
+import Security from "./pages/guides/Security";
+import Webhooks from "./pages/guides/Webhooks";
 import Admin from "./pages/Admin";
 import Developer from "./pages/Developer";
 import Auth from "./pages/Auth";
@@ -64,6 +68,10 @@ function App() {
             <Routes>
             <Route path="/" element={<Layout><Index /></Layout>} />
             <Route path="/documentation" element={<Layout><Documentation /></Layout>} />
+            <Route path="/guides/aisp" element={<Layout><AISP /></Layout>} />
+            <Route path="/guides/pisp" element={<Layout><PISP /></Layout>} />
+            <Route path="/guides/security" element={<Layout><Security /></Layout>} />
+            <Route path="/guides/webhooks" element={<Layout><Webhooks /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />

@@ -32,6 +32,26 @@ export const Navigation = () => {
           
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
+              Guides <ChevronDown className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-56">
+              <DropdownMenuItem asChild>
+                <Link to="/guides/aisp" className="cursor-pointer">Account Information (AISP)</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/guides/pisp" className="cursor-pointer">Payment Initiation (PISP)</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/guides/security" className="cursor-pointer">Security & Authentication</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/guides/webhooks" className="cursor-pointer">Webhooks & Events</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
               Portals <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-48">
@@ -39,16 +59,7 @@ export const Navigation = () => {
                 <Link to="/developer" className="cursor-pointer">Developer Portal</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/admin" className="cursor-pointer">Admin Portal</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/banking-ops" className="cursor-pointer">Banking Ops</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
                 <Link to="/dashboard" className="cursor-pointer">My Dashboard</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/fi-portal" className="cursor-pointer">FI Portal</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -99,22 +110,31 @@ export const Navigation = () => {
               </Link>
               
               <div className="border-t pt-4">
+                <p className="text-xs font-semibold text-muted-foreground mb-3">GUIDES</p>
+                <div className="space-y-3 ml-2">
+                  <Link to="/guides/aisp" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Account Information (AISP)
+                  </Link>
+                  <Link to="/guides/pisp" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Payment Initiation (PISP)
+                  </Link>
+                  <Link to="/guides/security" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Security & Authentication
+                  </Link>
+                  <Link to="/guides/webhooks" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Webhooks & Events
+                  </Link>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">PORTALS</p>
                 <div className="space-y-3 ml-2">
                   <Link to="/developer" className="text-sm font-medium hover:text-primary transition-colors block">
                     Developer Portal
                   </Link>
-                  <Link to="/admin" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Admin Portal
-                  </Link>
-                  <Link to="/banking-ops" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Banking Ops
-                  </Link>
                   <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors block">
                     My Dashboard
-                  </Link>
-                  <Link to="/fi-portal" className="text-sm font-medium hover:text-primary transition-colors block">
-                    FI Portal
                   </Link>
                 </div>
               </div>
