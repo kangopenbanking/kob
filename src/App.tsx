@@ -43,6 +43,10 @@ import UserManagement from "./pages/admin/UserManagement";
 import ApiClientManagement from "./pages/admin/ApiClientManagement";
 import SandboxManagement from "./pages/admin/SandboxManagement";
 import SecurityMonitoring from "./pages/admin/SecurityMonitoring";
+import AuditLogs from "./pages/admin/AuditLogs";
+import SystemConfig from "./pages/admin/SystemConfig";
+import WebhookManagement from "./pages/admin/WebhookManagement";
+import TransactionMonitoring from "./pages/admin/TransactionMonitoring";
 import ConsentManagement from "./pages/ConsentManagement";
 import SystemMonitoring from "./pages/SystemMonitoring";
 import Dashboard from "./pages/Dashboard";
@@ -102,6 +106,10 @@ function App() {
             <Route path="/admin/api-clients" element={<Layout><ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute></Layout>} />
             <Route path="/admin/sandbox" element={<Layout><ProtectedRoute requiredRole="admin"><SandboxManagement /></ProtectedRoute></Layout>} />
             <Route path="/admin/security" element={<Layout><ProtectedRoute requiredRole="admin"><SecurityMonitoring /></ProtectedRoute></Layout>} />
+            <Route path="/admin/audit-logs" element={<Layout><ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute></Layout>} />
+            <Route path="/admin/system-config" element={<Layout><ProtectedRoute requiredRole="admin"><SystemConfig /></ProtectedRoute></Layout>} />
+            <Route path="/admin/webhooks" element={<Layout><ProtectedRoute requiredRole="admin"><WebhookManagement /></ProtectedRoute></Layout>} />
+            <Route path="/admin/transactions" element={<Layout><ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute></Layout>} />
             
             {/* New Developer Portal */}
             <Route path="/developer" element={<DeveloperLayout />}>
