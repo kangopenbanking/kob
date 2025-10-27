@@ -4469,29 +4469,7 @@ export type Database = {
       }
     }
     Views: {
-      daily_fee_summary: {
-        Row: {
-          average_fee_per_transaction: number | null
-          fee_date: string | null
-          institution_id: string | null
-          institution_name: string | null
-          total_calculated_fees: number | null
-          total_final_fees: number | null
-          total_transaction_volume: number | null
-          total_waivers: number | null
-          transaction_count: number | null
-          transaction_type: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "transaction_fees_institution_id_fkey"
-            columns: ["institution_id"]
-            isOneToOne: false
-            referencedRelation: "institutions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
+      [_ in never]: never
     }
     Functions: {
       calculate_kyc_risk_score: { Args: { _user_id: string }; Returns: number }
@@ -4556,6 +4534,25 @@ export type Database = {
           _period_start: string
         }
         Returns: string
+      }
+      get_daily_fee_summary: {
+        Args: {
+          p_end_date?: string
+          p_institution_id?: string
+          p_start_date?: string
+        }
+        Returns: {
+          average_fee_per_transaction: number
+          fee_date: string
+          institution_id: string
+          institution_name: string
+          total_calculated_fees: number
+          total_final_fees: number
+          total_transaction_volume: number
+          total_waivers: number
+          transaction_count: number
+          transaction_type: string
+        }[]
       }
       has_role: {
         Args: {
