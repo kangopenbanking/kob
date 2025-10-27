@@ -70,6 +70,73 @@ export default function ApiTesting() {
         };
       }
 
+      // Special handling for OAuth endpoints
+      if (endpoint.endpoint === '/oauth-token') {
+        // oauth-token expects form-encoded data
+        const formData = new URLSearchParams();
+        formData.append('grant_type', 'client_credentials');
+        formData.append('client_id', 'test_client');
+        formData.append('client_secret', 'test_secret');
+        
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oauth-token`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: formData.toString()
+          }
+        );
+        
+        const responseTime = Date.now() - startTime;
+        
+        return {
+          endpoint: endpoint.endpoint,
+          method: endpoint.method,
+          status: response.ok ? 'success' : 'failed',
+          responseTime,
+          statusCode: response.status,
+          error: response.ok ? undefined : `Edge Function returned a non-2xx status code`,
+          category: endpoint.category
+        };
+      }
+      
+      if (endpoint.endpoint === '/oauth-authorize') {
+        // oauth-authorize requires query parameters
+        const params = new URLSearchParams({
+          client_id: 'test_client',
+          redirect_uri: 'https://example.com/callback',
+          response_type: 'code',
+          scope: 'openid accounts',
+          state: 'test_state',
+          code_challenge: 'test_challenge',
+          code_challenge_method: 'S256'
+        });
+        
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/oauth-authorize?${params.toString()}`,
+          {
+            method: 'GET',
+            headers: {
+              'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY || ''
+            }
+          }
+        );
+        
+        const responseTime = Date.now() - startTime;
+        
+        return {
+          endpoint: endpoint.endpoint,
+          method: endpoint.method,
+          status: response.ok ? 'success' : 'failed',
+          responseTime,
+          statusCode: response.status,
+          error: response.ok ? undefined : `Edge Function returned a non-2xx status code`,
+          category: endpoint.category
+        };
+      }
+
       // Test the endpoint using Supabase functions
       const { data, error } = await supabase.functions.invoke(
         endpoint.endpoint.replace('/', ''),
