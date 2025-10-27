@@ -3,6 +3,7 @@ import { CodeBlock } from "@/components/developer/CodeBlock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, Webhook, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function WebhooksGuide() {
   return (
@@ -500,6 +501,17 @@ ngrok http 3000
           </div>
         </CardContent>
       </Card>
+
+      <DocNavigation
+        previousPage={{
+          title: "Banking Operations API",
+          path: "/developer/api/banking"
+        }}
+        nextPage={{
+          title: "Web Integration",
+          path: "/developer/guides/web"
+        }}
+      />
     </div>
   );
 }

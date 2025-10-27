@@ -2,6 +2,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function BankingReference() {
   return (
@@ -361,6 +362,17 @@ export default function BankingReference() {
           </div>
         </CardContent>
       </Card>
+
+      <DocNavigation
+        previousPage={{
+          title: "Mobile Money API",
+          path: "/developer/api/mobile-money"
+        }}
+        nextPage={{
+          title: "Webhooks",
+          path: "/developer/api/webhooks"
+        }}
+      />
     </div>
   );
 }

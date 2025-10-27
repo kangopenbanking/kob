@@ -2,6 +2,7 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function AispReference() {
   return (
@@ -331,6 +332,17 @@ export default function AispReference() {
           </div>
         </CardContent>
       </Card>
+
+      <DocNavigation
+        previousPage={{
+          title: "Getting Started",
+          path: "/developer/getting-started"
+        }}
+        nextPage={{
+          title: "PISP API Reference",
+          path: "/developer/api/pisp"
+        }}
+      />
     </div>
   );
 }

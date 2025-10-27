@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Code, Smartphone, Zap, Shield, Book, Terminal, Webhook, Database } from "lucide-react";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function DeveloperHome() {
   return (
@@ -265,6 +266,13 @@ export default function DeveloperHome() {
           </Card>
         </div>
       </div>
+
+      <DocNavigation
+        nextPage={{
+          title: "Getting Started",
+          path: "/developer/getting-started"
+        }}
+      />
     </div>
   );
 }

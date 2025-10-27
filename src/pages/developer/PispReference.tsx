@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function PispReference() {
   return (
@@ -348,6 +349,17 @@ export default function PispReference() {
           </div>
         </CardContent>
       </Card>
+
+      <DocNavigation
+        previousPage={{
+          title: "AISP API Reference",
+          path: "/developer/api/aisp"
+        }}
+        nextPage={{
+          title: "Mobile Money API",
+          path: "/developer/api/mobile-money"
+        }}
+      />
     </div>
   );
 }

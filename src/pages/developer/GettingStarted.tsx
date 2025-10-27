@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Key, Code, Shield, Zap } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function GettingStarted() {
   return (
@@ -310,6 +311,13 @@ print(accounts)`
           </div>
         </CardContent>
       </Card>
+
+      <DocNavigation
+        nextPage={{
+          title: "AISP API Reference",
+          path: "/developer/api/aisp"
+        }}
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Code, CheckCircle2, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Info } from "lucide-react";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function SDKsPage() {
   return (
@@ -477,6 +478,13 @@ export default function SDKsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <DocNavigation
+        previousPage={{
+          title: "Code Examples",
+          path: "/developer/examples"
+        }}
+      />
     </div>
   );
 }
