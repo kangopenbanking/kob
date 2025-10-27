@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Code, Smartphone, Zap, Shield, Book, Terminal, Webhook, Database } from "lucide-react";
+import { ArrowRight, Code, Smartphone, Zap, Shield, Book, Terminal, Webhook, Database, TestTube } from "lucide-react";
 import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function DeveloperHome() {
@@ -30,7 +30,7 @@ export default function DeveloperHome() {
       </div>
 
       {/* Quick Start Cards */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
         <Card className="hover:shadow-lg transition-shadow">
           <CardHeader>
             <Book className="h-8 w-8 text-primary mb-2" />
@@ -77,6 +77,23 @@ export default function DeveloperHome() {
             <Link to="/developer/examples">
               <Button variant="ghost" className="w-full justify-start">
                 View Examples <ArrowRight className="ml-auto h-4 w-4" />
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <TestTube className="h-8 w-8 text-primary mb-2" />
+            <CardTitle>API Testing</CardTitle>
+            <CardDescription>
+              Comprehensive testing dashboard for all documented endpoints
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Link to="/developer/api-testing">
+              <Button variant="ghost" className="w-full justify-start">
+                Run Tests <ArrowRight className="ml-auto h-4 w-4" />
               </Button>
             </Link>
           </CardContent>

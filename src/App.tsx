@@ -22,6 +22,7 @@ import MobileIntegration from "./pages/developer/MobileIntegration";
 import WebhooksGuide from "./pages/developer/WebhooksGuide";
 import CodeExamples from "./pages/developer/CodeExamples";
 import SDKsPage from "./pages/developer/SDKsPage";
+import ApiTesting from "./pages/developer/ApiTesting";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -103,6 +104,7 @@ function App() {
               <Route path="api/webhooks" element={<WebhooksGuide />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<ApiConsole />} />
+              <Route path="api-testing" element={<ApiTesting />} />
               <Route path="examples" element={<CodeExamples />} />
               <Route path="guides/web" element={<WebIntegration />} />
               <Route path="guides/mobile" element={<MobileIntegration />} />
