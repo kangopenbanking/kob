@@ -15,6 +15,7 @@ const navSections = [
     title: "Getting Started",
     icon: Home,
     items: [
+      { title: "Integration Workflow", path: "/integration-workflow" },
       { title: "Quick Start", path: "/developer/getting-started" },
       { title: "Authentication", path: "/developer/getting-started/authentication" },
       { title: "First API Call", path: "/developer/getting-started/first-call" },

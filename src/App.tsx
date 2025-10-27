@@ -9,6 +9,8 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
+import IntegrationWorkflow from "./pages/IntegrationWorkflow";
+import Pricing from "./pages/Pricing";
 import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
 import DeveloperHome from "./pages/developer/DeveloperHome";
 import GettingStarted from "./pages/developer/GettingStarted";
@@ -133,9 +135,11 @@ function App() {
             <Route path="/aup" element={<Layout><AUP /></Layout>} />
             <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
-            <Route path="/contact" element={<Layout><Contact /></Layout>} />
-            <Route path="/faq" element={<Layout><FAQ /></Layout>} />
-            <Route path="/status" element={<Layout><Status /></Layout>} />
+        <Route path="/contact" element={<Layout><Contact /></Layout>} />
+        <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+        <Route path="/status" element={<Layout><Status /></Layout>} />
+        <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
+        <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
             <Route path="/fee-management" element={<Layout><ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />

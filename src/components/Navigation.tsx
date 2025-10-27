@@ -32,7 +32,7 @@ export const Navigation = () => {
           
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Guides <ChevronDown className="h-4 w-4" />
+              Solutions <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
             <DropdownMenuContent align="center" className="w-56">
               <DropdownMenuItem asChild>
@@ -42,10 +42,10 @@ export const Navigation = () => {
                 <Link to="/guides/pisp" className="cursor-pointer">Payment Initiation (PISP)</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/guides/security" className="cursor-pointer">Security & Authentication</Link>
+                <Link to="/mobile-money" className="cursor-pointer">Mobile Money</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/guides/webhooks" className="cursor-pointer">Webhooks & Events</Link>
+                <Link to="/guides/security" className="cursor-pointer">Compliance & Security</Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -66,25 +66,40 @@ export const Navigation = () => {
 
           <DropdownMenu>
             <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Company <ChevronDown className="h-4 w-4" />
+              Resources <ChevronDown className="h-4 w-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48">
+            <DropdownMenuContent align="center" className="w-56">
               <DropdownMenuItem asChild>
-                <Link to="/about" className="cursor-pointer">About</Link>
+                <Link to="/integration-workflow" className="cursor-pointer">Integration Workflow</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/contact" className="cursor-pointer">Contact</Link>
+                <Link to="/pricing" className="cursor-pointer">Pricing & Fees</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/status" className="cursor-pointer">API Status</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link to="/faq" className="cursor-pointer">FAQ</Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/contact" className="cursor-pointer">Support</Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
-          <Link to="/status" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-1">
-            <span className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></span>
-            Status
-          </Link>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
+              Company <ChevronDown className="h-4 w-4" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="center" className="w-48">
+              <DropdownMenuItem asChild>
+                <Link to="/about" className="cursor-pointer">About Us</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/contact" className="cursor-pointer">Contact Sales</Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <LanguageSwitcher />
           
@@ -110,7 +125,7 @@ export const Navigation = () => {
               </Link>
               
               <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">GUIDES</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-3">SOLUTIONS</p>
                 <div className="space-y-3 ml-2">
                   <Link to="/guides/aisp" className="text-sm font-medium hover:text-primary transition-colors block">
                     Account Information (AISP)
@@ -118,11 +133,11 @@ export const Navigation = () => {
                   <Link to="/guides/pisp" className="text-sm font-medium hover:text-primary transition-colors block">
                     Payment Initiation (PISP)
                   </Link>
-                  <Link to="/guides/security" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Security & Authentication
+                  <Link to="/mobile-money" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Mobile Money
                   </Link>
-                  <Link to="/guides/webhooks" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Webhooks & Events
+                  <Link to="/guides/security" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Compliance & Security
                   </Link>
                 </div>
               </div>
@@ -140,20 +155,35 @@ export const Navigation = () => {
               </div>
 
               <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">COMPANY</p>
+                <p className="text-xs font-semibold text-muted-foreground mb-3">RESOURCES</p>
                 <div className="space-y-3 ml-2">
-                  <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors block">
-                    About
+                  <Link to="/integration-workflow" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Integration Workflow
                   </Link>
-                  <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Contact
+                  <Link to="/pricing" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Pricing & Fees
+                  </Link>
+                  <Link to="/status" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
+                    <span className="h-2 w-2 bg-green-500 rounded-full"></span>
+                    API Status
                   </Link>
                   <Link to="/faq" className="text-sm font-medium hover:text-primary transition-colors block">
                     FAQ
                   </Link>
-                  <Link to="/status" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
-                    <span className="h-2 w-2 bg-green-500 rounded-full"></span>
-                    Status
+                  <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Support
+                  </Link>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-xs font-semibold text-muted-foreground mb-3">COMPANY</p>
+                <div className="space-y-3 ml-2">
+                  <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors block">
+                    About Us
+                  </Link>
+                  <Link to="/contact" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Contact Sales
                   </Link>
                 </div>
               </div>
