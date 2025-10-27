@@ -1,17 +1,20 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown } from "lucide-react";
+import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
 import kobLogo from "@/assets/kob-logo.png";
 import { LanguageSwitcher } from "./LanguageSwitcher";
 import { BrandName } from "./BrandName";
 import { useLanguage } from "@/lib/i18n/LanguageContext";
+import { cn } from "@/lib/utils";
 
 export const Navigation = () => {
   const { t } = useLanguage();
@@ -30,76 +33,191 @@ export const Navigation = () => {
             Documentation
           </Link>
           
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Solutions <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/guides/aisp" className="cursor-pointer">Account Information (AISP)</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/guides/pisp" className="cursor-pointer">Payment Initiation (PISP)</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/mobile-money" className="cursor-pointer">Mobile Money</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/guides/security" className="cursor-pointer">Compliance & Security</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NavigationMenu>
+            <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="text-sm font-medium">
+                  Solutions
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid w-[600px] gap-3 p-6">
+                    <Link 
+                      to="/guides/aisp" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <Database className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Account Information (AISP)
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Access account data, balances, and transactions securely
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/guides/pisp" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <Send className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Payment Initiation (PISP)
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Enable secure payment initiation and transfers
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/mobile-money" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <Smartphone className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Mobile Money
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Integrate with MTN, Orange Money and other providers
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/guides/security" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <Shield className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Compliance & Security
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          PSD2, GDPR compliant with enterprise-grade security
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Portals <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link to="/developer" className="cursor-pointer">Developer Portal</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/dashboard" className="cursor-pointer">My Dashboard</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="text-sm font-medium">
+                  Resources
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid w-[600px] grid-cols-2 gap-3 p-6">
+                    <Link 
+                      to="/integration-workflow" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <Lightbulb className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Integration Workflow
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Step-by-step integration guide
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/pricing" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <DollarSign className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Pricing & Fees
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Transparent pricing structure
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/developer" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <BookOpen className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Developer Portal
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          API docs and testing tools
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/status" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <Activity className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          API Status
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Real-time system status
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/faq" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <HelpCircle className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          FAQ
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Common questions answered
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/contact" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <MessageCircle className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Support
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Get help from our team
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Resources <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-56">
-              <DropdownMenuItem asChild>
-                <Link to="/integration-workflow" className="cursor-pointer">Integration Workflow</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/pricing" className="cursor-pointer">Pricing & Fees</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/status" className="cursor-pointer">API Status</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/faq" className="cursor-pointer">FAQ</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/contact" className="cursor-pointer">Support</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center gap-1 text-sm font-medium hover:text-primary transition-colors">
-              Company <ChevronDown className="h-4 w-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="center" className="w-48">
-              <DropdownMenuItem asChild>
-                <Link to="/about" className="cursor-pointer">About Us</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/contact" className="cursor-pointer">Contact Sales</Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              <NavigationMenuItem>
+                <Link to="/about" className="text-sm font-medium hover:text-primary transition-colors inline-flex items-center justify-center px-4 py-2">
+                  Company
+                </Link>
+              </NavigationMenuItem>
+            </NavigationMenuList>
+          </NavigationMenu>
 
           <LanguageSwitcher />
           
@@ -142,17 +260,6 @@ export const Navigation = () => {
                 </div>
               </div>
 
-              <div className="border-t pt-4">
-                <p className="text-xs font-semibold text-muted-foreground mb-3">PORTALS</p>
-                <div className="space-y-3 ml-2">
-                  <Link to="/developer" className="text-sm font-medium hover:text-primary transition-colors block">
-                    Developer Portal
-                  </Link>
-                  <Link to="/dashboard" className="text-sm font-medium hover:text-primary transition-colors block">
-                    My Dashboard
-                  </Link>
-                </div>
-              </div>
 
               <div className="border-t pt-4">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">RESOURCES</p>
