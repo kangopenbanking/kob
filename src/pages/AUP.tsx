@@ -191,7 +191,7 @@ export default function AUP() {
                 <p><strong>Abuse Reports:</strong> abuse@kangopenbanking.cm</p>
                 <p><strong>Security Issues:</strong> security@kangopenbanking.cm</p>
                 <p><strong>Fraud Reports:</strong> fraud@kangopenbanking.cm</p>
-                <p><strong>Emergency:</strong> +237 233 XX XX XX (24/7)</p>
+                <p><strong>Emergency:</strong> +237 6 22 02 25 67 (24/7)</p>
               </div>
             </Card>
           </section>
@@ -246,7 +246,7 @@ export default function AUP() {
                 <p><strong>Policy Questions:</strong> legal@kangopenbanking.cm</p>
                 <p><strong>Abuse Reports:</strong> abuse@kangopenbanking.cm</p>
                 <p><strong>Compliance Inquiries:</strong> compliance@kangopenbanking.cm</p>
-                <p><strong>Phone:</strong> +237 233 XX XX XX</p>
+                <p><strong>Phone:</strong> +237 6 22 02 25 67</p>
               </div>
             </Card>
           </section>

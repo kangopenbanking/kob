@@ -35,10 +35,12 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Developers</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/documentation" className="hover:text-primary transition-colors">Get Started</Link></li>
               <li><Link to="/developer" className="hover:text-primary transition-colors">Developer Portal</Link></li>
-              <li><Link to="/mobile-money" className="hover:text-primary transition-colors">Mobile Money</Link></li>
-              <li><Link to="/payments" className="hover:text-primary transition-colors">Payments</Link></li>
+              <li><Link to="/developer/getting-started" className="hover:text-primary transition-colors">Get Started</Link></li>
+              <li><Link to="/developer/api/aisp" className="hover:text-primary transition-colors">AISP APIs</Link></li>
+              <li><Link to="/developer/api/pisp" className="hover:text-primary transition-colors">PISP APIs</Link></li>
+              <li><Link to="/developer/api/mobile-money" className="hover:text-primary transition-colors">Mobile Money</Link></li>
+              <li><Link to="/developer/console" className="hover:text-primary transition-colors">API Console</Link></li>
             </ul>
           </div>
 

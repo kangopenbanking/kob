@@ -307,7 +307,7 @@ export default function SLA() {
                 <p><strong>Service Credit Claims:</strong> billing@kangopenbanking.cm</p>
                 <p><strong>Incident Reports:</strong> support@kangopenbanking.cm</p>
                 <p><strong>Status Page:</strong> status.kangopenbanking.cm</p>
-                <p><strong>Emergency Hotline:</strong> +237 233 XX XX XX (24/7)</p>
+                <p><strong>Emergency Hotline:</strong> +237 6 22 02 25 67 (24/7)</p>
               </div>
             </Card>
           </section>

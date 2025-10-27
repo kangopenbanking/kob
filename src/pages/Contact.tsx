@@ -60,7 +60,7 @@ export default function Contact() {
             <p className="text-sm text-muted-foreground mb-3">
               Critical issues support
             </p>
-            <p className="text-sm font-medium">+237 233 XX XX XX</p>
+            <p className="text-sm font-medium">+237 6 22 02 25 67</p>
           </Card>
 
           <Card className="p-6 text-center hover:shadow-lg transition-shadow">
@@ -192,7 +192,7 @@ export default function Contact() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      <span>+237 233 XX XX XX</span>
+                      <span>+237 6 22 02 25 67</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -218,7 +218,7 @@ export default function Contact() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      <span>+237 233 XX XX XX</span>
+                      <span>+237 6 22 02 25 67</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -270,7 +270,7 @@ export default function Contact() {
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
-                      <span>+237 233 XX XX XX</span>
+                      <span>+237 6 22 02 25 67</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -293,11 +293,11 @@ export default function Contact() {
                 <div>
                   <h3 className="text-xl font-semibold mb-2">Cameroon Headquarters</h3>
                   <p className="text-muted-foreground mb-4">
-                    Douala, Cameroon<br />
+                    Bamenda, Cameroon<br />
                     Main Operations & Technical Support
                   </p>
                   <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>Phone: +237 233 XX XX XX</p>
+                    <p>Phone: +237 6 22 02 25 67</p>
                     <p>Email: info@kangopenbanking.cm</p>
                     <p>Hours: Mon-Fri, 8AM-6PM WAT</p>
                   </div>

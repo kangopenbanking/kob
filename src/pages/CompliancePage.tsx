@@ -303,8 +303,8 @@ export default function CompliancePage() {
               <div className="space-y-2 text-sm">
                 <p><strong>Compliance Officer:</strong> compliance@kangopenbanking.cm</p>
                 <p><strong>Legal Department:</strong> legal@kangopenbanking.cm</p>
-                <p><strong>Regulatory Inquiries:</strong> +237 233 XX XX XX</p>
-                <p><strong>Address:</strong> Douala, Cameroon</p>
+                <p><strong>Regulatory Inquiries:</strong> +237 6 22 02 25 67</p>
+                <p><strong>Address:</strong> Bamenda, Cameroon</p>
               </div>
             </Card>
           </section>

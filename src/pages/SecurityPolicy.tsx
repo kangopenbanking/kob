@@ -256,8 +256,8 @@ export default function SecurityPolicy() {
               <div className="text-muted-foreground space-y-2">
                 <p><strong>Security Inquiries:</strong> security@kangopenbanking.cm</p>
                 <p><strong>Vulnerability Reports:</strong> security@kangopenbanking.cm (use PGP)</p>
-                <p><strong>Security Hotline:</strong> +237 233 XX XX XX (24/7)</p>
-                <p><strong>Physical Security:</strong> Douala, Cameroon</p>
+                <p><strong>Security Hotline:</strong> +237 6 22 02 25 67 (24/7)</p>
+                <p><strong>Physical Security:</strong> Bamenda, Cameroon</p>
               </div>
             </div>
           </section>

@@ -349,8 +349,8 @@ export default function DataProtection() {
               <div className="space-y-1 text-sm">
                 <p><strong>DPO Email:</strong> dpo@kangopenbanking.cm</p>
                 <p><strong>Privacy Team:</strong> privacy@kangopenbanking.cm</p>
-                <p><strong>Phone:</strong> +237 233 XX XX XX</p>
-                <p><strong>Address:</strong> Douala, Cameroon</p>
+                <p><strong>Phone:</strong> +237 6 22 02 25 67</p>
+                <p><strong>Address:</strong> Bamenda, Cameroon</p>
               </div>
             </Card>
           </section>

@@ -148,7 +148,7 @@ export default function Cookies() {
             <div className="text-muted-foreground leading-relaxed space-y-2">
               <p>Questions about our use of cookies?</p>
               <p className="font-medium">Email: privacy@kangopenbanking.cm</p>
-              <p className="font-medium">Phone: +237 233 XX XX XX</p>
+              <p className="font-medium">Phone: +237 6 22 02 25 67</p>
             </div>
           </section>
         </div>

@@ -20,6 +20,8 @@ import ApiConsole from "./pages/developer/ApiConsole";
 import WebIntegration from "./pages/developer/WebIntegration";
 import MobileIntegration from "./pages/developer/MobileIntegration";
 import WebhooksGuide from "./pages/developer/WebhooksGuide";
+import CodeExamples from "./pages/developer/CodeExamples";
+import SDKsPage from "./pages/developer/SDKsPage";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -92,6 +94,8 @@ function App() {
             <Route path="/developer" element={<DeveloperLayout />}>
               <Route index element={<DeveloperHome />} />
               <Route path="getting-started" element={<GettingStarted />} />
+              <Route path="getting-started/authentication" element={<GettingStarted />} />
+              <Route path="getting-started/first-call" element={<GettingStarted />} />
               <Route path="api/aisp" element={<AispReference />} />
               <Route path="api/pisp" element={<PispReference />} />
               <Route path="api/mobile-money" element={<MobileMoneyReference />} />
@@ -99,9 +103,10 @@ function App() {
               <Route path="api/webhooks" element={<WebhooksGuide />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<ApiConsole />} />
-              <Route path="examples" element={<ApiConsole />} />
+              <Route path="examples" element={<CodeExamples />} />
               <Route path="guides/web" element={<WebIntegration />} />
               <Route path="guides/mobile" element={<MobileIntegration />} />
+              <Route path="guides/sdks" element={<SDKsPage />} />
             </Route>
             <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
