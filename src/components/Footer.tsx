@@ -23,11 +23,11 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/integration-workflow" className="hover:text-primary transition-colors">Integration Guide</Link></li>
+              <li><Link to="/pricing" className="hover:text-primary transition-colors">Pricing & Fees</Link></li>
               <li><Link to="/documentation" className="hover:text-primary transition-colors">Documentation</Link></li>
               <li><Link to="/guides/aisp" className="hover:text-primary transition-colors">AISP Guide</Link></li>
               <li><Link to="/guides/pisp" className="hover:text-primary transition-colors">PISP Guide</Link></li>
-              <li><Link to="/guides/security" className="hover:text-primary transition-colors">Security</Link></li>
-              <li><Link to="/guides/webhooks" className="hover:text-primary transition-colors">Webhooks</Link></li>
               <li><Link to="/status" className="hover:text-primary transition-colors">Status</Link></li>
             </ul>
           </div>
