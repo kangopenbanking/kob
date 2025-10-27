@@ -48,8 +48,8 @@ serve(async (req) => {
       throw new Error('Invalid provider. Must be mtn or orange');
     }
 
-    // Generate unique transaction reference
-    const transaction_ref = `MMC_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    // Generate unique transaction reference using cryptographically secure random
+    const transaction_ref = `MMC_${crypto.randomUUID()}`;
 
     console.log('Initiating mobile money charge:', {
       amount,

@@ -1,9 +1,39 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Validation schema for KYC submission
+const kycSubmissionSchema = z.object({
+  verification_type: z.enum(['identity', 'address', 'business']),
+  document_type: z.string()
+    .min(2, 'Document type too short')
+    .max(50, 'Document type too long')
+    .regex(/^[a-zA-Z0-9_\s-]+$/, 'Invalid characters in document type'),
+  document_number: z.string()
+    .min(5, 'Document number too short')
+    .max(50, 'Document number too long')
+    .regex(/^[A-Z0-9-]+$/i, 'Document number must contain only letters, numbers, and hyphens'),
+  document_country: z.string()
+    .length(2, 'Country code must be 2 characters')
+    .regex(/^[A-Z]{2}$/i, 'Invalid ISO country code'),
+  document_expiry_date: z.string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
+    .refine(date => new Date(date) > new Date(), 'Document must not be expired'),
+  document_front_url: z.string()
+    .url('Invalid URL format')
+    .startsWith('https://', 'Document URLs must use HTTPS'),
+  document_back_url: z.string()
+    .url('Invalid URL format')
+    .startsWith('https://', 'Document URLs must use HTTPS')
+    .optional(),
+  selfie_url: z.string()
+    .url('Invalid URL format')
+    .startsWith('https://', 'Selfie URL must use HTTPS')
+});
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -33,6 +63,25 @@ Deno.serve(async (req) => {
       );
     }
 
+    const requestBody = await req.json();
+    
+    // Validate input data
+    let validatedData;
+    try {
+      validatedData = kycSubmissionSchema.parse(requestBody);
+    } catch (validationError) {
+      if (validationError instanceof z.ZodError) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Validation failed', 
+            details: validationError.errors.map(e => `${e.path.join('.')}: ${e.message}`)
+          }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      throw validationError;
+    }
+
     const {
       verification_type,
       document_type,
@@ -42,7 +91,7 @@ Deno.serve(async (req) => {
       document_front_url,
       document_back_url,
       selfie_url
-    } = await req.json();
+    } = validatedData;
 
     // Insert KYC verification record
     const { data: verification, error: verificationError } = await supabase
