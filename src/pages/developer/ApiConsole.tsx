@@ -150,7 +150,7 @@ export default function ApiConsole() {
     const headersArray = headers.split('\n').filter(h => h.trim());
     const headerFlags = headersArray.map(h => `-H "${h.trim()}"`).join(' \\\n  ');
     
-    let curl = `curl -X ${method} https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1${endpoint}`;
+    let curl = `curl -X ${method} https://api.kangopenbanking.com${endpoint}`;
     if (headerFlags) {
       curl += ` \\\n  ${headerFlags}`;
     }
@@ -223,7 +223,7 @@ export default function ApiConsole() {
                 <div className="space-y-2">
                   <Label>Full URL</Label>
                   <Input 
-                    value={`https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1${endpoint}`}
+                    value={`https://api.kangopenbanking.com${endpoint}`}
                     readOnly
                     className="font-mono text-sm"
                   />
@@ -330,7 +330,7 @@ export default function ApiConsole() {
                     size="sm"
                     variant="ghost"
                     className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(`const response = await fetch('https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1${endpoint}', {
+                    onClick={() => copyToClipboard(`const response = await fetch('https://api.kangopenbanking.com${endpoint}', {
   method: '${method}',
   headers: {
 ${headers.split('\n').map(h => {
@@ -346,7 +346,7 @@ console.log(data);`)}
                     {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                   </Button>
                   <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
-                    <code>{`const response = await fetch('https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1${endpoint}', {
+                    <code>{`const response = await fetch('https://api.kangopenbanking.com${endpoint}', {
   method: '${method}',
   headers: {
 ${headers.split('\n').map(h => {
@@ -378,7 +378,7 @@ ${headers.split('\n').map(h => {
 }
 
 ${method !== "GET" && body ? `data = ${body}\n\n` : ''}response = requests.${method.toLowerCase()}(
-    'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1${endpoint}',
+    'https://api.kangopenbanking.com${endpoint}',
     headers=headers${method !== "GET" && body ? ',\n    json=data' : ''}
 )
 
@@ -397,7 +397,7 @@ ${headers.split('\n').map(h => {
 }
 
 ${method !== "GET" && body ? `data = ${body}\n\n` : ''}response = requests.${method.toLowerCase()}(
-    'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1${endpoint}',
+    'https://api.kangopenbanking.com${endpoint}',
     headers=headers${method !== "GET" && body ? ',\n    json=data' : ''}
 )
 

@@ -54,7 +54,7 @@ interface Balance {
   Currency: string;
 }
 
-const API_BASE = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com';
 
 export default function AccountDashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -181,7 +181,7 @@ interface PaymentFormData {
   reference: string;
 }
 
-const API_BASE = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com';
 
 export default function PaymentCheckout() {
   const [formData, setFormData] = useState<PaymentFormData>({
@@ -415,7 +415,7 @@ const express = require('express');
 const axios = require('axios');
 const router = express.Router();
 
-const API_BASE = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com';
 
 // Initiate mobile money charge
 router.post('/charge', async (req, res) => {
@@ -603,7 +603,7 @@ module.exports = router;`
 
     // Fetch new token
     const response = await fetch(
-      'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oauth-token',
+      'https://api.kangopenbanking.com/oauth-token',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },

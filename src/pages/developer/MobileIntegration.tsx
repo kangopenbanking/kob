@@ -58,7 +58,7 @@ import Foundation
 
 class KOBAPIService {
     static let shared = KOBAPIService()
-    private let baseURL = "https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1"
+    private let baseURL = "https://api.kangopenbanking.com"
     
     private var accessToken: String? {
         get { KeychainHelper.standard.read(key: "kob_access_token") }
@@ -285,7 +285,7 @@ interface KOBApiService {
     ): PaymentResponse
     
     companion object {
-        private const val BASE_URL = "https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/"
+        private const val BASE_URL = "https://api.kangopenbanking.com/"
         
         fun create(): KOBApiService {
             return Retrofit.Builder()
@@ -478,7 +478,7 @@ npm install react-native-keychain`
 import axios from 'axios';
 import * as Keychain from 'react-native-keychain';
 
-const API_BASE = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1';
+const API_BASE = 'https://api.kangopenbanking.com';
 
 class KOBApiService {
   private async getToken(): Promise<string | null> {
@@ -648,7 +648,7 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class KOBApiService {
-  static const String baseUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1';
+  static const String baseUrl = 'https://api.kangopenbanking.com';
   final storage = const FlutterSecureStorage();
   
   Future<String?> getToken() async {

@@ -112,7 +112,7 @@ export default function GettingStarted() {
               {
                 language: "curl",
                 label: "cURL",
-                code: `curl -X POST https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oauth-token \\
+                code: `curl -X POST https://api.kangopenbanking.com/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
@@ -123,7 +123,7 @@ export default function GettingStarted() {
                 language: "javascript",
                 label: "Node.js",
                 code: `const response = await fetch(
-  'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oauth-token',
+  'https://api.kangopenbanking.com/oauth-token',
   {
     method: 'POST',
     headers: {
@@ -147,7 +147,7 @@ const accessToken = data.access_token;`
                 code: `import requests
 
 response = requests.post(
-    'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oauth-token',
+    'https://api.kangopenbanking.com/oauth-token',
     data={
         'grant_type': 'client_credentials',
         'client_id': 'YOUR_CLIENT_ID',
@@ -200,7 +200,7 @@ access_token = data['access_token']`
               {
                 language: "curl",
                 label: "cURL",
-                code: `curl -X GET https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/aisp-accounts \\
+                code: `curl -X GET https://api.kangopenbanking.com/aisp-accounts \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "x-consent-id: YOUR_CONSENT_ID"`
               },
@@ -208,7 +208,7 @@ access_token = data['access_token']`
                 language: "javascript",
                 label: "Node.js",
                 code: `const response = await fetch(
-  'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/aisp-accounts',
+  'https://api.kangopenbanking.com/aisp-accounts',
   {
     headers: {
       'Authorization': \`Bearer \${accessToken}\`,
@@ -231,7 +231,7 @@ headers = {
 }
 
 response = requests.get(
-    'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/aisp-accounts',
+    'https://api.kangopenbanking.com/aisp-accounts',
     headers=headers
 )
 
