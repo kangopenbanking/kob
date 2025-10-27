@@ -235,7 +235,7 @@ export default function PendingApproval() {
                   <Mail className="mr-2 h-4 w-4" />
                   Email Support
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => window.location.href = 'tel:+237XXXXXXXX'}>
+                <Button variant="outline" size="sm" onClick={() => window.location.href = 'tel:+237622022567'}>
                   <Phone className="mr-2 h-4 w-4" />
                   Call Support
                 </Button>
