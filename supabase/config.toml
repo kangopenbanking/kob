@@ -128,3 +128,156 @@ verify_jwt = false
 # BIC validator
 [functions.validate-bic]
 verify_jwt = false
+
+# Phase 1: Authentication & Security Functions
+
+[functions.phone-auth-send-otp]
+verify_jwt = false
+
+[functions.phone-auth-verify-otp]
+verify_jwt = false
+
+[functions.pin-code-set]
+verify_jwt = false
+
+[functions.pin-code-verify]
+verify_jwt = false
+
+[functions.password-reset-with-pin]
+verify_jwt = false
+
+[functions.captcha-generate]
+verify_jwt = false
+
+[functions.captcha-verify]
+verify_jwt = false
+
+[functions.sca-initiate]
+verify_jwt = false
+
+[functions.sca-verify]
+verify_jwt = false
+
+# Phase 2: API Endpoint Functions
+
+[functions.api-account-details]
+verify_jwt = false
+
+[functions.api-account-detail]
+verify_jwt = false
+
+[functions.api-bills]
+verify_jwt = false
+
+[functions.api-consents-list]
+verify_jwt = false
+
+[functions.api-transfers]
+verify_jwt = false
+
+[functions.api-transactions]
+verify_jwt = false
+
+[functions.api-verification]
+verify_jwt = false
+
+# Phase 3: Flutterwave Integration Functions
+
+[functions.flutterwave-list-banks]
+verify_jwt = false
+
+[functions.flutterwave-verify-bank]
+verify_jwt = false
+
+[functions.flutterwave-bank-transfer]
+verify_jwt = false
+
+# Phase 4: Mobile Money Functions
+
+[functions.mobile-money-charge]
+verify_jwt = false
+
+[functions.mobile-money-transfer]
+verify_jwt = false
+
+[functions.mobile-money-verify]
+verify_jwt = false
+
+# Phase 5: Stripe Payment Functions
+
+[functions.stripe-payment-intent]
+verify_jwt = false
+
+[functions.stripe-confirm-payment]
+verify_jwt = false
+
+[functions.stripe-save-card]
+verify_jwt = false
+
+# Phase 6: Banking Operations Functions
+
+[functions.bank-sync]
+verify_jwt = false
+
+[functions.bank-reconcile]
+verify_jwt = false
+
+[functions.bank-import-transactions]
+verify_jwt = false
+
+[functions.bulk-transfers]
+verify_jwt = false
+
+# Phase 7: Communication Functions
+
+[functions.send-communication]
+verify_jwt = false
+
+[functions.send-bulk-communication]
+verify_jwt = false
+
+# Phase 8: Monitoring & Compliance Functions
+
+[functions.transaction-monitor]
+verify_jwt = false
+
+[functions.sanctions-screen]
+verify_jwt = false
+
+# Phase 9: ISO20022 Message Processing Functions
+
+[functions.iso20022-pain001-parser]
+verify_jwt = false
+
+[functions.iso20022-camt053-parser]
+verify_jwt = false
+
+[functions.iso20022-pacs008-generator]
+verify_jwt = false
+
+[functions.iso20022-pacs002-generator]
+verify_jwt = false
+
+# Phase 10: OAuth & Security Functions
+
+[functions.oauth-introspect]
+verify_jwt = false
+
+# Phase 11: Data Management Functions
+
+[functions.data-export]
+verify_jwt = false
+
+[functions.kyc-submit]
+verify_jwt = false
+
+# Phase 12: Admin Functions
+
+[functions.admin-create-client]
+verify_jwt = false
+
+[functions.admin-metrics]
+verify_jwt = false
+
+[functions.admin-sandbox-accounts]
+verify_jwt = false
