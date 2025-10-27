@@ -35,15 +35,21 @@ import Developer from "./pages/Developer";
 import Auth from "./pages/Auth";
 import ProfileSettings from "./pages/ProfileSettings";
 import TPPRegistration from "./pages/TPPRegistration";
-import ConsentManagement from "./pages/ConsentManagement";
+import ComplianceDashboard from "./pages/ComplianceDashboard";
+import ISO20022Dashboard from "./pages/ISO20022Dashboard";
+import SWIFTDashboard from "./pages/SWIFTDashboard";
 import Analytics from "./pages/Analytics";
+import UserManagement from "./pages/admin/UserManagement";
+import ApiClientManagement from "./pages/admin/ApiClientManagement";
+import SandboxManagement from "./pages/admin/SandboxManagement";
+import SecurityMonitoring from "./pages/admin/SecurityMonitoring";
+import ConsentManagement from "./pages/ConsentManagement";
 import SystemMonitoring from "./pages/SystemMonitoring";
 import Dashboard from "./pages/Dashboard";
 import SecuritySettings from "./pages/SecuritySettings";
 import Communications from "./pages/Communications";
 import MobileMoney from "./pages/MobileMoney";
 import Payments from "./pages/Payments";
-import ComplianceDashboard from "./pages/ComplianceDashboard";
 import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
@@ -62,8 +68,6 @@ import NotFound from "./pages/NotFound";
 import PendingApproval from "./pages/PendingApproval";
 import FIPortal from "./pages/FIPortal";
 import FeeManagement from "./pages/FeeManagement";
-import ISO20022Dashboard from "./pages/ISO20022Dashboard";
-import SWIFTDashboard from "./pages/SWIFTDashboard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -94,6 +98,10 @@ function App() {
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
             <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
+            <Route path="/admin/users" element={<Layout><ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute></Layout>} />
+            <Route path="/admin/api-clients" element={<Layout><ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute></Layout>} />
+            <Route path="/admin/sandbox" element={<Layout><ProtectedRoute requiredRole="admin"><SandboxManagement /></ProtectedRoute></Layout>} />
+            <Route path="/admin/security" element={<Layout><ProtectedRoute requiredRole="admin"><SecurityMonitoring /></ProtectedRoute></Layout>} />
             
             {/* New Developer Portal */}
             <Route path="/developer" element={<DeveloperLayout />}>

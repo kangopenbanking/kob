@@ -384,21 +384,62 @@ const Admin = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
-          <Shield className="h-4 w-4 text-primary" />
-          <span className="text-sm font-medium text-primary">Admin Dashboard</span>
+    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5">
+      <div className="container mx-auto p-6 space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              Platform Management
+            </h1>
+            <p className="text-muted-foreground mt-2">
+              Monitor and manage the Kash Open Banking platform
+            </p>
+          </div>
+          <Button onClick={() => navigate('/dashboard')}>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Button>
         </div>
-        <h1 className="text-4xl font-bold mb-2">Platform Management</h1>
-        <p className="text-muted-foreground">
-          Monitor and manage institutions, consents, payments, and system activity
-        </p>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Quick Access Navigation */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/users')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                User Management
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/api-clients')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                API Clients
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/sandbox')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TestTube className="h-5 w-5" />
+                Sandbox
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/security')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Security
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Stats Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-start justify-between mb-4">
