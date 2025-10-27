@@ -274,7 +274,7 @@ export default function SLA() {
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                  <span className="text-muted-foreground">Real-time status dashboard at status.kangopenbanking.cm</span>
+                  <span className="text-muted-foreground">Real-time status dashboard at status.kangopenbanking.com</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -303,10 +303,10 @@ export default function SLA() {
             <h2 className="text-2xl font-semibold mb-4">10. Contact Information</h2>
             <Card className="p-4">
               <div className="space-y-2 text-sm">
-                <p><strong>SLA Inquiries:</strong> sla@kangopenbanking.cm</p>
-                <p><strong>Service Credit Claims:</strong> billing@kangopenbanking.cm</p>
-                <p><strong>Incident Reports:</strong> support@kangopenbanking.cm</p>
-                <p><strong>Status Page:</strong> status.kangopenbanking.cm</p>
+                <p><strong>SLA Inquiries:</strong> sla@kangopenbanking.com</p>
+                <p><strong>Service Credit Claims:</strong> billing@kangopenbanking.com</p>
+                <p><strong>Incident Reports:</strong> support@kangopenbanking.com</p>
+                <p><strong>Status Page:</strong> status.kangopenbanking.com</p>
                 <p><strong>Emergency Hotline:</strong> +237 6 22 02 25 67 (24/7)</p>
               </div>
             </Card>

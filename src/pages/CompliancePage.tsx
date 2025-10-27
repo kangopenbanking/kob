@@ -292,7 +292,7 @@ export default function CompliancePage() {
             <Card className="p-4 bg-muted/50">
               <p className="text-sm text-muted-foreground">
                 Audit reports and compliance certificates are available to partner institutions under NDA. 
-                Contact our compliance team for access: <span className="font-medium text-foreground">compliance@kangopenbanking.cm</span>
+                Contact our compliance team for access: <span className="font-medium text-foreground">compliance@kangopenbanking.com</span>
               </p>
             </Card>
           </section>
@@ -301,8 +301,8 @@ export default function CompliancePage() {
             <h2 className="text-2xl font-semibold mb-4">Contact Compliance Team</h2>
             <Card className="p-4">
               <div className="space-y-2 text-sm">
-                <p><strong>Compliance Officer:</strong> compliance@kangopenbanking.cm</p>
-                <p><strong>Legal Department:</strong> legal@kangopenbanking.cm</p>
+                <p><strong>Compliance Officer:</strong> compliance@kangopenbanking.com</p>
+                <p><strong>Legal Department:</strong> legal@kangopenbanking.com</p>
                 <p><strong>Regulatory Inquiries:</strong> +237 6 22 02 25 67</p>
                 <p><strong>Address:</strong> Bamenda, Cameroon</p>
               </div>

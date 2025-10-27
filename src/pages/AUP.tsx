@@ -188,9 +188,9 @@ export default function AUP() {
                 If you become aware of violations of this AUP, please report them immediately:
               </p>
               <div className="space-y-2 text-sm">
-                <p><strong>Abuse Reports:</strong> abuse@kangopenbanking.cm</p>
-                <p><strong>Security Issues:</strong> security@kangopenbanking.cm</p>
-                <p><strong>Fraud Reports:</strong> fraud@kangopenbanking.cm</p>
+                <p><strong>Abuse Reports:</strong> abuse@kangopenbanking.com</p>
+                <p><strong>Security Issues:</strong> security@kangopenbanking.com</p>
+                <p><strong>Fraud Reports:</strong> fraud@kangopenbanking.com</p>
                 <p><strong>Emergency:</strong> +237 6 22 02 25 67 (24/7)</p>
               </div>
             </Card>
@@ -220,7 +220,7 @@ export default function AUP() {
 
               <h3 className="text-xl font-medium mt-4">8.3 Appeal Process</h3>
               <p className="text-muted-foreground leading-relaxed">
-                If your account is suspended or terminated, you may appeal by contacting legal@kangopenbanking.cm within 30 days. Include a detailed explanation and evidence supporting your appeal.
+                If your account is suspended or terminated, you may appeal by contacting legal@kangopenbanking.com within 30 days. Include a detailed explanation and evidence supporting your appeal.
               </p>
             </div>
           </section>
@@ -243,9 +243,9 @@ export default function AUP() {
             <h2 className="text-2xl font-semibold mb-4">11. Contact Information</h2>
             <Card className="p-4">
               <div className="space-y-2 text-sm">
-                <p><strong>Policy Questions:</strong> legal@kangopenbanking.cm</p>
-                <p><strong>Abuse Reports:</strong> abuse@kangopenbanking.cm</p>
-                <p><strong>Compliance Inquiries:</strong> compliance@kangopenbanking.cm</p>
+                <p><strong>Policy Questions:</strong> legal@kangopenbanking.com</p>
+                <p><strong>Abuse Reports:</strong> abuse@kangopenbanking.com</p>
+                <p><strong>Compliance Inquiries:</strong> compliance@kangopenbanking.com</p>
                 <p><strong>Phone:</strong> +237 6 22 02 25 67</p>
               </div>
             </Card>

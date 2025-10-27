@@ -215,7 +215,7 @@ export default function SecurityPolicy() {
               <div className="bg-muted/50 rounded-lg p-4">
                 <h3 className="font-semibold mb-2">Reporting a Vulnerability</h3>
                 <p className="text-sm text-muted-foreground mb-2">
-                  Email: <span className="font-medium text-foreground">security@kangopenbanking.cm</span>
+                  Email: <span className="font-medium text-foreground">security@kangopenbanking.com</span>
                 </p>
                 <p className="text-sm text-muted-foreground mb-2">
                   Use our PGP key for sensitive reports (available on our website)
@@ -254,8 +254,8 @@ export default function SecurityPolicy() {
             <h2 className="text-2xl font-semibold mb-4">11. Contact Security Team</h2>
             <div className="bg-muted/50 rounded-lg p-4">
               <div className="text-muted-foreground space-y-2">
-                <p><strong>Security Inquiries:</strong> security@kangopenbanking.cm</p>
-                <p><strong>Vulnerability Reports:</strong> security@kangopenbanking.cm (use PGP)</p>
+                <p><strong>Security Inquiries:</strong> security@kangopenbanking.com</p>
+                <p><strong>Vulnerability Reports:</strong> security@kangopenbanking.com (use PGP)</p>
                 <p><strong>Security Hotline:</strong> +237 6 22 02 25 67 (24/7)</p>
                 <p><strong>Physical Security:</strong> Bamenda, Cameroon</p>
               </div>

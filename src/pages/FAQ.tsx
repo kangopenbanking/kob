@@ -372,7 +372,7 @@ export default function FAQ() {
                   <p>We offer multiple support channels based on your subscription tier:</p>
                   <ul className="list-disc list-inside space-y-2 ml-4">
                     <li><strong>Documentation:</strong> Comprehensive API docs, integration guides, code examples</li>
-                    <li><strong>Email Support:</strong> support@kangopenbanking.cm (24-48 hour response)</li>
+                    <li><strong>Email Support:</strong> support@kangopenbanking.com (24-48 hour response)</li>
                     <li><strong>Live Chat:</strong> Mon-Fri, 8AM-6PM WAT (Growth and Enterprise)</li>
                     <li><strong>24/7 Critical Support:</strong> Phone hotline for production emergencies (Enterprise)</li>
                     <li><strong>Dedicated Account Manager:</strong> For Enterprise clients</li>

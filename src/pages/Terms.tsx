@@ -39,7 +39,7 @@ export default function Terms() {
             </ul>
             <div className="bg-muted/50 rounded-lg p-4 mt-4">
               <p className="font-medium mb-2">Contact Information:</p>
-              <p>Email: <a href="mailto:legal@kangopenbanking.cm" className="text-primary hover:underline">legal@kangopenbanking.cm</a></p>
+              <p>Email: <a href="mailto:legal@kangopenbanking.com" className="text-primary hover:underline">legal@kangopenbanking.com</a></p>
               <p>Phone: +237 6 22 02 25 67</p>
               <p>Address: Bamenda, Cameroon</p>
             </div>

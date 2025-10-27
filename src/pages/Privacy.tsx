@@ -36,8 +36,8 @@ export default function Privacy() {
               Kang Open Banking is the data controller for the personal data we process. For any privacy-related inquiries, you can contact our Data Protection Officer:
             </p>
             <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-              <p className="font-medium">Email: privacy@kangopenbanking.cm</p>
-              <p className="font-medium">Alternative: dpo@kangopenbanking.cm</p>
+              <p className="font-medium">Email: privacy@kangopenbanking.com</p>
+              <p className="font-medium">Alternative: dpo@kangopenbanking.com</p>
               <p className="font-medium">Phone: +237 6 22 02 25 67</p>
               <p className="font-medium">Address: Bamenda, Cameroon</p>
             </div>
@@ -56,7 +56,7 @@ export default function Privacy() {
               <li><strong>Vital interests:</strong> Where processing is necessary to protect life or physical safety</li>
             </ul>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              You can withdraw your consent at any time by contacting <a href="mailto:privacy@kangopenbanking.cm" className="text-primary hover:underline">privacy@kangopenbanking.cm</a>. You also have the right to object to processing based on legitimate interests.
+              You can withdraw your consent at any time by contacting <a href="mailto:privacy@kangopenbanking.com" className="text-primary hover:underline">privacy@kangopenbanking.com</a>. You also have the right to object to processing based on legitimate interests.
             </p>
           </section>
 
@@ -349,7 +349,7 @@ export default function Privacy() {
               </div>
             </div>
             <p className="text-muted-foreground leading-relaxed mt-4">
-              To exercise any of these rights, please contact our Data Protection Officer at <a href="mailto:dpo@kangopenbanking.cm" className="text-primary hover:underline">dpo@kangopenbanking.cm</a>. We will respond to your request within 30 days.
+              To exercise any of these rights, please contact our Data Protection Officer at <a href="mailto:dpo@kangopenbanking.com" className="text-primary hover:underline">dpo@kangopenbanking.com</a>. We will respond to your request within 30 days.
             </p>
           </section>
 
@@ -387,7 +387,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">13. Children's Privacy</h2>
             <p className="text-muted-foreground leading-relaxed">
-              Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal data from children. If you believe we have inadvertently collected data from a minor, please contact us immediately at <a href="mailto:privacy@kangopenbanking.cm" className="text-primary hover:underline">privacy@kangopenbanking.cm</a>.
+              Our services are not intended for individuals under 18 years of age. We do not knowingly collect personal data from children. If you believe we have inadvertently collected data from a minor, please contact us immediately at <a href="mailto:privacy@kangopenbanking.com" className="text-primary hover:underline">privacy@kangopenbanking.com</a>.
             </p>
           </section>
 
@@ -436,8 +436,8 @@ export default function Privacy() {
               <p>For privacy-related inquiries, to exercise your data protection rights, or to report a data breach, contact our Data Protection Officer:</p>
               <div className="bg-muted/50 rounded-lg p-6 space-y-3">
                 <p><strong>Data Protection Officer</strong></p>
-                <p className="font-medium">Email: <a href="mailto:dpo@kangopenbanking.cm" className="text-primary hover:underline">dpo@kangopenbanking.cm</a></p>
-                <p className="font-medium">Privacy Team: <a href="mailto:privacy@kangopenbanking.cm" className="text-primary hover:underline">privacy@kangopenbanking.cm</a></p>
+                <p className="font-medium">Email: <a href="mailto:dpo@kangopenbanking.com" className="text-primary hover:underline">dpo@kangopenbanking.com</a></p>
+                <p className="font-medium">Privacy Team: <a href="mailto:privacy@kangopenbanking.com" className="text-primary hover:underline">privacy@kangopenbanking.com</a></p>
                 <p className="font-medium">Phone: +237 6 22 02 25 67</p>
                 <p className="font-medium">Address: Bamenda, Cameroon</p>
               </div>

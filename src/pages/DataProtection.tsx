@@ -225,7 +225,7 @@ export default function DataProtection() {
                 To exercise any of your data protection rights:
               </p>
               <ol className="text-sm text-muted-foreground space-y-2 ml-4 list-decimal list-inside">
-                <li>Send a request to: <span className="font-medium text-foreground">privacy@kangopenbanking.cm</span></li>
+                <li>Send a request to: <span className="font-medium text-foreground">privacy@kangopenbanking.com</span></li>
                 <li>Include: Full name, email address, nature of request, supporting documentation</li>
                 <li>We will verify your identity before processing</li>
                 <li>Response provided within 30 days (may be extended by 60 days for complex requests)</li>
@@ -347,8 +347,8 @@ export default function DataProtection() {
                 Our Data Protection Officer (DPO) oversees all data protection activities:
               </p>
               <div className="space-y-1 text-sm">
-                <p><strong>DPO Email:</strong> dpo@kangopenbanking.cm</p>
-                <p><strong>Privacy Team:</strong> privacy@kangopenbanking.cm</p>
+                <p><strong>DPO Email:</strong> dpo@kangopenbanking.com</p>
+                <p><strong>Privacy Team:</strong> privacy@kangopenbanking.com</p>
                 <p><strong>Phone:</strong> +237 6 22 02 25 67</p>
                 <p><strong>Address:</strong> Bamenda, Cameroon</p>
               </div>

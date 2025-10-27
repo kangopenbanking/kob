@@ -69,7 +69,7 @@ export default function Contact() {
             <p className="text-sm text-muted-foreground mb-3">
               General inquiries
             </p>
-            <p className="text-sm font-medium">info@kangopenbanking.cm</p>
+            <p className="text-sm font-medium">info@kangopenbanking.com</p>
           </Card>
 
           <Card className="p-6 text-center hover:shadow-lg transition-shadow">
@@ -87,7 +87,7 @@ export default function Contact() {
             <p className="text-sm text-muted-foreground mb-3">
               Service health
             </p>
-            <p className="text-sm font-medium">status.kangopenbanking.cm</p>
+            <p className="text-sm font-medium">status.kangopenbanking.com</p>
           </Card>
         </section>
 
@@ -188,7 +188,7 @@ export default function Contact() {
                   <div className="space-y-1 text-sm">
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span>support@kangopenbanking.cm</span>
+                      <span>support@kangopenbanking.com</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
@@ -214,7 +214,7 @@ export default function Contact() {
                   <div className="space-y-1 text-sm">
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span>sales@kangopenbanking.cm</span>
+                      <span>sales@kangopenbanking.com</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
@@ -240,11 +240,11 @@ export default function Contact() {
                   <div className="space-y-1 text-sm">
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span>compliance@kangopenbanking.cm</span>
+                      <span>compliance@kangopenbanking.com</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span>security@kangopenbanking.cm</span>
+                      <span>security@kangopenbanking.com</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Clock className="h-4 w-4" />
@@ -266,7 +266,7 @@ export default function Contact() {
                   <div className="space-y-1 text-sm">
                     <p className="flex items-center gap-2">
                       <Mail className="h-4 w-4" />
-                      <span>billing@kangopenbanking.cm</span>
+                      <span>billing@kangopenbanking.com</span>
                     </p>
                     <p className="flex items-center gap-2">
                       <Phone className="h-4 w-4" />
@@ -298,7 +298,7 @@ export default function Contact() {
                   </p>
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p>Phone: +237 6 22 02 25 67</p>
-                    <p>Email: info@kangopenbanking.cm</p>
+                    <p>Email: info@kangopenbanking.com</p>
                     <p>Hours: Mon-Fri, 8AM-6PM WAT</p>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ export default function Contact() {
                   </p>
                   <div className="space-y-1 text-sm text-muted-foreground">
                     <p>Reg. No: 1381210-3 (CBCA)</p>
-                    <p>Email: international@kangopenbanking.cm</p>
+                    <p>Email: international@kangopenbanking.com</p>
                   </div>
                 </div>
               </div>
@@ -342,7 +342,7 @@ export default function Contact() {
                 <a href="/guides/security">Security Guide</a>
               </Button>
               <Button variant="outline" asChild>
-                <a href="https://status.kangopenbanking.cm" target="_blank" rel="noopener">Status Page</a>
+                <a href="https://status.kangopenbanking.com" target="_blank" rel="noopener">Status Page</a>
               </Button>
             </div>
           </Card>
