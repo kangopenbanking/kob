@@ -10,6 +10,12 @@ verify_jwt = false
 verify_jwt = false
 
 # OAuth2 endpoints (handled by edge function logic)
+[functions.oauth-authorize]
+verify_jwt = false
+
+[functions.oauth-token]
+verify_jwt = false
+
 [functions.par-endpoint]
 verify_jwt = false
 
