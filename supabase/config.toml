@@ -281,3 +281,12 @@ verify_jwt = false
 
 [functions.admin-sandbox-accounts]
 verify_jwt = false
+
+[functions.admin-system-config]
+verify_jwt = false
+
+[functions.admin-webhooks]
+verify_jwt = false
+
+[functions.admin-transaction-review]
+verify_jwt = false
