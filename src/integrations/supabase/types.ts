@@ -4620,6 +4620,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_password_strength: {
+        Args: { password: string }
+        Returns: boolean
+      }
       validate_pisp_consent: {
         Args: { _amount: number; _consent_id: string; _user_id: string }
         Returns: Json
