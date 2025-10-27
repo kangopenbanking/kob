@@ -3877,6 +3877,39 @@ export type Database = {
         }
         Relationships: []
       }
+      system_config: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_sensitive: boolean | null
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_sensitive?: boolean | null
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_sensitive?: boolean | null
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       system_health_checks: {
         Row: {
           checked_at: string | null
@@ -4178,6 +4211,7 @@ export type Database = {
           status: string
           transaction_information: string | null
           transaction_type: string
+          user_id: string | null
           value_datetime: string | null
         }
         Insert: {
@@ -4197,6 +4231,7 @@ export type Database = {
           status: string
           transaction_information?: string | null
           transaction_type: string
+          user_id?: string | null
           value_datetime?: string | null
         }
         Update: {
@@ -4216,6 +4251,7 @@ export type Database = {
           status?: string
           transaction_information?: string | null
           transaction_type?: string
+          user_id?: string | null
           value_datetime?: string | null
         }
         Relationships: [
@@ -4415,6 +4451,7 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string | null
+          description: string | null
           events: string[]
           failure_count: number | null
           id: string
@@ -4425,11 +4462,13 @@ export type Database = {
           last_triggered_at: string | null
           secret: string
           updated_at: string | null
+          url: string | null
           webhook_url: string
         }
         Insert: {
           client_id: string
           created_at?: string | null
+          description?: string | null
           events: string[]
           failure_count?: number | null
           id?: string
@@ -4440,11 +4479,13 @@ export type Database = {
           last_triggered_at?: string | null
           secret: string
           updated_at?: string | null
+          url?: string | null
           webhook_url: string
         }
         Update: {
           client_id?: string
           created_at?: string | null
+          description?: string | null
           events?: string[]
           failure_count?: number | null
           id?: string
@@ -4455,6 +4496,7 @@ export type Database = {
           last_triggered_at?: string | null
           secret?: string
           updated_at?: string | null
+          url?: string | null
           webhook_url?: string
         }
         Relationships: [
