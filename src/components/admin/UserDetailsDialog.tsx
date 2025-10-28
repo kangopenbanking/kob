@@ -21,7 +21,9 @@ import {
   X,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Building2,
+  MapPin
 } from 'lucide-react';
 
 interface UserProfile {
@@ -50,6 +52,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [staffAssignments, setStaffAssignments] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -101,6 +104,19 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
         country_code: profile.country_code || '',
         preferred_otp_method: profile.preferred_otp_method || ''
       });
+
+      // Load staff assignments
+      const { data: assignments } = await supabase
+        .from('staff_assignments')
+        .select(`
+          *,
+          institutions(institution_name),
+          branches(branch_name)
+        `)
+        .eq('user_id', userId)
+        .eq('is_active', true);
+      
+      setStaffAssignments(assignments || []);
     } catch (error) {
       logger.error('Error loading user details:', error);
       toast.error('Failed to load user details');
@@ -179,8 +195,9 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
         </DialogHeader>
 
         <Tabs defaultValue="profile" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="profile">Profile</TabsTrigger>
+            <TabsTrigger value="assignments">Assignments</TabsTrigger>
             <TabsTrigger value="security">Security</TabsTrigger>
             <TabsTrigger value="activity">Activity</TabsTrigger>
           </TabsList>
@@ -340,6 +357,73 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
                     <Badge variant="outline">No roles assigned</Badge>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="assignments" className="space-y-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Staff Assignments</CardTitle>
+                <CardDescription>Institution and branch assignments for this user</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {staffAssignments.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No assignments found
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {staffAssignments.map((assignment: any) => (
+                      <div key={assignment.id} className="border rounded-lg p-4 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <Building2 className="h-4 w-4 text-muted-foreground" />
+                          <span className="font-medium">
+                            {assignment.institutions?.institution_name}
+                          </span>
+                        </div>
+                        
+                        {assignment.branches && (
+                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            <span>{assignment.branches.branch_name}</span>
+                          </div>
+                        )}
+                        
+                        <div className="grid grid-cols-2 gap-4 text-sm mt-2">
+                          <div>
+                            <span className="text-muted-foreground">Position:</span>
+                            <span className="ml-2 font-medium">{assignment.position}</span>
+                          </div>
+                          {assignment.department && (
+                            <div>
+                              <span className="text-muted-foreground">Department:</span>
+                              <span className="ml-2 font-medium">{assignment.department}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-muted-foreground">Type:</span>
+                            <span className="ml-2 font-medium capitalize">
+                              {assignment.employment_type?.replace('_', ' ')}
+                            </span>
+                          </div>
+                          {assignment.start_date && (
+                            <div>
+                              <span className="text-muted-foreground">Start Date:</span>
+                              <span className="ml-2 font-medium">
+                                {new Date(assignment.start_date).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <Badge variant={assignment.is_active ? "default" : "secondary"} className="mt-2">
+                          {assignment.is_active ? 'Active' : 'Inactive'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

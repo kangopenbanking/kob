@@ -123,6 +123,7 @@ function App() {
             <Route path="/admin/audit-logs" element={<Layout><ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute></Layout>} />
             <Route path="/admin/system-config" element={<Layout><ProtectedRoute requiredRole="admin"><SystemConfig /></ProtectedRoute></Layout>} />
             <Route path="/admin/webhooks" element={<Layout><ProtectedRoute requiredRole="admin"><WebhookManagement /></ProtectedRoute></Layout>} />
+            <Route path="/admin/branches" element={<Layout><ProtectedRoute requiredRole="admin"><BranchManagement /></ProtectedRoute></Layout>} />
             <Route path="/admin/transactions" element={<Layout><ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute></Layout>} />
             <Route path="/system-monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
             
