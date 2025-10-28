@@ -149,6 +149,7 @@ function App() {
             <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccounts /></ProtectedRoute></Layout>} />
             <Route path="/business-accounts" element={<Layout><ProtectedRoute><BusinessAccounts /></ProtectedRoute></Layout>} />
             <Route path="/savings" element={<Layout><ProtectedRoute><Savings /></ProtectedRoute></Layout>} />
+            <Route path="/virtual-cards" element={<Layout><ProtectedRoute><VirtualCards /></ProtectedRoute></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><KYCVerification /></ProtectedRoute></Layout>} />
             <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />

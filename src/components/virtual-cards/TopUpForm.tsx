@@ -53,13 +53,6 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
     (b: any) => b.balance_type === 'InterimAvailable'
   );
 
-  useEffect(() => {
-    if (selectedAccount && amount) {
-      const currency = selectedAccount.currency as string;
-      fetchExchangeRate(currency);
-    }
-  }, [selectedAccount, amount]);
-
   const fetchExchangeRate = async (currency: string) => {
     if (currency === 'USD') {
       setExchangeRate(1);
@@ -81,6 +74,13 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
       setIsLoadingRate(false);
     }
   };
+
+  useEffect(() => {
+    if (selectedAccount && amount) {
+      const currency = selectedAccount.currency as string;
+      fetchExchangeRate(currency);
+    }
+  }, [selectedAccount, amount]);
 
   const calculateConversion = () => {
     if (!amount || !exchangeRate) return null;
@@ -115,7 +115,7 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
       return;
     }
 
-    if (availableBalance && parseFloat(availableBalance.amount) < amountNum) {
+    if (availableBalance && Number(availableBalance.amount) < amountNum) {
       toast.error('Insufficient balance');
       return;
     }
@@ -203,7 +203,7 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
         />
         {availableBalance && (
           <p className="text-sm text-muted-foreground">
-            Available: {selectedAccount.currency} {parseFloat(availableBalance.amount).toFixed(2)}
+            Available: {selectedAccount.currency} {Number(availableBalance.amount).toFixed(2)}
           </p>
         )}
       </div>
