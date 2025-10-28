@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -74,14 +75,15 @@ export default function ComplianceDashboard() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Compliance Dashboard</h1>
-          <p className="text-muted-foreground">
-            Monitor KYC, AML, and regulatory compliance
-          </p>
-        </div>
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Compliance Dashboard</h1>
+            <p className="text-muted-foreground">
+              Monitor KYC, AML, and regulatory compliance
+            </p>
+          </div>
         <Button onClick={fetchComplianceData}>
           Refresh Data
         </Button>
@@ -277,6 +279,7 @@ export default function ComplianceDashboard() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

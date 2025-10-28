@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -231,15 +232,15 @@ const SystemMonitoring = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
-        <div className="mb-8">
+    <AdminLayout>
+      <div className="space-y-6">
+        <div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
             <Activity className="h-4 w-4 text-accent" />
             <span className="text-sm font-medium text-accent">System Monitoring</span>
           </div>
-          <h1 className="text-4xl font-bold mb-2">System Health & Compliance</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-3xl font-bold">System Health & Compliance</h1>
+          <p className="text-muted-foreground mt-2">
             Monitor system performance, manage incidents, and generate compliance reports
           </p>
         </div>
@@ -503,7 +504,7 @@ const SystemMonitoring = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
