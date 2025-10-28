@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -154,16 +155,12 @@ export default function SecurityMonitoring() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <AdminLayout>
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Security Monitoring</h1>
           <p className="text-muted-foreground">Monitor security events and threats</p>
         </div>
-        <Button onClick={() => navigate('/admin')}>
-          Back to Admin Dashboard
-        </Button>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -306,6 +303,7 @@ export default function SecurityMonitoring() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

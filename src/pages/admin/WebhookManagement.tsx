@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -127,16 +128,12 @@ export default function WebhookManagement() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <AdminLayout>
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Webhook Management</h1>
           <p className="text-muted-foreground">Monitor and manage webhook configurations</p>
         </div>
-        <Button onClick={() => navigate('/admin')}>
-          Back to Admin Dashboard
-        </Button>
-      </div>
 
       <Tabs defaultValue="webhooks" className="space-y-4">
         <TabsList>
@@ -264,6 +261,7 @@ export default function WebhookManagement() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

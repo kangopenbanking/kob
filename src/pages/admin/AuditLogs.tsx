@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -152,16 +153,12 @@ export default function AuditLogs() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
+    <AdminLayout>
+      <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Audit Logs</h1>
           <p className="text-muted-foreground">Complete audit trail of system activities</p>
         </div>
-        <Button onClick={() => navigate('/admin')}>
-          Back to Admin Dashboard
-        </Button>
-      </div>
 
       <Card>
         <CardHeader>
@@ -296,6 +293,7 @@ export default function AuditLogs() {
           </div>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

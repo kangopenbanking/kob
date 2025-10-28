@@ -53,7 +53,7 @@ const adminNavigation = [
       { title: "Security Monitoring", path: "/admin/security", icon: Shield },
       { title: "Transaction Monitoring", path: "/admin/transactions", icon: Activity },
       { title: "Audit Logs", path: "/admin/audit-logs", icon: FileText },
-      { title: "Credit Management", path: "/admin/credit", icon: DollarSign },
+      { title: "Credit Management", path: "/admin/credit-management", icon: DollarSign },
     ]
   },
   {
