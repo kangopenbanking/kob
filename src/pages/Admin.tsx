@@ -27,7 +27,6 @@ const Admin = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   
   // Stats
   const [totalInstitutions, setTotalInstitutions] = useState(0);
@@ -42,42 +41,9 @@ const Admin = () => {
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   useEffect(() => {
-    checkAdminAccess();
+    // ProtectedRoute already verifies admin access, so we can directly load data
+    loadDashboardData();
   }, []);
-
-  const checkAdminAccess = async () => {
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        navigate('/auth');
-        return;
-      }
-
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id);
-
-      const hasAdminRole = roles?.some(r => r.role === 'admin');
-      
-      if (!hasAdminRole) {
-        toast({
-          title: "Access Denied",
-          description: "You don't have admin privileges",
-          variant: "destructive"
-        });
-        navigate('/');
-        return;
-      }
-
-      setIsAdmin(true);
-      loadDashboardData();
-    } catch (error) {
-      console.error('Error checking admin access:', error);
-      navigate('/');
-    }
-  };
 
   const loadDashboardData = async () => {
     setLoading(true);
@@ -380,10 +346,6 @@ const Admin = () => {
         </div>
       </div>
     );
-  }
-
-  if (!isAdmin) {
-    return null;
   }
 
   return (
