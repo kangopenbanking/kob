@@ -56,6 +56,7 @@ import MobileMoney from "./pages/MobileMoney";
 import Payments from "./pages/Payments";
 import PersonalAccounts from "./pages/PersonalAccounts";
 import BusinessAccounts from "./pages/BusinessAccounts";
+import Savings from "./pages/Savings";
 import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
@@ -144,6 +145,7 @@ function App() {
             <Route path="/payments" element={<Layout><ProtectedRoute><Payments /></ProtectedRoute></Layout>} />
             <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccounts /></ProtectedRoute></Layout>} />
             <Route path="/business-accounts" element={<Layout><ProtectedRoute><BusinessAccounts /></ProtectedRoute></Layout>} />
+            <Route path="/savings" element={<Layout><ProtectedRoute><Savings /></ProtectedRoute></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><KYCVerification /></ProtectedRoute></Layout>} />
             <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />

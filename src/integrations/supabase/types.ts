@@ -3451,6 +3451,327 @@ export type Database = {
         }
         Relationships: []
       }
+      savings_accounts: {
+        Row: {
+          account_id: string
+          account_name: string | null
+          auto_save_amount: number | null
+          auto_save_day: number | null
+          auto_save_enabled: boolean | null
+          auto_save_frequency: string | null
+          available_balance: number
+          closed_at: string | null
+          created_at: string | null
+          current_balance: number
+          current_interest_rate: number
+          id: string
+          interest_accrued: number
+          is_locked: boolean | null
+          last_interest_date: string | null
+          last_withdrawal_date: string | null
+          maturity_date: string | null
+          next_interest_date: string | null
+          opened_at: string | null
+          product_id: string
+          savings_type: Database["public"]["Enums"]["savings_type"]
+          status: string
+          target_amount: number | null
+          target_date: string | null
+          total_interest_earned: number
+          updated_at: string | null
+          user_id: string
+          withdrawals_this_month: number | null
+        }
+        Insert: {
+          account_id: string
+          account_name?: string | null
+          auto_save_amount?: number | null
+          auto_save_day?: number | null
+          auto_save_enabled?: boolean | null
+          auto_save_frequency?: string | null
+          available_balance?: number
+          closed_at?: string | null
+          created_at?: string | null
+          current_balance?: number
+          current_interest_rate: number
+          id?: string
+          interest_accrued?: number
+          is_locked?: boolean | null
+          last_interest_date?: string | null
+          last_withdrawal_date?: string | null
+          maturity_date?: string | null
+          next_interest_date?: string | null
+          opened_at?: string | null
+          product_id: string
+          savings_type: Database["public"]["Enums"]["savings_type"]
+          status?: string
+          target_amount?: number | null
+          target_date?: string | null
+          total_interest_earned?: number
+          updated_at?: string | null
+          user_id: string
+          withdrawals_this_month?: number | null
+        }
+        Update: {
+          account_id?: string
+          account_name?: string | null
+          auto_save_amount?: number | null
+          auto_save_day?: number | null
+          auto_save_enabled?: boolean | null
+          auto_save_frequency?: string | null
+          available_balance?: number
+          closed_at?: string | null
+          created_at?: string | null
+          current_balance?: number
+          current_interest_rate?: number
+          id?: string
+          interest_accrued?: number
+          is_locked?: boolean | null
+          last_interest_date?: string | null
+          last_withdrawal_date?: string | null
+          maturity_date?: string | null
+          next_interest_date?: string | null
+          opened_at?: string | null
+          product_id?: string
+          savings_type?: Database["public"]["Enums"]["savings_type"]
+          status?: string
+          target_amount?: number | null
+          target_date?: string | null
+          total_interest_earned?: number
+          updated_at?: string | null
+          user_id?: string
+          withdrawals_this_month?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_accounts_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_accounts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "savings_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_interest_calculations: {
+        Row: {
+          average_balance: number
+          calculation_date: string
+          created_at: string | null
+          credited_at: string | null
+          days_in_period: number
+          id: string
+          interest_amount: number
+          interest_rate: number
+          period_end: string
+          period_start: string
+          savings_account_id: string
+          status: string
+        }
+        Insert: {
+          average_balance: number
+          calculation_date: string
+          created_at?: string | null
+          credited_at?: string | null
+          days_in_period: number
+          id?: string
+          interest_amount: number
+          interest_rate: number
+          period_end: string
+          period_start: string
+          savings_account_id: string
+          status?: string
+        }
+        Update: {
+          average_balance?: number
+          calculation_date?: string
+          created_at?: string | null
+          credited_at?: string | null
+          days_in_period?: number
+          id?: string
+          interest_amount?: number
+          interest_rate?: number
+          period_end?: string
+          period_start?: string
+          savings_account_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_interest_calculations_savings_account_id_fkey"
+            columns: ["savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "savings_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_products: {
+        Row: {
+          base_interest_rate: number
+          created_at: string | null
+          description: string | null
+          early_closure_penalty: number | null
+          id: string
+          institution_id: string | null
+          interest_payment_frequency: string
+          is_active: boolean | null
+          lock_in_period_months: number | null
+          max_balance: number | null
+          max_withdrawals_per_month: number | null
+          min_balance: number | null
+          min_opening_balance: number
+          monthly_maintenance_fee: number | null
+          product_code: string
+          product_name: string
+          savings_type: Database["public"]["Enums"]["savings_type"]
+          tiered_rates: Json | null
+          updated_at: string | null
+          withdrawal_penalty_rate: number | null
+        }
+        Insert: {
+          base_interest_rate: number
+          created_at?: string | null
+          description?: string | null
+          early_closure_penalty?: number | null
+          id?: string
+          institution_id?: string | null
+          interest_payment_frequency: string
+          is_active?: boolean | null
+          lock_in_period_months?: number | null
+          max_balance?: number | null
+          max_withdrawals_per_month?: number | null
+          min_balance?: number | null
+          min_opening_balance: number
+          monthly_maintenance_fee?: number | null
+          product_code: string
+          product_name: string
+          savings_type: Database["public"]["Enums"]["savings_type"]
+          tiered_rates?: Json | null
+          updated_at?: string | null
+          withdrawal_penalty_rate?: number | null
+        }
+        Update: {
+          base_interest_rate?: number
+          created_at?: string | null
+          description?: string | null
+          early_closure_penalty?: number | null
+          id?: string
+          institution_id?: string | null
+          interest_payment_frequency?: string
+          is_active?: boolean | null
+          lock_in_period_months?: number | null
+          max_balance?: number | null
+          max_withdrawals_per_month?: number | null
+          min_balance?: number | null
+          min_opening_balance?: number
+          monthly_maintenance_fee?: number | null
+          product_code?: string
+          product_name?: string
+          savings_type?: Database["public"]["Enums"]["savings_type"]
+          tiered_rates?: Json | null
+          updated_at?: string | null
+          withdrawal_penalty_rate?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_products_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string | null
+          description: string | null
+          destination_account_id: string | null
+          id: string
+          interest_period_end: string | null
+          interest_period_start: string | null
+          interest_rate: number | null
+          reference: string | null
+          savings_account_id: string
+          source_account_id: string | null
+          transaction_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string | null
+          description?: string | null
+          destination_account_id?: string | null
+          id?: string
+          interest_period_end?: string | null
+          interest_period_start?: string | null
+          interest_rate?: number | null
+          reference?: string | null
+          savings_account_id: string
+          source_account_id?: string | null
+          transaction_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string | null
+          description?: string | null
+          destination_account_id?: string | null
+          id?: string
+          interest_period_end?: string | null
+          interest_period_start?: string | null
+          interest_rate?: number | null
+          reference?: string | null
+          savings_account_id?: string
+          source_account_id?: string | null
+          transaction_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_transactions_destination_account_id_fkey"
+            columns: ["destination_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_transactions_savings_account_id_fkey"
+            columns: ["savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "savings_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_transactions_source_account_id_fkey"
+            columns: ["source_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "savings_transactions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sca_challenges: {
         Row: {
           attempts: number | null
@@ -4880,6 +5201,13 @@ export type Database = {
         | "scheduled"
         | "standing_order"
         | "vrp"
+      savings_type:
+        | "regular_savings"
+        | "fixed_deposit"
+        | "goal_savings"
+        | "high_yield"
+        | "kids_savings"
+        | "emergency_fund"
       template_category:
         | "user_auth"
         | "institution_management"
@@ -5036,6 +5364,14 @@ export const Constants = {
         "scheduled",
         "standing_order",
         "vrp",
+      ],
+      savings_type: [
+        "regular_savings",
+        "fixed_deposit",
+        "goal_savings",
+        "high_yield",
+        "kids_savings",
+        "emergency_fund",
       ],
       template_category: [
         "user_auth",
