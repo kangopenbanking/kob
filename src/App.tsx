@@ -58,6 +58,7 @@ import PersonalAccounts from "./pages/PersonalAccounts";
 import BusinessAccounts from "./pages/BusinessAccounts";
 import Savings from "./pages/Savings";
 import Loans from "./pages/Loans";
+import VirtualCards from "./pages/VirtualCards";
 import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";

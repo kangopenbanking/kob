@@ -1186,6 +1186,78 @@ export type Database = {
         }
         Relationships: []
       }
+      card_funding_transactions: {
+        Row: {
+          amount_source_currency: number
+          amount_usd: number
+          conversion_fee: number | null
+          created_at: string | null
+          error_message: string | null
+          exchange_rate: number
+          exchange_rate_source: string
+          id: string
+          processed_at: string | null
+          source_account_id: string | null
+          source_currency: string
+          status: Database["public"]["Enums"]["card_funding_status"] | null
+          stripe_funding_id: string | null
+          transaction_ref: string
+          user_id: string
+          virtual_card_id: string
+        }
+        Insert: {
+          amount_source_currency: number
+          amount_usd: number
+          conversion_fee?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          exchange_rate: number
+          exchange_rate_source: string
+          id?: string
+          processed_at?: string | null
+          source_account_id?: string | null
+          source_currency: string
+          status?: Database["public"]["Enums"]["card_funding_status"] | null
+          stripe_funding_id?: string | null
+          transaction_ref: string
+          user_id: string
+          virtual_card_id: string
+        }
+        Update: {
+          amount_source_currency?: number
+          amount_usd?: number
+          conversion_fee?: number | null
+          created_at?: string | null
+          error_message?: string | null
+          exchange_rate?: number
+          exchange_rate_source?: string
+          id?: string
+          processed_at?: string | null
+          source_account_id?: string | null
+          source_currency?: string
+          status?: Database["public"]["Enums"]["card_funding_status"] | null
+          stripe_funding_id?: string | null
+          transaction_ref?: string
+          user_id?: string
+          virtual_card_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_funding_transactions_source_account_id_fkey"
+            columns: ["source_account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "card_funding_transactions_virtual_card_id_fkey"
+            columns: ["virtual_card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       card_payment_transactions: {
         Row: {
           amount: number
@@ -1254,6 +1326,71 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      card_transactions: {
+        Row: {
+          amount_usd: number
+          created_at: string | null
+          decline_reason: string | null
+          id: string
+          merchant_category: string | null
+          merchant_country: string | null
+          merchant_name: string | null
+          metadata: Json | null
+          status: string | null
+          stripe_authorization_id: string | null
+          stripe_transaction_id: string | null
+          transaction_type:
+            | Database["public"]["Enums"]["card_transaction_type"]
+            | null
+          user_id: string
+          virtual_card_id: string
+        }
+        Insert: {
+          amount_usd: number
+          created_at?: string | null
+          decline_reason?: string | null
+          id?: string
+          merchant_category?: string | null
+          merchant_country?: string | null
+          merchant_name?: string | null
+          metadata?: Json | null
+          status?: string | null
+          stripe_authorization_id?: string | null
+          stripe_transaction_id?: string | null
+          transaction_type?:
+            | Database["public"]["Enums"]["card_transaction_type"]
+            | null
+          user_id: string
+          virtual_card_id: string
+        }
+        Update: {
+          amount_usd?: number
+          created_at?: string | null
+          decline_reason?: string | null
+          id?: string
+          merchant_category?: string | null
+          merchant_country?: string | null
+          merchant_name?: string | null
+          metadata?: Json | null
+          status?: string | null
+          stripe_authorization_id?: string | null
+          stripe_transaction_id?: string | null
+          transaction_type?:
+            | Database["public"]["Enums"]["card_transaction_type"]
+            | null
+          user_id?: string
+          virtual_card_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "card_transactions_virtual_card_id_fkey"
+            columns: ["virtual_card_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_cards"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       client_certificates: {
         Row: {
@@ -1768,6 +1905,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      exchange_rates_cache: {
+        Row: {
+          base_currency: string
+          created_at: string | null
+          id: string
+          rate: number
+          rate_source: string
+          target_currency: string
+          valid_until: string
+        }
+        Insert: {
+          base_currency: string
+          created_at?: string | null
+          id?: string
+          rate: number
+          rate_source: string
+          target_currency: string
+          valid_until: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string | null
+          id?: string
+          rate?: number
+          rate_source?: string
+          target_currency?: string
+          valid_until?: string
+        }
+        Relationships: []
       }
       failed_login_attempts: {
         Row: {
@@ -4411,6 +4578,48 @@ export type Database = {
           },
         ]
       }
+      stripe_cardholders: {
+        Row: {
+          billing_address: Json | null
+          created_at: string | null
+          email: string
+          id: string
+          metadata: Json | null
+          name: string
+          phone_number: string | null
+          status: string | null
+          stripe_cardholder_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          billing_address?: Json | null
+          created_at?: string | null
+          email: string
+          id?: string
+          metadata?: Json | null
+          name: string
+          phone_number?: string | null
+          status?: string | null
+          stripe_cardholder_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          billing_address?: Json | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          metadata?: Json | null
+          name?: string
+          phone_number?: string | null
+          status?: string | null
+          stripe_cardholder_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       supported_currencies: {
         Row: {
           code: string
@@ -5323,6 +5532,134 @@ export type Database = {
         }
         Relationships: []
       }
+      virtual_card_programs: {
+        Row: {
+          created_at: string | null
+          daily_spend_limit: number | null
+          id: string
+          institution_id: string | null
+          is_active: boolean | null
+          max_balance: number | null
+          monthly_fee: number | null
+          monthly_spend_limit: number | null
+          program_description: string | null
+          program_name: string
+          transaction_fee_fixed: number | null
+          transaction_fee_percentage: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          daily_spend_limit?: number | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          max_balance?: number | null
+          monthly_fee?: number | null
+          monthly_spend_limit?: number | null
+          program_description?: string | null
+          program_name: string
+          transaction_fee_fixed?: number | null
+          transaction_fee_percentage?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          daily_spend_limit?: number | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          max_balance?: number | null
+          monthly_fee?: number | null
+          monthly_spend_limit?: number | null
+          program_description?: string | null
+          program_name?: string
+          transaction_fee_fixed?: number | null
+          transaction_fee_percentage?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_card_programs_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      virtual_cards: {
+        Row: {
+          balance_usd: number | null
+          brand: string
+          card_name: string
+          cardholder_id: string
+          created_at: string | null
+          exp_month: number
+          exp_year: number
+          id: string
+          last4: string
+          metadata: Json | null
+          program_id: string | null
+          spending_controls: Json | null
+          status: Database["public"]["Enums"]["card_status"] | null
+          stripe_card_id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          balance_usd?: number | null
+          brand?: string
+          card_name: string
+          cardholder_id: string
+          created_at?: string | null
+          exp_month: number
+          exp_year: number
+          id?: string
+          last4: string
+          metadata?: Json | null
+          program_id?: string | null
+          spending_controls?: Json | null
+          status?: Database["public"]["Enums"]["card_status"] | null
+          stripe_card_id: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          balance_usd?: number | null
+          brand?: string
+          card_name?: string
+          cardholder_id?: string
+          created_at?: string | null
+          exp_month?: number
+          exp_year?: number
+          id?: string
+          last4?: string
+          metadata?: Json | null
+          program_id?: string | null
+          spending_controls?: Json | null
+          status?: Database["public"]["Enums"]["card_status"] | null
+          stripe_card_id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "virtual_cards_cardholder_id_fkey"
+            columns: ["cardholder_id"]
+            isOneToOne: false
+            referencedRelation: "stripe_cardholders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "virtual_cards_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_card_programs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       webhook_deliveries: {
         Row: {
           attempt_count: number | null
@@ -5607,6 +5944,14 @@ export type Database = {
       account_subtype: "Current" | "Savings" | "CreditCard" | "Loan"
       account_type: "Business" | "Personal"
       app_role: "admin" | "institution"
+      card_funding_status:
+        | "pending"
+        | "processing"
+        | "completed"
+        | "failed"
+        | "cancelled"
+      card_status: "active" | "inactive" | "blocked" | "cancelled"
+      card_transaction_type: "authorization" | "capture" | "refund" | "reversal"
       consent_status:
         | "AwaitingAuthorisation"
         | "Authorised"
@@ -5652,6 +5997,13 @@ export type Database = {
         | "high_yield"
         | "kids_savings"
         | "emergency_fund"
+      spending_limit_interval:
+        | "per_authorization"
+        | "daily"
+        | "weekly"
+        | "monthly"
+        | "yearly"
+        | "all_time"
       template_category:
         | "user_auth"
         | "institution_management"
@@ -5792,6 +6144,15 @@ export const Constants = {
       account_subtype: ["Current", "Savings", "CreditCard", "Loan"],
       account_type: ["Business", "Personal"],
       app_role: ["admin", "institution"],
+      card_funding_status: [
+        "pending",
+        "processing",
+        "completed",
+        "failed",
+        "cancelled",
+      ],
+      card_status: ["active", "inactive", "blocked", "cancelled"],
+      card_transaction_type: ["authorization", "capture", "refund", "reversal"],
       consent_status: [
         "AwaitingAuthorisation",
         "Authorised",
@@ -5842,6 +6203,14 @@ export const Constants = {
         "high_yield",
         "kids_savings",
         "emergency_fund",
+      ],
+      spending_limit_interval: [
+        "per_authorization",
+        "daily",
+        "weekly",
+        "monthly",
+        "yearly",
+        "all_time",
       ],
       template_category: [
         "user_auth",
