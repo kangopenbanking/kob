@@ -43,6 +43,41 @@ Deno.serve(async (req) => {
 
     console.log('Creating loan application for user:', user.id);
 
+    // Fetch credit score for auto-decision
+    let creditScore = null;
+    let autoDecision = null;
+    let recommendedAmount = null;
+
+    try {
+      const { data: scoreData } = await supabase.functions.invoke('credit-score-fetch', {
+        body: { user_id: user.id, include_report: false }
+      });
+      
+      if (scoreData?.score) {
+        creditScore = scoreData.score;
+        
+        // Automatic decision logic based on credit score
+        if (creditScore >= 720) {
+          autoDecision = 'pre_approved';
+          recommendedAmount = requested_amount; // Full amount
+        } else if (creditScore >= 650) {
+          autoDecision = 'under_review';
+          recommendedAmount = requested_amount * 0.7; // 70% of requested
+        } else if (creditScore >= 580) {
+          autoDecision = 'conditional';
+          recommendedAmount = requested_amount * 0.5; // 50% of requested
+        } else {
+          autoDecision = 'requires_review';
+          recommendedAmount = requested_amount * 0.3; // 30% of requested
+        }
+        
+        console.log('Credit score checked:', creditScore, 'Auto-decision:', autoDecision);
+      }
+    } catch (scoreError) {
+      console.error('Error fetching credit score:', scoreError);
+      // Continue without credit score
+    }
+
     // Validate loan product
     const { data: product, error: productError } = await supabase
       .from('loan_products')
@@ -96,6 +131,9 @@ Deno.serve(async (req) => {
       supporting_documents,
       status: submit ? 'submitted' : 'draft',
       submitted_at: submit ? new Date().toISOString() : null,
+      credit_score: creditScore,
+      auto_decision: autoDecision,
+      recommended_amount: recommendedAmount,
     };
 
     const { data: application, error: applicationError } = await supabase
