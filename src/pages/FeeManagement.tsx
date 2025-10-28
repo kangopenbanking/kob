@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,12 +7,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { DollarSign, FileText, Settings, TrendingUp, Plus } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { CreateFeeStructureForm } from "@/components/fee-management/CreateFeeStructureForm";
 import { FeeStructuresTable } from "@/components/fee-management/FeeStructuresTable";
 import { TransactionFeesTable } from "@/components/fee-management/TransactionFeesTable";
 import { InvoicesTable } from "@/components/fee-management/InvoicesTable";
 import { WaiversManagement } from "@/components/fee-management/WaiversManagement";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 
 export default function FeeManagement() {
   const navigate = useNavigate();
@@ -21,10 +24,14 @@ export default function FeeManagement() {
   
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [feeStructures, setFeeStructures] = useState<any[]>([]);
-  const [recentFees, setRecentFees] = useState<any[]>([]);
+  const [transactionFees, setTransactionFees] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showInvoiceDialog, setShowInvoiceDialog] = useState(false);
+  const [selectedInstitution, setSelectedInstitution] = useState("");
+  const [billingCycle, setBillingCycle] = useState("monthly");
+  const [generatingInvoice, setGeneratingInvoice] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -92,7 +99,7 @@ export default function FeeManagement() {
         .order('transaction_date', { ascending: false })
         .limit(50);
       
-      setRecentFees(feesData || []);
+      setTransactionFees(feesData || []);
 
       const { data: invoiceData } = await supabase
         .from('institution_invoices')
@@ -156,7 +163,10 @@ export default function FeeManagement() {
     }
   };
 
-  const generateInvoice = async (institutionId: string, billingCycle: string) => {
+  const generateInvoice = async () => {
+    if (!selectedInstitution) return;
+    
+    setGeneratingInvoice(true);
     try {
       const today = new Date();
       let periodStart, periodEnd;
@@ -175,7 +185,7 @@ export default function FeeManagement() {
 
       const { data, error } = await supabase.functions.invoke('generate-invoice', {
         body: {
-          institution_id: institutionId,
+          institution_id: selectedInstitution,
           billing_cycle: billingCycle,
           period_start: periodStart.toISOString().split('T')[0],
           period_end: periodEnd.toISOString().split('T')[0]
@@ -189,6 +199,7 @@ export default function FeeManagement() {
         description: "Invoice has been generated and sent to the institution"
       });
 
+      setShowInvoiceDialog(false);
       loadData();
     } catch (error) {
       console.error('Generate invoice error:', error);
@@ -197,6 +208,8 @@ export default function FeeManagement() {
         description: "Failed to generate invoice",
         variant: "destructive"
       });
+    } finally {
+      setGeneratingInvoice(false);
     }
   };
 
@@ -213,128 +226,225 @@ export default function FeeManagement() {
 
   if (!isAdmin) return null;
 
-  const totalFeesThisMonth = recentFees
-    .filter(f => new Date(f.transaction_date) >= new Date(new Date().getFullYear(), new Date().getMonth(), 1))
-    .reduce((sum, f) => sum + Number(f.final_fee), 0);
-
-  const totalFeesYTD = recentFees.reduce((sum, f) => sum + Number(f.final_fee), 0);
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-4xl font-bold mb-2">Fee Management</h1>
-            <p className="text-muted-foreground">
-              Configure transaction fees and manage billing for institutions
-            </p>
-          </div>
-          <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Fee Structure
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Create Fee Structure</DialogTitle>
-              </DialogHeader>
-              <CreateFeeStructureForm 
-                institutions={institutions}
-                onSubmit={createFeeStructure}
-                onCancel={() => setShowCreateDialog(false)}
-              />
-            </DialogContent>
-          </Dialog>
+    <AdminLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">Fee Management</h1>
+          <p className="text-muted-foreground mt-2">
+            Configure transaction fees and manage billing for institutions
+          </p>
         </div>
+
+        <div className="grid md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Fee Structures</CardTitle>
+              <Settings className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{feeStructures.length}</div>
+              <p className="text-xs text-muted-foreground">Active structures</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monthly Fees</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {transactionFees
+                  .filter(f => {
+                    const feeDate = new Date(f.created_at);
+                    const now = new Date();
+                    return feeDate.getMonth() === now.getMonth() && 
+                           feeDate.getFullYear() === now.getFullYear();
+                  })
+                  .reduce((sum, f) => sum + Number(f.calculated_fee), 0)
+                  .toFixed(2)} XAF
+              </div>
+              <p className="text-xs text-muted-foreground">This month</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">YTD Fees</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {transactionFees
+                  .filter(f => {
+                    const feeDate = new Date(f.created_at);
+                    const now = new Date();
+                    return feeDate.getFullYear() === now.getFullYear();
+                  })
+                  .reduce((sum, f) => sum + Number(f.calculated_fee), 0)
+                  .toFixed(2)} XAF
+              </div>
+              <p className="text-xs text-muted-foreground">Year to date</p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pending Invoices</CardTitle>
+              <FileText className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {invoices.filter(i => i.status === 'pending').length}
+              </div>
+              <p className="text-xs text-muted-foreground">Awaiting payment</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Tabs defaultValue="structures" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="structures">Fee Structures</TabsTrigger>
+            <TabsTrigger value="fees">Transaction Fees</TabsTrigger>
+            <TabsTrigger value="invoices">Invoices</TabsTrigger>
+            <TabsTrigger value="waivers">Waivers</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="structures" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-medium">Fee Structures</h3>
+                <p className="text-sm text-muted-foreground">
+                  Create and manage fee structures for institutions
+                </p>
+              </div>
+              <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Fee Structure
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Create New Fee Structure</DialogTitle>
+                    <DialogDescription>
+                      Define a new fee structure for an institution
+                    </DialogDescription>
+                  </DialogHeader>
+                  <CreateFeeStructureForm
+                    institutions={institutions}
+                    onSubmit={createFeeStructure}
+                    onCancel={() => setShowCreateDialog(false)}
+                  />
+                </DialogContent>
+              </Dialog>
+            </div>
+            <FeeStructuresTable structures={feeStructures} onRefresh={loadData} />
+          </TabsContent>
+
+          <TabsContent value="fees" className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium">Transaction Fees</h3>
+              <p className="text-sm text-muted-foreground">
+                View all calculated transaction fees
+              </p>
+            </div>
+            <TransactionFeesTable fees={transactionFees} />
+          </TabsContent>
+
+          <TabsContent value="invoices" className="space-y-4">
+            <div className="flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-medium">Invoices</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manage institution invoices
+                </p>
+              </div>
+              <Dialog open={showInvoiceDialog} onOpenChange={setShowInvoiceDialog}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <FileText className="mr-2 h-4 w-4" />
+                    Generate Invoice
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Generate Invoice</DialogTitle>
+                    <DialogDescription>
+                      Create a new invoice for an institution
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="institution">Institution</Label>
+                      <Select
+                        value={selectedInstitution}
+                        onValueChange={setSelectedInstitution}
+                      >
+                        <SelectTrigger id="institution">
+                          <SelectValue placeholder="Select institution" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {institutions.map((inst) => (
+                            <SelectItem key={inst.id} value={inst.id}>
+                              {inst.institution_name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="billing-cycle">Billing Cycle</Label>
+                      <Select
+                        value={billingCycle}
+                        onValueChange={setBillingCycle}
+                      >
+                        <SelectTrigger id="billing-cycle">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="monthly">Monthly</SelectItem>
+                          <SelectItem value="quarterly">Quarterly</SelectItem>
+                          <SelectItem value="annually">Annually</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button
+                      onClick={generateInvoice}
+                      disabled={!selectedInstitution || generatingInvoice}
+                      className="w-full"
+                    >
+                      {generatingInvoice ? "Generating..." : "Generate Invoice"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            <InvoicesTable 
+              invoices={invoices} 
+              institutions={institutions}
+              onGenerateInvoice={(instId: string, cycle: string) => {
+                setSelectedInstitution(instId);
+                setBillingCycle(cycle);
+                setShowInvoiceDialog(true);
+              }}
+              onRefresh={loadData}
+            />
+          </TabsContent>
+
+          <TabsContent value="waivers" className="space-y-4">
+            <div>
+              <h3 className="text-lg font-medium">Fee Waivers</h3>
+              <p className="text-sm text-muted-foreground">
+                Manage fee waivers and exemptions
+              </p>
+            </div>
+            <WaiversManagement institutions={institutions} onRefresh={loadData} />
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <div className="grid md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Active Fee Structures</p>
-                <p className="text-3xl font-bold">{feeStructures.length}</p>
-              </div>
-              <Settings className="h-8 w-8 text-primary" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Fees (This Month)</p>
-                <p className="text-3xl font-bold">
-                  {totalFeesThisMonth.toLocaleString()} XAF
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Pending Invoices</p>
-                <p className="text-3xl font-bold">
-                  {invoices.filter(i => i.status === 'pending' || i.status === 'sent').length}
-                </p>
-              </div>
-              <FileText className="h-8 w-8 text-orange-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Revenue (YTD)</p>
-                <p className="text-3xl font-bold">
-                  {totalFeesYTD.toLocaleString()} XAF
-                </p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="structures" className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="structures">Fee Structures</TabsTrigger>
-          <TabsTrigger value="fees">Transaction Fees</TabsTrigger>
-          <TabsTrigger value="invoices">Invoices</TabsTrigger>
-          <TabsTrigger value="waivers">Waivers</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="structures">
-          <FeeStructuresTable structures={feeStructures} onRefresh={loadData} />
-        </TabsContent>
-
-        <TabsContent value="fees">
-          <TransactionFeesTable fees={recentFees} />
-        </TabsContent>
-
-        <TabsContent value="invoices">
-          <InvoicesTable 
-            invoices={invoices} 
-            institutions={institutions}
-            onGenerateInvoice={generateInvoice}
-            onRefresh={loadData}
-          />
-        </TabsContent>
-
-        <TabsContent value="waivers">
-          <WaiversManagement institutions={institutions} onRefresh={loadData} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    </AdminLayout>
   );
 }

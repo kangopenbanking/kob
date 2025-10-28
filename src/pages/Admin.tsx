@@ -1,3 +1,4 @@
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -349,22 +350,16 @@ const Admin = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-primary/5">
-      <div className="container mx-auto p-6 space-y-6">
+    <AdminLayout>
+      <div className="space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-              Platform Management
-            </h1>
-            <p className="text-muted-foreground mt-2">
-              Monitor and manage the Kash Open Banking platform
-            </p>
-          </div>
-          <Button onClick={() => navigate('/dashboard')}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Button>
+        <div>
+          <h1 className="text-4xl font-bold">
+            Platform Management
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Monitor and manage the Kash Open Banking platform
+          </p>
         </div>
 
         {/* Quick Access Navigation */}
@@ -799,7 +794,7 @@ const Admin = () => {
         </TabsContent>
       </Tabs>
       </div>
-    </div>
+    </AdminLayout>
   );
 };
 
