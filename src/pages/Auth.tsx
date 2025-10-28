@@ -314,6 +314,7 @@ export default function Auth() {
           .single();
         
         if (institutionError || !institution) {
+          // For login flow, redirect to dashboard if no institution
           setTimeout(() => navigate('/dashboard'), 1000);
         } else if (institution.status === 'pending') {
           setTimeout(() => navigate('/pending-approval'), 1000);
@@ -420,10 +421,17 @@ export default function Auth() {
           .eq('user_id', user.id)
           .single();
         
-        // If there's an error or no institution found, redirect to dashboard
+        // If there's an error or no institution found
         if (institutionError || !institution) {
-          console.log('No institution found, redirecting to dashboard');
-          setTimeout(() => navigate('/dashboard'), 1000);
+          // For signup flow, redirect to register page to choose institution type
+          // For login flow, redirect to dashboard
+          if (!isLogin) {
+            console.log('New signup without institution, redirecting to register');
+            setTimeout(() => navigate('/register'), 1000);
+          } else {
+            console.log('Login without institution, redirecting to dashboard');
+            setTimeout(() => navigate('/dashboard'), 1000);
+          }
         } else if (institution.status === 'pending') {
           // Pending approval
           setTimeout(() => navigate('/pending-approval'), 1000);
@@ -435,9 +443,13 @@ export default function Auth() {
           setTimeout(() => navigate('/pending-approval'), 1000);
         }
       } catch (err) {
-        // On any error, redirect to dashboard as fallback
+        // On any error, redirect based on signup vs login
         console.error('Error checking institution status:', err);
-        setTimeout(() => navigate('/dashboard'), 1000);
+        if (!isLogin) {
+          setTimeout(() => navigate('/register'), 1000);
+        } else {
+          setTimeout(() => navigate('/dashboard'), 1000);
+        }
       }
     } catch (error: any) {
       console.error('Verify OTP error:', error);

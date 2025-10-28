@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 const Register = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [institutionType, setInstitutionType] = useState("");
@@ -121,69 +122,175 @@ const Register = () => {
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <Shield className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium text-primary">Secure Registration</span>
+              <span className="text-sm font-medium text-primary">Secure Registration • Step {currentStep} of 2</span>
             </div>
-            <h1 className="text-5xl font-bold mb-4">Register Your Institution</h1>
+            <h1 className="text-5xl font-bold mb-4">
+              {currentStep === 1 ? "Select Institution Type" : "Register Your Institution"}
+            </h1>
             <p className="text-xl text-muted-foreground">
-              Join Cameroon's unified banking API platform
+              {currentStep === 1 
+                ? "Choose the category that best describes your organization" 
+                : "Join Cameroon's unified banking API platform"}
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card className="border-2">
-              <CardContent className="pt-6 text-center">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-xl font-bold text-primary">1</span>
-                </div>
-                <h3 className="font-semibold mb-2">Submit Application</h3>
-                <p className="text-sm text-muted-foreground">Complete the registration form</p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="pt-6 text-center">
-                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <span className="text-xl font-bold text-primary">2</span>
-                </div>
-                <h3 className="font-semibold mb-2">Verification</h3>
-                <p className="text-sm text-muted-foreground">We verify your institution details</p>
-              </CardContent>
-            </Card>
-            <Card className="border-2">
-              <CardContent className="pt-6 text-center">
-                <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="h-6 w-6 text-accent" />
-                </div>
-                <h3 className="font-semibold mb-2">Get API Access</h3>
-                <p className="text-sm text-muted-foreground">Receive your API credentials</p>
-              </CardContent>
-            </Card>
-          </div>
+          {currentStep === 2 && (
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl font-bold text-primary">1</span>
+                  </div>
+                  <h3 className="font-semibold mb-2">Submit Application</h3>
+                  <p className="text-sm text-muted-foreground">Complete the registration form</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
+                    <span className="text-xl font-bold text-primary">2</span>
+                  </div>
+                  <h3 className="font-semibold mb-2">Verification</h3>
+                  <p className="text-sm text-muted-foreground">We verify your institution details</p>
+                </CardContent>
+              </Card>
+              <Card className="border-2">
+                <CardContent className="pt-6 text-center">
+                  <div className="h-12 w-12 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="h-6 w-6 text-accent" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Get API Access</h3>
+                  <p className="text-sm text-muted-foreground">Receive your API credentials</p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-          {/* Registration Form */}
-          <Card className="border-2">
-            <CardHeader>
-              <CardTitle className="text-2xl">Institution Details</CardTitle>
-              <CardDescription>
-                All fields are required. Your information will be kept confidential and secure.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Institution Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="institutionType">Institution Type *</Label>
-                  <Select value={institutionType} onValueChange={setInstitutionType} required>
-                    <SelectTrigger id="institutionType">
-                      <SelectValue placeholder="Select institution type" />
-                    </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bank">Bank</SelectItem>
-                <SelectItem value="credit_union">Credit Union</SelectItem>
-                <SelectItem value="fintech">Fintech Company</SelectItem>
-                <SelectItem value="developer">Developer / Third Party</SelectItem>
-              </SelectContent>
-                  </Select>
-                </div>
+          {/* Step 1: Institution Type Selection */}
+          {currentStep === 1 && (
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card 
+                className="border-2 cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+                onClick={() => {
+                  setInstitutionType("bank");
+                  setCurrentStep(2);
+                }}
+              >
+                <CardContent className="pt-8 pb-8">
+                  <div className="text-center space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Building2 className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Bank</h3>
+                      <p className="text-muted-foreground">
+                        Commercial banks, retail banks, and other licensed banking institutions
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="border-2 cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+                onClick={() => {
+                  setInstitutionType("credit_union");
+                  setCurrentStep(2);
+                }}
+              >
+                <CardContent className="pt-8 pb-8">
+                  <div className="text-center space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Building2 className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Credit Union</h3>
+                      <p className="text-muted-foreground">
+                        Member-owned financial cooperatives and credit unions
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="border-2 cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+                onClick={() => {
+                  setInstitutionType("fintech");
+                  setCurrentStep(2);
+                }}
+              >
+                <CardContent className="pt-8 pb-8">
+                  <div className="text-center space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Building2 className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Fintech Company</h3>
+                      <p className="text-muted-foreground">
+                        Digital payment providers, mobile money operators, and fintech startups
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card 
+                className="border-2 cursor-pointer transition-all hover:border-primary hover:shadow-lg"
+                onClick={() => {
+                  setInstitutionType("developer");
+                  setCurrentStep(2);
+                }}
+              >
+                <CardContent className="pt-8 pb-8">
+                  <div className="text-center space-y-4">
+                    <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                      <Building2 className="h-8 w-8 text-primary" />
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">Developer / Third Party</h3>
+                      <p className="text-muted-foreground">
+                        Third-party developers and service providers building on the platform
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Step 2: Registration Form */}
+          {currentStep === 2 && (
+            <Card className="border-2">
+              <CardHeader>
+                <CardTitle className="text-2xl">Institution Details</CardTitle>
+                <CardDescription>
+                  All fields are required. Your information will be kept confidential and secure.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Institution Type Display */}
+                  <div className="space-y-2">
+                    <Label>Institution Type</Label>
+                    <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
+                      <Building2 className="h-5 w-5 text-primary" />
+                      <span className="font-medium capitalize">
+                        {institutionType === "credit_union" ? "Credit Union" : 
+                         institutionType === "developer" ? "Developer / Third Party" :
+                         institutionType === "fintech" ? "Fintech Company" : "Bank"}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="ml-auto"
+                        onClick={() => setCurrentStep(1)}
+                      >
+                        Change
+                      </Button>
+                    </div>
+                  </div>
 
                 {/* Basic Information */}
                 <div className="grid md:grid-cols-2 gap-4">
@@ -261,29 +368,34 @@ const Register = () => {
                   </div>
                 </div>
 
-                {/* Submit */}
-                <div className="flex gap-4 pt-4">
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="flex-1 bg-gradient-to-r from-primary to-primary-light"
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Application"}
-                  </Button>
-                  <Link to="/" className="flex-1">
-                    <Button type="button" variant="outline" size="lg" className="w-full">
-                      Cancel
+                  {/* Submit */}
+                  <div className="flex gap-4 pt-4">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      onClick={() => setCurrentStep(1)}
+                    >
+                      <ArrowLeft className="h-4 w-4 mr-2" />
+                      Back
                     </Button>
-                  </Link>
-                </div>
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="flex-1 bg-gradient-to-r from-primary to-primary-light"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? "Submitting..." : "Submit Application"}
+                    </Button>
+                  </div>
 
-                <p className="text-xs text-center text-muted-foreground">
-                  By submitting this form, you agree to our Terms of Service and Privacy Policy
-                </p>
-              </form>
-            </CardContent>
-          </Card>
+                  <p className="text-xs text-center text-muted-foreground">
+                    By submitting this form, you agree to our Terms of Service and Privacy Policy
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
   );
