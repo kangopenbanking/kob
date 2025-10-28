@@ -563,7 +563,7 @@ export default function CreditScoresInfo() {
               </Button>
             </Link>
             <Link to="/loans">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-blue-600 hover:bg-primary-foreground hover:text-primary">
                 Apply for a Loan
               </Button>
             </Link>
