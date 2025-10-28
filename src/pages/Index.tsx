@@ -735,7 +735,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <SmartGetStartedButton size="lg" variant="secondary" className="text-lg px-8" />
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-blue-600 hover:bg-primary-foreground hover:text-primary">
                 Contact Sales
               </Button>
             </Link>
