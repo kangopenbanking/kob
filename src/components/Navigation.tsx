@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb } from "lucide-react";
+import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, Wallet, TrendingUp, CreditCard } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -105,6 +105,57 @@ export const Navigation = () => {
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           PSD2, GDPR compliant with enterprise-grade security
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link 
+                      to="/loans" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <DollarSign className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Loans
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Automated loan applications with credit scoring
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link 
+                      to="/savings" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <Wallet className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Savings
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          High-yield savings with interest rate bonuses
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link 
+                      to="/credit-scores-info" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <TrendingUp className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Credit Scoring
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Comprehensive 300-850 credit scoring system
                         </p>
                       </div>
                     </Link>
@@ -256,6 +307,15 @@ export const Navigation = () => {
                   </Link>
                   <Link to="/guides/security" className="text-sm font-medium hover:text-primary transition-colors block">
                     Compliance & Security
+                  </Link>
+                  <Link to="/loans" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Loans
+                  </Link>
+                  <Link to="/savings" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Savings
+                  </Link>
+                  <Link to="/credit-scores-info" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Credit Scoring
                   </Link>
                 </div>
               </div>

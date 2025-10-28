@@ -6,7 +6,7 @@ export const Footer = () => {
   return (
     <footer className="border-t py-12 bg-card">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-8">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-primary" />
@@ -29,6 +29,17 @@ export const Footer = () => {
               <li><Link to="/guides/aisp" className="hover:text-primary transition-colors">AISP Guide</Link></li>
               <li><Link to="/guides/pisp" className="hover:text-primary transition-colors">PISP Guide</Link></li>
               <li><Link to="/status" className="hover:text-primary transition-colors">Status</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4">Services</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/loans" className="hover:text-primary transition-colors">Loans</Link></li>
+              <li><Link to="/savings" className="hover:text-primary transition-colors">Savings</Link></li>
+              <li><Link to="/credit-score" className="hover:text-primary transition-colors">Credit Score</Link></li>
+              <li><Link to="/credit-scores-info" className="hover:text-primary transition-colors">How Credit Scoring Works</Link></li>
+              <li><Link to="/virtual-cards" className="hover:text-primary transition-colors">Virtual Cards</Link></li>
             </ul>
           </div>
 

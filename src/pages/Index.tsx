@@ -16,6 +16,10 @@ import {
   Clock,
   FileText,
   BarChart3,
+  DollarSign,
+  Wallet,
+  CreditCard,
+  PieChart,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
@@ -243,6 +247,30 @@ const Index = () => {
                 Access account balances, transactions, and payment status in real-time.
               </p>
             </Card>
+
+            <Card className="p-6 border-primary/50 bg-primary/5">
+              <DollarSign className="h-10 w-10 text-primary mb-4" />
+              <h3 className="text-xl font-bold mb-2">Loans & Credit</h3>
+              <p className="text-muted-foreground">
+                Automated credit scoring, loan applications, and repayment management with smart decisioning.
+              </p>
+            </Card>
+
+            <Card className="p-6 border-primary/50 bg-primary/5">
+              <Wallet className="h-10 w-10 text-primary mb-4" />
+              <h3 className="text-xl font-bold mb-2">Savings Products</h3>
+              <p className="text-muted-foreground">
+                Create and manage savings accounts with automatic interest calculation and credit bonuses.
+              </p>
+            </Card>
+
+            <Card className="p-6 border-primary/50 bg-primary/5">
+              <PieChart className="h-10 w-10 text-primary mb-4" />
+              <h3 className="text-xl font-bold mb-2">Credit Scoring (300-850)</h3>
+              <p className="text-muted-foreground">
+                Comprehensive credit scoring with NjangiBox integration and B2B APIs for institutions.
+              </p>
+            </Card>
           </div>
         </div>
       </section>
@@ -328,8 +356,11 @@ const Index = () => {
               <TrendingUp className="h-10 w-10 text-primary mb-4" />
               <h3 className="text-xl font-bold mb-2">Lending Platforms</h3>
               <p className="text-muted-foreground">
-                Access transaction data for credit scoring and automated loan decisioning.
+                Access transaction data for credit scoring and automated loan decisioning with 300-850 scoring.
               </p>
+              <Link to="/credit-scores-info" className="text-sm text-primary hover:underline mt-2 inline-block">
+                Learn about Credit Scoring →
+              </Link>
             </Card>
 
             <Card className="p-6">

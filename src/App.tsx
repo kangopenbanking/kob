@@ -61,6 +61,7 @@ import Loans from "./pages/Loans";
 import VirtualCards from "./pages/VirtualCards";
 import CreditScore from "./pages/CreditScore";
 import CreditReport from "./pages/CreditReport";
+import CreditScoresInfo from "./pages/CreditScoresInfo";
 import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
@@ -158,6 +159,7 @@ function App() {
             <Route path="/virtual-cards" element={<Layout><ProtectedRoute><VirtualCards /></ProtectedRoute></Layout>} />
             <Route path="/credit-score" element={<Layout><ProtectedRoute><CreditScore /></ProtectedRoute></Layout>} />
             <Route path="/credit-report" element={<Layout><ProtectedRoute><CreditReport /></ProtectedRoute></Layout>} />
+            <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><KYCVerification /></ProtectedRoute></Layout>} />
             <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />
