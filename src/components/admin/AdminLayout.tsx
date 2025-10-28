@@ -14,7 +14,8 @@ import {
   Key,
   Database,
   AlertTriangle,
-  ScrollText
+  ScrollText,
+  Building2
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,6 +43,7 @@ const adminNavigation = [
     title: "Management",
     items: [
       { title: "User Management", path: "/admin/users", icon: Users },
+      { title: "Branch Management", path: "/admin/branches", icon: Building2 },
       { title: "API Clients", path: "/admin/api-clients", icon: Key },
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
       { title: "Sandbox", path: "/admin/sandbox", icon: Database },

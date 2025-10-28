@@ -40,6 +40,7 @@ import ISO20022Dashboard from "./pages/ISO20022Dashboard";
 import SWIFTDashboard from "./pages/SWIFTDashboard";
 import Analytics from "./pages/Analytics";
 import UserManagement from "./pages/admin/UserManagement";
+import BranchManagement from "./pages/admin/BranchManagement";
 import ApiClientManagement from "./pages/admin/ApiClientManagement";
 import SandboxManagement from "./pages/admin/SandboxManagement";
 import SecurityMonitoring from "./pages/admin/SecurityMonitoring";

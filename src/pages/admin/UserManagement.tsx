@@ -14,6 +14,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { UserDetailsDialog } from '@/components/admin/UserDetailsDialog';
+import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 
 interface UserProfile {
   id: string;
@@ -24,6 +25,8 @@ interface UserProfile {
   last_sign_in_at?: string;
   roles: string[];
   status: string;
+  institution_name?: string;
+  branch_name?: string;
 }
 
 export default function UserManagement() {
@@ -35,10 +38,14 @@ export default function UserManagement() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [institutions, setInstitutions] = useState<any[]>([]);
+  const [institutionFilter, setInstitutionFilter] = useState<string>('all');
 
   useEffect(() => {
     checkAdminAccess();
     loadUsers();
+    loadInstitutions();
   }, []);
 
   const checkAdminAccess = async () => {
@@ -57,6 +64,15 @@ export default function UserManagement() {
       toast.error('Access denied');
       navigate('/');
     }
+  };
+
+  const loadInstitutions = async () => {
+    const { data } = await supabase
+      .from('institutions')
+      .select('id, institution_name')
+      .order('institution_name');
+    
+    if (data) setInstitutions(data);
   };
 
   const loadUsers = async () => {
@@ -78,12 +94,27 @@ export default function UserManagement() {
 
       if (rolesError) throw rolesError;
 
+      // Get staff assignments with institution and branch info
+      const { data: assignments } = await supabase
+        .from('staff_assignments')
+        .select(`
+          user_id,
+          institutions(institution_name),
+          branches(branch_name)
+        `)
+        .eq('is_active', true);
+
       // Combine data
-      const usersWithRoles = profiles?.map(profile => ({
-        ...profile,
-        roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || [],
-        status: 'active' // TODO: implement user status tracking
-      })) || [];
+      const usersWithRoles = profiles?.map(profile => {
+        const assignment = assignments?.find(a => a.user_id === profile.id);
+        return {
+          ...profile,
+          roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || [],
+          status: 'active',
+          institution_name: assignment?.institutions?.institution_name,
+          branch_name: assignment?.branches?.branch_name
+        };
+      }) || [];
 
       setUsers(usersWithRoles);
     } catch (error) {
@@ -133,8 +164,10 @@ export default function UserManagement() {
                          user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = roleFilter === 'all' || user.roles.includes(roleFilter);
     const matchesStatus = statusFilter === 'all' || user.status === statusFilter;
+    const matchesInstitution = institutionFilter === 'all' || 
+                               (user.institution_name && institutions.find(i => i.id === institutionFilter)?.institution_name === user.institution_name);
     
-    return matchesSearch && matchesRole && matchesStatus;
+    return matchesSearch && matchesRole && matchesStatus && matchesInstitution;
   });
 
   const getRoleBadgeVariant = (role: string) => {
@@ -161,6 +194,10 @@ export default function UserManagement() {
             <h1 className="text-3xl font-bold">User Management</h1>
             <p className="text-muted-foreground">Manage platform users, roles, and permissions</p>
           </div>
+          <Button onClick={() => setCreateDialogOpen(true)}>
+            <UserPlus className="mr-2 h-4 w-4" />
+            Create User
+          </Button>
         </div>
 
       <Card>
@@ -201,6 +238,19 @@ export default function UserManagement() {
                 <SelectItem value="banned">Banned</SelectItem>
               </SelectContent>
             </Select>
+            <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Filter by institution" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Institutions</SelectItem>
+                {institutions.map((inst) => (
+                  <SelectItem key={inst.id} value={inst.id}>
+                    {inst.institution_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Table>
@@ -208,9 +258,10 @@ export default function UserManagement() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Institution</TableHead>
+                <TableHead>Branch</TableHead>
                 <TableHead>Roles</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Joined</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -224,6 +275,8 @@ export default function UserManagement() {
                     </div>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                  <TableCell>{user.institution_name || '-'}</TableCell>
+                  <TableCell>{user.branch_name || '-'}</TableCell>
                   <TableCell>
                     <div className="flex gap-1 flex-wrap">
                       {user.roles.length > 0 ? (
@@ -292,6 +345,12 @@ export default function UserManagement() {
         onOpenChange={setDetailsDialogOpen}
         userId={selectedUserId}
         onUpdate={loadUsers}
+      />
+      
+      <CreateUserDialog
+        open={createDialogOpen}
+        onOpenChange={setCreateDialogOpen}
+        onUserCreated={loadUsers}
       />
     </AdminLayout>
   );
