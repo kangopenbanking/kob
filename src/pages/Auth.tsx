@@ -140,20 +140,22 @@ export default function Auth() {
   const checkIfUserHasPIN = async () => {
     try {
       const fullPhone = `${countryCode}${phoneNumber}`;
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('pin_code_hash')
-        .eq('phone_number', fullPhone)
-        .single();
+      const { data, error } = await supabase.functions.invoke('phone-auth-check-pin', {
+        body: { phone_number: fullPhone }
+      });
 
-      if (error || !data || !data.pin_code_hash) {
+      if (error || !data) {
+        console.error('Failed to check PIN:', error);
         setUserHasPIN(false);
         return false;
       }
 
-      setUserHasPIN(true);
-      return true;
-    } catch {
+      const hasPIN = data.has_pin === true;
+      setUserHasPIN(hasPIN);
+      console.log(`User has PIN: ${hasPIN}`);
+      return hasPIN;
+    } catch (error) {
+      console.error('PIN check error:', error);
       setUserHasPIN(false);
       return false;
     }
