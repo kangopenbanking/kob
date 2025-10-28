@@ -57,6 +57,7 @@ import Payments from "./pages/Payments";
 import PersonalAccounts from "./pages/PersonalAccounts";
 import BusinessAccounts from "./pages/BusinessAccounts";
 import Savings from "./pages/Savings";
+import Loans from "./pages/Loans";
 import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
@@ -104,6 +105,7 @@ function App() {
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
+            <Route path="/loans" element={<Layout><ProtectedRoute><Loans /></ProtectedRoute></Layout>} />
             <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
             <Route path="/admin/users" element={<Layout><ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute></Layout>} />
             <Route path="/admin/api-clients" element={<Layout><ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute></Layout>} />
