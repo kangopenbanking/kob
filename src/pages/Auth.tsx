@@ -252,18 +252,26 @@ export default function Auth() {
       
       setAuthStep('complete');
       
-      // Check for institution registration status
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: institution } = await supabase
+      // Check for institution registration status with fallback
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          // No user found, redirect to dashboard as fallback
+          setTimeout(() => navigate('/dashboard'), 1000);
+          return;
+        }
+
+        const { data: institution, error: institutionError } = await supabase
           .from('institutions')
           .select('id, status')
           .eq('user_id', user.id)
           .single();
         
-        if (!institution) {
-          // No institution registered - redirect to registration
-          setTimeout(() => navigate('/register'), 1000);
+        // If there's an error or no institution found, redirect to dashboard
+        if (institutionError || !institution) {
+          console.log('No institution found, redirecting to dashboard');
+          setTimeout(() => navigate('/dashboard'), 1000);
         } else if (institution.status === 'pending') {
           // Pending approval
           setTimeout(() => navigate('/pending-approval'), 1000);
@@ -274,6 +282,10 @@ export default function Auth() {
           // Rejected or other status
           setTimeout(() => navigate('/pending-approval'), 1000);
         }
+      } catch (err) {
+        // On any error, redirect to dashboard as fallback
+        console.error('Error checking institution status:', err);
+        setTimeout(() => navigate('/dashboard'), 1000);
       }
     } catch (error: any) {
       console.error('Verify OTP error:', error);
