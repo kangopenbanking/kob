@@ -44,9 +44,8 @@ const Index = () => {
                 🇨🇲 Cameroon's #1 Open Banking Platform
               </Badge>
               <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight">
-                The Future of
-                <span className="block bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent mt-2">
-                  Banking Infrastructure
+                <span className="block bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
+                  Unified Banking API for Cameroon
                 </span>
               </h1>
               <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">

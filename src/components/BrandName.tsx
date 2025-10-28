@@ -5,7 +5,7 @@ interface BrandNameProps {
 export const BrandName = ({ className = "" }: BrandNameProps) => {
   return (
     <span className={`font-bold ${className}`}>
-      <span style={{ color: '#9fe870' }}>Open</span> Banking
+      <span className="text-primary">OPEN</span> BANKING
     </span>
   );
 };
