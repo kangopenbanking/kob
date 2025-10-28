@@ -1712,6 +1712,524 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_api_clients: {
+        Row: {
+          allowed_operations: string[] | null
+          api_key: string
+          api_secret_hash: string
+          audit_logging_enabled: boolean | null
+          client_name: string
+          client_type: string
+          cost_per_query: number | null
+          created_at: string | null
+          created_by: string | null
+          data_retention_days: number | null
+          id: string
+          institution_id: string | null
+          is_active: boolean | null
+          is_sandbox: boolean | null
+          last_query_at: string | null
+          pricing_tier: string | null
+          rate_limit_per_day: number | null
+          rate_limit_per_minute: number | null
+          total_queries: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_operations?: string[] | null
+          api_key: string
+          api_secret_hash: string
+          audit_logging_enabled?: boolean | null
+          client_name: string
+          client_type: string
+          cost_per_query?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          data_retention_days?: number | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          is_sandbox?: boolean | null
+          last_query_at?: string | null
+          pricing_tier?: string | null
+          rate_limit_per_day?: number | null
+          rate_limit_per_minute?: number | null
+          total_queries?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_operations?: string[] | null
+          api_key?: string
+          api_secret_hash?: string
+          audit_logging_enabled?: boolean | null
+          client_name?: string
+          client_type?: string
+          cost_per_query?: number | null
+          created_at?: string | null
+          created_by?: string | null
+          data_retention_days?: number | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          is_sandbox?: boolean | null
+          last_query_at?: string | null
+          pricing_tier?: string | null
+          rate_limit_per_day?: number | null
+          rate_limit_per_minute?: number | null
+          total_queries?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_api_clients_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_api_usage_logs: {
+        Row: {
+          billed_amount: number | null
+          client_id: string
+          created_at: string | null
+          id: string
+          ip_address: unknown
+          operation_type: string
+          report_id: string | null
+          request_payload: Json | null
+          response_status: number | null
+          response_time_ms: number | null
+          score_returned: number | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          billed_amount?: number | null
+          client_id: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
+          operation_type: string
+          report_id?: string | null
+          request_payload?: Json | null
+          response_status?: number | null
+          response_time_ms?: number | null
+          score_returned?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          billed_amount?: number | null
+          client_id?: string
+          created_at?: string | null
+          id?: string
+          ip_address?: unknown
+          operation_type?: string
+          report_id?: string | null
+          request_payload?: Json | null
+          response_status?: number | null
+          response_time_ms?: number | null
+          score_returned?: number | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_api_usage_logs_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "credit_api_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "credit_api_usage_logs_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "credit_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_inquiries: {
+        Row: {
+          consent_reference: string | null
+          created_at: string | null
+          id: string
+          inquirer_id: string | null
+          inquirer_name: string
+          inquirer_type: string
+          inquiry_date: string | null
+          inquiry_type: string
+          ip_address: unknown
+          purpose: string
+          report_id: string | null
+          report_provided: boolean | null
+          score_provided: number | null
+          user_agent: string | null
+          user_consent_given: boolean | null
+          user_id: string
+        }
+        Insert: {
+          consent_reference?: string | null
+          created_at?: string | null
+          id?: string
+          inquirer_id?: string | null
+          inquirer_name: string
+          inquirer_type: string
+          inquiry_date?: string | null
+          inquiry_type: string
+          ip_address?: unknown
+          purpose: string
+          report_id?: string | null
+          report_provided?: boolean | null
+          score_provided?: number | null
+          user_agent?: string | null
+          user_consent_given?: boolean | null
+          user_id: string
+        }
+        Update: {
+          consent_reference?: string | null
+          created_at?: string | null
+          id?: string
+          inquirer_id?: string | null
+          inquirer_name?: string
+          inquirer_type?: string
+          inquiry_date?: string | null
+          inquiry_type?: string
+          ip_address?: unknown
+          purpose?: string
+          report_id?: string | null
+          report_provided?: boolean | null
+          score_provided?: number | null
+          user_agent?: string | null
+          user_consent_given?: boolean | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_inquiries_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "credit_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_monitoring_alerts: {
+        Row: {
+          alert_data: Json | null
+          alert_type: string
+          created_at: string | null
+          description: string | null
+          id: string
+          read_at: string | null
+          severity: string
+          status: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          alert_data?: Json | null
+          alert_type: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          read_at?: string | null
+          severity: string
+          status?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          alert_data?: Json | null
+          alert_type?: string
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          read_at?: string | null
+          severity?: string
+          status?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_reports: {
+        Row: {
+          active_accounts: number | null
+          active_loans: number | null
+          average_monthly_savings: number | null
+          bankruptcies: number | null
+          closed_accounts: number | null
+          collections: number | null
+          completed_loans: number | null
+          created_at: string | null
+          credit_score_id: string | null
+          credit_utilization_ratio: number | null
+          defaulted_loans: number | null
+          employment_verified: boolean | null
+          external_report_data: Json | null
+          external_report_fetched_at: string | null
+          generated_at: string | null
+          generated_by: string | null
+          hard_inquiries_12m: number | null
+          hard_inquiries_6m: number | null
+          id: string
+          income_verified: boolean | null
+          judgments: number | null
+          late_payments_30_days: number | null
+          late_payments_60_days: number | null
+          late_payments_90_days: number | null
+          liens: number | null
+          missed_payments: number | null
+          on_time_payment_rate: number | null
+          personal_info_verified: boolean | null
+          purpose: string | null
+          report_file_url: string | null
+          report_type: string
+          requested_by: string | null
+          requester_id: string | null
+          savings_consistency_score: number | null
+          soft_inquiries_total: number | null
+          total_accounts: number | null
+          total_balance: number | null
+          total_borrowed: number | null
+          total_credit_limit: number | null
+          total_loans: number | null
+          total_payments_made: number | null
+          total_repaid: number | null
+          total_savings_accounts: number | null
+          total_savings_balance: number | null
+          user_id: string
+        }
+        Insert: {
+          active_accounts?: number | null
+          active_loans?: number | null
+          average_monthly_savings?: number | null
+          bankruptcies?: number | null
+          closed_accounts?: number | null
+          collections?: number | null
+          completed_loans?: number | null
+          created_at?: string | null
+          credit_score_id?: string | null
+          credit_utilization_ratio?: number | null
+          defaulted_loans?: number | null
+          employment_verified?: boolean | null
+          external_report_data?: Json | null
+          external_report_fetched_at?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          hard_inquiries_12m?: number | null
+          hard_inquiries_6m?: number | null
+          id?: string
+          income_verified?: boolean | null
+          judgments?: number | null
+          late_payments_30_days?: number | null
+          late_payments_60_days?: number | null
+          late_payments_90_days?: number | null
+          liens?: number | null
+          missed_payments?: number | null
+          on_time_payment_rate?: number | null
+          personal_info_verified?: boolean | null
+          purpose?: string | null
+          report_file_url?: string | null
+          report_type: string
+          requested_by?: string | null
+          requester_id?: string | null
+          savings_consistency_score?: number | null
+          soft_inquiries_total?: number | null
+          total_accounts?: number | null
+          total_balance?: number | null
+          total_borrowed?: number | null
+          total_credit_limit?: number | null
+          total_loans?: number | null
+          total_payments_made?: number | null
+          total_repaid?: number | null
+          total_savings_accounts?: number | null
+          total_savings_balance?: number | null
+          user_id: string
+        }
+        Update: {
+          active_accounts?: number | null
+          active_loans?: number | null
+          average_monthly_savings?: number | null
+          bankruptcies?: number | null
+          closed_accounts?: number | null
+          collections?: number | null
+          completed_loans?: number | null
+          created_at?: string | null
+          credit_score_id?: string | null
+          credit_utilization_ratio?: number | null
+          defaulted_loans?: number | null
+          employment_verified?: boolean | null
+          external_report_data?: Json | null
+          external_report_fetched_at?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          hard_inquiries_12m?: number | null
+          hard_inquiries_6m?: number | null
+          id?: string
+          income_verified?: boolean | null
+          judgments?: number | null
+          late_payments_30_days?: number | null
+          late_payments_60_days?: number | null
+          late_payments_90_days?: number | null
+          liens?: number | null
+          missed_payments?: number | null
+          on_time_payment_rate?: number | null
+          personal_info_verified?: boolean | null
+          purpose?: string | null
+          report_file_url?: string | null
+          report_type?: string
+          requested_by?: string | null
+          requester_id?: string | null
+          savings_consistency_score?: number | null
+          soft_inquiries_total?: number | null
+          total_accounts?: number | null
+          total_balance?: number | null
+          total_borrowed?: number | null
+          total_credit_limit?: number | null
+          total_loans?: number | null
+          total_payments_made?: number | null
+          total_repaid?: number | null
+          total_savings_accounts?: number | null
+          total_savings_balance?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_reports_credit_score_id_fkey"
+            columns: ["credit_score_id"]
+            isOneToOne: false
+            referencedRelation: "credit_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_score_history: {
+        Row: {
+          change_reason: string | null
+          credit_score_id: string | null
+          id: string
+          recorded_at: string | null
+          score: number
+          score_change: number | null
+          significant_events: Json | null
+          user_id: string
+        }
+        Insert: {
+          change_reason?: string | null
+          credit_score_id?: string | null
+          id?: string
+          recorded_at?: string | null
+          score: number
+          score_change?: number | null
+          significant_events?: Json | null
+          user_id: string
+        }
+        Update: {
+          change_reason?: string | null
+          credit_score_id?: string | null
+          id?: string
+          recorded_at?: string | null
+          score?: number
+          score_change?: number | null
+          significant_events?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_score_history_credit_score_id_fkey"
+            columns: ["credit_score_id"]
+            isOneToOne: false
+            referencedRelation: "credit_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_scores: {
+        Row: {
+          amounts_owed_score: number | null
+          calculated_at: string | null
+          confidence_level: number | null
+          created_at: string | null
+          credit_history_length_score: number | null
+          credit_mix_score: number | null
+          expires_at: string | null
+          external_bureau_name: string | null
+          external_bureau_score: number | null
+          external_score_fetched_at: string | null
+          id: string
+          kyc_compliance_score: number | null
+          new_credit_score: number | null
+          next_update_date: string | null
+          payment_history_score: number | null
+          savings_behavior_score: number | null
+          score: number
+          score_factors: Json
+          score_version: string | null
+          scoring_model: string
+          status: string | null
+          transaction_pattern_score: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amounts_owed_score?: number | null
+          calculated_at?: string | null
+          confidence_level?: number | null
+          created_at?: string | null
+          credit_history_length_score?: number | null
+          credit_mix_score?: number | null
+          expires_at?: string | null
+          external_bureau_name?: string | null
+          external_bureau_score?: number | null
+          external_score_fetched_at?: string | null
+          id?: string
+          kyc_compliance_score?: number | null
+          new_credit_score?: number | null
+          next_update_date?: string | null
+          payment_history_score?: number | null
+          savings_behavior_score?: number | null
+          score: number
+          score_factors: Json
+          score_version?: string | null
+          scoring_model: string
+          status?: string | null
+          transaction_pattern_score?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amounts_owed_score?: number | null
+          calculated_at?: string | null
+          confidence_level?: number | null
+          created_at?: string | null
+          credit_history_length_score?: number | null
+          credit_mix_score?: number | null
+          expires_at?: string | null
+          external_bureau_name?: string | null
+          external_bureau_score?: number | null
+          external_score_fetched_at?: string | null
+          id?: string
+          kyc_compliance_score?: number | null
+          new_credit_score?: number | null
+          next_update_date?: string | null
+          payment_history_score?: number | null
+          savings_behavior_score?: number | null
+          score?: number
+          score_factors?: Json
+          score_version?: string | null
+          scoring_model?: string
+          status?: string | null
+          transaction_pattern_score?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_due_diligence: {
         Row: {
           beneficial_owners: Json | null
@@ -1933,6 +2451,45 @@ export type Database = {
           rate_source?: string
           target_currency?: string
           valid_until?: string
+        }
+        Relationships: []
+      }
+      external_credit_data_cache: {
+        Row: {
+          bureau_name: string
+          created_at: string | null
+          data_type: string
+          expires_at: string | null
+          fetched_at: string | null
+          id: string
+          is_stale: boolean | null
+          parsed_data: Json | null
+          raw_data: Json
+          user_id: string
+        }
+        Insert: {
+          bureau_name: string
+          created_at?: string | null
+          data_type: string
+          expires_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          is_stale?: boolean | null
+          parsed_data?: Json | null
+          raw_data: Json
+          user_id: string
+        }
+        Update: {
+          bureau_name?: string
+          created_at?: string | null
+          data_type?: string
+          expires_at?: string | null
+          fetched_at?: string | null
+          id?: string
+          is_stale?: boolean | null
+          parsed_data?: Json | null
+          raw_data?: Json
+          user_id?: string
         }
         Relationships: []
       }
@@ -2871,14 +3428,17 @@ export type Database = {
         Row: {
           application_number: string
           approved_at: string | null
+          auto_decision: string | null
           collateral_details: Json | null
           created_at: string | null
+          credit_report_id: string | null
           credit_score: number | null
           employment_details: Json | null
           guarantors: Json | null
           id: string
           loan_product_id: string
           purpose: string
+          recommended_amount: number | null
           rejection_reason: string | null
           repayment_frequency: Database["public"]["Enums"]["repayment_frequency"]
           requested_amount: number
@@ -2896,14 +3456,17 @@ export type Database = {
         Insert: {
           application_number: string
           approved_at?: string | null
+          auto_decision?: string | null
           collateral_details?: Json | null
           created_at?: string | null
+          credit_report_id?: string | null
           credit_score?: number | null
           employment_details?: Json | null
           guarantors?: Json | null
           id?: string
           loan_product_id: string
           purpose: string
+          recommended_amount?: number | null
           rejection_reason?: string | null
           repayment_frequency?: Database["public"]["Enums"]["repayment_frequency"]
           requested_amount: number
@@ -2921,14 +3484,17 @@ export type Database = {
         Update: {
           application_number?: string
           approved_at?: string | null
+          auto_decision?: string | null
           collateral_details?: Json | null
           created_at?: string | null
+          credit_report_id?: string | null
           credit_score?: number | null
           employment_details?: Json | null
           guarantors?: Json | null
           id?: string
           loan_product_id?: string
           purpose?: string
+          recommended_amount?: number | null
           rejection_reason?: string | null
           repayment_frequency?: Database["public"]["Enums"]["repayment_frequency"]
           requested_amount?: number
@@ -2944,6 +3510,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "loan_applications_credit_report_id_fkey"
+            columns: ["credit_report_id"]
+            isOneToOne: false
+            referencedRelation: "credit_reports"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "loan_applications_loan_product_id_fkey"
             columns: ["loan_product_id"]
@@ -5771,7 +6344,14 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      credit_score_distribution: {
+        Row: {
+          avg_score: number | null
+          score_range: string | null
+          user_count: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_kyc_risk_score: { Args: { _user_id: string }; Returns: number }
