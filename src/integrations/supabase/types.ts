@@ -6523,7 +6523,7 @@ export type Database = {
       account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN"
       account_subtype: "Current" | "Savings" | "CreditCard" | "Loan"
       account_type: "Business" | "Personal"
-      app_role: "admin" | "institution"
+      app_role: "admin" | "institution" | "moderator"
       card_funding_status:
         | "pending"
         | "processing"
@@ -6723,7 +6723,7 @@ export const Constants = {
       account_scheme: ["LOCAL_BANK", "MOMO", "IBAN"],
       account_subtype: ["Current", "Savings", "CreditCard", "Loan"],
       account_type: ["Business", "Personal"],
-      app_role: ["admin", "institution"],
+      app_role: ["admin", "institution", "moderator"],
       card_funding_status: [
         "pending",
         "processing",

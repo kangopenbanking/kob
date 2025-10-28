@@ -95,7 +95,7 @@ export default function UserManagement() {
     try {
       const { error } = await supabase
         .from('user_roles')
-        .insert({ user_id: userId, role: role as 'admin' | 'institution' });
+        .insert({ user_id: userId, role: role as 'admin' | 'moderator' | 'institution' });
 
       if (error) throw error;
 
@@ -113,7 +113,7 @@ export default function UserManagement() {
         .from('user_roles')
         .delete()
         .eq('user_id', userId)
-        .eq('role', role as 'admin' | 'institution');
+        .eq('role', role as 'admin' | 'moderator' | 'institution');
 
       if (error) throw error;
 
@@ -260,7 +260,15 @@ export default function UserManagement() {
                             Remove Admin
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem>
+                        {user.roles.includes('moderator') && (
+                          <DropdownMenuItem onClick={() => removeRole(user.id, 'moderator')}>
+                            <Ban className="h-4 w-4 mr-2" />
+                            Remove Moderator
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuItem onClick={() => {
+                          toast.info(`User Details: ${user.full_name || 'N/A'} (${user.email})\nID: ${user.id}\nRoles: ${user.roles.join(', ') || 'None'}\nStatus: ${user.status}\nJoined: ${new Date(user.created_at).toLocaleDateString()}`);
+                        }}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
                         </DropdownMenuItem>

@@ -27,7 +27,7 @@ export default function ComplianceDashboard() {
       // Fetch KYC statistics
       const { data: kycData, error: kycError } = await supabase
         .from('kyc_verifications')
-        .select('status, count');
+        .select('*');
 
       if (kycError) throw kycError;
 
