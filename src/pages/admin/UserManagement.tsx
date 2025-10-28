@@ -13,6 +13,7 @@ import { Search, UserPlus, Shield, Ban, Trash2, RefreshCw, Eye, MoreVertical } f
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { UserDetailsDialog } from '@/components/admin/UserDetailsDialog';
 
 interface UserProfile {
   id: string;
@@ -32,6 +33,8 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -267,7 +270,8 @@ export default function UserManagement() {
                           </DropdownMenuItem>
                         )}
                         <DropdownMenuItem onClick={() => {
-                          toast.info(`User Details: ${user.full_name || 'N/A'} (${user.email})\nID: ${user.id}\nRoles: ${user.roles.join(', ') || 'None'}\nStatus: ${user.status}\nJoined: ${new Date(user.created_at).toLocaleDateString()}`);
+                          setSelectedUserId(user.id);
+                          setDetailsDialogOpen(true);
                         }}>
                           <Eye className="h-4 w-4 mr-2" />
                           View Details
@@ -282,6 +286,13 @@ export default function UserManagement() {
         </CardContent>
       </Card>
       </div>
+
+      <UserDetailsDialog
+        open={detailsDialogOpen}
+        onOpenChange={setDetailsDialogOpen}
+        userId={selectedUserId}
+        onUpdate={loadUsers}
+      />
     </AdminLayout>
   );
 }
