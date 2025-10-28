@@ -59,6 +59,8 @@ import BusinessAccounts from "./pages/BusinessAccounts";
 import Savings from "./pages/Savings";
 import Loans from "./pages/Loans";
 import VirtualCards from "./pages/VirtualCards";
+import CreditScore from "./pages/CreditScore";
+import CreditReport from "./pages/CreditReport";
 import KYCVerification from "./pages/KYCVerification";
 import BankingOps from "./pages/BankingOps";
 import Privacy from "./pages/Privacy";
@@ -77,6 +79,7 @@ import NotFound from "./pages/NotFound";
 import PendingApproval from "./pages/PendingApproval";
 import FIPortal from "./pages/FIPortal";
 import FeeManagement from "./pages/FeeManagement";
+import CreditManagement from "./pages/admin/CreditManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -107,6 +110,9 @@ function App() {
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><Loans /></ProtectedRoute></Layout>} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/credit-management" element={<Layout><ProtectedRoute requiredRole="admin"><CreditManagement /></ProtectedRoute></Layout>} />
             <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
             <Route path="/admin/users" element={<Layout><ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute></Layout>} />
             <Route path="/admin/api-clients" element={<Layout><ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute></Layout>} />
