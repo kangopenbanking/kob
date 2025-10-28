@@ -12,7 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { z } from 'zod';
 
-type AuthStep = 'captcha' | 'phone' | 'otp' | 'complete';
+type AuthStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'complete';
 type OTPType = 'login' | 'signup';
 type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
 
@@ -41,6 +41,9 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [userHasPIN, setUserHasPIN] = useState(false);
+  const [usesPINLogin, setUsesPINLogin] = useState(false);
+  const [pinLoginAttempts, setPinLoginAttempts] = useState(3);
 
   // Captcha state
   const [captchaQuestion, setCaptchaQuestion] = useState('');
@@ -134,7 +137,29 @@ export default function Auth() {
     }
   };
 
-  const handleSendOTP = async () => {
+  const checkIfUserHasPIN = async () => {
+    try {
+      const fullPhone = `${countryCode}${phoneNumber}`;
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('pin_code_hash')
+        .eq('phone_number', fullPhone)
+        .single();
+
+      if (error || !data || !data.pin_code_hash) {
+        setUserHasPIN(false);
+        return false;
+      }
+
+      setUserHasPIN(true);
+      return true;
+    } catch {
+      setUserHasPIN(false);
+      return false;
+    }
+  };
+
+  const handlePhoneSubmit = async () => {
     // Validate phone number
     try {
       phoneSchema.parse(phoneNumber);
@@ -173,36 +198,163 @@ export default function Auth() {
 
     setLoading(true);
     try {
+      // For login, check if user has PIN set
+      if (isLogin) {
+        const hasPIN = await checkIfUserHasPIN();
+        if (hasPIN) {
+          setUsesPINLogin(true);
+          setAuthStep('pin');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // If no PIN or signup, proceed with OTP
+      setUsesPINLogin(false);
+      await handleSendOTP();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendOTP = async () => {
+    const fullPhone = `${countryCode}${phoneNumber}`;
+    
+    const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', {
+      body: {
+        phone_number: fullPhone,
+        otp_type: isLogin ? 'login' : 'signup',
+        delivery_method: deliveryMethod,
+        captcha_session_id: captchaSessionId,
+      },
+    });
+
+    if (error) throw error;
+
+    toast({
+      title: 'OTP Sent',
+      description: `Verification code sent via ${deliveryMethod === 'both' ? 'SMS and WhatsApp' : deliveryMethod.toUpperCase()}`,
+    });
+
+    setOtpExpiresAt(data.expires_at);
+    setAuthStep('otp');
+  };
+
+  const handlePINLogin = async () => {
+    try {
+      pinSchema.parse(pinCode);
+    } catch {
+      toast({
+        title: 'Invalid PIN',
+        description: 'PIN must be exactly 6 digits',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLoading(true);
+    try {
       const fullPhone = `${countryCode}${phoneNumber}`;
       
-      const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', {
+      const { data, error } = await supabase.functions.invoke('phone-auth-pin-login', {
         body: {
           phone_number: fullPhone,
-          otp_type: isLogin ? 'login' : 'signup',
-          delivery_method: deliveryMethod,
+          pin_code: pinCode,
           captcha_session_id: captchaSessionId,
         },
       });
 
       if (error) throw error;
 
+      if (!data.success) {
+        if (data.locked) {
+          throw new Error(data.error || 'Account locked due to multiple failed attempts');
+        }
+        setPinLoginAttempts(data.remaining_attempts || 0);
+        throw new Error(data.error || 'Invalid PIN code');
+      }
+
+      // Use the magic link to sign in
+      if (data.magic_link) {
+        const url = new URL(data.magic_link);
+        const token = url.searchParams.get('token');
+        const type = url.searchParams.get('type');
+        
+        if (token && type) {
+          const { error: verifyError } = await supabase.auth.verifyOtp({
+            token_hash: token,
+            type: type as any,
+          });
+
+          if (verifyError) throw verifyError;
+        }
+      }
+
       toast({
-        title: 'OTP Sent',
-        description: `Verification code sent via ${deliveryMethod === 'both' ? 'SMS and WhatsApp' : deliveryMethod.toUpperCase()}`,
+        title: 'Success',
+        description: 'Logged in successfully!',
       });
 
-      setOtpExpiresAt(data.expires_at);
-      setAuthStep('otp');
+      await supabase.auth.refreshSession();
+      setAuthStep('complete');
+      
+      // Check institution status and redirect
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          setTimeout(() => navigate('/dashboard'), 1000);
+          return;
+        }
+
+        const { data: institution, error: institutionError } = await supabase
+          .from('institutions')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .single();
+        
+        if (institutionError || !institution) {
+          setTimeout(() => navigate('/dashboard'), 1000);
+        } else if (institution.status === 'pending') {
+          setTimeout(() => navigate('/pending-approval'), 1000);
+        } else if (institution.status === 'approved') {
+          setTimeout(() => navigate('/fi-portal'), 1000);
+        } else {
+          setTimeout(() => navigate('/pending-approval'), 1000);
+        }
+      } catch (err) {
+        console.error('Error checking institution status:', err);
+        setTimeout(() => navigate('/dashboard'), 1000);
+      }
     } catch (error: any) {
-      console.error('Send OTP error:', error);
+      console.error('PIN login error:', error);
+      
+      let errorMessage = error.message || 'Invalid PIN code';
+      
+      if (errorMessage.includes('Account locked')) {
+        errorMessage = 'Too many failed attempts. Account locked for 30 minutes.';
+      } else if (pinLoginAttempts > 0) {
+        errorMessage = `Invalid PIN. ${pinLoginAttempts} attempts remaining.`;
+      }
+      
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to send OTP. Please try again.',
+        title: 'Login Failed',
+        description: errorMessage,
         variant: 'destructive',
       });
     } finally {
       setLoading(false);
     }
+  };
+
+  const switchToOTPLogin = () => {
+    setUsesPINLogin(false);
+    setAuthStep('phone');
+    setPinCode('');
+    toast({
+      title: 'Switched to OTP',
+      description: 'Choose your delivery method to receive a code',
+    });
   };
 
   const handleVerifyOTP = async () => {
@@ -384,6 +536,10 @@ export default function Auth() {
     if (authStep === 'otp') {
       setAuthStep('phone');
       setOtpCode('');
+    } else if (authStep === 'pin') {
+      setAuthStep('phone');
+      setPinCode('');
+      setUsesPINLogin(false);
     } else if (authStep === 'phone') {
       setAuthStep('captcha');
       generateCaptcha();
@@ -495,7 +651,7 @@ export default function Auth() {
                     </InputOTPGroup>
                   </InputOTP>
                   <p className="text-xs text-muted-foreground">
-                    Use this PIN to recover your password
+                    Use this PIN for future logins
                   </p>
                 </div>
               )}
@@ -516,36 +672,39 @@ export default function Auth() {
                 </div>
               )}
 
-              <div className="space-y-2">
-                <Label>How should we send your code?</Label>
-                <RadioGroup value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sms" id="sms" />
-                    <Label htmlFor="sms" className="font-normal flex items-center gap-2">
-                      SMS <span className="text-xs text-muted-foreground">(Recommended)</span>
-                    </Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="whatsapp" id="whatsapp" />
-                    <Label htmlFor="whatsapp" className="font-normal">WhatsApp</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="both" id="both" />
-                    <Label htmlFor="both" className="font-normal">Both</Label>
-                  </div>
-                </RadioGroup>
-                <p className="text-xs text-muted-foreground mt-2">
-                  💡 WhatsApp delivery requires you to message our business number first. SMS is instant and reliable.
-                </p>
-              </div>
+              {/* Only show delivery method for signup or OTP-based login */}
+              {(!isLogin || showForgotPassword) && (
+                <div className="space-y-2">
+                  <Label>How should we send your code?</Label>
+                  <RadioGroup value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="sms" id="sms" />
+                      <Label htmlFor="sms" className="font-normal flex items-center gap-2">
+                        SMS <span className="text-xs text-muted-foreground">(Recommended)</span>
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="whatsapp" id="whatsapp" />
+                      <Label htmlFor="whatsapp" className="font-normal">WhatsApp</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="both" id="both" />
+                      <Label htmlFor="both" className="font-normal">Both</Label>
+                    </div>
+                  </RadioGroup>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    💡 WhatsApp delivery requires you to message our business number first. SMS is instant and reliable.
+                  </p>
+                </div>
+              )}
 
               <Button 
-                onClick={showForgotPassword ? handleForgotPassword : handleSendOTP} 
+                onClick={showForgotPassword ? handleForgotPassword : handlePhoneSubmit} 
                 className="w-full" 
                 disabled={loading}
               >
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Send Verification Code
+                {isLogin && !showForgotPassword ? 'Continue' : 'Send Verification Code'}
               </Button>
 
               {isLogin && !showForgotPassword && (
@@ -557,6 +716,65 @@ export default function Auth() {
                   Forgot Password?
                 </Button>
               )}
+            </div>
+          )}
+
+          {/* PIN Login Step */}
+          {authStep === 'pin' && (
+            <div className="space-y-4">
+              <Button variant="ghost" size="sm" onClick={goBack} className="mb-2">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back
+              </Button>
+
+              <div className="space-y-2">
+                <Label>Enter Your 6-Digit PIN</Label>
+                <p className="text-sm text-muted-foreground">
+                  Enter the PIN you set during registration for {countryCode}{phoneNumber}
+                </p>
+                <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+                {pinLoginAttempts < 3 && (
+                  <p className="text-xs text-destructive">
+                    {pinLoginAttempts} attempts remaining before account lock
+                  </p>
+                )}
+              </div>
+
+              <Button onClick={handlePINLogin} className="w-full" disabled={loading || pinCode.length !== 6}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Login with PIN
+              </Button>
+
+              <div className="flex flex-col gap-2">
+                <Button 
+                  variant="ghost" 
+                  className="w-full" 
+                  onClick={switchToOTPLogin}
+                  disabled={loading}
+                >
+                  Login with OTP instead
+                </Button>
+                <Button 
+                  variant="link" 
+                  className="w-full text-sm" 
+                  onClick={() => {
+                    setShowForgotPassword(true);
+                    setAuthStep('phone');
+                  }}
+                  disabled={loading}
+                >
+                  Forgot PIN?
+                </Button>
+              </div>
             </div>
           )}
 

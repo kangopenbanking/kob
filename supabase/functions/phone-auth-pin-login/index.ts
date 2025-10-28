@@ -1,0 +1,220 @@
+import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { phone_number, pin_code, captcha_session_id } = await req.json();
+
+    if (!phone_number || !pin_code || !captcha_session_id) {
+      return new Response(
+        JSON.stringify({ error: 'phone_number, pin_code, and captcha_session_id are required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate PIN format
+    if (!/^\d{6}$/.test(pin_code)) {
+      return new Response(
+        JSON.stringify({ error: 'PIN must be exactly 6 digits' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Verify captcha first
+    const { data: captchaData, error: captchaError } = await supabase
+      .from('captcha_challenges')
+      .select('*')
+      .eq('session_id', captcha_session_id)
+      .eq('status', 'verified')
+      .gt('expires_at', new Date().toISOString())
+      .single();
+
+    if (captchaError || !captchaData) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired captcha session' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
+    // Get profile by phone number
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, pin_code_hash, pin_attempts, pin_locked_until')
+      .eq('phone_number', phone_number)
+      .single();
+
+    if (profileError || !profile) {
+      console.log('No account found for phone:', phone_number);
+      return new Response(
+        JSON.stringify({ error: 'No account found with this phone number' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 404 }
+      );
+    }
+
+    if (!profile.pin_code_hash) {
+      return new Response(
+        JSON.stringify({ error: 'No PIN code set for this account' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Check if account is locked
+    if (profile.pin_locked_until && new Date(profile.pin_locked_until) > new Date()) {
+      const minutesRemaining = Math.ceil(
+        (new Date(profile.pin_locked_until).getTime() - Date.now()) / (60 * 1000)
+      );
+      return new Response(
+        JSON.stringify({ 
+          error: `Account locked. Try again in ${minutesRemaining} minutes.`,
+          locked_until: profile.pin_locked_until,
+          remaining_attempts: 0
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+      );
+    }
+
+    // Verify PIN (support salted SHA-256 format: s2$<saltHex>$<hashHex>)
+    let pinValid = false;
+    const stored = profile.pin_code_hash as string;
+    if (stored.startsWith('s2$')) {
+      const parts = stored.split('$');
+      const saltHex = parts[1];
+      const storedHashHex = parts[2];
+      const salt = new Uint8Array(saltHex.match(/.{1,2}/g)!.map((b) => parseInt(b, 16)));
+      const encoder = new TextEncoder();
+      const pinBytes = encoder.encode(pin_code);
+      const toHash = new Uint8Array(salt.length + pinBytes.length);
+      toHash.set(salt, 0);
+      toHash.set(pinBytes, salt.length);
+      const digest = await crypto.subtle.digest('SHA-256', toHash);
+      const computedHashHex = Array.from(new Uint8Array(digest))
+        .map((b) => b.toString(16).padStart(2, '0'))
+        .join('');
+      pinValid = computedHashHex === storedHashHex;
+    } else {
+      console.warn('Unsupported PIN hash format for user:', profile.id);
+      pinValid = false;
+    }
+
+    if (pinValid) {
+      // Reset attempts
+      await supabase
+        .from('profiles')
+        .update({
+          pin_attempts: 0,
+          pin_locked_until: null,
+        })
+        .eq('id', profile.id);
+
+      // Create auth session using admin API
+      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(
+        profile.id
+      );
+
+      if (authError || !authData.user) {
+        console.error('Failed to get user for session:', authError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create session' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      // Generate session token
+      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+        type: 'magiclink',
+        email: authData.user.email || `${phone_number}@temp.kob.cm`,
+      });
+
+      if (sessionError) {
+        console.error('Failed to generate session:', sessionError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create session' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      // Log success
+      await supabase.rpc('log_security_event', {
+        _user_id: profile.id,
+        _event_type: 'pin_login_success',
+        _event_category: 'authentication',
+        _metadata: { action: 'pin_login', method: 'pin' },
+      });
+
+      console.log(`PIN login successful for user: ${profile.id}`);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: 'PIN login successful',
+          user_id: profile.id,
+          magic_link: sessionData.properties.action_link,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+      );
+
+    } else {
+      // Increment attempts
+      const newAttempts = (profile.pin_attempts || 0) + 1;
+      const updateData: any = { pin_attempts: newAttempts };
+
+      // Lock account after 3 failed attempts for 30 minutes
+      if (newAttempts >= 3) {
+        updateData.pin_locked_until = new Date(Date.now() + 30 * 60 * 1000).toISOString();
+      }
+
+      await supabase
+        .from('profiles')
+        .update(updateData)
+        .eq('id', profile.id);
+
+      // Log failure
+      await supabase.rpc('log_security_event', {
+        _user_id: profile.id,
+        _event_type: 'pin_login_failed',
+        _event_category: 'authentication',
+        _metadata: { 
+          action: 'pin_login',
+          attempts: newAttempts 
+        },
+      });
+
+      console.log(`PIN login failed for user: ${profile.id}, attempts: ${newAttempts}`);
+
+      const remainingAttempts = 3 - newAttempts;
+
+      return new Response(
+        JSON.stringify({ 
+          success: false,
+          error: 'Invalid PIN code',
+          remaining_attempts: Math.max(0, remainingAttempts),
+          locked: newAttempts >= 3,
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+  } catch (error) {
+    console.error('PIN login error:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: 'Failed to process PIN login', 
+        details: error instanceof Error ? error.message : String(error) 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
+  }
+});
