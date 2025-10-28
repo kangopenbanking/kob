@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Code, Smartphone, Zap, Shield, Book, Terminal, Webhook, Database, TestTube } from "lucide-react";
+import { ArrowRight, Code, Smartphone, Zap, Shield, Book, Terminal, Webhook, Database, TestTube, DollarSign, Wallet, TrendingUp } from "lucide-react";
 import { DocNavigation } from "@/components/developer/DocNavigation";
 
 export default function DeveloperHome() {
@@ -195,6 +195,54 @@ export default function DeveloperHome() {
               <Link to="/developer/api/webhooks">
                 <Button variant="outline" className="w-full">
                   View Webhooks Documentation
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <DollarSign className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Loans & Savings</CardTitle>
+                  <CardDescription>
+                    Loan applications, repayments, and savings management
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Enable lending and savings products with automated credit checks, interest calculations, and repayment tracking.
+              </p>
+              <Link to="/documentation">
+                <Button variant="outline" className="w-full">
+                  View Loans & Savings API
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <TrendingUp className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Credit Scoring</CardTitle>
+                  <CardDescription>
+                    Comprehensive credit scoring and reporting system
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-sm text-muted-foreground">
+                Access credit scores (300-850), detailed reports, and monitoring. B2B APIs available for financial institutions.
+              </p>
+              <Link to="/documentation">
+                <Button variant="outline" className="w-full">
+                  View Credit Scoring API
                 </Button>
               </Link>
             </CardContent>
