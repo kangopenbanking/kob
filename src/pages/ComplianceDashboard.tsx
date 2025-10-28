@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, AlertTriangle, CheckCircle, FileText, Users, TrendingUp } from "lucide-react";
+import { Shield, AlertTriangle, CheckCircle, FileText, Users, TrendingUp, RefreshCw } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function ComplianceDashboard() {
@@ -52,6 +52,11 @@ export default function ComplianceDashboard() {
       setReports(reportsData || []);
 
       setKycStats(kycData);
+      
+      toast({
+        title: "Success",
+        description: "Compliance data refreshed successfully",
+      });
     } catch (error: any) {
       console.error('Error fetching compliance data:', error);
       toast({
@@ -84,8 +89,18 @@ export default function ComplianceDashboard() {
               Monitor KYC, AML, and regulatory compliance
             </p>
           </div>
-        <Button onClick={fetchComplianceData}>
-          Refresh Data
+        <Button onClick={fetchComplianceData} disabled={loading}>
+          {loading ? (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+              Refreshing...
+            </>
+          ) : (
+            <>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh Data
+            </>
+          )}
         </Button>
       </div>
 
