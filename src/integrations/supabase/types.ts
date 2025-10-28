@@ -117,6 +117,8 @@ export type Database = {
           account_id: string
           account_subtype: Database["public"]["Enums"]["account_subtype"]
           account_type: Database["public"]["Enums"]["account_type"]
+          authorized_signatories: Json[] | null
+          business_details: Json | null
           created_at: string | null
           currency: string
           id: string
@@ -127,6 +129,7 @@ export type Database = {
           nickname: string | null
           opened_date: string | null
           secondary_identification: string | null
+          transaction_limits: Json | null
           updated_at: string | null
           user_id: string
         }
@@ -135,6 +138,8 @@ export type Database = {
           account_id: string
           account_subtype?: Database["public"]["Enums"]["account_subtype"]
           account_type?: Database["public"]["Enums"]["account_type"]
+          authorized_signatories?: Json[] | null
+          business_details?: Json | null
           created_at?: string | null
           currency?: string
           id?: string
@@ -145,6 +150,7 @@ export type Database = {
           nickname?: string | null
           opened_date?: string | null
           secondary_identification?: string | null
+          transaction_limits?: Json | null
           updated_at?: string | null
           user_id: string
         }
@@ -153,6 +159,8 @@ export type Database = {
           account_id?: string
           account_subtype?: Database["public"]["Enums"]["account_subtype"]
           account_type?: Database["public"]["Enums"]["account_type"]
+          authorized_signatories?: Json[] | null
+          business_details?: Json | null
           created_at?: string | null
           currency?: string
           id?: string
@@ -163,6 +171,7 @@ export type Database = {
           nickname?: string | null
           opened_date?: string | null
           secondary_identification?: string | null
+          transaction_limits?: Json | null
           updated_at?: string | null
           user_id?: string
         }
@@ -956,6 +965,178 @@ export type Database = {
             columns: ["template_id"]
             isOneToOne: false
             referencedRelation: "communication_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_account_signatories: {
+        Row: {
+          account_id: string
+          activated_at: string | null
+          created_at: string | null
+          daily_transaction_limit: number | null
+          id: string
+          invited_at: string | null
+          invited_by: string | null
+          permissions: Json
+          requires_approval: boolean | null
+          role: string
+          single_transaction_limit: number | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          activated_at?: string | null
+          created_at?: string | null
+          daily_transaction_limit?: number | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          permissions?: Json
+          requires_approval?: boolean | null
+          role: string
+          single_transaction_limit?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          activated_at?: string | null
+          created_at?: string | null
+          daily_transaction_limit?: number | null
+          id?: string
+          invited_at?: string | null
+          invited_by?: string | null
+          permissions?: Json
+          requires_approval?: boolean | null
+          role?: string
+          single_transaction_limit?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_account_signatories_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      business_kyc: {
+        Row: {
+          account_id: string | null
+          annual_turnover: number | null
+          articles_of_association_url: string | null
+          bank_statement_url: string | null
+          beneficial_owners: Json[] | null
+          business_address: Json
+          business_description: string | null
+          business_name: string
+          business_type: string
+          created_at: string | null
+          directors: Json[] | null
+          id: string
+          industry: string
+          number_of_employees: number | null
+          proof_of_address_url: string | null
+          registration_authority: string | null
+          registration_certificate_url: string | null
+          registration_country: string | null
+          registration_date: string | null
+          registration_number: string
+          rejection_reason: string | null
+          risk_rating: string | null
+          sanctions_screen_date: string | null
+          sanctions_screened: boolean | null
+          tax_certificate_url: string | null
+          tax_id: string | null
+          updated_at: string | null
+          user_id: string
+          vat_number: string | null
+          verification_status: string
+          verified_at: string | null
+          verified_by: string | null
+        }
+        Insert: {
+          account_id?: string | null
+          annual_turnover?: number | null
+          articles_of_association_url?: string | null
+          bank_statement_url?: string | null
+          beneficial_owners?: Json[] | null
+          business_address: Json
+          business_description?: string | null
+          business_name: string
+          business_type: string
+          created_at?: string | null
+          directors?: Json[] | null
+          id?: string
+          industry: string
+          number_of_employees?: number | null
+          proof_of_address_url?: string | null
+          registration_authority?: string | null
+          registration_certificate_url?: string | null
+          registration_country?: string | null
+          registration_date?: string | null
+          registration_number: string
+          rejection_reason?: string | null
+          risk_rating?: string | null
+          sanctions_screen_date?: string | null
+          sanctions_screened?: boolean | null
+          tax_certificate_url?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+          user_id: string
+          vat_number?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Update: {
+          account_id?: string | null
+          annual_turnover?: number | null
+          articles_of_association_url?: string | null
+          bank_statement_url?: string | null
+          beneficial_owners?: Json[] | null
+          business_address?: Json
+          business_description?: string | null
+          business_name?: string
+          business_type?: string
+          created_at?: string | null
+          directors?: Json[] | null
+          id?: string
+          industry?: string
+          number_of_employees?: number | null
+          proof_of_address_url?: string | null
+          registration_authority?: string | null
+          registration_certificate_url?: string | null
+          registration_country?: string | null
+          registration_date?: string | null
+          registration_number?: string
+          rejection_reason?: string | null
+          risk_rating?: string | null
+          sanctions_screen_date?: string | null
+          sanctions_screened?: boolean | null
+          tax_certificate_url?: string | null
+          tax_id?: string | null
+          updated_at?: string | null
+          user_id?: string
+          vat_number?: string | null
+          verification_status?: string
+          verified_at?: string | null
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_kyc_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
             referencedColumns: ["id"]
           },
         ]
