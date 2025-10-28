@@ -1,3 +1,4 @@
+import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -27,6 +28,10 @@ export default function FIPortal() {
     await loadInstitution();
     await loadMetrics();
   };
+
+  useEffect(() => {
+    checkAuthAndInstitution();
+  }, []);
 
   const checkAuth = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -105,7 +110,7 @@ export default function FIPortal() {
 
   if (!institution) {
     return (
-      <div className="container mx-auto py-8">
+      <InstitutionLayout>
         <Card>
           <CardHeader>
             <CardTitle>Financial Institution Portal</CardTitle>
@@ -114,7 +119,7 @@ export default function FIPortal() {
             </CardDescription>
           </CardHeader>
         </Card>
-      </div>
+      </InstitutionLayout>
     );
   }
 
@@ -122,23 +127,24 @@ export default function FIPortal() {
   const sandboxCreds = institution.sandbox_credentials as any;
 
   return (
-    <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">{t('fiDashboard')}</h1>
-        <p className="text-muted-foreground">{institution.institution_name}</p>
-        {isDeveloper && (
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Developer Mode Active</h3>
-            <p className="text-sm text-blue-800 dark:text-blue-200">
-              You have access to sandbox environment and API credentials
-            </p>
-          </div>
-        )}
-      </div>
+    <InstitutionLayout>
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold">{t('fiDashboard')}</h1>
+          <p className="text-muted-foreground mt-2">{institution.institution_name}</p>
+          {isDeveloper && (
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Developer Mode Active</h3>
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                You have access to sandbox environment and API credentials
+              </p>
+            </div>
+          )}
+        </div>
 
       {/* Sandbox Credentials for Developers */}
       {isDeveloper && sandboxCreds && (
-        <Card className="mb-8 border-blue-200 dark:border-blue-800">
+        <Card className="border-blue-200 dark:border-blue-800">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Activity className="h-5 w-5 text-blue-600" />
@@ -183,7 +189,7 @@ export default function FIPortal() {
       )}
 
       {/* Metrics Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">{t('transactions')}</CardTitle>
@@ -312,7 +318,8 @@ export default function FIPortal() {
           </Card>
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </InstitutionLayout>
   );
 }
 
