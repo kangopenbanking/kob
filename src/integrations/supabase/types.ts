@@ -913,6 +913,65 @@ export type Database = {
           },
         ]
       }
+      branches: {
+        Row: {
+          address: Json
+          branch_code: string
+          branch_name: string
+          branch_type: string
+          created_at: string | null
+          email: string | null
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          manager_id: string | null
+          opening_hours: Json | null
+          phone: string | null
+          services_offered: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          address: Json
+          branch_code: string
+          branch_name: string
+          branch_type: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          opening_hours?: Json | null
+          phone?: string | null
+          services_offered?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: Json
+          branch_code?: string
+          branch_name?: string
+          branch_type?: string
+          created_at?: string | null
+          email?: string | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          manager_id?: string | null
+          opening_hours?: Json | null
+          phone?: string | null
+          services_offered?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "branches_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bulk_communications: {
         Row: {
           body: string
@@ -4384,6 +4443,44 @@ export type Database = {
         }
         Relationships: []
       }
+      role_permissions: {
+        Row: {
+          actions: Database["public"]["Enums"]["permission_action"][]
+          created_at: string | null
+          created_by: string | null
+          id: string
+          institution_id: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          scope: Database["public"]["Enums"]["permission_scope"]
+        }
+        Insert: {
+          actions: Database["public"]["Enums"]["permission_action"][]
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          institution_id?: string | null
+          role: Database["public"]["Enums"]["app_role"]
+          scope: Database["public"]["Enums"]["permission_scope"]
+        }
+        Update: {
+          actions?: Database["public"]["Enums"]["permission_action"][]
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          institution_id?: string | null
+          role?: Database["public"]["Enums"]["app_role"]
+          scope?: Database["public"]["Enums"]["permission_scope"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "role_permissions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sanctions_screening: {
         Row: {
           created_at: string | null
@@ -5076,6 +5173,66 @@ export type Database = {
           use?: string
         }
         Relationships: []
+      }
+      staff_assignments: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          branch_id: string | null
+          department: string | null
+          employment_type: string | null
+          end_date: string | null
+          id: string
+          institution_id: string
+          is_active: boolean | null
+          position: string
+          start_date: string | null
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          branch_id?: string | null
+          department?: string | null
+          employment_type?: string | null
+          end_date?: string | null
+          id?: string
+          institution_id: string
+          is_active?: boolean | null
+          position: string
+          start_date?: string | null
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          branch_id?: string | null
+          department?: string | null
+          employment_type?: string | null
+          end_date?: string | null
+          id?: string
+          institution_id?: string
+          is_active?: boolean | null
+          position?: string
+          start_date?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_assignments_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       standing_orders: {
         Row: {
@@ -6018,6 +6175,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permission_overrides: {
+        Row: {
+          actions: Database["public"]["Enums"]["permission_action"][]
+          expires_at: string | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          reason: string | null
+          scope: Database["public"]["Enums"]["permission_scope"]
+          user_id: string
+        }
+        Insert: {
+          actions: Database["public"]["Enums"]["permission_action"][]
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          scope: Database["public"]["Enums"]["permission_scope"]
+          user_id: string
+        }
+        Update: {
+          actions?: Database["public"]["Enums"]["permission_action"][]
+          expires_at?: string | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          reason?: string | null
+          scope?: Database["public"]["Enums"]["permission_scope"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_preferences: {
         Row: {
           created_at: string | null
@@ -6436,6 +6626,14 @@ export type Database = {
           transaction_type: string
         }[]
       }
+      has_permission: {
+        Args: {
+          _action: Database["public"]["Enums"]["permission_action"]
+          _scope: Database["public"]["Enums"]["permission_scope"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -6564,6 +6762,25 @@ export type Database = {
         | "scheduled"
         | "standing_order"
         | "vrp"
+      permission_action:
+        | "view"
+        | "create"
+        | "update"
+        | "delete"
+        | "approve"
+        | "export"
+      permission_scope:
+        | "users"
+        | "transactions"
+        | "accounts"
+        | "reports"
+        | "settings"
+        | "compliance"
+        | "api"
+        | "branches"
+        | "fees"
+        | "webhooks"
+        | "audit_logs"
       repayment_frequency:
         | "daily"
         | "weekly"
@@ -6768,6 +6985,27 @@ export const Constants = {
         "scheduled",
         "standing_order",
         "vrp",
+      ],
+      permission_action: [
+        "view",
+        "create",
+        "update",
+        "delete",
+        "approve",
+        "export",
+      ],
+      permission_scope: [
+        "users",
+        "transactions",
+        "accounts",
+        "reports",
+        "settings",
+        "compliance",
+        "api",
+        "branches",
+        "fees",
+        "webhooks",
+        "audit_logs",
       ],
       repayment_frequency: [
         "daily",
