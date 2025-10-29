@@ -1,22 +1,22 @@
-# Welcome to your Lovable project
+# Welcome to Kang Open Banking - KOB
 
 ## Project info
 
-**URL**: https://lovable.dev/projects/342820e7-280a-44d3-88ce-2854c6d907ed
+**URL**: https://kangopenbanking.com
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
+**Use Kang Unified Banking API for Cameroon**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/342820e7-280a-44d3-88ce-2854c6d907ed) and start prompting.
+Simply visit the [Kang Open Banking](https://kangopenbanking.com) and start prompting.
 
-Changes made via Lovable will be committed automatically to this repo.
+Changes made via Kang Open Banking - KOB will be committed automatically to this repo.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in KOB.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -62,12 +62,12 @@ This project is built with:
 
 ## How can I deploy this project?
 
-Simply open [Lovable](https://lovable.dev/projects/342820e7-280a-44d3-88ce-2854c6d907ed) and click on Share -> Publish.
+Simply open [Kang Open Banking](https://kangopenbanking.com) and click on Register your financial institution ->
 
-## Can I connect a custom domain to my Lovable project?
+## Can I connect a custom domain to my KOB project?
 
 Yes, you can!
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+To connect a domain, navigate to Account > Console > Integrate KOB with your application.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Read more here: [Developer Console](https://kangopenbanking.com/integration-workflow)
