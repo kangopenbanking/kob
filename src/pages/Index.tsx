@@ -30,49 +30,44 @@ const Index = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-background via-primary/5 to-accent/5">
-        <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-        <div 
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-10" 
-          style={{ backgroundImage: `url(${heroBanner})` }}
-        ></div>
+      <section className="relative overflow-hidden animated-gradient-banner">
+        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:32px_32px]"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-white/10 to-transparent"></div>
         <div className="container mx-auto px-4 py-24 md:py-40 relative">
           <div className="max-w-5xl mx-auto text-center">
             <div className="space-y-8 animate-fade-in">
-              <Badge variant="outline" className="px-6 py-2 text-sm font-medium border-primary/30 bg-primary/5">
+              <Badge variant="outline" className="px-6 py-2 text-sm font-medium border-white/30 bg-white/90 text-blue-900">
                 <Globe className="h-4 w-4 inline mr-2" />
                 🇨🇲 Cameroon's #1 Open Banking Platform
               </Badge>
-              <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight">
-                <span className="block bg-gradient-to-r from-primary via-primary to-accent bg-clip-text text-transparent">
-                  Unified Banking API for Cameroon
-                </span>
+              <h1 className="text-5xl md:text-7xl font-bold leading-tight tracking-tight text-white drop-shadow-lg">
+                Unified Banking API for Cameroon
               </h1>
-              <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed max-w-3xl mx-auto">
+              <p className="text-xl md:text-2xl text-white/95 drop-shadow-md font-medium leading-relaxed max-w-3xl mx-auto">
                 Connect to banks, credit unions, and mobile money operators across Cameroon with a single, 
                 enterprise-grade API. COBAC & BEAC compliant.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                 <SmartGetStartedButton size="lg" className="text-lg px-10 py-6 shadow-lg hover:shadow-xl transition-shadow" />
                 <Link to="/documentation">
-                  <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-2">
+                  <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-2 bg-white/95 hover:bg-white text-blue-900 border-white/30">
                     View Documentation
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
                 </Link>
               </div>
               <div className="flex flex-wrap gap-8 pt-8 justify-center">
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-card border">
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
                   <div className="h-2 w-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-semibold">99.9% Uptime SLA</span>
+                  <span className="text-sm font-semibold text-blue-900">99.9% Uptime SLA</span>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-card border">
-                  <Shield className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold">COBAC Compliant</span>
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
+                  <Shield className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-900">COBAC Compliant</span>
                 </div>
-                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-card border">
-                  <Lock className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-semibold">PCI-DSS Certified</span>
+                <div className="flex items-center gap-3 px-4 py-2 rounded-full bg-white/95 border border-white/30">
+                  <Lock className="h-4 w-4 text-blue-600" />
+                  <span className="text-sm font-semibold text-blue-900">PCI-DSS Certified</span>
                 </div>
               </div>
             </div>

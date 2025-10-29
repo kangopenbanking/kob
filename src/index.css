@@ -113,3 +113,52 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Animated gradient banner effect */
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes gradient-rotate {
+  0% {
+    background-position: 0% 50%;
+  }
+  25% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient-banner {
+  background: linear-gradient(
+    -45deg,
+    #ffffff,
+    #e0f2fe,
+    #60a5fa,
+    #3b82f6,
+    #2563eb,
+    #ffffff
+  );
+  background-size: 400% 400%;
+  animation: gradient-rotate 18s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animated-gradient-banner {
+    animation: none;
+    background: linear-gradient(135deg, #3b82f6 0%, #60a5fa 100%);
+  }
+}
