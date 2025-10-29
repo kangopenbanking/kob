@@ -72,7 +72,7 @@ export default function BranchManagement() {
       // Load branches
       const { data, error } = await supabase.functions.invoke('admin-manage-branches', {
         method: 'GET',
-        body: filterInstitution ? { institution_id: filterInstitution } : {}
+        body: (filterInstitution && filterInstitution !== 'all') ? { institution_id: filterInstitution } : {}
       });
 
       if (error) throw error;
@@ -185,7 +185,7 @@ export default function BranchManagement() {
               <SelectValue placeholder="Filter by institution" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Institutions</SelectItem>
+              <SelectItem value="all">All Institutions</SelectItem>
               {institutions.map((inst) => (
                 <SelectItem key={inst.id} value={inst.id}>
                   {inst.institution_name}
