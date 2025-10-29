@@ -71,10 +71,9 @@ export default function BranchManagement() {
 
       // Load branches
       const { data, error } = await supabase.functions.invoke('admin-manage-branches', {
-        method: 'GET',
-        headers: (filterInstitution && filterInstitution !== 'all')
-          ? { 'x-institution-id': filterInstitution }
-          : undefined,
+        body: (filterInstitution && filterInstitution !== 'all')
+          ? { institution_id: filterInstitution }
+          : {},
       });
 
       if (error) throw error;

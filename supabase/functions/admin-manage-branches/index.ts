@@ -40,11 +40,16 @@ serve(async (req) => {
     const pathParts = url.pathname.split('/');
     const branchId = pathParts[pathParts.length - 1];
 
-    if (req.method === 'GET') {
-      const url = new URL(req.url);
-      const institutionIdFromQuery = url.searchParams.get('institution_id');
-      const institutionIdFromHeader = req.headers.get('x-institution-id');
-      const institutionId = institutionIdFromQuery || institutionIdFromHeader || undefined;
+    if (req.method === 'GET' || (req.method === 'POST' && !pathParts[pathParts.length - 1].match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i))) {
+      // Handle both GET and POST for fetching branches (POST used by supabase.functions.invoke)
+      let institutionId: string | undefined;
+      
+      if (req.method === 'POST') {
+        const body = await req.json();
+        institutionId = body.institution_id;
+      } else {
+        institutionId = url.searchParams.get('institution_id') || undefined;
+      }
       
       let query = supabaseAdmin
         .from('branches')
@@ -64,7 +69,7 @@ serve(async (req) => {
       );
     }
 
-    if (req.method === 'POST') {
+    if (req.method === 'POST' && branchId) {
       const body = await req.json();
       
       const { data, error } = await supabaseAdmin
@@ -144,7 +149,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error managing branches:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: (error as Error).message }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
