@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-institution-id',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
 };
 
 serve(async (req) => {
@@ -40,7 +41,10 @@ serve(async (req) => {
     const branchId = pathParts[pathParts.length - 1];
 
     if (req.method === 'GET') {
-      const institutionId = url.searchParams.get('institution_id');
+      const url = new URL(req.url);
+      const institutionIdFromQuery = url.searchParams.get('institution_id');
+      const institutionIdFromHeader = req.headers.get('x-institution-id');
+      const institutionId = institutionIdFromQuery || institutionIdFromHeader || undefined;
       
       let query = supabaseAdmin
         .from('branches')

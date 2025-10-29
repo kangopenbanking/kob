@@ -70,12 +70,12 @@ export default function BranchManagement() {
       if (instData) setInstitutions(instData);
 
       // Load branches
-      let url = 'admin-manage-branches';
-      if (filterInstitution && filterInstitution !== 'all') {
-        url += `?institution_id=${filterInstitution}`;
-      }
-      
-      const { data, error } = await supabase.functions.invoke(url);
+      const { data, error } = await supabase.functions.invoke('admin-manage-branches', {
+        method: 'GET',
+        headers: (filterInstitution && filterInstitution !== 'all')
+          ? { 'x-institution-id': filterInstitution }
+          : undefined,
+      });
 
       if (error) throw error;
       setBranches(data.branches || []);
