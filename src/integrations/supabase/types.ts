@@ -1911,6 +1911,45 @@ export type Database = {
           },
         ]
       }
+      credit_goals: {
+        Row: {
+          achieved_at: string | null
+          created_at: string
+          current_score: number
+          deadline: string | null
+          id: string
+          is_active: boolean | null
+          milestone_alerts: Json | null
+          target_score: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          achieved_at?: string | null
+          created_at?: string
+          current_score: number
+          deadline?: string | null
+          id?: string
+          is_active?: boolean | null
+          milestone_alerts?: Json | null
+          target_score: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          achieved_at?: string | null
+          created_at?: string
+          current_score?: number
+          deadline?: string | null
+          id?: string
+          is_active?: boolean | null
+          milestone_alerts?: Json | null
+          target_score?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_inquiries: {
         Row: {
           consent_reference: string | null
@@ -2201,6 +2240,92 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "credit_score_history_credit_score_id_fkey"
+            columns: ["credit_score_id"]
+            isOneToOne: false
+            referencedRelation: "credit_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      credit_score_simulations: {
+        Row: {
+          created_at: string
+          current_score: number
+          id: string
+          input_parameters: Json
+          predicted_score: number
+          score_change: number
+          simulation_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_score: number
+          id?: string
+          input_parameters: Json
+          predicted_score: number
+          score_change: number
+          simulation_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_score?: number
+          id?: string
+          input_parameters?: Json
+          predicted_score?: number
+          score_change?: number
+          simulation_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      credit_score_tips: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          credit_score_id: string | null
+          estimated_impact: number | null
+          expires_at: string
+          generated_at: string
+          id: string
+          is_completed: boolean | null
+          priority: string
+          tip_category: string
+          tip_content: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          credit_score_id?: string | null
+          estimated_impact?: number | null
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          is_completed?: boolean | null
+          priority: string
+          tip_category: string
+          tip_content: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          credit_score_id?: string | null
+          estimated_impact?: number | null
+          expires_at?: string
+          generated_at?: string
+          id?: string
+          is_completed?: boolean | null
+          priority?: string
+          tip_category?: string
+          tip_content?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_score_tips_credit_score_id_fkey"
             columns: ["credit_score_id"]
             isOneToOne: false
             referencedRelation: "credit_scores"
