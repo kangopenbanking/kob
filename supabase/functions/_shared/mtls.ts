@@ -69,7 +69,7 @@ export async function extractClientCertificate(req: Request): Promise<ClientCert
 /**
  * Convert hex string to base64url (RFC 8705 format)
  */
-function hexToBase64Url(hex: string): string {
+export function hexToBase64Url(hex: string): string {
   const hexStr = hex.replace(/:/g, '').toLowerCase();
   const bytes = new Uint8Array(hexStr.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
   return btoa(String.fromCharCode(...bytes))

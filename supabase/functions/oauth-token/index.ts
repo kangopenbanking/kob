@@ -175,19 +175,6 @@ Deno.serve(async (req) => {
       const new_refresh_token = generateSecureToken();
       const expires_in = 3600; // 1 hour
 
-      // Store refresh token
-      const { data: refreshTokenData } = await supabase
-        .from('refresh_tokens')
-        .insert({
-          token_hash: new_refresh_token,
-          user_id: authCode.user_id,
-          client_id: client_id,
-          scope: authCode.scope,
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        })
-        .select()
-        .single();
-
       // Store refresh token with certificate binding
       const { data: refreshTokenData } = await supabase
         .from('refresh_tokens')

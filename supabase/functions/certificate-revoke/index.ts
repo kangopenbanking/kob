@@ -68,11 +68,7 @@ Deno.serve(async (req) => {
         tpp_registration_id,
         tpp_registrations!inner(
           id,
-          institution_id,
-          institutions!inner(
-            id,
-            user_id
-          )
+          institution_id
         )
       `)
       .eq('id', certificate_id)
@@ -86,8 +82,15 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify user owns the certificate
-    if (cert.tpp_registrations.institutions.user_id !== user.id) {
+    // Verify user owns the certificate via institution
+    const tppReg = cert.tpp_registrations as any;
+    const { data: institution } = await supabase
+      .from('institutions')
+      .select('user_id')
+      .eq('id', tppReg.institution_id)
+      .single();
+
+    if (!institution || institution.user_id !== user.id) {
       console.error('User does not own this certificate');
       return new Response(
         JSON.stringify({ error: 'Unauthorized: You do not own this certificate' }),

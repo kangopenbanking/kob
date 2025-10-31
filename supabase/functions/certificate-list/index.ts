@@ -81,9 +81,10 @@ Deno.serve(async (req) => {
       .eq('user_id', user.id);
 
     const userInstitutionIds = new Set(userInstitutions.data?.map(i => i.id) || []);
-    const certificates = (allCerts || []).filter((cert: any) => 
-      userInstitutionIds.has(cert.tpp_registrations?.institution_id)
-    );
+    const certificates = (allCerts || []).filter((cert: any) => {
+      const tppReg = cert.tpp_registrations as any;
+      return tppReg && userInstitutionIds.has(tppReg.institution_id);
+    });
 
 
     // Format response with status indicators
