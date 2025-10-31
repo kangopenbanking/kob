@@ -103,3 +103,46 @@ export function sanitizeHtml(input: string): string {
     .replace(/'/g, '&#x27;')
     .replace(/\//g, '&#x2F;');
 }
+
+/**
+ * Get rate limit information for a client and endpoint
+ */
+export async function getRateLimitInfo(
+  supabase: any,
+  client_id: string,
+  endpoint: string,
+  limit: number,
+  windowMinutes: number
+): Promise<{ remaining: number; reset: number }> {
+  const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000);
+  
+  const { data: rateLimits } = await supabase
+    .from('rate_limits')
+    .select('request_count')
+    .eq('client_id', client_id)
+    .eq('endpoint', endpoint)
+    .gte('window_start', windowStart.toISOString());
+
+  const totalRequests = rateLimits?.reduce((sum: number, rl: any) => sum + (rl.request_count || 0), 0) || 0;
+  const remaining = Math.max(0, limit - totalRequests);
+  const reset = Math.floor(Date.now() / 1000) + (windowMinutes * 60);
+
+  return { remaining, reset };
+}
+
+/**
+ * Add rate limit headers to response headers
+ */
+export function addRateLimitHeaders(
+  headers: Record<string, string>,
+  limit: number,
+  remaining: number,
+  reset: number
+): Record<string, string> {
+  return {
+    ...headers,
+    'X-RateLimit-Limit': String(limit),
+    'X-RateLimit-Remaining': String(remaining),
+    'X-RateLimit-Reset': String(reset),
+  };
+}

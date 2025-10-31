@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { getRateLimitInfo, checkRateLimit, addRateLimitHeaders, rateLimitResponse } from '../_shared/security.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -25,6 +26,22 @@ Deno.serve(async (req) => {
     // Get authorization and consent headers
     const authHeader = req.headers.get('authorization');
     const consentId = req.headers.get('x-consent-id');
+
+    // Get client_id from consent for rate limiting
+    const { data: consentData } = await supabase
+      .from('aisp_consents')
+      .select('client_id')
+      .eq('consent_id', consentId)
+      .single();
+
+    const clientId = consentData?.client_id || 'unknown';
+    
+    // Rate limiting - 300 requests per hour per client
+    const rateLimit = await getRateLimitInfo(supabase, clientId, '/aisp/accounts', 300, 60);
+    const allowed = await checkRateLimit(supabase, clientId, '/aisp/accounts', 300, 60);
+    if (!allowed) {
+      return rateLimitResponse(addRateLimitHeaders(corsHeaders, 300, rateLimit.remaining, rateLimit.reset));
+    }
 
     if (!authHeader || !consentId) {
       return new Response(
@@ -129,13 +146,20 @@ Deno.serve(async (req) => {
       }
     };
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { 
+    const responseHeaders = addRateLimitHeaders(
+      { 
         ...corsHeaders, 
         'Content-Type': 'application/json',
         'Cache-Control': 'no-store'
-      }
+      },
+      300,
+      rateLimit.remaining,
+      rateLimit.reset
+    );
+
+    return new Response(JSON.stringify(response), {
+      status: 200,
+      headers: responseHeaders
     });
 
   } catch (error) {

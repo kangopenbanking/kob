@@ -1,6 +1,6 @@
 // Phase 3: OAuth Token Endpoint with mTLS Support
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { generateSecureToken, verifySecret, checkRateLimit, rateLimitResponse } from '../_shared/security.ts';
+import { generateSecureToken, verifySecret, checkRateLimit, rateLimitResponse, getRateLimitInfo, addRateLimitHeaders } from '../_shared/security.ts';
 import { extractClientCertificate, validateClientCertificate, recordCertificateUsage } from '../_shared/mtls.ts';
 
 const corsHeaders = {
@@ -28,9 +28,10 @@ Deno.serve(async (req) => {
     const redirect_uri = formData.get('redirect_uri');
 
     // Rate limiting - 100 requests per hour per client
+    const rateLimit = await getRateLimitInfo(supabase, client_id as string, '/oauth/token', 100, 60);
     const allowed = await checkRateLimit(supabase, client_id as string, '/oauth/token', 100, 60);
     if (!allowed) {
-      return rateLimitResponse(corsHeaders);
+      return rateLimitResponse(addRateLimitHeaders(corsHeaders, 100, rateLimit.remaining, rateLimit.reset));
     }
 
     // Validate client credentials
@@ -222,9 +223,16 @@ Deno.serve(async (req) => {
         console.log('Issued certificate-bound access token (RFC 8705)');
       }
 
+      const responseHeaders = addRateLimitHeaders(
+        { ...corsHeaders, 'Content-Type': 'application/json' },
+        100,
+        rateLimit.remaining,
+        rateLimit.reset
+      );
+
       return new Response(
         JSON.stringify(tokenResponse),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: responseHeaders }
       );
 
     } else if (grant_type === 'refresh_token') {
@@ -277,9 +285,16 @@ Deno.serve(async (req) => {
         };
       }
 
+      const refreshResponseHeaders = addRateLimitHeaders(
+        { ...corsHeaders, 'Content-Type': 'application/json' },
+        100,
+        rateLimit.remaining,
+        rateLimit.reset
+      );
+
       return new Response(
         JSON.stringify(refreshTokenResponse),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        { status: 200, headers: refreshResponseHeaders }
       );
     }
 

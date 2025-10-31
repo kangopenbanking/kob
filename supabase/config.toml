@@ -323,3 +323,8 @@ verify_jwt = false
 
 [functions.api-health]
 verify_jwt = false
+
+# Phase 15: Certificate Monitoring & Alerts
+
+[functions.certificate-expiry-monitor]
+verify_jwt = false
