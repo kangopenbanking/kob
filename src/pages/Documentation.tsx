@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
 
@@ -20,6 +20,55 @@ const Documentation = () => {
     });
     setTimeout(() => setCopiedId(null), 2000);
   };
+
+  // Resolve working endpoints with automatic fallback
+  const [openApiUrl, setOpenApiUrl] = useState<string>(API_CONFIG.OPENAPI_SPEC);
+  const [postmanUrl, setPostmanUrl] = useState<string>(API_CONFIG.POSTMAN_COLLECTION);
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    const fallbackOpenApi = API_CONFIG.OPENAPI_SPEC.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
+    const fallbackPostman = API_CONFIG.POSTMAN_COLLECTION.replace(API_CONFIG.BASE_URL, API_CONFIG.BASE_URL_FALLBACK);
+
+    const check = async () => {
+      setIsChecking(true);
+      try {
+        const [specHead, postmanHead] = await Promise.allSettled([
+          fetch(API_CONFIG.OPENAPI_SPEC, { method: 'HEAD' }),
+          fetch(API_CONFIG.POSTMAN_COLLECTION, { method: 'HEAD' }),
+        ]);
+
+        let usedFallback = false;
+
+        if (specHead.status === 'fulfilled' && specHead.value.ok) {
+          if (!cancelled) setOpenApiUrl(API_CONFIG.OPENAPI_SPEC);
+        } else {
+          if (!cancelled) { setOpenApiUrl(fallbackOpenApi); usedFallback = true; }
+        }
+
+        if (postmanHead.status === 'fulfilled' && postmanHead.value.ok) {
+          if (!cancelled) setPostmanUrl(API_CONFIG.POSTMAN_COLLECTION);
+        } else {
+          if (!cancelled) { setPostmanUrl(fallbackPostman); usedFallback = true; }
+        }
+
+        if (!cancelled) setUsingFallback(usedFallback);
+      } catch (_e) {
+        if (!cancelled) {
+          setOpenApiUrl(fallbackOpenApi);
+          setPostmanUrl(fallbackPostman);
+          setUsingFallback(true);
+        }
+      } finally {
+        if (!cancelled) setIsChecking(false);
+      }
+    };
+
+    check();
+    return () => { cancelled = true; };
+  }, []);
 
   const apiEndpoints = [
     {
@@ -103,8 +152,8 @@ const Documentation = () => {
                       Download our complete API specification in OpenAPI 3.0 format
                     </p>
                     <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                        <a href={API_CONFIG.OPENAPI_SPEC} download>
+                    <Button variant="outline" size="sm" asChild disabled={isChecking}>
+                        <a href={openApiUrl} download>
                           <Download className="mr-2 h-4 w-4" />
                           JSON
                         </a>
@@ -120,9 +169,9 @@ const Documentation = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       Import all endpoints into Postman with one click
                     </p>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild disabled={isChecking}>
                       <a
-                        href={API_CONFIG.POSTMAN_COLLECTION}
+                        href={postmanUrl}
                         download
                       >
                         <Download className="mr-2 h-4 w-4" />
@@ -155,9 +204,9 @@ const Documentation = () => {
                     <p className="text-sm text-muted-foreground mb-4">
                       Generate client SDKs in multiple languages
                     </p>
-                    <Button variant="outline" size="sm" asChild>
+                    <Button variant="outline" size="sm" asChild disabled={isChecking}>
                       <a
-                        href={`https://editor.swagger.io/?url=${API_CONFIG.OPENAPI_SPEC}`}
+                        href={`https://editor.swagger.io/?url=${openApiUrl}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -173,7 +222,7 @@ const Documentation = () => {
                     🚀 Quick Start for External Platforms
                   </p>
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">{API_CONFIG.OPENAPI_SPEC}</code></li>
+                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">{openApiUrl}</code></li>
                     <li>Obtain your API credentials from the <Link to="/developer" className="text-primary hover:underline">Developer Portal</Link></li>
                     <li>Authenticate using OAuth 2.0 or Bearer token</li>
                     <li>Start making API calls!</li>
