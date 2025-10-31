@@ -12,3 +12,11 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+# API Documentation
+Allow: /documentation
+Allow: /developer
+Allow: /developer/api-explorer
+Allow: /openapi.json
+
+Sitemap: https://kangopenbanking.com/sitemap.xml

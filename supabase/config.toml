@@ -10,6 +10,13 @@ verify_jwt = true
 [functions.test-data-generator]
 verify_jwt = true
 
+# API Documentation Edge Functions
+[functions.public-api-spec]
+verify_jwt = false
+
+[functions.postman-collection]
+verify_jwt = false
+
 # Phase 1 Edge Functions - FAPI 1.0 Advanced Implementation
 
 # Public endpoints (no JWT verification required)

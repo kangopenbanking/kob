@@ -165,3 +165,24 @@ All colors MUST be HSL.
     background: linear-gradient(135deg, #3b82f6 0%, #9fe870 50%, #8852e0 100%);
   }
 }
+
+/* Swagger UI Styling */
+.swagger-container {
+  @apply border rounded-lg overflow-hidden;
+}
+
+.swagger-container .swagger-ui {
+  @apply font-sans;
+}
+
+.swagger-container .swagger-ui .topbar {
+  display: none;
+}
+
+.swagger-container .swagger-ui .info {
+  @apply p-6;
+}
+
+.swagger-container .swagger-ui .scheme-container {
+  @apply bg-muted/50 p-4 rounded-lg;
+}

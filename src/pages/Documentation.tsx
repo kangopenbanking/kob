@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle } from "lucide-react";
+import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -81,6 +81,106 @@ const Documentation = () => {
               Complete reference for integrating Kang Open Banking API into your financial institution
             </p>
           </div>
+
+          {/* API Integrations Section */}
+          <section className="mb-12">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">API Integrations</CardTitle>
+                <CardDescription>
+                  Import our API specification into your favorite tools for seamless integration
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <Code className="h-5 w-5 text-primary" />
+                      OpenAPI Specification
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Download our complete API specification in OpenAPI 3.0 format
+                    </p>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href="https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec" download>
+                          <Download className="mr-2 h-4 w-4" />
+                          JSON
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <ExternalLink className="h-5 w-5 text-primary" />
+                      Postman Collection
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Import all endpoints into Postman with one click
+                    </p>
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href="https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/postman-collection"
+                        download
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download Collection
+                      </a>
+                    </Button>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <Book className="h-5 w-5 text-primary" />
+                      Interactive Explorer
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Test endpoints directly in your browser with Swagger UI
+                    </p>
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/developer/api-explorer">
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Open Explorer
+                      </Link>
+                    </Button>
+                  </div>
+                  
+                  <div className="border rounded-lg p-4">
+                    <h3 className="font-semibold mb-2 flex items-center gap-2">
+                      <Terminal className="h-5 w-5 text-primary" />
+                      SDK Generation
+                    </h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Generate client SDKs in multiple languages
+                    </p>
+                    <Button variant="outline" size="sm" asChild>
+                      <a
+                        href="https://editor.swagger.io/?url=https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Generate SDK
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+                
+                <div className="bg-accent/10 border-l-4 border-accent p-4 rounded">
+                  <p className="text-sm font-semibold mb-2">
+                    🚀 Quick Start for External Platforms
+                  </p>
+                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec</code></li>
+                    <li>Obtain your API credentials from the <Link to="/developer" className="text-primary hover:underline">Developer Portal</Link></li>
+                    <li>Authenticate using OAuth 2.0 or Bearer token</li>
+                    <li>Start making API calls!</li>
+                  </ol>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
           {/* Getting Started */}
           <section className="mb-12">
