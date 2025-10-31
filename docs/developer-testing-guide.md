@@ -248,9 +248,17 @@ Authorization: Bearer ACCESS_TOKEN
 1. Download the KOB API Postman collection
 2. Import into Postman
 3. Set environment variables:
-   - `base_url`: https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1
+   - `base_url`: https://api.kangopenbanking.com
    - `client_id`: test_aisp_client_001
    - `client_secret`: test_aisp_secret_001
+
+### API Base URL
+The KOB API is available at: `https://api.kangopenbanking.com`
+
+All edge functions are accessible directly via this custom domain without needing to append `/functions/v1/`.
+For example:
+- Consent creation: `https://api.kangopenbanking.com/aisp-create-consent`
+- OAuth token: `https://api.kangopenbanking.com/oauth-token`
 
 ### Test Sequence
 1. **Generate CAPTCHA** → `POST /captcha-generate`

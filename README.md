@@ -64,6 +64,20 @@ This project is built with:
 
 Simply open [Kang Open Banking](https://kangopenbanking.com) and click on Register your financial institution ->
 
+## API Access
+
+The Kang Open Banking API is publicly accessible at:
+
+**Base URL:** `https://api.kangopenbanking.com`
+
+**Documentation:**
+- Interactive API Explorer: https://kangopenbanking.com/developer/api-explorer
+- Full Documentation: https://kangopenbanking.com/documentation
+- OpenAPI Specification: https://api.kangopenbanking.com/public-api-spec
+- Postman Collection: https://api.kangopenbanking.com/postman-collection
+
+See the [Developer Testing Guide](docs/developer-testing-guide.md) for sandbox credentials and testing instructions.
+
 ## Can I connect a custom domain to my KOB project?
 
 Yes, you can!
