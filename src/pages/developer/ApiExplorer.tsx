@@ -1,21 +1,56 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Download } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ExternalLink, Download, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import yaml from 'js-yaml';
 
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const swaggerUrl = 'https://api.kangopenbanking.com/public-api-spec';
+  const [effectiveUrl, setEffectiveUrl] = useState<string>('');
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  
+  const primaryUrl = 'https://api.kangopenbanking.com/public-api-spec';
+  const fallbackUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec';
+
+  useEffect(() => {
+    const validateUrl = async () => {
+      try {
+        const response = await fetch(primaryUrl, { method: 'HEAD' });
+        if (response.ok) {
+          setEffectiveUrl(primaryUrl);
+          setUsingFallback(false);
+        } else {
+          setEffectiveUrl(fallbackUrl);
+          setUsingFallback(true);
+        }
+      } catch (error) {
+        setEffectiveUrl(fallbackUrl);
+        setUsingFallback(true);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+
+    validateUrl();
+  }, []);
 
   const handleDownload = async (format: 'json' | 'yaml') => {
     setLoading(true);
     try {
-      const response = await fetch(swaggerUrl);
+      let response = await fetch(effectiveUrl);
+      
+      if (!response.ok) {
+        const alternateUrl = effectiveUrl === primaryUrl ? fallbackUrl : primaryUrl;
+        response = await fetch(alternateUrl);
+      }
+      
       if (!response.ok) throw new Error('Failed to fetch API spec');
       
       const spec = await response.json();
@@ -60,6 +95,15 @@ const ApiExplorer = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {usingFallback && (
+        <Alert className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>
+            Using fallback endpoint. Custom domain temporarily unavailable.
+          </AlertDescription>
+        </Alert>
+      )}
+      
       <div className="mb-8">
         <h1 className="text-4xl font-bold mb-4">API Explorer</h1>
         <p className="text-lg text-muted-foreground mb-6">
@@ -85,7 +129,7 @@ const ApiExplorer = () => {
           </Button>
           <Button variant="outline" asChild>
             <a
-              href={`https://editor.swagger.io/?url=${encodeURIComponent(swaggerUrl)}`}
+              href={effectiveUrl ? `https://editor.swagger.io/?url=${encodeURIComponent(effectiveUrl)}` : '#'}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -97,14 +141,22 @@ const ApiExplorer = () => {
       </div>
 
       <Card className="overflow-hidden swagger-container">
-        <SwaggerUI
-          url={swaggerUrl}
-          docExpansion="list"
-          deepLinking={true}
-          displayOperationId={true}
-          filter={true}
-          tryItOutEnabled={true}
-        />
+        {isChecking ? (
+          <div className="p-8 space-y-4">
+            <Skeleton className="h-8 w-3/4" />
+            <Skeleton className="h-6 w-1/2" />
+            <Skeleton className="h-32 w-full" />
+          </div>
+        ) : (
+          <SwaggerUI
+            url={effectiveUrl}
+            docExpansion="list"
+            deepLinking={true}
+            displayOperationId={true}
+            filter={true}
+            tryItOutEnabled={true}
+          />
+        )}
       </Card>
     </div>
   );
