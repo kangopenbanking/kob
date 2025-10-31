@@ -28,10 +28,12 @@ import SDKsPage from "./pages/developer/SDKsPage";
 import ApiTesting from "./pages/developer/ApiTesting";
 import ApiExplorer from "./pages/developer/ApiExplorer";
 import CertificateManagement from "./pages/developer/CertificateManagement";
+import CertificateReference from "./pages/developer/CertificateReference";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
 import Webhooks from "./pages/guides/Webhooks";
+import Certificates from "./pages/guides/Certificates";
 import Admin from "./pages/Admin";
 import Developer from "./pages/Developer";
 import Auth from "./pages/Auth";
@@ -110,6 +112,7 @@ function App() {
             <Route path="/guides/pisp" element={<Layout><PISP /></Layout>} />
             <Route path="/guides/security" element={<Layout><Security /></Layout>} />
             <Route path="/guides/webhooks" element={<Layout><Webhooks /></Layout>} />
+            <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
@@ -139,6 +142,7 @@ function App() {
               <Route path="api/pisp" element={<PispReference />} />
               <Route path="api/mobile-money" element={<MobileMoneyReference />} />
               <Route path="api/banking" element={<BankingReference />} />
+              <Route path="api/certificates" element={<CertificateReference />} />
               <Route path="api/webhooks" element={<WebhooksGuide />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<ApiConsole />} />

@@ -307,3 +307,19 @@ verify_jwt = false
 
 [functions.admin-transaction-review]
 verify_jwt = false
+
+# Phase 13: mTLS Certificate Management (FAPI 1.0 Advanced)
+
+[functions.certificate-upload]
+verify_jwt = false
+
+[functions.certificate-list]
+verify_jwt = false
+
+[functions.certificate-revoke]
+verify_jwt = false
+
+# Phase 14: API Health & Monitoring
+
+[functions.api-health]
+verify_jwt = false

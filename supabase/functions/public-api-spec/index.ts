@@ -47,6 +47,28 @@ serve(async (req) => {
             bearerFormat: 'JWT',
             description: 'OAuth 2.0 access token with Bearer scheme',
           },
+          mtls: {
+            type: 'mutualTLS',
+            description: 'Client certificate authentication (RFC 8705) for certificate-bound access tokens',
+          },
+          oauth2: {
+            type: 'oauth2',
+            description: 'OAuth 2.0 Authorization Code Flow with PKCE (FAPI 1.0 Advanced)',
+            flows: {
+              authorizationCode: {
+                authorizationUrl: 'https://api.kangopenbanking.com/oauth-authorize',
+                tokenUrl: 'https://api.kangopenbanking.com/oauth-token',
+                scopes: {
+                  openid: 'OpenID Connect',
+                  accounts: 'Read account information',
+                  balances: 'Read account balances',
+                  transactions: 'Read transaction history',
+                  payments: 'Initiate payments',
+                  offline_access: 'Refresh tokens',
+                },
+              },
+            },
+          },
         },
         schemas: {
           Error: {
@@ -77,10 +99,68 @@ serve(async (req) => {
               status: { type: 'string', enum: ['active', 'inactive', 'frozen', 'closed'] },
             },
           },
+          Certificate: {
+            type: 'object',
+            properties: {
+              id: { type: 'string', format: 'uuid' },
+              thumbprint: { type: 'string', description: 'RFC 8705 base64url-encoded SHA-256 thumbprint' },
+              fingerprint: { type: 'string', description: 'SHA-256 fingerprint (hex format)' },
+              subject_dn: { type: 'string', description: 'Certificate subject distinguished name' },
+              issuer_dn: { type: 'string', description: 'Certificate issuer distinguished name' },
+              serial_number: { type: 'string' },
+              valid_from: { type: 'string', format: 'date-time' },
+              valid_until: { type: 'string', format: 'date-time' },
+              is_revoked: { type: 'boolean' },
+              usage_count: { type: 'integer' },
+              last_used_at: { type: 'string', format: 'date-time' },
+            },
+          },
+          Payment: {
+            type: 'object',
+            properties: {
+              payment_id: { type: 'string', format: 'uuid' },
+              amount: { type: 'number', format: 'double' },
+              currency: { type: 'string', default: 'XAF' },
+              status: { type: 'string', enum: ['pending', 'completed', 'failed', 'cancelled'] },
+              created_at: { type: 'string', format: 'date-time' },
+            },
+          },
+          Transaction: {
+            type: 'object',
+            properties: {
+              transaction_id: { type: 'string', format: 'uuid' },
+              amount: { type: 'number', format: 'double' },
+              currency: { type: 'string' },
+              type: { type: 'string', enum: ['debit', 'credit'] },
+              description: { type: 'string' },
+              balance_after: { type: 'number' },
+              timestamp: { type: 'string', format: 'date-time' },
+            },
+          },
+          MobileMoneyCharge: {
+            type: 'object',
+            properties: {
+              transaction_id: { type: 'string' },
+              phone_number: { type: 'string' },
+              amount: { type: 'number' },
+              currency: { type: 'string', default: 'XAF' },
+              status: { type: 'string' },
+            },
+          },
+          Webhook: {
+            type: 'object',
+            properties: {
+              webhook_id: { type: 'string', format: 'uuid' },
+              url: { type: 'string', format: 'uri' },
+              events: { type: 'array', items: { type: 'string' } },
+              is_active: { type: 'boolean' },
+            },
+          },
         },
       },
       tags: [
         { name: 'Authentication', description: 'OAuth 2.0 and authentication endpoints' },
+        { name: 'Certificates', description: 'mTLS certificate management (FAPI 1.0 Advanced)' },
         { name: 'AISP', description: 'Account Information Service Provider endpoints' },
         { name: 'PISP', description: 'Payment Initiation Service Provider endpoints' },
         { name: 'Credit Scoring', description: 'Credit score calculation and reporting' },
@@ -93,6 +173,7 @@ serve(async (req) => {
         { name: 'Virtual Cards', description: 'Virtual card issuance and management' },
         { name: 'KYC & Compliance', description: 'Identity verification and compliance checks' },
         { name: 'Admin', description: 'Administrative endpoints' },
+        { name: 'Webhooks', description: 'Webhook configuration and management' },
       ],
       paths: {
         '/oauth-token': {
@@ -140,6 +221,125 @@ serve(async (req) => {
               },
               '400': { description: 'Bad request' },
               '401': { description: 'Unauthorized' },
+            },
+          },
+        },
+        '/certificate-upload': {
+          post: {
+            summary: 'Upload client certificate',
+            description: 'Register a new X.509 client certificate for mTLS authentication',
+            operationId: 'uploadCertificate',
+            tags: ['Certificates'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['certificate_pem', 'tpp_registration_id'],
+                    properties: {
+                      certificate_pem: { type: 'string', description: 'PEM-encoded X.509 certificate' },
+                      tpp_registration_id: { type: 'string', format: 'uuid' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Certificate uploaded successfully',
+                content: {
+                  'application/json': {
+                    schema: { $ref: '#/components/schemas/Certificate' },
+                  },
+                },
+              },
+              '400': { description: 'Invalid certificate format' },
+              '401': { description: 'Unauthorized' },
+            },
+          },
+        },
+        '/certificate-list': {
+          get: {
+            summary: 'List registered certificates',
+            description: 'Retrieve all X.509 certificates registered for the authenticated user',
+            operationId: 'listCertificates',
+            tags: ['Certificates'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+              {
+                name: 'tpp_registration_id',
+                in: 'query',
+                description: 'Filter by TPP registration ID',
+                required: false,
+                schema: { type: 'string', format: 'uuid' },
+              },
+            ],
+            responses: {
+              '200': {
+                description: 'Certificates retrieved successfully',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        certificates: {
+                          type: 'array',
+                          items: { $ref: '#/components/schemas/Certificate' },
+                        },
+                        count: { type: 'integer' },
+                      },
+                    },
+                  },
+                },
+              },
+              '401': { description: 'Unauthorized' },
+            },
+          },
+        },
+        '/certificate-revoke': {
+          post: {
+            summary: 'Revoke client certificate',
+            description: 'Revoke a certificate and invalidate all associated access tokens',
+            operationId: 'revokeCertificate',
+            tags: ['Certificates'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['certificate_id', 'reason'],
+                    properties: {
+                      certificate_id: { type: 'string', format: 'uuid' },
+                      reason: { type: 'string', enum: ['key_compromise', 'cessation_of_operation', 'superseded'] },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Certificate revoked successfully',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        success: { type: 'boolean' },
+                        certificate_id: { type: 'string' },
+                        revoked_at: { type: 'string', format: 'date-time' },
+                        tokens_revoked: { type: 'integer' },
+                      },
+                    },
+                  },
+                },
+              },
+              '400': { description: 'Bad request' },
+              '401': { description: 'Unauthorized' },
+              '404': { description: 'Certificate not found' },
             },
           },
         },

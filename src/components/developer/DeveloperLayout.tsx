@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Layers, Zap } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -34,23 +34,26 @@ const navSections = [
       { title: "PISP APIs", path: "/developer/api/pisp" },
       { title: "Mobile Money", path: "/developer/api/mobile-money" },
       { title: "Banking Operations", path: "/developer/api/banking" },
+      { title: "Certificates", path: "/developer/api/certificates" },
       { title: "Webhooks", path: "/developer/api/webhooks" },
     ],
   },
   {
-    title: "Integration Guides",
-    icon: Layers,
+    title: "Security & Compliance",
+    icon: Shield,
     items: [
-      { title: "Web Applications", path: "/developer/guides/web" },
-      { title: "Mobile Apps", path: "/developer/guides/mobile" },
-      { title: "SDKs & Libraries", path: "/developer/guides/sdks" },
+      { title: "mTLS Certificates", path: "/developer/certificates" },
+      { title: "Security Guide", path: "/guides/security" },
+      { title: "Certificate Guide", path: "/guides/certificates" },
     ],
   },
   {
-    title: "Resources",
+    title: "Tools & Testing",
     icon: Zap,
     items: [
+      { title: "API Explorer", path: "/developer/api-explorer" },
       { title: "API Console", path: "/developer/console" },
+      { title: "API Testing", path: "/developer/api-testing" },
       { title: "Code Examples", path: "/developer/examples" },
       { title: "Sandbox", path: "/developer/sandbox" },
     ],

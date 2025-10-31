@@ -40,6 +40,31 @@ serve(async (req) => {
           value: 'YOUR_ACCESS_TOKEN',
           type: 'string',
         },
+        {
+          key: 'user_id',
+          value: 'USER_UUID',
+          type: 'string',
+        },
+        {
+          key: 'account_id',
+          value: 'ACCOUNT_UUID',
+          type: 'string',
+        },
+        {
+          key: 'product_id',
+          value: 'PRODUCT_UUID',
+          type: 'string',
+        },
+        {
+          key: 'certificate_id',
+          value: 'CERTIFICATE_UUID',
+          type: 'string',
+        },
+        {
+          key: 'tpp_registration_id',
+          value: 'TPP_REGISTRATION_UUID',
+          type: 'string',
+        },
       ],
       item: [
         {
@@ -70,6 +95,88 @@ serve(async (req) => {
                   ],
                 },
                 description: 'Exchange authorization code for access token',
+              },
+            },
+          ],
+        },
+        {
+          name: 'Certificate Management (mTLS)',
+          item: [
+            {
+              name: 'Upload Certificate',
+              request: {
+                method: 'POST',
+                header: [
+                  {
+                    key: 'Content-Type',
+                    value: 'application/json',
+                  },
+                ],
+                url: {
+                  raw: '{{base_url}}/certificate-upload',
+                  host: ['{{base_url}}'],
+                  path: ['certificate-upload'],
+                },
+                body: {
+                  mode: 'raw',
+                  raw: JSON.stringify(
+                    {
+                      certificate_pem: '-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----',
+                      tpp_registration_id: '{{tpp_registration_id}}',
+                    },
+                    null,
+                    2
+                  ),
+                },
+                description: 'Upload X.509 client certificate for mTLS authentication',
+              },
+            },
+            {
+              name: 'List Certificates',
+              request: {
+                method: 'GET',
+                header: [],
+                url: {
+                  raw: '{{base_url}}/certificate-list?tpp_registration_id={{tpp_registration_id}}',
+                  host: ['{{base_url}}'],
+                  path: ['certificate-list'],
+                  query: [
+                    {
+                      key: 'tpp_registration_id',
+                      value: '{{tpp_registration_id}}',
+                    },
+                  ],
+                },
+                description: 'List all registered certificates',
+              },
+            },
+            {
+              name: 'Revoke Certificate',
+              request: {
+                method: 'POST',
+                header: [
+                  {
+                    key: 'Content-Type',
+                    value: 'application/json',
+                  },
+                ],
+                url: {
+                  raw: '{{base_url}}/certificate-revoke',
+                  host: ['{{base_url}}'],
+                  path: ['certificate-revoke'],
+                },
+                body: {
+                  mode: 'raw',
+                  raw: JSON.stringify(
+                    {
+                      certificate_id: '{{certificate_id}}',
+                      reason: 'key_compromise',
+                    },
+                    null,
+                    2
+                  ),
+                },
+                description: 'Revoke certificate and invalidate bound tokens',
               },
             },
           ],

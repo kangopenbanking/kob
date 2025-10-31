@@ -17,6 +17,17 @@ Allow: /
 Allow: /documentation
 Allow: /developer
 Allow: /developer/api-explorer
+Allow: /developer/api-testing
+Allow: /developer/console
+Allow: /developer/certificates
+Allow: /developer/examples
+Allow: /developer/sandbox
+Allow: /developer/api/
+Allow: /guides/
 Allow: /openapi.json
+
+# Certificate Management & Security
+Allow: /guides/certificates
+Allow: /guides/security
 
 Sitemap: https://kangopenbanking.com/sitemap.xml

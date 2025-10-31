@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal } from "lucide-react";
+import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
@@ -419,6 +419,94 @@ const Documentation = () => {
   },
   "timestamp": "2025-01-01T12:00:00Z"
 }`}</pre>
+                </div>
+              </CardContent>
+            </Card>
+          </section>
+
+          {/* mTLS Certificate Management Section */}
+          <section className="mb-12">
+            <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
+              <Shield className="h-8 w-8 text-primary" />
+              mTLS Certificate Management (FAPI 1.0 Advanced)
+            </h2>
+            <Card className="mb-6">
+              <CardHeader>
+                <CardTitle className="text-2xl">Client Certificate Authentication</CardTitle>
+                <CardDescription>
+                  Manage X.509 certificates for mutual TLS authentication and certificate-bound access tokens (RFC 8705)
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-8">
+                <div className="bg-accent/10 border-l-4 border-accent p-4 rounded">
+                  <p className="text-sm font-semibold mb-2">FAPI 1.0 Advanced Compliance</p>
+                  <p className="text-sm text-muted-foreground">
+                    Certificate-bound access tokens are mandatory for production. All API access must use mTLS with registered certificates.
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-accent" />
+                    Upload Certificate
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Register a new X.509 client certificate for your TPP registration
+                  </p>
+                  <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
+                    <pre className="font-mono text-sm">{`POST /functions/v1/certificate-upload
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+{
+  "certificate_pem": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----",
+  "tpp_registration_id": "uuid-of-tpp-registration"
+}`}</pre>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-accent" />
+                    List Certificates
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Retrieve all registered certificates with status and usage information
+                  </p>
+                  <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
+                    <pre className="font-mono text-sm">{`GET /functions/v1/certificate-list?tpp_registration_id=uuid
+Authorization: Bearer YOUR_ACCESS_TOKEN`}</pre>
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-3 flex items-center gap-2">
+                    <CheckCircle2 className="h-5 w-5 text-accent" />
+                    Revoke Certificate
+                  </h3>
+                  <p className="text-muted-foreground mb-4">
+                    Revoke a certificate and immediately invalidate all associated access tokens
+                  </p>
+                  <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
+                    <pre className="font-mono text-sm">{`POST /functions/v1/certificate-revoke
+Authorization: Bearer YOUR_ACCESS_TOKEN
+
+{
+  "certificate_id": "uuid-of-certificate",
+  "reason": "key_compromise"
+}`}</pre>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button asChild variant="outline">
+                    <Link to="/developer/certificates">Manage Certificates</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link to="/guides/certificates">Certificate Guide</Link>
+                  </Button>
+                  <Button asChild variant="outline">
+                    <Link to="/developer/api/certificates">Full API Reference</Link>
+                  </Button>
                 </div>
               </CardContent>
             </Card>
