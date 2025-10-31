@@ -72,7 +72,9 @@ export default function CertificateManagement() {
   const loadCertificates = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase.functions.invoke('certificate-list');
+      const { data, error } = await supabase.functions.invoke('certificate-list', {
+        method: 'GET'
+      });
 
       if (error) throw error;
       setCertificates(data?.certificates || []);
