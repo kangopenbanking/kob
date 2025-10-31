@@ -25,6 +25,22 @@ async function createHmacSignature(secret: string, data: string): Promise<string
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Sanitize error messages to prevent sensitive data leakage
+function sanitizeErrorMessage(message: string, maxLength: number = 200): string {
+  // Remove common sensitive patterns
+  const sanitized = message
+    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')  // API tokens
+    .replace(/api[_-]?key["\s:=]+[A-Za-z0-9\-._~+/]+/gi, 'apikey=[REDACTED]')  // API keys
+    .replace(/password["\s:=]+[^,}\s]+/gi, 'password=[REDACTED]')  // Passwords
+    .replace(/secret["\s:=]+[^,}\s]+/gi, 'secret=[REDACTED]')  // Secrets
+    .replace(/token["\s:=]+[A-Za-z0-9\-._~+/]+=*/gi, 'token=[REDACTED]')  // Tokens
+    .replace(/\b\d{13,19}\b/g, '[CARD_NUMBER]')  // Credit card numbers
+    .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')  // Email addresses
+    .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]');  // IP addresses
+  
+  return sanitized.substring(0, maxLength);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -133,14 +149,14 @@ serve(async (req) => {
           console.log(`Successfully delivered webhook ${delivery.id} to ${webhook.webhook_url}`);
         } else {
           // Failure
-          const errorMessage = `HTTP ${statusCode}: ${responseBody.substring(0, 200)}`;
+          const errorMessage = `HTTP ${statusCode}: ${sanitizeErrorMessage(responseBody, 200)}`;
           
           await supabase
             .from('webhook_deliveries')
             .update({
               status: 'failed',
               http_status: statusCode,
-              response_body: responseBody.substring(0, 1000),
+              response_body: sanitizeErrorMessage(responseBody, 500),
               attempt_count: delivery.attempt_count + 1
             })
             .eq('id', delivery.id);
@@ -155,7 +171,7 @@ serve(async (req) => {
                 .eq('id', delivery.webhook_id)
                 .single()).data?.failure_count + 1 || 1,
               last_failure_at: new Date().toISOString(),
-              last_failure_reason: errorMessage
+              last_failure_reason: sanitizeErrorMessage(errorMessage, 500)
             })
             .eq('id', delivery.webhook_id);
 
@@ -163,13 +179,14 @@ serve(async (req) => {
           console.error(`Failed to deliver webhook ${delivery.id}: ${errorMessage}`);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const rawError = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage = sanitizeErrorMessage(rawError, 200);
         
         await supabase
           .from('webhook_deliveries')
           .update({
             status: 'failed',
-            response_body: errorMessage.substring(0, 1000),
+            response_body: errorMessage,
             attempt_count: delivery.attempt_count + 1
           })
           .eq('id', delivery.id);
@@ -183,7 +200,7 @@ serve(async (req) => {
               .eq('id', delivery.webhook_id)
               .single()).data?.failure_count + 1 || 1,
             last_failure_at: new Date().toISOString(),
-            last_failure_reason: errorMessage.substring(0, 500)
+            last_failure_reason: errorMessage
           })
           .eq('id', delivery.webhook_id);
 

@@ -1777,6 +1777,7 @@ export type Database = {
           event_type: string
           id: string
           ip_address: unknown
+          ip_address_hash: string | null
           metadata: Json | null
           user_agent: string | null
           user_id: string | null
@@ -1789,6 +1790,7 @@ export type Database = {
           event_type: string
           id?: string
           ip_address?: unknown
+          ip_address_hash?: string | null
           metadata?: Json | null
           user_agent?: string | null
           user_id?: string | null
@@ -1801,6 +1803,7 @@ export type Database = {
           event_type?: string
           id?: string
           ip_address?: unknown
+          ip_address_hash?: string | null
           metadata?: Json | null
           user_agent?: string | null
           user_id?: string | null
@@ -6825,6 +6828,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      hash_ip_address: { Args: { ip_address: unknown }; Returns: string }
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
         Returns: boolean

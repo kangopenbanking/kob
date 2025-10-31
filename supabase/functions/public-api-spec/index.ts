@@ -3331,10 +3331,10 @@ serve(async (req) => {
                   },
                 },
               },
-            },
           },
         },
-        '/virtual-card-update-status': {
+      },
+      '/virtual-card-update-status': {
           post: {
             summary: 'Update card status',
             description: 'Freeze, unfreeze, or cancel virtual card',
@@ -4113,14 +4113,6 @@ serve(async (req) => {
         },
       },
     };
-
-    return new Response(JSON.stringify(openapiSpec), {
-      headers: {
-        ...corsHeaders,
-        'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=3600',
-      },
-    });
 
     return new Response(JSON.stringify(openapiSpec, null, 2), {
       status: 200,
