@@ -32,7 +32,7 @@ serve(async (req) => {
       variable: [
         {
           key: 'base_url',
-          value: 'https://api.kangopenbanking.com',
+          value: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1',
           type: 'string',
         },
         {
