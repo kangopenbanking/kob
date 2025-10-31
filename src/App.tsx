@@ -27,6 +27,7 @@ import CodeExamples from "./pages/developer/CodeExamples";
 import SDKsPage from "./pages/developer/SDKsPage";
 import ApiTesting from "./pages/developer/ApiTesting";
 import ApiExplorer from "./pages/developer/ApiExplorer";
+import CertificateManagement from "./pages/developer/CertificateManagement";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -147,6 +148,7 @@ function App() {
               <Route path="guides/mobile" element={<MobileIntegration />} />
               <Route path="guides/sdks" element={<SDKsPage />} />
               <Route path="api-explorer" element={<ApiExplorer />} />
+              <Route path="certificates" element={<CertificateManagement />} />
             </Route>
             <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />

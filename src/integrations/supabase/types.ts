@@ -16,7 +16,9 @@ export type Database = {
     Tables: {
       access_tokens: {
         Row: {
+          certificate_id: string | null
           client_id: string
+          cnf_thumbprint: string | null
           consent_id: string | null
           created_at: string | null
           expires_at: string
@@ -29,7 +31,9 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          certificate_id?: string | null
           client_id: string
+          cnf_thumbprint?: string | null
           consent_id?: string | null
           created_at?: string | null
           expires_at: string
@@ -42,7 +46,9 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          certificate_id?: string | null
           client_id?: string
+          cnf_thumbprint?: string | null
           consent_id?: string | null
           created_at?: string | null
           expires_at?: string
@@ -55,6 +61,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "access_tokens_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "client_certificates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "access_tokens_refresh_token_id_fkey"
             columns: ["refresh_token_id"]
@@ -1460,10 +1473,15 @@ export type Database = {
           id: string
           is_revoked: boolean | null
           issuer_dn: string
+          last_used_at: string | null
           revocation_reason: string | null
           revoked_at: string | null
+          serial_number: string | null
           subject_dn: string
+          thumbprint: string | null
+          tpp_registration_id: string | null
           updated_at: string | null
+          usage_count: number | null
           valid_from: string
           valid_until: string
         }
@@ -1475,10 +1493,15 @@ export type Database = {
           id?: string
           is_revoked?: boolean | null
           issuer_dn: string
+          last_used_at?: string | null
           revocation_reason?: string | null
           revoked_at?: string | null
+          serial_number?: string | null
           subject_dn: string
+          thumbprint?: string | null
+          tpp_registration_id?: string | null
           updated_at?: string | null
+          usage_count?: number | null
           valid_from: string
           valid_until: string
         }
@@ -1490,14 +1513,27 @@ export type Database = {
           id?: string
           is_revoked?: boolean | null
           issuer_dn?: string
+          last_used_at?: string | null
           revocation_reason?: string | null
           revoked_at?: string | null
+          serial_number?: string | null
           subject_dn?: string
+          thumbprint?: string | null
+          tpp_registration_id?: string | null
           updated_at?: string | null
+          usage_count?: number | null
           valid_from?: string
           valid_until?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "client_certificates_tpp_registration_id_fkey"
+            columns: ["tpp_registration_id"]
+            isOneToOne: false
+            referencedRelation: "tpp_registrations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       communication_logs: {
         Row: {
@@ -4467,7 +4503,9 @@ export type Database = {
       refresh_tokens: {
         Row: {
           access_token_id: string | null
+          certificate_id: string | null
           client_id: string
+          cnf_thumbprint: string | null
           created_at: string | null
           expires_at: string
           id: string
@@ -4478,7 +4516,9 @@ export type Database = {
         }
         Insert: {
           access_token_id?: string | null
+          certificate_id?: string | null
           client_id: string
+          cnf_thumbprint?: string | null
           created_at?: string | null
           expires_at: string
           id?: string
@@ -4489,7 +4529,9 @@ export type Database = {
         }
         Update: {
           access_token_id?: string | null
+          certificate_id?: string | null
           client_id?: string
+          cnf_thumbprint?: string | null
           created_at?: string | null
           expires_at?: string
           id?: string
@@ -4504,6 +4546,13 @@ export type Database = {
             columns: ["access_token_id"]
             isOneToOne: false
             referencedRelation: "access_tokens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refresh_tokens_certificate_id_fkey"
+            columns: ["certificate_id"]
+            isOneToOne: false
+            referencedRelation: "client_certificates"
             referencedColumns: ["id"]
           },
         ]
@@ -5937,13 +5986,16 @@ export type Database = {
           client_secret: string
           created_at: string | null
           environment: string
+          fapi_profile: string | null
           grant_types: string[]
           id: string
           institution_id: string | null
           is_active: boolean | null
           jwks: Json | null
           jwks_uri: string | null
+          mtls_subject_dn: string | null
           redirect_uris: string[]
+          require_mtls: boolean | null
           response_types: string[]
           scope: string
           software_id: string
@@ -5958,13 +6010,16 @@ export type Database = {
           client_secret: string
           created_at?: string | null
           environment?: string
+          fapi_profile?: string | null
           grant_types?: string[]
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
           jwks?: Json | null
           jwks_uri?: string | null
+          mtls_subject_dn?: string | null
           redirect_uris: string[]
+          require_mtls?: boolean | null
           response_types?: string[]
           scope?: string
           software_id: string
@@ -5979,13 +6034,16 @@ export type Database = {
           client_secret?: string
           created_at?: string | null
           environment?: string
+          fapi_profile?: string | null
           grant_types?: string[]
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
           jwks?: Json | null
           jwks_uri?: string | null
+          mtls_subject_dn?: string | null
           redirect_uris?: string[]
+          require_mtls?: boolean | null
           response_types?: string[]
           scope?: string
           software_id?: string
@@ -6707,6 +6765,7 @@ export type Database = {
       }
       cleanup_expired_auth_codes: { Args: never; Returns: undefined }
       cleanup_expired_auth_records: { Args: never; Returns: undefined }
+      cleanup_expired_certificates: { Args: never; Returns: undefined }
       cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
       cleanup_expired_par_requests: { Args: never; Returns: undefined }
       encrypt_sandbox_credentials: {

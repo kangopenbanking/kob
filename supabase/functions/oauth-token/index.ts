@@ -1,5 +1,7 @@
+// Phase 3: OAuth Token Endpoint with mTLS Support
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { generateSecureToken, verifySecret, checkRateLimit, rateLimitResponse } from '../_shared/security.ts';
+import { extractClientCertificate, validateClientCertificate, recordCertificateUsage } from '../_shared/mtls.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -46,13 +48,75 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify client secret with bcrypt
-    const secretValid = await verifySecret(client_secret as string, client.client_secret_hash);
-    if (!secretValid) {
-      return new Response(
-        JSON.stringify({ error: 'invalid_client', error_description: 'Invalid client secret' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    // Get TPP registration to check auth method
+    const { data: tppReg } = await supabase
+      .from('tpp_registrations')
+      .select('id, token_endpoint_auth_method, require_mtls')
+      .eq('client_id', client.client_id)
+      .single();
+
+    let certificateId: string | undefined;
+    let cnfThumbprint: string | undefined;
+
+    // Check if client requires mTLS authentication (FAPI 1.0 Advanced)
+    if (tppReg?.token_endpoint_auth_method === 'tls_client_auth') {
+      console.log('Client requires mTLS authentication (tls_client_auth)');
+      
+      // Extract client certificate from request headers
+      const cert = await extractClientCertificate(req);
+      
+      if (!cert) {
+        console.error('mTLS required but no certificate provided');
+        return new Response(
+          JSON.stringify({ 
+            error: 'invalid_client', 
+            error_description: 'Client certificate required for tls_client_auth' 
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      // Validate certificate against registered certificates
+      const validation = await validateClientCertificate(
+        supabase,
+        tppReg.id,
+        cert.thumbprint
       );
+
+      if (!validation.valid) {
+        console.error('Certificate validation failed:', validation.error);
+        return new Response(
+          JSON.stringify({ 
+            error: 'invalid_client', 
+            error_description: `Certificate validation failed: ${validation.error}` 
+          }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      certificateId = validation.certificateId;
+      cnfThumbprint = cert.thumbprint;
+
+      // Record certificate usage
+      if (certificateId) {
+        await recordCertificateUsage(supabase, certificateId);
+      }
+
+      console.log('mTLS authentication successful', { certificateId, cnfThumbprint });
+      
+      // Skip client_secret verification for mTLS clients
+    } else {
+      // Standard client_secret_basic authentication
+      console.log('Using client_secret_basic authentication');
+      
+      // Verify client secret with bcrypt
+      const secretValid = await verifySecret(client_secret as string, client.client_secret_hash);
+      if (!secretValid) {
+        return new Response(
+          JSON.stringify({ error: 'invalid_client', error_description: 'Invalid client secret' }),
+          { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     if (grant_type === 'authorization_code') {
@@ -124,7 +188,22 @@ Deno.serve(async (req) => {
         .select()
         .single();
 
-      // Store access token
+      // Store refresh token with certificate binding
+      const { data: refreshTokenData } = await supabase
+        .from('refresh_tokens')
+        .insert({
+          token_hash: new_refresh_token,
+          user_id: authCode.user_id,
+          client_id: client_id,
+          scope: authCode.scope,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+          cnf_thumbprint: cnfThumbprint,
+          certificate_id: certificateId,
+        })
+        .select()
+        .single();
+
+      // Store access token with certificate binding (RFC 8705)
       await supabase
         .from('access_tokens')
         .insert({
@@ -135,16 +214,29 @@ Deno.serve(async (req) => {
           consent_id: authCode.consent_id,
           expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
           refresh_token_id: refreshTokenData?.id,
+          cnf_thumbprint: cnfThumbprint, // RFC 8705 certificate binding
+          certificate_id: certificateId,
         });
 
+      // Build token response
+      const tokenResponse: any = {
+        access_token,
+        token_type: 'Bearer',
+        expires_in,
+        refresh_token: new_refresh_token,
+        scope: authCode.scope,
+      };
+
+      // Add cnf claim if certificate-bound (FAPI 1.0 Advanced requirement)
+      if (cnfThumbprint) {
+        tokenResponse.cnf = {
+          'x5t#S256': cnfThumbprint
+        };
+        console.log('Issued certificate-bound access token (RFC 8705)');
+      }
+
       return new Response(
-        JSON.stringify({
-          access_token,
-          token_type: 'Bearer',
-          expires_in,
-          refresh_token: new_refresh_token,
-          scope: authCode.scope,
-        }),
+        JSON.stringify(tokenResponse),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
 
@@ -169,6 +261,7 @@ Deno.serve(async (req) => {
       const access_token = generateSecureToken();
       const expires_in = 3600;
 
+      // Inherit certificate binding from refresh token
       await supabase
         .from('access_tokens')
         .insert({
@@ -178,15 +271,27 @@ Deno.serve(async (req) => {
           scope: refreshData.scope,
           expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
           refresh_token_id: refreshData.id,
+          cnf_thumbprint: refreshData.cnf_thumbprint,
+          certificate_id: refreshData.certificate_id,
         });
 
+      // Build token response
+      const refreshTokenResponse: any = {
+        access_token,
+        token_type: 'Bearer',
+        expires_in,
+        scope: refreshData.scope,
+      };
+
+      // Add cnf claim if certificate-bound
+      if (refreshData.cnf_thumbprint) {
+        refreshTokenResponse.cnf = {
+          'x5t#S256': refreshData.cnf_thumbprint
+        };
+      }
+
       return new Response(
-        JSON.stringify({
-          access_token,
-          token_type: 'Bearer',
-          expires_in,
-          scope: refreshData.scope,
-        }),
+        JSON.stringify(refreshTokenResponse),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
