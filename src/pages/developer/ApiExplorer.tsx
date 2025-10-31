@@ -1,21 +1,50 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SwaggerUI from 'swagger-ui-react';
 import 'swagger-ui-react/swagger-ui.css';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Download } from 'lucide-react';
+import { ExternalLink, Download, AlertCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import yaml from 'js-yaml';
 
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const swaggerUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec';
+  const [effectiveUrl, setEffectiveUrl] = useState<string>('');
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [isChecking, setIsChecking] = useState(true);
+  
+  const primaryUrl = 'https://api.kangopenbanking.com/functions/v1/public-api-spec';
+  const fallbackUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec';
+
+  useEffect(() => {
+    // Try primary URL first, fall back if it fails
+    const checkUrl = async () => {
+      try {
+        const response = await fetch(primaryUrl, { method: 'HEAD' });
+        if (response.ok) {
+          setEffectiveUrl(primaryUrl);
+          setUsingFallback(false);
+        } else {
+          throw new Error('Primary URL not accessible');
+        }
+      } catch (error) {
+        console.log('Primary URL failed, using fallback:', error);
+        setEffectiveUrl(fallbackUrl);
+        setUsingFallback(true);
+      } finally {
+        setIsChecking(false);
+      }
+    };
+    
+    checkUrl();
+  }, [primaryUrl, fallbackUrl]);
 
   const handleDownload = async (format: 'json' | 'yaml') => {
     setLoading(true);
     try {
-      const response = await fetch(swaggerUrl);
+      const response = await fetch(effectiveUrl);
       if (!response.ok) throw new Error('Failed to fetch API spec');
       
       const spec = await response.json();
@@ -66,11 +95,20 @@ const ApiExplorer = () => {
           Interactive documentation powered by Swagger UI. Test endpoints directly from your browser.
         </p>
 
+        {usingFallback && (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Using fallback API endpoint. Custom domain routing is being configured.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="flex gap-4 flex-wrap">
           <Button
             onClick={() => handleDownload('json')}
             variant="outline"
-            disabled={loading}
+            disabled={loading || isChecking}
           >
             <Download className="mr-2 h-4 w-4" />
             Download OpenAPI JSON
@@ -78,14 +116,14 @@ const ApiExplorer = () => {
           <Button
             onClick={() => handleDownload('yaml')}
             variant="outline"
-            disabled={loading}
+            disabled={loading || isChecking}
           >
             <Download className="mr-2 h-4 w-4" />
             Download OpenAPI YAML
           </Button>
-          <Button variant="outline" asChild>
+          <Button variant="outline" asChild disabled={isChecking}>
             <a
-              href={`https://editor.swagger.io/?url=${encodeURIComponent(swaggerUrl)}`}
+              href={effectiveUrl ? `https://editor.swagger.io/?url=${encodeURIComponent(effectiveUrl)}` : '#'}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -97,14 +135,20 @@ const ApiExplorer = () => {
       </div>
 
       <Card className="overflow-hidden swagger-container">
-        <SwaggerUI
-          url={swaggerUrl}
-          docExpansion="list"
-          deepLinking={true}
-          displayOperationId={true}
-          filter={true}
-          tryItOutEnabled={true}
-        />
+        {isChecking ? (
+          <div className="p-8 text-center text-muted-foreground">
+            Checking API availability...
+          </div>
+        ) : (
+          <SwaggerUI
+            url={effectiveUrl}
+            docExpansion="list"
+            deepLinking={true}
+            displayOperationId={true}
+            filter={true}
+            tryItOutEnabled={true}
+          />
+        )}
       </Card>
     </div>
   );
