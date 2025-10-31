@@ -10,7 +10,7 @@ import yaml from 'js-yaml';
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const swaggerUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec';
+  const swaggerUrl = 'https://api.kangopenbanking.com/functions/v1/public-api-spec';
 
   const handleDownload = async (format: 'json' | 'yaml') => {
     setLoading(true);
