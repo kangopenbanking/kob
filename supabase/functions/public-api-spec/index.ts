@@ -32,7 +32,7 @@ serve(async (req) => {
       },
       servers: [
         {
-          url: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1',
+          url: 'https://api.kangopenbanking.com',
           description: 'Production API Server',
         },
       ],
