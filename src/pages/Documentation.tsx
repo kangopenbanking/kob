@@ -103,7 +103,7 @@ const Documentation = () => {
                     </p>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" asChild>
-                        <a href="https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec" download>
+                        <a href="https://api.kangopenbanking.com/public-api-spec" download>
                           <Download className="mr-2 h-4 w-4" />
                           JSON
                         </a>
@@ -121,7 +121,7 @@ const Documentation = () => {
                     </p>
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href="https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/postman-collection"
+                        href="https://api.kangopenbanking.com/postman-collection"
                         download
                       >
                         <Download className="mr-2 h-4 w-4" />
@@ -156,7 +156,7 @@ const Documentation = () => {
                     </p>
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href="https://editor.swagger.io/?url=https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec"
+                        href="https://editor.swagger.io/?url=https://api.kangopenbanking.com/public-api-spec"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -172,7 +172,7 @@ const Documentation = () => {
                     🚀 Quick Start for External Platforms
                   </p>
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec</code></li>
+                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">https://api.kangopenbanking.com/public-api-spec</code></li>
                     <li>Obtain your API credentials from the <Link to="/developer" className="text-primary hover:underline">Developer Portal</Link></li>
                     <li>Authenticate using OAuth 2.0 or Bearer token</li>
                     <li>Start making API calls!</li>
