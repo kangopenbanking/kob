@@ -97,18 +97,42 @@ Deno.serve(async (req) => {
 
     let finalScore = internalScore;
     let externalScore = null;
+    let externalBureauData = null;
 
-    // Fetch external score if requested
-    if (include_external) {
-      // TODO: Implement NjangiBox API call
-      // For now, we'll use internal score only
+    // Fetch external score if requested and KYC is verified
+    if (include_external && kycData) {
+      try {
+        console.log('Fetching external credit data from NjangiBox...');
+        const { data: externalData, error: externalError } = await supabase.functions.invoke(
+          'njangibox-credit-fetch',
+          {
+            body: { user_id, fetch_type: 'score' }
+          }
+        );
+
+        if (!externalError && externalData?.success) {
+          externalScore = externalData.external_score;
+          externalBureauData = externalData;
+          console.log('External score fetched:', externalScore);
+
+          // Blend internal and external scores (70% internal, 30% external)
+          if (externalScore && externalScore >= 300 && externalScore <= 850) {
+            finalScore = Math.round((internalScore * 0.7) + (externalScore * 0.3));
+            console.log(`Blended score: ${finalScore} (Internal: ${internalScore}, External: ${externalScore})`);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching external credit data:', error);
+        // Continue with internal score only
+      }
     }
 
     const scoreData = {
       user_id,
       score: Math.max(300, Math.min(850, finalScore)),
-      score_version: 'v1.0',
-      scoring_model,
+      internal_score: internalScore,
+      score_version: 'v2.0', // Updated version with external integration
+      scoring_model: externalScore ? 'blended' : scoring_model,
       score_factors: {
         components,
         details: {
@@ -116,9 +140,12 @@ Deno.serve(async (req) => {
           total_savings: savingsAccounts?.length || 0,
           total_transactions: transactions?.length || 0,
           kyc_verified: !!kycData,
-        }
+          external_data_used: !!externalScore,
+          blending_ratio: externalScore ? '70% internal, 30% external' : '100% internal',
+        },
+        external_bureau_data: externalBureauData,
       },
-      confidence_level: calculateConfidence(components),
+      confidence_level: calculateConfidence(components, !!externalScore),
       ...components,
       external_bureau_score: externalScore,
       calculated_at: new Date().toISOString(),
@@ -303,7 +330,14 @@ function calculateKYCCompliance(kycData: any): number {
   return 750; // Verified KYC = high score
 }
 
-function calculateConfidence(components: ScoreComponents): number {
+function calculateConfidence(components: ScoreComponents, hasExternalData: boolean): number {
   const nonZeroComponents = Object.values(components).filter(v => v > 300).length;
-  return Math.round((nonZeroComponents / 8) * 100) / 100; // 0-1 scale
+  let confidence = (nonZeroComponents / 8) * 0.8; // Base confidence from components (0-0.8)
+  
+  // Boost confidence if external data is available
+  if (hasExternalData) {
+    confidence += 0.2; // Up to 1.0
+  }
+  
+  return Math.round(confidence * 100) / 100; // 0-1 scale
 }

@@ -7,6 +7,9 @@ verify_jwt = true
 [functions.credit-score-simulate]
 verify_jwt = true
 
+[functions.test-data-generator]
+verify_jwt = true
+
 # Phase 1 Edge Functions - FAPI 1.0 Advanced Implementation
 
 # Public endpoints (no JWT verification required)
