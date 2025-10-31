@@ -5,6 +5,7 @@ import { Link } from "react-router-dom";
 import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { API_CONFIG } from "@/config/api";
 
 const Documentation = () => {
   const { toast } = useToast();
@@ -103,7 +104,7 @@ const Documentation = () => {
                     </p>
                     <div className="flex gap-2">
                     <Button variant="outline" size="sm" asChild>
-                        <a href="https://api.kangopenbanking.com/public-api-spec" download>
+                        <a href={API_CONFIG.OPENAPI_SPEC} download>
                           <Download className="mr-2 h-4 w-4" />
                           JSON
                         </a>
@@ -121,7 +122,7 @@ const Documentation = () => {
                     </p>
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href="https://api.kangopenbanking.com/postman-collection"
+                        href={API_CONFIG.POSTMAN_COLLECTION}
                         download
                       >
                         <Download className="mr-2 h-4 w-4" />
@@ -156,7 +157,7 @@ const Documentation = () => {
                     </p>
                     <Button variant="outline" size="sm" asChild>
                       <a
-                        href="https://editor.swagger.io/?url=https://api.kangopenbanking.com/public-api-spec"
+                        href={`https://editor.swagger.io/?url=${API_CONFIG.OPENAPI_SPEC}`}
                         target="_blank"
                         rel="noopener noreferrer"
                       >
@@ -172,7 +173,7 @@ const Documentation = () => {
                     🚀 Quick Start for External Platforms
                   </p>
                   <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
-                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">https://api.kangopenbanking.com/public-api-spec</code></li>
+                    <li>Import our OpenAPI spec: <code className="text-xs bg-muted px-2 py-1 rounded">{API_CONFIG.OPENAPI_SPEC}</code></li>
                     <li>Obtain your API credentials from the <Link to="/developer" className="text-primary hover:underline">Developer Portal</Link></li>
                     <li>Authenticate using OAuth 2.0 or Bearer token</li>
                     <li>Start making API calls!</li>
