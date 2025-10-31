@@ -2626,91 +2626,6 @@ serve(async (req) => {
             },
           },
         },
-        '/consent-authorize': {
-          post: {
-            summary: 'Authorize consent',
-            description: 'User authorizes or rejects consent',
-            operationId: 'authorizeConsent',
-            tags: ['Authentication'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['consent_id', 'consent_type', 'authorized'],
-                    properties: {
-                      consent_id: { type: 'string' },
-                      consent_type: { type: 'string', enum: ['aisp', 'pisp'] },
-                      authorized: { type: 'boolean' },
-                      selected_accounts: { type: 'array', items: { type: 'string' } },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Consent updated',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        consent_id: { type: 'string' },
-                        status: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-              },
-              '401': { description: 'Unauthorized' },
-            },
-          },
-        },
-        '/consent-revoke': {
-          post: {
-            summary: 'Revoke consent',
-            description: 'Revoke an existing consent',
-            operationId: 'revokeConsent',
-            tags: ['Authentication'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['consent_id', 'consent_type'],
-                    properties: {
-                      consent_id: { type: 'string' },
-                      consent_type: { type: 'string', enum: ['aisp', 'pisp'] },
-                      reason: { type: 'string' },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Consent revoked',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        success: { type: 'boolean' },
-                        revoked_at: { type: 'string', format: 'date-time' },
-                      },
-                    },
-                  },
-                },
-              },
-              '401': { description: 'Unauthorized' },
-            },
-          },
-        },
         '/exchange-rate-get': {
           get: {
             summary: 'Get exchange rates',
@@ -2913,48 +2828,13 @@ serve(async (req) => {
           },
         },
 
-        // ISO20022 Standards
-        '/iso20022-pain001-parser': {
+        // Additional Admin Endpoints
+        '/admin-assign-staff': {
           post: {
-            summary: 'Parse ISO20022 pain.001',
-            description: 'Parse ISO20022 pain.001 (Payment Initiation) message',
-            operationId: 'iso20022Pain001Parser',
-            tags: ['Standards'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/xml': {
-                  schema: { type: 'string' },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Message parsed',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        message_id: { type: 'string' },
-                        debtor: { type: 'object' },
-                        transactions: { type: 'array', items: { type: 'object' } },
-                      },
-                    },
-                  },
-                },
-              },
-              '400': { description: 'Invalid XML' },
-            },
-          },
-        },
-        '/iso20022-pacs008-generator': {
-          post: {
-            summary: 'Generate ISO20022 pacs.008',
-            description: 'Generate ISO20022 pacs.008 (Payment Clearing and Settlement) message',
-            operationId: 'iso20022Pacs008Generator',
-            tags: ['Standards'],
+            summary: 'Assign staff to institution',
+            description: 'Assign staff member to financial institution',
+            operationId: 'adminAssignStaff',
+            tags: ['Admin'],
             security: [{ bearerAuth: [] }],
             requestBody: {
               required: true,
@@ -2962,12 +2842,11 @@ serve(async (req) => {
                 'application/json': {
                   schema: {
                     type: 'object',
-                    required: ['amount', 'debtor', 'creditor'],
+                    required: ['user_id', 'institution_id', 'role'],
                     properties: {
-                      amount: { type: 'number' },
-                      currency: { type: 'string' },
-                      debtor: { type: 'object' },
-                      creditor: { type: 'object' },
+                      user_id: { type: 'string' },
+                      institution_id: { type: 'string' },
+                      role: { type: 'string' },
                     },
                   },
                 },
@@ -2975,78 +2854,13 @@ serve(async (req) => {
             },
             responses: {
               '200': {
-                description: 'Message generated',
-                content: {
-                  'application/xml': {
-                    schema: { type: 'string' },
-                  },
-                },
-              },
-            },
-          },
-        },
-        '/iso20022-pacs002-generator': {
-          post: {
-            summary: 'Generate ISO20022 pacs.002',
-            description: 'Generate ISO20022 pacs.002 (Payment Status Report) message',
-            operationId: 'iso20022Pacs002Generator',
-            tags: ['Standards'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['original_message_id', 'status'],
-                    properties: {
-                      original_message_id: { type: 'string' },
-                      status: { type: 'string' },
-                      reason_code: { type: 'string' },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Status report generated',
-                content: {
-                  'application/xml': {
-                    schema: { type: 'string' },
-                  },
-                },
-              },
-            },
-          },
-        },
-        '/iso20022-camt053-parser': {
-          post: {
-            summary: 'Parse ISO20022 camt.053',
-            description: 'Parse ISO20022 camt.053 (Bank Statement) message',
-            operationId: 'iso20022Camt053Parser',
-            tags: ['Standards'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/xml': {
-                  schema: { type: 'string' },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Statement parsed',
+                description: 'Staff assigned',
                 content: {
                   'application/json': {
                     schema: {
                       type: 'object',
                       properties: {
-                        account: { type: 'object' },
-                        opening_balance: { type: 'number' },
-                        closing_balance: { type: 'number' },
-                        entries: { type: 'array', items: { type: 'object' } },
+                        success: { type: 'boolean' },
                       },
                     },
                   },
@@ -3055,37 +2869,67 @@ serve(async (req) => {
             },
           },
         },
-
-        // SWIFT
-        '/swift-mt103-parser': {
-          post: {
-            summary: 'Parse SWIFT MT103',
-            description: 'Parse SWIFT MT103 (Single Customer Credit Transfer) message',
-            operationId: 'swiftMt103Parser',
-            tags: ['Standards'],
+        '/admin-manage-branches': {
+          get: {
+            summary: 'List branches',
+            description: 'List all branches for an institution',
+            operationId: 'adminListBranches',
+            tags: ['Admin'],
             security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'text/plain': {
-                  schema: { type: 'string' },
-                },
-              },
-            },
+            parameters: [
+              { name: 'institution_id', in: 'query', required: true, schema: { type: 'string' } },
+            ],
             responses: {
               '200': {
-                description: 'Message parsed',
+                description: 'Branches list',
                 content: {
                   'application/json': {
                     schema: {
                       type: 'object',
                       properties: {
-                        sender_reference: { type: 'string' },
-                        value_date: { type: 'string' },
-                        currency: { type: 'string' },
-                        amount: { type: 'number' },
-                        ordering_customer: { type: 'string' },
-                        beneficiary: { type: 'string' },
+                        branches: {
+                          type: 'array',
+                          items: { type: 'object' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          post: {
+            summary: 'Create branch',
+            description: 'Create new branch for institution',
+            operationId: 'adminCreateBranch',
+            tags: ['Admin'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['institution_id', 'branch_name'],
+                    properties: {
+                      institution_id: { type: 'string' },
+                      branch_name: { type: 'string' },
+                      branch_code: { type: 'string' },
+                      address: { type: 'object' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '201': {
+                description: 'Branch created',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        branch_id: { type: 'string' },
                       },
                     },
                   },
@@ -3094,12 +2938,37 @@ serve(async (req) => {
             },
           },
         },
-        '/swift-mt103-generator': {
+        '/admin-sandbox-accounts': {
+          get: {
+            summary: 'List sandbox accounts',
+            description: 'List all sandbox test accounts',
+            operationId: 'adminListSandboxAccounts',
+            tags: ['Admin'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+              '200': {
+                description: 'Sandbox accounts list',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        accounts: {
+                          type: 'array',
+                          items: { type: 'object' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           post: {
-            summary: 'Generate SWIFT MT103',
-            description: 'Generate SWIFT MT103 message',
-            operationId: 'swiftMt103Generator',
-            tags: ['Standards'],
+            summary: 'Create sandbox account',
+            description: 'Create new sandbox test account',
+            operationId: 'adminCreateSandboxAccount',
+            tags: ['Admin'],
             security: [{ bearerAuth: [] }],
             requestBody: {
               required: true,
@@ -3107,57 +2976,49 @@ serve(async (req) => {
                 'application/json': {
                   schema: {
                     type: 'object',
-                    required: ['amount', 'currency', 'sender', 'beneficiary'],
+                    required: ['account_type'],
                     properties: {
-                      amount: { type: 'number' },
-                      currency: { type: 'string' },
-                      sender: { type: 'object' },
-                      beneficiary: { type: 'object' },
+                      account_type: { type: 'string' },
+                      initial_balance: { type: 'number' },
                     },
                   },
                 },
               },
             },
             responses: {
-              '200': {
-                description: 'Message generated',
+              '201': {
+                description: 'Sandbox account created',
                 content: {
-                  'text/plain': {
-                    schema: { type: 'string' },
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        account_id: { type: 'string' },
+                        credentials: { type: 'object' },
+                      },
+                    },
                   },
                 },
               },
             },
           },
         },
-        '/swift-mt940-parser': {
+        '/admin-clear-test-data': {
           post: {
-            summary: 'Parse SWIFT MT940',
-            description: 'Parse SWIFT MT940 (Customer Statement) message',
-            operationId: 'swiftMt940Parser',
-            tags: ['Standards'],
+            summary: 'Clear test data',
+            description: 'Clear all test/sandbox data',
+            operationId: 'adminClearTestData',
+            tags: ['Admin'],
             security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'text/plain': {
-                  schema: { type: 'string' },
-                },
-              },
-            },
             responses: {
               '200': {
-                description: 'Statement parsed',
+                description: 'Test data cleared',
                 content: {
                   'application/json': {
                     schema: {
                       type: 'object',
                       properties: {
-                        account: { type: 'string' },
-                        statement_number: { type: 'string' },
-                        opening_balance: { type: 'object' },
-                        closing_balance: { type: 'object' },
-                        transactions: { type: 'array', items: { type: 'object' } },
+                        records_deleted: { type: 'integer' },
                       },
                     },
                   },
@@ -3167,23 +3028,71 @@ serve(async (req) => {
           },
         },
 
-        // Validation
-        '/validate-iban': {
+        // Additional Banking Operations
+        '/api-account-detail': {
+          get: {
+            summary: 'Get account details',
+            description: 'Retrieve detailed account information',
+            operationId: 'apiAccountDetail',
+            tags: ['Banking Operations'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+              { name: 'account_id', in: 'query', required: true, schema: { type: 'string' } },
+            ],
+            responses: {
+              '200': {
+                description: 'Account details',
+                content: {
+                  'application/json': {
+                    schema: { $ref: '#/components/schemas/Account' },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/api-bills': {
+          get: {
+            summary: 'List bills',
+            description: 'List pending bills for payment',
+            operationId: 'apiBills',
+            tags: ['Payments'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+              '200': {
+                description: 'Bills list',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        bills: {
+                          type: 'array',
+                          items: { type: 'object' },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
           post: {
-            summary: 'Validate IBAN',
-            description: 'Validate International Bank Account Number',
-            operationId: 'validateIban',
-            tags: ['Standards'],
-            security: [],
+            summary: 'Pay bill',
+            description: 'Pay a bill',
+            operationId: 'apiPayBill',
+            tags: ['Payments'],
+            security: [{ bearerAuth: [] }],
             requestBody: {
               required: true,
               content: {
                 'application/json': {
                   schema: {
                     type: 'object',
-                    required: ['iban'],
+                    required: ['bill_id', 'amount'],
                     properties: {
-                      iban: { type: 'string' },
+                      bill_id: { type: 'string' },
+                      amount: { type: 'number' },
                     },
                   },
                 },
@@ -3191,16 +3100,13 @@ serve(async (req) => {
             },
             responses: {
               '200': {
-                description: 'Validation result',
+                description: 'Bill paid',
                 content: {
                   'application/json': {
                     schema: {
                       type: 'object',
                       properties: {
-                        valid: { type: 'boolean' },
-                        country_code: { type: 'string' },
-                        check_digits: { type: 'string' },
-                        bban: { type: 'string' },
+                        transaction_id: { type: 'string' },
                       },
                     },
                   },
@@ -3209,22 +3115,25 @@ serve(async (req) => {
             },
           },
         },
-        '/validate-bic': {
+        '/api-transfers': {
           post: {
-            summary: 'Validate BIC/SWIFT',
-            description: 'Validate Business Identifier Code / SWIFT code',
-            operationId: 'validateBic',
-            tags: ['Standards'],
-            security: [],
+            summary: 'Transfer money',
+            description: 'Transfer money between accounts',
+            operationId: 'apiTransfers',
+            tags: ['Payments'],
+            security: [{ bearerAuth: [] }],
             requestBody: {
               required: true,
               content: {
                 'application/json': {
                   schema: {
                     type: 'object',
-                    required: ['bic'],
+                    required: ['from_account', 'to_account', 'amount'],
                     properties: {
-                      bic: { type: 'string' },
+                      from_account: { type: 'string' },
+                      to_account: { type: 'string' },
+                      amount: { type: 'number' },
+                      reference: { type: 'string' },
                     },
                   },
                 },
@@ -3232,17 +3141,283 @@ serve(async (req) => {
             },
             responses: {
               '200': {
-                description: 'Validation result',
+                description: 'Transfer successful',
                 content: {
                   'application/json': {
                     schema: {
                       type: 'object',
                       properties: {
-                        valid: { type: 'boolean' },
-                        institution_code: { type: 'string' },
-                        country_code: { type: 'string' },
-                        location_code: { type: 'string' },
-                        branch_code: { type: 'string' },
+                        transaction_id: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/api-verification': {
+          post: {
+            summary: 'Verify account',
+            description: 'Verify bank account ownership',
+            operationId: 'apiVerification',
+            tags: ['Banking Operations'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['account_number', 'bank_code'],
+                    properties: {
+                      account_number: { type: 'string' },
+                      bank_code: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Verification result',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        verified: { type: 'boolean' },
+                        account_name: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/bank-import-transactions': {
+          post: {
+            summary: 'Import transactions',
+            description: 'Import transaction data from CSV/file',
+            operationId: 'bankImportTransactions',
+            tags: ['Banking Operations'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'multipart/form-data': {
+                  schema: {
+                    type: 'object',
+                    required: ['file'],
+                    properties: {
+                      file: { type: 'string', format: 'binary' },
+                      account_id: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Transactions imported',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        imported_count: { type: 'integer' },
+                        skipped_count: { type: 'integer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+
+        // Additional Payment Endpoints
+        '/flutterwave-verify-bank': {
+          post: {
+            summary: 'Verify bank account',
+            description: 'Verify bank account details via Flutterwave',
+            operationId: 'flutterwaveVerifyBank',
+            tags: ['Payments'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['account_number', 'account_bank'],
+                    properties: {
+                      account_number: { type: 'string' },
+                      account_bank: { type: 'string' },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Account verified',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        account_name: { type: 'string' },
+                        account_number: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/flutterwave-transfer-webhook': {
+          post: {
+            summary: 'Flutterwave webhook',
+            description: 'Receive Flutterwave transfer webhook callbacks',
+            operationId: 'flutterwaveTransferWebhook',
+            tags: ['Webhooks'],
+            security: [],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: { type: 'object' },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Webhook processed',
+              },
+            },
+          },
+        },
+
+        // Additional Virtual Cards
+        '/virtual-card-transactions': {
+          get: {
+            summary: 'Get card transactions',
+            description: 'Retrieve transaction history for virtual card',
+            operationId: 'virtualCardTransactions',
+            tags: ['Virtual Cards'],
+            security: [{ bearerAuth: [] }],
+            parameters: [
+              { name: 'card_id', in: 'query', required: true, schema: { type: 'string' } },
+              { name: 'limit', in: 'query', schema: { type: 'integer', default: 50 } },
+            ],
+            responses: {
+              '200': {
+                description: 'Transactions retrieved',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        transactions: {
+                          type: 'array',
+                          items: { $ref: '#/components/schemas/Transaction' },
+                        },
+                        total: { type: 'integer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/virtual-card-update-status': {
+          post: {
+            summary: 'Update card status',
+            description: 'Freeze, unfreeze, or cancel virtual card',
+            operationId: 'virtualCardUpdateStatus',
+            tags: ['Virtual Cards'],
+            security: [{ bearerAuth: [] }],
+            requestBody: {
+              required: true,
+              content: {
+                'application/json': {
+                  schema: {
+                    type: 'object',
+                    required: ['card_id', 'status'],
+                    properties: {
+                      card_id: { type: 'string' },
+                      status: { type: 'string', enum: ['active', 'inactive', 'canceled'] },
+                    },
+                  },
+                },
+              },
+            },
+            responses: {
+              '200': {
+                description: 'Status updated',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        card_id: { type: 'string' },
+                        new_status: { type: 'string' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+
+        // Monitoring & Cron Jobs
+        '/certificate-expiry-monitor': {
+          post: {
+            summary: 'Monitor certificate expiry',
+            description: 'Check for expiring certificates and send alerts',
+            operationId: 'certificateExpiryMonitor',
+            tags: ['Monitoring'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+              '200': {
+                description: 'Monitoring completed',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        expiring_soon: { type: 'integer' },
+                        expired: { type: 'integer' },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        '/automated-billing-cron': {
+          post: {
+            summary: 'Run automated billing',
+            description: 'Execute automated billing cycle (cron job)',
+            operationId: 'automatedBillingCron',
+            tags: ['Admin'],
+            security: [{ bearerAuth: [] }],
+            responses: {
+              '200': {
+                description: 'Billing cycle completed',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'object',
+                      properties: {
+                        invoices_generated: { type: 'integer' },
+                        total_amount: { type: 'number' },
                       },
                     },
                   },
@@ -3293,121 +3468,6 @@ serve(async (req) => {
                 },
               },
               '403': { description: 'Forbidden - admin only' },
-            },
-          },
-        },
-        '/admin-create-client': {
-          post: {
-            summary: 'Register TPP client',
-            description: 'Register new Third Party Provider client',
-            operationId: 'adminCreateClient',
-            tags: ['Admin'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['client_name', 'redirect_uris'],
-                    properties: {
-                      client_name: { type: 'string' },
-                      redirect_uris: { type: 'array', items: { type: 'string' } },
-                      client_type: { type: 'string' },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '201': {
-                description: 'Client registered',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        client_id: { type: 'string' },
-                        client_secret: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        '/admin-webhooks': {
-          get: {
-            summary: 'List webhooks',
-            description: 'List all registered webhooks',
-            operationId: 'adminListWebhooks',
-            tags: ['Admin'],
-            security: [{ bearerAuth: [] }],
-            responses: {
-              '200': {
-                description: 'Webhooks list',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        webhooks: {
-                          type: 'array',
-                          items: {
-                            type: 'object',
-                            properties: {
-                              id: { type: 'string' },
-                              url: { type: 'string' },
-                              events: { type: 'array', items: { type: 'string' } },
-                              is_active: { type: 'boolean' },
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          post: {
-            summary: 'Create webhook',
-            description: 'Register new webhook endpoint',
-            operationId: 'adminCreateWebhook',
-            tags: ['Admin'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['url', 'events'],
-                    properties: {
-                      url: { type: 'string', format: 'uri' },
-                      events: { type: 'array', items: { type: 'string' } },
-                      secret: { type: 'string' },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '201': {
-                description: 'Webhook created',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        webhook_id: { type: 'string' },
-                        secret: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-              },
             },
           },
         },
@@ -3689,90 +3749,6 @@ serve(async (req) => {
                       properties: {
                         success: { type: 'boolean' },
                         sent_at: { type: 'string', format: 'date-time' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-
-        // Invoicing
-        '/generate-invoice': {
-          post: {
-            summary: 'Generate invoice',
-            description: 'Generate PDF invoice',
-            operationId: 'generateInvoice',
-            tags: ['Invoicing'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['institution_id', 'period_start', 'period_end'],
-                    properties: {
-                      institution_id: { type: 'string' },
-                      period_start: { type: 'string', format: 'date' },
-                      period_end: { type: 'string', format: 'date' },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Invoice generated',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        invoice_id: { type: 'string' },
-                        pdf_url: { type: 'string' },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-        '/generate-bank-statement': {
-          post: {
-            summary: 'Generate bank statement',
-            description: 'Generate PDF bank statement',
-            operationId: 'generateBankStatement',
-            tags: ['Banking Operations'],
-            security: [{ bearerAuth: [] }],
-            requestBody: {
-              required: true,
-              content: {
-                'application/json': {
-                  schema: {
-                    type: 'object',
-                    required: ['account_id', 'start_date', 'end_date'],
-                    properties: {
-                      account_id: { type: 'string' },
-                      start_date: { type: 'string', format: 'date' },
-                      end_date: { type: 'string', format: 'date' },
-                    },
-                  },
-                },
-              },
-            },
-            responses: {
-              '200': {
-                description: 'Statement generated',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'object',
-                      properties: {
-                        statement_id: { type: 'string' },
-                        pdf_url: { type: 'string' },
                       },
                     },
                   },
