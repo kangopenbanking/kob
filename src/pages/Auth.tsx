@@ -147,17 +147,18 @@ export default function Auth() {
       if (error || !data) {
         console.error('Failed to check PIN:', error);
         setUserHasPIN(false);
-        return false;
+        return { exists: false, hasPIN: false };
       }
 
+      const userExists = data.user_exists === true;
       const hasPIN = data.has_pin === true;
       setUserHasPIN(hasPIN);
-      console.log(`User has PIN: ${hasPIN}`);
-      return hasPIN;
+      console.log(`User exists: ${userExists}, has PIN: ${hasPIN}`);
+      return { exists: userExists, hasPIN };
     } catch (error) {
       console.error('PIN check error:', error);
       setUserHasPIN(false);
-      return false;
+      return { exists: false, hasPIN: false };
     }
   };
 
@@ -200,9 +201,22 @@ export default function Auth() {
 
     setLoading(true);
     try {
-      // For login, check if user has PIN set
+      // For login, check if user exists and has PIN set
       if (isLogin) {
-        const hasPIN = await checkIfUserHasPIN();
+        const { exists, hasPIN } = await checkIfUserHasPIN();
+        
+        // If user doesn't exist, prompt them to sign up
+        if (!exists) {
+          toast({
+            title: 'Account Not Found',
+            description: 'No account found with this phone number. Please sign up first.',
+            variant: 'destructive',
+          });
+          setLoading(false);
+          return;
+        }
+        
+        // If user exists and has PIN, use PIN login
         if (hasPIN) {
           setUsesPINLogin(true);
           setAuthStep('pin');
