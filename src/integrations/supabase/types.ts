@@ -1837,6 +1837,345 @@ export type Database = {
         }
         Relationships: []
       }
+      crediq_action_plans: {
+        Row: {
+          action_description: string
+          action_title: string
+          action_type: string
+          completed_at: string | null
+          created_at: string | null
+          due_date: string | null
+          estimated_impact: number | null
+          id: string
+          priority: string
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          action_description: string
+          action_title: string
+          action_type: string
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          estimated_impact?: number | null
+          id?: string
+          priority?: string
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          action_description?: string
+          action_title?: string
+          action_type?: string
+          completed_at?: string | null
+          created_at?: string | null
+          due_date?: string | null
+          estimated_impact?: number | null
+          id?: string
+          priority?: string
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      crediq_email_preferences: {
+        Row: {
+          goal_achievement_alerts: boolean | null
+          marketing_emails: boolean | null
+          monthly_report: boolean | null
+          product_recommendations: boolean | null
+          score_change_alerts: boolean | null
+          tips_recommendations: boolean | null
+          updated_at: string | null
+          user_id: string
+          weekly_digest: boolean | null
+        }
+        Insert: {
+          goal_achievement_alerts?: boolean | null
+          marketing_emails?: boolean | null
+          monthly_report?: boolean | null
+          product_recommendations?: boolean | null
+          score_change_alerts?: boolean | null
+          tips_recommendations?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          weekly_digest?: boolean | null
+        }
+        Update: {
+          goal_achievement_alerts?: boolean | null
+          marketing_emails?: boolean | null
+          monthly_report?: boolean | null
+          product_recommendations?: boolean | null
+          score_change_alerts?: boolean | null
+          tips_recommendations?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_digest?: boolean | null
+        }
+        Relationships: []
+      }
+      crediq_health_metrics: {
+        Row: {
+          account_diversity: string
+          account_diversity_score: number
+          calculated_at: string | null
+          created_at: string | null
+          credit_score_id: string | null
+          credit_utilization_percentage: number | null
+          credit_utilization_score: number
+          debt_management: string
+          debt_management_score: number
+          financial_stability: string
+          financial_stability_score: number
+          id: string
+          overall_health_score: number
+          payment_reliability: string
+          payment_reliability_score: number
+          priority_actions: Json | null
+          suggested_actions: Json | null
+          user_id: string
+        }
+        Insert: {
+          account_diversity: string
+          account_diversity_score: number
+          calculated_at?: string | null
+          created_at?: string | null
+          credit_score_id?: string | null
+          credit_utilization_percentage?: number | null
+          credit_utilization_score: number
+          debt_management: string
+          debt_management_score: number
+          financial_stability: string
+          financial_stability_score: number
+          id?: string
+          overall_health_score: number
+          payment_reliability: string
+          payment_reliability_score: number
+          priority_actions?: Json | null
+          suggested_actions?: Json | null
+          user_id: string
+        }
+        Update: {
+          account_diversity?: string
+          account_diversity_score?: number
+          calculated_at?: string | null
+          created_at?: string | null
+          credit_score_id?: string | null
+          credit_utilization_percentage?: number | null
+          credit_utilization_score?: number
+          debt_management?: string
+          debt_management_score?: number
+          financial_stability?: string
+          financial_stability_score?: number
+          id?: string
+          overall_health_score?: number
+          payment_reliability?: string
+          payment_reliability_score?: number
+          priority_actions?: Json | null
+          suggested_actions?: Json | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crediq_health_metrics_credit_score_id_fkey"
+            columns: ["credit_score_id"]
+            isOneToOne: false
+            referencedRelation: "credit_scores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crediq_product_recommendations: {
+        Row: {
+          created_at: string | null
+          eligibility_score: number | null
+          estimated_apr: number | null
+          expires_at: string | null
+          id: string
+          key_benefits: Json | null
+          product_name: string
+          product_type: string
+          provider_institution_id: string | null
+          recommendation_reason: string | null
+          recommended_at: string | null
+          requirements: Json | null
+          status: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          eligibility_score?: number | null
+          estimated_apr?: number | null
+          expires_at?: string | null
+          id?: string
+          key_benefits?: Json | null
+          product_name: string
+          product_type: string
+          provider_institution_id?: string | null
+          recommendation_reason?: string | null
+          recommended_at?: string | null
+          requirements?: Json | null
+          status?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          eligibility_score?: number | null
+          estimated_apr?: number | null
+          expires_at?: string | null
+          id?: string
+          key_benefits?: Json | null
+          product_name?: string
+          product_type?: string
+          provider_institution_id?: string | null
+          recommendation_reason?: string | null
+          recommended_at?: string | null
+          requirements?: Json | null
+          status?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crediq_product_recommendations_provider_institution_id_fkey"
+            columns: ["provider_institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crediq_questionnaire_responses: {
+        Row: {
+          answer_label: string | null
+          answer_value: string
+          answered_at: string | null
+          id: string
+          profile_id: string | null
+          question_id: string
+          question_step: number | null
+          question_text: string
+          user_id: string
+        }
+        Insert: {
+          answer_label?: string | null
+          answer_value: string
+          answered_at?: string | null
+          id?: string
+          profile_id?: string | null
+          question_id: string
+          question_step?: number | null
+          question_text: string
+          user_id: string
+        }
+        Update: {
+          answer_label?: string | null
+          answer_value?: string
+          answered_at?: string | null
+          id?: string
+          profile_id?: string | null
+          question_id?: string
+          question_step?: number | null
+          question_text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "crediq_questionnaire_responses_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "crediq_user_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      crediq_user_profiles: {
+        Row: {
+          average_monthly_savings_range: string | null
+          baseline_score_generated: boolean | null
+          completed_at: string | null
+          created_at: string | null
+          digital_banking_frequency: string | null
+          employment_status: string
+          has_bank_account: boolean | null
+          has_defaulted_loans: boolean | null
+          has_dependents: boolean | null
+          has_existing_loans: boolean | null
+          has_previous_loans: boolean | null
+          has_smartphone: boolean | null
+          id: string
+          income_stability: string | null
+          loan_payment_history: string | null
+          monthly_income_range: string
+          monthly_loan_obligations_range: string | null
+          number_of_dependents: number | null
+          primary_financial_goal: string | null
+          questionnaire_version: string | null
+          target_loan_amount_range: string | null
+          updated_at: string | null
+          user_id: string
+          uses_digital_payments: boolean | null
+          uses_mobile_money: boolean | null
+        }
+        Insert: {
+          average_monthly_savings_range?: string | null
+          baseline_score_generated?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          digital_banking_frequency?: string | null
+          employment_status: string
+          has_bank_account?: boolean | null
+          has_defaulted_loans?: boolean | null
+          has_dependents?: boolean | null
+          has_existing_loans?: boolean | null
+          has_previous_loans?: boolean | null
+          has_smartphone?: boolean | null
+          id?: string
+          income_stability?: string | null
+          loan_payment_history?: string | null
+          monthly_income_range: string
+          monthly_loan_obligations_range?: string | null
+          number_of_dependents?: number | null
+          primary_financial_goal?: string | null
+          questionnaire_version?: string | null
+          target_loan_amount_range?: string | null
+          updated_at?: string | null
+          user_id: string
+          uses_digital_payments?: boolean | null
+          uses_mobile_money?: boolean | null
+        }
+        Update: {
+          average_monthly_savings_range?: string | null
+          baseline_score_generated?: boolean | null
+          completed_at?: string | null
+          created_at?: string | null
+          digital_banking_frequency?: string | null
+          employment_status?: string
+          has_bank_account?: boolean | null
+          has_defaulted_loans?: boolean | null
+          has_dependents?: boolean | null
+          has_existing_loans?: boolean | null
+          has_previous_loans?: boolean | null
+          has_smartphone?: boolean | null
+          id?: string
+          income_stability?: string | null
+          loan_payment_history?: string | null
+          monthly_income_range?: string
+          monthly_loan_obligations_range?: string | null
+          number_of_dependents?: number | null
+          primary_financial_goal?: string | null
+          questionnaire_version?: string | null
+          target_loan_amount_range?: string | null
+          updated_at?: string | null
+          user_id?: string
+          uses_digital_payments?: boolean | null
+          uses_mobile_money?: boolean | null
+        }
+        Relationships: []
+      }
       credit_api_clients: {
         Row: {
           allowed_operations: string[] | null

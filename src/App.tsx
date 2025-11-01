@@ -89,6 +89,10 @@ import CreditManagement from "./pages/admin/CreditManagement";
 import PaymentFacilitation from "./pages/PaymentFacilitation";
 import PaymentFacilitationDev from "./pages/developer/PaymentFacilitation";
 import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
+import CrediQ from "./pages/CrediQ";
+import CrediQOnboarding from "./pages/CrediQOnboarding";
+import CrediQDashboard from "./pages/CrediQDashboard";
+import CrediQSettings from "./pages/CrediQSettings";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -174,6 +178,13 @@ function App() {
             <Route path="/business-accounts" element={<Layout><ProtectedRoute><BusinessAccounts /></ProtectedRoute></Layout>} />
             <Route path="/savings" element={<Layout><ProtectedRoute><Savings /></ProtectedRoute></Layout>} />
             <Route path="/virtual-cards" element={<Layout><ProtectedRoute><VirtualCards /></ProtectedRoute></Layout>} />
+            
+            {/* CrediQ Routes */}
+            <Route path="/crediq" element={<CrediQ />} />
+            <Route path="/crediq/info" element={<CrediQ />} />
+            <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><CrediQOnboarding /></ProtectedRoute></Layout>} />
+            <Route path="/crediq/dashboard" element={<Layout><ProtectedRoute><CrediQDashboard /></ProtectedRoute></Layout>} />
+            <Route path="/crediq/settings" element={<Layout><ProtectedRoute><CrediQSettings /></ProtectedRoute></Layout>} />
             <Route path="/credit-score" element={<Layout><ProtectedRoute><CreditScore /></ProtectedRoute></Layout>} />
             <Route path="/credit-report" element={<Layout><ProtectedRoute><CreditReport /></ProtectedRoute></Layout>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
