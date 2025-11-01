@@ -175,7 +175,7 @@ export function FacilitatedPaymentsCard({ institutionId }: FacilitatedPaymentsCa
           <div className="flex justify-between items-center">
             <div>
               <CardTitle>Facilitated Payments</CardTitle>
-              <CardDescription>Transactions processed through KOB Flutterwave</CardDescription>
+              <CardDescription>Transactions processed through KOB Mobile Money Gateway</CardDescription>
             </div>
             <Button variant="outline" size="sm" onClick={loadData} disabled={loading}>
               <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />

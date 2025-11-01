@@ -668,10 +668,10 @@ const Index = () => {
                 For Developers & Fintechs
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Accept Payments Without Flutterwave Account
+                Accept Payments Without Setup Delays
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                Use KOB's verified Flutterwave account to process payments instantly. No KYB delays, no setup fees.
+                Use KOB's payment infrastructure to process payments instantly. No KYB delays, no setup fees.
               </p>
             </div>
 

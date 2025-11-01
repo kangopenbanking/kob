@@ -35,10 +35,10 @@ const PaymentFacilitation = () => {
             <h1 className="text-5xl md:text-6xl font-bold mb-6 leading-tight">
               Accept Payments Instantly
               <br />
-              <span className="text-primary">Without Flutterwave Account</span>
+              <span className="text-primary">Without Your Own Payment Account</span>
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Start processing mobile money and bank transfers immediately using KOB's verified Flutterwave account. 
+              Start processing mobile money and bank transfers immediately using KOB's payment infrastructure. 
               No KYB delays, no setup fees, just instant payment processing.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -187,7 +187,7 @@ const PaymentFacilitation = () => {
                 <ul className="space-y-3 text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-                    <span>No Flutterwave account needed</span>
+                    <span>No payment account setup needed</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
@@ -466,7 +466,7 @@ const PaymentFacilitation = () => {
                   <div className="flex-1">
                     <h3 className="text-lg font-bold mb-2">Customer Payment</h3>
                     <p className="text-muted-foreground">
-                      Customer pays via mobile money or receives bank transfer. Money is collected through KOB's Flutterwave account.
+                      Customer pays via mobile money or receives bank transfer. Money is collected through KOB's payment gateway.
                     </p>
                   </div>
                 </div>

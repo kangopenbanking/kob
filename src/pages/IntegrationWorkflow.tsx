@@ -85,7 +85,7 @@ const phases = [
     tasks: [
       "Integrate Mobile Money (MTN, Orange) for XAF",
       "Set up card payments via Stripe (optional)",
-      "Configure bank transfer via Flutterwave (optional)",
+      "Configure bank transfer gateway (optional)",
       "Implement mobile-to-bank transfer flows",
       "Test payment reconciliation"
     ],

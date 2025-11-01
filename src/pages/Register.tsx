@@ -371,7 +371,7 @@ const Register = () => {
                             <div>
                               <h3 className="text-lg font-bold mb-1">Use KOB Payment Facilitation</h3>
                               <p className="text-sm text-muted-foreground mb-3">
-                                Start accepting payments instantly without a Flutterwave account
+                                Start accepting payments instantly without payment account setup
                               </p>
                             </div>
                             <div className="flex items-center gap-2">
@@ -387,7 +387,7 @@ const Register = () => {
                           <ul className="space-y-2 text-sm">
                             <li className="flex items-start gap-2">
                               <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                              <span>No Flutterwave account needed</span>
+                              <span>No payment account setup needed</span>
                             </li>
                             <li className="flex items-start gap-2">
                               <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />

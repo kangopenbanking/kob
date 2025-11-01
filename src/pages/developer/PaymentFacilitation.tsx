@@ -16,7 +16,7 @@ const PaymentFacilitation = () => {
           <Badge className="mb-4">White-Label Payment Processing</Badge>
           <h1 className="text-4xl font-bold mb-4">KOB Payment Facilitation</h1>
           <p className="text-xl text-muted-foreground max-w-3xl">
-            Process payments using Kang Open Banking's Flutterwave account. No need for your own Flutterwave credentials - start accepting payments immediately.
+            Process payments using Kang Open Banking's payment infrastructure. No need for your own payment gateway account - start accepting payments immediately.
           </p>
         </div>
 
@@ -29,7 +29,7 @@ const PaymentFacilitation = () => {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                No Flutterwave account needed. Start processing payments in minutes with our facilitated endpoints.
+                No payment gateway account needed. Start processing payments in minutes with our facilitated endpoints.
               </p>
             </CardContent>
           </Card>
@@ -73,7 +73,7 @@ const PaymentFacilitation = () => {
               <div>
                 <h3 className="font-semibold mb-1">Enable KOB Facilitation</h3>
                 <p className="text-sm text-muted-foreground">
-                  When registering as a Developer or Fintech, select the option to use KOB's Flutterwave integration.
+                  When registering as a Developer or Fintech, select the option to use KOB's payment facilitation.
                 </p>
               </div>
             </div>
@@ -97,7 +97,7 @@ const PaymentFacilitation = () => {
               <div>
                 <h3 className="font-semibold mb-1">Use Facilitated Endpoints</h3>
                 <p className="text-sm text-muted-foreground">
-                  Call our facilitated payment endpoints to process collections and transfers using KOB's Flutterwave account.
+                  Call our facilitated payment endpoints to process collections and transfers using KOB's payment gateway.
                 </p>
               </div>
             </div>
@@ -179,7 +179,7 @@ const PaymentFacilitation = () => {
                 <ApiEndpoint
                   method="POST"
                   endpoint="/facilitated-mobile-money-charge"
-                  description="Initiate a mobile money collection using KOB's Flutterwave account"
+                  description="Initiate a mobile money collection using KOB's payment gateway"
                 />
 
                 <div>
@@ -211,7 +211,7 @@ const PaymentFacilitation = () => {
   "success": true,
   "transaction_ref": "KOB-MM-1234567890-ABC123",
   "transaction_id": "uuid",
-  "flutterwave_link": "https://flutterwave.com/pay/...",
+  "payment_link": "https://payment.kangob.com/pay/...",
   "kob_fee_amount": 175,
   "net_amount": 4825
 }`
@@ -224,7 +224,7 @@ const PaymentFacilitation = () => {
                 <ApiEndpoint
                   method="POST"
                   endpoint="/facilitated-bank-transfer"
-                  description="Initiate a bank transfer using KOB's Flutterwave account"
+                  description="Initiate a bank transfer using KOB's payment gateway"
                 />
 
                 <div>
@@ -350,8 +350,10 @@ async function collectPayment(phoneNumber: string, amount: number) {
     console.log('KOB Fee:', data.kob_fee_amount, 'XAF');
     console.log('Net Amount:', data.net_amount, 'XAF');
     
-    // Redirect customer to Flutterwave payment page
-    window.location.href = data.flutterwave_link;
+    // Redirect customer to payment page
+    if (data.payment_link) {
+      window.location.href = data.payment_link;
+    }
   } catch (error) {
     console.error('Payment failed:', error);
   }

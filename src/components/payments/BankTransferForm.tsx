@@ -160,7 +160,7 @@ export const BankTransferForm = () => {
       <CardHeader>
         <CardTitle>Bank Transfer</CardTitle>
         <CardDescription>
-          Transfer money directly to any bank account via Flutterwave
+          Transfer money directly to any bank account
         </CardDescription>
       </CardHeader>
       <CardContent>

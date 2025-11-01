@@ -8,7 +8,7 @@ const PaymentFacilitation = () => {
         <div>
           <h1 className="text-3xl font-bold">Payment Facilitation</h1>
           <p className="text-muted-foreground mt-2">
-            Manage KOB Flutterwave facilitation and settlements for developers and fintechs
+            Manage KOB payment facilitation and settlements for developers and fintechs
           </p>
         </div>
         
