@@ -69,7 +69,16 @@ Deno.serve(async (req) => {
       throw new Error('No credit score found. Please calculate your score first.');
     }
 
-    const components = creditScore.score_components as any;
+    const components = (creditScore.score_factors && creditScore.score_factors.components) || {
+      payment_history_score: creditScore.payment_history_score,
+      amounts_owed_score: creditScore.amounts_owed_score,
+      credit_history_length_score: creditScore.credit_history_length_score,
+      credit_mix_score: creditScore.credit_mix_score,
+      new_credit_score: creditScore.new_credit_score,
+      savings_behavior_score: creditScore.savings_behavior_score,
+      transaction_pattern_score: creditScore.transaction_pattern_score,
+      kyc_compliance_score: creditScore.kyc_compliance_score,
+    };
 
     // Build context for AI
     const systemPrompt = `You are a financial advisor for Kang Open Banking in Cameroon. 
@@ -78,10 +87,10 @@ Currency is XAF (Central African Franc). Be specific with numbers and timelines.
 Focus on realistic, achievable actions tailored to the Cameroon financial system.`;
 
     const userPrompt = `Generate 3-5 personalized credit improvement tips for a user with:
-- Current Score: ${creditScore.internal_score}/850
+- Current Score: ${creditScore.score}/850
 - Payment History: ${components.payment_history_score}/35 (weight: 30%)
 - Amounts Owed: ${components.amounts_owed_score}/30 (weight: 25%)
-- Credit History: ${components.credit_history_score}/15 (weight: 15%)
+- Credit History: ${components.credit_history_length_score}/15 (weight: 15%)
 - Credit Mix: ${components.credit_mix_score}/10 (weight: 10%)
 - New Credit: ${components.new_credit_score}/10 (weight: 8%)
 - Savings Behavior: ${components.savings_behavior_score}/10 (weight: 10%)

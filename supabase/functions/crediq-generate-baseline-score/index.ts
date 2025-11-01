@@ -51,22 +51,39 @@ Deno.serve(async (req) => {
     if (hasTransactionHistory) {
       // User has KOB history - use full calculation
       console.log('User has transaction history, using full credit calculation');
-      const { data: fullScoreResponse } = await supabase.functions.invoke('credit-score-calculate', {
-        body: { user_id, include_external: true }
-      });
       
-      const fullScore = fullScoreResponse?.score || 300;
-      
-      return new Response(
-        JSON.stringify({
-          success: true,
-          score: fullScore,
-          score_type: 'full_calculation',
-          confidence: 0.8,
-          message: 'Score calculated from your transaction history'
-        }),
-        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+      try {
+        const { data: fullScoreResponse, error: fullScoreError } = await supabase.functions.invoke('credit-score-calculate', {
+          body: { user_id, include_external: true, trigger_event: 'crediq_onboarding' }
+        });
+        
+        if (fullScoreError) throw fullScoreError;
+        
+        const fullScore = fullScoreResponse?.score || 300;
+        
+        // Trigger follow-up actions
+        await supabase.functions.invoke('crediq-generate-action-plan', {
+          body: { user_id }
+        });
+        
+        await supabase.functions.invoke('crediq-send-welcome-email', {
+          body: { user_id, credit_score: fullScore }
+        });
+        
+        return new Response(
+          JSON.stringify({
+            success: true,
+            score: fullScore,
+            score_type: 'full_calculation',
+            confidence: 0.8,
+            message: 'Score calculated from your transaction history'
+          }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (calculatorError) {
+        console.error('Full calculator failed, falling back to baseline:', calculatorError);
+        // Continue to baseline calculation below
+      }
     }
 
     // Calculate baseline score from questionnaire

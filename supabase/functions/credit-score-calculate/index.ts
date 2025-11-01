@@ -130,8 +130,7 @@ Deno.serve(async (req) => {
     const scoreData = {
       user_id,
       score: Math.max(300, Math.min(850, finalScore)),
-      internal_score: internalScore,
-      score_version: 'v2.0', // Updated version with external integration
+      score_version: 'v2.0',
       scoring_model: externalScore ? 'blended' : scoring_model,
       score_factors: {
         components,
@@ -149,8 +148,8 @@ Deno.serve(async (req) => {
       ...components,
       external_bureau_score: externalScore,
       calculated_at: new Date().toISOString(),
-      expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(), // 90 days
-      next_update_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+      expires_at: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString(),
+      next_update_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       status: 'active',
     };
 

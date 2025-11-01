@@ -4,7 +4,7 @@ import { format } from 'date-fns';
 
 interface ScoreHistoryPoint {
   id: string;
-  internal_score: number;
+  score: number;
   calculated_at: string;
 }
 
@@ -16,7 +16,7 @@ const ScoreTrendChart = ({ history }: ScoreTrendChartProps) => {
   const chartData = history.map(point => ({
     date: format(new Date(point.calculated_at), 'MMM dd'),
     fullDate: format(new Date(point.calculated_at), 'PPP'),
-    score: point.internal_score,
+    score: point.score,
   })).reverse();
 
   const CustomTooltip = ({ active, payload }: any) => {

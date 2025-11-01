@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
       throw new Error('No credit score found');
     }
 
-    const currentScore = creditScore.internal_score;
+    const currentScore = creditScore.score;
     let predictedScore = currentScore;
     let scoreChange = 0;
 

@@ -235,8 +235,8 @@ export default function CreditScore() {
               <CardDescription>Factors contributing to your credit score</CardDescription>
             </CardHeader>
             <CardContent>
-              {scoreData?.score_components ? (
-                <ScoreBreakdownChart components={scoreData.score_components as any} />
+              {scoreData?.score_factors?.components ? (
+                <ScoreBreakdownChart components={(scoreData.score_factors as any).components} />
               ) : (
                 <p className="text-center text-muted-foreground py-8">No data available</p>
               )}
@@ -252,7 +252,7 @@ export default function CreditScore() {
               {historyData && historyData.length > 0 ? (
                 <ScoreTrendChart history={historyData.map(h => ({ 
                   id: h.id, 
-                  internal_score: h.score, 
+                  score: h.score, 
                   calculated_at: h.recorded_at 
                 }))} />
               ) : (
