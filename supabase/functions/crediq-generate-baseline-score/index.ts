@@ -155,7 +155,6 @@ Deno.serve(async (req) => {
     const scoreData = {
       user_id,
       score: baselineScore,
-      internal_score: baselineScore,
       score_version: 'baseline_v1.0',
       scoring_model: 'questionnaire',
       score_factors: {
