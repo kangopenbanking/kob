@@ -34,7 +34,6 @@ export class ErrorBoundary extends Component<Props, State> {
 
     // Log to monitoring service in production
     if (import.meta.env.PROD) {
-      // TODO: Send to error tracking service (e.g., Sentry)
       this.logErrorToService(error, errorInfo);
     }
   }

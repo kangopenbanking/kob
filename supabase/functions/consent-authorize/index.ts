@@ -207,14 +207,26 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Log authorization event
+    // Log authorization event with validated metadata
+    const validatedMetadata = authorized 
+      ? { 
+          action: 'authorized',
+          account_count: Array.isArray(selected_accounts) ? selected_accounts.length : 0,
+          timestamp: new Date().toISOString()
+        }
+      : { 
+          action: 'rejected',
+          reason: 'user_rejected',
+          timestamp: new Date().toISOString()
+        };
+
     await supabase.rpc('log_consent_event', {
       _consent_id: consent_id,
       _consent_type: consent_type,
       _event_type: authorized ? 'authorized' : 'rejected',
       _user_id: user.id,
       _client_id: consent.client_id,
-      _metadata: authorized ? { selected_accounts } : { reason: 'user_rejected' }
+      _metadata: validatedMetadata
     });
 
     console.log(`Consent ${consent_id} ${authorized ? 'authorized' : 'rejected'} by user ${user.id}`);
