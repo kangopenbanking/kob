@@ -166,7 +166,7 @@ export default function Pricing() {
   const costs = calculateCost();
 
   return (
-    <div className="container mx-auto px-4 py-12 max-w-7xl">
+    <div className="container mx-auto px-4 py-12 max-w-5xl">
       {/* Hero Section */}
       <div className="text-center mb-12 space-y-4">
         <Badge variant="outline" className="mb-4">Transparent Pricing</Badge>
