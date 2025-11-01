@@ -133,6 +133,17 @@ serve(async (req) => {
   }
 
   try {
+    // Check RESEND_API_KEY early
+    if (!Deno.env.get('RESEND_API_KEY')) {
+      console.error('RESEND_API_KEY is not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Email service not configured. Please add RESEND_API_KEY secret.' 
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -159,11 +170,9 @@ serve(async (req) => {
 
     // Check if user is admin
     const { data: roles, error: roleError } = await supabaseClient
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id);
+      .rpc('has_role', { _user_id: user.id, _role: 'admin' });
 
-    if (roleError || !roles?.some(r => r.role === 'admin')) {
+    if (roleError || !roles) {
       return new Response(
         JSON.stringify({ error: 'Forbidden - Admin access required' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

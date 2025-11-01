@@ -67,27 +67,34 @@ serve(async (req) => {
 
     // Send email
     if (template.template_type === 'email' && recipient_email) {
-      try {
-        const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
-        
-        const { error: emailError } = await resend.emails.send({
-          from: 'Open Banking Platform <onboarding@resend.dev>',
-          to: [recipient_email],
-          subject: subject,
-          html: body,
-        });
+      const resendApiKey = Deno.env.get('RESEND_API_KEY');
+      
+      if (!resendApiKey) {
+        errorMessage = 'RESEND_API_KEY not configured';
+        console.error('RESEND_API_KEY environment variable is not set');
+      } else {
+        try {
+          const resend = new Resend(resendApiKey);
+          
+          const { error: emailError } = await resend.emails.send({
+            from: 'KOB Open Banking <onboarding@resend.dev>',
+            to: [recipient_email],
+            subject: subject,
+            html: body,
+          });
 
-        if (emailError) {
-          errorMessage = emailError.message;
-          console.error('Email error:', emailError);
-        } else {
-          success = true;
-          sentAt = new Date().toISOString();
-          console.log('Email sent successfully to:', recipient_email);
+          if (emailError) {
+            errorMessage = emailError.message;
+            console.error('Email error:', emailError);
+          } else {
+            success = true;
+            sentAt = new Date().toISOString();
+            console.log('Email sent successfully to:', recipient_email);
+          }
+        } catch (error: any) {
+          errorMessage = error.message;
+          console.error('Email sending failed:', error);
         }
-      } catch (error: any) {
-        errorMessage = error.message;
-        console.error('Email sending failed:', error);
       }
     }
 

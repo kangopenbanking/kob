@@ -248,10 +248,10 @@ verify_jwt = false
 # Phase 7: Communication Functions
 
 [functions.send-communication]
-verify_jwt = false
+verify_jwt = true
 
 [functions.send-bulk-communication]
-verify_jwt = false
+verify_jwt = true
 
 # Phase 8: Monitoring & Compliance Functions
 
@@ -332,4 +332,4 @@ verify_jwt = false
 # Phase 16: Testing & Communication Functions
 
 [functions.test-all-templates]
-verify_jwt = false
+verify_jwt = true
