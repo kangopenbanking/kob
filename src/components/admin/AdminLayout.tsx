@@ -16,7 +16,8 @@ import {
   AlertTriangle,
   ScrollText,
   Building2,
-  Mail
+  Mail,
+  CreditCard
 } from "lucide-react";
 import {
   Sidebar,
@@ -48,6 +49,7 @@ const adminNavigation = [
       { title: "API Clients", path: "/admin/api-clients", icon: Key },
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
       { title: "Communications", path: "/communications", icon: Mail },
+      { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
       { title: "Sandbox", path: "/admin/sandbox", icon: Database },
     ]
   },
