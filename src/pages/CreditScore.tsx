@@ -171,7 +171,8 @@ export default function CreditScore() {
 
   return (
     <div className="container mx-auto p-6 space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div className="max-w-5xl mx-auto">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-bold mb-2">Your Credit Score</h1>
           <p className="text-muted-foreground">
@@ -268,6 +269,7 @@ export default function CreditScore() {
           <ScoreSimulator currentScore={score} />
           <CreditActivityFeed activities={activities} />
         </div>
+      </div>
       </div>
     </div>
   );

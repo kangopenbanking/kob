@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
@@ -122,9 +123,9 @@ function App() {
             <Route path="/guides/webhooks" element={<Layout><Webhooks /></Layout>} />
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
-            <Route path="/pending-approval" element={<Layout><ProtectedRoute><PendingApproval /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
-            <Route path="/loans" element={<Layout><ProtectedRoute><Loans /></ProtectedRoute></Layout>} />
+            <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal" element={<Layout><ProtectedRoute><PersonalAccountRoute><FIPortal /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
             {/* Admin Routes */}
             <Route path="/admin/credit-management" element={<ProtectedRoute requiredRole="admin"><CreditManagement /></ProtectedRoute>} />
@@ -170,15 +171,15 @@ function App() {
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
             <Route path="/analytics" element={<Layout><ProtectedRoute><Analytics /></ProtectedRoute></Layout>} />
             <Route path="/monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
-            <Route path="/dashboard" element={<Layout><ProtectedRoute><Dashboard /></ProtectedRoute></Layout>} />
-            <Route path="/security" element={<Layout><ProtectedRoute><SecuritySettings /></ProtectedRoute></Layout>} />
+            <Route path="/dashboard" element={<Layout><ProtectedRoute><PersonalAccountRoute><Dashboard /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/security" element={<Layout><ProtectedRoute><PersonalAccountRoute><SecuritySettings /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/communications" element={<Layout><ProtectedRoute requiredRole="admin"><Communications /></ProtectedRoute></Layout>} />
-            <Route path="/mobile-money" element={<Layout><ProtectedRoute><MobileMoney /></ProtectedRoute></Layout>} />
-            <Route path="/payments" element={<Layout><ProtectedRoute><Payments /></ProtectedRoute></Layout>} />
-            <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccounts /></ProtectedRoute></Layout>} />
-            <Route path="/business-accounts" element={<Layout><ProtectedRoute><BusinessAccounts /></ProtectedRoute></Layout>} />
-            <Route path="/savings" element={<Layout><ProtectedRoute><Savings /></ProtectedRoute></Layout>} />
-            <Route path="/virtual-cards" element={<Layout><ProtectedRoute><VirtualCards /></ProtectedRoute></Layout>} />
+            <Route path="/mobile-money" element={<Layout><ProtectedRoute><PersonalAccountRoute><MobileMoney /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/payments" element={<Layout><ProtectedRoute><PersonalAccountRoute><Payments /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><PersonalAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/business-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><BusinessAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/savings" element={<Layout><ProtectedRoute><PersonalAccountRoute><Savings /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/virtual-cards" element={<Layout><ProtectedRoute><PersonalAccountRoute><VirtualCards /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
             {/* CrediQ Routes */}
             <Route path="/crediq" element={<CrediQ />} />
@@ -190,8 +191,8 @@ function App() {
             <Route path="/credit-report" element={<Layout><ProtectedRoute><CreditReport /></ProtectedRoute></Layout>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
-            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><KYCVerification /></ProtectedRoute></Layout>} />
-            <Route path="/banking-ops" element={<Layout><ProtectedRoute><BankingOps /></ProtectedRoute></Layout>} />
+            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/banking-ops" element={<Layout><ProtectedRoute><PersonalAccountRoute><BankingOps /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/profile-settings" element={<Layout><ProtectedRoute><ProfileSettings /></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />

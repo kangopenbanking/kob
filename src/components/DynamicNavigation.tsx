@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb } from "lucide-react";
+import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, TrendingUp, Target, BarChart3 } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -180,6 +180,83 @@ export const DynamicNavigation = () => {
           
           <NavigationMenu>
             <NavigationMenuList>
+              <NavigationMenuItem>
+                <NavigationMenuTrigger className="text-sm font-medium">
+                  Credit Score
+                </NavigationMenuTrigger>
+                <NavigationMenuContent>
+                  <div className="grid w-[600px] gap-3 p-6">
+                    <Link 
+                      to="/credit-score" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <TrendingUp className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          My Credit Score
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          View your current credit score and trends
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/credit-report" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <FileText className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Credit Report
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Access your detailed credit history
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/crediq/dashboard" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <Target className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          CrediQ Dashboard
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Track goals and improvement plans
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/credit-scores-info" 
+                      className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                        <BarChart3 className="h-6 w-6 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          How Credit Scores Work
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Learn about our credit scoring system
+                        </p>
+                      </div>
+                    </Link>
+                  </div>
+                </NavigationMenuContent>
+              </NavigationMenuItem>
+
               <NavigationMenuItem>
                 <NavigationMenuTrigger className="text-sm font-medium">
                   Solutions
@@ -382,6 +459,24 @@ export const DynamicNavigation = () => {
                 Documentation
               </Link>
               
+              <div className="border-t pt-4">
+                <p className="text-xs font-semibold text-muted-foreground mb-3">CREDIT SCORE</p>
+                <div className="space-y-3 ml-2">
+                  <Link to="/credit-score" className="text-sm font-medium hover:text-primary transition-colors block">
+                    My Credit Score
+                  </Link>
+                  <Link to="/credit-report" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Credit Report
+                  </Link>
+                  <Link to="/crediq/dashboard" className="text-sm font-medium hover:text-primary transition-colors block">
+                    CrediQ Dashboard
+                  </Link>
+                  <Link to="/credit-scores-info" className="text-sm font-medium hover:text-primary transition-colors block">
+                    How Credit Scores Work
+                  </Link>
+                </div>
+              </div>
+
               <div className="border-t pt-4">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">SOLUTIONS</p>
                 <div className="space-y-3 ml-2">
