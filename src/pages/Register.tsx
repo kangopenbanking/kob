@@ -61,34 +61,22 @@ const Register = () => {
         throw new Error("You must be signed in to register an institution");
       }
 
-      const { data, error } = await supabase
-        .from("institutions")
-        .insert([{
-          user_id: user.id,
+      const { data, error } = await supabase.functions.invoke('institution-register', {
+        body: {
           institution_name: formData.institutionName,
-          institution_type: institutionType as any,
+          institution_type: institutionType,
           registration_number: formData.registrationNumber,
           address: formData.address,
           phone: formData.phone,
           website: formData.website || null,
-          status: "pending" as any,
           use_kob_flutterwave: useKobFlutterwave,
-        }])
-        .select()
-        .single();
+        }
+      });
 
       if (error) throw error;
 
-      // Assign institution role to user
-      const { error: roleError } = await supabase
-        .from("user_roles")
-        .insert([{
-          user_id: user.id,
-          role: "institution" as any,
-        }]);
-
-      if (roleError && roleError.code !== "23505") { // Ignore duplicate key errors
-        throw roleError;
+      if (data?.error) {
+        throw new Error(data.error);
       }
 
       toast({
@@ -99,10 +87,17 @@ const Register = () => {
       navigate('/pending-approval');
     } catch (error: any) {
       console.error("Registration error:", error);
+      
+      let errorMessage = "Failed to submit registration. Please try again.";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      }
+      
       toast({
         variant: "destructive",
         title: "Registration Failed",
-        description: error.message || "Failed to submit registration. Please try again.",
+        description: errorMessage,
       });
     } finally {
       setIsSubmitting(false);
