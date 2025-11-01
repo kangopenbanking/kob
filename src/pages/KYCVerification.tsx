@@ -73,6 +73,10 @@ export default function KYCVerification() {
 
       if (error) throw error;
 
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
       toast({
         title: "Success",
         description: "KYC verification submitted successfully",
@@ -89,9 +93,19 @@ export default function KYCVerification() {
       setFiles({ front: null, back: null, selfie: null });
     } catch (error: any) {
       console.error('Error submitting KYC:', error);
+      
+      let errorMessage = "Failed to submit KYC verification";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to submit KYC verification",
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

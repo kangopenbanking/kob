@@ -106,6 +106,11 @@ export default function LoanApplicationForm({ product, onBack }: LoanApplication
       });
 
       if (error) throw error;
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -114,7 +119,18 @@ export default function LoanApplicationForm({ product, onBack }: LoanApplication
       onBack();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to submit application");
+      console.error('Loan application error:', error);
+      
+      let errorMessage = "Failed to submit application";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
+      toast.error(errorMessage);
     },
   });
 

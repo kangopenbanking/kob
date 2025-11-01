@@ -47,6 +47,11 @@ export default function LoanRepaymentForm({ loan, onBack }: LoanRepaymentFormPro
       });
 
       if (error) throw error;
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+      
       return data;
     },
     onSuccess: () => {
@@ -57,7 +62,18 @@ export default function LoanRepaymentForm({ loan, onBack }: LoanRepaymentFormPro
       onBack();
     },
     onError: (error: any) => {
-      toast.error(error.message || "Failed to process payment");
+      console.error('Loan repayment error:', error);
+      
+      let errorMessage = "Failed to process payment";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
+      toast.error(errorMessage);
     },
   });
 

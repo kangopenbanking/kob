@@ -68,12 +68,26 @@ export const CreateCardForm = ({ onSuccess, onCancel }: CreateCardFormProps) => 
       });
 
       if (response.error) throw response.error;
+      
+      if (response.data?.error) {
+        throw new Error(response.data.error);
+      }
 
       toast.success('Virtual card created successfully!');
       onSuccess();
     } catch (error: any) {
       console.error('Error creating card:', error);
-      toast.error(error.message || 'Failed to create virtual card');
+      
+      let errorMessage = "Failed to create virtual card";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }

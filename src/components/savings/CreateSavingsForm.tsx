@@ -54,11 +54,31 @@ export const CreateSavingsForm = ({ products, onSuccess, onCancel }: CreateSavin
 
       if (error) throw error;
 
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Success",
+        description: "Savings account created successfully",
+      });
+
       onSuccess();
     } catch (error: any) {
+      console.error('Error creating savings account:', error);
+      
+      let errorMessage = "Failed to create savings account";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
       toast({
-        title: "Error creating savings account",
-        description: error.message,
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

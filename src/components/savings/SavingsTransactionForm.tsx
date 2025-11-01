@@ -33,12 +33,32 @@ export const SavingsTransactionForm = ({ savingsAccount, type, onSuccess, onCanc
       });
 
       if (error) throw error;
+      
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast({
+        title: "Success",
+        description: `${type === 'deposit' ? 'Deposit' : 'Withdrawal'} processed successfully`,
+      });
 
       onSuccess();
     } catch (error: any) {
+      console.error(`Error processing ${type}:`, error);
+      
+      let errorMessage = `Failed to process ${type}`;
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
       toast({
-        title: `Error processing ${type}`,
-        description: error.message,
+        title: "Transaction Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
