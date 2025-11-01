@@ -328,3 +328,8 @@ verify_jwt = false
 
 [functions.certificate-expiry-monitor]
 verify_jwt = false
+
+# Phase 16: Testing & Communication Functions
+
+[functions.test-all-templates]
+verify_jwt = false

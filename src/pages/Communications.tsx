@@ -163,6 +163,30 @@ const Communications = () => {
     },
   });
 
+  // Test all templates
+  const testAllTemplatesMutation = useMutation({
+    mutationFn: async (testEmail: string) => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      const response = await supabase.functions.invoke('test-all-templates', {
+        body: { test_email: testEmail },
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+        },
+      });
+
+      if (response.error) throw response.error;
+      return response.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['communication-logs'] });
+      toast.success(`Successfully sent ${data.sent} templates out of ${data.total_templates} to ${data.test_email}`);
+    },
+    onError: (error: any) => {
+      toast.error(`Failed to test templates: ${error.message}`);
+    },
+  });
+
   const getCategoryBadge = (category: string) => {
     const colors: Record<string, string> = {
       user_auth: 'bg-blue-100 text-blue-800',
@@ -183,6 +207,17 @@ const Communications = () => {
           <h1 className="text-3xl font-bold">Communications Management</h1>
           <p className="text-muted-foreground">Manage email and SMS templates, send notifications to institutions and users</p>
         </div>
+        <Button 
+          onClick={() => {
+            if (confirm('This will send all 26 email templates to umojami@gmail.com. Continue?')) {
+              testAllTemplatesMutation.mutate('umojami@gmail.com');
+            }
+          }}
+          disabled={testAllTemplatesMutation.isPending}
+        >
+          <Send className="w-4 h-4 mr-2" />
+          {testAllTemplatesMutation.isPending ? 'Sending...' : 'Test All Templates'}
+        </Button>
       </div>
 
       <Tabs defaultValue="templates" className="w-full">
