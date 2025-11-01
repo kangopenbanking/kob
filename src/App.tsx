@@ -119,18 +119,19 @@ function App() {
             <Route path="/loans" element={<Layout><ProtectedRoute><Loans /></ProtectedRoute></Layout>} />
             
             {/* Admin Routes */}
-            <Route path="/admin/credit-management" element={<Layout><ProtectedRoute requiredRole="admin"><CreditManagement /></ProtectedRoute></Layout>} />
-            <Route path="/admin" element={<Layout><ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute></Layout>} />
-            <Route path="/admin/users" element={<Layout><ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute></Layout>} />
-            <Route path="/admin/api-clients" element={<Layout><ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute></Layout>} />
-            <Route path="/admin/sandbox" element={<Layout><ProtectedRoute requiredRole="admin"><SandboxManagement /></ProtectedRoute></Layout>} />
-            <Route path="/admin/security" element={<Layout><ProtectedRoute requiredRole="admin"><SecurityMonitoring /></ProtectedRoute></Layout>} />
-            <Route path="/admin/audit-logs" element={<Layout><ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute></Layout>} />
-            <Route path="/admin/system-config" element={<Layout><ProtectedRoute requiredRole="admin"><SystemConfig /></ProtectedRoute></Layout>} />
-            <Route path="/admin/webhooks" element={<Layout><ProtectedRoute requiredRole="admin"><WebhookManagement /></ProtectedRoute></Layout>} />
-            <Route path="/admin/branches" element={<Layout><ProtectedRoute requiredRole="admin"><BranchManagement /></ProtectedRoute></Layout>} />
-            <Route path="/admin/transactions" element={<Layout><ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute></Layout>} />
-            <Route path="/system-monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
+            <Route path="/admin/credit-management" element={<ProtectedRoute requiredRole="admin"><CreditManagement /></ProtectedRoute>} />
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
+            <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
+            <Route path="/admin/api-clients" element={<ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute>} />
+            <Route path="/admin/sandbox" element={<ProtectedRoute requiredRole="admin"><SandboxManagement /></ProtectedRoute>} />
+            <Route path="/admin/security" element={<ProtectedRoute requiredRole="admin"><SecurityMonitoring /></ProtectedRoute>} />
+            <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
+            <Route path="/admin/system-config" element={<ProtectedRoute requiredRole="admin"><SystemConfig /></ProtectedRoute>} />
+            <Route path="/admin/webhooks" element={<ProtectedRoute requiredRole="admin"><WebhookManagement /></ProtectedRoute>} />
+            <Route path="/admin/branches" element={<ProtectedRoute requiredRole="admin"><BranchManagement /></ProtectedRoute>} />
+            <Route path="/admin/transactions" element={<ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute>} />
+            <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
+            <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
             
             {/* New Developer Portal */}
             <Route path="/developer" element={<DeveloperLayout />}>
@@ -188,8 +189,7 @@ function App() {
         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
         <Route path="/status" element={<Layout><Status /></Layout>} />
         <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
-        <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
-            <Route path="/fee-management" element={<Layout><ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute></Layout>} />
+            <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />

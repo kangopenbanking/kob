@@ -79,6 +79,7 @@ const Index = () => {
       {/* Portal Access Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Three Portals, One Platform
@@ -163,6 +164,7 @@ const Index = () => {
               </Link>
             </Card>
           </div>
+          </div>
         </div>
       </section>
 
@@ -199,6 +201,7 @@ const Index = () => {
       {/* Core APIs Section */}
       <section className="py-24 bg-gradient-to-b from-background to-muted/30">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
           <div className="text-center mb-20">
             <Badge variant="outline" className="mb-4">Core APIs</Badge>
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -547,12 +550,14 @@ const Index = () => {
               </div>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* Security & Compliance Section */}
       <section className="py-24 bg-muted/50">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <Badge variant="outline" className="mb-4">Enterprise Security</Badge>
             <h2 className="text-4xl md:text-5xl font-bold mb-6">
@@ -595,12 +600,14 @@ const Index = () => {
               </p>
             </Card>
           </div>
+          </div>
         </div>
       </section>
 
       {/* How It Works */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Get Started in Minutes
@@ -647,12 +654,14 @@ const Index = () => {
               </p>
             </div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* Use Cases */}
       <section className="py-20">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Powering Innovation Across Fintech
@@ -694,12 +703,14 @@ const Index = () => {
               </p>
             </Card>
           </div>
+          </div>
         </div>
       </section>
 
       {/* Partners */}
       <section className="py-16 bg-muted/30">
         <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-2xl md:text-3xl font-bold mb-4">
               Trusted by Leading Financial Institutions
@@ -714,12 +725,14 @@ const Index = () => {
             <div className="text-center text-2xl font-bold">MTN MoMo</div>
             <div className="text-center text-2xl font-bold">CamCCUL</div>
           </div>
+          </div>
         </div>
       </section>
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        <div className="container mx-auto px-4 text-center">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Ready to Transform Financial Services?
           </h2>
@@ -733,6 +746,7 @@ const Index = () => {
                 Contact Sales
               </Button>
             </Link>
+          </div>
           </div>
         </div>
       </section>
