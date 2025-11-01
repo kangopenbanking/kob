@@ -145,7 +145,7 @@ export default function CreditScoresInfo() {
                     <BarChart3 className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <Badge variant="outline">60% Weight</Badge>
+                    <Badge variant="outline">70% Weight</Badge>
                   </div>
                 </div>
                 <CardTitle className="text-xl">Internal KOB Score</CardTitle>
@@ -194,42 +194,53 @@ export default function CreditScoresInfo() {
                     <Globe className="h-6 w-6 text-accent" />
                   </div>
                   <div>
-                    <Badge variant="outline">40% Weight</Badge>
+                    <Badge variant="outline">30% Weight</Badge>
                   </div>
                 </div>
                 <CardTitle className="text-xl">NjangiBox Bureau Score</CardTitle>
-                <CardDescription>Cross-institution credit history data</CardDescription>
+                <CardDescription>External credit history from across Cameroon's financial ecosystem</CardDescription>
               </CardHeader>
               <CardContent>
+                <p className="text-sm text-muted-foreground mb-4">
+                  When you complete KYC verification, we fetch your credit history from NjangiBox (Cameroon's credit bureau) 
+                  and blend it with KOB data. This means loans from other banks, credit cards, and financial activity 
+                  outside our platform <strong>count toward your score</strong>.
+                </p>
                 <ul className="space-y-3 text-sm">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
                     <div>
-                      <strong>Cross-Bank History:</strong> Loan and credit performance across all participating institutions
+                      <strong>Cross-Bank Payment History:</strong> On-time payments at other banks boost your score
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
                     <div>
-                      <strong>Public Records:</strong> Court judgments, liens, and bankruptcies if any
+                      <strong>Broader Credit Profile:</strong> Credit cards, mortgages, and other credit across all institutions
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
                     <div>
-                      <strong>Credit Inquiries:</strong> Recent hard inquiries from other lenders
+                      <strong>Higher Confidence:</strong> +20% confidence boost from comprehensive multi-institution data
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
                     <div>
-                      <strong>Payment Patterns:</strong> Historical payment behavior across the financial system
+                      <strong>Smart 30-Day Caching:</strong> Data cached to prevent repeated hard inquiries harming your score
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Shield className="h-5 w-5 text-accent mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong>Consent-Based:</strong> Only fetched with your explicit permission
                     </div>
                   </li>
                   <li className="flex items-start gap-2">
                     <AlertTriangle className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
                     <div>
-                      <strong>Fallback:</strong> 100% internal scoring if external data unavailable
+                      <strong>Graceful Fallback:</strong> If NjangiBox has no data, we use 100% internal KOB scoring
                     </div>
                   </li>
                 </ul>
@@ -264,6 +275,83 @@ export default function CreditScoresInfo() {
                 </li>
               </ul>
             </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      {/* Why NjangiBox Matters */}
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Why External Credit Bureau Data Matters</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              NjangiBox integration gives you credit for ALL your good financial behavior across Cameroon
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <Card className="text-center p-6 hover:shadow-lg transition-all border-accent/30">
+              <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
+                <Globe className="h-8 w-8 text-accent" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Complete Credit Picture</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Your score reflects activity at KOB (70%) plus all banks and lenders (30%)
+              </p>
+              <Badge variant="outline" className="text-xs">70/30 Blend</Badge>
+            </Card>
+
+            <Card className="text-center p-6 hover:shadow-lg transition-all border-accent/30">
+              <div className="h-16 w-16 rounded-full bg-green-100 dark:bg-green-950/30 flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-8 w-8 text-green-600" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Higher Confidence Score</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Boost confidence from ~60-80% to 80-100% with external data
+              </p>
+              <Badge variant="outline" className="text-xs bg-green-50 dark:bg-green-950/20">+20% Confidence</Badge>
+            </Card>
+
+            <Card className="text-center p-6 hover:shadow-lg transition-all border-accent/30">
+              <div className="h-16 w-16 rounded-full bg-blue-100 dark:bg-blue-950/30 flex items-center justify-center mx-auto mb-4">
+                <DollarSign className="h-8 w-8 text-blue-600" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Better Loan Terms</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                Lenders trust comprehensive data more, leading to lower rates and higher amounts
+              </p>
+              <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-950/20">Up to 4% Lower APR</Badge>
+            </Card>
+
+            <Card className="text-center p-6 hover:shadow-lg transition-all border-accent/30">
+              <div className="h-16 w-16 rounded-full bg-purple-100 dark:bg-purple-950/30 flex items-center justify-center mx-auto mb-4">
+                <Shield className="h-8 w-8 text-purple-600" />
+              </div>
+              <h3 className="font-semibold text-lg mb-2">Smart Caching Protection</h3>
+              <p className="text-sm text-muted-foreground mb-3">
+                30-day caching prevents multiple hard inquiries when applying for multiple loans
+              </p>
+              <Badge variant="outline" className="text-xs bg-purple-50 dark:bg-purple-950/20">Query Once</Badge>
+            </Card>
+          </div>
+
+          <Card className="mt-12 max-w-3xl mx-auto p-6 bg-accent/5 border-accent/30">
+            <h3 className="font-semibold text-xl mb-4 flex items-center gap-2">
+              <CheckCircle className="h-6 w-6 text-accent" />
+              How NjangiBox Benefits You
+            </h3>
+            <div className="space-y-3 text-sm text-muted-foreground">
+              <p>
+                <strong>Scenario:</strong> You've been banking at another institution for 3 years with perfect payment history, 
+                but you're new to KOB. Without NjangiBox, your KOB score would be based only on your limited KOB activity 
+                (maybe 6 months). With NjangiBox, your 3 years of excellent history from other banks <strong>instantly boosts 
+                your score by 30-50 points</strong>.
+              </p>
+              <p>
+                <strong>The Result:</strong> You qualify for better loan terms immediately, rather than waiting months to build 
+                history at KOB. Your good financial behavior <strong>everywhere counts</strong>, not just what happens on our platform.
+              </p>
+            </div>
           </Card>
         </div>
       </section>
@@ -354,6 +442,128 @@ export default function CreditScoresInfo() {
                   </li>
                 </ul>
               </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
+
+      {/* Real-World Impact */}
+      <section className="py-20 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">Real-World Impact of NjangiBox Data</h2>
+            <p className="text-xl text-muted-foreground">
+              See how external credit bureau data transforms credit access
+            </p>
+          </div>
+          
+          <div className="max-w-5xl mx-auto">
+            <Card className="p-8">
+              <div className="mb-8">
+                <Badge className="mb-3 bg-accent">Case Study</Badge>
+                <h3 className="text-2xl font-semibold mb-2">Emmanuel's Credit Journey</h3>
+                <p className="text-muted-foreground">
+                  Emmanuel has been banking at another institution for 3 years with perfect payment history. 
+                  He recently joined KOB and wants to apply for a business loan. Here's how NjangiBox transformed his application.
+                </p>
+              </div>
+              
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <div>
+                  <Badge variant="outline" className="mb-4">Before NjangiBox</Badge>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Credit Score</p>
+                      <p className="text-4xl font-bold mb-1">680</p>
+                      <p className="text-xs text-muted-foreground">Based on 6 months KOB activity only</p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Score Classification</p>
+                      <p className="text-xl font-semibold mb-1">Internal Only</p>
+                      <p className="text-xs text-muted-foreground">Limited data from single platform</p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Confidence Level</p>
+                      <p className="text-xl font-semibold mb-1">62%</p>
+                      <p className="text-xs text-amber-600 flex items-center gap-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        Medium confidence - limited data
+                      </p>
+                    </div>
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Loan Offer</p>
+                      <p className="text-xl font-semibold mb-1">500,000 XAF</p>
+                      <p className="text-xs text-muted-foreground">@ 15% APR over 3 years</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <Badge className="mb-4 bg-accent">After Adding NjangiBox ✨</Badge>
+                  <div className="space-y-4">
+                    <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Credit Score</p>
+                      <p className="text-4xl font-bold text-accent mb-1">725</p>
+                      <p className="text-xs text-muted-foreground">KOB (70%) + 3 years external history (30%)</p>
+                    </div>
+                    <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Score Classification</p>
+                      <p className="text-xl font-semibold text-accent mb-1">Blended</p>
+                      <p className="text-xs text-muted-foreground">Comprehensive multi-institution data</p>
+                    </div>
+                    <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Confidence Level</p>
+                      <p className="text-xl font-semibold text-accent mb-1">91%</p>
+                      <p className="text-xs text-green-600 flex items-center gap-1">
+                        <CheckCircle className="h-3 w-3" />
+                        High confidence - verified external data
+                      </p>
+                    </div>
+                    <div className="p-4 bg-accent/10 border border-accent/20 rounded-lg">
+                      <p className="text-sm text-muted-foreground mb-2">Improved Loan Offer</p>
+                      <p className="text-xl font-semibold text-accent mb-1">800,000 XAF</p>
+                      <p className="text-xs text-muted-foreground">@ 11% APR over 3 years</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+                <h4 className="font-semibold text-green-900 dark:text-green-100 mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-5 w-5" />
+                  The Transformation
+                </h4>
+                <div className="grid md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-green-900 dark:text-green-100">+45 Points</strong>
+                      <p className="text-green-800 dark:text-green-200">From including 3 years of perfect payment history at other banks</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-green-900 dark:text-green-100">+29% Confidence</strong>
+                      <p className="text-green-800 dark:text-green-200">Comprehensive cross-institution data verification</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <DollarSign className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-green-900 dark:text-green-100">+300,000 XAF</strong>
+                      <p className="text-green-800 dark:text-green-200">Higher loan amount due to proven creditworthiness</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <TrendingUp className="h-5 w-5 text-green-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <strong className="text-green-900 dark:text-green-100">4% Lower APR</strong>
+                      <p className="text-green-800 dark:text-green-200">Saves 160,000 XAF in interest over 3 years</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </Card>
           </div>
         </div>

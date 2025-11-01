@@ -1,10 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { 
   Shield, TrendingUp, Bell, Target, Award, Users, 
-  CheckCircle, Zap, Lock, BarChart3, Smartphone, Mail, FileText
+  CheckCircle, Zap, Lock, BarChart3, Smartphone, Mail, FileText,
+  Globe, AlertTriangle
 } from "lucide-react";
 
 export default function CrediQInfo() {
@@ -198,6 +200,171 @@ export default function CrediQInfo() {
               </Card>
             </div>
 
+            {/* NjangiBox External Credit Bureau */}
+            <h2 className="text-3xl font-bold mb-8 text-center mt-16">
+              Boost Your Score with NjangiBox External Credit Data
+            </h2>
+
+            <Card className="p-8 bg-gradient-to-br from-accent/10 to-accent/5 border-accent/30 mb-8">
+              <div className="flex items-center gap-4 mb-6">
+                <Globe className="h-12 w-12 text-accent" />
+                <div>
+                  <h3 className="text-2xl font-bold">What is NjangiBox?</h3>
+                  <p className="text-muted-foreground">
+                    Cameroon's credit bureau that tracks your financial history across ALL banks and lenders
+                  </p>
+                </div>
+              </div>
+              
+              <p className="text-muted-foreground mb-6">
+                When you complete KYC verification, CrediQ can fetch your credit history from NjangiBox and 
+                blend it with your KOB activity (70% Internal + 30% External). This gives you:
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <CheckCircle className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1">Credit from Other Banks Counts!</h4>
+                      <p className="text-sm text-muted-foreground">
+                        Paid off a loan at another bank? Have savings elsewhere? NjangiBox captures it, 
+                        so you get credit for ALL your good financial behavior, not just what happens on KOB.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1">Higher Confidence = Better Terms</h4>
+                      <p className="text-sm text-muted-foreground">
+                        External data increases your score confidence from ~60-80% to 80-100%. 
+                        Lenders trust comprehensive data more, leading to lower interest rates and higher loan amounts.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Shield className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1">Smart 30-Day Caching</h4>
+                      <p className="text-sm text-muted-foreground">
+                        We fetch your NjangiBox data once and cache it for 30 days. This means if you apply 
+                        for multiple loans, we don't ping the bureau repeatedly—protecting your score from 
+                        multiple hard inquiries.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <Lock className="h-6 w-6 text-accent mt-1 flex-shrink-0" />
+                    <div>
+                      <h4 className="font-semibold mb-1">Your Consent, Always</h4>
+                      <p className="text-sm text-muted-foreground">
+                        External data is ONLY fetched with your explicit permission when you request a credit 
+                        score or apply for a loan. You're always in control.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+
+            {/* Before/After Comparison */}
+            <div className="grid md:grid-cols-2 gap-6 mb-8">
+              <Card className="p-6">
+                <Badge variant="outline" className="mb-4">KOB Data Only</Badge>
+                <h3 className="text-xl font-semibold mb-4">Without NjangiBox</h3>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-primary">70%</span>
+                    </div>
+                    <div>
+                      <strong>Score Based On:</strong> Only your KOB loans, savings, mobile money
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="h-5 w-5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-yellow-600">60-80%</span>
+                    </div>
+                    <div>
+                      <strong>Confidence Level:</strong> Medium confidence (limited data)
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Missing:</strong> Credit history from other banks ignored
+                    </div>
+                  </li>
+                </ul>
+              </Card>
+
+              <Card className="p-6 border-accent/50 bg-accent/5">
+                <Badge className="mb-4 bg-accent">With NjangiBox ✨</Badge>
+                <h3 className="text-xl font-semibold mb-4">With External Bureau Data</h3>
+                <ul className="space-y-3 text-sm">
+                  <li className="flex items-start gap-2">
+                    <div className="h-5 w-5 rounded-full bg-accent/20 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-accent">100%</span>
+                    </div>
+                    <div>
+                      <strong>Score Based On:</strong> KOB activity (70%) + All bank history (30%)
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <div className="h-5 w-5 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <span className="text-xs font-bold text-green-600">80-100%</span>
+                    </div>
+                    <div>
+                      <strong>Confidence Level:</strong> High confidence (comprehensive data)
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                    <div>
+                      <strong>Complete Picture:</strong> All your good behavior counts everywhere
+                    </div>
+                  </li>
+                </ul>
+              </Card>
+            </div>
+
+            {/* How to Unlock NjangiBox */}
+            <Card className="p-6 bg-primary/5 border-primary/20 mb-16">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <Zap className="h-6 w-6 text-primary" />
+                How to Unlock External Credit Bureau Data
+              </h3>
+              <ol className="space-y-3 text-sm">
+                <li className="flex gap-3">
+                  <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0 text-xs">1</span>
+                  <div>
+                    <strong>Complete KYC Verification</strong>
+                    <p className="text-muted-foreground">Upload your National ID and verify your identity (+50 points instantly!)</p>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0 text-xs">2</span>
+                  <div>
+                    <strong>Request Your Credit Score</strong>
+                    <p className="text-muted-foreground">Go to your dashboard and click "Check My Score" or apply for a loan</p>
+                  </div>
+                </li>
+                <li className="flex gap-3">
+                  <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold flex-shrink-0 text-xs">3</span>
+                  <div>
+                    <strong>Automatic Enhancement</strong>
+                    <p className="text-muted-foreground">We'll fetch your NjangiBox data (with your permission) and blend it with KOB data for maximum accuracy</p>
+                  </div>
+                </li>
+              </ol>
+            </Card>
+
             {/* Benefits */}
             <h2 className="text-3xl font-bold mb-8 text-center">Benefits of a Good Score</h2>
             
@@ -346,6 +513,38 @@ export default function CrediQInfo() {
                   <li>• Make 3 on-time loan payments: <strong>+30-50 points</strong></li>
                   <li>• Open a savings account: <strong>+40 points</strong></li>
                 </ul>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="font-semibold text-lg mb-2">What is NjangiBox and why should I use it?</h3>
+                <p className="text-muted-foreground mb-3">
+                  NjangiBox is Cameroon's credit bureau that tracks your financial history across ALL banks and lenders. 
+                  When you complete KYC, CrediQ fetches your NjangiBox data and blends it (70% KOB + 30% NjangiBox) 
+                  for a more accurate score.
+                </p>
+                <p className="text-muted-foreground">
+                  <strong>Why use it?</strong> (1) Credit from other banks counts toward your score, 
+                  (2) Higher confidence level (80-100%), (3) Better loan terms from lenders, 
+                  (4) 30-day caching prevents multiple hard inquiries.
+                </p>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="font-semibold text-lg mb-2">Does NjangiBox access hurt my credit score?</h3>
+                <p className="text-muted-foreground">
+                  No! We fetch your NjangiBox data only with your explicit permission and cache it for 30 days. 
+                  This means if you apply for 5 loans in a month, we only query NjangiBox ONCE—not 5 times. 
+                  This protects your score from multiple hard inquiries.
+                </p>
+              </Card>
+
+              <Card className="p-6">
+                <h3 className="font-semibold text-lg mb-2">What if I don't have credit history at other banks?</h3>
+                <p className="text-muted-foreground">
+                  That's perfectly fine! If NjangiBox has no data for you (you're new to credit), we'll use 
+                  100% internal KOB data for your score. As you build credit history across Cameroon's financial 
+                  system, NjangiBox will start contributing to your score automatically.
+                </p>
               </Card>
             </div>
 
