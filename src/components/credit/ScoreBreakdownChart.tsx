@@ -79,11 +79,27 @@ const ScoreBreakdownChart = ({ components }: ScoreBreakdownChartProps) => {
       const percentage = ((data.value / data.maxValue) * 100).toFixed(0);
       
       return (
-        <Card className="p-3 shadow-lg">
-          <p className="font-semibold">{data.name}</p>
-          <p className="text-sm text-muted-foreground">
-            {data.value}/{data.maxValue} points ({percentage}%)
-          </p>
+        <Card className="p-4 shadow-lg border-2">
+          <div className="flex items-center gap-2 mb-2">
+            <div 
+              className="w-3 h-3 rounded-full" 
+              style={{ backgroundColor: data.color }}
+            />
+            <p className="font-semibold text-base">{data.name}</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-sm font-medium">
+              {data.value} out of {data.maxValue} points
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {percentage}% of maximum score
+            </p>
+            <div className="pt-2 border-t mt-2">
+              <p className="text-xs text-muted-foreground">
+                {data.maxValue - data.value} points remaining
+              </p>
+            </div>
+          </div>
         </Card>
       );
     }
@@ -113,8 +129,9 @@ const ScoreBreakdownChart = ({ components }: ScoreBreakdownChartProps) => {
             align="right" 
             verticalAlign="middle"
             formatter={(value, entry: any) => {
+              const points = `${entry.payload.value}/${entry.payload.maxValue}`;
               const percentage = ((entry.payload.value / entry.payload.maxValue) * 100).toFixed(0);
-              return `${value}: ${percentage}%`;
+              return `${value}: ${points} (${percentage}%)`;
             }}
           />
         </PieChart>

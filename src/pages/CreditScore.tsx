@@ -13,6 +13,13 @@ import ScoreTrendChart from '@/components/credit/ScoreTrendChart';
 import AITipsCard from '@/components/credit/AITipsCard';
 import ScoreSimulator from '@/components/credit/ScoreSimulator';
 import CreditActivityFeed from '@/components/credit/CreditActivityFeed';
+import ScoreComponentDetails from '@/components/credit/ScoreComponentDetails';
+import ScoreTypeBadge from '@/components/credit/ScoreTypeBadge';
+import DataSourceChart from '@/components/credit/DataSourceChart';
+import ConfidenceIndicator from '@/components/credit/ConfidenceIndicator';
+import ScoreMetadata from '@/components/credit/ScoreMetadata';
+import ScoreEducation from '@/components/credit/ScoreEducation';
+import QuickStats from '@/components/credit/QuickStats';
 
 export default function CreditScore() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -148,6 +155,11 @@ export default function CreditScore() {
 
   const score = scoreData?.score || 0;
   const scoreRange = scoreData?.score_range || 'Unknown';
+  const scoringModel = scoreData?.scoring_model || 'baseline';
+  const confidenceLevel = scoreData?.confidence_level || 0.3;
+  const scoreFactors = scoreData?.score_factors as any;
+  const kycVerified = scoreFactors?.details?.kyc_verified || false;
+  const externalDataUsed = scoreFactors?.details?.external_data_used || false;
 
   // Build activity feed
   const activities = [
@@ -172,104 +184,169 @@ export default function CreditScore() {
   return (
     <div className="container mx-auto p-6 space-y-8">
       <div className="max-w-5xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div>
-          <h1 className="text-4xl font-bold mb-2">Your Credit Score</h1>
-          <p className="text-muted-foreground">
-            Last updated: {scoreData?.calculated_at ? new Date(scoreData.calculated_at).toLocaleDateString() : 'Never'}
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-            Refresh
-          </Button>
-          <Button asChild>
-            <Link to="/credit-report">
-              <FileText className="mr-2 h-4 w-4" />
-              Full Report
-            </Link>
-          </Button>
-        </div>
-      </div>
-
-      <Card className="overflow-hidden">
-        <CardContent className="p-8">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            <div className="flex justify-center">
-              <CircularScoreDisplay
-                score={score}
-                previousScore={historyData?.[1]?.score}
-                maxScore={850}
-                size={280}
-              />
-            </div>
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">{scoreRange}</h2>
-                <p className="text-muted-foreground">
-                  Your credit score is {scoreRange.toLowerCase()}.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-4">
-                <Button onClick={handleGenerateTips} variant="default" className="gap-2">
-                  <Sparkles className="h-4 w-4" />
-                  Get AI Tips
-                </Button>
-                <Button asChild variant="outline" className="gap-2">
-                  <Link to="/credit-scores-info">
-                    <Target className="h-4 w-4" />
-                    Learn More
-                  </Link>
-                </Button>
-              </div>
-            </div>
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Your Credit Score</h1>
+            <p className="text-muted-foreground">
+              Last updated: {scoreData?.calculated_at ? new Date(scoreData.calculated_at).toLocaleDateString() : 'Never'}
+            </p>
           </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Score Breakdown</CardTitle>
-              <CardDescription>Factors contributing to your credit score</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {scoreData?.score_factors?.components ? (
-                <ScoreBreakdownChart components={(scoreData.score_factors as any).components} />
-              ) : (
-                <p className="text-center text-muted-foreground py-8">No data available</p>
-              )}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Score Trend</CardTitle>
-              <CardDescription>Your score history over time</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {historyData && historyData.length > 0 ? (
-                <ScoreTrendChart history={historyData.map(h => ({ 
-                  id: h.id, 
-                  score: h.score, 
-                  calculated_at: h.recorded_at 
-                }))} />
-              ) : (
-                <p className="text-center text-muted-foreground py-8">No history available</p>
-              )}
-            </CardContent>
-          </Card>
-
-          {tips && tips.length > 0 && <AITipsCard tips={tips} onTipComplete={refetchTips} />}
+          <div className="flex gap-2">
+            <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
+              <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Refresh
+            </Button>
+            <Button asChild>
+              <Link to="/credit-report">
+                <FileText className="mr-2 h-4 w-4" />
+                Full Report
+              </Link>
+            </Button>
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <ScoreSimulator currentScore={score} />
-          <CreditActivityFeed activities={activities} />
+        {/* Hero Section - Score Display with Type and Confidence */}
+        <Card className="overflow-hidden mb-8">
+          <CardContent className="p-8">
+            <div className="grid md:grid-cols-2 gap-8 items-center">
+              <div className="flex justify-center">
+                <CircularScoreDisplay
+                  score={score}
+                  previousScore={historyData?.[1]?.score}
+                  maxScore={850}
+                  size={280}
+                />
+              </div>
+              <div className="space-y-4">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <h2 className="text-2xl font-bold">{scoreRange}</h2>
+                    <ScoreTypeBadge 
+                      scoringModel={scoringModel} 
+                      confidenceLevel={confidenceLevel}
+                    />
+                  </div>
+                  <p className="text-muted-foreground">
+                    Your credit score is {scoreRange.toLowerCase()}.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-4">
+                  <Button onClick={handleGenerateTips} variant="default" className="gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Get AI Tips
+                  </Button>
+                  <Button asChild variant="outline" className="gap-2">
+                    <Link to="/credit-scores-info">
+                      <Target className="h-4 w-4" />
+                      Learn More
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Core Metrics Row */}
+        <div className="grid md:grid-cols-3 gap-6 mb-8">
+          <ScoreMetadata
+            scoreVersion={scoreData?.score_version}
+            calculatedAt={scoreData?.calculated_at}
+            nextUpdateDate={scoreData?.next_update_date}
+            expiresAt={scoreData?.expires_at}
+          />
+          <DataSourceChart
+            scoringModel={scoringModel}
+            externalBureauUsed={externalDataUsed}
+          />
+          <QuickStats
+            totalLoans={scoreFactors?.details?.total_loans}
+            totalSavings={scoreFactors?.details?.total_savings}
+            kycVerified={kycVerified}
+            externalDataUsed={externalDataUsed}
+          />
         </div>
-      </div>
+
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Left Column - Detailed Information */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Component Details - Expandable Cards */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Score Components</CardTitle>
+                <CardDescription>
+                  Detailed breakdown of the 8 factors affecting your score
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {scoreFactors?.components ? (
+                  <ScoreComponentDetails components={scoreFactors.components} />
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">No data available</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Score Breakdown Chart */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Score Breakdown</CardTitle>
+                <CardDescription>Visual distribution of scoring components</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {scoreFactors?.components ? (
+                  <ScoreBreakdownChart components={scoreFactors.components} />
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">No data available</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Score Trend */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Score Trend</CardTitle>
+                <CardDescription>Your score history over time</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {historyData && historyData.length > 0 ? (
+                  <ScoreTrendChart history={historyData.map(h => ({ 
+                    id: h.id, 
+                    score: h.score, 
+                    calculated_at: h.recorded_at 
+                  }))} />
+                ) : (
+                  <p className="text-center text-muted-foreground py-8">No history available</p>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Educational Content */}
+            <ScoreEducation />
+
+            {/* AI Tips */}
+            {tips && tips.length > 0 && <AITipsCard tips={tips} onTipComplete={refetchTips} />}
+          </div>
+
+          {/* Right Column - Quick Actions & Info */}
+          <div className="space-y-6">
+            {/* Confidence Indicator */}
+            <ConfidenceIndicator
+              confidenceLevel={confidenceLevel}
+              scoringModel={scoringModel}
+              kycVerified={kycVerified}
+              externalDataUsed={externalDataUsed}
+            />
+
+            {/* Score Simulator */}
+            <ScoreSimulator currentScore={score} />
+
+            {/* Activity Feed */}
+            <CreditActivityFeed activities={activities} />
+          </div>
+        </div>
       </div>
     </div>
   );
