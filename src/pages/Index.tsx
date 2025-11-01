@@ -727,7 +727,7 @@ const Index = () => {
                 <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
                   <DollarSign className="h-6 w-6 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">1.5% + 100 XAF</h3>
+                <h3 className="text-xl font-bold mb-2">3.5% + 100 XAF</h3>
                 <p className="text-muted-foreground text-sm">
                   Transparent pricing with no setup fees or monthly charges. Only pay for successful transactions.
                 </p>

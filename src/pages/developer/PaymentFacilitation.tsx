@@ -130,7 +130,7 @@ const PaymentFacilitation = () => {
                   <p className="text-sm text-muted-foreground">Per successful transaction</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold">1.5%</p>
+                  <p className="text-2xl font-bold">3.5%</p>
                   <p className="text-sm text-muted-foreground">+ 100 XAF</p>
                 </div>
               </div>

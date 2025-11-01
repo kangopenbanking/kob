@@ -67,8 +67,8 @@ serve(async (req) => {
         kobFeeAmount = feeCalc.final_fee || 0;
       }
     } else {
-      // Default fee: 1.5% + 100 XAF
-      kobFeeAmount = (amount * 0.015) + 100;
+      // Default fee: 3.5% + 100 XAF
+      kobFeeAmount = (amount * 0.035) + 100;
     }
 
     // Insert pending transaction

@@ -55,7 +55,7 @@ const pricingTiers = [
       { text: "Up to 10,000 transactions/month", included: true },
       { text: "AISP: 50 XAF per request", included: true },
       { text: "PISP: 0.5% per transaction", included: true },
-      { text: "Mobile Money: 1.5% + 100 XAF", included: true },
+      { text: "Mobile Money: 3.5% + 100 XAF", included: true },
       { text: "Email support (24-48h response)", included: true },
       { text: "99.5% uptime SLA", included: true },
       { text: "Volume discounts available", included: true },
@@ -129,8 +129,8 @@ const apiPricing = [
   {
     category: "Mobile Money",
     items: [
-      { endpoint: "POST /mobile-money-charge", starter: "1.5% + 100 XAF", pro: "1.125% + 75 XAF", enterprise: "Custom" },
-      { endpoint: "POST /mobile-money-transfer", starter: "1.5% + 100 XAF", pro: "1.125% + 75 XAF", enterprise: "Custom" },
+      { endpoint: "POST /mobile-money-charge", starter: "3.5% + 100 XAF", pro: "1.125% + 75 XAF", enterprise: "Custom" },
+      { endpoint: "POST /mobile-money-transfer", starter: "3.5% + 100 XAF", pro: "1.125% + 75 XAF", enterprise: "Custom" },
     ]
   },
   {
@@ -153,7 +153,7 @@ export default function Pricing() {
     // PISP calls (0.5% of transaction amount)
     const pispCost = transactions * avgAmount * 0.005;
     // Mobile Money (1.5% + 100 XAF)
-    const mmCost = transactions * (avgAmount * 0.015 + 100);
+    const mmCost = transactions * (avgAmount * 0.035 + 100);
     
     return {
       aisp: Math.round(aispCost),
@@ -298,7 +298,7 @@ export default function Pricing() {
                 <div className="text-sm text-muted-foreground mb-1">Mobile Money</div>
                 <div className="text-2xl font-bold">{costs.mobileMoney.toLocaleString()} XAF</div>
                 <div className="text-xs text-muted-foreground mt-1">
-                  1.5% + 100 XAF per transaction
+                  3.5% + 100 XAF per transaction
                 </div>
               </div>
               <div className="bg-primary/10 p-4 rounded-lg border-2 border-primary">
