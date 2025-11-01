@@ -611,7 +611,7 @@ const Index = () => {
                 </Button>
               </Link>
               <Link to="/crediq">
-                <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-2 border-white text-white hover:bg-white/10">
+                <Button size="lg" className="text-lg px-10 py-6 bg-crediq-green text-white hover:bg-crediq-green/90 border-0">
                   Learn More
                 </Button>
               </Link>
