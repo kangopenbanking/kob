@@ -647,15 +647,15 @@ const Index = () => {
             </div>
 
             {/* Step 2 */}
-            <Card className="relative p-8 transition-all duration-500 group animate-fade-in border-accent/30 bg-gradient-to-br from-accent/5 via-card to-card hover:from-accent/10 hover:shadow-2xl hover:shadow-accent/20 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm card-3d overflow-hidden" style={{animationDelay: '0.1s'}}>
-              <div className="absolute inset-0 bg-gradient-to-br from-accent/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-accent to-accent/60 text-accent-foreground font-bold flex items-center justify-center text-base shadow-lg relative z-10">
+            <Card className="relative p-8 transition-all duration-500 group animate-fade-in border-red-500/30 bg-gradient-to-br from-red-500/5 via-card to-card hover:from-red-500/10 hover:shadow-2xl hover:shadow-red-500/20 hover:scale-105 hover:-translate-y-1 backdrop-blur-sm card-3d overflow-hidden" style={{animationDelay: '0.1s'}}>
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+              <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white font-bold flex items-center justify-center text-base shadow-lg relative z-10">
                 2
               </div>
-              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-accent/20 to-accent/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-accent/20 relative z-10">
-                <FlaskConical className="h-10 w-10 text-accent" strokeWidth={1.5} />
+              <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500/20 to-red-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg shadow-red-500/20 relative z-10">
+                <FlaskConical className="h-10 w-10 text-red-500" strokeWidth={1.5} />
               </div>
-              <h3 className="text-xl font-bold mb-3 text-accent relative z-10">Test</h3>
+              <h3 className="text-xl font-bold mb-3 text-red-500 relative z-10">Test</h3>
               <p className="text-sm text-muted-foreground relative z-10">
                 Integrate using our sandbox environment and test APIs
               </p>
@@ -663,7 +663,7 @@ const Index = () => {
 
             {/* Arrow 2 */}
             <div className="hidden md:flex items-center justify-center animate-fade-in relative" style={{animationDelay: '0.25s'}}>
-              <svg width="40" height="40" viewBox="0 0 40 40" className="curved-arrow text-accent/40">
+              <svg width="40" height="40" viewBox="0 0 40 40" className="curved-arrow text-red-500/40">
                 <path d="M 5 20 Q 20 10, 35 20" stroke="currentColor" strokeWidth="2" fill="none" strokeDasharray="4 4" />
                 <path d="M 35 20 L 30 17 M 35 20 L 30 23" stroke="currentColor" strokeWidth="2" fill="none" />
               </svg>
