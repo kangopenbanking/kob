@@ -203,8 +203,46 @@ All colors MUST be HSL.
   animation: arrow-pulse 2s ease-in-out infinite;
 }
 
+/* Curved arrow animation */
+.curved-arrow {
+  animation: arrow-flow 3s ease-in-out infinite;
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+@keyframes arrow-flow {
+  0%, 100% { 
+    opacity: 0.4; 
+    transform: translateX(-2px);
+  }
+  50% { 
+    opacity: 1; 
+    transform: translateX(2px);
+  }
+}
+
+/* 3D Card Effect */
+.card-3d {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+}
+
+.card-3d:hover {
+  transform: perspective(1000px) rotateY(2deg) rotateX(1deg);
+}
+
+/* Grid pattern background */
+.bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, hsl(var(--primary) / 0.1) 1px, transparent 1px),
+    linear-gradient(to bottom, hsl(var(--primary) / 0.1) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .arrow-trail {
+  .arrow-trail,
+  .curved-arrow,
+  .card-3d:hover {
     animation: none;
+    transform: none;
   }
 }
