@@ -79,6 +79,7 @@ Deno.serve(async (req) => {
     const topTips = tipsData?.tips?.slice(0, 3) || [];
 
     const dashboardUrl = `${supabaseUrl.replace('/functions/v1', '')}/crediq/dashboard`;
+    const preferencesUrl = `${supabaseUrl.replace('/functions/v1', '')}/crediq/settings`;
 
     // Send email
     await supabase.functions.invoke('send-communication', {

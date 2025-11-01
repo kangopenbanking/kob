@@ -1,0 +1,19 @@
+name: CrediQ Monthly Report
+
+on:
+  schedule:
+    # Run on the 1st of every month at 9:00 AM UTC (10:00 AM WAT)
+    - cron: '0 9 1 * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  send-monthly-reports:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Monthly Report Emails
+        run: |
+          curl -X POST \
+            'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-monthly-report' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{}'

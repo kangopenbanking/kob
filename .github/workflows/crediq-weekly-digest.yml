@@ -1,0 +1,19 @@
+name: CrediQ Weekly Digest
+
+on:
+  schedule:
+    # Run every Monday at 8:00 AM UTC (9:00 AM WAT)
+    - cron: '0 8 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  send-weekly-digest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Weekly Digest Emails
+        run: |
+          curl -X POST \
+            'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-weekly-digest' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' \
+            -d '{}'
