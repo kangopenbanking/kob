@@ -107,7 +107,24 @@ export const Navigation = () => {
                           PSD2, GDPR compliant with enterprise-grade security
                         </p>
                       </div>
-                    </Link>
+                     </Link>
+                     
+                     <Link 
+                       to="/crediq" 
+                       className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                     >
+                       <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
+                         <TrendingUp className="h-6 w-6 text-primary" />
+                       </div>
+                       <div>
+                         <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                           CrediQ Credit Score
+                         </h3>
+                         <p className="text-sm text-muted-foreground">
+                           Free credit score with personalized recommendations
+                         </p>
+                       </div>
+                     </Link>
 
                     <Link 
                       to="/loans" 

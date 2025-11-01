@@ -35,10 +35,10 @@ export const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><Link to="/crediq" className="hover:text-primary transition-colors">CrediQ Credit Score</Link></li>
               <li><Link to="/loans" className="hover:text-primary transition-colors">Loans</Link></li>
               <li><Link to="/savings" className="hover:text-primary transition-colors">Savings</Link></li>
-              <li><Link to="/credit-score" className="hover:text-primary transition-colors">Credit Score</Link></li>
-              <li><Link to="/credit-scores-info" className="hover:text-primary transition-colors">How Credit Scoring Works</Link></li>
+              <li><Link to="/credit-score" className="hover:text-primary transition-colors">Credit Reports</Link></li>
               <li><Link to="/virtual-cards" className="hover:text-primary transition-colors">Virtual Cards</Link></li>
             </ul>
           </div>

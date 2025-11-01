@@ -93,6 +93,7 @@ import CrediQ from "./pages/CrediQ";
 import CrediQOnboarding from "./pages/CrediQOnboarding";
 import CrediQDashboard from "./pages/CrediQDashboard";
 import CrediQSettings from "./pages/CrediQSettings";
+import CrediQInfo from "./pages/CrediQInfo";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -181,7 +182,7 @@ function App() {
             
             {/* CrediQ Routes */}
             <Route path="/crediq" element={<CrediQ />} />
-            <Route path="/crediq/info" element={<CrediQ />} />
+            <Route path="/crediq/info" element={<CrediQInfo />} />
             <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><CrediQOnboarding /></ProtectedRoute></Layout>} />
             <Route path="/crediq/dashboard" element={<Layout><ProtectedRoute><CrediQDashboard /></ProtectedRoute></Layout>} />
             <Route path="/crediq/settings" element={<Layout><ProtectedRoute><CrediQSettings /></ProtectedRoute></Layout>} />

@@ -25,8 +25,10 @@ import {
   UserPlus,
   FlaskConical,
   Rocket,
+  Activity,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
+import crediqHeroBg from "@/assets/crediq-hero-bg.png";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
 
 const Index = () => {
@@ -553,6 +555,71 @@ const Index = () => {
               </div>
             </div>
           </div>
+          </div>
+        </div>
+      </section>
+
+      {/* CrediQ Credit Score Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div 
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${crediqHeroBg})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/85 to-primary/95 backdrop-blur-sm"></div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-5xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/20 border border-white/30 backdrop-blur-sm mb-8">
+              <TrendingUp className="h-5 w-5 text-white" />
+              <span className="text-sm font-semibold text-white">CrediQ - Cameroon Credit Standard</span>
+            </div>
+            
+            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
+              Know Your Credit Score
+            </h2>
+            
+            <p className="text-xl md:text-2xl text-white/90 mb-12 max-w-3xl mx-auto">
+              Get your free credit score in minutes. Build your financial future with personalized recommendations and real-time updates.
+            </p>
+            
+            <div className="grid md:grid-cols-3 gap-6 mb-12">
+              <Card className="p-6 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 transition-all">
+                <TrendingUp className="h-12 w-12 text-white mb-4 mx-auto" />
+                <h3 className="text-lg font-bold text-white mb-2">Free Forever</h3>
+                <p className="text-white/80 text-sm">No hidden fees, always accessible</p>
+              </Card>
+              
+              <Card className="p-6 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 transition-all">
+                <Activity className="h-12 w-12 text-white mb-4 mx-auto" />
+                <h3 className="text-lg font-bold text-white mb-2">Real-Time Updates</h3>
+                <p className="text-white/80 text-sm">Score updates automatically</p>
+              </Card>
+              
+              <Card className="p-6 bg-white/10 backdrop-blur-md border-white/20 hover:bg-white/20 transition-all">
+                <Shield className="h-12 w-12 text-white mb-4 mx-auto" />
+                <h3 className="text-lg font-bold text-white mb-2">Secure & Private</h3>
+                <p className="text-white/80 text-sm">Bank-level security</p>
+              </Card>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/crediq/onboarding">
+                <Button size="lg" className="text-lg px-10 py-6 bg-white text-primary hover:bg-white/90">
+                  Check Your Score - Free
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+              <Link to="/crediq">
+                <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-2 border-white text-white hover:bg-white/10">
+                  Learn More
+                </Button>
+              </Link>
+            </div>
+            
+            <p className="text-sm text-white/70 mt-8">
+              ✓ Takes 3 minutes  ✓ No impact on your score  ✓ Trusted by thousands
+            </p>
           </div>
         </div>
       </section>
