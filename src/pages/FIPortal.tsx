@@ -1,4 +1,5 @@
 import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+import { FacilitatedPaymentsCard } from "@/components/institution/FacilitatedPaymentsCard";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -307,6 +308,10 @@ export default function FIPortal() {
         </TabsContent>
 
         <TabsContent value="fees" className="space-y-4">
+          {institution?.use_kob_flutterwave && (
+            <FacilitatedPaymentsCard institutionId={institution.id} />
+          )}
+          
           <Card>
             <CardHeader>
               <CardTitle>Transaction Fees & Billing</CardTitle>

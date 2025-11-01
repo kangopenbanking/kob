@@ -1,0 +1,26 @@
+name: Automated Settlement Processing
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  process-settlements:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Process Daily Settlements
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-settlement-cron \
+            -d '{"triggered_by": "github_actions", "time": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'"}'
+      
+      - name: Log Completion
+        if: always()
+        run: |
+          echo "Settlement processing job completed at $(date -u)"
+          echo "Status: ${{ job.status }}"

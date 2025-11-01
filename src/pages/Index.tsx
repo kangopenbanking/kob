@@ -658,6 +658,67 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Payment Facilitation Animated Section - NEW */}
+      <section className="py-20 overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-16">
+              <Badge variant="outline" className="mb-4 px-4 py-2">
+                <Zap className="h-4 w-4 mr-2 inline" />
+                For Developers & Fintechs
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                Accept Payments Without Flutterwave Account
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Use KOB's verified Flutterwave account to process payments instantly. No KYB delays, no setup fees.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-6 mb-8">
+              <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in">
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Zap className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Start in Minutes</h3>
+                <p className="text-muted-foreground text-sm">
+                  Skip weeks of KYB verification. Start processing payments immediately with our pre-verified account.
+                </p>
+              </Card>
+
+              <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in" style={{animationDelay: '0.1s'}}>
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <DollarSign className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">1.5% + 100 XAF</h3>
+                <p className="text-muted-foreground text-sm">
+                  Transparent pricing with no setup fees or monthly charges. Only pay for successful transactions.
+                </p>
+              </Card>
+
+              <Card className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1 animate-fade-in" style={{animationDelay: '0.2s'}}>
+                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                  <Wallet className="h-6 w-6 text-primary" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">Auto Settlements</h3>
+                <p className="text-muted-foreground text-sm">
+                  Receive automatic payouts to your bank or mobile money account daily, weekly, or monthly.
+                </p>
+              </Card>
+            </div>
+
+            <div className="text-center">
+              <Link to="/payment-facilitation">
+                <Button size="lg" className="text-lg px-10 py-6">
+                  Learn About Payment Facilitation
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Use Cases */}
       <section className="py-20">
         <div className="container mx-auto px-4">

@@ -170,6 +170,21 @@ export const Navigation = () => {
                 <NavigationMenuContent>
                   <div className="grid w-[600px] grid-cols-2 gap-3 p-6">
                     <Link 
+                      to="/payment-facilitation" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <CreditCard className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Payment Facilitation
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Accept payments instantly
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
                       to="/integration-workflow" 
                       className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
                     >
@@ -324,6 +339,9 @@ export const Navigation = () => {
               <div className="border-t pt-4">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">RESOURCES</p>
                 <div className="space-y-3 ml-2">
+                  <Link to="/payment-facilitation" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Payment Facilitation
+                  </Link>
                   <Link to="/integration-workflow" className="text-sm font-medium hover:text-primary transition-colors block">
                     Integration Workflow
                   </Link>

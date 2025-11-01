@@ -105,6 +105,28 @@ serve(async (req) => {
         throw new Error(`Failed to update transaction: ${sanitizedError}`);
       }
 
+      // Check if this is a settlement transaction
+      const settlementId = data.meta?.settlement_id;
+      if (settlementId) {
+        console.log('Updating settlement transaction:', settlementId);
+        
+        const { error: settlementError } = await supabase
+          .from('settlement_transactions')
+          .update({
+            settlement_status: updateStatus,
+            flutterwave_transfer_ref: data.id || data.flw_ref,
+            completed_at: updateStatus === 'completed' ? new Date().toISOString() : null,
+            error_message: updateStatus === 'failed' ? (data.complete_message || data.message) : null,
+            metadata: { ...data },
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', settlementId);
+
+        if (settlementError) {
+          console.error('Error updating settlement:', settlementError);
+        }
+      }
+
       // Log the webhook event
       await supabase
         .from('security_audit_logs')
@@ -116,6 +138,7 @@ serve(async (req) => {
             transaction_ref: transactionRef,
             status: updateStatus,
             provider: 'flutterwave',
+            settlement_id: settlementId || null,
           },
         });
 

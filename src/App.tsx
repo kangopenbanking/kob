@@ -86,6 +86,9 @@ import PendingApproval from "./pages/PendingApproval";
 import FIPortal from "./pages/FIPortal";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
+import PaymentFacilitation from "./pages/PaymentFacilitation";
+import PaymentFacilitationDev from "./pages/developer/PaymentFacilitation";
+import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +123,7 @@ function App() {
             
             {/* Admin Routes */}
             <Route path="/admin/credit-management" element={<ProtectedRoute requiredRole="admin"><CreditManagement /></ProtectedRoute>} />
+            <Route path="/admin/payment-facilitation" element={<ProtectedRoute requiredRole="admin"><PaymentFacilitationAdmin /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
             <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
             <Route path="/admin/api-clients" element={<ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute>} />
@@ -145,6 +149,7 @@ function App() {
               <Route path="api/banking" element={<BankingReference />} />
               <Route path="api/certificates" element={<CertificateReference />} />
               <Route path="api/webhooks" element={<WebhooksGuide />} />
+              <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<ApiConsole />} />
               <Route path="api-testing" element={<ApiTesting />} />
@@ -188,7 +193,8 @@ function App() {
         <Route path="/contact" element={<Layout><Contact /></Layout>} />
         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
         <Route path="/status" element={<Layout><Status /></Layout>} />
-        <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
+            <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
+            <Route path="/payment-facilitation" element={<Layout><PaymentFacilitation /></Layout>} />
             <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />

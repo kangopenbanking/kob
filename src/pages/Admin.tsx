@@ -737,12 +737,17 @@ const Admin = () => {
                 Configure transaction fees and manage billing for institutions
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button onClick={() => navigate('/fee-management')}>
-                Open Fee Management Dashboard
-              </Button>
-              <p className="text-sm text-muted-foreground mt-4">
-                Manage fee structures, view transaction fees, generate invoices, and configure waivers for all institutions.
+            <CardContent className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <Button onClick={() => navigate('/fee-management')}>
+                  Open Fee Management Dashboard
+                </Button>
+                <Button onClick={() => navigate('/admin/payment-facilitation')} variant="outline">
+                  Payment Facilitation & Settlements
+                </Button>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                Manage fee structures, transaction fees, invoices, waivers, and automated settlements for facilitated payments.
               </p>
             </CardContent>
           </Card>

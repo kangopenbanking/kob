@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Link, useNavigate } from "react-router-dom";
-import { Building2, ArrowLeft, CheckCircle2, Shield } from "lucide-react";
+import { Building2, ArrowLeft, CheckCircle2, Shield, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +17,7 @@ const Register = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [institutionType, setInstitutionType] = useState("");
+  const [useKobFlutterwave, setUseKobFlutterwave] = useState(false);
   const [formData, setFormData] = useState({
     institutionName: "",
     registrationNumber: "",
@@ -71,6 +72,7 @@ const Register = () => {
           phone: formData.phone,
           website: formData.website || null,
           status: "pending" as any,
+          use_kob_flutterwave: useKobFlutterwave,
         }])
         .select()
         .single();
@@ -353,6 +355,61 @@ const Register = () => {
                     required
                   />
                 </div>
+
+                {/* KOB Payment Facilitation Option - Only for Developer/Fintech */}
+                {(institutionType === "developer" || institutionType === "fintech") && (
+                  <Card className="border-2 border-primary/20 bg-primary/5">
+                    <CardContent className="pt-6 pb-6">
+                      <div className="flex items-start gap-4">
+                        <div className="flex-shrink-0">
+                          <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Zap className="h-6 w-6 text-primary" />
+                          </div>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="text-lg font-bold mb-1">Use KOB Payment Facilitation</h3>
+                              <p className="text-sm text-muted-foreground mb-3">
+                                Start accepting payments instantly without a Flutterwave account
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                id="useKobFlutterwave"
+                                checked={useKobFlutterwave}
+                                onChange={(e) => setUseKobFlutterwave(e.target.checked)}
+                                className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+                              />
+                            </div>
+                          </div>
+                          <ul className="space-y-2 text-sm">
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                              <span>No Flutterwave account needed</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Skip KYB verification delays</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Only 1.5% + 100 XAF per transaction</span>
+                            </li>
+                            <li className="flex items-start gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                              <span>Automated settlements to your account</span>
+                            </li>
+                          </ul>
+                          <Link to="/payment-facilitation" target="_blank" className="text-sm text-primary hover:underline mt-3 inline-block">
+                            Learn more about Payment Facilitation →
+                          </Link>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 {/* Compliance */}
                 <div className="bg-muted/50 p-4 rounded-lg space-y-3">
