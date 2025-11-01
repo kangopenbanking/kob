@@ -71,12 +71,26 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
         throw new Error(data.error);
       }
 
-      toast({ title: "Business KYC submitted for verification" });
+      toast({ 
+        title: "Success",
+        description: "Business KYC submitted for verification" 
+      });
       onSuccess();
     } catch (error: any) {
+      console.error('Business KYC submission error:', error);
+      
+      let errorMessage = "Failed to submit KYC. Please try again.";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
       toast({
-        title: "Error submitting KYC",
-        description: error.message,
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {

@@ -204,6 +204,12 @@ export default function CrediQOnboarding() {
 
       if (profileError) throw profileError;
 
+      // Delete existing questionnaire responses before inserting new ones
+      await supabase
+        .from('crediq_questionnaire_responses')
+        .delete()
+        .eq('user_id', user.id);
+
       // Save questionnaire responses
       const responses = Object.entries(answers).map(([questionId, answerValue], index) => {
         const question = questions.find(q => q.id === questionId);
@@ -219,7 +225,11 @@ export default function CrediQOnboarding() {
         };
       });
 
-      await supabase.from('crediq_questionnaire_responses').insert(responses);
+      const { error: responsesError } = await supabase
+        .from('crediq_questionnaire_responses')
+        .insert(responses);
+
+      if (responsesError) throw responsesError;
 
       // Generate baseline score
       const { data: scoreData, error: scoreError } = await supabase.functions.invoke(
@@ -237,9 +247,19 @@ export default function CrediQOnboarding() {
       navigate('/crediq/dashboard');
     } catch (error: any) {
       console.error('Error submitting questionnaire:', error);
+      
+      let errorMessage = "Failed to generate score. Please try again.";
+      
+      // Extract specific error messages
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (error.error) {
+        errorMessage = error.error;
+      }
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to generate score. Please try again.",
+        title: "Submission Failed",
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
