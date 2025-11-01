@@ -577,16 +577,16 @@ export default function Auth() {
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
       {/* Left Panel - Auth Form */}
-      <div className="flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5 lg:bg-gray-950">
-        <Card className="w-full max-w-md lg:bg-gray-900 lg:border-gray-800">
+      <div className="flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        <Card className="w-full max-w-md bg-white border shadow-lg">
           <CardHeader className="space-y-1">
             <div className="flex items-center gap-4 mb-4">
               <img src="/kob-logo.png" alt="Kang Open Banking Logo" className="h-12 w-12" />
               <div>
-                <CardTitle className="text-2xl font-bold lg:text-white">
+                <CardTitle className="text-2xl font-bold">
                   {showForgotPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Create Account'}
                 </CardTitle>
-                <CardDescription className="lg:text-gray-300">
+                <CardDescription>
                   {showForgotPassword 
                     ? 'Verify your phone and PIN to reset password'
                     : isLogin 
@@ -603,8 +603,8 @@ export default function Auth() {
           {authStep === 'captcha' && (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label className="lg:text-gray-200">Security Check</Label>
-                <p className="text-lg font-semibold text-center py-4 bg-muted rounded-md lg:bg-gray-800 lg:text-white">
+                <Label>Security Check</Label>
+                <p className="text-lg font-semibold text-center py-4 bg-muted rounded-md">
                   {captchaQuestion} = ?
                 </p>
                 <Input
@@ -613,7 +613,6 @@ export default function Auth() {
                   value={captchaAnswer}
                   onChange={(e) => setCaptchaAnswer(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleVerifyCaptcha()}
-                  className="lg:bg-gray-800 lg:border-gray-700 lg:text-white lg:placeholder:text-gray-400"
                 />
               </div>
               <Button onClick={handleVerifyCaptcha} className="w-full" disabled={loading}>
@@ -633,27 +632,26 @@ export default function Auth() {
 
               {!isLogin && !showForgotPassword && (
                 <div className="space-y-2">
-                  <Label htmlFor="fullName" className="lg:text-gray-200">Full Name *</Label>
+                  <Label htmlFor="fullName">Full Name *</Label>
                   <Input
                     id="fullName"
                     placeholder="John Doe"
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="lg:bg-gray-800 lg:border-gray-700 lg:text-white lg:placeholder:text-gray-400"
                   />
                 </div>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="phone" className="lg:text-gray-200">Phone Number *</Label>
+                <Label htmlFor="phone">Phone Number *</Label>
                 <div className="flex gap-2">
                   <Select value={countryCode} onValueChange={setCountryCode}>
-                    <SelectTrigger className="w-[140px] lg:bg-gray-800 lg:border-gray-700 lg:text-white">
+                    <SelectTrigger className="w-[140px]">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="lg:bg-gray-800 lg:border-gray-700">
+                    <SelectContent>
                       {COUNTRY_CODES.map((cc) => (
-                        <SelectItem key={cc.code} value={cc.code} className="lg:text-white lg:focus:bg-gray-700">
+                        <SelectItem key={cc.code} value={cc.code}>
                           {cc.flag} {cc.code}
                         </SelectItem>
                       ))}
@@ -665,25 +663,24 @@ export default function Auth() {
                     placeholder="6 XX XX XX XX"
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))}
-                    className="lg:bg-gray-800 lg:border-gray-700 lg:text-white lg:placeholder:text-gray-400"
                   />
                 </div>
               </div>
 
               {!isLogin && !showForgotPassword && (
                 <div className="space-y-2">
-                  <Label htmlFor="pin" className="lg:text-gray-200">Set 6-Digit PIN *</Label>
+                  <Label htmlFor="pin">Set 6-Digit PIN *</Label>
                   <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
                     <InputOTPGroup>
-                      <InputOTPSlot index={0} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={1} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={2} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={3} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={4} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={5} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
-                  <p className="text-xs text-muted-foreground lg:text-gray-300">
+                  <p className="text-xs text-muted-foreground">
                     Use this PIN for future logins
                   </p>
                 </div>
@@ -691,15 +688,15 @@ export default function Auth() {
 
               {showForgotPassword && (
                 <div className="space-y-2">
-                  <Label htmlFor="reset-pin" className="lg:text-gray-200">Enter Your 6-Digit PIN</Label>
+                  <Label htmlFor="reset-pin">Enter Your 6-Digit PIN</Label>
                   <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
                     <InputOTPGroup>
-                      <InputOTPSlot index={0} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={1} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={2} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={3} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={4} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                      <InputOTPSlot index={5} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
                     </InputOTPGroup>
                   </InputOTP>
                 </div>
@@ -708,24 +705,24 @@ export default function Auth() {
               {/* Only show delivery method for signup or OTP-based login */}
               {(!isLogin || showForgotPassword) && (
                 <div className="space-y-2">
-                  <Label className="lg:text-gray-200">How should we send your code?</Label>
+                  <Label>How should we send your code?</Label>
                   <RadioGroup value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sms" id="sms" className="lg:border-gray-600 lg:text-white" />
-                      <Label htmlFor="sms" className="font-normal flex items-center gap-2 lg:text-gray-200">
-                        SMS <span className="text-xs text-muted-foreground lg:text-gray-400">(Recommended)</span>
+                      <RadioGroupItem value="sms" id="sms" />
+                      <Label htmlFor="sms" className="font-normal flex items-center gap-2">
+                        SMS <span className="text-xs text-muted-foreground">(Recommended)</span>
                       </Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="whatsapp" id="whatsapp" className="lg:border-gray-600 lg:text-white" />
-                      <Label htmlFor="whatsapp" className="font-normal lg:text-gray-200">WhatsApp</Label>
+                      <RadioGroupItem value="whatsapp" id="whatsapp" />
+                      <Label htmlFor="whatsapp" className="font-normal">WhatsApp</Label>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="both" id="both" className="lg:border-gray-600 lg:text-white" />
-                      <Label htmlFor="both" className="font-normal lg:text-gray-200">Both</Label>
+                      <RadioGroupItem value="both" id="both" />
+                      <Label htmlFor="both" className="font-normal">Both</Label>
                     </div>
                   </RadioGroup>
-                  <p className="text-xs text-muted-foreground lg:text-gray-400 mt-2">
+                  <p className="text-xs text-muted-foreground mt-2">
                     💡 WhatsApp delivery requires you to message our business number first. SMS is instant and reliable.
                   </p>
                 </div>
@@ -761,22 +758,22 @@ export default function Auth() {
               </Button>
 
               <div className="space-y-2">
-                <Label className="lg:text-gray-200">Enter Your 6-Digit PIN</Label>
-                <p className="text-sm text-muted-foreground lg:text-gray-300">
+                <Label>Enter Your 6-Digit PIN</Label>
+                <p className="text-sm text-muted-foreground">
                   Enter the PIN you set during registration for {countryCode}{phoneNumber}
                 </p>
                 <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={1} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={2} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={3} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={4} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={5} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
                   </InputOTPGroup>
                 </InputOTP>
                 {pinLoginAttempts < 3 && (
-                  <p className="text-xs text-destructive lg:text-red-400">
+                  <p className="text-xs text-destructive">
                     {pinLoginAttempts} attempts remaining before account lock
                   </p>
                 )}
@@ -820,23 +817,23 @@ export default function Auth() {
               </Button>
 
               <div className="space-y-2">
-                <Label className="lg:text-gray-200">Enter 6-Digit Code</Label>
-                <p className="text-sm text-muted-foreground lg:text-gray-300">
+                <Label>Enter 6-Digit Code</Label>
+                <p className="text-sm text-muted-foreground">
                   Code sent to {countryCode}{phoneNumber}
                   {deliveryMethod === 'both' && ' via SMS and WhatsApp'}
                 </p>
                 <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
                   <InputOTPGroup>
-                    <InputOTPSlot index={0} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={1} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={2} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={3} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={4} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
-                    <InputOTPSlot index={5} className="lg:bg-gray-800 lg:border-gray-700 lg:text-white" />
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
                   </InputOTPGroup>
                 </InputOTP>
                 {otpExpiresAt && (
-                  <p className="text-xs text-muted-foreground lg:text-gray-400">
+                  <p className="text-xs text-muted-foreground">
                     Code expires in 10 minutes
                   </p>
                 )}
@@ -864,11 +861,11 @@ export default function Auth() {
           {/* Success Step */}
           {authStep === 'complete' && (
             <div className="text-center py-8">
-              <div className="mb-4 text-4xl lg:text-green-400">✓</div>
-              <h3 className="text-lg font-semibold mb-2 lg:text-white">
+              <div className="mb-4 text-4xl text-green-500">✓</div>
+              <h3 className="text-lg font-semibold mb-2">
                 {isLogin ? 'Welcome back!' : 'Account created!'}
               </h3>
-              <p className="text-sm text-muted-foreground lg:text-gray-300">
+              <p className="text-sm text-muted-foreground">
                 Redirecting to dashboard...
               </p>
             </div>
