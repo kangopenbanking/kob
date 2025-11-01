@@ -200,7 +200,7 @@ export default function CrediQOnboarding() {
 
       const { error: profileError } = await supabase
         .from('crediq_user_profiles')
-        .insert(profile);
+        .upsert(profile, { onConflict: 'user_id' });
 
       if (profileError) throw profileError;
 
