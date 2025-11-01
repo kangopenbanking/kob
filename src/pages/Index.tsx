@@ -22,6 +22,9 @@ import {
   PieChart,
   ArrowRight,
   Database,
+  UserPlus,
+  FlaskConical,
+  Rocket,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
@@ -607,7 +610,7 @@ const Index = () => {
       {/* How It Works */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Get Started in Minutes
@@ -616,43 +619,77 @@ const Index = () => {
               Simple integration process from sandbox to production
             </p>
           </div>
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+          <div className="grid md:grid-cols-4 gap-6 md:gap-4 items-center">
+            {/* Step 1 */}
+            <Card className="relative p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group animate-fade-in border-primary/20">
+              <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-sm">
                 1
               </div>
-              <h3 className="text-lg font-bold mb-2">Register</h3>
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <UserPlus className="h-8 w-8 text-primary" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-primary">Register</h3>
               <p className="text-sm text-muted-foreground">
                 Create your account and complete KYC verification
               </p>
+            </Card>
+
+            {/* Arrow 1 */}
+            <div className="hidden md:flex items-center justify-center animate-fade-in" style={{animationDelay: '0.15s'}}>
+              <ArrowRight className="h-8 w-8 text-primary/40 arrow-trail" />
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+
+            {/* Step 2 */}
+            <Card className="relative p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group animate-fade-in border-accent/20" style={{animationDelay: '0.1s'}}>
+              <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-accent/10 text-accent font-bold flex items-center justify-center text-sm">
                 2
               </div>
-              <h3 className="text-lg font-bold mb-2">Test</h3>
+              <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-4 group-hover:bg-accent/20 transition-colors">
+                <FlaskConical className="h-8 w-8 text-accent" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-accent">Test</h3>
               <p className="text-sm text-muted-foreground">
                 Integrate using our sandbox environment and test APIs
               </p>
+            </Card>
+
+            {/* Arrow 2 */}
+            <div className="hidden md:flex items-center justify-center animate-fade-in" style={{animationDelay: '0.25s'}}>
+              <ArrowRight className="h-8 w-8 text-accent/40 arrow-trail" style={{animationDelay: '0.2s'}} />
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+
+            {/* Step 3 */}
+            <Card className="relative p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group animate-fade-in border-green-500/20" style={{animationDelay: '0.2s'}}>
+              <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-green-500/10 text-green-500 font-bold flex items-center justify-center text-sm">
                 3
               </div>
-              <h3 className="text-lg font-bold mb-2">Deploy</h3>
+              <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4 group-hover:bg-green-500/20 transition-colors">
+                <Rocket className="h-8 w-8 text-green-500" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-green-500">Deploy</h3>
               <p className="text-sm text-muted-foreground">
                 Get production credentials and go live
               </p>
+            </Card>
+
+            {/* Arrow 3 */}
+            <div className="hidden md:flex items-center justify-center animate-fade-in" style={{animationDelay: '0.35s'}}>
+              <ArrowRight className="h-8 w-8 text-green-500/40 arrow-trail" style={{animationDelay: '0.4s'}} />
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-2xl font-bold mx-auto mb-4">
+
+            {/* Step 4 */}
+            <Card className="relative p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-2 group animate-fade-in border-orange-500/20" style={{animationDelay: '0.3s'}}>
+              <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-orange-500/10 text-orange-500 font-bold flex items-center justify-center text-sm">
                 4
               </div>
-              <h3 className="text-lg font-bold mb-2">Scale</h3>
+              <div className="w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-4 group-hover:bg-orange-500/20 transition-colors">
+                <TrendingUp className="h-8 w-8 text-orange-500" strokeWidth={1.5} />
+              </div>
+              <h3 className="text-xl font-bold mb-3 text-orange-500">Scale</h3>
               <p className="text-sm text-muted-foreground">
                 Monitor, optimize, and grow your integration
               </p>
-            </div>
+            </Card>
           </div>
           </div>
         </div>

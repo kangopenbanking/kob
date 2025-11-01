@@ -186,3 +186,25 @@ All colors MUST be HSL.
 .swagger-container .swagger-ui .scheme-container {
   @apply bg-muted/50 p-4 rounded-lg;
 }
+
+/* Arrow Trail Animation */
+@keyframes arrow-pulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: translateX(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateX(4px);
+  }
+}
+
+.arrow-trail {
+  animation: arrow-pulse 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrow-trail {
+    animation: none;
+  }
+}
