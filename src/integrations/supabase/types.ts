@@ -827,10 +827,14 @@ export type Database = {
           created_at: string | null
           currency: string
           error_message: string | null
+          facilitated_institution_id: string | null
           flutterwave_ref: string | null
           id: string
+          is_kob_facilitated: boolean | null
+          kob_fee_amount: number | null
           metadata: Json | null
           narration: string | null
+          settlement_id: string | null
           status: string
           transaction_ref: string
           transaction_type: string
@@ -847,10 +851,14 @@ export type Database = {
           created_at?: string | null
           currency?: string
           error_message?: string | null
+          facilitated_institution_id?: string | null
           flutterwave_ref?: string | null
           id?: string
+          is_kob_facilitated?: boolean | null
+          kob_fee_amount?: number | null
           metadata?: Json | null
           narration?: string | null
+          settlement_id?: string | null
           status?: string
           transaction_ref: string
           transaction_type: string
@@ -867,17 +875,36 @@ export type Database = {
           created_at?: string | null
           currency?: string
           error_message?: string | null
+          facilitated_institution_id?: string | null
           flutterwave_ref?: string | null
           id?: string
+          is_kob_facilitated?: boolean | null
+          kob_fee_amount?: number | null
           metadata?: Json | null
           narration?: string | null
+          settlement_id?: string | null
           status?: string
           transaction_ref?: string
           transaction_type?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "bank_transfer_transactions_facilitated_institution_id_fkey"
+            columns: ["facilitated_institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_transfer_transactions_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       beneficiaries: {
         Row: {
@@ -3026,13 +3053,18 @@ export type Database = {
           id: string
           institution_name: string
           institution_type: Database["public"]["Enums"]["institution_type"]
+          kob_payment_fee_structure_id: string | null
+          minimum_settlement_amount: number | null
           phone: string
           registration_number: string
           rejection_reason: string | null
           sandbox_access: boolean | null
           sandbox_credentials: Json | null
+          settlement_bank_account: Json | null
+          settlement_frequency: string | null
           status: Database["public"]["Enums"]["institution_status"]
           updated_at: string
+          use_kob_flutterwave: boolean | null
           user_id: string
           website: string | null
         }
@@ -3045,13 +3077,18 @@ export type Database = {
           id?: string
           institution_name: string
           institution_type: Database["public"]["Enums"]["institution_type"]
+          kob_payment_fee_structure_id?: string | null
+          minimum_settlement_amount?: number | null
           phone: string
           registration_number: string
           rejection_reason?: string | null
           sandbox_access?: boolean | null
           sandbox_credentials?: Json | null
+          settlement_bank_account?: Json | null
+          settlement_frequency?: string | null
           status?: Database["public"]["Enums"]["institution_status"]
           updated_at?: string
+          use_kob_flutterwave?: boolean | null
           user_id: string
           website?: string | null
         }
@@ -3064,17 +3101,30 @@ export type Database = {
           id?: string
           institution_name?: string
           institution_type?: Database["public"]["Enums"]["institution_type"]
+          kob_payment_fee_structure_id?: string | null
+          minimum_settlement_amount?: number | null
           phone?: string
           registration_number?: string
           rejection_reason?: string | null
           sandbox_access?: boolean | null
           sandbox_credentials?: Json | null
+          settlement_bank_account?: Json | null
+          settlement_frequency?: string | null
           status?: Database["public"]["Enums"]["institution_status"]
           updated_at?: string
+          use_kob_flutterwave?: boolean | null
           user_id?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "institutions_kob_payment_fee_structure_id_fkey"
+            columns: ["kob_payment_fee_structure_id"]
+            isOneToOne: false
+            referencedRelation: "fee_structures"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       iso20022_account_statements: {
         Row: {
@@ -4048,13 +4098,17 @@ export type Database = {
           description: string | null
           destination_account_id: string | null
           error_message: string | null
+          facilitated_institution_id: string | null
           flutterwave_ref: string | null
           id: string
           is_bank_deposit: boolean | null
+          is_kob_facilitated: boolean | null
+          kob_fee_amount: number | null
           metadata: Json | null
           mobile_account_id: string | null
           phone_number: string
           provider: string
+          settlement_id: string | null
           status: string
           transaction_ref: string
           transaction_type: string
@@ -4070,13 +4124,17 @@ export type Database = {
           description?: string | null
           destination_account_id?: string | null
           error_message?: string | null
+          facilitated_institution_id?: string | null
           flutterwave_ref?: string | null
           id?: string
           is_bank_deposit?: boolean | null
+          is_kob_facilitated?: boolean | null
+          kob_fee_amount?: number | null
           metadata?: Json | null
           mobile_account_id?: string | null
           phone_number: string
           provider: string
+          settlement_id?: string | null
           status?: string
           transaction_ref: string
           transaction_type: string
@@ -4092,13 +4150,17 @@ export type Database = {
           description?: string | null
           destination_account_id?: string | null
           error_message?: string | null
+          facilitated_institution_id?: string | null
           flutterwave_ref?: string | null
           id?: string
           is_bank_deposit?: boolean | null
+          is_kob_facilitated?: boolean | null
+          kob_fee_amount?: number | null
           metadata?: Json | null
           mobile_account_id?: string | null
           phone_number?: string
           provider?: string
+          settlement_id?: string | null
           status?: string
           transaction_ref?: string
           transaction_type?: string
@@ -4121,10 +4183,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "mobile_money_transactions_facilitated_institution_id_fkey"
+            columns: ["facilitated_institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "mobile_money_transactions_mobile_account_id_fkey"
             columns: ["mobile_account_id"]
             isOneToOne: false
             referencedRelation: "mobile_money_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mobile_money_transactions_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_transactions"
             referencedColumns: ["id"]
           },
         ]
@@ -5308,6 +5384,77 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      settlement_transactions: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_message: string | null
+          flutterwave_transfer_ref: string | null
+          id: string
+          institution_id: string
+          kob_fees_charged: number
+          metadata: Json | null
+          net_settlement_amount: number
+          period_end: string
+          period_start: string
+          settlement_destination: Json
+          settlement_method: string
+          settlement_ref: string
+          settlement_status: string | null
+          total_inflows: number
+          total_outflows: number
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          flutterwave_transfer_ref?: string | null
+          id?: string
+          institution_id: string
+          kob_fees_charged?: number
+          metadata?: Json | null
+          net_settlement_amount?: number
+          period_end: string
+          period_start: string
+          settlement_destination: Json
+          settlement_method: string
+          settlement_ref: string
+          settlement_status?: string | null
+          total_inflows?: number
+          total_outflows?: number
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          flutterwave_transfer_ref?: string | null
+          id?: string
+          institution_id?: string
+          kob_fees_charged?: number
+          metadata?: Json | null
+          net_settlement_amount?: number
+          period_end?: string
+          period_start?: string
+          settlement_destination?: Json
+          settlement_method?: string
+          settlement_ref?: string
+          settlement_status?: string | null
+          total_inflows?: number
+          total_outflows?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_transactions_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       signing_keys: {
         Row: {
@@ -6731,6 +6878,14 @@ export type Database = {
     }
     Functions: {
       calculate_kyc_risk_score: { Args: { _user_id: string }; Returns: number }
+      calculate_settlement_balance: {
+        Args: {
+          _institution_id: string
+          _period_end: string
+          _period_start: string
+        }
+        Returns: Json
+      }
       calculate_transaction_fee: {
         Args: {
           _institution_id: string
