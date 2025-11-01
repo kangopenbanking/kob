@@ -22,24 +22,24 @@ export function SettlementManagement() {
     setLoading(true);
     try {
       // Load institutions with facilitation enabled
-      const { data: instData, error: instError } = await supabase
+      const instResponse = await (supabase as any)
         .from('institutions')
         .select('id, institution_name, use_kob_flutterwave, settlement_frequency, minimum_settlement_amount, settlement_bank_account')
         .eq('use_kob_flutterwave', true)
         .eq('is_active', true);
 
-      if (instError) throw instError;
-      setInstitutions(instData || []);
+      if (instResponse.error) throw instResponse.error;
+      setInstitutions(instResponse.data || []);
 
       // Load recent settlements
-      const { data: settlementData, error: settlementError } = await supabase
+      const settlementResponse = await (supabase as any)
         .from('settlement_transactions')
         .select('*, institutions(institution_name)')
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (settlementError) throw settlementError;
-      setSettlements(settlementData || []);
+      if (settlementResponse.error) throw settlementResponse.error;
+      setSettlements(settlementResponse.data || []);
     } catch (error: any) {
       console.error('Error loading data:', error);
       toast.error('Failed to load data');
