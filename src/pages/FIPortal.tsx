@@ -1,5 +1,6 @@
 import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
 import { FacilitatedPaymentsCard } from "@/components/institution/FacilitatedPaymentsCard";
+import { CreditApiIntegrationWidget } from "@/components/credit-api/CreditApiIntegrationWidget";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -244,6 +245,7 @@ export default function FIPortal() {
           <TabsTrigger value="analytics">{t('analytics')}</TabsTrigger>
           <TabsTrigger value="compliance">{t('compliance')}</TabsTrigger>
           <TabsTrigger value="fees">Fees & Billing</TabsTrigger>
+          <TabsTrigger value="credit-api">Credit API</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
@@ -319,6 +321,26 @@ export default function FIPortal() {
             </CardHeader>
             <CardContent>
               {institution?.id && <FeesDashboardWidget institutionId={institution.id} />}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="credit-api" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Credit Scoring API Access</CardTitle>
+              <CardDescription>
+                Query customer credit scores for lending decisions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {institution?.id ? (
+                <CreditApiIntegrationWidget institutionId={institution.id} />
+              ) : (
+                <p className="text-muted-foreground">
+                  Contact admin to get Credit API credentials
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

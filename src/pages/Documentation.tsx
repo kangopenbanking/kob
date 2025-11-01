@@ -967,6 +967,28 @@ Response:
                   </div>
                 </div>
 
+                <Card className="bg-gradient-to-r from-primary/10 to-accent/10 border-primary/20 mb-6">
+                  <CardContent className="py-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-semibold text-lg mb-1 flex items-center gap-2">
+                          <TrendingUp className="h-5 w-5 text-primary" />
+                          Complete Credit API Documentation
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Comprehensive guide for financial institutions with code examples, pricing calculator, and integration patterns
+                        </p>
+                      </div>
+                      <Button size="lg" asChild>
+                        <Link to="/credit-api-docs">
+                          <Book className="mr-2 h-5 w-5" />
+                          View Full Docs
+                        </Link>
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+
                 <div>
                   <h3 className="font-semibold text-lg mb-3">B2B Pricing Tiers</h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

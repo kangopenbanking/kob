@@ -95,6 +95,7 @@ import CrediQOnboarding from "./pages/CrediQOnboarding";
 import CrediQDashboard from "./pages/CrediQDashboard";
 import CrediQSettings from "./pages/CrediQSettings";
 import CrediQInfo from "./pages/CrediQInfo";
+import CreditAPIDocumentation from "./pages/CreditAPIDocumentation";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -190,6 +191,7 @@ function App() {
             <Route path="/credit-score" element={<Layout><ProtectedRoute><CreditScore /></ProtectedRoute></Layout>} />
             <Route path="/credit-report" element={<Layout><ProtectedRoute><CreditReport /></ProtectedRoute></Layout>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
+            <Route path="/credit-api-docs" element={<Layout><CreditAPIDocumentation /></Layout>} />
             <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/banking-ops" element={<Layout><ProtectedRoute><PersonalAccountRoute><BankingOps /></PersonalAccountRoute></ProtectedRoute></Layout>} />
