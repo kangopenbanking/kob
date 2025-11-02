@@ -179,17 +179,21 @@ serve(async (req) => {
       );
     }
 
-    const { test_email } = await req.json();
-    const targetEmail = test_email || 'umojami@gmail.com';
+    const { email: testEmail, include_sms = false } = await req.json();
+    
+    console.log(`Testing templates with email: ${testEmail}${include_sms ? ' (including SMS)' : ' (email only)'}`);
 
-    console.log(`Starting to send all templates to: ${targetEmail}`);
-
-    // Fetch all active email templates
-    const { data: templates, error: templatesError } = await supabaseClient
+    // Fetch all active templates based on include_sms flag
+    const templateQuery = supabaseClient
       .from('communication_templates')
       .select('*')
-      .eq('is_active', true)
-      .eq('template_type', 'email')
+      .eq('is_active', true);
+    
+    if (!include_sms) {
+      templateQuery.eq('template_type', 'email');
+    }
+    
+    const { data: templates, error: templatesError } = await templateQuery
       .order('category', { ascending: true })
       .order('template_key', { ascending: true });
 
@@ -201,32 +205,39 @@ serve(async (req) => {
       );
     }
 
-    const results = [];
-    let successCount = 0;
-    let failureCount = 0;
+    const emailTemplates = templates.filter(t => t.template_type === 'email');
+    const smsTemplates = templates.filter(t => t.template_type === 'sms');
+    
+    console.log(`Testing ${emailTemplates.length} email templates${include_sms ? ` and ${smsTemplates.length} SMS templates` : ''}`);
 
-    // Send each template
-    for (const template of templates) {
+    const results = [];
+    let sent = 0;
+    let failed = 0;
+    let rerouted = 0;
+
+    // Send test email for each email template
+    for (const template of emailTemplates) {
       try {
         console.log(`Sending template: ${template.template_key}`);
         
         const variables = getSampleVariables(template.template_key);
         
-        // Call the send-communication function
-        const { data: sendResult, error: sendError } = await supabaseClient.functions.invoke(
+        // Call the send-communication function with test_mode enabled
+        const { data: result, error: sendError } = await supabaseClient.functions.invoke(
           'send-communication',
           {
             body: {
               template_key: template.template_key,
-              recipient_email: targetEmail,
+              recipient_email: testEmail,
               variables: variables,
+              test_mode: true,
             },
           }
         );
 
         if (sendError) {
           console.error(`Failed to send ${template.template_key}:`, sendError);
-          failureCount++;
+          failed++;
           results.push({
             template_key: template.template_key,
             template_name: template.template_name,
@@ -234,14 +245,26 @@ serve(async (req) => {
             status: 'failed',
             error: sendError.message,
           });
+        } else if (!result.success) {
+          console.error(`Failed to send ${template.template_key}:`, result.error);
+          failed++;
+          results.push({
+            template_key: template.template_key,
+            template_name: template.template_name,
+            category: template.category,
+            status: 'failed',
+            error: result.error,
+          });
         } else {
-          console.log(`Successfully sent ${template.template_key}`);
-          successCount++;
+          console.log(`Successfully sent ${template.template_key}${result.rerouted_to ? ` (rerouted to ${result.rerouted_to})` : ''}`);
+          sent++;
+          if (result.rerouted_to) rerouted++;
           results.push({
             template_key: template.template_key,
             template_name: template.template_name,
             category: template.category,
             status: 'sent',
+            rerouted_to: result.rerouted_to,
           });
         }
 
@@ -249,7 +272,7 @@ serve(async (req) => {
         await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error: any) {
         console.error(`Error sending ${template.template_key}:`, error);
-        failureCount++;
+        failed++;
         results.push({
           template_key: template.template_key,
           template_name: template.template_name,
@@ -260,12 +283,29 @@ serve(async (req) => {
       }
     }
 
+    // Handle SMS templates if requested
+    if (include_sms && smsTemplates.length > 0) {
+      for (const template of smsTemplates) {
+        results.push({
+          template_key: template.template_key,
+          template_name: template.template_name,
+          category: template.category,
+          status: 'skipped',
+          error: 'SMS testing not yet implemented',
+        });
+      }
+    }
+
     const summary = {
-      test_email: targetEmail,
-      total_templates: templates.length,
-      sent: successCount,
-      failed: failureCount,
-      results: results,
+      test_email: testEmail,
+      active_email_templates: emailTemplates.length,
+      active_sms_templates: smsTemplates.length,
+      total_attempted: emailTemplates.length,
+      sent,
+      failed,
+      rerouted,
+      sandbox_mode: rerouted > 0,
+      results,
       timestamp: new Date().toISOString(),
     };
 

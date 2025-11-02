@@ -13,6 +13,7 @@ interface CommunicationRequest {
   recipient_phone?: string;
   recipient_id?: string;
   variables: Record<string, any>;
+  test_mode?: boolean;
 }
 
 // Simple template variable replacement
@@ -37,7 +38,7 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
     );
 
-    const { template_key, recipient_email, recipient_phone, recipient_id, variables } = await req.json() as CommunicationRequest;
+    const { template_key, recipient_email, recipient_phone, recipient_id, variables, test_mode } = await req.json() as CommunicationRequest;
 
     console.log('Sending communication with template:', template_key);
 
@@ -64,6 +65,7 @@ serve(async (req) => {
     let success = false;
     let errorMessage = '';
     let sentAt = null;
+    let reroutedTo = null;
 
     // Send email
     if (template.template_type === 'email' && recipient_email) {
@@ -75,17 +77,47 @@ serve(async (req) => {
       } else {
         try {
           const resend = new Resend(resendApiKey);
+          const fromAddress = Deno.env.get('RESEND_FROM') || 'KOB Open Banking <onboarding@resend.dev>';
           
           const { error: emailError } = await resend.emails.send({
-            from: 'KOB Open Banking <onboarding@resend.dev>',
+            from: fromAddress,
             to: [recipient_email],
             subject: subject,
             html: body,
           });
 
           if (emailError) {
-            errorMessage = emailError.message;
-            console.error('Email error:', emailError);
+            // Check if this is a sandbox validation error
+            if (test_mode && emailError.message && emailError.message.includes('You can only send testing emails')) {
+              console.log('Sandbox mode detected, attempting to reroute to allowed address');
+              
+              // Extract allowed email from error message (between parentheses)
+              const match = emailError.message.match(/\(([^)]+)\)/);
+              const allowedEmail = match ? match[1] : 'kangopenbanking@gmail.com';
+              
+              console.log(`Rerouting test email from ${recipient_email} to ${allowedEmail}`);
+              
+              // Retry with allowed email
+              const { error: retryError } = await resend.emails.send({
+                from: fromAddress,
+                to: [allowedEmail],
+                subject: `[TEST for ${recipient_email}] ${subject}`,
+                html: `<p><strong>Note: This test email was rerouted from ${recipient_email} due to Resend sandbox restrictions.</strong></p><hr>${body}`,
+              });
+
+              if (retryError) {
+                errorMessage = `Reroute failed: ${retryError.message}`;
+                console.error('Reroute error:', retryError);
+              } else {
+                success = true;
+                sentAt = new Date().toISOString();
+                reroutedTo = allowedEmail;
+                console.log(`Email rerouted successfully to: ${allowedEmail}`);
+              }
+            } else {
+              errorMessage = emailError.message;
+              console.error('Email error:', emailError);
+            }
           } else {
             success = true;
             sentAt = new Date().toISOString();
@@ -160,7 +192,8 @@ serve(async (req) => {
       JSON.stringify({ 
         success, 
         message: success ? 'Communication sent successfully' : 'Communication failed',
-        error: errorMessage || undefined
+        error: errorMessage || undefined,
+        rerouted_to: reroutedTo || undefined
       }),
       { 
         status: success ? 200 : 500,

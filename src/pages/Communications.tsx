@@ -169,7 +169,7 @@ const Communications = () => {
       const { data: { session } } = await supabase.auth.getSession();
       
       const response = await supabase.functions.invoke('test-all-templates', {
-        body: { test_email: testEmail },
+        body: { email: testEmail },
         headers: {
           Authorization: `Bearer ${session?.access_token}`,
         },
@@ -180,7 +180,8 @@ const Communications = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['communication-logs'] });
-      toast.success(`Successfully sent ${data.sent} templates out of ${data.total_templates} to ${data.test_email}`);
+      const sandboxNote = data.sandbox_mode ? ' (Resend sandbox mode active - emails rerouted)' : '';
+      toast.success(`Sent ${data.sent} of ${data.total_attempted} email templates${sandboxNote}`);
     },
     onError: (error: any) => {
       toast.error(`Failed to test templates: ${error.message}`);
@@ -209,8 +210,8 @@ const Communications = () => {
         </div>
         <Button 
           onClick={() => {
-            if (confirm('This will send all 26 email templates to umojami@gmail.com. Continue?')) {
-              testAllTemplatesMutation.mutate('umojami@gmail.com');
+            if (confirm('This will test all email templates with kangopenbanking@gmail.com. Continue?')) {
+              testAllTemplatesMutation.mutate('kangopenbanking@gmail.com');
             }
           }}
           disabled={testAllTemplatesMutation.isPending}
