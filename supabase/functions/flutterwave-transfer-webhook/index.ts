@@ -172,11 +172,18 @@ serve(async (req) => {
     });
 
   } catch (error: any) {
-    console.error('Webhook error:', error);
-    const errorMessage = sanitizeErrorMessage(error?.message || 'Unknown error');
+    // Log full details server-side for debugging
+    console.error('[FLUTTERWAVE-WEBHOOK] Error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      webhook_type: 'flutterwave_transfer',
+      timestamp: new Date().toISOString()
+    });
+    
+    // Return generic error to external webhook caller
     return new Response(JSON.stringify({ 
-      error: errorMessage,
-      success: false 
+      received: false,
+      message: 'Processing error occurred'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

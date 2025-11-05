@@ -147,17 +147,23 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in stripe-confirm-payment:', error);
-    const rawError = error instanceof Error ? error.message : 'Unknown error occurred';
-    const errorMessage = sanitizeErrorMessage(rawError);
+    // Log full details server-side for debugging
+    console.error('[STRIPE-WEBHOOK] Error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      webhook_type: 'stripe_payment',
+      timestamp: new Date().toISOString()
+    });
+    
+    // Return generic error to external webhook caller
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
-        code: 'STRIPE_WEBHOOK_ERROR'
+        received: false,
+        message: 'Processing error occurred'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400
+        status: 500
       }
     );
   }

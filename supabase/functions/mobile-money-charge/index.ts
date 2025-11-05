@@ -185,14 +185,19 @@ serve(async (req) => {
     }
 
   } catch (error) {
-    console.error('Error in mobile-money-charge:', error);
-    const rawError = error instanceof Error ? error.message : 'Unknown error occurred';
-    const errorMessage = sanitizeErrorMessage(rawError);
+    // Log full details server-side for debugging
+    console.error('[MOBILE-MONEY] Error:', {
+      error: error instanceof Error ? error.message : error,
+      stack: error instanceof Error ? error.stack : undefined,
+      operation: 'mobile_money_charge',
+      timestamp: new Date().toISOString()
+    });
+    
+    // Return generic error - do not expose internal details
     return new Response(
       JSON.stringify({ 
         success: false,
-        error: errorMessage,
-        code: 'MOBILE_MONEY_CHARGE_ERROR'
+        message: 'Transaction processing failed. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
