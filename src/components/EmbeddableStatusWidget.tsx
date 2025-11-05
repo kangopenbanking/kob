@@ -27,7 +27,7 @@ export const EmbeddableStatusWidget = () => {
     const checkHealth = async () => {
       const startTime = Date.now();
       try {
-        const response = await fetch("https://api.kangopenbanking.com/functions/v1/api-health");
+        const response = await fetch("https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/api-health");
         const endTime = Date.now();
         const responseTime = endTime - startTime;
         
