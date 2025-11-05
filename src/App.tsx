@@ -104,6 +104,13 @@ import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
 import Playground from "./pages/developer/Playground";
 import Changelog from "./pages/developer/Changelog";
+import NoCodeIndex from "./pages/integrations/NoCodeIndex";
+import ZapierGuide from "./pages/integrations/ZapierGuide";
+import MakeGuide from "./pages/integrations/MakeGuide";
+import BubbleGuide from "./pages/integrations/BubbleGuide";
+import RetoolGuide from "./pages/integrations/RetoolGuide";
+import StatusWidget from "./pages/StatusWidget";
+import EmbedStatusWidget from "./pages/EmbedStatusWidget";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -183,6 +190,14 @@ function App() {
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/api-catalog" element={<Layout><ApiCatalog /></Layout>} />
+            
+            {/* No-Code Integration Guides */}
+            <Route path="/integrations" element={<Layout><NoCodeIndex /></Layout>} />
+            <Route path="/integrations/zapier" element={<Layout><ZapierGuide /></Layout>} />
+            <Route path="/integrations/make" element={<Layout><MakeGuide /></Layout>} />
+            <Route path="/integrations/bubble" element={<Layout><BubbleGuide /></Layout>} />
+            <Route path="/integrations/retool" element={<Layout><RetoolGuide /></Layout>} />
+            
             <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
@@ -219,6 +234,8 @@ function App() {
             <Route path="/compliance" element={<Layout><CompliancePage /></Layout>} />
             <Route path="/sla" element={<Layout><SLA /></Layout>} />
             <Route path="/aup" element={<Layout><AUP /></Layout>} />
+            <Route path="/status-widget" element={<StatusWidget />} />
+            <Route path="/embed-status-widget" element={<EmbedStatusWidget />} />
             <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
         <Route path="/contact" element={<Layout><Contact /></Layout>} />

@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Zap, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import CodeBlock from "@/components/developer/CodeBlock";
+import { CodeBlock } from "@/components/developer/CodeBlock";
 
 const ZapierGuide = () => {
   const { toast } = useToast();
@@ -331,6 +331,34 @@ const ZapierGuide = () => {
                 <p className="text-sm text-muted-foreground">
                   Add a delay between API calls if you're hitting rate limits. Zapier has built-in delay actions.
                 </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Video Tutorials */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Video Tutorials</CardTitle>
+              <CardDescription>Watch step-by-step video guides</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="text-center p-6">
+                  <h4 className="font-semibold mb-2">Zapier Integration in 5 Minutes</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Complete walkthrough from setup to first automation
+                  </p>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
+              </div>
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="text-center p-6">
+                  <h4 className="font-semibold mb-2">Advanced Webhook Triggers</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Learn to build complex multi-step workflows
+                  </p>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
               </div>
             </CardContent>
           </Card>

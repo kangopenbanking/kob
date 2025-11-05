@@ -5,7 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Workflow, CheckCircle2, AlertCircle, GitBranch } from "lucide-react";
-import CodeBlock from "@/components/developer/CodeBlock";
+import { CodeBlock } from "@/components/developer/CodeBlock";
 
 const MakeGuide = () => {
   const apiBaseUrl = "https://api.kangopenbanking.com/functions/v1";
@@ -328,6 +328,34 @@ const MakeGuide = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Video Tutorials */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Video Tutorials</CardTitle>
+              <CardDescription>Visual guides for Make.com integration</CardDescription>
+            </CardHeader>
+            <CardContent className="grid md:grid-cols-2 gap-4">
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="text-center p-6">
+                  <h4 className="font-semibold mb-2">Build Your First Scenario</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    From zero to working automation in 10 minutes
+                  </p>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
+              </div>
+              <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
+                <div className="text-center p-6">
+                  <h4 className="font-semibold mb-2">Complex Payment Workflows</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Multi-step processing with error handling
+                  </p>
+                  <Badge variant="outline">Coming Soon</Badge>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Next Steps */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
