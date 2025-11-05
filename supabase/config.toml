@@ -333,3 +333,8 @@ verify_jwt = false
 
 [functions.test-all-templates]
 verify_jwt = true
+
+# Phase 17: GDPR Compliance & Data Retention
+
+[functions.gdpr-consent-retention]
+verify_jwt = false
