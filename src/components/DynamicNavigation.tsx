@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, TrendingUp, Target, BarChart3 } from "lucide-react";
+import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, TrendingUp, Target, BarChart3, Puzzle, Code } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -429,6 +429,36 @@ export const DynamicNavigation = () => {
                         </p>
                       </div>
                     </Link>
+                    
+                    <Link 
+                      to="/integrations" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <Puzzle className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          No-Code Integrations
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Zapier, Make, Bubble & Retool guides
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/embed-status-widget" 
+                      className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <Code className="h-5 w-5 text-primary mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
+                          Embeddable Widget
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Add status to your site
+                        </p>
+                      </div>
+                    </Link>
                   </div>
                 </NavigationMenuContent>
               </NavigationMenuItem>
@@ -514,6 +544,12 @@ export const DynamicNavigation = () => {
                   <Link to="/status" className="text-sm font-medium hover:text-primary transition-colors flex items-center gap-2">
                     <span className="h-2 w-2 bg-green-500 rounded-full"></span>
                     API Status
+                  </Link>
+                  <Link to="/integrations" className="text-sm font-medium hover:text-primary transition-colors block">
+                    No-Code Integrations
+                  </Link>
+                  <Link to="/embed-status-widget" className="text-sm font-medium hover:text-primary transition-colors block">
+                    Embeddable Widget
                   </Link>
                   <Link to="/faq" className="text-sm font-medium hover:text-primary transition-colors block">
                     FAQ

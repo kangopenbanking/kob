@@ -29,6 +29,8 @@ export const Footer = () => {
               <li><Link to="/guides/aisp" className="hover:text-primary transition-colors">AISP Guide</Link></li>
               <li><Link to="/guides/pisp" className="hover:text-primary transition-colors">PISP Guide</Link></li>
               <li><Link to="/status" className="hover:text-primary transition-colors">Status</Link></li>
+              <li><Link to="/status-widget" className="hover:text-primary transition-colors">Status Widget</Link></li>
+              <li><Link to="/embed-status-widget" className="hover:text-primary transition-colors">Embed Widget</Link></li>
             </ul>
           </div>
 
@@ -52,6 +54,11 @@ export const Footer = () => {
               <li><Link to="/developer/api/pisp" className="hover:text-primary transition-colors">PISP APIs</Link></li>
               <li><Link to="/developer/api/mobile-money" className="hover:text-primary transition-colors">Mobile Money</Link></li>
               <li><Link to="/developer/console" className="hover:text-primary transition-colors">API Console</Link></li>
+              <li><Link to="/integrations" className="hover:text-primary transition-colors">No-Code Integrations</Link></li>
+              <li><Link to="/integrations/zapier" className="hover:text-primary transition-colors">Zapier Integration</Link></li>
+              <li><Link to="/integrations/make" className="hover:text-primary transition-colors">Make Integration</Link></li>
+              <li><Link to="/integrations/bubble" className="hover:text-primary transition-colors">Bubble Integration</Link></li>
+              <li><Link to="/integrations/retool" className="hover:text-primary transition-colors">Retool Integration</Link></li>
             </ul>
           </div>
 

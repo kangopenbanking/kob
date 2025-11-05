@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield, Puzzle } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -56,6 +56,17 @@ const navSections = [
       { title: "API Testing", path: "/developer/api-testing" },
       { title: "Code Examples", path: "/developer/examples" },
       { title: "Sandbox", path: "/developer/sandbox" },
+    ],
+  },
+  {
+    title: "No-Code Integration",
+    icon: Puzzle,
+    items: [
+      { title: "Overview", path: "/integrations" },
+      { title: "Zapier", path: "/integrations/zapier" },
+      { title: "Make.com", path: "/integrations/make" },
+      { title: "Bubble.io", path: "/integrations/bubble" },
+      { title: "Retool", path: "/integrations/retool" },
     ],
   },
 ];
