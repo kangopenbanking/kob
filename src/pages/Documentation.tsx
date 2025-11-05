@@ -6,6 +6,7 @@ import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, Trend
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
+import { SEO } from "@/components/SEO";
 
 const Documentation = () => {
   const { toast } = useToast();
@@ -119,6 +120,24 @@ const Documentation = () => {
 
   return (
     <div className="container mx-auto px-4 py-12">
+        <SEO
+          title="API Documentation"
+          description="Complete API reference for Kang Open Banking. RESTful endpoints, authentication guides, code examples in multiple languages, and integration tutorials for Cameroon's banking ecosystem."
+          keywords="API documentation, REST API, banking API reference, open banking integration, financial services API, XAF payment integration, AISP, PISP"
+          canonical="https://kangopenbanking.com/documentation"
+          structuredData={{
+            "@context": "https://schema.org",
+            "@type": "TechArticle",
+            "headline": "Kang Open Banking API Documentation",
+            "description": "Complete technical documentation for integrating banking services in Cameroon",
+            "author": {
+              "@type": "Organization",
+              "name": "Kang Open Banking"
+            },
+            "datePublished": "2025-01-05",
+            "dateModified": "2025-11-05"
+          }}
+        />
         <div className="max-w-5xl mx-auto">
           {/* Header */}
           <div className="mb-12">

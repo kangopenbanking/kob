@@ -7,7 +7,7 @@
   <!-- Homepage -->
   <url>
     <loc>https://kangopenbanking.com/</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -15,19 +15,19 @@
   <!-- Main Pages -->
   <url>
     <loc>https://kangopenbanking.com/about</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/pricing</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/contact</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
@@ -35,95 +35,103 @@
   <!-- Developer Portal - High Priority -->
   <url>
     <loc>https://kangopenbanking.com/for-developers</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/documentation</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/api-catalog</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
+  </url>
+  
+  <!-- Credit API Documentation - NEW -->
+  <url>
+    <loc>https://kangopenbanking.com/credit-api-documentation</loc>
+    <lastmod>2025-11-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
   </url>
 
   <!-- Developer Tools -->
   <url>
     <loc>https://kangopenbanking.com/developer/quick-start</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/api-explorer</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/playground</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/api-testing</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/console</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/changelog</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
-  <!-- No-Code Integration Guides - NEW High Priority -->
+  <!-- No-Code Integration Guides - High Priority -->
   <url>
     <loc>https://kangopenbanking.com/integrations</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/integrations/zapier</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/integrations/make</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/integrations/bubble</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/integrations/retool</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
@@ -131,25 +139,25 @@
   <!-- API Reference Guides -->
   <url>
     <loc>https://kangopenbanking.com/developer/aisp-reference</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/pisp-reference</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/banking-reference</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/mobile-money-reference</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -157,13 +165,13 @@
   <!-- API Specifications (for discovery tools) -->
   <url>
     <loc>https://api.kangopenbanking.com/functions/v1/public-api-spec</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
     <loc>https://api.kangopenbanking.com/functions/v1/postman-collection</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -171,13 +179,13 @@
   <!-- Code Examples -->
   <url>
     <loc>https://kangopenbanking.com/developer/examples</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/sdks</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -185,19 +193,19 @@
   <!-- Security & Certificates -->
   <url>
     <loc>https://kangopenbanking.com/guides/certificates</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/guides/security</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/certificate-management</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -205,25 +213,25 @@
   <!-- Integration Guides -->
   <url>
     <loc>https://kangopenbanking.com/guides/aisp</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/guides/pisp</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/guides/webhooks</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer/webhooks-guide</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -231,19 +239,19 @@
   <!-- Product Pages -->
   <url>
     <loc>https://kangopenbanking.com/crediq</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/crediq-info</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/credit-scores-info</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
@@ -251,31 +259,31 @@
   <!-- Legal & Compliance -->
   <url>
     <loc>https://kangopenbanking.com/privacy</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/terms</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/aup</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/cookies</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
     <loc>https://kangopenbanking.com/sla</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>quarterly</changefreq>
     <priority>0.5</priority>
   </url>
@@ -283,7 +291,7 @@
   <!-- Status & Monitoring -->
   <url>
     <loc>https://kangopenbanking.com/status</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
@@ -291,7 +299,7 @@
   <!-- FAQ -->
   <url>
     <loc>https://kangopenbanking.com/faq</loc>
-    <lastmod>2025-01-05</lastmod>
+    <lastmod>2025-11-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>

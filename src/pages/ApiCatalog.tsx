@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, ExternalLink, Lock, Unlock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { SEO } from "@/components/SEO";
 
 interface ApiEndpoint {
   name: string;
@@ -123,6 +124,19 @@ export default function ApiCatalog() {
 
   return (
     <div className="container mx-auto px-4 py-12">
+      <SEO
+        title="API Catalog"
+        description="Browse 100+ banking API endpoints for Cameroon. Account information (AISP), payment initiation (PISP), credit scoring, mobile money integration, and XAF payment gateway. OpenAPI 3.0 compatible with Postman collections."
+        keywords="API catalog, banking endpoints, AISP endpoints, PISP endpoints, payment API, credit API, mobile money API, REST endpoints"
+        canonical="https://kangopenbanking.com/api-catalog"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          "name": "Kang Open Banking API Catalog",
+          "description": "Complete list of available API endpoints",
+          "numberOfItems": filteredEndpoints.length
+        }}
+      />
       <div className="max-w-6xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">API Endpoint Catalog</h1>

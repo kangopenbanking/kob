@@ -1,0 +1,42 @@
+{
+  "name": "Kang Open Banking",
+  "short_name": "KOB",
+  "description": "Unified Banking API for Cameroon",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0EA5E9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/kob-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/kob-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business", "developer tools"],
+  "shortcuts": [
+    {
+      "name": "API Documentation",
+      "url": "/documentation",
+      "description": "View API reference"
+    },
+    {
+      "name": "API Explorer",
+      "url": "/developer/api-explorer",
+      "description": "Test API endpoints"
+    },
+    {
+      "name": "Developer Portal",
+      "url": "/developer",
+      "description": "Access developer tools"
+    }
+  ]
+}

@@ -13,6 +13,11 @@ Allow: /
 User-agent: *
 Allow: /
 
+# API Discovery for aggregators
+User-agent: APIs-Google
+Allow: /
+Crawl-delay: 1
+
 # API Documentation
 Allow: /documentation
 Allow: /developer
@@ -30,6 +35,13 @@ Allow: /guides/
 Allow: /openapi.json
 Allow: /for-developers
 Allow: /api-catalog
+
+# Integration Guides
+Allow: /integrations
+Allow: /integrations/*
+
+# Credit API Documentation
+Allow: /credit-api-documentation
 
 # API Specifications (for discovery tools)
 Allow: /functions/v1/public-api-spec
