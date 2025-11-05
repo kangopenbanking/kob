@@ -275,16 +275,16 @@ export const Navigation = () => {
                     </Link>
                     
                     <Link 
-                      to="/developer" 
+                      to="/for-developers" 
                       className="group flex items-start gap-3 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
                     >
                       <BookOpen className="h-5 w-5 text-primary mt-0.5" />
                       <div>
                         <h3 className="font-semibold mb-1 group-hover:text-primary transition-colors">
-                          Developer Portal
+                          Developer API
                         </h3>
                         <p className="text-sm text-muted-foreground">
-                          API docs and testing tools
+                          Quick start, API docs & testing tools
                         </p>
                       </div>
                     </Link>

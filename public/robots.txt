@@ -23,8 +23,17 @@ Allow: /developer/certificates
 Allow: /developer/examples
 Allow: /developer/sandbox
 Allow: /developer/api/
+Allow: /developer/quick-start
+Allow: /developer/playground
+Allow: /developer/changelog
 Allow: /guides/
 Allow: /openapi.json
+Allow: /for-developers
+Allow: /api-catalog
+
+# API Specifications (for discovery tools)
+Allow: /functions/v1/public-api-spec
+Allow: /functions/v1/postman-collection
 
 # Certificate Management & Security
 Allow: /guides/certificates

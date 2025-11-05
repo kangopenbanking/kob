@@ -99,6 +99,11 @@ import CrediQInfo from "./pages/CrediQInfo";
 import CreditAPIDocumentation from "./pages/CreditAPIDocumentation";
 import HealthMonitoring from "./pages/admin/HealthMonitoring";
 import RLSMonitoring from "./pages/admin/RLSMonitoring";
+import ForDevelopers from "./pages/ForDevelopers";
+import ApiCatalog from "./pages/ApiCatalog";
+import QuickStart from "./pages/developer/QuickStart";
+import Playground from "./pages/developer/Playground";
+import Changelog from "./pages/developer/Changelog";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -156,6 +161,9 @@ function App() {
               <Route path="getting-started" element={<GettingStarted />} />
               <Route path="getting-started/authentication" element={<GettingStarted />} />
               <Route path="getting-started/first-call" element={<GettingStarted />} />
+              <Route path="quick-start" element={<QuickStart />} />
+              <Route path="playground" element={<Playground />} />
+              <Route path="changelog" element={<Changelog />} />
               <Route path="api/aisp" element={<AispReference />} />
               <Route path="api/pisp" element={<PispReference />} />
               <Route path="api/mobile-money" element={<MobileMoneyReference />} />
@@ -173,6 +181,8 @@ function App() {
               <Route path="api-explorer" element={<ApiExplorer />} />
               <Route path="certificates" element={<CertificateManagement />} />
             </Route>
+            <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
+            <Route path="/api-catalog" element={<Layout><ApiCatalog /></Layout>} />
             <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />

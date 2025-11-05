@@ -114,8 +114,8 @@ const Index = () => {
                   <span>Code examples & SDKs</span>
                 </li>
               </ul>
-              <Link to="/developer">
-                <Button className="w-full">Access Developer Portal</Button>
+              <Link to="/for-developers">
+                <Button className="w-full">Access Developer API</Button>
               </Link>
             </Card>
 
