@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Play, Copy, Check, Loader2, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { API_CONFIG } from "@/config/api";
 
 interface DemoField {
   name: string;
@@ -61,7 +62,7 @@ export function InteractiveDemoWidget({
   const generateCurlCommand = () => {
     if (!currentEndpoint) return '';
 
-    const baseUrl = `${window.location.origin}/api-demo`;
+    const baseUrl = API_CONFIG.BASE_URL;
     let command = `curl -X ${currentEndpoint.method} "${baseUrl}/${currentEndpoint.path}"`;
 
     if (currentEndpoint.requiresAuth) {
@@ -80,7 +81,7 @@ export function InteractiveDemoWidget({
   const generateJavaScriptCode = () => {
     if (!currentEndpoint) return '';
 
-    const baseUrl = `${window.location.origin}/api-demo`;
+    const baseUrl = API_CONFIG.BASE_URL;
     let code = `const response = await fetch('${baseUrl}/${currentEndpoint.path}', {\n`;
     code += `  method: '${currentEndpoint.method}',\n`;
     code += `  headers: {\n`;
@@ -104,7 +105,7 @@ export function InteractiveDemoWidget({
   const generatePythonCode = () => {
     if (!currentEndpoint) return '';
 
-    const baseUrl = `${window.location.origin}/api-demo`;
+    const baseUrl = API_CONFIG.BASE_URL;
     let code = `import requests\n\n`;
     code += `headers = {\n`;
     
