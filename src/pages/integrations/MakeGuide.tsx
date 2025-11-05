@@ -358,7 +358,57 @@ const MakeGuide = () => {
             </CardContent>
           </Card>
 
-          {/* Next Steps */}
+          {/* Interactive Demo */}
+          <InteractiveDemoWidget
+            title="Try It: Make.com HTTP Module"
+            description="Test API endpoints for Make.com integration"
+            platform="make"
+            endpoints={[
+              {
+                id: 'http-test',
+                name: 'Connection Test',
+                method: 'GET',
+                path: 'test',
+                description: 'Verify your HTTP module connection',
+                requiresAuth: true,
+              },
+              {
+                id: 'create-payment',
+                name: 'Create Payment',
+                method: 'POST',
+                path: 'payment',
+                description: 'Initiate a payment transaction',
+                requiresAuth: true,
+                fields: [
+                  { name: 'amount', type: 'number', label: 'Amount', required: true, defaultValue: 5000 },
+                  { name: 'currency', type: 'select', label: 'Currency', options: ['XAF', 'USD', 'EUR'], defaultValue: 'XAF' },
+                  { name: 'recipient', type: 'text', label: 'Recipient', placeholder: 'John Doe' },
+                ]
+              },
+              {
+                id: 'calculate-loan',
+                name: 'Loan Calculator',
+                method: 'POST',
+                path: 'loan/calculate',
+                description: 'Calculate loan repayment schedule',
+                requiresAuth: false,
+                fields: [
+                  { name: 'amount', type: 'number', label: 'Loan Amount', required: true, defaultValue: 500000 },
+                  { name: 'term_months', type: 'number', label: 'Term (months)', required: true, defaultValue: 12 },
+                ]
+              },
+              {
+                id: 'check-credit',
+                name: 'Credit Score Check',
+                method: 'GET',
+                path: 'credit-score',
+                description: 'Get sample credit score data',
+                requiresAuth: true,
+              },
+            ]}
+          />
+
+          {/* Video Tutorials */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
             <CardHeader>
               <CardTitle>Next Steps</CardTitle>

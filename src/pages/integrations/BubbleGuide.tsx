@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Circle, CheckCircle2, AlertCircle, Smartphone } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { InteractiveDemoWidget } from "@/components/developer/InteractiveDemoWidget";
 
 const BubbleGuide = () => {
   const apiBaseUrl = "https://api.kangopenbanking.com/functions/v1";
@@ -433,6 +434,52 @@ const BubbleGuide = () => {
               </Card>
             </TabsContent>
           </Tabs>
+
+          {/* Interactive Demo */}
+          <InteractiveDemoWidget
+            title="Try It: Bubble.io API Connector"
+            description="Test API endpoints for your Bubble.io application"
+            platform="bubble"
+            endpoints={[
+              {
+                id: 'connector-test',
+                name: 'API Connector Test',
+                method: 'GET',
+                path: 'test',
+                description: 'Verify your API connector configuration',
+                requiresAuth: false,
+              },
+              {
+                id: 'user-account',
+                name: 'Get User Account',
+                method: 'GET',
+                path: 'account',
+                description: 'Fetch user account details',
+                requiresAuth: true,
+              },
+              {
+                id: 'get-transactions',
+                name: 'Get Transactions',
+                method: 'GET',
+                path: 'transactions',
+                description: 'Retrieve transaction history',
+                requiresAuth: true,
+              },
+              {
+                id: 'mobile-money-transfer',
+                name: 'Mobile Money Transfer',
+                method: 'POST',
+                path: 'mm-transfer',
+                description: 'Initiate mobile money transfer',
+                requiresAuth: true,
+                fields: [
+                  { name: 'phone_number', type: 'text', label: 'Phone Number', required: true, placeholder: '+237670000000' },
+                  { name: 'amount', type: 'number', label: 'Amount', required: true, defaultValue: 5000 },
+                  { name: 'provider', type: 'select', label: 'Provider', options: ['MTN', 'Orange'], defaultValue: 'MTN' },
+                ]
+              },
+            ]}
+          />
 
           {/* Video Tutorials */}
           <Card>

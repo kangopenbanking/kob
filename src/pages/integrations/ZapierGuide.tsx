@@ -336,6 +336,51 @@ const ZapierGuide = () => {
             </CardContent>
           </Card>
 
+          {/* Interactive Demo */}
+          <InteractiveDemoWidget
+            title="Try It: Zapier Integration"
+            description="Test API calls that you can use with Zapier"
+            platform="zapier"
+            endpoints={[
+              {
+                id: 'webhook-test',
+                name: 'Webhook Test',
+                method: 'POST',
+                path: 'webhook',
+                description: 'Test sending data to your Zapier webhook',
+                requiresAuth: false,
+                fields: [
+                  { name: 'event_type', type: 'select', label: 'Event Type', required: true, options: ['payment.completed', 'account.created', 'transaction.processed'], defaultValue: 'payment.completed' },
+                  { name: 'amount', type: 'number', label: 'Amount', placeholder: '10000', defaultValue: 10000 },
+                ]
+              },
+              {
+                id: 'account-balance',
+                name: 'Get Account Balance',
+                method: 'GET',
+                path: 'balance',
+                description: 'Fetch sample account balance',
+                requiresAuth: true,
+              },
+              {
+                id: 'transactions',
+                name: 'Get Transactions',
+                method: 'GET',
+                path: 'transactions',
+                description: 'Retrieve recent transactions',
+                requiresAuth: true,
+              },
+              {
+                id: 'payment-status',
+                name: 'Check Payment Status',
+                method: 'GET',
+                path: 'payment/status',
+                description: 'Query payment status',
+                requiresAuth: true,
+              },
+            ]}
+          />
+
           {/* Video Tutorials */}
           <Card>
             <CardHeader>

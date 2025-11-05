@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Database, CheckCircle2, AlertCircle, LayoutDashboard } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { InteractiveDemoWidget } from "@/components/developer/InteractiveDemoWidget";
 
 const RetoolGuide = () => {
   const apiBaseUrl = "https://api.kangopenbanking.com/functions/v1";
@@ -443,6 +444,52 @@ const RetoolGuide = () => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Interactive Demo */}
+          <InteractiveDemoWidget
+            title="Try It: Retool Resource Query"
+            description="Test API endpoints for your Retool admin panels"
+            platform="retool"
+            endpoints={[
+              {
+                id: 'resource-test',
+                name: 'Resource Connection Test',
+                method: 'GET',
+                path: 'test',
+                description: 'Verify your Retool resource connection',
+                requiresAuth: false,
+              },
+              {
+                id: 'dashboard-data',
+                name: 'Get Dashboard Metrics',
+                method: 'GET',
+                path: 'dashboard',
+                description: 'Fetch dashboard data and metrics',
+                requiresAuth: true,
+              },
+              {
+                id: 'get-transactions',
+                name: 'Query Transactions',
+                method: 'GET',
+                path: 'transactions',
+                description: 'Retrieve transactions with filtering',
+                requiresAuth: true,
+              },
+              {
+                id: 'create-payment',
+                name: 'Process Payment',
+                method: 'POST',
+                path: 'payment',
+                description: 'Create a new payment transaction',
+                requiresAuth: true,
+                fields: [
+                  { name: 'amount', type: 'number', label: 'Amount', required: true, defaultValue: 25000 },
+                  { name: 'currency', type: 'select', label: 'Currency', options: ['XAF', 'USD', 'EUR'], defaultValue: 'XAF' },
+                  { name: 'description', type: 'text', label: 'Description', placeholder: 'Payment for services' },
+                ]
+              },
+            ]}
+          />
 
           {/* Next Steps */}
           <Card className="bg-gradient-to-r from-primary/10 to-primary/5">
