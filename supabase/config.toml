@@ -338,3 +338,32 @@ verify_jwt = true
 
 [functions.gdpr-consent-retention]
 verify_jwt = false
+
+# Phase 18: CrediQ Functions
+
+[functions.crediq-health-check]
+verify_jwt = false
+
+[functions.crediq-generate-baseline-score]
+verify_jwt = false
+
+[functions.crediq-calculate-health-metrics]
+verify_jwt = false
+
+[functions.crediq-generate-action-plan]
+verify_jwt = false
+
+[functions.crediq-send-welcome-email]
+verify_jwt = false
+
+[functions.crediq-send-score-change-email]
+verify_jwt = false
+
+[functions.crediq-send-weekly-digest]
+verify_jwt = false
+
+[functions.crediq-send-monthly-report]
+verify_jwt = false
+
+[functions.crediq-send-goal-achieved-email]
+verify_jwt = false

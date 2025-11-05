@@ -97,6 +97,8 @@ import CrediQDashboard from "./pages/CrediQDashboard";
 import CrediQSettings from "./pages/CrediQSettings";
 import CrediQInfo from "./pages/CrediQInfo";
 import CreditAPIDocumentation from "./pages/CreditAPIDocumentation";
+import HealthMonitoring from "./pages/admin/HealthMonitoring";
+import RLSMonitoring from "./pages/admin/RLSMonitoring";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -143,6 +145,8 @@ function App() {
             <Route path="/admin/branches" element={<ProtectedRoute requiredRole="admin"><BranchManagement /></ProtectedRoute>} />
             <Route path="/admin/transactions" element={<ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute>} />
             <Route path="/admin/consent-data" element={<ProtectedRoute requiredRole="admin"><ConsentDataManagement /></ProtectedRoute>} />
+            <Route path="/admin/health" element={<ProtectedRoute requiredRole="admin"><HealthMonitoring /></ProtectedRoute>} />
+            <Route path="/admin/rls-monitoring" element={<ProtectedRoute requiredRole="admin"><RLSMonitoring /></ProtectedRoute>} />
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
             

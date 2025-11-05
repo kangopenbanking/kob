@@ -434,6 +434,26 @@ const Admin = () => {
           </Card>
         </div>
 
+        {/* Monitoring & Health */}
+        <div className="grid gap-4 md:grid-cols-4">
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/health')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="h-5 w-5" />
+                Health Monitor
+              </CardTitle>
+            </CardHeader>
+          </Card>
+          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/rls-monitoring')}>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                RLS Monitoring
+              </CardTitle>
+            </CardHeader>
+          </Card>
+        </div>
+
         {/* Stats Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <Card>
