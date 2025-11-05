@@ -332,14 +332,24 @@ async function loadAccounts() {
     const data = await kob.getAccounts('consent_123');
     const accounts = data.Data.Account;
     
-    // Update DOM
+    // Update DOM safely (prevents XSS attacks)
     const container = document.getElementById('accounts');
-    container.innerHTML = accounts.map(acc => \`
-      <div class="account">
-        <h3>\${acc.Nickname}</h3>
-        <p>Type: \${acc.AccountType}</p>
-      </div>
-    \`).join('');
+    container.innerHTML = ''; // Clear existing content
+    
+    accounts.forEach(acc => {
+      const div = document.createElement('div');
+      div.className = 'account';
+      
+      const h3 = document.createElement('h3');
+      h3.textContent = acc.Nickname; // Safe - no HTML parsing
+      
+      const p = document.createElement('p');
+      p.textContent = \`Type: \${acc.AccountType}\`; // Safe
+      
+      div.appendChild(h3);
+      div.appendChild(p);
+      container.appendChild(div);
+    });
   } catch (error) {
     console.error('Failed to load accounts:', error);
   }
