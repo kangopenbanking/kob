@@ -17,7 +17,8 @@ import {
   ScrollText,
   Building2,
   Mail,
-  CreditCard
+  CreditCard,
+  Database as DatabaseIcon
 } from "lucide-react";
 import {
   Sidebar,
@@ -58,6 +59,7 @@ const adminNavigation = [
     items: [
       { title: "Security Monitoring", path: "/admin/security", icon: Shield },
       { title: "Transaction Monitoring", path: "/admin/transactions", icon: Activity },
+      { title: "Consent Data Management", path: "/admin/consent-data", icon: DatabaseIcon },
       { title: "Audit Logs", path: "/admin/audit-logs", icon: FileText },
       { title: "Credit Management", path: "/admin/credit-management", icon: DollarSign },
     ]

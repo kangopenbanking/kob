@@ -53,6 +53,7 @@ import AuditLogs from "./pages/admin/AuditLogs";
 import SystemConfig from "./pages/admin/SystemConfig";
 import WebhookManagement from "./pages/admin/WebhookManagement";
 import TransactionMonitoring from "./pages/admin/TransactionMonitoring";
+import ConsentDataManagement from "./pages/admin/ConsentDataManagement";
 import ConsentManagement from "./pages/ConsentManagement";
 import SystemMonitoring from "./pages/SystemMonitoring";
 import Dashboard from "./pages/Dashboard";
@@ -141,6 +142,7 @@ function App() {
             <Route path="/admin/webhooks" element={<ProtectedRoute requiredRole="admin"><WebhookManagement /></ProtectedRoute>} />
             <Route path="/admin/branches" element={<ProtectedRoute requiredRole="admin"><BranchManagement /></ProtectedRoute>} />
             <Route path="/admin/transactions" element={<ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute>} />
+            <Route path="/admin/consent-data" element={<ProtectedRoute requiredRole="admin"><ConsentDataManagement /></ProtectedRoute>} />
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
             
