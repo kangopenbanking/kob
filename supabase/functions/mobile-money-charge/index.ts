@@ -6,21 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Sanitize error messages to prevent sensitive data leakage
-function sanitizeErrorMessage(message: string, maxLength: number = 200): string {
-  const sanitized = message
-    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
-    .replace(/api[_-]?key["\s:=]+[A-Za-z0-9\-._~+/]+/gi, 'apikey=[REDACTED]')
-    .replace(/password["\s:=]+[^,}\s]+/gi, 'password=[REDACTED]')
-    .replace(/secret["\s:=]+[^,}\s]+/gi, 'secret=[REDACTED]')
-    .replace(/token["\s:=]+[A-Za-z0-9\-._~+/]+=*/gi, 'token=[REDACTED]')
-    .replace(/\b\d{13,19}\b/g, '[CARD_NUMBER]')
-    .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')
-    .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]');
-  
-  return sanitized.substring(0, maxLength);
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -177,7 +162,7 @@ serve(async (req) => {
         .from('mobile_money_transactions')
         .update({
           status: 'failed',
-          error_message: sanitizeErrorMessage(flutterwaveData.message || 'Payment initiation failed')
+          error_message: flutterwaveData.message || 'Payment initiation failed'
         })
         .eq('id', transactionData.id);
 
