@@ -8,6 +8,7 @@ import { ArrowLeft, Zap, Copy, CheckCircle2, AlertCircle } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { InteractiveDemoWidget } from "@/components/developer/InteractiveDemoWidget";
 
 const ZapierGuide = () => {
   const { toast } = useToast();

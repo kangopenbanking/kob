@@ -357,6 +357,42 @@ export type Database = {
           },
         ]
       }
+      api_demo_logs: {
+        Row: {
+          created_at: string
+          endpoint: string
+          error_message: string | null
+          id: string
+          ip_address_hash: string | null
+          method: string
+          platform: string
+          response_time_ms: number | null
+          success: boolean
+        }
+        Insert: {
+          created_at?: string
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          ip_address_hash?: string | null
+          method: string
+          platform: string
+          response_time_ms?: number | null
+          success: boolean
+        }
+        Update: {
+          created_at?: string
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          ip_address_hash?: string | null
+          method?: string
+          platform?: string
+          response_time_ms?: number | null
+          success?: boolean
+        }
+        Relationships: []
+      }
       api_test_requests: {
         Row: {
           client_id: string
@@ -3012,6 +3048,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      enterprise_leads: {
+        Row: {
+          assigned_to: string | null
+          budget_range: string | null
+          company_name: string
+          company_size: string
+          created_at: string
+          current_systems: string | null
+          email: string
+          id: string
+          inquiry_type: string
+          integration_timeline: string
+          ip_address_hash: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          preferred_contact: string
+          priority: string
+          requirements: string
+          source_page: string | null
+          status: string
+          transaction_volume: string
+          updated_at: string
+          use_cases: string[]
+          user_agent: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          budget_range?: string | null
+          company_name: string
+          company_size: string
+          created_at?: string
+          current_systems?: string | null
+          email: string
+          id?: string
+          inquiry_type: string
+          integration_timeline: string
+          ip_address_hash?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          preferred_contact: string
+          priority?: string
+          requirements: string
+          source_page?: string | null
+          status?: string
+          transaction_volume: string
+          updated_at?: string
+          use_cases: string[]
+          user_agent?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          budget_range?: string | null
+          company_name?: string
+          company_size?: string
+          created_at?: string
+          current_systems?: string | null
+          email?: string
+          id?: string
+          inquiry_type?: string
+          integration_timeline?: string
+          ip_address_hash?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          preferred_contact?: string
+          priority?: string
+          requirements?: string
+          source_page?: string | null
+          status?: string
+          transaction_volume?: string
+          updated_at?: string
+          use_cases?: string[]
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       exchange_rates_cache: {
         Row: {

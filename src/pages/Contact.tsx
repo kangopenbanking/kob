@@ -20,24 +20,86 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Contact() {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    company: "",
-    inquiryType: "",
-    message: ""
+    company_name: "",
+    company_size: "",
+    phone: "",
+    inquiry_type: "",
+    integration_timeline: "",
+    transaction_volume: "",
+    use_cases: [] as string[],
+    current_systems: "",
+    requirements: "",
+    preferred_contact: "",
+    budget_range: "",
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast({
-      title: "Message Sent",
-      description: "We'll get back to you within 24 hours.",
-    });
-    setFormData({ name: "", email: "", company: "", inquiryType: "", message: "" });
+    
+    if (formData.use_cases.length === 0) {
+      toast({
+        title: "Validation Error",
+        description: "Please select at least one use case",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('enterprise-contact-submit', {
+        body: {
+          ...formData,
+          source_page: window.location.pathname
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Thank You! 🎉",
+          description: `We'll respond within ${data.expected_response_time}. Check your email for confirmation.`,
+        });
+        
+        // Reset form
+        setFormData({
+          name: "",
+          email: "",
+          company_name: "",
+          company_size: "",
+          phone: "",
+          inquiry_type: "",
+          integration_timeline: "",
+          transaction_volume: "",
+          use_cases: [],
+          current_systems: "",
+          requirements: "",
+          preferred_contact: "",
+          budget_range: "",
+        });
+      } else {
+        throw new Error(data.error || 'Submission failed');
+      }
+    } catch (error: any) {
+      console.error('Form submission error:', error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Please try again or contact us directly.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -92,84 +154,280 @@ export default function Contact() {
         </section>
 
         <div className="grid lg:grid-cols-2 gap-12 mb-12">
-          {/* Contact Form */}
+          {/* Enhanced Enterprise Contact Form */}
           <section>
             <Card>
               <CardHeader>
-                <CardTitle>Send Us a Message</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Enterprise Contact Form
+                </CardTitle>
                 <CardDescription>
-                  Fill out the form below and our team will respond within 24 hours
+                  Tell us about your needs and we'll get back to you with a tailored solution
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div>
-                    <Label htmlFor="name">Full Name *</Label>
-                    <Input
-                      id="name"
-                      value={formData.name}
-                      onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                      required
-                      placeholder="John Doe"
-                    />
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  {/* Basic Information */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-sm">Contact Information</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="name">Full Name *</Label>
+                        <Input
+                          id="name"
+                          value={formData.name}
+                          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                          required
+                          maxLength={100}
+                          placeholder="John Doe"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="email">Email Address *</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          value={formData.email}
+                          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                          required
+                          maxLength={255}
+                          placeholder="john@company.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="company_name">Company Name *</Label>
+                        <Input
+                          id="company_name"
+                          value={formData.company_name}
+                          onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                          required
+                          maxLength={200}
+                          placeholder="Acme Corporation"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="phone">Phone Number</Label>
+                        <Input
+                          id="phone"
+                          type="tel"
+                          value={formData.phone}
+                          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                          placeholder="+237 6XX XXX XXX"
+                        />
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      required
-                      placeholder="john@company.com"
-                    />
+                  {/* Company Details */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-sm">Company Details</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="company_size">Company Size *</Label>
+                        <Select
+                          value={formData.company_size}
+                          onValueChange={(value) => setFormData({ ...formData, company_size: value })}
+                          required
+                        >
+                          <SelectTrigger id="company_size">
+                            <SelectValue placeholder="Select size" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1-10">1-10 employees</SelectItem>
+                            <SelectItem value="11-50">11-50 employees</SelectItem>
+                            <SelectItem value="51-200">51-200 employees</SelectItem>
+                            <SelectItem value="201-1000">201-1,000 employees</SelectItem>
+                            <SelectItem value="1000+">1,000+ employees</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="transaction_volume">Expected Transaction Volume *</Label>
+                        <Select
+                          value={formData.transaction_volume}
+                          onValueChange={(value) => setFormData({ ...formData, transaction_volume: value })}
+                          required
+                        >
+                          <SelectTrigger id="transaction_volume">
+                            <SelectValue placeholder="Select volume" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="< 1K/month">Less than 1K/month</SelectItem>
+                            <SelectItem value="1K-10K">1K-10K/month</SelectItem>
+                            <SelectItem value="10K-100K">10K-100K/month</SelectItem>
+                            <SelectItem value="100K+">100K+/month</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="company">Company / Organization</Label>
-                    <Input
-                      id="company"
-                      value={formData.company}
-                      onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                      placeholder="Your Company Ltd"
-                    />
+                  {/* Integration Details */}
+                  <div className="space-y-4">
+                    <h3 className="font-semibold text-sm">Integration Details</h3>
+                    
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="inquiry_type">Type of Inquiry *</Label>
+                        <Select
+                          value={formData.inquiry_type}
+                          onValueChange={(value) => setFormData({ ...formData, inquiry_type: value })}
+                          required
+                        >
+                          <SelectTrigger id="inquiry_type">
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Enterprise API Integration">🔥 Enterprise API Integration</SelectItem>
+                            <SelectItem value="Strategic Partnership">🔥 Strategic Partnership</SelectItem>
+                            <SelectItem value="White-Label Solution">🔥 White-Label Solution</SelectItem>
+                            <SelectItem value="Custom Development">Custom Development</SelectItem>
+                            <SelectItem value="Technical Support">Technical Support</SelectItem>
+                            <SelectItem value="General Inquiry">General Inquiry</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="integration_timeline">Integration Timeline *</Label>
+                        <Select
+                          value={formData.integration_timeline}
+                          onValueChange={(value) => setFormData({ ...formData, integration_timeline: value })}
+                          required
+                        >
+                          <SelectTrigger id="integration_timeline">
+                            <SelectValue placeholder="Select timeline" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Immediate">Immediate (ASAP)</SelectItem>
+                            <SelectItem value="1-3 months">1-3 months</SelectItem>
+                            <SelectItem value="3-6 months">3-6 months</SelectItem>
+                            <SelectItem value="6-12 months">6-12 months</SelectItem>
+                            <SelectItem value="Exploring">Just Exploring</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <Label htmlFor="preferred_contact">Preferred Contact Method *</Label>
+                        <Select
+                          value={formData.preferred_contact}
+                          onValueChange={(value) => setFormData({ ...formData, preferred_contact: value })}
+                          required
+                        >
+                          <SelectTrigger id="preferred_contact">
+                            <SelectValue placeholder="Select method" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Email">📧 Email</SelectItem>
+                            <SelectItem value="Phone">📞 Phone</SelectItem>
+                            <SelectItem value="Video Call">🎥 Video Call</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="budget_range">Budget Range (Optional)</Label>
+                        <Select
+                          value={formData.budget_range}
+                          onValueChange={(value) => setFormData({ ...formData, budget_range: value })}
+                        >
+                          <SelectTrigger id="budget_range">
+                            <SelectValue placeholder="Select range" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Confidential">Confidential</SelectItem>
+                            <SelectItem value="<$5K">Less than $5,000</SelectItem>
+                            <SelectItem value="$5K-$20K">$5,000 - $20,000</SelectItem>
+                            <SelectItem value="$20K-$100K">$20,000 - $100,000</SelectItem>
+                            <SelectItem value="$100K+">$100,000+</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label>Use Cases * (Select all that apply)</Label>
+                      <div className="grid md:grid-cols-2 gap-3 mt-2">
+                        {[
+                          'Banking Integration',
+                          'Payment Processing',
+                          'Credit Scoring',
+                          'Loan Management',
+                          'Mobile Money',
+                          'Custom Solution'
+                        ].map((useCase) => (
+                          <label key={useCase} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={formData.use_cases.includes(useCase)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setFormData({
+                                    ...formData,
+                                    use_cases: [...formData.use_cases, useCase]
+                                  });
+                                } else {
+                                  setFormData({
+                                    ...formData,
+                                    use_cases: formData.use_cases.filter(uc => uc !== useCase)
+                                  });
+                                }
+                              }}
+                              className="rounded"
+                            />
+                            <span className="text-sm">{useCase}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <Label htmlFor="current_systems">Current Systems (Optional)</Label>
+                      <Input
+                        id="current_systems"
+                        value={formData.current_systems}
+                        onChange={(e) => setFormData({ ...formData, current_systems: e.target.value })}
+                        maxLength={500}
+                        placeholder="e.g., Salesforce, SAP, Custom ERP"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="requirements">Specific Requirements *</Label>
+                      <Textarea
+                        id="requirements"
+                        value={formData.requirements}
+                        onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                        required
+                        rows={5}
+                        maxLength={2000}
+                        placeholder="Tell us about your specific needs, challenges, and what you're looking to achieve..."
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {formData.requirements.length}/2000 characters
+                      </p>
+                    </div>
                   </div>
 
-                  <div>
-                    <Label htmlFor="inquiryType">Type of Inquiry *</Label>
-                    <Select
-                      value={formData.inquiryType}
-                      onValueChange={(value) => setFormData({ ...formData, inquiryType: value })}
-                      required
-                    >
-                      <SelectTrigger id="inquiryType">
-                        <SelectValue placeholder="Select inquiry type" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="technical">Technical Support</SelectItem>
-                        <SelectItem value="sales">Sales & Partnerships</SelectItem>
-                        <SelectItem value="integration">Integration Help</SelectItem>
-                        <SelectItem value="compliance">Compliance & Legal</SelectItem>
-                        <SelectItem value="billing">Billing & Accounts</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <Label htmlFor="message">Message *</Label>
-                    <Textarea
-                      id="message"
-                      value={formData.message}
-                      onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-                      required
-                      rows={6}
-                      placeholder="Tell us how we can help..."
-                    />
-                  </div>
-
-                  <Button type="submit" className="w-full">Send Message</Button>
+                  <Button type="submit" className="w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Submitting..." : "Submit Enterprise Inquiry"}
+                  </Button>
+                  
+                  <p className="text-xs text-muted-foreground text-center">
+                    By submitting this form, you agree to our Terms of Service and Privacy Policy
+                  </p>
                 </form>
               </CardContent>
             </Card>

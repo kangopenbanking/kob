@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Workflow, CheckCircle2, AlertCircle, GitBranch } from "lucide-react";
 import { CodeBlock } from "@/components/developer/CodeBlock";
+import { InteractiveDemoWidget } from "@/components/developer/InteractiveDemoWidget";
 
 const MakeGuide = () => {
   const apiBaseUrl = "https://api.kangopenbanking.com/functions/v1";
