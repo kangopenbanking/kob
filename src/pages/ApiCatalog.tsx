@@ -163,38 +163,32 @@ export default function ApiCatalog() {
         </div>
 
         {/* Endpoints Grid */}
-        <div className="grid gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredEndpoints.map((endpoint, index) => (
-            <Card key={index} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge variant="outline" className={getMethodColor(endpoint.method)}>
-                        {endpoint.method}
-                      </Badge>
-                      <code className="text-sm font-mono">{endpoint.path}</code>
-                      {endpoint.requiresAuth ? (
-                        <Lock className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Unlock className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </div>
-                    <CardTitle className="text-lg">{endpoint.name}</CardTitle>
-                    <CardDescription>{endpoint.description}</CardDescription>
-                  </div>
-                  <Badge variant="secondary">{endpoint.category}</Badge>
+            <Card key={index} className="hover:shadow-md transition-shadow flex flex-col">
+              <CardHeader className="flex-1">
+                <div className="flex items-center gap-2 mb-3 flex-wrap">
+                  <Badge variant="outline" className={getMethodColor(endpoint.method)}>
+                    {endpoint.method}
+                  </Badge>
+                  {endpoint.requiresAuth ? (
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Unlock className="h-4 w-4 text-muted-foreground" />
+                  )}
+                  <Badge variant="secondary" className="ml-auto">{endpoint.category}</Badge>
                 </div>
+                <CardTitle className="text-lg mb-2">{endpoint.name}</CardTitle>
+                <code className="text-xs font-mono text-muted-foreground block mb-3 break-all">{endpoint.path}</code>
+                <CardDescription className="line-clamp-2">{endpoint.description}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="flex gap-2">
-                  <Link to="/developer/api-explorer">
-                    <Button size="sm" variant="outline">
-                      <ExternalLink className="h-4 w-4 mr-2" />
-                      Try in Explorer
-                    </Button>
-                  </Link>
-                </div>
+              <CardContent className="pt-0">
+                <Link to="/developer/api-explorer" className="block">
+                  <Button size="sm" variant="outline" className="w-full">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Try in Explorer
+                  </Button>
+                </Link>
               </CardContent>
             </Card>
           ))}
