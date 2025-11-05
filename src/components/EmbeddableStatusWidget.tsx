@@ -63,10 +63,10 @@ export const EmbeddableStatusWidget = () => {
   }, []);
 
   useEffect(() => {
-    // Generate embed code
-    const widgetUrl = `${window.location.origin}/status-widget`;
+    // Generate embed code with production domain
+    const widgetUrl = "https://kangopenbanking.com/status-widget";
     const iframeCode = `<iframe src="${widgetUrl}" width="300" height="200" frameborder="0" style="border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);"></iframe>`;
-    const scriptCode = `<div id="kang-status"></div>\n<script src="${window.location.origin}/status-widget.js"></script>`;
+    const scriptCode = `<div id="kang-status"></div>\n<script src="https://kangopenbanking.com/status-widget.js"></script>`;
     
     setEmbedCode(iframeCode);
   }, []);
