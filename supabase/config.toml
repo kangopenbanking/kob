@@ -367,3 +367,8 @@ verify_jwt = false
 
 [functions.crediq-send-goal-achieved-email]
 verify_jwt = false
+
+# Phase 19: Demo & Testing Functions
+
+[functions.api-demo-proxy]
+verify_jwt = false
