@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
-import { Layout } from "@/components/Layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import CircularScoreDisplay from "@/components/credit/CircularScoreDisplay";
-import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock } from "lucide-react";
+import { TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock, ArrowRight, ExternalLink } from "lucide-react";
 
 export default function CrediQDashboard() {
   const [loading, setLoading] = useState(true);
@@ -56,15 +55,24 @@ export default function CrediQDashboard() {
 
       setCreditScore(scoreData);
 
-      // Fetch action plans
+      // Fetch action plans with deduplication
       const { data: actionsData } = await supabase
         .from('crediq_action_plans')
         .select('*')
         .eq('user_id', user.id)
         .order('priority', { ascending: false })
-        .limit(5);
+        .limit(10);
 
-      setActionPlans(actionsData || []);
+      // Deduplicate by action_type, keeping most recent
+      const uniqueActions = actionsData?.reduce((acc: any[], action: any) => {
+        const exists = acc.find(a => a.action_type === action.action_type);
+        if (!exists) {
+          acc.push(action);
+        }
+        return acc;
+      }, []).slice(0, 5) || [];
+
+      setActionPlans(uniqueActions);
 
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
@@ -98,39 +106,64 @@ export default function CrediQDashboard() {
     return <AlertCircle className="h-5 w-5 text-gray-400" />;
   };
 
+  const handleActionStart = (action: any) => {
+    // Check if action requires third-party application
+    if (action.action_type?.includes('njangibox')) {
+      window.open('https://njangibox.com', '_blank');
+      toast({
+        title: "Redirecting to NjangiBox",
+        description: "Opening NjangiBox in a new tab...",
+      });
+      return;
+    }
+
+    // Handle other action types
+    switch (action.action_type) {
+      case 'complete_kyc':
+        navigate('/kyc-verification');
+        break;
+      case 'open_savings':
+        navigate('/savings');
+        break;
+      case 'make_payment':
+        navigate('/loans');
+        break;
+      default:
+        toast({
+          title: "Action started",
+          description: "Redirecting to the appropriate page...",
+        });
+    }
+  };
+
   if (loading) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading your CrediQ dashboard...</div>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">Loading your CrediQ dashboard...</div>
+      </div>
     );
   }
 
   if (!creditScore) {
     return (
-      <Layout>
-        <div className="min-h-screen flex items-center justify-center">
-          <Card className="p-8 text-center max-w-md">
-            <h2 className="text-2xl font-bold mb-4">No Credit Score Found</h2>
-            <p className="text-muted-foreground mb-6">
-              Complete the CrediQ questionnaire to get your baseline credit score.
-            </p>
-            <Button onClick={() => navigate('/crediq/onboarding')}>
-              Start Questionnaire
-            </Button>
-          </Card>
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center">
+        <Card className="p-8 text-center max-w-md">
+          <h2 className="text-2xl font-bold mb-4">No Credit Score Found</h2>
+          <p className="text-muted-foreground mb-6">
+            Complete the CrediQ questionnaire to get your baseline credit score.
+          </p>
+          <Button onClick={() => navigate('/crediq/onboarding')}>
+            Start Questionnaire
+          </Button>
+        </Card>
+      </div>
     );
   }
 
   const rating = getScoreRating(Number(creditScore.score));
 
   return (
-    <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 py-8">
         <div className="container mx-auto px-4">
           {/* Header */}
           <div className="mb-8">
@@ -242,8 +275,17 @@ export default function CrediQDashboard() {
                         {action.action_description}
                       </p>
                       {action.status === 'pending' && (
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleActionStart(action)}
+                        >
                           Start Action
+                          {action.action_type?.includes('njangibox') ? (
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          ) : (
+                            <ArrowRight className="ml-2 h-4 w-4" />
+                          )}
                         </Button>
                       )}
                     </div>
@@ -265,6 +307,5 @@ export default function CrediQDashboard() {
           </Card>
         </div>
       </div>
-    </Layout>
   );
 }

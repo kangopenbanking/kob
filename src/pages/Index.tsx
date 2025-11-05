@@ -255,12 +255,14 @@ const Index = () => {
                     </div>
                   </li>
                 </ul>
-                <Link to="/guides/aisp">
-                  <Button size="lg" className="group">
-                    Explore AISP
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+                <div className="mt-6">
+                  <Link to="/guides/aisp">
+                    <Button size="lg" className="group">
+                      Explore AISP
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
               <Card className="p-8 shadow-xl border-2 hover:shadow-2xl transition-shadow">
                 <div className="space-y-4">
@@ -365,12 +367,14 @@ const Index = () => {
                     </div>
                   </li>
                 </ul>
-                <Link to="/guides/pisp">
-                  <Button size="lg" variant="outline" className="group border-2">
-                    Explore PISP
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+                <div className="mt-6">
+                  <Link to="/guides/pisp">
+                    <Button size="lg" variant="outline" className="group border-2">
+                      Explore PISP
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -546,12 +550,14 @@ const Index = () => {
                     </div>
                   </li>
                 </ul>
-                <Link to="/savings">
-                  <Button size="lg" variant="outline" className="group border-2">
-                    Open Savings Account
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
+                <div className="mt-6">
+                  <Link to="/savings">
+                    <Button size="lg" variant="outline" className="group border-2">
+                      Open Savings Account
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                </div>
               </div>
             </div>
           </div>

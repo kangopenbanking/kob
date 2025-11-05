@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Mail, MessageSquare, Plus, Send, Edit, Eye, FileText } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 
 const Communications = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
@@ -202,7 +203,8 @@ const Communications = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <AdminLayout>
+      <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Communications Management</h1>
@@ -454,7 +456,8 @@ const Communications = () => {
           )}
         </DialogContent>
       </Dialog>
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 

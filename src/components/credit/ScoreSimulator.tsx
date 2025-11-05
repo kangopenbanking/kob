@@ -20,7 +20,7 @@ const ScoreSimulator = ({ currentScore }: ScoreSimulatorProps) => {
   const { toast } = useToast();
 
   const handleSimulate = async () => {
-    if (!amount || parseFloat(amount) <= 0) {
+    if (simulationType !== 'new_account' && (!amount || parseFloat(amount) <= 0)) {
       toast({
         title: 'Invalid amount',
         description: 'Please enter a valid amount',
@@ -30,23 +30,45 @@ const ScoreSimulator = ({ currentScore }: ScoreSimulatorProps) => {
     }
 
     setSimulating(true);
+    setResult(null);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: 'Authentication required',
+          description: 'Please log in to use the simulator',
+          variant: 'destructive',
+        });
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('credit-score-simulate', {
         body: {
           simulation_type: simulationType,
-          amount: parseFloat(amount),
+          amount: parseFloat(amount) || 0,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to simulate score');
+      }
+
+      if (!data || !data.success) {
+        throw new Error(data?.error || 'Simulation failed');
+      }
 
       setResult(data);
-    } catch (error) {
+      toast({
+        title: 'Simulation complete',
+        description: `Your score would ${data.score_change >= 0 ? 'increase' : 'decrease'} by ${Math.abs(data.score_change)} points`,
+      });
+    } catch (error: any) {
       console.error('Simulation error:', error);
       toast({
         title: 'Simulation failed',
-        description: 'Failed to simulate credit score impact',
+        description: error.message || 'Failed to simulate credit score impact. Please try again.',
         variant: 'destructive',
       });
     } finally {
