@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { logger } from '@/lib/logger';
+import { loggedQuery } from '@/lib/database-logger';
 import { Loader2, Trash2, Database, Calendar, BarChart3, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -51,11 +53,21 @@ export default function ConsentDataManagement() {
       setLoading(true);
 
       // Get total events
-      const { count: totalCount, error: totalError } = await supabase
+      const totalQuery = supabase
         .from('consent_events')
         .select('*', { count: 'exact', head: true });
+      
+      const totalResult = await loggedQuery(
+        totalQuery,
+        {
+          type: 'select',
+          table: 'consent_events',
+          description: 'Count total consent events',
+        }
+      );
 
-      if (totalError) throw totalError;
+      if (totalResult.error) throw totalResult.error;
+      const totalCount = totalResult.count;
 
       // Get events by type
       const { data: byTypeData, error: byTypeError } = await supabase
@@ -116,13 +128,28 @@ export default function ConsentDataManagement() {
         oldest_event_date: oldestEvent?.created_at || null,
         newest_event_date: newestEvent?.created_at || null,
       });
-    } catch (error) {
-      console.error('Error fetching consent statistics:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to fetch consent event statistics.",
+
+      logger.info('Consent statistics loaded successfully', {
+        totalEvents: totalCount,
+        eventTypes: eventsByType.length,
+        oldEventsCount,
       });
+    } catch (error: any) {
+      logger.error('Error fetching consent statistics:', error);
+      
+      if (error?.code === '42501') {
+        toast({
+          variant: "destructive",
+          title: "Permission Denied",
+          description: "You don't have permission to access consent event statistics.",
+        });
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: `Failed to fetch consent event statistics: ${error?.message || 'Unknown error'}`,
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -130,16 +157,29 @@ export default function ConsentDataManagement() {
 
   const fetchRecentEvents = async () => {
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from('consent_events')
         .select('id, event_type, consent_type, created_at, user_id')
         .order('created_at', { ascending: false })
         .limit(10);
+      
+      const result = await loggedQuery(
+        query,
+        {
+          type: 'select',
+          table: 'consent_events',
+          description: 'Fetch recent consent events',
+        }
+      );
 
-      if (error) throw error;
-      setRecentEvents(data || []);
+      if (result.error) {
+        logger.warn('Failed to fetch recent consent events', result.error);
+        return;
+      }
+
+      setRecentEvents((result.data as any[]) || []);
     } catch (error) {
-      console.error('Error fetching recent events:', error);
+      logger.error('Error fetching recent events:', error);
     }
   };
 
@@ -166,12 +206,17 @@ export default function ConsentDataManagement() {
   const handleManualCleanup = async () => {
     try {
       setCleanupLoading(true);
+      logger.info('Starting manual GDPR consent data cleanup');
 
       const { data, error } = await supabase.functions.invoke('gdpr-consent-retention', {
         body: { manual_trigger: true },
       });
 
       if (error) throw error;
+
+      logger.info('Manual cleanup completed successfully', {
+        deletedCount: data.data.deleted_count,
+      });
 
       toast({
         title: "Cleanup Completed",
@@ -181,12 +226,12 @@ export default function ConsentDataManagement() {
       // Refresh statistics
       await fetchConsentStatistics();
       await fetchLastCleanupRun();
-    } catch (error) {
-      console.error('Error triggering manual cleanup:', error);
+    } catch (error: any) {
+      logger.error('Error triggering manual cleanup:', error);
       toast({
         variant: "destructive",
         title: "Cleanup Failed",
-        description: "Failed to execute data retention cleanup. Please check the logs.",
+        description: `Failed to execute data retention cleanup: ${error?.message || 'Unknown error'}`,
       });
     } finally {
       setCleanupLoading(false);

@@ -13,6 +13,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Search, Download, Filter, Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { loggedQuery, loggedAdminCheck } from '@/lib/database-logger';
 import { format } from 'date-fns';
 
 interface AuditLog {
@@ -54,13 +55,16 @@ export default function AuditLogs() {
       return;
     }
 
-    const { data: hasAdminRole } = await supabase.rpc('has_role', {
-      _user_id: user.id,
-      _role: 'admin'
+    const hasAdminRole = await loggedAdminCheck(user.id, async () => {
+      const { data } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'admin'
+      });
+      return data || false;
     });
 
     if (!hasAdminRole) {
-      toast.error('Access denied');
+      toast.error('Access denied: Admin role required');
       navigate('/');
     }
   };
@@ -68,17 +72,39 @@ export default function AuditLogs() {
   const loadAuditLogs = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      
+      const query = supabase
         .from('audit_logs')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(500);
+      
+      const result = await loggedQuery(
+        query,
+        {
+          type: 'select',
+          table: 'audit_logs',
+          description: 'Load audit logs for admin dashboard',
+        }
+      );
 
-      if (error) throw error;
-      setLogs(data || []);
+      if (result.error) {
+        if (result.error.code === '42501') {
+          toast.error('Permission denied: Unable to access audit logs');
+        } else {
+          toast.error(`Failed to load audit logs: ${result.error.message}`);
+        }
+        return;
+      }
+
+      if (!result.data || (Array.isArray(result.data) && result.data.length === 0)) {
+        logger.info('No audit logs found in the system');
+      }
+
+      setLogs((result.data as AuditLog[]) || []);
     } catch (error) {
-      logger.error('Error loading audit logs:', error);
-      toast.error('Failed to load audit logs');
+      logger.error('Unexpected error loading audit logs:', error);
+      toast.error('An unexpected error occurred while loading audit logs');
     } finally {
       setLoading(false);
     }
@@ -115,6 +141,8 @@ export default function AuditLogs() {
   };
 
   const exportToCSV = () => {
+    logger.info(`Exporting ${filteredLogs.length} audit logs to CSV`);
+    
     const headers = ['Timestamp', 'Action', 'Entity Type', 'Entity ID', 'Performed By', 'IP Address'];
     const csvContent = [
       headers.join(','),
@@ -134,7 +162,9 @@ export default function AuditLogs() {
     a.href = url;
     a.download = `audit-logs-${format(new Date(), 'yyyy-MM-dd')}.csv`;
     a.click();
-    toast.success('Audit logs exported');
+    
+    logger.info('Audit logs export completed successfully');
+    toast.success(`Exported ${filteredLogs.length} audit logs to CSV`);
   };
 
   const getActionBadge = (action: string) => {
