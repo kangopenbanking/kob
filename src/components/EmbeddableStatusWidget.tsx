@@ -20,12 +20,16 @@ export const EmbeddableStatusWidget = () => {
     lastChecked: new Date().toISOString()
   });
   const [embedCode, setEmbedCode] = useState("");
+  const [retryCount, setRetryCount] = useState(0);
+  const [isRetrying, setIsRetrying] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check API health
-    const checkHealth = async () => {
+    // Check API health with retry logic
+    const checkHealth = async (attemptNumber = 0) => {
       const startTime = Date.now();
+      setIsRetrying(attemptNumber > 0);
+      
       try {
         const response = await fetch("https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/api-health");
         const endTime = Date.now();
@@ -38,26 +42,46 @@ export const EmbeddableStatusWidget = () => {
             uptime: 99.9,
             lastChecked: new Date().toISOString()
           });
+          setRetryCount(0);
+          setIsRetrying(false);
         } else {
-          setStatus({
-            status: "degraded",
-            responseTime,
-            uptime: 99.5,
-            lastChecked: new Date().toISOString()
-          });
+          if (attemptNumber < 3) {
+            // Exponential backoff: 1s, 2s, 4s
+            const delay = Math.pow(2, attemptNumber) * 1000;
+            setTimeout(() => checkHealth(attemptNumber + 1), delay);
+            setRetryCount(attemptNumber + 1);
+          } else {
+            setStatus({
+              status: "degraded",
+              responseTime,
+              uptime: 99.5,
+              lastChecked: new Date().toISOString()
+            });
+            setRetryCount(0);
+            setIsRetrying(false);
+          }
         }
       } catch (error) {
-        setStatus({
-          status: "down",
-          responseTime: 0,
-          uptime: 0,
-          lastChecked: new Date().toISOString()
-        });
+        if (attemptNumber < 3) {
+          // Exponential backoff: 1s, 2s, 4s
+          const delay = Math.pow(2, attemptNumber) * 1000;
+          setTimeout(() => checkHealth(attemptNumber + 1), delay);
+          setRetryCount(attemptNumber + 1);
+        } else {
+          setStatus({
+            status: "down",
+            responseTime: 0,
+            uptime: 0,
+            lastChecked: new Date().toISOString()
+          });
+          setRetryCount(0);
+          setIsRetrying(false);
+        }
       }
     };
 
     checkHealth();
-    const interval = setInterval(checkHealth, 30000); // Check every 30 seconds
+    const interval = setInterval(() => checkHealth(), 30000); // Check every 30 seconds
 
     return () => clearInterval(interval);
   }, []);
@@ -135,9 +159,14 @@ export const EmbeddableStatusWidget = () => {
               </div>
             </div>
             
-            <p className="text-xs text-muted-foreground mt-4 text-center">
-              Last updated: {new Date(status.lastChecked).toLocaleTimeString()}
-            </p>
+            <div className="text-xs text-muted-foreground mt-4 text-center space-y-1">
+              <p>Last updated: {new Date(status.lastChecked).toLocaleTimeString()}</p>
+              {isRetrying && (
+                <p className="text-yellow-600 dark:text-yellow-500 font-semibold">
+                  Retrying... (Attempt {retryCount}/3)
+                </p>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>

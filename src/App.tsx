@@ -99,6 +99,7 @@ import CrediQInfo from "./pages/CrediQInfo";
 import CreditAPIDocumentation from "./pages/CreditAPIDocumentation";
 import HealthMonitoring from "./pages/admin/HealthMonitoring";
 import RLSMonitoring from "./pages/admin/RLSMonitoring";
+import ApiHealthDashboard from "./pages/admin/ApiHealthDashboard";
 import ForDevelopers from "./pages/ForDevelopers";
 import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
@@ -159,6 +160,7 @@ function App() {
             <Route path="/admin/consent-data" element={<ProtectedRoute requiredRole="admin"><ConsentDataManagement /></ProtectedRoute>} />
             <Route path="/admin/health" element={<ProtectedRoute requiredRole="admin"><HealthMonitoring /></ProtectedRoute>} />
             <Route path="/admin/rls-monitoring" element={<ProtectedRoute requiredRole="admin"><RLSMonitoring /></ProtectedRoute>} />
+            <Route path="/admin/api-health" element={<ProtectedRoute requiredRole="admin"><ApiHealthDashboard /></ProtectedRoute>} />
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
             

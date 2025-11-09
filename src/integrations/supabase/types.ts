@@ -393,6 +393,36 @@ export type Database = {
         }
         Relationships: []
       }
+      api_health_metrics: {
+        Row: {
+          checked_at: string
+          created_at: string
+          error_message: string | null
+          id: string
+          response_time: number
+          status: string
+          uptime: number
+        }
+        Insert: {
+          checked_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          response_time: number
+          status: string
+          uptime: number
+        }
+        Update: {
+          checked_at?: string
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          response_time?: number
+          status?: string
+          uptime?: number
+        }
+        Relationships: []
+      }
       api_test_requests: {
         Row: {
           client_id: string
