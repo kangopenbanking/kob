@@ -1,5 +1,11 @@
 project_id = "ftwbtzbeqkqrdmxmyvvz"
 
+[functions.bank-transaction-webhook]
+verify_jwt = false
+
+[functions.health-alert-monitor]
+verify_jwt = false
+
 # Credit Score Enhancement Functions
 [functions.credit-score-tips]
 verify_jwt = true

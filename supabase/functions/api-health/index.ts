@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,8 +14,61 @@ serve(async (req) => {
   }
 
   try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Real-time health checks for external services
+    async function checkFlutterwaveHealth(): Promise<boolean> {
+      try {
+        const response = await fetch('https://api.flutterwave.com/v3/banks/NG', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('FLUTTERWAVE_SECRET_KEY')}`
+          },
+          signal: AbortSignal.timeout(5000)
+        });
+        return response.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    async function checkStripeHealth(): Promise<boolean> {
+      try {
+        const response = await fetch('https://api.stripe.com/v1/products?limit=1', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}`
+          },
+          signal: AbortSignal.timeout(5000)
+        });
+        return response.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    async function checkDatabaseHealth(): Promise<boolean> {
+      try {
+        const { error } = await supabase.from('profiles').select('count').limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    }
+
+    // Execute health checks in parallel
+    const [flutterwaveOk, stripeOk, dbOk] = await Promise.all([
+      checkFlutterwaveHealth(),
+      checkStripeHealth(),
+      checkDatabaseHealth()
+    ]);
+
+    const allServicesOk = flutterwaveOk && stripeOk && dbOk;
+
     const health = {
-      status: 'operational',
+      status: allServicesOk ? 'operational' : 'degraded',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
       services: {
@@ -22,11 +76,12 @@ serve(async (req) => {
         aisp: 'operational',
         pisp: 'operational',
         certificates: 'operational',
-        mobile_money: 'operational',
-        banking: 'operational',
-        credit_scoring: 'operational',
-        virtual_cards: 'operational',
-        webhooks: 'operational'
+        mobile_money: flutterwaveOk ? 'operational' : 'degraded',
+        banking: flutterwaveOk ? 'operational' : 'degraded',
+        credit_scoring: dbOk ? 'operational' : 'degraded',
+        virtual_cards: stripeOk ? 'operational' : 'degraded',
+        webhooks: 'operational',
+        database: dbOk ? 'operational' : 'degraded'
       },
       documentation: {
         openapi: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec',

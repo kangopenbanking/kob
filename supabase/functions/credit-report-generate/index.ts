@@ -87,6 +87,40 @@ Deno.serve(async (req) => {
 
     const softInquiriesTotal = inquiries?.filter(i => i.inquiry_type === 'soft').length || 0;
 
+    // Calculate real late payment metrics from loan_payments
+    const { data: paymentHistory, error: paymentError } = await supabase
+      .from('loan_payments')
+      .select('*, loan_accounts!inner(user_id)')
+      .eq('loan_accounts.user_id', user_id);
+
+    if (paymentError) {
+      console.error('Error fetching payment history:', paymentError);
+    }
+
+    let late30Days = 0;
+    let late60Days = 0;
+    let late90Days = 0;
+    let missedPayments = 0;
+
+    for (const payment of paymentHistory || []) {
+      if (payment.status === 'overdue' || payment.status === 'late') {
+        const dueDate = new Date(payment.created_at);
+        const daysLate = Math.floor(
+          (new Date().getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        
+        if (daysLate >= 90) {
+          late90Days++;
+        } else if (daysLate >= 60) {
+          late60Days++;
+        } else if (daysLate >= 30) {
+          late30Days++;
+        }
+      } else if (payment.status === 'missed' || payment.status === 'defaulted') {
+        missedPayments++;
+      }
+    }
+
     // Create credit report
     const reportData = {
       user_id,
@@ -117,11 +151,11 @@ Deno.serve(async (req) => {
       average_monthly_savings: totalSavingsAccounts > 0 ? totalSavingsBalance / totalSavingsAccounts : 0,
       savings_consistency_score: calculateSavingsConsistency(savingsAccounts || []),
       
-      late_payments_30_days: 0, // TODO: Calculate from payment history
-      late_payments_60_days: 0,
-      late_payments_90_days: 0,
-      missed_payments: 0,
-      total_payments_made: 0,
+      late_payments_30_days: late30Days,
+      late_payments_60_days: late60Days,
+      late_payments_90_days: late90Days,
+      missed_payments: missedPayments,
+      total_payments_made: (paymentHistory || []).length,
       
       hard_inquiries_6m: hardInquiries6m,
       hard_inquiries_12m: hardInquiries12m,
