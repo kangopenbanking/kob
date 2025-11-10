@@ -13,7 +13,8 @@ import {
   Landmark,
   User,
   Shield,
-  TrendingUp
+  TrendingUp,
+  Bell
 } from "lucide-react";
 import {
   Sidebar,
@@ -62,6 +63,7 @@ const dashboardNavigation = [
     items: [
       { title: "Profile Settings", path: "/profile", icon: User },
       { title: "Security Settings", path: "/security", icon: Shield },
+      { title: "Notifications", path: "/notifications", icon: Bell },
     ]
   }
 ];

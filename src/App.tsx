@@ -67,6 +67,7 @@ import ConsentManagement from "./pages/ConsentManagement";
 import SystemMonitoring from "./pages/SystemMonitoring";
 import Dashboard from "./pages/Dashboard";
 import SecuritySettings from "./pages/SecuritySettings";
+import NotificationPreferences from "./pages/NotificationPreferences";
 import Communications from "./pages/Communications";
 import MobileMoney from "./pages/MobileMoney";
 import Payments from "./pages/Payments";
@@ -246,6 +247,7 @@ function App() {
               <Route index element={<Dashboard />} />
             </Route>
             <Route path="/security" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
             <Route path="/mobile-money" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><Payments /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
             <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><PersonalAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />

@@ -4811,6 +4811,63 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          created_at: string | null
+          credit_score_alerts: boolean | null
+          daily_digest: boolean | null
+          email_enabled: boolean | null
+          id: string
+          in_app_enabled: boolean | null
+          instant_notifications: boolean | null
+          loan_alerts: boolean | null
+          payment_alerts: boolean | null
+          savings_alerts: boolean | null
+          security_alerts: boolean | null
+          sms_enabled: boolean | null
+          transaction_alerts: boolean | null
+          updated_at: string | null
+          user_id: string
+          weekly_summary: boolean | null
+        }
+        Insert: {
+          created_at?: string | null
+          credit_score_alerts?: boolean | null
+          daily_digest?: boolean | null
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          instant_notifications?: boolean | null
+          loan_alerts?: boolean | null
+          payment_alerts?: boolean | null
+          savings_alerts?: boolean | null
+          security_alerts?: boolean | null
+          sms_enabled?: boolean | null
+          transaction_alerts?: boolean | null
+          updated_at?: string | null
+          user_id: string
+          weekly_summary?: boolean | null
+        }
+        Update: {
+          created_at?: string | null
+          credit_score_alerts?: boolean | null
+          daily_digest?: boolean | null
+          email_enabled?: boolean | null
+          id?: string
+          in_app_enabled?: boolean | null
+          instant_notifications?: boolean | null
+          loan_alerts?: boolean | null
+          payment_alerts?: boolean | null
+          savings_alerts?: boolean | null
+          security_alerts?: boolean | null
+          sms_enabled?: boolean | null
+          transaction_alerts?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+          weekly_summary?: boolean | null
+        }
+        Relationships: []
+      }
       oauth_sessions: {
         Row: {
           client_id: string
