@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
           institution_id,
           institutions!inner(
             institution_name,
-            primary_contact_email
+            contact_email
           )
         )
       `)
@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
       }
 
       const institution = (cert.tpp_registrations as any).institutions;
-      const contactEmail = institution.primary_contact_email;
+      const contactEmail = institution.contact_email;
       const institutionName = institution.institution_name;
 
       // Send notification via send-communication function

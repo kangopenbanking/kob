@@ -7356,39 +7356,6 @@ export type Database = {
       }
     }
     Views: {
-      captcha_challenges_public: {
-        Row: {
-          attempts: number | null
-          challenge_question: string | null
-          created_at: string | null
-          expires_at: string | null
-          id: string | null
-          max_attempts: number | null
-          session_id: string | null
-          status: string | null
-        }
-        Insert: {
-          attempts?: number | null
-          challenge_question?: string | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string | null
-          max_attempts?: number | null
-          session_id?: string | null
-          status?: string | null
-        }
-        Update: {
-          attempts?: number | null
-          challenge_question?: string | null
-          created_at?: string | null
-          expires_at?: string | null
-          id?: string | null
-          max_attempts?: number | null
-          session_id?: string | null
-          status?: string | null
-        }
-        Relationships: []
-      }
       credit_score_distribution: {
         Row: {
           avg_score: number | null

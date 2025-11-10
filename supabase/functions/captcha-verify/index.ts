@@ -28,13 +28,13 @@ serve(async (req) => {
       );
     }
 
-    // Get challenge
+    // Get challenge (don't expose answer to client queries)
     const { data: challenge, error: fetchError } = await supabase
       .from('captcha_challenges')
-      .select('*')
+      .select('id, session_id, challenge_answer, status, expires_at, attempts, max_attempts')
       .eq('session_id', session_id)
       .eq('status', 'pending')
-      .single();
+      .maybeSingle();
 
     if (fetchError || !challenge) {
       console.error('Challenge not found:', fetchError);
