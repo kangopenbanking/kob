@@ -106,6 +106,53 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Check if approaching rate limit (80%) and trigger webhook
+    if (minuteCount && minuteCount >= rateLimitPerMinute * 0.8 && minuteCount < rateLimitPerMinute) {
+      // Trigger rate limit warning webhook
+      fetch(`${supabaseUrl}/functions/v1/sandbox-trigger-webhook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({
+          api_key_id: keyData.id,
+          event_type: 'rate_limit_warning',
+          payload: {
+            api_key_id: keyData.id,
+            timestamp: new Date().toISOString(),
+            limit_type: 'per_minute',
+            current_usage: minuteCount,
+            limit: rateLimitPerMinute,
+            percentage: ((minuteCount / rateLimitPerMinute) * 100).toFixed(1),
+          }
+        })
+      }).catch(err => console.error('Failed to trigger webhook:', err));
+    }
+
+    if (dailyCount && dailyCount >= rateLimitPerDay * 0.8 && dailyCount < rateLimitPerDay) {
+      // Trigger rate limit warning webhook
+      fetch(`${supabaseUrl}/functions/v1/sandbox-trigger-webhook`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+        body: JSON.stringify({
+          api_key_id: keyData.id,
+          event_type: 'rate_limit_warning',
+          payload: {
+            api_key_id: keyData.id,
+            timestamp: new Date().toISOString(),
+            limit_type: 'per_day',
+            current_usage: dailyCount,
+            limit: rateLimitPerDay,
+            percentage: ((dailyCount / rateLimitPerDay) * 100).toFixed(1),
+          }
+        })
+      }).catch(err => console.error('Failed to trigger webhook:', err));
+    }
+
     // Update last used timestamp
     await supabase
       .from('sandbox_api_keys')

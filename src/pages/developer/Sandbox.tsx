@@ -378,6 +378,35 @@ export default function Sandbox() {
           </CardContent>
         </Card>
 
+        {/* Webhooks */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Webhooks</CardTitle>
+                <CardDescription>
+                  Register webhook URLs to receive rate limit notifications
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => navigate('/developer/sandbox/webhooks')}
+                size="sm"
+                variant="outline"
+              >
+                Manage Webhooks
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-2">
+              Get notified when you exceed 80% of your rate limits via webhook callbacks.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Events: <code className="text-xs">rate_limit_warning</code>, <code className="text-xs">rate_limit_exceeded</code>
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Documentation Link */}
         <Card>
           <CardHeader>
@@ -387,9 +416,14 @@ export default function Sandbox() {
             <p className="text-muted-foreground">
               Use your API key to authenticate requests to our sandbox environment.
             </p>
-            <Button variant="outline" onClick={() => navigate('/developer/api-testing')}>
-              View API Documentation
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => navigate('/developer/api-playground')}>
+                Try API Playground
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/developer/api-testing')}>
+                View Documentation
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

@@ -33,6 +33,8 @@ import CertificateManagement from "./pages/developer/CertificateManagement";
 import CertificateReference from "./pages/developer/CertificateReference";
 import Sandbox from "./pages/developer/Sandbox";
 import SandboxUsage from "./pages/developer/SandboxUsage";
+import SandboxWebhooks from "./pages/developer/SandboxWebhooks";
+import ApiPlayground from "./pages/developer/ApiPlayground";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -203,6 +205,8 @@ function App() {
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<Sandbox />} />
               <Route path="sandbox/usage" element={<SandboxUsage />} />
+              <Route path="sandbox/webhooks" element={<SandboxWebhooks />} />
+              <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-testing" element={<ApiTesting />} />
               <Route path="examples" element={<CodeExamples />} />
               <Route path="guides/web" element={<WebIntegration />} />

@@ -5622,6 +5622,91 @@ export type Database = {
         }
         Relationships: []
       }
+      sandbox_webhook_logs: {
+        Row: {
+          created_at: string | null
+          delivered_at: string | null
+          event_type: string
+          id: string
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          webhook_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          delivered_at?: string | null
+          event_type: string
+          id?: string
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_id: string
+        }
+        Update: {
+          created_at?: string | null
+          delivered_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          webhook_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_webhook_logs_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "sandbox_webhooks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sandbox_webhooks: {
+        Row: {
+          created_at: string | null
+          event_types: string[]
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          sandbox_account_id: string
+          secret_key: string | null
+          updated_at: string | null
+          webhook_url: string
+        }
+        Insert: {
+          created_at?: string | null
+          event_types?: string[]
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          sandbox_account_id: string
+          secret_key?: string | null
+          updated_at?: string | null
+          webhook_url: string
+        }
+        Update: {
+          created_at?: string | null
+          event_types?: string[]
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          sandbox_account_id?: string
+          secret_key?: string | null
+          updated_at?: string | null
+          webhook_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_webhooks_sandbox_account_id_fkey"
+            columns: ["sandbox_account_id"]
+            isOneToOne: false
+            referencedRelation: "developer_sandbox_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_cards: {
         Row: {
           billing_name: string | null
