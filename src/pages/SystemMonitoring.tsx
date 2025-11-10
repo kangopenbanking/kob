@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -232,8 +231,7 @@ const SystemMonitoring = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
             <Activity className="h-4 w-4 text-accent" />
@@ -504,7 +502,6 @@ const SystemMonitoring = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
   );
 };
 

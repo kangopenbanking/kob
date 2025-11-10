@@ -197,9 +197,8 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
-        <div className="max-w-5xl mx-auto">
+    <div className="space-y-6">
+      <div className="space-y-6">
           <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -540,7 +539,6 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
-        </div>
       </div>
     </div>
   );

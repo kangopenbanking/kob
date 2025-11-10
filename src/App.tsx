@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
@@ -160,33 +162,37 @@ function App() {
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><PersonalAccountRoute><FIPortal /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
-            {/* Admin Routes */}
-            <Route path="/admin/credit-management" element={<ProtectedRoute requiredRole="admin"><CreditManagement /></ProtectedRoute>} />
-            <Route path="/admin/payment-facilitation" element={<ProtectedRoute requiredRole="admin"><PaymentFacilitationAdmin /></ProtectedRoute>} />
-            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><Admin /></ProtectedRoute>} />
-            <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><UserManagement /></ProtectedRoute>} />
-            <Route path="/admin/api-clients" element={<ProtectedRoute requiredRole="admin"><ApiClientManagement /></ProtectedRoute>} />
-            <Route path="/admin/sandbox" element={<ProtectedRoute requiredRole="admin"><SandboxManagement /></ProtectedRoute>} />
-            <Route path="/admin/security" element={<ProtectedRoute requiredRole="admin"><SecurityMonitoring /></ProtectedRoute>} />
-            <Route path="/admin/audit-logs" element={<ProtectedRoute requiredRole="admin"><AuditLogs /></ProtectedRoute>} />
-            <Route path="/admin/system-config" element={<ProtectedRoute requiredRole="admin"><SystemConfig /></ProtectedRoute>} />
-            <Route path="/admin/webhooks" element={<ProtectedRoute requiredRole="admin"><WebhookManagement /></ProtectedRoute>} />
-            <Route path="/admin/branches" element={<ProtectedRoute requiredRole="admin"><BranchManagement /></ProtectedRoute>} />
-            <Route path="/admin/transactions" element={<ProtectedRoute requiredRole="admin"><TransactionMonitoring /></ProtectedRoute>} />
-            <Route path="/admin/consent-data" element={<ProtectedRoute requiredRole="admin"><ConsentDataManagement /></ProtectedRoute>} />
-            <Route path="/admin/health" element={<ProtectedRoute requiredRole="admin"><HealthMonitoring /></ProtectedRoute>} />
-            <Route path="/admin/rls-monitoring" element={<ProtectedRoute requiredRole="admin"><RLSMonitoring /></ProtectedRoute>} />
-            <Route path="/admin/api-health" element={<ProtectedRoute requiredRole="admin"><ApiHealthDashboard /></ProtectedRoute>} />
-            <Route path="/admin/api-testing" element={<ProtectedRoute requiredRole="admin"><ApiTestingAdmin /></ProtectedRoute>} />
-            <Route path="/admin/system-alerts" element={<ProtectedRoute requiredRole="admin"><SystemAlerts /></ProtectedRoute>} />
-            <Route path="/admin/api-performance" element={<ProtectedRoute requiredRole="admin"><ApiPerformance /></ProtectedRoute>} />
-            <Route path="/admin/rate-limits" element={<ProtectedRoute requiredRole="admin"><RateLimitConfig /></ProtectedRoute>} />
-            <Route path="/admin/api-docs" element={<ProtectedRoute requiredRole="admin"><ApiDocumentation /></ProtectedRoute>} />
-            <Route path="/admin/load-testing" element={<ProtectedRoute requiredRole="admin"><LoadTesting /></ProtectedRoute>} />
-            <Route path="/admin/audit-trail" element={<ProtectedRoute requiredRole="admin"><AuditTrailViewer /></ProtectedRoute>} />
-            <Route path="/admin/anomaly-detection" element={<ProtectedRoute requiredRole="admin"><AnomalyDetection /></ProtectedRoute>} />
-            <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
-            <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
+            {/* Admin Routes - Nested with AdminLayout */}
+            <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<Admin />} />
+              <Route path="users" element={<UserManagement />} />
+              <Route path="api-clients" element={<ApiClientManagement />} />
+              <Route path="sandbox" element={<SandboxManagement />} />
+              <Route path="security" element={<SecurityMonitoring />} />
+              <Route path="audit-logs" element={<AuditLogs />} />
+              <Route path="system-config" element={<SystemConfig />} />
+              <Route path="webhooks" element={<WebhookManagement />} />
+              <Route path="branches" element={<BranchManagement />} />
+              <Route path="transactions" element={<TransactionMonitoring />} />
+              <Route path="consent-data" element={<ConsentDataManagement />} />
+              <Route path="health" element={<HealthMonitoring />} />
+              <Route path="rls-monitoring" element={<RLSMonitoring />} />
+              <Route path="api-health" element={<ApiHealthDashboard />} />
+              <Route path="api-testing" element={<ApiTestingAdmin />} />
+              <Route path="system-alerts" element={<SystemAlerts />} />
+              <Route path="api-performance" element={<ApiPerformance />} />
+              <Route path="rate-limits" element={<RateLimitConfig />} />
+              <Route path="api-docs" element={<ApiDocumentation />} />
+              <Route path="load-testing" element={<LoadTesting />} />
+              <Route path="audit-trail" element={<AuditTrailViewer />} />
+              <Route path="anomaly-detection" element={<AnomalyDetection />} />
+              <Route path="credit-management" element={<CreditManagement />} />
+              <Route path="payment-facilitation" element={<PaymentFacilitationAdmin />} />
+            </Route>
+            <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SystemMonitoring /></AdminLayout></ProtectedRoute>} />
+            <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><AdminLayout><FeeManagement /></AdminLayout></ProtectedRoute>} />
+            <Route path="/communications" element={<ProtectedRoute requiredRole="admin"><AdminLayout><Communications /></AdminLayout></ProtectedRoute>} />
+            <Route path="/compliance-dashboard" element={<ProtectedRoute requiredRole="admin"><AdminLayout><ComplianceDashboard /></AdminLayout></ProtectedRoute>} />
             
             {/* New Developer Portal */}
             <Route path="/developer" element={<DeveloperLayout />}>
@@ -234,29 +240,32 @@ function App() {
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
             <Route path="/analytics" element={<Layout><ProtectedRoute><Analytics /></ProtectedRoute></Layout>} />
             <Route path="/monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
-            <Route path="/dashboard" element={<Layout><ProtectedRoute><PersonalAccountRoute><Dashboard /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/security" element={<Layout><ProtectedRoute><PersonalAccountRoute><SecuritySettings /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/communications" element={<Layout><ProtectedRoute requiredRole="admin"><Communications /></ProtectedRoute></Layout>} />
-            <Route path="/mobile-money" element={<Layout><ProtectedRoute><PersonalAccountRoute><MobileMoney /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/payments" element={<Layout><ProtectedRoute><PersonalAccountRoute><Payments /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            
+            {/* User Dashboard Routes - Nested with DashboardLayout */}
+            <Route path="/dashboard" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></ProtectedRoute>}>
+              <Route index element={<Dashboard />} />
+            </Route>
+            <Route path="/security" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
+            <Route path="/mobile-money" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
+            <Route path="/payments" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><Payments /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
             <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><PersonalAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><BusinessAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/savings" element={<Layout><ProtectedRoute><PersonalAccountRoute><Savings /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/virtual-cards" element={<Layout><ProtectedRoute><PersonalAccountRoute><VirtualCards /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/savings" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><Savings /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
+            <Route path="/virtual-cards" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><VirtualCards /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
             
             {/* CrediQ Routes */}
             <Route path="/crediq" element={<CrediQ />} />
             <Route path="/crediq/info" element={<CrediQInfo />} />
             <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><CrediQOnboarding /></ProtectedRoute></Layout>} />
-            <Route path="/crediq/dashboard" element={<Layout><ProtectedRoute><CrediQDashboard /></ProtectedRoute></Layout>} />
+            <Route path="/crediq/dashboard" element={<ProtectedRoute><DashboardLayout><CrediQDashboard /></DashboardLayout></ProtectedRoute>} />
             <Route path="/crediq/settings" element={<Layout><ProtectedRoute><CrediQSettings /></ProtectedRoute></Layout>} />
-            <Route path="/credit-score" element={<Layout><ProtectedRoute><CreditScore /></ProtectedRoute></Layout>} />
-            <Route path="/credit-report" element={<Layout><ProtectedRoute><CreditReport /></ProtectedRoute></Layout>} />
+            <Route path="/credit-score" element={<ProtectedRoute><DashboardLayout><CreditScore /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/credit-report" element={<ProtectedRoute><DashboardLayout><CreditReport /></DashboardLayout></ProtectedRoute>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/credit-api-docs" element={<Layout><CreditAPIDocumentation /></Layout>} />
-            <Route path="/compliance-dashboard" element={<Layout><ProtectedRoute requiredRole="admin"><ComplianceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/banking-ops" element={<Layout><ProtectedRoute><PersonalAccountRoute><BankingOps /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/banking-ops" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><BankingOps /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><DashboardLayout><ProfileSettings /></DashboardLayout></ProtectedRoute>} />
             <Route path="/profile-settings" element={<Layout><ProtectedRoute><ProfileSettings /></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />

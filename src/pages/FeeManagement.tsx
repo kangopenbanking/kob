@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -227,8 +226,7 @@ export default function FeeManagement() {
   if (!isAdmin) return null;
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Fee Management</h1>
           <p className="text-muted-foreground mt-2">
@@ -445,6 +443,5 @@ export default function FeeManagement() {
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
   );
 }

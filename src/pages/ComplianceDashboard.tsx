@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -80,8 +79,7 @@ export default function ComplianceDashboard() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Compliance Dashboard</h1>
@@ -295,6 +293,5 @@ export default function ComplianceDashboard() {
         </TabsContent>
       </Tabs>
       </div>
-    </AdminLayout>
   );
 }
