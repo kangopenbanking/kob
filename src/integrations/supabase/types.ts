@@ -6515,34 +6515,40 @@ export type Database = {
           acknowledged_at: string | null
           acknowledged_by: string | null
           alert_type: string
-          created_at: string | null
+          created_at: string
           details: Json | null
           id: string
-          is_acknowledged: boolean | null
           message: string
+          resolved_at: string | null
           severity: string
+          status: string
+          updated_at: string
         }
         Insert: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           alert_type: string
-          created_at?: string | null
+          created_at?: string
           details?: Json | null
           id?: string
-          is_acknowledged?: boolean | null
           message: string
+          resolved_at?: string | null
           severity: string
+          status?: string
+          updated_at?: string
         }
         Update: {
           acknowledged_at?: string | null
           acknowledged_by?: string | null
           alert_type?: string
-          created_at?: string | null
+          created_at?: string
           details?: Json | null
           id?: string
-          is_acknowledged?: boolean | null
           message?: string
+          resolved_at?: string | null
           severity?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
