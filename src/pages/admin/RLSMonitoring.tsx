@@ -84,8 +84,7 @@ export default function RLSMonitoring() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">RLS & Security Monitoring</h1>
           <p className="text-muted-foreground">Real-time monitoring of Row-Level Security policies and permission checks</p>
@@ -290,10 +289,9 @@ export default function RLSMonitoring() {
                   ))}
                 </TableBody>
               </Table>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-    </AdminLayout>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }

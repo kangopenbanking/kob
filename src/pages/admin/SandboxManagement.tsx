@@ -143,8 +143,7 @@ export default function SandboxManagement() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Sandbox Management</h1>
           <p className="text-muted-foreground">Manage test accounts for API development</p>
@@ -300,10 +299,9 @@ export default function SandboxManagement() {
                 </TableRow>
               ))}
             </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-      </div>
-    </AdminLayout>
-  );
+        </Table>
+      </CardContent>
+    </Card>
+  </div>
+);
 }

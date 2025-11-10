@@ -188,8 +188,7 @@ export default function KYCVerificationReview() {
   );
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Shield className="h-8 w-8 text-primary" />
           <div>
@@ -305,10 +304,9 @@ export default function KYCVerificationReview() {
               >
                 {reviewAction === "approved" ? "Approve" : "Reject"}
               </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </AdminLayout>
-  );
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  </div>
+);
 }

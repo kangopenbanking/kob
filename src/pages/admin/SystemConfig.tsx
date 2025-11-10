@@ -108,8 +108,7 @@ export default function SystemConfig() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">System Configuration</h1>
           <p className="text-muted-foreground">Manage platform settings and features</p>
@@ -276,10 +275,9 @@ export default function SystemConfig() {
               <Save className="h-4 w-4 mr-2" />
               Save Configuration
             </>
-          )}
-        </Button>
-      </div>
-      </div>
-    </AdminLayout>
-  );
+        )}
+      </Button>
+    </div>
+  </div>
+);
 }

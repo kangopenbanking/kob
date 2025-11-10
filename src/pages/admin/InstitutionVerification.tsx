@@ -308,8 +308,7 @@ export default function InstitutionVerification() {
   };
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center gap-3">
           <Building2 className="h-8 w-8 text-primary" />
           <div>
@@ -403,6 +402,5 @@ export default function InstitutionVerification() {
           />
         )}
       </div>
-    </AdminLayout>
   );
 }

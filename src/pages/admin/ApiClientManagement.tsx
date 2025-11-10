@@ -148,8 +148,7 @@ export default function ApiClientManagement() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">API Client Management</h1>
           <p className="text-muted-foreground">Manage OAuth 2.0 API clients and credentials</p>
@@ -336,7 +335,6 @@ export default function ApiClientManagement() {
           </Table>
         </CardContent>
       </Card>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }

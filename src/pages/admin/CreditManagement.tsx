@@ -150,8 +150,7 @@ export default function CreditManagement() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">Credit API Management</h1>
@@ -385,10 +384,9 @@ export default function CreditManagement() {
                 </div>
               )}
             </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      </div>
-    </AdminLayout>
-  );
+        </Card>
+      </TabsContent>
+    </Tabs>
+  </div>
+);
 }

@@ -181,17 +181,14 @@ export default function ApiHealthDashboard() {
 
   if (loading && metrics.length === 0) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         {/* Page Header */}
         <div className="mb-6">
           <h1 className="text-3xl font-bold tracking-tight">API Health Dashboard</h1>
@@ -335,7 +332,6 @@ export default function ApiHealthDashboard() {
             </div>
           </CardContent>
         </Card>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }

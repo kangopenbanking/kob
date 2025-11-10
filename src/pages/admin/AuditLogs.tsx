@@ -183,8 +183,7 @@ export default function AuditLogs() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Audit Logs</h1>
           <p className="text-muted-foreground">Complete audit trail of system activities</p>
@@ -320,10 +319,9 @@ export default function AuditLogs() {
                 ))}
               </TableBody>
             </Table>
-          </div>
-        </CardContent>
-      </Card>
-      </div>
-    </AdminLayout>
-  );
+        </div>
+      </CardContent>
+    </Card>
+  </div>
+);
 }
