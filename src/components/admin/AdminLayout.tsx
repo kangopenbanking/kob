@@ -32,6 +32,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { RealtimeAlertNotifications } from "@/components/admin/RealtimeAlertNotifications";
 
 const adminNavigation = [
   {
@@ -40,6 +41,7 @@ const adminNavigation = [
       { title: "Dashboard", path: "/admin", icon: LayoutDashboard },
       { title: "Fee Management", path: "/fee-management", icon: DollarSign },
       { title: "System Monitoring", path: "/system-monitoring", icon: Activity },
+      { title: "System Alerts", path: "/admin/system-alerts", icon: AlertTriangle },
     ]
   },
   {
@@ -52,6 +54,15 @@ const adminNavigation = [
       { title: "Communications", path: "/communications", icon: Mail },
       { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
       { title: "Sandbox", path: "/admin/sandbox", icon: Database },
+    ]
+  },
+  {
+    title: "API & Performance",
+    items: [
+      { title: "API Testing", path: "/admin/api-testing", icon: Activity },
+      { title: "API Performance", path: "/admin/api-performance", icon: Activity },
+      { title: "Rate Limiting", path: "/admin/rate-limits", icon: Shield },
+      { title: "API Documentation", path: "/admin/api-docs", icon: FileText },
     ]
   },
   {
@@ -129,6 +140,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
           <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
             <SidebarTrigger />
             <div className="flex-1" />
+            <RealtimeAlertNotifications />
           </header>
 
           <main className="flex-1 p-6">

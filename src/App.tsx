@@ -103,6 +103,9 @@ import RLSMonitoring from "./pages/admin/RLSMonitoring";
 import ApiHealthDashboard from "./pages/admin/ApiHealthDashboard";
 import ApiTestingAdmin from "./pages/admin/ApiTesting";
 import SystemAlerts from "./pages/admin/SystemAlerts";
+import ApiPerformance from "./pages/admin/ApiPerformance";
+import RateLimitConfig from "./pages/admin/RateLimitConfig";
+import ApiDocumentation from "./pages/admin/ApiDocumentation";
 import ForDevelopers from "./pages/ForDevelopers";
 import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
@@ -167,6 +170,9 @@ function App() {
             <Route path="/admin/api-health" element={<ProtectedRoute requiredRole="admin"><ApiHealthDashboard /></ProtectedRoute>} />
             <Route path="/admin/api-testing" element={<ProtectedRoute requiredRole="admin"><ApiTestingAdmin /></ProtectedRoute>} />
             <Route path="/admin/system-alerts" element={<ProtectedRoute requiredRole="admin"><SystemAlerts /></ProtectedRoute>} />
+            <Route path="/admin/api-performance" element={<ProtectedRoute requiredRole="admin"><ApiPerformance /></ProtectedRoute>} />
+            <Route path="/admin/rate-limits" element={<ProtectedRoute requiredRole="admin"><RateLimitConfig /></ProtectedRoute>} />
+            <Route path="/admin/api-docs" element={<ProtectedRoute requiredRole="admin"><ApiDocumentation /></ProtectedRoute>} />
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
             
