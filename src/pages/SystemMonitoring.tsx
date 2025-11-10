@@ -66,7 +66,7 @@ const SystemMonitoring = () => {
     const { data } = await supabase
       .from("system_alerts")
       .select("*")
-      .eq("is_acknowledged", false)
+      .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(10);
     if (data) setAlerts(data);
