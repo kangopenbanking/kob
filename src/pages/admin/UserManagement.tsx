@@ -15,6 +15,7 @@ import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { UserDetailsDialog } from '@/components/admin/UserDetailsDialog';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
+import { SearchFilter } from '@/components/SearchFilter';
 
 interface UserProfile {
   id: string;
@@ -187,18 +188,17 @@ export default function UserManagement() {
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">User Management</h1>
-            <p className="text-muted-foreground">Manage platform users, roles, and permissions</p>
-          </div>
-          <Button onClick={() => setCreateDialogOpen(true)}>
-            <UserPlus className="mr-2 h-4 w-4" />
-            Create User
-          </Button>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">User Management</h1>
+          <p className="text-muted-foreground">Manage platform users, roles, and permissions</p>
         </div>
+        <Button onClick={() => setCreateDialogOpen(true)}>
+          <UserPlus className="mr-2 h-4 w-4" />
+          Create User
+        </Button>
+      </div>
 
       <Card>
         <CardHeader>
@@ -206,51 +206,46 @@ export default function UserManagement() {
           <CardDescription>View and manage all registered users</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex gap-4 mb-6">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search by email or name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
+          <div className="space-y-4 mb-6">
+            <SearchFilter
+              searchTerm={searchQuery}
+              onSearchChange={setSearchQuery}
+              placeholder="Search by email or name..."
+              filterOptions={[
+                { label: "Admin", value: "admin" },
+                { label: "Moderator", value: "moderator" },
+                { label: "User", value: "user" },
+              ]}
+              selectedFilter={roleFilter}
+              onFilterChange={setRoleFilter}
+            />
+            
+            <div className="flex gap-2">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full sm:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="suspended">Suspended</SelectItem>
+                  <SelectItem value="banned">Banned</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
+                <SelectTrigger className="w-full sm:w-[200px]">
+                  <SelectValue placeholder="Filter by institution" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Institutions</SelectItem>
+                  {institutions.map((inst) => (
+                    <SelectItem key={inst.id} value={inst.id}>
+                      {inst.institution_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            <Select value={roleFilter} onValueChange={setRoleFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by role" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Roles</SelectItem>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="moderator">Moderator</SelectItem>
-                <SelectItem value="user">User</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="active">Active</SelectItem>
-                <SelectItem value="suspended">Suspended</SelectItem>
-                <SelectItem value="banned">Banned</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Filter by institution" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Institutions</SelectItem>
-                {institutions.map((inst) => (
-                  <SelectItem key={inst.id} value={inst.id}>
-                    {inst.institution_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           <Table>
@@ -338,7 +333,6 @@ export default function UserManagement() {
           </Table>
         </CardContent>
       </Card>
-      </div>
 
       <UserDetailsDialog
         open={detailsDialogOpen}
@@ -352,6 +346,6 @@ export default function UserManagement() {
         onOpenChange={setCreateDialogOpen}
         onUserCreated={loadUsers}
       />
-    </AdminLayout>
+    </div>
   );
 }

@@ -27,6 +27,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { Menu } from "lucide-react";
 
 const dashboardNavigation = [
   {
@@ -78,7 +80,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="border-r">
+        <Sidebar className="border-r" collapsible="icon">
           <div className="p-4 border-b">
             <Button 
               variant="ghost" 
@@ -87,7 +89,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               className="w-full justify-start"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
+              <span className="truncate">Back</span>
             </Button>
           </div>
 
@@ -115,12 +117,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sidebar>
 
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
-            <SidebarTrigger />
-            <div className="flex-1" />
+          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+            <SidebarTrigger className="-ml-1">
+              <Menu className="h-5 w-5" />
+            </SidebarTrigger>
+            <div className="flex-1 min-w-0">
+              <Breadcrumbs />
+            </div>
           </header>
 
-          <main className="flex-1 p-6">
+          <main className="flex-1 p-4 sm:p-6 overflow-auto">
             {children || <Outlet />}
           </main>
         </div>

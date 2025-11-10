@@ -2990,6 +2990,42 @@ export type Database = {
         }
         Relationships: []
       }
+      dashboard_widgets: {
+        Row: {
+          config: Json | null
+          created_at: string | null
+          id: string
+          is_visible: boolean
+          position: number
+          size: string
+          updated_at: string | null
+          user_id: string
+          widget_type: string
+        }
+        Insert: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean
+          position?: number
+          size?: string
+          updated_at?: string | null
+          user_id: string
+          widget_type: string
+        }
+        Update: {
+          config?: Json | null
+          created_at?: string | null
+          id?: string
+          is_visible?: boolean
+          position?: number
+          size?: string
+          updated_at?: string | null
+          user_id?: string
+          widget_type?: string
+        }
+        Relationships: []
+      }
       data_privacy_requests: {
         Row: {
           completion_deadline: string | null

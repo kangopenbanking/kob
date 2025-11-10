@@ -16,8 +16,12 @@ import {
   TrendingUp,
   TrendingDown,
   Eye,
-  EyeOff
+  EyeOff,
+  Settings
 } from "lucide-react";
+import { BalanceWidget } from "@/components/dashboard/widgets/BalanceWidget";
+import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
+import { WidgetCustomizer } from "@/components/dashboard/WidgetCustomizer";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -32,9 +36,12 @@ const Dashboard = () => {
   const [standingOrders, setStandingOrders] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
   const [showBalances, setShowBalances] = useState(true);
+  const [customizerOpen, setCustomizerOpen] = useState(false);
+  const [widgets, setWidgets] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
+    loadWidgets();
   }, []);
 
   useEffect(() => {
@@ -69,6 +76,40 @@ const Dashboard = () => {
     setUser(user);
     await fetchAllData(user.id);
     setLoading(false);
+  };
+
+  const loadWidgets = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("dashboard_widgets")
+      .select("*")
+      .eq("user_id", user.id)
+      .eq("is_visible", true)
+      .order("position");
+
+    if (data) setWidgets(data);
+  };
+
+  const handleHideWidget = async (widgetId: string) => {
+    await supabase
+      .from("dashboard_widgets")
+      .update({ is_visible: false })
+      .eq("id", widgetId);
+    
+    loadWidgets();
+    toast({ title: "Widget hidden" });
+  };
+
+  const handleRemoveWidget = async (widgetId: string) => {
+    await supabase
+      .from("dashboard_widgets")
+      .delete()
+      .eq("id", widgetId);
+    
+    loadWidgets();
+    toast({ title: "Widget removed" });
   };
 
   const fetchAllData = async (userId: string) => {
@@ -198,21 +239,45 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-6">
-          <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h1 className="text-4xl font-bold mb-2">My Dashboard</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">My Dashboard</h1>
               <p className="text-muted-foreground">
                 Manage your accounts, consents, and transactions
               </p>
             </div>
-            <Button variant="outline" onClick={() => setShowBalances(!showBalances)}>
-              {showBalances ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
-              {showBalances ? "Hide" : "Show"} Balances
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setShowBalances(!showBalances)}>
+                {showBalances ? <EyeOff className="mr-2 h-4 w-4" /> : <Eye className="mr-2 h-4 w-4" />}
+                <span className="hidden sm:inline">{showBalances ? "Hide" : "Show"} Balances</span>
+              </Button>
+              <Button variant="outline" onClick={() => setCustomizerOpen(true)}>
+                <Settings className="mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Customize</span>
+              </Button>
+            </div>
           </div>
-        </div>
+
+          {/* Widgets Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {widgets.some((w) => w.widget_type === "balance") && (
+              <BalanceWidget
+                id={widgets.find((w) => w.widget_type === "balance")?.id}
+                balance={getTotalBalance()}
+                onHide={handleHideWidget}
+                onRemove={handleRemoveWidget}
+              />
+            )}
+            
+            {widgets.some((w) => w.widget_type === "quick_actions") && (
+              <QuickActionsWidget
+                id={widgets.find((w) => w.widget_type === "quick_actions")?.id}
+                onHide={handleHideWidget}
+                onRemove={handleRemoveWidget}
+              />
+            )}
+          </div>
 
         {/* Total Balance Card */}
         <Card className="mb-6 bg-gradient-to-br from-primary/10 to-accent/10">
@@ -539,6 +604,13 @@ const Dashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
+        
+        {/* Widget Customizer Dialog */}
+        <WidgetCustomizer
+          open={customizerOpen}
+          onOpenChange={setCustomizerOpen}
+          onUpdate={loadWidgets}
+        />
       </div>
     </div>
   );
