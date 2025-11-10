@@ -118,6 +118,9 @@ import ApiDocumentation from "./pages/admin/ApiDocumentation";
 import LoadTesting from "./pages/admin/LoadTesting";
 import AuditTrailViewer from "./pages/admin/AuditTrailViewer";
 import AnomalyDetection from "./pages/admin/AnomalyDetection";
+import KYCVerificationReview from "./pages/admin/KYCVerificationReview";
+import BusinessKYCReview from "./pages/admin/BusinessKYCReview";
+import TPPRegistrationReview from "./pages/admin/TPPRegistrationReview";
 import ForDevelopers from "./pages/ForDevelopers";
 import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
@@ -189,6 +192,9 @@ function App() {
               <Route path="anomaly-detection" element={<AnomalyDetection />} />
               <Route path="credit-management" element={<CreditManagement />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationAdmin />} />
+              <Route path="kyc-verification" element={<KYCVerificationReview />} />
+              <Route path="business-kyc" element={<BusinessKYCReview />} />
+              <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
             </Route>
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SystemMonitoring /></AdminLayout></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><AdminLayout><FeeManagement /></AdminLayout></ProtectedRoute>} />

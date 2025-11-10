@@ -48,6 +48,15 @@ const adminNavigation = [
     ]
   },
   {
+    title: "Registration & Verification",
+    items: [
+      { title: "Institution Approvals", path: "/admin", icon: Building2 },
+      { title: "KYC Verification", path: "/admin/kyc-verification", icon: Shield },
+      { title: "Business KYC (KYB)", path: "/admin/business-kyc", icon: Building2 },
+      { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: Key },
+    ]
+  },
+  {
     title: "Management",
     items: [
       { title: "User Management", path: "/admin/users", icon: Users },
