@@ -198,6 +198,30 @@ export type Database = {
           },
         ]
       }
+      ai_anomaly_reports: {
+        Row: {
+          ai_analysis: string
+          analysis_data: Json
+          anomalies_detected: boolean | null
+          created_at: string | null
+          id: string
+        }
+        Insert: {
+          ai_analysis: string
+          analysis_data: Json
+          anomalies_detected?: boolean | null
+          created_at?: string | null
+          id?: string
+        }
+        Update: {
+          ai_analysis?: string
+          analysis_data?: Json
+          anomalies_detected?: boolean | null
+          created_at?: string | null
+          id?: string
+        }
+        Relationships: []
+      }
       aisp_consents: {
         Row: {
           account_ids: Json | null
@@ -4062,6 +4086,33 @@ export type Database = {
           verification_type?: string
           verified_at?: string | null
           verified_by?: string | null
+        }
+        Relationships: []
+      }
+      load_test_results: {
+        Row: {
+          concurrent_requests: number
+          created_at: string | null
+          duration_seconds: number
+          endpoint: string
+          id: string
+          results: Json
+        }
+        Insert: {
+          concurrent_requests: number
+          created_at?: string | null
+          duration_seconds: number
+          endpoint: string
+          id?: string
+          results: Json
+        }
+        Update: {
+          concurrent_requests?: number
+          created_at?: string | null
+          duration_seconds?: number
+          endpoint?: string
+          id?: string
+          results?: Json
         }
         Relationships: []
       }

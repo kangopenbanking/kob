@@ -63,6 +63,8 @@ const adminNavigation = [
       { title: "API Performance", path: "/admin/api-performance", icon: Activity },
       { title: "Rate Limiting", path: "/admin/rate-limits", icon: Shield },
       { title: "API Documentation", path: "/admin/api-docs", icon: FileText },
+      { title: "Load Testing", path: "/admin/load-testing", icon: Activity },
+      { title: "AI Anomaly Detection", path: "/admin/anomaly-detection", icon: AlertTriangle },
     ]
   },
   {
@@ -71,6 +73,7 @@ const adminNavigation = [
       { title: "Security Monitoring", path: "/admin/security", icon: Shield },
       { title: "Transaction Monitoring", path: "/admin/transactions", icon: Activity },
       { title: "Consent Data Management", path: "/admin/consent-data", icon: DatabaseIcon },
+      { title: "Audit Trail", path: "/admin/audit-trail", icon: FileText },
       { title: "Audit Logs", path: "/admin/audit-logs", icon: FileText },
       { title: "Credit Management", path: "/admin/credit-management", icon: DollarSign },
     ]

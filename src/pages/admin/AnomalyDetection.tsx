@@ -17,13 +17,13 @@ export default function AnomalyDetection() {
     queryKey: ["anomaly-reports"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("ai_anomaly_reports")
+        .from("ai_anomaly_reports" as any)
         .select("*")
         .order("created_at", { ascending: false })
         .limit(10);
 
       if (error) throw error;
-      return data;
+      return data as any[];
     },
   });
 
@@ -31,7 +31,7 @@ export default function AnomalyDetection() {
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("ai-anomaly-detection");
       if (error) throw error;
-      return data;
+      return data as any;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["anomaly-reports"] });
@@ -58,7 +58,7 @@ export default function AnomalyDetection() {
     }
   };
 
-  const latestReport = reports?.[0];
+  const latestReport: any = reports?.[0];
 
   return (
     <div className="container mx-auto p-6 space-y-6">

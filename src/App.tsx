@@ -106,6 +106,9 @@ import SystemAlerts from "./pages/admin/SystemAlerts";
 import ApiPerformance from "./pages/admin/ApiPerformance";
 import RateLimitConfig from "./pages/admin/RateLimitConfig";
 import ApiDocumentation from "./pages/admin/ApiDocumentation";
+import LoadTesting from "./pages/admin/LoadTesting";
+import AuditTrailViewer from "./pages/admin/AuditTrailViewer";
+import AnomalyDetection from "./pages/admin/AnomalyDetection";
 import ForDevelopers from "./pages/ForDevelopers";
 import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
@@ -173,6 +176,9 @@ function App() {
             <Route path="/admin/api-performance" element={<ProtectedRoute requiredRole="admin"><ApiPerformance /></ProtectedRoute>} />
             <Route path="/admin/rate-limits" element={<ProtectedRoute requiredRole="admin"><RateLimitConfig /></ProtectedRoute>} />
             <Route path="/admin/api-docs" element={<ProtectedRoute requiredRole="admin"><ApiDocumentation /></ProtectedRoute>} />
+            <Route path="/admin/load-testing" element={<ProtectedRoute requiredRole="admin"><LoadTesting /></ProtectedRoute>} />
+            <Route path="/admin/audit-trail" element={<ProtectedRoute requiredRole="admin"><AuditTrailViewer /></ProtectedRoute>} />
+            <Route path="/admin/anomaly-detection" element={<ProtectedRoute requiredRole="admin"><AnomalyDetection /></ProtectedRoute>} />
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><FeeManagement /></ProtectedRoute>} />
             
