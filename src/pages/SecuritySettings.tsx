@@ -229,8 +229,8 @@ const SecuritySettings = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto py-8 px-4">
+    <div className="space-y-6">
+      <div>
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-accent/10 border border-accent/20 mb-4">
             <Shield className="h-4 w-4 text-accent" />
