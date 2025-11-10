@@ -3044,6 +3044,42 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_sandbox_accounts: {
+        Row: {
+          company_name: string
+          created_at: string
+          description: string | null
+          id: string
+          status: string
+          tier: string
+          updated_at: string
+          user_id: string | null
+          website: string | null
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          status?: string
+          tier?: string
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
       direct_debits: {
         Row: {
           account_id: string
@@ -5383,6 +5419,106 @@ export type Database = {
         }
         Relationships: []
       }
+      sandbox_api_keys: {
+        Row: {
+          api_key: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          key_hash: string
+          key_name: string
+          last_used_at: string | null
+          rate_limit_per_day: number
+          rate_limit_per_minute: number
+          sandbox_account_id: string
+        }
+        Insert: {
+          api_key: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash: string
+          key_name: string
+          last_used_at?: string | null
+          rate_limit_per_day?: number
+          rate_limit_per_minute?: number
+          sandbox_account_id: string
+        }
+        Update: {
+          api_key?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          key_hash?: string
+          key_name?: string
+          last_used_at?: string | null
+          rate_limit_per_day?: number
+          rate_limit_per_minute?: number
+          sandbox_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_api_keys_sandbox_account_id_fkey"
+            columns: ["sandbox_account_id"]
+            isOneToOne: false
+            referencedRelation: "developer_sandbox_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sandbox_api_usage: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          endpoint: string
+          id: string
+          ip_address: unknown
+          method: string
+          request_size: number | null
+          response_size: number | null
+          response_time_ms: number | null
+          status_code: number
+          user_agent: string | null
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          ip_address?: unknown
+          method: string
+          request_size?: number | null
+          response_size?: number | null
+          response_time_ms?: number | null
+          status_code: number
+          user_agent?: string | null
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          ip_address?: unknown
+          method?: string
+          request_size?: number | null
+          response_size?: number | null
+          response_time_ms?: number | null
+          status_code?: number
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_api_usage_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "sandbox_api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sandbox_data: {
         Row: {
           created_at: string | null
@@ -5414,6 +5550,44 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sandbox_rate_limit_tracker: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          id: string
+          limit_exceeded: boolean
+          request_count: number
+          window_end: string
+          window_start: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          id?: string
+          limit_exceeded?: boolean
+          request_count?: number
+          window_end: string
+          window_start: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          id?: string
+          limit_exceeded?: boolean
+          request_count?: number
+          window_end?: string
+          window_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sandbox_rate_limit_tracker_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: false
+            referencedRelation: "sandbox_api_keys"
             referencedColumns: ["id"]
           },
         ]

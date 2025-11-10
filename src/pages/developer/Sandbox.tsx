@@ -1,0 +1,398 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { Loader2, Key, Plus, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
+export default function Sandbox() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [account, setAccount] = useState<any>(null);
+  const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [newApiKey, setNewApiKey] = useState<string | null>(null);
+  const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
+
+  // Form state
+  const [companyName, setCompanyName] = useState("");
+  const [website, setWebsite] = useState("");
+  const [description, setDescription] = useState("");
+  const [keyName, setKeyName] = useState("");
+
+  useEffect(() => {
+    fetchSandboxData();
+  }, []);
+
+  const fetchSandboxData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate('/auth');
+        return;
+      }
+
+      // Fetch sandbox account
+      const { data: accountData } = await supabase
+        .from('developer_sandbox_accounts')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      setAccount(accountData);
+
+      if (accountData) {
+        // Fetch API keys
+        const { data: keysData } = await supabase
+          .from('sandbox_api_keys')
+          .select('*')
+          .eq('sandbox_account_id', accountData.id)
+          .order('created_at', { ascending: false });
+
+        setApiKeys(keysData || []);
+      }
+    } catch (error) {
+      console.error('Error fetching sandbox data:', error);
+      toast.error('Failed to load sandbox data');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createSandboxAccount = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sandbox-create-account', {
+        body: { company_name: companyName, website, description }
+      });
+
+      if (error) throw error;
+
+      toast.success('Sandbox account created successfully!');
+      setAccount(data.account);
+    } catch (error: any) {
+      console.error('Error creating sandbox account:', error);
+      toast.error(error.message || 'Failed to create sandbox account');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const createApiKey = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sandbox-create-api-key', {
+        body: { key_name: keyName || 'Default Key' }
+      });
+
+      if (error) throw error;
+
+      setNewApiKey(data.api_key);
+      setKeyName("");
+      toast.success('API key created successfully!');
+      fetchSandboxData();
+    } catch (error: any) {
+      console.error('Error creating API key:', error);
+      toast.error(error.message || 'Failed to create API key');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const deleteApiKey = async (keyId: string) => {
+    try {
+      const { error } = await supabase
+        .from('sandbox_api_keys')
+        .update({ is_active: false })
+        .eq('id', keyId);
+
+      if (error) throw error;
+
+      toast.success('API key deactivated');
+      fetchSandboxData();
+    } catch (error) {
+      console.error('Error deleting API key:', error);
+      toast.error('Failed to delete API key');
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
+
+  if (loading) {
+    return (
+      <DeveloperLayout>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </DeveloperLayout>
+    );
+  }
+
+  if (!account) {
+    return (
+      <DeveloperLayout>
+        <div className="max-w-2xl mx-auto space-y-6">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>
+            <p className="text-muted-foreground">
+              Create a sandbox environment to test our APIs with rate limits and usage tracking
+            </p>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Create Sandbox Account</CardTitle>
+              <CardDescription>
+                Get started by creating your developer sandbox account
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="company">Company Name *</Label>
+                <Input
+                  id="company"
+                  value={companyName}
+                  onChange={(e) => setCompanyName(e.target.value)}
+                  placeholder="Acme Inc."
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="website">Website</Label>
+                <Input
+                  id="website"
+                  type="url"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                  placeholder="https://example.com"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Brief description of your use case..."
+                  rows={3}
+                />
+              </div>
+
+              <Button
+                onClick={createSandboxAccount}
+                disabled={!companyName || submitting}
+                className="w-full"
+              >
+                {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create Sandbox Account
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </DeveloperLayout>
+    );
+  }
+
+  return (
+    <DeveloperLayout>
+      <div className="max-w-4xl mx-auto space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>
+          <p className="text-muted-foreground">
+            Manage your sandbox environment and API keys
+          </p>
+        </div>
+
+        {/* Account Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Sandbox Account</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="text-muted-foreground">Company</Label>
+                <p className="font-medium">{account.company_name}</p>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Tier</Label>
+                <div>
+                  <Badge variant={account.tier === 'pro' ? 'default' : 'secondary'}>
+                    {account.tier.toUpperCase()}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Status</Label>
+                <div>
+                  <Badge variant={account.status === 'active' ? 'default' : 'secondary'}>
+                    {account.status}
+                  </Badge>
+                </div>
+              </div>
+              <div>
+                <Label className="text-muted-foreground">Created</Label>
+                <p>{new Date(account.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* API Keys */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>API Keys</CardTitle>
+                <CardDescription>
+                  Manage your sandbox API keys (max 5 keys)
+                </CardDescription>
+              </div>
+              <Button
+                onClick={() => setKeyName("")}
+                disabled={apiKeys.filter(k => k.is_active).length >= 5}
+                size="sm"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Create Key
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {newApiKey && (
+              <Alert>
+                <Key className="h-4 w-4" />
+                <AlertDescription className="space-y-2">
+                  <p className="font-medium">Your new API key (save this now!):</p>
+                  <div className="flex items-center gap-2 font-mono text-sm bg-muted p-2 rounded">
+                    <code className="flex-1">{newApiKey}</code>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => copyToClipboard(newApiKey)}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setNewApiKey(null)}
+                  >
+                    I've saved it
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {keyName !== null && !newApiKey && (
+              <div className="border rounded-lg p-4 space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="keyName">Key Name</Label>
+                  <Input
+                    id="keyName"
+                    value={keyName}
+                    onChange={(e) => setKeyName(e.target.value)}
+                    placeholder="Production API Key"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={createApiKey}
+                    disabled={submitting}
+                  >
+                    {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Generate API Key
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setKeyName("")}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            <div className="space-y-2">
+              {apiKeys.filter(k => k.is_active).map((key) => (
+                <div key={key.id} className="border rounded-lg p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-medium">{key.key_name}</p>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <code className="font-mono">
+                          {showKeys[key.id] ? key.api_key : '•'.repeat(40)}
+                        </code>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => setShowKeys(prev => ({ ...prev, [key.id]: !prev[key.id] }))}
+                        >
+                          {showKeys[key.id] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => copyToClipboard(key.api_key)}
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => deleteApiKey(key.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" />
+                    </Button>
+                  </div>
+                  <div className="flex gap-4 text-sm text-muted-foreground">
+                    <span>{key.rate_limit_per_minute} req/min</span>
+                    <span>{key.rate_limit_per_day} req/day</span>
+                    {key.last_used_at && (
+                      <span>Last used: {new Date(key.last_used_at).toLocaleString()}</span>
+                    )}
+                  </div>
+                </div>
+              ))}
+
+              {apiKeys.filter(k => k.is_active).length === 0 && (
+                <p className="text-center text-muted-foreground py-8">
+                  No API keys yet. Create one to get started.
+                </p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Documentation Link */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Next Steps</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <p className="text-muted-foreground">
+              Use your API key to authenticate requests to our sandbox environment.
+            </p>
+            <Button variant="outline" onClick={() => navigate('/developer/api-testing')}>
+              View API Documentation
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    </DeveloperLayout>
+  );
+}

@@ -48,16 +48,17 @@ const navSections = [
     ],
   },
   {
-    title: "Tools & Testing",
-    icon: Zap,
-    items: [
-      { title: "API Explorer", path: "/developer/api-explorer" },
-      { title: "API Console", path: "/developer/console" },
-      { title: "API Testing", path: "/developer/api-testing" },
-      { title: "Code Examples", path: "/developer/examples" },
-      { title: "Sandbox", path: "/developer/sandbox" },
-    ],
-  },
+      title: "Tools & Testing",
+      icon: Zap,
+      items: [
+        { title: "API Explorer", path: "/developer/api-explorer" },
+        { title: "API Console", path: "/developer/console" },
+        { title: "API Testing", path: "/developer/api-testing" },
+        { title: "Code Examples", path: "/developer/examples" },
+        { title: "Sandbox Environment", path: "/developer/sandbox" },
+        { title: "Usage Analytics", path: "/developer/sandbox/usage" },
+      ],
+    },
   {
     title: "No-Code Integration",
     icon: Puzzle,
