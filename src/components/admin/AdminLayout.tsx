@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/sidebar";
 import { RealtimeAlertNotifications } from "@/components/admin/RealtimeAlertNotifications";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { Menu } from "lucide-react";
 
 const adminNavigation = [
@@ -149,7 +150,10 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <div className="flex-1 min-w-0">
               <Breadcrumbs />
             </div>
-            <RealtimeAlertNotifications />
+            <div className="flex items-center gap-2">
+              <NotificationCenter />
+              <RealtimeAlertNotifications />
+            </div>
           </header>
 
           <main className="flex-1 p-4 sm:p-6">

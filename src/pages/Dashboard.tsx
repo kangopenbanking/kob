@@ -21,6 +21,10 @@ import {
 } from "lucide-react";
 import { BalanceWidget } from "@/components/dashboard/widgets/BalanceWidget";
 import { QuickActionsWidget } from "@/components/dashboard/widgets/QuickActionsWidget";
+import { TransactionsWidget } from "@/components/dashboard/widgets/TransactionsWidget";
+import { CreditScoreWidget } from "@/components/dashboard/widgets/CreditScoreWidget";
+import { SavingsGoalsWidget } from "@/components/dashboard/widgets/SavingsGoalsWidget";
+import { ActivityFeedWidget } from "@/components/dashboard/widgets/ActivityFeedWidget";
 import { WidgetCustomizer } from "@/components/dashboard/WidgetCustomizer";
 
 const Dashboard = () => {
@@ -38,6 +42,9 @@ const Dashboard = () => {
   const [showBalances, setShowBalances] = useState(true);
   const [customizerOpen, setCustomizerOpen] = useState(false);
   const [widgets, setWidgets] = useState<any[]>([]);
+  const [creditScore, setCreditScore] = useState<number | null>(null);
+  const [savingsGoals, setSavingsGoals] = useState<any[]>([]);
+  const [activityFeed, setActivityFeed] = useState<any[]>([]);
 
   useEffect(() => {
     checkAuth();
@@ -116,7 +123,10 @@ const Dashboard = () => {
     await Promise.all([
       fetchAccounts(userId),
       fetchConsents(userId),
-      fetchPayments(userId)
+      fetchPayments(userId),
+      fetchCreditScore(userId),
+      fetchSavingsGoals(userId),
+      fetchActivityFeed(userId),
     ]);
   };
 
@@ -187,6 +197,96 @@ const Dashboard = () => {
       .limit(10);
     
     if (data) setPayments(data);
+  };
+
+  const fetchCreditScore = async (userId: string) => {
+    const { data } = await supabase
+      .from("credit_scores")
+      .select("score")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+    
+    if (data) setCreditScore(data.score);
+  };
+
+  const fetchSavingsGoals = async (userId: string) => {
+    try {
+      const { data } = await supabase
+        .from("savings_accounts")
+        .select("id, account_name, target_amount, available_balance, maturity_date, status")
+        .eq("user_id", userId)
+        .eq("status", "active");
+      
+      if (data) {
+        const goals: any[] = [];
+        data.forEach((account) => {
+          goals.push({
+            id: account.id,
+            name: account.account_name,
+            targetAmount: account.target_amount || 0,
+            currentAmount: account.available_balance || 0,
+            currency: "XAF",
+            deadline: account.maturity_date,
+          });
+        });
+        setSavingsGoals(goals);
+      }
+    } catch (error) {
+      console.error("Error fetching savings goals:", error);
+    }
+  };
+
+  const fetchActivityFeed = async (userId: string) => {
+    // Fetch recent activities from various sources
+    const activities: any[] = [];
+    
+    // Recent transactions
+    const { data: txData } = await supabase
+      .from("transactions")
+      .select("id, transaction_information, booking_datetime")
+      .order("booking_datetime", { ascending: false })
+      .limit(5);
+    
+    if (txData) {
+      txData.forEach((tx) => {
+        activities.push({
+          id: `tx-${tx.id}`,
+          type: "info",
+          title: "Transaction Processed",
+          description: tx.transaction_information || "Transaction completed",
+          timestamp: tx.booking_datetime,
+        });
+      });
+    }
+
+    // Recent consents
+    const { data: consentData } = await supabase
+      .from("aisp_consents")
+      .select("id, status, created_at")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(3);
+    
+    if (consentData) {
+      consentData.forEach((consent) => {
+        activities.push({
+          id: `consent-${consent.id}`,
+          type: consent.status === "Authorised" ? "success" : "pending",
+          title: "Consent Updated",
+          description: `Consent ${consent.status.toLowerCase()}`,
+          timestamp: consent.created_at,
+        });
+      });
+    }
+
+    // Sort by timestamp
+    activities.sort((a, b) => 
+      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
+
+    setActivityFeed(activities.slice(0, 10));
   };
 
   const revokeConsent = async (consentId: string) => {
@@ -273,6 +373,50 @@ const Dashboard = () => {
             {widgets.some((w) => w.widget_type === "quick_actions") && (
               <QuickActionsWidget
                 id={widgets.find((w) => w.widget_type === "quick_actions")?.id}
+                onHide={handleHideWidget}
+                onRemove={handleRemoveWidget}
+              />
+            )}
+
+            {widgets.some((w) => w.widget_type === "credit_score") && creditScore && (
+              <CreditScoreWidget
+                id={widgets.find((w) => w.widget_type === "credit_score")?.id}
+                score={creditScore}
+                onHide={handleHideWidget}
+                onRemove={handleRemoveWidget}
+              />
+            )}
+
+            {widgets.some((w) => w.widget_type === "savings_goals") && (
+              <SavingsGoalsWidget
+                id={widgets.find((w) => w.widget_type === "savings_goals")?.id}
+                goals={savingsGoals}
+                onHide={handleHideWidget}
+                onRemove={handleRemoveWidget}
+              />
+            )}
+
+            {widgets.some((w) => w.widget_type === "transactions") && (
+              <TransactionsWidget
+                id={widgets.find((w) => w.widget_type === "transactions")?.id}
+                transactions={transactions.map((tx) => ({
+                  id: tx.id,
+                  amount: parseFloat(tx.amount),
+                  currency: tx.currency,
+                  type: tx.credit_debit_indicator === "Credit" ? "credit" : "debit",
+                  description: tx.transaction_information || "Transaction",
+                  date: tx.booking_datetime,
+                  status: tx.status,
+                }))}
+                onHide={handleHideWidget}
+                onRemove={handleRemoveWidget}
+              />
+            )}
+
+            {widgets.some((w) => w.widget_type === "activity_feed") && (
+              <ActivityFeedWidget
+                id={widgets.find((w) => w.widget_type === "activity_feed")?.id}
+                activities={activityFeed}
                 onHide={handleHideWidget}
                 onRemove={handleRemoveWidget}
               />

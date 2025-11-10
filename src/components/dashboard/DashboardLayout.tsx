@@ -28,6 +28,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { Menu } from "lucide-react";
 
 const dashboardNavigation = [
@@ -124,6 +125,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex-1 min-w-0">
               <Breadcrumbs />
             </div>
+            <NotificationCenter />
           </header>
 
           <main className="flex-1 p-4 sm:p-6 overflow-auto">
