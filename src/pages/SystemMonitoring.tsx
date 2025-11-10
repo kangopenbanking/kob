@@ -65,7 +65,7 @@ const SystemMonitoring = () => {
   const fetchAlerts = async () => {
     const { data } = await supabase
       .from("system_alerts")
-      .select("*")
+      .select("id, alert_type, message, severity, status, created_at")
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(10);

@@ -8,13 +8,14 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Check, X, AlertCircle } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export default function WebhookManagement() {
   const [open, setOpen] = useState(false);
+  const [testWebhookId, setTestWebhookId] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -61,7 +62,7 @@ export default function WebhookManagement() {
       toast({ title: "Webhook created successfully" });
       setOpen(false);
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({ 
         title: "Failed to create webhook",
         description: error.message,
@@ -91,8 +92,9 @@ export default function WebhookManagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["webhook-deliveries"] });
       toast({ title: "Test webhook sent successfully" });
+      setTestWebhookId(null);
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
       toast({
         title: "Failed to send test webhook",
         description: error.message,
@@ -194,6 +196,7 @@ export default function WebhookManagement() {
                       size="sm"
                       variant="outline"
                       onClick={() => testWebhook.mutate(webhook.id)}
+                      disabled={testWebhookId === webhook.id}
                     >
                       <RefreshCw className="mr-1 h-3 w-3" />
                       Test
