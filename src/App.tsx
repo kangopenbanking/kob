@@ -34,6 +34,8 @@ import CertificateReference from "./pages/developer/CertificateReference";
 import Sandbox from "./pages/developer/Sandbox";
 import SandboxUsage from "./pages/developer/SandboxUsage";
 import SandboxWebhooks from "./pages/developer/SandboxWebhooks";
+import WebhookTesting from "./pages/developer/WebhookTesting";
+import SandboxDataGenerator from "./pages/developer/SandboxDataGenerator";
 import ApiPlayground from "./pages/developer/ApiPlayground";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
@@ -206,6 +208,8 @@ function App() {
               <Route path="sandbox" element={<Sandbox />} />
               <Route path="sandbox/usage" element={<SandboxUsage />} />
               <Route path="sandbox/webhooks" element={<SandboxWebhooks />} />
+              <Route path="sandbox/webhook-testing" element={<WebhookTesting />} />
+              <Route path="sandbox/data-generator" element={<SandboxDataGenerator />} />
               <Route path="api-playground" element={<ApiPlayground />} />
               <Route path="api-testing" element={<ApiTesting />} />
               <Route path="examples" element={<CodeExamples />} />

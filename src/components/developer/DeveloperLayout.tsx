@@ -59,6 +59,8 @@ const navSections = [
         { title: "Sandbox Environment", path: "/developer/sandbox" },
         { title: "Usage Analytics", path: "/developer/sandbox/usage" },
         { title: "Webhooks", path: "/developer/sandbox/webhooks" },
+        { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
+        { title: "Data Generator", path: "/developer/sandbox/data-generator" },
       ],
     },
   {

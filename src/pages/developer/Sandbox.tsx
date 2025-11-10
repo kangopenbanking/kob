@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { Loader2, Key, Plus, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Loader2, Key, Plus, Copy, Eye, EyeOff, Trash2, Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
+import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
 
 export default function Sandbox() {
   const navigate = useNavigate();
@@ -18,6 +20,7 @@ export default function Sandbox() {
   const [submitting, setSubmitting] = useState(false);
   const [account, setAccount] = useState<any>(null);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
+  const [selectedKeyForDashboard, setSelectedKeyForDashboard] = useState<string>("");
   const [newApiKey, setNewApiKey] = useState<string | null>(null);
   const [showKeys, setShowKeys] = useState<Record<string, boolean>>({});
 
@@ -57,6 +60,11 @@ export default function Sandbox() {
           .order('created_at', { ascending: false });
 
         setApiKeys(keysData || []);
+
+        // Set first active key as selected for dashboard
+        if (keysData && keysData.length > 0) {
+          setSelectedKeyForDashboard(keysData[0].id);
+        }
       }
     } catch (error) {
       console.error('Error fetching sandbox data:', error);
@@ -378,6 +386,14 @@ export default function Sandbox() {
           </CardContent>
         </Card>
 
+        {/* Rate Limit Dashboard */}
+        {apiKeys.filter(k => k.is_active).length > 0 && (
+          <RateLimitDashboard 
+            apiKeyId={selectedKeyForDashboard} 
+            tier={account.tier}
+          />
+        )}
+
         {/* Webhooks */}
         <Card>
           <CardHeader>
@@ -401,9 +417,42 @@ export default function Sandbox() {
             <p className="text-sm text-muted-foreground mb-2">
               Get notified when you exceed 80% of your rate limits via webhook callbacks.
             </p>
-            <p className="text-xs text-muted-foreground">
-              Events: <code className="text-xs">rate_limit_warning</code>, <code className="text-xs">rate_limit_exceeded</code>
+            <div className="flex gap-2 mt-4">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate('/developer/sandbox/webhook-testing')}
+              >
+                Test Webhooks
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Data Generator */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Test Data</CardTitle>
+                <CardDescription>
+                  Generate realistic test data for your sandbox
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-muted-foreground mb-2">
+              Quickly populate your sandbox with accounts, transactions, and balances.
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/developer/sandbox/data-generator')}
+            >
+              <Database className="mr-2 h-4 w-4" />
+              Generate Data
+            </Button>
           </CardContent>
         </Card>
 
