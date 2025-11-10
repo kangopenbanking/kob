@@ -22,6 +22,7 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { CreateBranchDialog } from "@/components/admin/CreateBranchDialog";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -39,6 +40,10 @@ const Admin = () => {
   const [recentConsents, setRecentConsents] = useState<any[]>([]);
   const [recentPayments, setRecentPayments] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  
+  // Branch creation dialog state
+  const [branchDialogOpen, setBranchDialogOpen] = useState(false);
+  const [selectedInstitutionForBranch, setSelectedInstitutionForBranch] = useState<{id: string; name: string} | null>(null);
 
   useEffect(() => {
     // ProtectedRoute already verifies admin access, so we can directly load data
@@ -208,14 +213,17 @@ const Admin = () => {
         console.error('Failed to send approval email:', emailError);
       }
 
-      toast({
-        title: "Institution Approved",
-        description: institution.institution_type === 'developer' 
-          ? "Institution approved with sandbox credentials generated"
-          : "Institution approved successfully"
+      // Open branch creation dialog
+      setSelectedInstitutionForBranch({
+        id: institutionId,
+        name: institution.institution_name
       });
+      setBranchDialogOpen(true);
 
-      loadDashboardData();
+      toast({
+        title: "Institution Approved - Create Main Branch",
+        description: "Now create the main branch to complete the approval process"
+      });
     } catch (error) {
       console.error('Error approving institution:', error);
       toast({
@@ -815,8 +823,22 @@ const Admin = () => {
             </CardContent>
           </Card>
         </TabsContent>
-        </Tabs>
-      </div>
+      </Tabs>
+
+      {/* Branch Creation Dialog */}
+      {selectedInstitutionForBranch && (
+        <CreateBranchDialog
+          open={branchDialogOpen}
+          onOpenChange={setBranchDialogOpen}
+          institutionId={selectedInstitutionForBranch.id}
+          institutionName={selectedInstitutionForBranch.name}
+          onSuccess={() => {
+            loadDashboardData();
+            setSelectedInstitutionForBranch(null);
+          }}
+        />
+      )}
+    </div>
   );
 };
 

@@ -121,6 +121,8 @@ import AnomalyDetection from "./pages/admin/AnomalyDetection";
 import KYCVerificationReview from "./pages/admin/KYCVerificationReview";
 import BusinessKYCReview from "./pages/admin/BusinessKYCReview";
 import TPPRegistrationReview from "./pages/admin/TPPRegistrationReview";
+import InstitutionVerification from "./pages/admin/InstitutionVerification";
+import BusinessKYBSubmission from "./pages/BusinessKYBSubmission";
 import ForDevelopers from "./pages/ForDevelopers";
 import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
@@ -163,6 +165,7 @@ function App() {
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/business-kyb-submission" element={<Layout><ProtectedRoute><BusinessKYBSubmission /></ProtectedRoute></Layout>} />
             <Route path="/fi-portal" element={<Layout><ProtectedRoute><PersonalAccountRoute><FIPortal /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
@@ -195,6 +198,7 @@ function App() {
               <Route path="kyc-verification" element={<KYCVerificationReview />} />
               <Route path="business-kyc" element={<BusinessKYCReview />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
+              <Route path="institution-verification" element={<InstitutionVerification />} />
             </Route>
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SystemMonitoring /></AdminLayout></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><AdminLayout><FeeManagement /></AdminLayout></ProtectedRoute>} />

@@ -70,6 +70,7 @@ serve(async (req) => {
         phone,
         website: website || null,
         status: 'pending',
+        verification_step: 'pending_kyb',
         use_kob_flutterwave: use_kob_flutterwave || false,
       }])
       .select()
@@ -125,7 +126,9 @@ serve(async (req) => {
       JSON.stringify({
         success: true,
         institution_id: institution.id,
-        message: 'Institution registered successfully. Your application is pending review.'
+        message: 'Institution registered successfully. Please submit Business KYC documents to continue.',
+        next_step: 'kyb_submission',
+        redirect_url: '/business-kyb-submission'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

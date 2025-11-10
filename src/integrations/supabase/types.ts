@@ -3622,6 +3622,56 @@ export type Database = {
           },
         ]
       }
+      institution_verification_steps: {
+        Row: {
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          id: string
+          institution_id: string
+          metadata: Json | null
+          notes: string | null
+          status: string
+          step_name: string
+          step_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          id?: string
+          institution_id: string
+          metadata?: Json | null
+          notes?: string | null
+          status?: string
+          step_name: string
+          step_type: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          id?: string
+          institution_id?: string
+          metadata?: Json | null
+          notes?: string | null
+          status?: string
+          step_name?: string
+          step_type?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_verification_steps_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institutions: {
         Row: {
           address: string
@@ -3633,6 +3683,10 @@ export type Database = {
           institution_name: string
           institution_type: Database["public"]["Enums"]["institution_type"]
           kob_payment_fee_structure_id: string | null
+          kyb_submission_id: string | null
+          kyb_verified_at: string | null
+          kyb_verified_by: string | null
+          main_branch_id: string | null
           minimum_settlement_amount: number | null
           phone: string
           registration_number: string
@@ -3645,6 +3699,7 @@ export type Database = {
           updated_at: string
           use_kob_flutterwave: boolean | null
           user_id: string
+          verification_step: string | null
           website: string | null
         }
         Insert: {
@@ -3657,6 +3712,10 @@ export type Database = {
           institution_name: string
           institution_type: Database["public"]["Enums"]["institution_type"]
           kob_payment_fee_structure_id?: string | null
+          kyb_submission_id?: string | null
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
+          main_branch_id?: string | null
           minimum_settlement_amount?: number | null
           phone: string
           registration_number: string
@@ -3669,6 +3728,7 @@ export type Database = {
           updated_at?: string
           use_kob_flutterwave?: boolean | null
           user_id: string
+          verification_step?: string | null
           website?: string | null
         }
         Update: {
@@ -3681,6 +3741,10 @@ export type Database = {
           institution_name?: string
           institution_type?: Database["public"]["Enums"]["institution_type"]
           kob_payment_fee_structure_id?: string | null
+          kyb_submission_id?: string | null
+          kyb_verified_at?: string | null
+          kyb_verified_by?: string | null
+          main_branch_id?: string | null
           minimum_settlement_amount?: number | null
           phone?: string
           registration_number?: string
@@ -3693,6 +3757,7 @@ export type Database = {
           updated_at?: string
           use_kob_flutterwave?: boolean | null
           user_id?: string
+          verification_step?: string | null
           website?: string | null
         }
         Relationships: [
@@ -3701,6 +3766,20 @@ export type Database = {
             columns: ["kob_payment_fee_structure_id"]
             isOneToOne: false
             referencedRelation: "fee_structures"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institutions_kyb_submission_id_fkey"
+            columns: ["kyb_submission_id"]
+            isOneToOne: false
+            referencedRelation: "business_kyc"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institutions_main_branch_id_fkey"
+            columns: ["main_branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
             referencedColumns: ["id"]
           },
         ]

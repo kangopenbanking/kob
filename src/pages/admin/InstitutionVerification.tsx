@@ -1,0 +1,408 @@
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { AdminLayout } from "@/components/admin/AdminLayout";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CreateBranchDialog } from "@/components/admin/CreateBranchDialog";
+import { useToast } from "@/hooks/use-toast";
+import { 
+  Building2, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  AlertTriangle,
+  FileText,
+  Shield,
+  MapPin,
+  ArrowRight
+} from "lucide-react";
+import { format } from "date-fns";
+
+interface Institution {
+  id: string;
+  institution_name: string;
+  institution_type: string;
+  status: string;
+  verification_step: string;
+  kyb_verified_at: string | null;
+  main_branch_id: string | null;
+  created_at: string;
+  user_id: string;
+}
+
+interface VerificationStep {
+  id: string;
+  step_name: string;
+  step_type: string;
+  status: string;
+  completed_at: string | null;
+  notes: string | null;
+}
+
+export default function InstitutionVerification() {
+  const { toast } = useToast();
+  const [branchDialogOpen, setBranchDialogOpen] = useState(false);
+  const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+
+  const { data: institutions, isLoading, refetch } = useQuery({
+    queryKey: ["institutions-verification"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("institutions")
+        .select("*")
+        .in('verification_step', ['pending_registration', 'pending_kyb', 'kyb_submitted', 'kyb_approved', 'pending_branch'])
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      return data as Institution[];
+    },
+  });
+
+  const { data: verificationSteps } = useQuery({
+    queryKey: ["verification-steps"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("institution_verification_steps")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return data as VerificationStep[];
+    },
+  });
+
+  const { data: kybSubmissions } = useQuery({
+    queryKey: ["kyb-for-institutions"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("business_kyc")
+        .select("*");
+
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const getStepsForInstitution = (institutionId: string) => {
+    return verificationSteps?.filter(step => (step as any).institution_id === institutionId) || [];
+  };
+
+  const getKYBForInstitution = (userId: string, accountId: string | null) => {
+    return kybSubmissions?.find(kyb => 
+      kyb.user_id === userId || (accountId && kyb.account_id === accountId)
+    );
+  };
+
+  const calculateProgress = (steps: VerificationStep[]) => {
+    const completed = steps.filter(s => s.status === 'completed').length;
+    return (completed / Math.max(steps.length, 1)) * 100;
+  };
+
+  const getStatusBadge = (status: string) => {
+    const variants: Record<string, any> = {
+      completed: { variant: "default", icon: CheckCircle, color: "text-green-500" },
+      pending: { variant: "secondary", icon: Clock, color: "text-yellow-500" },
+      in_progress: { variant: "default", icon: AlertTriangle, color: "text-blue-500" },
+      failed: { variant: "destructive", icon: XCircle, color: "text-red-500" },
+    };
+
+    const config = variants[status] || variants.pending;
+    const Icon = config.icon;
+
+    return (
+      <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
+        <Icon className={`h-3 w-3 ${config.color}`} />
+        {status.toUpperCase()}
+      </Badge>
+    );
+  };
+
+  const getVerificationStepBadge = (step: string) => {
+    const stepLabels: Record<string, string> = {
+      pending_registration: "Pending Registration",
+      pending_kyb: "Pending KYB",
+      kyb_submitted: "KYB Submitted",
+      kyb_approved: "KYB Approved",
+      pending_branch: "Pending Branch",
+      approved: "Fully Approved",
+      rejected: "Rejected"
+    };
+
+    return (
+      <Badge variant="outline">
+        {stepLabels[step] || step}
+      </Badge>
+    );
+  };
+
+  const handleCreateBranch = (institution: Institution) => {
+    setSelectedInstitution(institution);
+    setBranchDialogOpen(true);
+  };
+
+  const handleApproveKYB = async (institutionId: string, kybId: string) => {
+    try {
+      // Update KYB status
+      const { error: kybError } = await supabase
+        .from('business_kyc')
+        .update({ verification_status: 'approved', verified_at: new Date().toISOString() })
+        .eq('id', kybId);
+
+      if (kybError) throw kybError;
+
+      // Update institution
+      const { error: instError } = await supabase
+        .from('institutions')
+        .update({ 
+          verification_step: 'pending_branch',
+          kyb_verified_at: new Date().toISOString(),
+          kyb_submission_id: kybId
+        })
+        .eq('id', institutionId);
+
+      if (instError) throw instError;
+
+      // Update verification step
+      const { error: stepError } = await supabase
+        .from('institution_verification_steps')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('institution_id', institutionId)
+        .eq('step_type', 'kyb_verification');
+
+      if (stepError) throw stepError;
+
+      toast({
+        title: "KYB Approved",
+        description: "Business KYC approved. Next: Create main branch.",
+      });
+
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const InstitutionCard = ({ institution }: { institution: Institution }) => {
+    const steps = getStepsForInstitution(institution.id);
+    const progress = calculateProgress(steps);
+    const kyb = getKYBForInstitution(institution.user_id, null);
+
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between">
+            <div className="space-y-1">
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="h-5 w-5" />
+                {institution.institution_name}
+              </CardTitle>
+              <CardDescription className="text-xs">
+                {institution.institution_type} • Created {format(new Date(institution.created_at), "MMM d, yyyy")}
+              </CardDescription>
+            </div>
+            {getVerificationStepBadge(institution.verification_step)}
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Progress Bar */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Verification Progress</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
+            <Progress value={progress} className="h-2" />
+          </div>
+
+          {/* Verification Checklist */}
+          <div className="space-y-2">
+            {steps.map((step) => (
+              <div key={step.id} className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  {step.status === 'completed' ? (
+                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  ) : step.status === 'failed' ? (
+                    <XCircle className="h-4 w-4 text-red-500" />
+                  ) : (
+                    <Clock className="h-4 w-4 text-yellow-500" />
+                  )}
+                  <span className={step.status === 'completed' ? 'line-through text-muted-foreground' : ''}>
+                    {step.step_name}
+                  </span>
+                </div>
+                {getStatusBadge(step.status)}
+              </div>
+            ))}
+          </div>
+
+          {/* KYB Status */}
+          {kyb && (
+            <div className="p-3 bg-muted rounded-lg space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  Business KYC Status
+                </span>
+                <Badge variant={kyb.verification_status === 'approved' ? 'default' : 'secondary'}>
+                  {kyb.verification_status?.toUpperCase()}
+                </Badge>
+              </div>
+              {kyb.verification_status === 'pending' && (
+                <Button 
+                  size="sm" 
+                  className="w-full" 
+                  onClick={() => handleApproveKYB(institution.id, kyb.id)}
+                >
+                  <CheckCircle className="h-4 w-4 mr-1" />
+                  Approve KYB
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Main Branch Status */}
+          {institution.main_branch_id ? (
+            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+              <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+                <MapPin className="h-4 w-4" />
+                <span>Main branch created</span>
+              </div>
+            </div>
+          ) : institution.verification_step === 'pending_branch' || institution.verification_step === 'kyb_approved' ? (
+            <Button 
+              className="w-full" 
+              onClick={() => handleCreateBranch(institution)}
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              Create Main Branch
+              <ArrowRight className="h-4 w-4 ml-2" />
+            </Button>
+          ) : null}
+
+          {/* Quick Actions */}
+          <div className="flex gap-2 text-xs">
+            <Button variant="outline" size="sm" className="flex-1">
+              <FileText className="h-3 w-3 mr-1" />
+              View Details
+            </Button>
+            {!kyb && (
+              <Button variant="outline" size="sm" className="flex-1">
+                <Shield className="h-3 w-3 mr-1" />
+                Request KYB
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  };
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex items-center gap-3">
+          <Building2 className="h-8 w-8 text-primary" />
+          <div>
+            <h1 className="text-3xl font-bold">Institution Verification Dashboard</h1>
+            <p className="text-muted-foreground">
+              Manage end-to-end institution verification and onboarding
+            </p>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-muted-foreground">Loading institutions...</p>
+          </div>
+        ) : institutions && institutions.length > 0 ? (
+          <Tabs defaultValue="all" className="space-y-4">
+            <TabsList>
+              <TabsTrigger value="all">
+                All ({institutions.length})
+              </TabsTrigger>
+              <TabsTrigger value="pending_kyb">
+                Pending KYB ({institutions.filter(i => i.verification_step === 'pending_kyb').length})
+              </TabsTrigger>
+              <TabsTrigger value="kyb_submitted">
+                KYB Submitted ({institutions.filter(i => i.verification_step === 'kyb_submitted').length})
+              </TabsTrigger>
+              <TabsTrigger value="pending_branch">
+                Pending Branch ({institutions.filter(i => i.verification_step === 'pending_branch' || i.verification_step === 'kyb_approved').length})
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {institutions.map((inst) => (
+                  <InstitutionCard key={inst.id} institution={inst} />
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="pending_kyb" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {institutions
+                  .filter(i => i.verification_step === 'pending_kyb')
+                  .map((inst) => (
+                    <InstitutionCard key={inst.id} institution={inst} />
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="kyb_submitted" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {institutions
+                  .filter(i => i.verification_step === 'kyb_submitted')
+                  .map((inst) => (
+                    <InstitutionCard key={inst.id} institution={inst} />
+                  ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="pending_branch" className="space-y-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {institutions
+                  .filter(i => i.verification_step === 'pending_branch' || i.verification_step === 'kyb_approved')
+                  .map((inst) => (
+                    <InstitutionCard key={inst.id} institution={inst} />
+                  ))}
+              </div>
+            </TabsContent>
+          </Tabs>
+        ) : (
+          <Card>
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <Building2 className="h-12 w-12 text-muted-foreground mb-4" />
+              <p className="text-muted-foreground">No institutions pending verification</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Branch Creation Dialog */}
+        {selectedInstitution && (
+          <CreateBranchDialog
+            open={branchDialogOpen}
+            onOpenChange={setBranchDialogOpen}
+            institutionId={selectedInstitution.id}
+            institutionName={selectedInstitution.institution_name}
+            onSuccess={() => {
+              refetch();
+              setSelectedInstitution(null);
+            }}
+          />
+        )}
+      </div>
+    </AdminLayout>
+  );
+}

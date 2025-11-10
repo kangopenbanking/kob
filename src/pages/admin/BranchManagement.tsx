@@ -167,7 +167,7 @@ export default function BranchManagement() {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <div>
@@ -366,6 +366,6 @@ export default function BranchManagement() {
           </DialogContent>
         </Dialog>
       </div>
-    </AdminLayout>
+    </>
   );
 }
