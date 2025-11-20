@@ -130,6 +130,20 @@ verify_jwt = false
 [functions.automated-billing-cron]
 verify_jwt = false
 
+# Automated settlement cron job
+[functions.automated-settlement-cron]
+verify_jwt = false
+
+# Settlement Management Functions
+
+# Settlement calculation (admin only)
+[functions.settlement-calculate]
+verify_jwt = true
+
+# Settlement processing (admin only)
+[functions.settlement-process]
+verify_jwt = true
+
 # SWIFT Message Processing Functions
 
 # MT103 parser
