@@ -229,7 +229,7 @@ verify_jwt = false
 # Phase 5: Stripe Payment Functions
 
 [functions.stripe-payment-intent]
-verify_jwt = false
+verify_jwt = true
 
 [functions.stripe-confirm-payment]
 verify_jwt = false
@@ -296,6 +296,9 @@ verify_jwt = false
 
 # Phase 12: Admin Functions
 
+[functions.admin-create-user]
+verify_jwt = true
+
 [functions.admin-create-client]
 verify_jwt = false
 
@@ -306,10 +309,10 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.admin-system-config]
-verify_jwt = false
+verify_jwt = true
 
 [functions.admin-webhooks]
-verify_jwt = false
+verify_jwt = true
 
 [functions.admin-transaction-review]
 verify_jwt = false

@@ -1,10 +1,21 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const sendOtpSchema = z.object({
+  phone: z.string()
+    .trim()
+    .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in international format (e.g., +237123456789)')
+    .min(8, 'Phone number is too short')
+    .max(15, 'Phone number is too long'),
+  method: z.enum(['sms', 'whatsapp', 'auto']).optional(),
+});
 
 // Send OTP via SMS using Vonage
 async function sendViaSMS(phoneNumber: string, otpCode: string): Promise<boolean> {
@@ -96,6 +107,23 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { phone_number, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
+
+    // Validate input
+    const validationResult = sendOtpSchema.safeParse({ phone: phone_number, method: delivery_method });
+    
+    if (!validationResult.success) {
+      console.error('Validation failed:', validationResult.error.errors);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid phone number format', 
+          details: validationResult.error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     if (!phone_number || !otp_type || !captcha_session_id) {
       return new Response(
