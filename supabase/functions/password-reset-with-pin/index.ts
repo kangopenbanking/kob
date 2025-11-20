@@ -25,10 +25,54 @@ serve(async (req) => {
       );
     }
 
-    // Validate password strength
-    if (new_password.length < 8) {
+    // Rate limiting - 5 attempts per hour per phone number
+    const rateLimitKey = `password_reset_${phone_number}`;
+    const { data: rateLimitAllowed, error: rateLimitError } = await supabase.rpc('check_rate_limit', {
+      _client_id: rateLimitKey,
+      _endpoint: 'password-reset-with-pin',
+      _limit: 5,
+      _window_minutes: 60
+    });
+
+    if (rateLimitError) {
+      console.error('Rate limit check error:', rateLimitError);
+    }
+
+    if (!rateLimitAllowed) {
       return new Response(
-        JSON.stringify({ error: 'Password must be at least 8 characters long' }),
+        JSON.stringify({ 
+          error: 'Too many password reset attempts. Please try again later.',
+          retry_after: '1 hour'
+        }),
+        { 
+          status: 429, 
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': '3600'
+          } 
+        }
+      );
+    }
+
+    // Validate password strength using database function
+    const { data: isStrongPassword, error: validationError } = await supabase.rpc('validate_password_strength', {
+      password: new_password
+    });
+
+    if (validationError) {
+      console.error('Password validation error:', validationError);
+      return new Response(
+        JSON.stringify({ error: 'Failed to validate password strength' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+      );
+    }
+
+    if (!isStrongPassword) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Password must contain at least 8 characters including uppercase, lowercase, number, and special character'
+        }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
