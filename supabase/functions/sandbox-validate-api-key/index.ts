@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 function hashApiKey(apiKey: string): string {
-  return crypto.createHash('sha256').update(apiKey).digest('hex');
+  return crypto.createHash('sha256').update(apiKey).digest('hex') as string;
 }
 
 async function checkRateLimit(
@@ -106,8 +106,25 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Get counts for webhook warnings
+    const now = new Date();
+    const oneMinuteAgo = new Date(now.getTime() - 60000);
+    const oneDayAgo = new Date(now.getTime() - 86400000);
+
+    const { count: minuteCount } = await supabase
+      .from('sandbox_api_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('api_key_id', keyData.id)
+      .gte('created_at', oneMinuteAgo.toISOString());
+
+    const { count: dailyCount } = await supabase
+      .from('sandbox_api_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('api_key_id', keyData.id)
+      .gte('created_at', oneDayAgo.toISOString());
+
     // Check if approaching rate limit (80%) and trigger webhook
-    if (minuteCount && minuteCount >= rateLimitPerMinute * 0.8 && minuteCount < rateLimitPerMinute) {
+    if (minuteCount && minuteCount >= keyData.rate_limit_per_minute * 0.8 && minuteCount < keyData.rate_limit_per_minute) {
       // Trigger rate limit warning webhook
       fetch(`${supabaseUrl}/functions/v1/sandbox-trigger-webhook`, {
         method: 'POST',
@@ -123,14 +140,14 @@ Deno.serve(async (req) => {
             timestamp: new Date().toISOString(),
             limit_type: 'per_minute',
             current_usage: minuteCount,
-            limit: rateLimitPerMinute,
-            percentage: ((minuteCount / rateLimitPerMinute) * 100).toFixed(1),
+            limit: keyData.rate_limit_per_minute,
+            percentage: ((minuteCount / keyData.rate_limit_per_minute) * 100).toFixed(1),
           }
         })
       }).catch(err => console.error('Failed to trigger webhook:', err));
     }
 
-    if (dailyCount && dailyCount >= rateLimitPerDay * 0.8 && dailyCount < rateLimitPerDay) {
+    if (dailyCount && dailyCount >= keyData.rate_limit_per_day * 0.8 && dailyCount < keyData.rate_limit_per_day) {
       // Trigger rate limit warning webhook
       fetch(`${supabaseUrl}/functions/v1/sandbox-trigger-webhook`, {
         method: 'POST',
@@ -146,8 +163,8 @@ Deno.serve(async (req) => {
             timestamp: new Date().toISOString(),
             limit_type: 'per_day',
             current_usage: dailyCount,
-            limit: rateLimitPerDay,
-            percentage: ((dailyCount / rateLimitPerDay) * 100).toFixed(1),
+            limit: keyData.rate_limit_per_day,
+            percentage: ((dailyCount / keyData.rate_limit_per_day) * 100).toFixed(1),
           }
         })
       }).catch(err => console.error('Failed to trigger webhook:', err));

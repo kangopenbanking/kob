@@ -30,7 +30,7 @@ serve(async (req) => {
     for (const institution of institutions || []) {
       try {
         let shouldSettle = false;
-        let periodStart: Date;
+        let periodStart: Date = new Date();
         let periodEnd: Date = new Date();
 
         // Determine if settlement should run based on frequency
@@ -144,7 +144,7 @@ serve(async (req) => {
           institution_id: institution.id,
           institution_name: institution.institution_name,
           status: 'error',
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
         });
       }
     }
@@ -165,7 +165,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Automated settlement cron error:', error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ error: error instanceof Error ? error.message : String(error) }),
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }

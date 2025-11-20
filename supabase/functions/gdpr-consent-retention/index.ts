@@ -73,21 +73,23 @@ Deno.serve(async (req) => {
     console.log('Cleanup completed successfully:', result);
 
     // Log the cleanup event to audit logs for compliance tracking
-    await supabase.rpc('log_audit_event', {
-      _action_type: 'gdpr_data_retention',
-      _entity_type: 'consent_events',
-      _entity_id: null,
-      _details: {
-        deleted_count: result.deleted_count,
-        retention_period_days: retentionDays,
-        cutoff_date: cutoffDateStr,
-        execution_time_ms: executionTime,
-        automated: true,
-      },
-    }).catch(err => {
+    try {
+      await supabase.rpc('log_audit_event', {
+        _action_type: 'gdpr_data_retention',
+        _entity_type: 'consent_events',
+        _entity_id: null,
+        _details: {
+          deleted_count: result.deleted_count,
+          retention_period_days: retentionDays,
+          cutoff_date: cutoffDateStr,
+          execution_time_ms: executionTime,
+          automated: true,
+        },
+      });
+    } catch (err) {
       console.error('Error logging audit event:', err);
       // Don't fail the cleanup if audit logging fails
-    });
+    }
 
     return new Response(
       JSON.stringify({
@@ -106,7 +108,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: false,
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         message: 'Failed to execute GDPR data retention cleanup',
       }),
       {

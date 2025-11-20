@@ -13,7 +13,7 @@ function generateApiKey(): string {
 }
 
 function hashApiKey(apiKey: string): string {
-  return crypto.createHash('sha256').update(apiKey).digest('hex');
+  return crypto.createHash('sha256').update(apiKey).digest('hex') as string;
 }
 
 Deno.serve(async (req) => {
