@@ -1,10 +1,48 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const createUserSchema = z.object({
+  email: z.string()
+    .trim()
+    .email('Invalid email address')
+    .max(255, 'Email must be less than 255 characters'),
+  full_name: z.string()
+    .trim()
+    .min(2, 'Full name must be at least 2 characters')
+    .max(200, 'Full name must be less than 200 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Full name contains invalid characters'),
+  phone_number: z.string()
+    .trim()
+    .regex(/^\+?[1-9]\d{6,14}$/, 'Invalid phone number format')
+    .optional()
+    .or(z.literal('')),
+  country_code: z.string().length(2).optional().or(z.literal('')),
+  roles: z.array(z.string()).optional(),
+  institution_id: z.string().uuid('Invalid institution ID').optional(),
+  branch_id: z.string().uuid('Invalid branch ID').optional(),
+  position: z.string()
+    .trim()
+    .min(2, 'Position must be at least 2 characters')
+    .max(100, 'Position must be less than 100 characters')
+    .optional()
+    .or(z.literal('')),
+  department: z.string()
+    .trim()
+    .min(2, 'Department must be at least 2 characters')
+    .max(100, 'Department must be less than 100 characters')
+    .optional()
+    .or(z.literal('')),
+  employment_type: z.string().optional(),
+  start_date: z.string().optional(),
+  send_welcome_email: z.boolean().optional(),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -50,6 +88,36 @@ serve(async (req) => {
       start_date,
       send_welcome_email
     } = await req.json();
+
+    // Validate input
+    const validationResult = createUserSchema.safeParse({
+      email,
+      full_name,
+      phone_number,
+      country_code,
+      roles: userRoles,
+      institution_id,
+      branch_id,
+      position,
+      department,
+      employment_type,
+      start_date,
+      send_welcome_email
+    });
+    
+    if (!validationResult.success) {
+      console.error('Validation failed:', validationResult.error.errors);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Validation failed', 
+          details: validationResult.error.errors.map(e => ({
+            field: e.path.join('.'),
+            message: e.message
+          }))
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Generate temporary password
     const tempPassword = crypto.randomUUID().slice(0, 12);

@@ -1,10 +1,26 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
 import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
+import { create } from 'https://deno.land/x/djwt@v3.0.2/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function getJwtKey(): Promise<CryptoKey> {
+  const secret = Deno.env.get('JWT_SECRET');
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+
+  return await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign', 'verify']
+  );
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -55,17 +71,24 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate JWT token (simplified - in production use proper JWT library)
+    // Generate proper JWT token with HMAC-SHA256 signing
+    const jwtKey = await getJwtKey();
+    
     const tokenPayload = {
       client_id: client.id,
       api_key: client.api_key,
       institution_id: client.institution_id,
       allowed_operations: client.allowed_operations,
       pricing_tier: client.pricing_tier,
+      iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 3600, // 1 hour expiry
     };
 
-    const token = btoa(JSON.stringify(tokenPayload));
+    const token = await create(
+      { alg: 'HS256', typ: 'JWT' },
+      tokenPayload,
+      jwtKey
+    );
 
     // Update last query time
     await supabase
