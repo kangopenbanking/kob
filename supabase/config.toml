@@ -213,12 +213,12 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.flutterwave-bank-transfer]
-verify_jwt = false
+verify_jwt = true
 
 # Phase 4: Mobile Money Functions
 
 [functions.mobile-money-charge]
-verify_jwt = false
+verify_jwt = true
 
 [functions.mobile-money-transfer]
 verify_jwt = false
@@ -249,7 +249,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.bulk-transfers]
-verify_jwt = false
+verify_jwt = true
 
 # Phase 7: Communication Functions
 
@@ -289,7 +289,7 @@ verify_jwt = false
 # Phase 11: Data Management Functions
 
 [functions.data-export]
-verify_jwt = false
+verify_jwt = true
 
 [functions.kyc-submit]
 verify_jwt = false
@@ -303,10 +303,10 @@ verify_jwt = true
 verify_jwt = false
 
 [functions.admin-metrics]
-verify_jwt = false
+verify_jwt = true
 
 [functions.admin-sandbox-accounts]
-verify_jwt = false
+verify_jwt = true
 
 [functions.admin-system-config]
 verify_jwt = true
@@ -315,7 +315,7 @@ verify_jwt = true
 verify_jwt = true
 
 [functions.admin-transaction-review]
-verify_jwt = false
+verify_jwt = true
 
 # Phase 13: mTLS Certificate Management (FAPI 1.0 Advanced)
 
