@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.database = {
         status: 'unhealthy',
-        details: { error: e.message }
+        details: { error: e instanceof Error ? e.message : String(e) }
       };
     }
 
@@ -69,7 +69,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.edge_functions = {
         status: 'unhealthy',
-        details: { error: e.message }
+        details: { error: e instanceof Error ? e.message : String(e) }
       };
     }
 
@@ -87,7 +87,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.email_service = {
         status: 'unhealthy',
-        details: { error: e.message }
+        details: { error: e instanceof Error ? e.message : String(e) }
       };
     }
 
@@ -108,7 +108,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.integrations = {
         status: 'unhealthy',
-        details: { error: e.message }
+        details: { error: e instanceof Error ? e.message : String(e) }
       };
     }
 
@@ -138,7 +138,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         status: 'error',
-        error: error.message,
+        error: error instanceof Error ? error.message : String(error),
         timestamp: new Date().toISOString()
       }),
       {

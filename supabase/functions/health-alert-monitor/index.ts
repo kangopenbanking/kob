@@ -106,9 +106,10 @@ serve(async (req) => {
         const criticalAlerts = alerts.filter(a => a.severity === 'critical');
         
         for (const admin of admins) {
+          const profile = admin.profiles as any;
           await supabase.functions.invoke('send-communication', {
             body: {
-              recipient: admin.profiles.email,
+              recipient: profile?.email || '',
               subject: criticalAlerts.length > 0 
                 ? '🚨 CRITICAL: API Health Alert' 
                 : '⚠️ API Health Warning',
