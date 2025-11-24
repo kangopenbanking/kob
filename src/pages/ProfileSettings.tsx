@@ -8,7 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Phone, Lock, Mail } from 'lucide-react';
+import { Loader2, Phone, Lock, Mail, MapPin } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useQuery } from '@tanstack/react-query';
 
 const COUNTRY_CODES = [
   { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
@@ -28,6 +30,25 @@ export default function ProfileSettings() {
   const [otpCode, setOtpCode] = useState('');
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [pinCode, setPinCode] = useState('');
+
+  // Fetch PostiQ verification
+  const { data: postiqData } = useQuery({
+    queryKey: ['postiq-verification'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data } = await supabase
+        .from('postiq_address_verifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .single();
+      return data;
+    }
+  });
 
   useEffect(() => {
     loadProfile();
@@ -282,6 +303,57 @@ export default function ProfileSettings() {
                 </div>
               )}
             </>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* PostiQ Address Verification Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Verified Address (PostiQ)
+          </CardTitle>
+          <CardDescription>
+            Your verified physical address for credit score enhancement
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {postiqData ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-4 bg-green-50 dark:bg-green-950/20 rounded-lg border border-green-200 dark:border-green-800">
+                <MapPin className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0" />
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="font-mono font-semibold text-lg">{postiqData.postiq_code}</span>
+                    <Badge variant="outline" className="bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700">
+                      Verified
+                    </Badge>
+                  </div>
+                  {postiqData.full_address && (
+                    <p className="text-sm text-muted-foreground">{postiqData.full_address}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Verified on {new Date(postiqData.verified_at).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                ✓ This verified address provides a <strong className="text-green-600 dark:text-green-400">+50 point boost</strong> to your credit score
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                No verified address yet. Verify your address on the Credit Score page to boost your score by +50 points.
+              </p>
+              <Button variant="outline" asChild>
+                <a href="/credit-score">
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Verify Address
+                </a>
+              </Button>
+            </div>
           )}
         </CardContent>
       </Card>
