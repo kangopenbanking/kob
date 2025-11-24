@@ -51,6 +51,7 @@ const navSections = [
       title: "Tools & Testing",
       icon: Zap,
       items: [
+        { title: "API Keys", path: "/developer/api-keys" },
         { title: "API Explorer", path: "/developer/api-explorer" },
         { title: "API Console", path: "/developer/console" },
         { title: "API Playground", path: "/developer/api-playground" },

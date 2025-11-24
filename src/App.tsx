@@ -128,6 +128,7 @@ import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
 import Playground from "./pages/developer/Playground";
 import Changelog from "./pages/developer/Changelog";
+import ApiKeys from "./pages/developer/ApiKeys";
 import NoCodeIndex from "./pages/integrations/NoCodeIndex";
 import ZapierGuide from "./pages/integrations/ZapierGuide";
 import MakeGuide from "./pages/integrations/MakeGuide";
@@ -235,6 +236,7 @@ function App() {
               <Route path="guides/sdks" element={<SDKsPage />} />
               <Route path="api-explorer" element={<ApiExplorer />} />
               <Route path="certificates" element={<CertificateManagement />} />
+              <Route path="api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/api-catalog" element={<Layout><ApiCatalog /></Layout>} />
