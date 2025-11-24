@@ -5356,6 +5356,175 @@ export type Database = {
           },
         ]
       }
+      postiq_address_verifications: {
+        Row: {
+          area_name: string | null
+          created_at: string | null
+          credits_consumed: number | null
+          district: string | null
+          full_address: string | null
+          house_number: string | null
+          id: string
+          is_active: boolean | null
+          latitude: number
+          longitude: number
+          postiq_code: string
+          precision: string
+          region: string | null
+          road_name: string | null
+          sector: string | null
+          updated_at: string | null
+          user_id: string
+          verification_method: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          area_name?: string | null
+          created_at?: string | null
+          credits_consumed?: number | null
+          district?: string | null
+          full_address?: string | null
+          house_number?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude: number
+          longitude: number
+          postiq_code: string
+          precision: string
+          region?: string | null
+          road_name?: string | null
+          sector?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_method?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          area_name?: string | null
+          created_at?: string | null
+          credits_consumed?: number | null
+          district?: string | null
+          full_address?: string | null
+          house_number?: string | null
+          id?: string
+          is_active?: boolean | null
+          latitude?: number
+          longitude?: number
+          postiq_code?: string
+          precision?: string
+          region?: string | null
+          road_name?: string | null
+          sector?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_method?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      postiq_api_keys: {
+        Row: {
+          api_key: string
+          api_secret: string
+          created_at: string | null
+          credits_remaining: number | null
+          expires_at: string | null
+          id: string
+          institution_id: string | null
+          is_active: boolean | null
+          is_sandbox: boolean | null
+          rate_limit_per_day: number | null
+          rate_limit_per_hour: number | null
+        }
+        Insert: {
+          api_key: string
+          api_secret: string
+          created_at?: string | null
+          credits_remaining?: number | null
+          expires_at?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          is_sandbox?: boolean | null
+          rate_limit_per_day?: number | null
+          rate_limit_per_hour?: number | null
+        }
+        Update: {
+          api_key?: string
+          api_secret?: string
+          created_at?: string | null
+          credits_remaining?: number | null
+          expires_at?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          is_sandbox?: boolean | null
+          rate_limit_per_day?: number | null
+          rate_limit_per_hour?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postiq_api_keys_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      postiq_api_usage: {
+        Row: {
+          created_at: string | null
+          credits_consumed: number | null
+          endpoint: string
+          error_message: string | null
+          id: string
+          institution_id: string | null
+          ip_address: unknown
+          method: string
+          request_data: Json | null
+          response_data: Json | null
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          credits_consumed?: number | null
+          endpoint: string
+          error_message?: string | null
+          id?: string
+          institution_id?: string | null
+          ip_address?: unknown
+          method: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          credits_consumed?: number | null
+          endpoint?: string
+          error_message?: string | null
+          id?: string
+          institution_id?: string | null
+          ip_address?: unknown
+          method?: string
+          request_data?: Json | null
+          response_data?: Json | null
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "postiq_api_usage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           country_code: string | null
@@ -8056,6 +8225,7 @@ export type Database = {
         Returns: boolean
       }
       check_api_key_expiration: { Args: never; Returns: undefined }
+      check_postiq_rate_limit: { Args: { p_user_id: string }; Returns: boolean }
       check_rate_limit: {
         Args: {
           _client_id: string
@@ -8114,6 +8284,14 @@ export type Database = {
           total_waivers: number
           transaction_count: number
           transaction_type: string
+        }[]
+      }
+      get_user_postiq_verification: {
+        Args: { p_user_id: string }
+        Returns: {
+          full_address: string
+          postiq_code: string
+          verified_at: string
         }[]
       }
       has_permission: {
