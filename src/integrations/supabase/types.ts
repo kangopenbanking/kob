@@ -292,40 +292,49 @@ export type Database = {
       }
       api_clients: {
         Row: {
+          allowed_ips: Json | null
           client_id: string
           client_name: string
           client_secret_hash: string
           created_at: string | null
+          expires_at: string | null
           grant_types: Json
           id: string
           institution_id: string | null
           is_active: boolean | null
+          last_rotated_at: string | null
           redirect_uris: Json
           scopes: Json
           updated_at: string | null
         }
         Insert: {
+          allowed_ips?: Json | null
           client_id: string
           client_name: string
           client_secret_hash: string
           created_at?: string | null
+          expires_at?: string | null
           grant_types?: Json
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          last_rotated_at?: string | null
           redirect_uris?: Json
           scopes?: Json
           updated_at?: string | null
         }
         Update: {
+          allowed_ips?: Json | null
           client_id?: string
           client_name?: string
           client_secret_hash?: string
           created_at?: string | null
+          expires_at?: string | null
           grant_types?: Json
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          last_rotated_at?: string | null
           redirect_uris?: Json
           scopes?: Json
           updated_at?: string | null
@@ -447,6 +456,38 @@ export type Database = {
         }
         Relationships: []
       }
+      api_key_notifications: {
+        Row: {
+          api_client_id: string | null
+          email_sent_to: string
+          id: string
+          notification_type: string
+          sent_at: string | null
+        }
+        Insert: {
+          api_client_id?: string | null
+          email_sent_to: string
+          id?: string
+          notification_type: string
+          sent_at?: string | null
+        }
+        Update: {
+          api_client_id?: string | null
+          email_sent_to?: string
+          id?: string
+          notification_type?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_notifications_api_client_id_fkey"
+            columns: ["api_client_id"]
+            isOneToOne: false
+            referencedRelation: "api_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       api_test_requests: {
         Row: {
           client_id: string
@@ -552,33 +593,42 @@ export type Database = {
           action_type: string
           created_at: string
           details: Json | null
+          device_fingerprint: string | null
           entity_id: string
           entity_type: string
+          geolocation: Json | null
           id: string
           ip_address: string | null
           performed_by: string | null
+          session_id: string | null
           user_agent: string | null
         }
         Insert: {
           action_type: string
           created_at?: string
           details?: Json | null
+          device_fingerprint?: string | null
           entity_id: string
           entity_type: string
+          geolocation?: Json | null
           id?: string
           ip_address?: string | null
           performed_by?: string | null
+          session_id?: string | null
           user_agent?: string | null
         }
         Update: {
           action_type?: string
           created_at?: string
           details?: Json | null
+          device_fingerprint?: string | null
           entity_id?: string
           entity_type?: string
+          geolocation?: Json | null
           id?: string
           ip_address?: string | null
           performed_by?: string | null
+          session_id?: string | null
           user_agent?: string | null
         }
         Relationships: []
@@ -3080,6 +3130,51 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_resources: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          downloads_count: number | null
+          github_url: string | null
+          id: string
+          is_active: boolean | null
+          language: string | null
+          npm_package: string | null
+          resource_type: string
+          title: string
+          updated_at: string | null
+          url: string
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          downloads_count?: number | null
+          github_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          npm_package?: string | null
+          resource_type: string
+          title: string
+          updated_at?: string | null
+          url: string
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          downloads_count?: number | null
+          github_url?: string | null
+          id?: string
+          is_active?: boolean | null
+          language?: string | null
+          npm_package?: string | null
+          resource_type?: string
+          title?: string
+          updated_at?: string | null
+          url?: string
+        }
+        Relationships: []
+      }
       developer_sandbox_accounts: {
         Row: {
           company_name: string
@@ -4170,6 +4265,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      jwt_secrets: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          secret_hash: string
+          secret_version: string
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          secret_hash: string
+          secret_version: string
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          secret_hash?: string
+          secret_version?: string
+        }
+        Relationships: []
       }
       kyc_verifications: {
         Row: {
@@ -5296,6 +5421,7 @@ export type Database = {
           id: string
           limit_exceeded: boolean | null
           request_count: number | null
+          user_id: string | null
           window_end: string
           window_start: string
         }
@@ -5306,6 +5432,7 @@ export type Database = {
           id?: string
           limit_exceeded?: boolean | null
           request_count?: number | null
+          user_id?: string | null
           window_end: string
           window_start: string
         }
@@ -5316,6 +5443,7 @@ export type Database = {
           id?: string
           limit_exceeded?: boolean | null
           request_count?: number | null
+          user_id?: string | null
           window_end?: string
           window_start?: string
         }
@@ -6347,6 +6475,51 @@ export type Database = {
           risk_score?: number | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      seo_metadata: {
+        Row: {
+          canonical_url: string | null
+          created_at: string | null
+          description: string
+          hreflang_tags: Json | null
+          id: string
+          is_active: boolean | null
+          keywords: string | null
+          og_image: string | null
+          page_path: string
+          structured_data: Json | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          canonical_url?: string | null
+          created_at?: string | null
+          description: string
+          hreflang_tags?: Json | null
+          id?: string
+          is_active?: boolean | null
+          keywords?: string | null
+          og_image?: string | null
+          page_path: string
+          structured_data?: Json | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          canonical_url?: string | null
+          created_at?: string | null
+          description?: string
+          hreflang_tags?: Json | null
+          id?: string
+          is_active?: boolean | null
+          keywords?: string | null
+          og_image?: string | null
+          page_path?: string
+          structured_data?: Json | null
+          title?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -7538,18 +7711,21 @@ export type Database = {
       }
       user_roles: {
         Row: {
+          allowed_ips: Json | null
           created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
+          allowed_ips?: Json | null
           created_at?: string
           id?: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
+          allowed_ips?: Json | null
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
@@ -7879,6 +8055,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      check_api_key_expiration: { Args: never; Returns: undefined }
       check_rate_limit: {
         Args: {
           _client_id: string
@@ -8013,6 +8190,10 @@ export type Database = {
           _status: string
         }
         Returns: undefined
+      }
+      validate_ip_whitelist: {
+        Args: { _client_ip: unknown; _user_id: string }
+        Returns: boolean
       }
       validate_password_strength: {
         Args: { password: string }
