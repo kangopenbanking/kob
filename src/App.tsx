@@ -129,6 +129,10 @@ import QuickStart from "./pages/developer/QuickStart";
 import Playground from "./pages/developer/Playground";
 import Changelog from "./pages/developer/Changelog";
 import ApiKeys from "./pages/developer/ApiKeys";
+import FintechDevelopers from "./pages/solutions/FintechDevelopers";
+import MobileMoneyIntegration from "./pages/solutions/MobileMoneyIntegration";
+import CreditScoring from "./pages/solutions/CreditScoring";
+import SecurityDashboard from "./pages/admin/SecurityDashboard";
 import NoCodeIndex from "./pages/integrations/NoCodeIndex";
 import ZapierGuide from "./pages/integrations/ZapierGuide";
 import MakeGuide from "./pages/integrations/MakeGuide";
@@ -200,6 +204,7 @@ function App() {
               <Route path="business-kyc" element={<BusinessKYCReview />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
+              <Route path="security-dashboard" element={<SecurityDashboard />} />
             </Route>
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SystemMonitoring /></AdminLayout></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><AdminLayout><FeeManagement /></AdminLayout></ProtectedRoute>} />
@@ -247,6 +252,11 @@ function App() {
             <Route path="/integrations/make" element={<Layout><MakeGuide /></Layout>} />
             <Route path="/integrations/bubble" element={<Layout><BubbleGuide /></Layout>} />
             <Route path="/integrations/retool" element={<Layout><RetoolGuide /></Layout>} />
+            
+            {/* Solution Pages */}
+            <Route path="/solutions/fintech-developers" element={<Layout><FintechDevelopers /></Layout>} />
+            <Route path="/solutions/mobile-money-integration" element={<Layout><MobileMoneyIntegration /></Layout>} />
+            <Route path="/solutions/credit-scoring" element={<Layout><CreditScoring /></Layout>} />
             
             <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
