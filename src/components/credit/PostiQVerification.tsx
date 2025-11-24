@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { MapPin, Check, Loader2, TrendingUp } from 'lucide-react';
+import { MapPin, Award } from 'lucide-react';
 import { toast } from 'sonner';
 
 export function PostiQVerification() {
@@ -105,26 +105,32 @@ export function PostiQVerification() {
 
   if (verification) {
     return (
-      <Card className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20 border-green-200 dark:border-green-800">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-green-500 rounded-lg">
-            <Check className="h-6 w-6 text-white" />
+      <Card className="p-6 bg-gradient-to-br from-postiq-blue-light to-background border-postiq-blue/30">
+        <div className="flex items-start justify-between mb-4">
+          <div>
+            <h3 className="text-lg font-semibold mb-2 text-postiq-blue">Address Verified ✓</h3>
+            <p className="text-sm text-muted-foreground">
+              Your PostiQ code has been verified and added to your credit profile
+            </p>
           </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-lg mb-1">Address Verified ✓</h3>
-            <p className="text-sm text-muted-foreground mb-2">
-              PostiQ Code: <span className="font-mono font-medium text-foreground">{verification.postiq_code}</span>
-            </p>
-            {verification.full_address && (
-              <p className="text-sm text-muted-foreground mb-3">{verification.full_address}</p>
-            )}
-            <div className="mt-3 px-3 py-2 bg-green-100 dark:bg-green-900/30 rounded-md inline-flex items-center gap-2">
-              <TrendingUp className="h-4 w-4 text-green-700 dark:text-green-400" />
-              <p className="text-sm font-medium text-green-700 dark:text-green-400">+50 Credit Score Boost Applied</p>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              Verified on {new Date(verification.verified_at).toLocaleDateString()}
-            </p>
+          <div className="w-12 h-12 bg-postiq-blue/10 rounded-full flex items-center justify-center">
+            <MapPin className="w-6 h-6 text-postiq-blue" />
+          </div>
+        </div>
+        
+        <div className="space-y-3">
+          <div className="bg-postiq-blue-light/50 p-4 rounded-lg border border-postiq-blue/20">
+            <div className="text-sm text-muted-foreground mb-1">Your PostiQ Code</div>
+            <div className="text-2xl font-bold font-mono text-postiq-blue">{verification.postiq_code}</div>
+          </div>
+          
+          <div className="flex items-center gap-2 p-3 bg-crediq-green/10 rounded-lg border border-crediq-green/20">
+            <Award className="w-5 h-5 text-crediq-green" />
+            <span className="font-semibold text-crediq-green">+50 Credit Score Boost Applied</span>
+          </div>
+          
+          <div className="text-xs text-muted-foreground">
+            Verified on {new Date(verification.verified_at).toLocaleDateString()}
           </div>
         </div>
       </Card>
@@ -132,37 +138,52 @@ export function PostiQVerification() {
   }
 
   return (
-    <Card className="p-6 border-2 border-dashed border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10">
-      <div className="flex items-start gap-4">
-        <div className="p-3 bg-primary rounded-lg">
-          <MapPin className="h-6 w-6 text-primary-foreground" />
-        </div>
-        <div className="flex-1">
-          <h3 className="font-semibold text-lg mb-1">Verify Your Address</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Get an instant <strong className="text-foreground">+50 point</strong> credit score boost by verifying your address with PostiQ Mail.
-          </p>
-          <Button 
-            onClick={handleGetLocation}
-            disabled={isGettingLocation || createVerification.isPending}
-            className="w-full sm:w-auto"
-          >
-            {(isGettingLocation || createVerification.isPending) ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Verifying...
-              </>
-            ) : (
-              <>
-                <MapPin className="mr-2 h-4 w-4" />
-                Verify Address with GPS
-              </>
-            )}
-          </Button>
-          <p className="text-xs text-muted-foreground mt-2">
-            Limited to 5 verifications per day • Uses your device's GPS location
+    <Card className="p-6 bg-gradient-to-br from-postiq-red-light to-background border-postiq-red/30">
+      <div className="flex items-start justify-between mb-4">
+        <div>
+          <h3 className="text-lg font-semibold mb-2 text-postiq-red">Verify Your Address</h3>
+          <p className="text-sm text-muted-foreground">
+            Get a +50 credit score boost by verifying your physical address with PostiQ
           </p>
         </div>
+        <div className="w-12 h-12 bg-postiq-red/10 rounded-full flex items-center justify-center">
+          <MapPin className="w-6 h-6 text-postiq-red" />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <div className="bg-background/80 p-4 rounded-lg border border-border">
+          <h4 className="font-medium mb-2">How it works:</h4>
+          <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+            <li>Click the button below to use your GPS location</li>
+            <li>We'll generate your unique PostiQ code (e.g., YA01 456)</li>
+            <li>Your credit score will instantly increase by +50 points</li>
+          </ol>
+        </div>
+
+        <div className="flex items-center gap-2 p-3 bg-crediq-green/10 rounded-lg border border-crediq-green/20">
+          <Award className="w-4 h-4 text-crediq-green" />
+          <span className="text-sm font-medium text-crediq-green">One-time boost • Free • Instant</span>
+        </div>
+
+        <Button
+          onClick={handleGetLocation}
+          disabled={isGettingLocation || createVerification.isPending}
+          className="w-full bg-gradient-to-r from-postiq-red to-postiq-red-dark hover:from-postiq-red-dark hover:to-postiq-red"
+        >
+          {(isGettingLocation || createVerification.isPending) ? (
+            <>Processing...</>
+          ) : (
+            <>
+              <MapPin className="w-4 h-4 mr-2" />
+              Verify with GPS Location
+            </>
+          )}
+        </Button>
+
+        <p className="text-xs text-muted-foreground text-center">
+          Limit: 5 verifications per day
+        </p>
       </div>
     </Card>
   );

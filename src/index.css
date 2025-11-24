@@ -71,6 +71,14 @@ All colors MUST be HSL.
     --crediq-good: 258 90% 66%; /* 670-739: Purple */
     --crediq-fair: 38 92% 50%; /* 580-669: Orange */
     --crediq-poor: 0 84% 60%; /* 300-579: Red */
+    
+    /* PostiQ Colors (postiq.cam theme) */
+    --postiq-red: 4 91% 58%; /* #EF4444 - what3words comparison */
+    --postiq-blue: 217 91% 60%; /* #3B82F6 - PostiQ Code */
+    --postiq-red-light: 4 100% 97%; /* #FEE2E2 - Light background */
+    --postiq-blue-light: 217 100% 97%; /* #DBEAFE - Light background */
+    --postiq-red-dark: 4 84% 56%; /* #DC2626 - Hover state */
+    --postiq-blue-dark: 217 91% 56%; /* #2563EB - Hover state */
   }
 
   .dark {
