@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Building2 } from "lucide-react";
+import { Building2, MapPin } from "lucide-react";
 import { BrandName } from "./BrandName";
 
 export const Footer = () => {
@@ -38,6 +38,12 @@ export const Footer = () => {
             <h3 className="font-semibold mb-4">Services</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><Link to="/crediq" className="hover:text-primary transition-colors">CrediQ Credit Score</Link></li>
+              <li>
+                <Link to="/credit-score" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <MapPin className="h-3 w-3 text-postiq-blue" />
+                  PostiQ Code
+                </Link>
+              </li>
               <li><Link to="/loans" className="hover:text-primary transition-colors">Loans</Link></li>
               <li><Link to="/savings" className="hover:text-primary transition-colors">Savings</Link></li>
               <li><Link to="/credit-score" className="hover:text-primary transition-colors">Credit Reports</Link></li>
