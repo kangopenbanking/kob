@@ -41,6 +41,28 @@ export function SEO({
     }))
   } : null;
 
+  // Generate WebAPI schema for developer pages
+  const webAPISchema = canonical?.includes('/developer') ? {
+    "@context": "https://schema.org",
+    "@type": "WebAPI",
+    "name": "Kang Open Banking API",
+    "description": "COBAC-compliant Open Banking API for Cameroon enabling account information, payment initiation, credit scoring, and mobile money integration",
+    "url": "https://api.kangopenbanking.com",
+    "documentation": "https://kangopenbanking.com/developer",
+    "termsOfService": "https://kangopenbanking.com/terms",
+    "provider": {
+      "@type": "Organization",
+      "name": "Kang Open Banking",
+      "url": "https://kangopenbanking.com",
+      "logo": "https://kangopenbanking.com/kob-logo.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "Developer Support",
+        "email": "developers@kangopenbanking.com"
+      }
+    }
+  } : null;
+
   // Generate FAQ structured data
   const faqSchema = faqItems ? {
     "@context": "https://schema.org",
@@ -67,6 +89,10 @@ export function SEO({
       <link rel="alternate" hrefLang="fr" href={canonical?.replace('/en/', '/fr/') || `${baseUrl}/fr`} />
       <link rel="alternate" hrefLang="x-default" href={canonical || baseUrl} />
       
+      {/* OpenAPI and API Discovery Links */}
+      <link rel="alternate" type="application/openapi+json" href="https://kangopenbanking.com/openapi.json" />
+      <link rel="alternate" type="application/json" href="https://kangopenbanking.com/apis.json" />
+      
       {/* Open Graph */}
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description || defaultDescription} />
@@ -81,6 +107,13 @@ export function SEO({
       <meta name="twitter:description" content={description || defaultDescription} />
       <meta name="twitter:image" content={ogImage || defaultImage} />
       
+      {/* WebAPI Structured Data */}
+      {webAPISchema && (
+        <script type="application/ld+json">
+          {JSON.stringify(webAPISchema)}
+        </script>
+      )}
+
       {/* Breadcrumb Structured Data */}
       {breadcrumbSchema && (
         <script type="application/ld+json">

@@ -23,6 +23,9 @@ verify_jwt = false
 [functions.postman-collection]
 verify_jwt = false
 
+[functions.openapi-json]
+verify_jwt = false
+
 # Phase 1 Edge Functions - FAPI 1.0 Advanced Implementation
 
 # Public endpoints (no JWT verification required)

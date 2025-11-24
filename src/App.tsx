@@ -132,6 +132,8 @@ import ApiKeys from "./pages/developer/ApiKeys";
 import FintechDevelopers from "./pages/solutions/FintechDevelopers";
 import MobileMoneyIntegration from "./pages/solutions/MobileMoneyIntegration";
 import CreditScoring from "./pages/solutions/CreditScoring";
+import AIIntegrationGuide from "./pages/developer/AIIntegrationGuide";
+import ApiDirectorySubmissions from "./pages/developer/ApiDirectorySubmissions";
 import SecurityDashboard from "./pages/admin/SecurityDashboard";
 import NoCodeIndex from "./pages/integrations/NoCodeIndex";
 import ZapierGuide from "./pages/integrations/ZapierGuide";
@@ -242,6 +244,8 @@ function App() {
               <Route path="api-explorer" element={<ApiExplorer />} />
               <Route path="certificates" element={<CertificateManagement />} />
               <Route path="api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
+              <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
+              <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/api-catalog" element={<Layout><ApiCatalog /></Layout>} />
