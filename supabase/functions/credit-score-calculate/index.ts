@@ -14,6 +14,7 @@ interface ScoreComponents {
   savings_behavior_score: number;
   transaction_pattern_score: number;
   kyc_compliance_score: number;
+  postiq_verification_score: number;
 }
 
 Deno.serve(async (req) => {
@@ -71,6 +72,16 @@ Deno.serve(async (req) => {
       .eq('status', 'approved')
       .single();
 
+    // 5. Fetch PostiQ verification
+    const { data: postiqVerification } = await supabase
+      .from('postiq_address_verifications')
+      .select('*')
+      .eq('user_id', user_id)
+      .eq('is_active', true)
+      .order('verified_at', { ascending: false })
+      .limit(1)
+      .single();
+
     // Calculate score components
     const components: ScoreComponents = {
       payment_history_score: calculatePaymentHistory(loanAccounts || []),
@@ -81,18 +92,20 @@ Deno.serve(async (req) => {
       savings_behavior_score: calculateSavingsBehavior(savingsAccounts || []),
       transaction_pattern_score: calculateTransactionPattern(transactions || []),
       kyc_compliance_score: calculateKYCCompliance(kycData),
+      postiq_verification_score: postiqVerification ? 50 : 0,
     };
 
     // Calculate weighted final score
     const internalScore = Math.round(
-      (components.payment_history_score * 0.35) +
-      (components.amounts_owed_score * 0.30) +
+      (components.payment_history_score * 0.30) +
+      (components.amounts_owed_score * 0.25) +
       (components.credit_history_length_score * 0.15) +
       (components.credit_mix_score * 0.10) +
-      (components.new_credit_score * 0.10) +
-      (components.savings_behavior_score * 0.05) +
-      (components.transaction_pattern_score * 0.03) +
-      (components.kyc_compliance_score * 0.02)
+      (components.new_credit_score * 0.08) +
+      (components.postiq_verification_score * 0.05) +
+      (components.savings_behavior_score * 0.04) +
+      (components.transaction_pattern_score * 0.02) +
+      (components.kyc_compliance_score * 0.01)
     );
 
     let finalScore = internalScore;

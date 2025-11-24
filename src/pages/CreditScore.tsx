@@ -20,6 +20,7 @@ import ConfidenceIndicator from '@/components/credit/ConfidenceIndicator';
 import ScoreMetadata from '@/components/credit/ScoreMetadata';
 import ScoreEducation from '@/components/credit/ScoreEducation';
 import QuickStats from '@/components/credit/QuickStats';
+import { PostiQVerification } from '@/components/credit/PostiQVerification';
 
 export default function CreditScore() {
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -205,6 +206,9 @@ export default function CreditScore() {
             </Button>
           </div>
         </div>
+
+        {/* PostiQ Address Verification */}
+        <PostiQVerification />
 
         {/* Hero Section - Score Display with Type and Confidence */}
         <Card className="overflow-hidden mb-8">

@@ -398,3 +398,11 @@ verify_jwt = false
 
 [functions.api-demo-proxy]
 verify_jwt = false
+
+# PostiQ Address Verification Functions
+
+[functions.postiq-create-code]
+verify_jwt = true
+
+[functions.postiq-lookup-code]
+verify_jwt = true
