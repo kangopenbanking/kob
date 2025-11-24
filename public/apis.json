@@ -1,0 +1,84 @@
+{
+  "name": "Kang Open Banking",
+  "description": "Open Banking API for Cameroon",
+  "url": "https://kangopenbanking.com",
+  "created": "2024-01-01",
+  "modified": "2025-01-24",
+  "specificationVersion": "0.16",
+  "apis": [
+    {
+      "name": "Kang Open Banking API",
+      "description": "COBAC-compliant banking API for Cameroon enabling account information, payment initiation, credit scoring, and mobile money integration",
+      "image": "https://kangopenbanking.com/kob-logo.png",
+      "baseURL": "https://api.kangopenbanking.com",
+      "humanURL": "https://kangopenbanking.com/developer",
+      "tags": [
+        "banking",
+        "payments",
+        "cameroon",
+        "xaf",
+        "mobile-money",
+        "credit-scoring",
+        "open-banking",
+        "fintech",
+        "africa"
+      ],
+      "properties": [
+        {
+          "type": "X-openapi",
+          "url": "https://kangopenbanking.com/openapi.json"
+        },
+        {
+          "type": "X-openapi-original",
+          "url": "https://api.kangopenbanking.com/functions/v1/public-api-spec"
+        },
+        {
+          "type": "X-postman-collection",
+          "url": "https://api.kangopenbanking.com/functions/v1/postman-collection"
+        },
+        {
+          "type": "X-documentation",
+          "url": "https://kangopenbanking.com/developer"
+        },
+        {
+          "type": "X-api-explorer",
+          "url": "https://kangopenbanking.com/developer/api-explorer"
+        },
+        {
+          "type": "X-terms-of-service",
+          "url": "https://kangopenbanking.com/terms"
+        },
+        {
+          "type": "X-contact",
+          "url": "https://kangopenbanking.com/contact"
+        },
+        {
+          "type": "X-pricing",
+          "url": "https://kangopenbanking.com/pricing"
+        },
+        {
+          "type": "X-authentication",
+          "url": "https://kangopenbanking.com/developer/authentication"
+        },
+        {
+          "type": "X-signup",
+          "url": "https://kangopenbanking.com/register"
+        }
+      ],
+      "contact": [
+        {
+          "FN": "Kang Open Banking Support",
+          "email": "developers@kangopenbanking.com",
+          "X-twitter": "kangopenbanking"
+        }
+      ]
+    }
+  ],
+  "include": [],
+  "maintainers": [
+    {
+      "FN": "Kang Open Banking",
+      "email": "developers@kangopenbanking.com"
+    }
+  ]
+}

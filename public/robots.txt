@@ -46,6 +46,9 @@ Allow: /credit-api-documentation
 # API Specifications (for discovery tools)
 Allow: /functions/v1/public-api-spec
 Allow: /functions/v1/postman-collection
+Allow: /openapi.json
+Allow: /apis.json
+Allow: /.well-known/ai-plugin.json
 
 # Certificate Management & Security
 Allow: /guides/certificates

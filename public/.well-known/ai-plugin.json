@@ -1,0 +1,19 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Kang Open Banking",
+  "name_for_model": "kang_open_banking",
+  "description_for_human": "Banking API for Cameroon - COBAC compliant. Access accounts, payments, credit scores, mobile money.",
+  "description_for_model": "Access Cameroon banking services: AISP (account information), PISP (payment initiation), credit scoring, mobile money (MTN, Orange Money), loans, savings. XAF currency native. Requires OAuth 2.0 authentication.",
+  "auth": {
+    "type": "oauth",
+    "authorization_url": "https://api.kangopenbanking.com/functions/v1/oauth-authorize",
+    "scope": "openid accounts balances transactions payments"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://kangopenbanking.com/openapi.json"
+  },
+  "logo_url": "https://kangopenbanking.com/kob-logo.png",
+  "contact_email": "developers@kangopenbanking.com",
+  "legal_info_url": "https://kangopenbanking.com/terms"
+}
