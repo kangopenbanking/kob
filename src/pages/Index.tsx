@@ -906,7 +906,7 @@ const Index = () => {
                 New Feature
               </Badge>
               <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                PostiQ Code: UK-Style Postcodes for Cameroon
+                PostiQ Code: UK-Style Locations for Cameroon
               </h2>
               <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
                 Verify your address with PostiQ Mail and get an instant <strong className="text-green-600">+50 point</strong> credit score boost
@@ -1018,7 +1018,7 @@ const Index = () => {
                   <span className="text-2xl font-bold text-postiq-blue">2</span>
                 </div>
                 <h4 className="font-semibold mb-2">Get PostiQ Code</h4>
-                <p className="text-sm text-muted-foreground">Receive UK-style postcode (YA01 456)</p>
+                <p className="text-sm text-muted-foreground">Receive UK-style location code (YA01 456)</p>
               </div>
 
               <div className="text-center">
