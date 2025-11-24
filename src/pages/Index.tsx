@@ -26,6 +26,8 @@ import {
   Users,
   Wallet,
   Zap,
+  MapPin,
+  X,
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
 import crediqHeroBg from "@/assets/crediq-hero-bg.png";
@@ -890,6 +892,149 @@ const Index = () => {
               </p>
             </Card>
           </div>
+          </div>
+        </div>
+      </section>
+
+      {/* PostiQ Code Feature Section */}
+      <section className="py-20 bg-gradient-to-br from-postiq-red-light/20 via-background to-postiq-blue-light/20 border-y">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-12">
+              <Badge variant="outline" className="mb-4 border-postiq-blue">
+                <MapPin className="h-4 w-4 inline mr-2 text-postiq-blue" />
+                New Feature
+              </Badge>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">
+                PostiQ Code: UK-Style Postcodes for Cameroon
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Verify your address with PostiQ Mail and get an instant <strong className="text-green-600">+50 point</strong> credit score boost
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-8 mb-12">
+              {/* Visual Comparison */}
+              <Card className="p-6 border-postiq-blue/40 bg-gradient-to-br from-postiq-blue-light/20 to-background">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="h-12 w-12 bg-postiq-blue rounded-lg flex items-center justify-center">
+                    <MapPin className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold">Better Than what3words</h3>
+                    <p className="text-sm text-muted-foreground">Hierarchical UK-style format</p>
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  <div className="p-4 bg-postiq-blue-light rounded-lg">
+                    <div className="text-xs text-muted-foreground mb-1">PostiQ Code</div>
+                    <div className="font-mono text-lg font-bold text-postiq-blue">YA01 456</div>
+                    <div className="text-xs text-muted-foreground mt-1">Yaoundé, Centre Region</div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex items-center gap-2 text-postiq-blue">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Structured format</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-postiq-blue">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>~500m radius</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-postiq-blue">
+                      <CheckCircle className="h-4 w-4" />
+                      <span>Easy to remember</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-green-600 font-semibold">
+                      <TrendingUp className="h-4 w-4" />
+                      <span>+50 Credit</span>
+                    </div>
+                  </div>
+                </div>
+              </Card>
+
+              {/* Credit Score Impact */}
+              <Card className="p-6 border-green-500/40 bg-gradient-to-br from-green-500/10 to-background">
+                <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                  Instant Credit Score Boost
+                </h3>
+                
+                <div className="flex items-center justify-between mb-6 p-4 bg-muted/50 rounded-lg">
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-orange-500">650</div>
+                    <div className="text-xs text-muted-foreground">Before</div>
+                  </div>
+                  <ArrowRight className="h-6 w-6 text-muted-foreground" />
+                  <div className="text-center">
+                    <div className="text-3xl font-bold text-yellow-600">700</div>
+                    <div className="text-xs text-muted-foreground">After</div>
+                  </div>
+                </div>
+
+                <div className="space-y-3 text-sm">
+                  <div className="flex items-start gap-2">
+                    <Zap className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    <div>
+                      <strong>GPS Verification:</strong> Share your location once to get your PostiQ code
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    <div>
+                      <strong>Secure & Private:</strong> Your exact coordinates stay private
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Clock className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    <div>
+                      <strong>Rate Limit:</strong> 5 free verifications per day
+                    </div>
+                  </div>
+                </div>
+
+                <Link to="/credit-score" className="block mt-6">
+                  <Button className="w-full bg-gradient-to-r from-postiq-blue to-primary hover:from-postiq-blue-dark hover:to-primary-dark">
+                    <MapPin className="mr-2 h-4 w-4" />
+                    Get Your PostiQ Code
+                  </Button>
+                </Link>
+              </Card>
+            </div>
+
+            {/* How It Works */}
+            <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="h-16 w-16 bg-postiq-blue/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl font-bold text-postiq-blue">1</span>
+                </div>
+                <h4 className="font-semibold mb-2">Share Location</h4>
+                <p className="text-sm text-muted-foreground">Enable GPS to verify your address</p>
+              </div>
+
+              <div className="text-center">
+                <div className="h-16 w-16 bg-postiq-blue/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl font-bold text-postiq-blue">2</span>
+                </div>
+                <h4 className="font-semibold mb-2">Get PostiQ Code</h4>
+                <p className="text-sm text-muted-foreground">Receive UK-style postcode (YA01 456)</p>
+              </div>
+
+              <div className="text-center">
+                <div className="h-16 w-16 bg-green-100 dark:bg-green-950/30 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <span className="text-2xl font-bold text-green-600">3</span>
+                </div>
+                <h4 className="font-semibold mb-2">Score Increases</h4>
+                <p className="text-sm text-muted-foreground">+50 points added automatically</p>
+              </div>
+            </div>
+
+            <div className="text-center mt-8">
+              <Link to="/credit-scores-info" className="text-sm text-primary hover:underline">
+                Learn more about PostiQ and credit scoring →
+              </Link>
+            </div>
           </div>
         </div>
       </section>

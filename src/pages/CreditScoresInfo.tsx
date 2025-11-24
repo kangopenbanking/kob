@@ -18,6 +18,10 @@ import {
   CreditCard,
   FileText,
   Activity,
+  MapPin,
+  X,
+  Zap,
+  Clock,
 } from "lucide-react";
 
 export default function CreditScoresInfo() {
@@ -276,6 +280,190 @@ export default function CreditScoresInfo() {
               </ul>
             </CardContent>
           </Card>
+        </div>
+      </section>
+
+      {/* PostiQ Code Section */}
+      <section className="py-20 bg-gradient-to-br from-postiq-red-light/30 via-background to-postiq-blue-light/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <Badge variant="outline" className="mb-4 border-postiq-blue">
+              <MapPin className="h-4 w-4 inline mr-2 text-postiq-blue" />
+              Location-Based Credit Boost
+            </Badge>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              PostiQ Code: Your Address = Higher Credit Score
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              UK-style hierarchical postcodes (AA## ###) for Cameroon. 
+              Verify your address, boost your credit by +50 points instantly.
+            </p>
+          </div>
+
+          {/* Comparison Cards: what3words vs PostiQ */}
+          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto mb-12">
+            {/* what3words Card (Red theme) */}
+            <Card className="border-postiq-red/30 bg-gradient-to-br from-postiq-red-light/20 to-background">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-2xl font-bold text-postiq-red">what3words</h3>
+                  <div className="text-3xl text-postiq-red">///</div>
+                </div>
+                <div className="font-mono text-sm bg-postiq-red-light px-3 py-2 rounded text-postiq-red-dark">
+                  ///filled.count.soap
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <X className="h-4 w-4 text-postiq-red mt-0.5 shrink-0" />
+                    Random word combinations
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <X className="h-4 w-4 text-postiq-red mt-0.5 shrink-0" />
+                    No hierarchical structure
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <X className="h-4 w-4 text-postiq-red mt-0.5 shrink-0" />
+                    <strong>No credit score benefit</strong>
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <X className="h-4 w-4 text-postiq-red mt-0.5 shrink-0" />
+                    Complex to remember
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* PostiQ Code Card (Blue theme) */}
+            <Card className="border-postiq-blue/50 bg-gradient-to-br from-postiq-blue-light/30 to-background shadow-lg">
+              <CardHeader>
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-2xl font-bold text-postiq-blue">PostiQ Code</h3>
+                  <MapPin className="h-8 w-8 text-postiq-blue" />
+                </div>
+                <div className="font-mono text-sm bg-postiq-blue-light px-3 py-2 rounded text-postiq-blue-dark font-bold">
+                  YA01 456
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    UK-style hierarchical format
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    Region-based (AA## ### format)
+                  </li>
+                  <li className="flex items-start gap-2 font-semibold text-postiq-blue">
+                    <TrendingUp className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    <strong>+50 Credit Score Boost 🎉</strong>
+                  </li>
+                  <li className="flex items-start gap-2 text-muted-foreground">
+                    <CheckCircle className="h-4 w-4 text-postiq-blue mt-0.5 shrink-0" />
+                    Simple, memorable codes
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Credit Score Impact Visualization */}
+          <Card className="max-w-3xl mx-auto p-8 bg-gradient-to-br from-postiq-blue-light/20 to-background border-postiq-blue/30">
+            <div className="text-center mb-6">
+              <h3 className="text-2xl font-bold mb-2">Instant Credit Score Impact</h3>
+              <p className="text-muted-foreground">Verify your address once, boost your score permanently</p>
+            </div>
+
+            <div className="flex items-center justify-center gap-8 mb-6">
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-2">Before Verification</div>
+                <div className="text-5xl font-bold text-orange-500">650</div>
+                <Badge variant="outline" className="mt-2">Fair</Badge>
+              </div>
+
+              <ArrowRight className="h-8 w-8 text-postiq-blue" />
+
+              <div className="text-center">
+                <div className="text-sm text-muted-foreground mb-2">After Verification</div>
+                <div className="text-5xl font-bold text-yellow-600">700</div>
+                <Badge variant="outline" className="mt-2 bg-green-50 dark:bg-green-950">Good</Badge>
+              </div>
+            </div>
+
+            <div className="text-center p-4 bg-gradient-to-r from-green-500/20 to-postiq-blue/20 rounded-lg border border-green-500/30">
+              <div className="flex items-center justify-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+                <span className="font-bold text-lg text-green-600">+50 Points Instantly</span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-2">
+                5 free verifications per day • GPS-based • Instant boost
+              </p>
+            </div>
+
+            <div className="mt-6 text-center">
+              <Link to="/credit-score">
+                <Button size="lg" className="bg-gradient-to-r from-postiq-blue to-primary hover:from-postiq-blue-dark hover:to-primary-dark">
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Verify Your Address Now
+                </Button>
+              </Link>
+            </div>
+          </Card>
+
+          {/* How PostiQ Works */}
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mt-12">
+            <Card className="text-center p-6 border-postiq-blue/30">
+              <div className="h-12 w-12 bg-postiq-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <MapPin className="h-6 w-6 text-postiq-blue" />
+              </div>
+              <h4 className="font-semibold mb-2">1. Enable GPS</h4>
+              <p className="text-sm text-muted-foreground">
+                Share your location to get your unique PostiQ code
+              </p>
+            </Card>
+
+            <Card className="text-center p-6 border-postiq-blue/30">
+              <div className="h-12 w-12 bg-postiq-blue/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Zap className="h-6 w-6 text-postiq-blue" />
+              </div>
+              <h4 className="font-semibold mb-2">2. Get Your Code</h4>
+              <p className="text-sm text-muted-foreground">
+                Receive UK-style postcode (YA01 456) covering ~500m radius
+              </p>
+            </Card>
+
+            <Card className="text-center p-6 border-green-500/30">
+              <div className="h-12 w-12 bg-green-100 dark:bg-green-950/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                <TrendingUp className="h-6 w-6 text-green-600" />
+              </div>
+              <h4 className="font-semibold mb-2">3. Score Boost</h4>
+              <p className="text-sm text-muted-foreground">
+                Your credit score increases by +50 points automatically
+              </p>
+            </Card>
+          </div>
+
+          {/* Trust Indicators */}
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-12 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-postiq-blue rounded-full" />
+              <span>UK-Style Format</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full" />
+              <span>Credit Score Verified</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full" />
+              <span>Cameroon Postal Integrated</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Shield className="h-4 w-4 text-primary" />
+              <span>Secure & Private</span>
+            </div>
+          </div>
         </div>
       </section>
 
