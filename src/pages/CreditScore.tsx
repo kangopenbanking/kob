@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,9 +21,15 @@ import ScoreMetadata from '@/components/credit/ScoreMetadata';
 import ScoreEducation from '@/components/credit/ScoreEducation';
 import QuickStats from '@/components/credit/QuickStats';
 import { PostiQVerification } from '@/components/credit/PostiQVerification';
+import PostiQFeatureShowcase from '@/components/credit/PostiQFeatureShowcase';
 
 export default function CreditScore() {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const verificationRef = useRef<HTMLDivElement>(null);
+
+  const scrollToVerification = () => {
+    verificationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
 
   // Fetch current credit score
   const { data: scoreData, isLoading, refetch } = useQuery({
@@ -182,8 +188,33 @@ export default function CreditScore() {
     })) || []),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
+  // Fetch PostiQ verification status
+  const { data: verification } = useQuery({
+    queryKey: ['postiq-verification'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data } = await supabase
+        .from('postiq_address_verifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    }
+  });
+
   return (
     <div className="container mx-auto p-6 space-y-8">
+      {/* PostiQ Feature Showcase */}
+      <PostiQFeatureShowcase 
+        hasVerification={!!verification}
+        onVerifyClick={scrollToVerification}
+      />
+
       <div className="max-w-5xl mx-auto">
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -208,7 +239,9 @@ export default function CreditScore() {
         </div>
 
         {/* PostiQ Address Verification */}
-        <PostiQVerification />
+        <div ref={verificationRef}>
+          <PostiQVerification />
+        </div>
 
         {/* Hero Section - Score Display with Type and Confidence */}
         <Card className="overflow-hidden mb-8">
