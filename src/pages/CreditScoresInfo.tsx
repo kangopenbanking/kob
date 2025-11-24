@@ -295,7 +295,7 @@ export default function CreditScoresInfo() {
               PostiQ Code: Your Address = Higher Credit Score
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              UK-style hierarchical postcodes (AA## ###) for Cameroon. 
+              UK-style hierarchical locations (AA## ###) for Cameroon. 
               Verify your address, boost your credit by +50 points instantly.
             </p>
           </div>
@@ -430,7 +430,7 @@ export default function CreditScoresInfo() {
               </div>
               <h4 className="font-semibold mb-2">2. Get Your Code</h4>
               <p className="text-sm text-muted-foreground">
-                Receive UK-style postcode (YA01 456) covering ~500m radius
+                Receive UK-style location code (YA01 456) covering ~500m radius
               </p>
             </Card>
 

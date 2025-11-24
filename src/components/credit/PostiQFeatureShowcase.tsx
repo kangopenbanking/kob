@@ -61,7 +61,7 @@ const PostiQFeatureShowcase = ({ hasVerification, onVerifyClick }: PostiQFeature
           </h2>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            UK-style postcodes for Cameroon. Better addressing, better credit.
+            UK-style locations for Cameroon. Better addressing, better credit.
           </p>
         </motion.div>
 
