@@ -100,13 +100,35 @@ Deno.serve(async (req) => {
       }
     );
 
-    if (!postiqResponse.ok) {
-      const errorData = await postiqResponse.json().catch(() => ({ error: 'Unknown error' }));
-      console.error('PostiQ API error:', postiqResponse.status, errorData);
-      throw new Error(errorData.error || 'PostiQ API error');
+    // Check content type before parsing
+    const contentType = postiqResponse.headers.get('content-type') || '';
+    console.log('PostiQ API response status:', postiqResponse.status);
+    console.log('PostiQ API content-type:', contentType);
+
+    // Read response as text first
+    const responseText = await postiqResponse.text();
+    console.log('PostiQ API response (first 500 chars):', responseText.substring(0, 500));
+
+    // Check if response is HTML (error page)
+    if (responseText.trim().toLowerCase().startsWith('<!doctype') || 
+        responseText.trim().startsWith('<html')) {
+      console.error('PostiQ API returned HTML instead of JSON');
+      throw new Error('PostiQ API error: Service returned HTML instead of JSON. The API might be down or authentication failed.');
     }
 
-    const postiqData = await postiqResponse.json();
+    // Try to parse as JSON
+    let postiqData;
+    try {
+      postiqData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse PostiQ response as JSON:', parseError);
+      throw new Error(`Invalid JSON response from PostiQ API: ${responseText.substring(0, 200)}`);
+    }
+
+    if (!postiqResponse.ok) {
+      console.error('PostiQ API error:', postiqResponse.status, postiqData);
+      throw new Error(postiqData.error || postiqData.message || 'PostiQ API error');
+    }
 
     if (!postiqData.success) {
       throw new Error(postiqData.error || 'Failed to create PostiQ code');
