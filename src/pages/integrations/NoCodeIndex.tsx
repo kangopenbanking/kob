@@ -13,7 +13,8 @@ const NoCodeIndex = () => {
       difficulty: "Beginner",
       useCases: ["E-commerce payments", "Mobile Money checkout", "XAF transactions"],
       link: "/woo-for-kang",
-      color: "text-[#96588a]"
+      color: "text-[#96588a]",
+      status: "Production Ready" // New status field
     },
     {
       name: "Zapier",
@@ -121,9 +122,16 @@ const NoCodeIndex = () => {
                         </div>
                         <div>
                           <CardTitle>{platform.name}</CardTitle>
-                          <Badge variant="outline" className="mt-1">
-                            {platform.difficulty}
-                          </Badge>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">
+                              {platform.difficulty}
+                            </Badge>
+                            {platform.status && (
+                              <Badge className="bg-green-500 text-white hover:bg-green-600">
+                                {platform.status}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
