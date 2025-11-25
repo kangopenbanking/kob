@@ -54,6 +54,7 @@ import ISO20022Dashboard from "./pages/ISO20022Dashboard";
 import SWIFTDashboard from "./pages/SWIFTDashboard";
 import Analytics from "./pages/Analytics";
 import UserManagement from "./pages/admin/UserManagement";
+import WooCommerceManagement from "./pages/admin/WooCommerceManagement";
 import BranchManagement from "./pages/admin/BranchManagement";
 import ApiClientManagement from "./pages/admin/ApiClientManagement";
 import SandboxManagement from "./pages/admin/SandboxManagement";
@@ -182,6 +183,7 @@ function App() {
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
               <Route index element={<Admin />} />
               <Route path="users" element={<UserManagement />} />
+              <Route path="woocommerce-plugin" element={<WooCommerceManagement />} />
               <Route path="api-clients" element={<ApiClientManagement />} />
               <Route path="sandbox" element={<SandboxManagement />} />
               <Route path="security" element={<SecurityMonitoring />} />

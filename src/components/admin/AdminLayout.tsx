@@ -18,7 +18,8 @@ import {
   Building2,
   Mail,
   CreditCard,
-  Database as DatabaseIcon
+  Database as DatabaseIcon,
+  ShoppingCart
 } from "lucide-react";
 import {
   Sidebar,
@@ -66,6 +67,7 @@ const adminNavigation = [
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
       { title: "Communications", path: "/communications", icon: Mail },
       { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
+      { title: "WooCommerce Plugin", path: "/admin/woocommerce-plugin", icon: ShoppingCart },
       { title: "Sandbox", path: "/admin/sandbox", icon: Database },
     ]
   },
