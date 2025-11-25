@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, ArrowRight, ShoppingCart, CreditCard, Shield, Zap, FileCode, BookOpen, Github, CheckCircle, Smartphone, BarChart, Gauge, Clock } from "lucide-react";
+import { Download, ArrowRight, ShoppingCart, CreditCard, Shield, Zap, FileCode, BookOpen, Github, CheckCircle, Smartphone, BarChart, Gauge } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import wooKangLogo from "@/assets/woo-kang-logo.png";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const features = [
   {
@@ -190,9 +193,38 @@ const AnimatedBackground = () => {
 };
 
 const WooForKang = () => {
+  const { toast } = useToast();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('woocommerce-download-plugin');
+      
+      if (error) throw error;
+      
+      // Open download URL in new tab
+      window.open(data.download_url, '_blank');
+      
+      toast({
+        title: "Download Started",
+        description: `Woo for Kang v${data.version} is being downloaded`,
+      });
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download plugin",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   return (
     <>
-      <SEO 
+      <SEO
         title="Woo for Kang - WooCommerce Payment Plugin for Cameroon"
         description="Accept Mobile Money, Card, and Bank Transfer payments in your WooCommerce store. Built for Cameroon merchants with XAF currency support."
         keywords="WooCommerce Cameroon, Mobile Money plugin, MTN Money WooCommerce, Orange Money payments, XAF payment gateway"
@@ -257,11 +289,12 @@ const WooForKang = () => {
               >
                 <Button 
                   size="lg"
-                  disabled
-                  className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-8 py-6 text-lg shadow-lg opacity-60 cursor-not-allowed"
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-8 py-6 text-lg shadow-lg transition-all duration-200 hover:scale-[1.02]"
                 >
-                  <Clock className="mr-2 h-5 w-5" />
-                  Coming Soon
+                  <Download className="mr-2 h-5 w-5" />
+                  {downloading ? "Preparing Download..." : "Download Plugin v1.0.0"}
                 </Button>
                 <Button 
                   size="lg" 
@@ -269,8 +302,8 @@ const WooForKang = () => {
                   className="bg-white border-[#96588a] border-2 text-[#96588a] hover:bg-[#96588a]/5 rounded-xl px-8 py-6 text-lg transition-all duration-200 hover:scale-[1.02]"
                   asChild
                 >
-                  <Link to="/integrations/woocommerce-docs">
-                    View Documentation
+                  <Link to="/integrations/woocommerce-merchant-register">
+                    Register Your Store
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
@@ -450,11 +483,12 @@ const WooForKang = () => {
                   </div>
                   <Button 
                     size="lg"
-                    disabled
-                    className="w-full mt-8 bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl py-6 text-lg shadow-lg opacity-60 cursor-not-allowed"
+                    onClick={handleDownload}
+                    disabled={downloading}
+                    className="w-full mt-8 bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl py-6 text-lg shadow-lg transition-all duration-200 hover:scale-[1.02]"
                   >
-                    <Clock className="mr-2 h-5 w-5" />
-                    Coming Soon
+                    <Download className="mr-2 h-5 w-5" />
+                    {downloading ? "Preparing Download..." : "Download Plugin v1.0.0"}
                   </Button>
                 </CardContent>
               </Card>
@@ -564,11 +598,12 @@ const WooForKang = () => {
                   <div className="flex flex-wrap gap-4 justify-center">
                     <Button 
                       size="lg"
-                      disabled
-                      className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-10 py-7 text-lg shadow-lg opacity-60 cursor-not-allowed"
+                      onClick={handleDownload}
+                      disabled={downloading}
+                      className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-10 py-7 text-lg shadow-lg transition-all duration-200 hover:scale-[1.03]"
                     >
-                      <Clock className="mr-2 h-5 w-5" />
-                      Coming Soon
+                      <Download className="mr-2 h-5 w-5" />
+                      {downloading ? "Preparing..." : "Download Now v1.0.0"}
                     </Button>
                     <Button 
                       size="lg" 
@@ -576,8 +611,8 @@ const WooForKang = () => {
                       className="bg-white border-[#96588a] border-2 text-[#96588a] hover:bg-[#96588a]/5 rounded-xl px-10 py-7 text-lg transition-all duration-200 hover:scale-[1.03]"
                       asChild
                     >
-                      <Link to="/contact">
-                        Contact Sales
+                      <Link to="/integrations/woocommerce-merchant-register">
+                        Register Your Store
                         <ArrowRight className="ml-2 h-5 w-5" />
                       </Link>
                     </Button>
