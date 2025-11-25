@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { SEO } from "@/components/SEO";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Download, 
   ShoppingCart, 
@@ -21,11 +24,38 @@ import {
   Smartphone,
   Building2,
   Shield,
-  Clock,
   ArrowRight
 } from "lucide-react";
 
 const WooCommerceGuide = () => {
+  const { toast } = useToast();
+  const [downloading, setDownloading] = useState(false);
+
+  const handleDownload = async () => {
+    setDownloading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('woocommerce-download-plugin');
+      
+      if (error) throw error;
+      
+      window.open(data.download_url, '_blank');
+      
+      toast({
+        title: "Download Started",
+        description: `Woo for Kang v${data.version} is being downloaded`,
+      });
+    } catch (error: any) {
+      console.error('Download error:', error);
+      toast({
+        title: "Download Failed",
+        description: error.message || "Failed to download plugin",
+        variant: "destructive"
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const paymentMethods = [
     { icon: Smartphone, name: "Mobile Money", description: "MTN Mobile Money, Orange Money" },
     { icon: CreditCard, name: "Card Payments", description: "Visa, Mastercard via Stripe" },
@@ -65,14 +95,14 @@ const WooCommerceGuide = () => {
             </p>
           </div>
 
-          {/* Coming Soon Alert */}
-          <Alert className="mb-12 border-[#96588a] bg-[#96588a]/5">
-            <Clock className="h-4 w-4 text-[#96588a]" />
+          {/* Ready Alert */}
+          <Alert className="mb-12 border-green-500 bg-green-50">
+            <CheckCircle className="h-4 w-4 text-green-600" />
             <AlertDescription className="text-sm">
-              <strong>Coming Soon:</strong> The Woo for Kang plugin is currently in development. 
-              Join our waitlist to be notified when it's ready for download. 
-              <Link to="/contact" className="ml-2 text-[#96588a] hover:underline font-medium">
-                Join Waitlist <ArrowRight className="inline h-3 w-3 ml-1" />
+              <strong className="text-green-800">Now Available:</strong> Woo for Kang v1.0.0 is production-ready! 
+              Download the plugin and start accepting payments in your WooCommerce store.
+              <Link to="/integrations/woocommerce-merchant-register" className="ml-2 text-green-700 hover:underline font-medium">
+                Register Your Store <ArrowRight className="inline h-3 w-3 ml-1" />
               </Link>
             </AlertDescription>
           </Alert>
@@ -121,13 +151,25 @@ const WooCommerceGuide = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-lg border-2 border-dashed p-6 text-center">
-                    <Download className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-                    <p className="text-muted-foreground mb-4">Plugin will be available for download soon</p>
-                    <Button disabled className="bg-[#96588a] hover:bg-[#7a466f]">
-                      <Download className="mr-2 h-4 w-4" />
-                      Coming Soon
-                    </Button>
+                  <div className="rounded-lg border-2 border-green-500 bg-green-50 p-6 text-center">
+                    <Download className="h-12 w-12 mx-auto mb-3 text-green-600" />
+                    <p className="text-green-800 font-semibold mb-2">Woo for Kang v1.0.0</p>
+                    <p className="text-sm text-green-700 mb-4">Production-ready WordPress plugin</p>
+                    <div className="flex gap-3 justify-center">
+                      <Button 
+                        onClick={handleDownload}
+                        disabled={downloading}
+                        className="bg-[#96588a] hover:bg-[#7a466f]"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        {downloading ? "Preparing..." : "Download Plugin"}
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link to="/integrations/woocommerce-merchant-register">
+                          Register Store
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                   <Alert>
                     <FileText className="h-4 w-4" />
@@ -188,34 +230,34 @@ const WooCommerceGuide = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <p className="text-sm text-muted-foreground">
-                    You'll need API credentials from Kang Open Banking to process payments.
+                    Register your WooCommerce store to receive API credentials instantly.
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-start gap-3">
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-medium">Create KOB Account</p>
-                        <p className="text-sm text-muted-foreground">Register at kangopenbanking.com</p>
+                        <p className="font-medium">Register Your Store</p>
+                        <p className="text-sm text-muted-foreground">Provide store details and get instant API credentials</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-medium">Complete Verification</p>
-                        <p className="text-sm text-muted-foreground">Submit KYC documents (business registration required)</p>
+                        <p className="font-medium">Automatic Setup</p>
+                        <p className="text-sm text-muted-foreground">API Key, Client Secret, and Webhook credentials generated automatically</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-3">
                       <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
                       <div>
-                        <p className="font-medium">Generate API Keys</p>
-                        <p className="text-sm text-muted-foreground">Get your Client ID and Client Secret from dashboard</p>
+                        <p className="font-medium">Secure Integration</p>
+                        <p className="text-sm text-muted-foreground">Credentials are hashed and stored securely</p>
                       </div>
                     </div>
                   </div>
                   <Button asChild className="w-full bg-[#96588a] hover:bg-[#7a466f]">
-                    <Link to="/register">
-                      Create KOB Account <ArrowRight className="ml-2 h-4 w-4" />
+                    <Link to="/integrations/woocommerce-merchant-register">
+                      Register Your Store <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                   </Button>
                 </CardContent>
@@ -494,12 +536,21 @@ const WooCommerceGuide = () => {
             <CardContent className="py-12 text-center space-y-6">
               <h2 className="text-3xl font-bold">Ready to Accept Payments?</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto">
-                Create your Kang Open Banking account to get API credentials and start integrating payments into your WooCommerce store.
+                Download the plugin and register your store to start accepting Mobile Money, card payments, and bank transfers today.
               </p>
-              <div className="flex gap-4 justify-center">
-                <Button size="lg" asChild className="bg-[#96588a] hover:bg-[#7a466f]">
-                  <Link to="/register">
-                    Get Started <ArrowRight className="ml-2 h-4 w-4" />
+              <div className="flex gap-4 justify-center flex-wrap">
+                <Button 
+                  size="lg" 
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  className="bg-[#96588a] hover:bg-[#7a466f]"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  {downloading ? "Preparing..." : "Download Plugin"}
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <Link to="/integrations/woocommerce-merchant-register">
+                    Register Store
                   </Link>
                 </Button>
                 <Button size="lg" variant="outline" asChild>
