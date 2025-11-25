@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CreateBranchDialog } from "@/components/admin/CreateBranchDialog";
+import { InstitutionDetailsDialog } from "@/components/admin/InstitutionDetailsDialog";
 import { useToast } from "@/hooks/use-toast";
 import { 
   Building2, 
@@ -46,7 +47,9 @@ interface VerificationStep {
 export default function InstitutionVerification() {
   const { toast } = useToast();
   const [branchDialogOpen, setBranchDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
+  const [requestingKYB, setRequestingKYB] = useState<string | null>(null);
 
   const { data: institutions, isLoading, refetch } = useQuery({
     queryKey: ["institutions-verification"],
@@ -142,6 +145,63 @@ export default function InstitutionVerification() {
   const handleCreateBranch = (institution: Institution) => {
     setSelectedInstitution(institution);
     setBranchDialogOpen(true);
+  };
+
+  const handleViewDetails = (institution: Institution) => {
+    setSelectedInstitution(institution);
+    setDetailsDialogOpen(true);
+  };
+
+  const handleRequestKYB = async (institution: Institution) => {
+    setRequestingKYB(institution.id);
+    try {
+      // Get institution user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', institution.user_id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Send KYB request email
+      const { error: commError } = await supabase.functions.invoke('send-communication', {
+        body: {
+          template_key: 'kyb_request',
+          recipient_email: profile.email,
+          variables: {
+            recipient_name: profile.full_name || 'Institution Representative',
+            institution_name: institution.institution_name,
+            dashboard_url: `${window.location.origin}/business-kyb-submission`
+          }
+        }
+      });
+
+      if (commError) throw commError;
+
+      // Update institution verification step
+      const { error: updateError } = await supabase
+        .from('institutions')
+        .update({ verification_step: 'pending_kyb' })
+        .eq('id', institution.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "KYB Request Sent",
+        description: `Email sent to ${profile.email} requesting business KYC submission.`,
+      });
+
+      refetch();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setRequestingKYB(null);
+    }
   };
 
   const handleApproveKYB = async (institutionId: string, kybId: string) => {
@@ -291,14 +351,25 @@ export default function InstitutionVerification() {
 
           {/* Quick Actions */}
           <div className="flex gap-2 text-xs">
-            <Button variant="outline" size="sm" className="flex-1">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="flex-1"
+              onClick={() => handleViewDetails(institution)}
+            >
               <FileText className="h-3 w-3 mr-1" />
               View Details
             </Button>
             {!kyb && (
-              <Button variant="outline" size="sm" className="flex-1">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex-1"
+                onClick={() => handleRequestKYB(institution)}
+                disabled={requestingKYB === institution.id}
+              >
                 <Shield className="h-3 w-3 mr-1" />
-                Request KYB
+                {requestingKYB === institution.id ? 'Sending...' : 'Request KYB'}
               </Button>
             )}
           </div>
@@ -390,16 +461,25 @@ export default function InstitutionVerification() {
 
         {/* Branch Creation Dialog */}
         {selectedInstitution && (
-          <CreateBranchDialog
-            open={branchDialogOpen}
-            onOpenChange={setBranchDialogOpen}
-            institutionId={selectedInstitution.id}
-            institutionName={selectedInstitution.institution_name}
-            onSuccess={() => {
-              refetch();
-              setSelectedInstitution(null);
-            }}
-          />
+          <>
+            <CreateBranchDialog
+              open={branchDialogOpen}
+              onOpenChange={setBranchDialogOpen}
+              institutionId={selectedInstitution.id}
+              institutionName={selectedInstitution.institution_name}
+              onSuccess={() => {
+                refetch();
+                setSelectedInstitution(null);
+              }}
+            />
+            <InstitutionDetailsDialog
+              open={detailsDialogOpen}
+              onOpenChange={setDetailsDialogOpen}
+              institution={selectedInstitution}
+              verificationSteps={getStepsForInstitution(selectedInstitution.id)}
+              kybSubmission={getKYBForInstitution(selectedInstitution.user_id, null)}
+            />
+          </>
         )}
       </div>
   );
