@@ -406,3 +406,20 @@ verify_jwt = true
 
 [functions.postiq-lookup-code]
 verify_jwt = true
+
+# WooCommerce Plugin Integration Functions
+
+[functions.woocommerce-register-merchant]
+verify_jwt = true
+
+[functions.woocommerce-payment-webhook]
+verify_jwt = false
+
+[functions.woocommerce-transaction-sync]
+verify_jwt = true
+
+[functions.woocommerce-validate-install]
+verify_jwt = false
+
+[functions.woocommerce-process-payment]
+verify_jwt = false
