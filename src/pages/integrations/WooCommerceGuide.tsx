@@ -24,7 +24,8 @@ import {
   Smartphone,
   Building2,
   Shield,
-  ArrowRight
+  ArrowRight,
+  FileCode
 } from "lucide-react";
 
 const WooCommerceGuide = () => {
@@ -170,6 +171,12 @@ const WooCommerceGuide = () => {
                       >
                         <Download className="mr-2 h-4 w-4" />
                         {downloading ? "Checking..." : "Request Download"}
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <Link to="/integrations/woocommerce-plugin-code">
+                          <FileCode className="mr-2 h-4 w-4" />
+                          View Plugin Code
+                        </Link>
                       </Button>
                       <Button variant="default" asChild className="bg-green-600 hover:bg-green-700">
                         <Link to="/integrations/woocommerce-merchant-register">

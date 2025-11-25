@@ -144,6 +144,7 @@ import BubbleGuide from "./pages/integrations/BubbleGuide";
 import RetoolGuide from "./pages/integrations/RetoolGuide";
 import WooCommerceGuide from "./pages/integrations/WooCommerceGuide";
 import WooCommerceMerchantRegister from "./pages/integrations/WooCommerceMerchantRegister";
+import WooCommercePluginCode from "./pages/integrations/WooCommercePluginCode";
 import StatusWidget from "./pages/StatusWidget";
 import EmbedStatusWidget from "./pages/EmbedStatusWidget";
 
@@ -263,6 +264,7 @@ function App() {
             <Route path="/integrations/retool" element={<Layout><RetoolGuide /></Layout>} />
             <Route path="/integrations/woocommerce-docs" element={<Layout><WooCommerceGuide /></Layout>} />
             <Route path="/integrations/woocommerce-merchant-register" element={<Layout><WooCommerceMerchantRegister /></Layout>} />
+            <Route path="/integrations/woocommerce-plugin-code" element={<Layout><WooCommercePluginCode /></Layout>} />
             <Route path="/woo-for-kang" element={<Layout><WooForKang /></Layout>} />
             
             {/* Solution Pages */}

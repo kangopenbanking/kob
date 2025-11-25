@@ -308,6 +308,17 @@ const WooForKang = () => {
                   className="bg-white border-[#96588a] border-2 text-[#96588a] hover:bg-[#96588a]/5 rounded-xl px-8 py-6 text-lg transition-all duration-200 hover:scale-[1.02]"
                   asChild
                 >
+                  <Link to="/integrations/woocommerce-plugin-code">
+                    <FileCode className="mr-2 h-5 w-5" />
+                    View Plugin Code
+                  </Link>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="bg-white border-[#96588a] border-2 text-[#96588a] hover:bg-[#96588a]/5 rounded-xl px-8 py-6 text-lg transition-all duration-200 hover:scale-[1.02]"
+                  asChild
+                >
                   <Link to="/integrations/woocommerce-merchant-register">
                     Register Your Store
                     <ArrowRight className="ml-2 h-5 w-5" />
