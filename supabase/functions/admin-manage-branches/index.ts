@@ -53,7 +53,7 @@ serve(async (req) => {
       
       let query = supabaseAdmin
         .from('branches')
-        .select('*, institutions!institution_id(institution_name)');
+        .select('*, institutions!branches_institution_id_fkey(institution_name)');
       
       if (institutionId) {
         query = query.eq('institution_id', institutionId);
