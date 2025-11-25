@@ -8181,6 +8181,122 @@ export type Database = {
           },
         ]
       }
+      woocommerce_merchants: {
+        Row: {
+          admin_email: string
+          api_key_hash: string
+          client_secret_hash: string
+          created_at: string | null
+          id: string
+          last_sync_at: string | null
+          payment_methods: Json | null
+          plugin_version: string | null
+          status: string | null
+          store_name: string
+          store_url: string
+          updated_at: string | null
+          user_id: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          admin_email: string
+          api_key_hash: string
+          client_secret_hash: string
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          payment_methods?: Json | null
+          plugin_version?: string | null
+          status?: string | null
+          store_name: string
+          store_url: string
+          updated_at?: string | null
+          user_id: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          admin_email?: string
+          api_key_hash?: string
+          client_secret_hash?: string
+          created_at?: string | null
+          id?: string
+          last_sync_at?: string | null
+          payment_methods?: Json | null
+          plugin_version?: string | null
+          status?: string | null
+          store_name?: string
+          store_url?: string
+          updated_at?: string | null
+          user_id?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
+      woocommerce_transactions: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string
+          customer_email: string | null
+          customer_phone: string | null
+          error_message: string | null
+          id: string
+          kob_transaction_id: string | null
+          merchant_id: string
+          metadata: Json | null
+          payment_method: string
+          status: string
+          transaction_ref: string
+          updated_at: string | null
+          woocommerce_order_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          error_message?: string | null
+          id?: string
+          kob_transaction_id?: string | null
+          merchant_id: string
+          metadata?: Json | null
+          payment_method: string
+          status: string
+          transaction_ref: string
+          updated_at?: string | null
+          woocommerce_order_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          customer_email?: string | null
+          customer_phone?: string | null
+          error_message?: string | null
+          id?: string
+          kob_transaction_id?: string | null
+          merchant_id?: string
+          metadata?: Json | null
+          payment_method?: string
+          status?: string
+          transaction_ref?: string
+          updated_at?: string | null
+          woocommerce_order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "woocommerce_transactions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "woocommerce_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       credit_score_distribution: {

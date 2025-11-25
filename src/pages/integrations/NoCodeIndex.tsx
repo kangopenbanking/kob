@@ -2,10 +2,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Zap, Workflow, Circle, Database, ArrowRight, CheckCircle2 } from "lucide-react";
+import { Zap, Workflow, Circle, Database, ArrowRight, CheckCircle2, ShoppingCart } from "lucide-react";
 
 const NoCodeIndex = () => {
   const platforms = [
+    {
+      name: "WooCommerce",
+      icon: ShoppingCart,
+      description: "Accept payments in your WooCommerce store with Mobile Money, Cards, and Bank Transfer",
+      difficulty: "Beginner",
+      useCases: ["E-commerce payments", "Mobile Money checkout", "XAF transactions"],
+      link: "/woo-for-kang",
+      color: "text-[#96588a]"
+    },
     {
       name: "Zapier",
       icon: Zap,
