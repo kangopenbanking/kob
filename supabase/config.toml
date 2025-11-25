@@ -421,5 +421,8 @@ verify_jwt = true
 [functions.woocommerce-validate-install]
 verify_jwt = false
 
+[functions.woocommerce-download-plugin]
+verify_jwt = false
+
 [functions.woocommerce-process-payment]
 verify_jwt = false
