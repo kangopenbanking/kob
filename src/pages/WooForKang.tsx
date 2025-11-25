@@ -2,8 +2,9 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Download, ArrowRight, ShoppingCart, CreditCard, Shield, Zap, FileCode, BookOpen, Github, CheckCircle, Smartphone, BarChart, Gauge } from "lucide-react";
+import { Download, ArrowRight, ShoppingCart, CreditCard, Shield, Zap, FileCode, BookOpen, Github, CheckCircle, Smartphone, BarChart, Gauge, Clock } from "lucide-react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import wooKangLogo from "@/assets/woo-kang-logo.png";
 
 const features = [
@@ -255,19 +256,23 @@ const WooForKang = () => {
                 className="flex flex-wrap gap-4 justify-center"
               >
                 <Button 
-                  size="lg" 
-                  className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-8 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
+                  size="lg"
+                  disabled
+                  className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-8 py-6 text-lg shadow-lg opacity-60 cursor-not-allowed"
                 >
-                  <Download className="mr-2 h-5 w-5" />
-                  Download Plugin
+                  <Clock className="mr-2 h-5 w-5" />
+                  Coming Soon
                 </Button>
                 <Button 
                   size="lg" 
                   variant="outline" 
                   className="bg-white border-[#96588a] border-2 text-[#96588a] hover:bg-[#96588a]/5 rounded-xl px-8 py-6 text-lg transition-all duration-200 hover:scale-[1.02]"
+                  asChild
                 >
-                  View Documentation
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <Link to="/integrations/woocommerce-docs">
+                    View Documentation
+                    <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
                 </Button>
               </motion.div>
             </div>
@@ -444,11 +449,12 @@ const WooForKang = () => {
                     ))}
                   </div>
                   <Button 
-                    size="lg" 
-                    className="w-full mt-8 bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]"
+                    size="lg"
+                    disabled
+                    className="w-full mt-8 bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl py-6 text-lg shadow-lg opacity-60 cursor-not-allowed"
                   >
-                    <Download className="mr-2 h-5 w-5" />
-                    Download Now
+                    <Clock className="mr-2 h-5 w-5" />
+                    Coming Soon
                   </Button>
                 </CardContent>
               </Card>
@@ -486,10 +492,10 @@ const WooForKang = () => {
                     <CardDescription className="text-base leading-relaxed mb-4">
                       Comprehensive API reference with code examples and integration guides.
                     </CardDescription>
-                    <a href="https://woocommerce.github.io/woocommerce-rest-api-docs/" target="_blank" rel="noopener noreferrer" className="text-[#96588a] hover:underline inline-flex items-center gap-2 font-medium">
+                    <Link to="/developer" className="text-[#96588a] hover:underline inline-flex items-center gap-2 font-medium">
                       View Docs
                       <ArrowRight className="w-4 h-4" />
-                    </a>
+                    </Link>
                   </CardHeader>
                 </Card>
               </motion.div>
@@ -528,10 +534,10 @@ const WooForKang = () => {
                     <CardDescription className="text-base leading-relaxed mb-4">
                       Step-by-step tutorials for common integration scenarios and customizations.
                     </CardDescription>
-                    <a href="#" className="text-[#96588a] hover:underline inline-flex items-center gap-2 font-medium">
+                    <Link to="/integrations/woocommerce-docs" className="text-[#96588a] hover:underline inline-flex items-center gap-2 font-medium">
                       Browse Guides
                       <ArrowRight className="w-4 h-4" />
-                    </a>
+                    </Link>
                   </CardHeader>
                 </Card>
               </motion.div>
@@ -557,19 +563,23 @@ const WooForKang = () => {
                   </p>
                   <div className="flex flex-wrap gap-4 justify-center">
                     <Button 
-                      size="lg" 
-                      className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-10 py-7 text-lg shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.03]"
+                      size="lg"
+                      disabled
+                      className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-10 py-7 text-lg shadow-lg opacity-60 cursor-not-allowed"
                     >
-                      <Download className="mr-2 h-5 w-5" />
-                      Download Plugin
+                      <Clock className="mr-2 h-5 w-5" />
+                      Coming Soon
                     </Button>
                     <Button 
                       size="lg" 
                       variant="outline" 
                       className="bg-white border-[#96588a] border-2 text-[#96588a] hover:bg-[#96588a]/5 rounded-xl px-10 py-7 text-lg transition-all duration-200 hover:scale-[1.03]"
+                      asChild
                     >
-                      Contact Sales
-                      <ArrowRight className="ml-2 h-5 w-5" />
+                      <Link to="/contact">
+                        Contact Sales
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
                     </Button>
                   </div>
                 </CardContent>

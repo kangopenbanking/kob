@@ -141,6 +141,7 @@ import ZapierGuide from "./pages/integrations/ZapierGuide";
 import MakeGuide from "./pages/integrations/MakeGuide";
 import BubbleGuide from "./pages/integrations/BubbleGuide";
 import RetoolGuide from "./pages/integrations/RetoolGuide";
+import WooCommerceGuide from "./pages/integrations/WooCommerceGuide";
 import StatusWidget from "./pages/StatusWidget";
 import EmbedStatusWidget from "./pages/EmbedStatusWidget";
 
@@ -257,6 +258,7 @@ function App() {
             <Route path="/integrations/make" element={<Layout><MakeGuide /></Layout>} />
             <Route path="/integrations/bubble" element={<Layout><BubbleGuide /></Layout>} />
             <Route path="/integrations/retool" element={<Layout><RetoolGuide /></Layout>} />
+            <Route path="/integrations/woocommerce-docs" element={<Layout><WooCommerceGuide /></Layout>} />
             <Route path="/woo-for-kang" element={<Layout><WooForKang /></Layout>} />
             
             {/* Solution Pages */}
