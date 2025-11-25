@@ -38,9 +38,9 @@ export default function WooCommerceMerchantRegister() {
     setLoading(true);
 
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (!user) {
+      if (!session) {
         toast({
           title: "Authentication Required",
           description: "Please log in to register your WooCommerce store",
@@ -51,7 +51,10 @@ export default function WooCommerceMerchantRegister() {
       }
 
       const { data, error } = await supabase.functions.invoke('woocommerce-register-merchant', {
-        body: formData
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
       });
 
       if (error) throw error;
