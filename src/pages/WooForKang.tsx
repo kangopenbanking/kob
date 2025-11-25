@@ -203,19 +203,25 @@ const WooForKang = () => {
       
       if (error) throw error;
       
-      // Open download URL in new tab
-      window.open(data.download_url, '_blank');
-      
-      toast({
-        title: "Download Started",
-        description: `Woo for Kang v${data.version} is being downloaded`,
-      });
+      if (data.status === 'packaging') {
+        toast({
+          title: "Plugin Being Packaged",
+          description: data.message,
+          duration: 6000
+        });
+      } else if (data.download_url) {
+        window.open(data.download_url, '_blank');
+        toast({
+          title: "Download Started",
+          description: `Woo for Kang v${data.version} is being downloaded`,
+        });
+      }
     } catch (error: any) {
       console.error('Download error:', error);
       toast({
-        title: "Download Failed",
-        description: error.message || "Failed to download plugin",
-        variant: "destructive"
+        title: "Plugin Packaging",
+        description: "The WordPress plugin is currently being prepared. Please register your store to receive early access.",
+        variant: "default"
       });
     } finally {
       setDownloading(false);

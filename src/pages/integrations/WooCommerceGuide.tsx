@@ -38,18 +38,25 @@ const WooCommerceGuide = () => {
       
       if (error) throw error;
       
-      window.open(data.download_url, '_blank');
-      
-      toast({
-        title: "Download Started",
-        description: `Woo for Kang v${data.version} is being downloaded`,
-      });
+      if (data.status === 'packaging') {
+        toast({
+          title: "Plugin Being Packaged",
+          description: data.message,
+          duration: 6000
+        });
+      } else if (data.download_url) {
+        window.open(data.download_url, '_blank');
+        toast({
+          title: "Download Started",
+          description: `Woo for Kang v${data.version} is being downloaded`,
+        });
+      }
     } catch (error: any) {
       console.error('Download error:', error);
       toast({
-        title: "Download Failed",
-        description: error.message || "Failed to download plugin",
-        variant: "destructive"
+        title: "Plugin Packaging",
+        description: "The WordPress plugin is currently being prepared. Please register your store to receive early access.",
+        variant: "default"
       });
     } finally {
       setDownloading(false);
@@ -96,13 +103,13 @@ const WooCommerceGuide = () => {
           </div>
 
           {/* Ready Alert */}
-          <Alert className="mb-12 border-green-500 bg-green-50">
-            <CheckCircle className="h-4 w-4 text-green-600" />
+          <Alert className="mb-12 border-blue-500 bg-blue-50">
+            <CheckCircle className="h-4 w-4 text-blue-600" />
             <AlertDescription className="text-sm">
-              <strong className="text-green-800">Now Available:</strong> Woo for Kang v1.0.0 is production-ready! 
-              Download the plugin and start accepting payments in your WooCommerce store.
-              <Link to="/integrations/woocommerce-merchant-register" className="ml-2 text-green-700 hover:underline font-medium">
-                Register Your Store <ArrowRight className="inline h-3 w-3 ml-1" />
+              <strong className="text-blue-800">Final Packaging:</strong> Woo for Kang v1.0.0 is production-ready and being packaged for distribution. 
+              Register your store now for early access and priority notification when the download becomes available.
+              <Link to="/integrations/woocommerce-merchant-register" className="ml-2 text-blue-700 hover:underline font-medium">
+                Register for Early Access <ArrowRight className="inline h-3 w-3 ml-1" />
               </Link>
             </AlertDescription>
           </Alert>
@@ -151,25 +158,28 @@ const WooCommerceGuide = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="rounded-lg border-2 border-green-500 bg-green-50 p-6 text-center">
-                    <Download className="h-12 w-12 mx-auto mb-3 text-green-600" />
-                    <p className="text-green-800 font-semibold mb-2">Woo for Kang v1.0.0</p>
-                    <p className="text-sm text-green-700 mb-4">Production-ready WordPress plugin</p>
-                    <div className="flex gap-3 justify-center">
+                  <div className="rounded-lg border-2 border-blue-500 bg-blue-50 p-6 text-center">
+                    <Download className="h-12 w-12 mx-auto mb-3 text-blue-600" />
+                    <p className="text-blue-800 font-semibold mb-2">Woo for Kang v1.0.0</p>
+                    <p className="text-sm text-blue-700 mb-4">Final packaging in progress</p>
+                    <div className="flex gap-3 justify-center flex-wrap">
                       <Button 
                         onClick={handleDownload}
                         disabled={downloading}
                         className="bg-[#96588a] hover:bg-[#7a466f]"
                       >
                         <Download className="mr-2 h-4 w-4" />
-                        {downloading ? "Preparing..." : "Download Plugin"}
+                        {downloading ? "Checking..." : "Request Download"}
                       </Button>
-                      <Button variant="outline" asChild>
+                      <Button variant="default" asChild className="bg-green-600 hover:bg-green-700">
                         <Link to="/integrations/woocommerce-merchant-register">
-                          Register Store
+                          Register for Early Access
                         </Link>
                       </Button>
                     </div>
+                    <p className="text-xs text-blue-600 mt-3">
+                      Register your store to receive priority access when packaging is complete
+                    </p>
                   </div>
                   <Alert>
                     <FileText className="h-4 w-4" />

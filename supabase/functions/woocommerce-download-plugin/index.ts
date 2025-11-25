@@ -28,11 +28,10 @@ serve(async (req) => {
     // WordPress plugin information
     const pluginVersion = '1.0.0';
     const pluginName = 'woo-for-kang';
-    const downloadUrl = `https://github.com/kangopenbanking/woo-for-kang/releases/download/v${pluginVersion}/${pluginName}-v${pluginVersion}.zip`;
 
-    // Log the download
+    // Log the download attempt
     await supabase.from('audit_logs').insert({
-      action_type: 'plugin_download',
+      action_type: 'plugin_download_request',
       entity_type: 'woocommerce_plugin',
       entity_id: pluginVersion,
       performed_by: user?.id,
@@ -40,30 +39,27 @@ serve(async (req) => {
         version: pluginVersion,
         ip_address: clientIp,
         user_agent: userAgent,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        status: 'packaging_in_progress'
       },
       ip_address: clientIp
     });
 
-    // Generate temporary signed URL (in production, this would generate a real signed URL)
-    // For now, return plugin information and download instructions
+    // Plugin is being packaged - return information
     const response = {
       success: true,
       plugin_name: pluginName,
       version: pluginVersion,
-      download_url: downloadUrl,
-      checksum: {
-        algorithm: 'SHA-256',
-        hash: 'to-be-generated-on-build'
-      },
-      size_mb: 0.5,
-      expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hour
-      installation_guide: 'https://kangopenbanking.com/integrations/woocommerce-docs',
+      status: 'packaging',
+      message: 'The WordPress plugin files are currently being packaged. Please register your store to receive notification when the download is ready.',
+      registration_url: '/integrations/woocommerce-merchant-register',
+      installation_guide: '/integrations/woocommerce-docs',
       requirements: {
         php: '7.4+',
         wordpress: '5.8+',
         woocommerce: '5.0+'
-      }
+      },
+      expected_availability: 'Contact sales for early access'
     };
 
     return new Response(
