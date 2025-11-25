@@ -118,6 +118,25 @@ export default function CreditScore() {
     },
   });
 
+  // Fetch PostiQ verification status
+  const { data: verification } = useQuery({
+    queryKey: ['postiq-verification'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+
+      const { data } = await supabase
+        .from('postiq_address_verifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .order('verified_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    }
+  });
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -187,25 +206,6 @@ export default function CreditScore() {
       impact: inq.inquiry_type === 'hard' ? 'negative' as const : 'neutral' as const,
     })) || []),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-  // Fetch PostiQ verification status
-  const { data: verification } = useQuery({
-    queryKey: ['postiq-verification'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return null;
-
-      const { data } = await supabase
-        .from('postiq_address_verifications')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('verified_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return data;
-    }
-  });
 
   return (
     <div className="container mx-auto p-6 space-y-8">
