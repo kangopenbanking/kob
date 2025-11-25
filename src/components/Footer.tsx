@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, MapPin, Package } from "lucide-react";
 import { BrandName } from "./BrandName";
 
 export const Footer = () => {
   return (
     <footer className="border-t py-12 bg-card">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-8 gap-8">
           <div className="col-span-2">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-primary" />
@@ -65,6 +65,22 @@ export const Footer = () => {
               <li><Link to="/integrations/make" className="hover:text-primary transition-colors">Make Integration</Link></li>
               <li><Link to="/integrations/bubble" className="hover:text-primary transition-colors">Bubble Integration</Link></li>
               <li><Link to="/integrations/retool" className="hover:text-primary transition-colors">Retool Integration</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-semibold mb-4">Integrations</h3>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li>
+                <Link to="/woo-for-kang" className="hover:text-primary transition-colors flex items-center gap-1">
+                  <Package className="h-3 w-3 text-[#96588a]" />
+                  WooCommerce Plugin
+                </Link>
+              </li>
+              <li><Link to="/integrations/zapier" className="hover:text-primary transition-colors">Zapier</Link></li>
+              <li><Link to="/integrations/make" className="hover:text-primary transition-colors">Make</Link></li>
+              <li><Link to="/integrations/bubble" className="hover:text-primary transition-colors">Bubble</Link></li>
+              <li><Link to="/integrations/retool" className="hover:text-primary transition-colors">Retool</Link></li>
             </ul>
           </div>
 

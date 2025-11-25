@@ -98,6 +98,7 @@ import PendingApproval from "./pages/PendingApproval";
 import FIPortal from "./pages/FIPortal";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
+import WooForKang from "./pages/WooForKang";
 import PaymentFacilitation from "./pages/PaymentFacilitation";
 import PaymentFacilitationDev from "./pages/developer/PaymentFacilitation";
 import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
@@ -256,6 +257,7 @@ function App() {
             <Route path="/integrations/make" element={<Layout><MakeGuide /></Layout>} />
             <Route path="/integrations/bubble" element={<Layout><BubbleGuide /></Layout>} />
             <Route path="/integrations/retool" element={<Layout><RetoolGuide /></Layout>} />
+            <Route path="/woo-for-kang" element={<Layout><WooForKang /></Layout>} />
             
             {/* Solution Pages */}
             <Route path="/solutions/fintech-developers" element={<Layout><FintechDevelopers /></Layout>} />

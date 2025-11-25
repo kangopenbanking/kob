@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, Wallet, TrendingUp, CreditCard, Target, BarChart3 } from "lucide-react";
+import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, Wallet, TrendingUp, CreditCard, Target, BarChart3, Package } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -330,6 +330,21 @@ export const Navigation = () => {
                         </h3>
                         <p className="text-sm text-muted-foreground">
                           Get help from our team
+                        </p>
+                      </div>
+                    </Link>
+                    
+                    <Link 
+                      to="/woo-for-kang" 
+                      className="group flex items-start gap-3 rounded-lg border border-[#96588a]/30 bg-gradient-to-br from-[#96588a]/10 to-card p-4 hover:bg-accent transition-colors"
+                    >
+                      <Package className="h-5 w-5 text-[#96588a] mt-0.5" />
+                      <div>
+                        <h3 className="font-semibold mb-1 text-[#96588a] group-hover:text-[#96588a]/80 transition-colors">
+                          WooCommerce Plugin
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          Accept payments in WooCommerce
                         </p>
                       </div>
                     </Link>
