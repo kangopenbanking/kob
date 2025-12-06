@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,6 +11,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CreateBranchDialog } from "@/components/admin/CreateBranchDialog";
 import { InstitutionDetailsDialog } from "@/components/admin/InstitutionDetailsDialog";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { 
   Building2, 
   CheckCircle, 
@@ -22,7 +25,10 @@ import {
   MapPin,
   ArrowRight,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
+  Ban,
+  Settings
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -64,20 +70,25 @@ interface KYBSubmission {
 
 export default function InstitutionVerification() {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [branchDialogOpen, setBranchDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedInstitution, setSelectedInstitution] = useState<Institution | null>(null);
   const [requestingKYB, setRequestingKYB] = useState<string | null>(null);
   const [approvingKYB, setApprovingKYB] = useState<string | null>(null);
+  const [rejectingKYB, setRejectingKYB] = useState<string | null>(null);
+  const [rejectionReason, setRejectionReason] = useState("");
+  const [creatingSteps, setCreatingSteps] = useState<string | null>(null);
 
-  // Fetch institutions
+  // Fetch all institutions (not just pending verification)
   const { data: institutions, isLoading: institutionsLoading, refetch, error: institutionsError } = useQuery({
     queryKey: ["institutions-verification"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutions")
         .select("*")
-        .in('verification_step', ['pending_registration', 'pending_kyb', 'kyb_submitted', 'kyb_approved', 'pending_branch'])
+        .neq('verification_step', 'approved')
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -86,7 +97,7 @@ export default function InstitutionVerification() {
   });
 
   // Fetch verification steps
-  const { data: verificationSteps, isLoading: stepsLoading } = useQuery({
+  const { data: verificationSteps, isLoading: stepsLoading, refetch: refetchSteps } = useQuery({
     queryKey: ["verification-steps"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -125,8 +136,9 @@ export default function InstitutionVerification() {
   };
 
   const calculateProgress = (steps: VerificationStep[]): number => {
+    if (steps.length === 0) return 0;
     const completed = steps.filter(s => s.status === 'completed').length;
-    return (completed / Math.max(steps.length, 1)) * 100;
+    return (completed / steps.length) * 100;
   };
 
   const getStatusBadge = (status: string) => {
@@ -186,6 +198,44 @@ export default function InstitutionVerification() {
     setBranchDialogOpen(true);
   };
 
+  // Create verification steps manually if trigger didn't fire
+  const handleCreateVerificationSteps = async (institution: Institution) => {
+    setCreatingSteps(institution.id);
+    try {
+      const steps = [
+        { step_name: 'Institution Registration', step_type: 'registration', status: 'completed' },
+        { step_name: 'Business KYC Submission', step_type: 'kyb_submission', status: 'pending' },
+        { step_name: 'KYB Verification', step_type: 'kyb_verification', status: 'pending' },
+        { step_name: 'Main Branch Creation', step_type: 'branch_creation', status: 'pending' },
+        { step_name: 'Final Approval', step_type: 'final_approval', status: 'pending' },
+      ];
+
+      const { error } = await supabase
+        .from('institution_verification_steps')
+        .insert(steps.map(step => ({
+          institution_id: institution.id,
+          ...step
+        })));
+
+      if (error) throw error;
+
+      toast({
+        title: "Verification Steps Created",
+        description: "Verification workflow initialized successfully.",
+      });
+
+      await refetchSteps();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingSteps(null);
+    }
+  };
+
   const handleRequestKYB = async (institution: Institution) => {
     setRequestingKYB(institution.id);
     try {
@@ -228,12 +278,23 @@ export default function InstitutionVerification() {
 
       if (updateError) throw updateError;
 
+      // Update verification step
+      await supabase
+        .from('institution_verification_steps')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('institution_id', institution.id)
+        .eq('step_type', 'registration');
+
       toast({
         title: "KYB Request Sent",
         description: `Email sent to ${profile.email} requesting Business KYC submission.`,
       });
 
       await refetch();
+      await refetchSteps();
     } catch (error: any) {
       console.error('Error sending KYB request:', error);
       toast({
@@ -273,8 +334,18 @@ export default function InstitutionVerification() {
 
       if (instError) throw instError;
 
+      // Update KYB submission verification step
+      await supabase
+        .from('institution_verification_steps')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('institution_id', institutionId)
+        .eq('step_type', 'kyb_submission');
+
       // Update verification step
-      const { error: stepError } = await supabase
+      await supabase
         .from('institution_verification_steps')
         .update({ 
           status: 'completed',
@@ -283,14 +354,13 @@ export default function InstitutionVerification() {
         .eq('institution_id', institutionId)
         .eq('step_type', 'kyb_verification');
 
-      if (stepError) throw stepError;
-
       toast({
         title: "KYB Approved",
         description: "Business KYC approved successfully. Institution can now create main branch.",
       });
 
       await refetch();
+      await refetchSteps();
     } catch (error: any) {
       console.error('Error approving KYB:', error);
       toast({
@@ -303,12 +373,140 @@ export default function InstitutionVerification() {
     }
   };
 
+  const handleRejectKYB = async () => {
+    if (!selectedInstitution || !rejectionReason) return;
+    
+    setRejectingKYB(selectedInstitution.id);
+    try {
+      const kyb = getKYBForInstitution(selectedInstitution.user_id, null);
+      
+      if (kyb) {
+        // Update KYB status
+        const { error: kybError } = await supabase
+          .from('business_kyc')
+          .update({ 
+            verification_status: 'rejected',
+            rejection_reason: rejectionReason
+          })
+          .eq('id', kyb.id);
+
+        if (kybError) throw kybError;
+      }
+
+      // Update institution
+      const { error: instError } = await supabase
+        .from('institutions')
+        .update({ 
+          verification_step: 'rejected',
+          status: 'rejected',
+          rejection_reason: rejectionReason,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedInstitution.id);
+
+      if (instError) throw instError;
+
+      // Update verification steps
+      await supabase
+        .from('institution_verification_steps')
+        .update({ 
+          status: 'failed',
+          notes: rejectionReason
+        })
+        .eq('institution_id', selectedInstitution.id)
+        .eq('step_type', 'kyb_verification');
+
+      toast({
+        title: "Institution Rejected",
+        description: "The institution has been rejected and notified.",
+      });
+
+      setRejectDialogOpen(false);
+      setRejectionReason("");
+      setSelectedInstitution(null);
+      await refetch();
+      await refetchSteps();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setRejectingKYB(null);
+    }
+  };
+
+  const handleFinalApproval = async (institution: Institution) => {
+    try {
+      // Update institution to fully approved
+      const { error: instError } = await supabase
+        .from('institutions')
+        .update({ 
+          verification_step: 'approved',
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', institution.id);
+
+      if (instError) throw instError;
+
+      // Complete final approval step
+      await supabase
+        .from('institution_verification_steps')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString()
+        })
+        .eq('institution_id', institution.id)
+        .eq('step_type', 'final_approval');
+
+      // Send approval email
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('email, full_name')
+        .eq('id', institution.user_id)
+        .single();
+
+      if (profile?.email) {
+        await supabase.functions.invoke('send-communication', {
+          body: {
+            template_key: 'institution_approved',
+            recipient_email: profile.email,
+            variables: {
+              recipient_name: profile.full_name || 'Institution Representative',
+              institution_name: institution.institution_name,
+              dashboard_url: `${window.location.origin}/fi-portal`
+            }
+          }
+        });
+      }
+
+      toast({
+        title: "Institution Approved",
+        description: `${institution.institution_name} has been fully approved and can now access all features.`,
+      });
+
+      await refetch();
+      await refetchSteps();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
   const InstitutionCard = ({ institution }: { institution: Institution }) => {
     const steps = getStepsForInstitution(institution.id);
     const progress = calculateProgress(steps);
     const kyb = getKYBForInstitution(institution.user_id, null);
     const isProcessingKYB = requestingKYB === institution.id;
     const isApprovingKYBForThis = approvingKYB === institution.id;
+    const isCreatingSteps = creatingSteps === institution.id;
+    const hasNoSteps = steps.length === 0;
 
     return (
       <Card className="hover:shadow-lg transition-shadow">
@@ -327,6 +525,25 @@ export default function InstitutionVerification() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* No Steps Warning */}
+          {hasNoSteps && (
+            <Alert className="bg-yellow-50 border-yellow-200">
+              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertDescription className="text-yellow-700 text-xs">
+                Verification steps not initialized.
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="h-auto p-0 ml-1 text-yellow-700 underline"
+                  onClick={() => handleCreateVerificationSteps(institution)}
+                  disabled={isCreatingSteps}
+                >
+                  {isCreatingSteps ? "Creating..." : "Initialize now"}
+                </Button>
+              </AlertDescription>
+            </Alert>
+          )}
+
           {/* Progress Bar */}
           <div className="space-y-2">
             <div className="flex justify-between text-xs text-muted-foreground">
@@ -337,9 +554,9 @@ export default function InstitutionVerification() {
           </div>
 
           {/* Verification Checklist */}
-          <div className="space-y-2">
-            {steps.length > 0 ? (
-              steps.map((step) => (
+          {steps.length > 0 && (
+            <div className="space-y-2">
+              {steps.map((step) => (
                 <div key={step.id} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     {step.status === 'completed' ? (
@@ -355,11 +572,9 @@ export default function InstitutionVerification() {
                   </div>
                   {getStatusBadge(step.status)}
                 </div>
-              ))
-            ) : (
-              <p className="text-xs text-muted-foreground">No verification steps available</p>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* KYB Status */}
           {kyb && (
@@ -369,40 +584,66 @@ export default function InstitutionVerification() {
                   <Shield className="h-4 w-4" />
                   Business KYC Status
                 </span>
-                <Badge variant={kyb.verification_status === 'approved' ? 'default' : 'secondary'}>
+                <Badge variant={kyb.verification_status === 'approved' ? 'default' : 
+                              kyb.verification_status === 'rejected' ? 'destructive' : 'secondary'}>
                   {kyb.verification_status?.toUpperCase()}
                 </Badge>
               </div>
               {kyb.verification_status === 'pending' && (
-                <Button 
-                  size="sm" 
-                  className="w-full" 
-                  onClick={() => handleApproveKYB(institution.id, kyb.id)}
-                  disabled={isApprovingKYBForThis}
-                >
-                  {isApprovingKYBForThis ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      Approving...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Approve KYB
-                    </>
-                  )}
-                </Button>
+                <div className="flex gap-2">
+                  <Button 
+                    size="sm" 
+                    className="flex-1" 
+                    onClick={() => handleApproveKYB(institution.id, kyb.id)}
+                    disabled={isApprovingKYBForThis}
+                  >
+                    {isApprovingKYBForThis ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                        Approving...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="h-4 w-4 mr-1" />
+                        Approve
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="destructive"
+                    className="flex-1" 
+                    onClick={() => {
+                      setSelectedInstitution(institution);
+                      setRejectDialogOpen(true);
+                    }}
+                  >
+                    <XCircle className="h-4 w-4 mr-1" />
+                    Reject
+                  </Button>
+                </div>
               )}
             </div>
           )}
 
           {/* Main Branch Status */}
           {institution.main_branch_id ? (
-            <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
-              <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
-                <MapPin className="h-4 w-4" />
-                <span>Main branch created</span>
+            <div className="space-y-2">
+              <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                <div className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400">
+                  <MapPin className="h-4 w-4" />
+                  <span>Main branch created</span>
+                </div>
               </div>
+              {institution.verification_step !== 'approved' && (
+                <Button 
+                  className="w-full" 
+                  onClick={() => handleFinalApproval(institution)}
+                >
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Complete Final Approval
+                </Button>
+              )}
             </div>
           ) : (institution.verification_step === 'pending_branch' || institution.verification_step === 'kyb_approved') ? (
             <Button 
@@ -426,7 +667,7 @@ export default function InstitutionVerification() {
               <FileText className="h-3 w-3 mr-1" />
               View Details
             </Button>
-            {!kyb && institution.verification_step !== 'pending_kyb' && (
+            {!kyb && institution.verification_step !== 'pending_kyb' && institution.verification_step !== 'rejected' && (
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -471,14 +712,20 @@ export default function InstitutionVerification() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Building2 className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">Institution Verification Dashboard</h1>
-            <p className="text-muted-foreground">
-              Manage end-to-end institution verification and onboarding
-            </p>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Building2 className="h-8 w-8 text-primary" />
+            <div>
+              <h1 className="text-3xl font-bold">Institution Verification Dashboard</h1>
+              <p className="text-muted-foreground">
+                Manage end-to-end institution verification and onboarding
+              </p>
+            </div>
           </div>
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Refresh
+          </Button>
         </div>
 
         {isLoading ? (
@@ -492,14 +739,20 @@ export default function InstitutionVerification() {
               <TabsTrigger value="all">
                 All ({institutions.length})
               </TabsTrigger>
+              <TabsTrigger value="pending_registration">
+                New ({institutions.filter(i => i.verification_step === 'pending_registration').length})
+              </TabsTrigger>
               <TabsTrigger value="pending_kyb">
                 Pending KYB ({institutions.filter(i => i.verification_step === 'pending_kyb').length})
               </TabsTrigger>
               <TabsTrigger value="kyb_submitted">
-                KYB Submitted ({institutions.filter(i => i.verification_step === 'kyb_submitted').length})
+                KYB Review ({institutions.filter(i => i.verification_step === 'kyb_submitted').length})
               </TabsTrigger>
               <TabsTrigger value="pending_branch">
                 Pending Branch ({institutions.filter(i => ['pending_branch', 'kyb_approved'].includes(i.verification_step)).length})
+              </TabsTrigger>
+              <TabsTrigger value="rejected">
+                Rejected ({institutions.filter(i => i.verification_step === 'rejected').length})
               </TabsTrigger>
             </TabsList>
 
@@ -509,6 +762,25 @@ export default function InstitutionVerification() {
                   <InstitutionCard key={inst.id} institution={inst} />
                 ))}
               </div>
+            </TabsContent>
+
+            <TabsContent value="pending_registration" className="space-y-4">
+              {institutions.filter(i => i.verification_step === 'pending_registration').length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {institutions
+                    .filter(i => i.verification_step === 'pending_registration')
+                    .map((inst) => (
+                      <InstitutionCard key={inst.id} institution={inst} />
+                    ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <CheckCircle className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No new registrations pending</p>
+                  </CardContent>
+                </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="pending_kyb" className="space-y-4">
@@ -524,7 +796,7 @@ export default function InstitutionVerification() {
                 <Card>
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <Clock className="h-12 w-12 text-muted-foreground mb-4" />
-                    <p className="text-muted-foreground">No institutions pending KYB</p>
+                    <p className="text-muted-foreground">No institutions pending KYB submission</p>
                   </CardContent>
                 </Card>
               )}
@@ -567,6 +839,25 @@ export default function InstitutionVerification() {
                 </Card>
               )}
             </TabsContent>
+
+            <TabsContent value="rejected" className="space-y-4">
+              {institutions.filter(i => i.verification_step === 'rejected').length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {institutions
+                    .filter(i => i.verification_step === 'rejected')
+                    .map((inst) => (
+                      <InstitutionCard key={inst.id} institution={inst} />
+                    ))}
+                </div>
+              ) : (
+                <Card>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Ban className="h-12 w-12 text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No rejected institutions</p>
+                  </CardContent>
+                </Card>
+              )}
+            </TabsContent>
           </Tabs>
         ) : (
           <Card>
@@ -587,6 +878,7 @@ export default function InstitutionVerification() {
               institutionName={selectedInstitution.institution_name}
               onSuccess={() => {
                 refetch();
+                refetchSteps();
                 setSelectedInstitution(null);
               }}
             />
@@ -599,6 +891,54 @@ export default function InstitutionVerification() {
             />
           </>
         )}
+
+        {/* Reject KYB Dialog */}
+        <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-destructive">
+                <XCircle className="h-5 w-5" />
+                Reject Institution
+              </DialogTitle>
+              <DialogDescription>
+                Provide a reason for rejecting {selectedInstitution?.institution_name}'s verification.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Rejection Reason *</Label>
+                <Textarea
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  placeholder="Please provide a detailed reason for rejection..."
+                  rows={4}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => {
+                setRejectDialogOpen(false);
+                setRejectionReason("");
+              }}>
+                Cancel
+              </Button>
+              <Button 
+                variant="destructive" 
+                onClick={handleRejectKYB}
+                disabled={!rejectionReason || !!rejectingKYB}
+              >
+                {rejectingKYB ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Rejecting...
+                  </>
+                ) : (
+                  "Confirm Rejection"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
