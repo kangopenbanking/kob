@@ -36,6 +36,42 @@ interface WooCommerceTransaction {
   payment_method: string;
 }
 
+// Helper to safely fetch data avoiding deep type instantiation
+async function fetchMerchants(institutionId: string): Promise<WooCommerceMerchant[]> {
+  const client: any = supabase;
+  const { data } = await client
+    .from("woocommerce_merchants")
+    .select("*")
+    .eq("institution_id", institutionId);
+  
+  return (data || []).map((m: any) => ({
+    id: String(m.id || ''),
+    store_name: String(m.store_name || ''),
+    store_url: String(m.store_url || ''),
+    status: String(m.status || ''),
+    created_at: String(m.created_at || '')
+  }));
+}
+
+async function fetchTransactions(merchantIds: string[]): Promise<WooCommerceTransaction[]> {
+  const client: any = supabase;
+  const { data } = await client
+    .from("woocommerce_transactions")
+    .select("*")
+    .in("merchant_id", merchantIds)
+    .limit(50);
+  
+  return (data || []).map((t: any) => ({
+    id: String(t.id || ''),
+    woocommerce_order_id: String(t.woocommerce_order_id || ''),
+    amount: Number(t.amount || 0),
+    currency: String(t.currency || 'XAF'),
+    status: String(t.status || ''),
+    created_at: String(t.created_at || ''),
+    payment_method: String(t.payment_method || '')
+  }));
+}
+
 export default function WooCommerceDashboard() {
   const navigate = useNavigate();
   const [merchants, setMerchants] = useState<WooCommerceMerchant[]>([]);
@@ -60,59 +96,32 @@ export default function WooCommerceDashboard() {
         return;
       }
 
-      // Get institution - use any to avoid deep type instantiation
-      const institutionRes: any = await supabase
+      // Get institution
+      const { data: institutionData } = await supabase
         .from("institutions")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
-      if (!institutionRes.data) {
+      if (!institutionData) {
         setLoading(false);
         return;
       }
 
-      const institutionId = institutionRes.data.id;
+      const institutionId = institutionData.id;
 
-      // Load merchants
-      const merchantsRes: any = await supabase
-        .from("woocommerce_merchants")
-        .select("id, store_name, store_url, status, created_at")
-        .eq("institution_id", institutionId)
-        .order("created_at", { ascending: false });
-      
-      const merchantsData: WooCommerceMerchant[] = (merchantsRes.data || []).map((m: any) => ({
-        id: m.id,
-        store_name: m.store_name,
-        store_url: m.store_url,
-        status: m.status,
-        created_at: m.created_at
-      }));
+      // Load merchants using helper
+      const merchantsData = await fetchMerchants(institutionId);
       setMerchants(merchantsData);
 
       // Load transactions
       if (merchantsData.length > 0) {
         const merchantIds = merchantsData.map(m => m.id);
-        const transactionsRes: any = await supabase
-          .from("woocommerce_transactions")
-          .select("id, woocommerce_order_id, amount, currency, status, created_at, payment_method")
-          .in("merchant_id", merchantIds)
-          .order("created_at", { ascending: false })
-          .limit(50);
-        
-        const transactionsData: WooCommerceTransaction[] = (transactionsRes.data || []).map((t: any) => ({
-          id: t.id,
-          woocommerce_order_id: t.woocommerce_order_id,
-          amount: t.amount,
-          currency: t.currency,
-          status: t.status,
-          created_at: t.created_at,
-          payment_method: t.payment_method
-        }));
+        const transactionsData = await fetchTransactions(merchantIds);
         setTransactions(transactionsData);
 
         // Calculate stats
-        const totalVolume = transactionsData.reduce((sum, t) => sum + Number(t.amount), 0);
+        const totalVolume = transactionsData.reduce((sum, t) => sum + t.amount, 0);
         const successfulTransactions = transactionsData.filter(t => t.status === 'completed').length;
         const successRate = transactionsData.length ? (successfulTransactions / transactionsData.length) * 100 : 0;
 
