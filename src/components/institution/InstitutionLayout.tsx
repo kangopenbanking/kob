@@ -11,7 +11,14 @@ import {
   Key,
   Webhook,
   CreditCard,
-  Building2
+  Building2,
+  ArrowUpDown,
+  DollarSign,
+  TrendingUp,
+  ShoppingCart,
+  Store,
+  Shield,
+  UserCheck
 } from "lucide-react";
 import {
   Sidebar,
@@ -31,21 +38,46 @@ const institutionNavigation = [
     title: "Overview",
     items: [
       { title: "Dashboard", path: "/fi-portal", icon: LayoutDashboard },
-      { title: "Analytics", path: "/analytics", icon: Activity },
+      { title: "Analytics", path: "/fi-portal/analytics", icon: Activity },
+    ]
+  },
+  {
+    title: "Payments & Transactions",
+    items: [
+      { title: "Transactions", path: "/fi-portal/transactions", icon: ArrowUpDown },
+      { title: "Payments", path: "/fi-portal/payments", icon: CreditCard },
+      { title: "Settlement", path: "/fi-portal/settlement", icon: DollarSign },
     ]
   },
   {
     title: "API Management",
     items: [
       { title: "API Clients", path: "/fi-portal/api-clients", icon: Key },
+      { title: "API Keys", path: "/developer/api-keys", icon: Key },
       { title: "Webhooks", path: "/fi-portal/webhooks", icon: Webhook },
+      { title: "Credit API", path: "/fi-portal/credit-api", icon: TrendingUp },
       { title: "Documentation", path: "/documentation", icon: FileText },
+    ]
+  },
+  {
+    title: "E-Commerce",
+    items: [
+      { title: "WooCommerce", path: "/fi-portal/woocommerce", icon: ShoppingCart },
+      { title: "Register Store", path: "/integrations/woocommerce-merchant-register", icon: Store },
+    ]
+  },
+  {
+    title: "Compliance",
+    items: [
+      { title: "KYB Documents", path: "/business-kyb-submission", icon: FileText },
+      { title: "Compliance", path: "/fi-portal/compliance", icon: Shield },
     ]
   },
   {
     title: "Settings",
     items: [
       { title: "Institution Profile", path: "/fi-portal/profile", icon: Building2 },
+      { title: "Team Members", path: "/fi-portal/team", icon: Users },
       { title: "Settings", path: "/fi-portal/settings", icon: Settings },
     ]
   }

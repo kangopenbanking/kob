@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, TrendingUp, Target, BarChart3, Puzzle, Code } from "lucide-react";
+import { Menu, ChevronDown, Database, Send, Smartphone, Shield, FileText, DollarSign, Activity, HelpCircle, MessageCircle, BookOpen, Lightbulb, TrendingUp, Target, BarChart3, Puzzle, Code, LayoutDashboard } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -24,6 +24,7 @@ interface UserStatus {
   institutionStatus?: 'pending' | 'approved' | 'rejected' | 'suspended';
   institutionType?: string;
   isAdmin: boolean;
+  isDeveloper: boolean;
 }
 
 export const DynamicNavigation = () => {
@@ -31,7 +32,8 @@ export const DynamicNavigation = () => {
   const [userStatus, setUserStatus] = useState<UserStatus>({
     isAuthenticated: false,
     hasInstitution: false,
-    isAdmin: false
+    isAdmin: false,
+    isDeveloper: false
   });
 
   useEffect(() => {
@@ -51,7 +53,7 @@ export const DynamicNavigation = () => {
       const { data: { user } } = await supabase.auth.getUser();
       
       if (!user) {
-        setUserStatus({ isAuthenticated: false, hasInstitution: false, isAdmin: false });
+        setUserStatus({ isAuthenticated: false, hasInstitution: false, isAdmin: false, isDeveloper: false });
         return;
       }
 
@@ -71,11 +73,22 @@ export const DynamicNavigation = () => {
         hasInstitution: !!institution,
         institutionStatus: institution?.status,
         institutionType: institution?.institution_type,
-        isAdmin: !!isAdmin
+        isAdmin: !!isAdmin,
+        isDeveloper: institution?.institution_type === 'developer'
       });
     } catch (error) {
       console.error('Error checking user status:', error);
     }
+  };
+
+  // Get the appropriate dashboard path based on user role
+  const getDashboardPath = () => {
+    if (userStatus.isAdmin) return "/admin";
+    if (userStatus.institutionStatus === 'approved') {
+      return userStatus.isDeveloper ? "/developer" : "/fi-portal";
+    }
+    if (userStatus.hasInstitution) return "/pending-approval";
+    return "/credit-score";
   };
 
   const getMobilePortalLinks = () => {
@@ -472,6 +485,16 @@ export const DynamicNavigation = () => {
           </NavigationMenu>
 
           <LanguageSwitcher />
+          
+          {/* Dashboard Button - Role-aware */}
+          {userStatus.isAuthenticated && (
+            <Link to={getDashboardPath()}>
+              <Button variant="outline" size="sm" className="gap-2">
+                <LayoutDashboard className="h-4 w-4" />
+                Dashboard
+              </Button>
+            </Link>
+          )}
           
           {getAuthButtons()}
         </div>

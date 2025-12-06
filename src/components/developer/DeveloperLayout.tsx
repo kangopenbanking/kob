@@ -15,6 +15,8 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
+import { ShoppingCart } from "lucide-react";
+
 const navSections = [
   {
     title: "Getting Started",
@@ -48,22 +50,32 @@ const navSections = [
     ],
   },
   {
-      title: "Tools & Testing",
-      icon: Zap,
-      items: [
-        { title: "API Keys", path: "/developer/api-keys" },
-        { title: "API Explorer", path: "/developer/api-explorer" },
-        { title: "API Console", path: "/developer/console" },
-        { title: "API Playground", path: "/developer/api-playground" },
-        { title: "API Testing", path: "/developer/api-testing" },
-        { title: "Code Examples", path: "/developer/examples" },
-        { title: "Sandbox Environment", path: "/developer/sandbox" },
-        { title: "Usage Analytics", path: "/developer/sandbox/usage" },
-        { title: "Webhooks", path: "/developer/sandbox/webhooks" },
-        { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
-        { title: "Data Generator", path: "/developer/sandbox/data-generator" },
-      ],
-    },
+    title: "Tools & Testing",
+    icon: Zap,
+    items: [
+      { title: "API Keys", path: "/developer/api-keys" },
+      { title: "API Explorer", path: "/developer/api-explorer" },
+      { title: "API Console", path: "/developer/console" },
+      { title: "API Playground", path: "/developer/api-playground" },
+      { title: "API Testing", path: "/developer/api-testing" },
+      { title: "Code Examples", path: "/developer/examples" },
+      { title: "Sandbox Environment", path: "/developer/sandbox" },
+      { title: "Usage Analytics", path: "/developer/sandbox/usage" },
+      { title: "Webhooks", path: "/developer/sandbox/webhooks" },
+      { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
+      { title: "Data Generator", path: "/developer/sandbox/data-generator" },
+    ],
+  },
+  {
+    title: "E-Commerce Integration",
+    icon: ShoppingCart,
+    items: [
+      { title: "WooCommerce Plugin", path: "/woo-for-kang" },
+      { title: "Register Store", path: "/integrations/woocommerce-merchant-register" },
+      { title: "Documentation", path: "/integrations/woocommerce-docs" },
+      { title: "Plugin Code", path: "/integrations/woocommerce-plugin-code" },
+    ],
+  },
   {
     title: "No-Code Integration",
     icon: Puzzle,
