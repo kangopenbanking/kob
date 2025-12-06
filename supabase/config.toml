@@ -426,3 +426,7 @@ verify_jwt = false
 
 [functions.woocommerce-process-payment]
 verify_jwt = false
+
+# Institution API with role-based middleware
+[functions.institution-api]
+verify_jwt = true

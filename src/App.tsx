@@ -97,6 +97,10 @@ import Status from "./pages/Status";
 import NotFound from "./pages/NotFound";
 import PendingApproval from "./pages/PendingApproval";
 import FIPortal from "./pages/FIPortal";
+import InstitutionTransactions from "./pages/institution/InstitutionTransactions";
+import InstitutionAnalytics from "./pages/institution/InstitutionAnalytics";
+import InstitutionApiClients from "./pages/institution/InstitutionApiClients";
+import WooCommerceDashboard from "./pages/institution/WooCommerceDashboard";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
 import WooForKang from "./pages/WooForKang";
@@ -178,7 +182,11 @@ function App() {
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<Layout><ProtectedRoute><BusinessKYBSubmission /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal" element={<Layout><ProtectedRoute><PersonalAccountRoute><FIPortal /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal/transactions" element={<Layout><ProtectedRoute><InstitutionTransactions /></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal/analytics" element={<Layout><ProtectedRoute><InstitutionAnalytics /></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal/api-clients" element={<Layout><ProtectedRoute><InstitutionApiClients /></ProtectedRoute></Layout>} />
+            <Route path="/fi-portal/woocommerce" element={<Layout><ProtectedRoute><WooCommerceDashboard /></ProtectedRoute></Layout>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
             {/* Admin Routes - Nested with AdminLayout */}
