@@ -93,6 +93,43 @@ serve(async (req) => {
 
     console.log('Business KYC created:', kycData.id);
 
+    // Get institution associated with this user and update verification step
+    const { data: institution } = await supabaseAdmin
+      .from('institutions')
+      .select('id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (institution) {
+      // Update institution verification step to kyb_submitted
+      await supabaseAdmin
+        .from('institutions')
+        .update({ 
+          verification_step: 'kyb_submitted',
+          kyb_submission_id: kycData.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', institution.id);
+
+      // Update verification step record
+      await supabaseAdmin
+        .from('institution_verification_steps')
+        .update({ 
+          status: 'completed',
+          completed_at: new Date().toISOString(),
+          completed_by: user.id
+        })
+        .eq('institution_id', institution.id)
+        .eq('step_type', 'kyb_submission');
+
+      // Set kyb_verification step to in_progress
+      await supabaseAdmin
+        .from('institution_verification_steps')
+        .update({ status: 'in_progress' })
+        .eq('institution_id', institution.id)
+        .eq('step_type', 'kyb_verification');
+    }
+
     // Log audit event
     await supabaseAdmin
       .from('audit_logs')
@@ -105,6 +142,7 @@ serve(async (req) => {
           business_name,
           business_type,
           industry,
+          institution_id: institution?.id || null,
           status: 'pending'
         }
       }]);
