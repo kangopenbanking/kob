@@ -309,57 +309,25 @@ export default function InstitutionVerification() {
   const handleApproveKYB = async (institutionId: string, kybId: string) => {
     setApprovingKYB(institutionId);
     try {
-      // Update KYB status
-      const { error: kybError } = await supabase
-        .from('business_kyc')
-        .update({ 
-          verification_status: 'approved', 
-          verified_at: new Date().toISOString() 
-        })
-        .eq('id', kybId);
+      const { data, error } = await supabase.functions.invoke('admin-kyb-verify', {
+        body: {
+          kyb_id: kybId,
+          institution_id: institutionId,
+          action: 'approve'
+        }
+      });
 
-      if (kybError) throw kybError;
-
-      // Update institution
-      const { error: instError } = await supabase
-        .from('institutions')
-        .update({ 
-          verification_step: 'pending_branch',
-          kyb_verified_at: new Date().toISOString(),
-          kyb_submission_id: kybId,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', institutionId);
-
-      if (instError) throw instError;
-
-      // Update KYB submission verification step
-      await supabase
-        .from('institution_verification_steps')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('institution_id', institutionId)
-        .eq('step_type', 'kyb_submission');
-
-      // Update verification step
-      await supabase
-        .from('institution_verification_steps')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('institution_id', institutionId)
-        .eq('step_type', 'kyb_verification');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "KYB Approved",
-        description: "Business KYC approved successfully. Institution can now create main branch.",
+        description: data?.message || "Business KYC approved successfully. Institution can now create main branch.",
       });
 
       await refetch();
       await refetchSteps();
+      queryClient.invalidateQueries({ queryKey: ["kyb-for-institutions"] });
     } catch (error: any) {
       console.error('Error approving KYB:', error);
       toast({
@@ -379,45 +347,25 @@ export default function InstitutionVerification() {
     try {
       const kyb = getKYBForInstitution(selectedInstitution.user_id, null);
       
-      if (kyb) {
-        // Update KYB status
-        const { error: kybError } = await supabase
-          .from('business_kyc')
-          .update({ 
-            verification_status: 'rejected',
-            rejection_reason: rejectionReason
-          })
-          .eq('id', kyb.id);
-
-        if (kybError) throw kybError;
+      if (!kyb) {
+        throw new Error('No KYB submission found for this institution');
       }
 
-      // Update institution
-      const { error: instError } = await supabase
-        .from('institutions')
-        .update({ 
-          verification_step: 'rejected',
-          status: 'rejected',
-          rejection_reason: rejectionReason,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedInstitution.id);
+      const { data, error } = await supabase.functions.invoke('admin-kyb-verify', {
+        body: {
+          kyb_id: kyb.id,
+          institution_id: selectedInstitution.id,
+          action: 'reject',
+          rejection_reason: rejectionReason
+        }
+      });
 
-      if (instError) throw instError;
-
-      // Update verification steps
-      await supabase
-        .from('institution_verification_steps')
-        .update({ 
-          status: 'failed',
-          notes: rejectionReason
-        })
-        .eq('institution_id', selectedInstitution.id)
-        .eq('step_type', 'kyb_verification');
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Institution Rejected",
-        description: "The institution has been rejected and notified.",
+        description: data?.message || "The institution has been rejected and notified.",
       });
 
       setRejectDialogOpen(false);
@@ -425,6 +373,7 @@ export default function InstitutionVerification() {
       setSelectedInstitution(null);
       await refetch();
       await refetchSteps();
+      queryClient.invalidateQueries({ queryKey: ["kyb-for-institutions"] });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -438,53 +387,16 @@ export default function InstitutionVerification() {
 
   const handleFinalApproval = async (institution: Institution) => {
     try {
-      // Update institution to fully approved
-      const { error: instError } = await supabase
-        .from('institutions')
-        .update({ 
-          verification_step: 'approved',
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', institution.id);
+      const { data, error } = await supabase.functions.invoke('admin-institution-approve', {
+        body: { institution_id: institution.id }
+      });
 
-      if (instError) throw instError;
-
-      // Complete final approval step
-      await supabase
-        .from('institution_verification_steps')
-        .update({ 
-          status: 'completed',
-          completed_at: new Date().toISOString()
-        })
-        .eq('institution_id', institution.id)
-        .eq('step_type', 'final_approval');
-
-      // Send approval email
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('email, full_name')
-        .eq('id', institution.user_id)
-        .single();
-
-      if (profile?.email) {
-        await supabase.functions.invoke('send-communication', {
-          body: {
-            template_key: 'institution_approved',
-            recipient_email: profile.email,
-            variables: {
-              recipient_name: profile.full_name || 'Institution Representative',
-              institution_name: institution.institution_name,
-              dashboard_url: `${window.location.origin}/fi-portal`
-            }
-          }
-        });
-      }
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
 
       toast({
         title: "Institution Approved",
-        description: `${institution.institution_name} has been fully approved and can now access all features.`,
+        description: data?.message || `${institution.institution_name} has been fully approved and can now access all features.`,
       });
 
       await refetch();
