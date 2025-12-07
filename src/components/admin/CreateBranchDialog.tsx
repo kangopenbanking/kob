@@ -65,19 +65,19 @@ export function CreateBranchDialog({
 
       if (branchError) throw branchError;
 
-      // Update institution with main_branch_id and verification_step
+      // Update institution with main_branch_id - don't auto-approve, just mark pending_branch complete
       const { error: updateError } = await supabase
         .from('institutions')
         .update({
           main_branch_id: branchData.id,
-          verification_step: 'approved',
-          status: 'approved'
+          verification_step: 'pending_branch', // Keep at pending_branch until final approval
+          updated_at: new Date().toISOString()
         })
         .eq('id', institutionId);
 
       if (updateError) throw updateError;
 
-      // Update verification step
+      // Update branch creation verification step
       const { error: stepError } = await supabase
         .from('institution_verification_steps')
         .update({
@@ -88,24 +88,11 @@ export function CreateBranchDialog({
         .eq('institution_id', institutionId)
         .eq('step_type', 'branch_creation');
 
-      if (stepError) throw stepError;
-
-      // Complete final approval step
-      const { error: finalStepError } = await supabase
-        .from('institution_verification_steps')
-        .update({
-          status: 'completed',
-          completed_at: new Date().toISOString(),
-          completed_by: (await supabase.auth.getUser()).data.user?.id
-        })
-        .eq('institution_id', institutionId)
-        .eq('step_type', 'final_approval');
-
-      if (finalStepError) throw finalStepError;
+      if (stepError) console.error('Step update error:', stepError);
 
       toast({
         title: "Success",
-        description: "Main branch created and institution approved successfully!",
+        description: "Main branch created successfully. The institution is now ready for final approval.",
       });
 
       onOpenChange(false);
@@ -279,7 +266,7 @@ export function CreateBranchDialog({
               Cancel
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Creating..." : "Create Branch & Approve Institution"}
+              {loading ? "Creating..." : "Create Main Branch"}
             </Button>
           </DialogFooter>
         </form>

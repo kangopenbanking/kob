@@ -430,3 +430,18 @@ verify_jwt = false
 # Institution API with role-based middleware
 [functions.institution-api]
 verify_jwt = true
+
+# Admin KYB Verification Functions
+[functions.admin-kyb-verify]
+verify_jwt = true
+
+[functions.admin-institution-approve]
+verify_jwt = true
+
+# Business KYC Submission
+[functions.business-kyc-submit]
+verify_jwt = true
+
+# Institution Registration
+[functions.institution-register]
+verify_jwt = true
