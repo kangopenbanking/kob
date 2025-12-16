@@ -8,9 +8,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, Phone, Lock, Mail, MapPin } from 'lucide-react';
+import { Loader2, Phone, Lock, Mail, MapPin, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
+import { formatErrorForToast, parseEdgeFunctionError } from '@/lib/error-handler';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const COUNTRY_CODES = [
   { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
@@ -30,7 +32,7 @@ export default function ProfileSettings() {
   const [otpCode, setOtpCode] = useState('');
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [pinCode, setPinCode] = useState('');
-
+  const [errorAlert, setErrorAlert] = useState<{ title: string; message: string; action?: string } | null>(null);
   // Fetch PostiQ verification
   const { data: postiqData } = useQuery({
     queryKey: ['postiq-verification'],
@@ -91,10 +93,12 @@ export default function ProfileSettings() {
     }
 
     setLoading(true);
+    setErrorAlert(null);
+    
     try {
       const fullPhone = `${countryCode}${phoneNumber}`;
       
-      const { error } = await supabase.functions.invoke('phone-auth-send-otp', {
+      const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', {
         body: {
           phone_number: fullPhone,
           otp_type: 'verification',
@@ -102,18 +106,38 @@ export default function ProfileSettings() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        const parsedError = parseEdgeFunctionError(error);
+        const { title, description } = formatErrorForToast(error);
+        
+        // Show persistent alert for quota/service issues
+        if (parsedError.code === 'QUOTA_EXCEEDED' || parsedError.code === 'SERVICE_UNAVAILABLE') {
+          setErrorAlert({
+            title: title,
+            message: parsedError.userMessage,
+            action: parsedError.action
+          });
+        }
+        
+        toast({
+          title,
+          description,
+          variant: 'destructive',
+        });
+        return;
+      }
 
       toast({
         title: 'OTP Sent',
-        description: `Verification code sent via ${deliveryMethod}`,
+        description: `Verification code sent via ${deliveryMethod === 'auto' ? 'SMS/WhatsApp' : deliveryMethod}`,
       });
 
       setShowOTPInput(true);
     } catch (error: any) {
+      const { title, description } = formatErrorForToast(error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to send OTP',
+        title,
+        description,
         variant: 'destructive',
       });
     } finally {
@@ -275,6 +299,20 @@ export default function ProfileSettings() {
                   </div>
                 </RadioGroup>
               </div>
+
+              {errorAlert && (
+                <Alert variant="destructive" className="border-destructive/50 bg-destructive/10">
+                  <AlertTriangle className="h-4 w-4" />
+                  <AlertDescription className="ml-2">
+                    <span className="font-medium">{errorAlert.title}:</span> {errorAlert.message}
+                    {errorAlert.action && (
+                      <span className="block mt-1 text-sm opacity-80">
+                        Suggestion: {errorAlert.action}
+                      </span>
+                    )}
+                  </AlertDescription>
+                </Alert>
+              )}
 
               {!showOTPInput ? (
                 <Button onClick={handleSendOTP} disabled={loading}>

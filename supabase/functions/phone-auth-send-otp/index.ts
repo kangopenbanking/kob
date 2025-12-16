@@ -17,15 +17,28 @@ const sendOtpSchema = z.object({
   method: z.enum(['sms', 'whatsapp', 'auto']).optional(),
 });
 
+// Error codes for specific failure scenarios
+type SMSResult = {
+  success: boolean;
+  error_code?: 'QUOTA_EXCEEDED' | 'INVALID_CREDENTIALS' | 'SERVICE_UNAVAILABLE' | 'DELIVERY_FAILED';
+  error_message?: string;
+};
+
+type WhatsAppResult = {
+  success: boolean;
+  error_code?: 'INVALID_CREDENTIALS' | 'SERVICE_UNAVAILABLE' | 'DELIVERY_FAILED';
+  error_message?: string;
+};
+
 // Send OTP via SMS using Vonage
-async function sendViaSMS(phoneNumber: string, otpCode: string): Promise<boolean> {
+async function sendViaSMS(phoneNumber: string, otpCode: string): Promise<SMSResult> {
   try {
     const vonageKey = Deno.env.get('VONAGE_API_KEY');
     const vonageSecret = Deno.env.get('VONAGE_API_SECRET');
 
     if (!vonageKey || !vonageSecret) {
       console.error('Vonage credentials not configured');
-      return false;
+      return { success: false, error_code: 'INVALID_CREDENTIALS', error_message: 'SMS service not configured' };
     }
 
     const response = await fetch('https://rest.nexmo.com/sms/json', {
@@ -42,22 +55,36 @@ async function sendViaSMS(phoneNumber: string, otpCode: string): Promise<boolean
 
     const result = await response.json();
     console.log('SMS sent via Vonage:', result);
-    return result.messages?.[0]?.status === '0';
+    
+    const messageStatus = result.messages?.[0]?.status;
+    const errorText = result.messages?.[0]?.['error-text'] || '';
+    
+    // Vonage status codes: 0 = success, 9 = quota exceeded, others = various errors
+    if (messageStatus === '0') {
+      return { success: true };
+    } else if (messageStatus === '9') {
+      console.error('Vonage quota exceeded:', errorText);
+      return { success: false, error_code: 'QUOTA_EXCEEDED', error_message: 'SMS quota exceeded. Please try again later or use WhatsApp.' };
+    } else if (messageStatus === '4' || messageStatus === '5') {
+      return { success: false, error_code: 'INVALID_CREDENTIALS', error_message: 'SMS service authentication failed' };
+    } else {
+      return { success: false, error_code: 'DELIVERY_FAILED', error_message: errorText || 'Failed to deliver SMS' };
+    }
   } catch (error) {
     console.error('SMS sending failed:', error);
-    return false;
+    return { success: false, error_code: 'SERVICE_UNAVAILABLE', error_message: 'SMS service unavailable' };
   }
 }
 
 // Send OTP via WhatsApp using Meta Business API
-async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<boolean> {
+async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<WhatsAppResult> {
   try {
     const whatsappToken = Deno.env.get('WHATSAPP_API_TOKEN');
     const phoneNumberId = Deno.env.get('WHATSAPP_PHONE_NUMBER_ID');
 
     if (!whatsappToken || !phoneNumberId) {
       console.error('WhatsApp credentials not configured');
-      return false;
+      return { success: false, error_code: 'INVALID_CREDENTIALS', error_message: 'WhatsApp service not configured' };
     }
 
     // Try sending as regular text message (works if conversation is active)
@@ -85,14 +112,14 @@ async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<bo
     
     if (result.messages?.[0]?.id) {
       console.log('WhatsApp message sent successfully:', result.messages[0].id);
-      return true;
+      return { success: true };
     } else {
       console.warn('WhatsApp send failed:', result);
-      return false;
+      return { success: false, error_code: 'DELIVERY_FAILED', error_message: result.error?.message || 'WhatsApp delivery failed' };
     }
   } catch (error) {
     console.error('WhatsApp sending failed:', error instanceof Error ? error.message : String(error));
-    return false;
+    return { success: false, error_code: 'SERVICE_UNAVAILABLE', error_message: 'WhatsApp service unavailable' };
   }
 }
 
@@ -172,35 +199,54 @@ serve(async (req) => {
     const userAgent = req.headers.get('user-agent') || '';
 
     // Send via selected delivery method(s) with automatic fallback
-    let smsSent = false;
-    let whatsappSent = false;
+    let smsResult: SMSResult = { success: false };
+    let whatsappResult: WhatsAppResult = { success: false };
     let actualDeliveryMethod = delivery_method;
+    let lastErrorCode: string | undefined;
+    let lastErrorMessage: string | undefined;
 
-    if (delivery_method === 'sms' || delivery_method === 'both') {
-      smsSent = await sendViaSMS(phone_number, otpCode);
+    if (delivery_method === 'sms' || delivery_method === 'auto') {
+      smsResult = await sendViaSMS(phone_number, otpCode);
+      if (!smsResult.success) {
+        lastErrorCode = smsResult.error_code;
+        lastErrorMessage = smsResult.error_message;
+      }
     }
 
-    if (delivery_method === 'whatsapp' || delivery_method === 'both') {
-      whatsappSent = await sendViaWhatsApp(phone_number, otpCode);
+    if (delivery_method === 'whatsapp' || delivery_method === 'auto') {
+      whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
+      if (!whatsappResult.success) {
+        lastErrorCode = whatsappResult.error_code;
+        lastErrorMessage = whatsappResult.error_message;
+      }
       
       // Automatic fallback to SMS if WhatsApp fails and SMS wasn't already tried
-      if (!whatsappSent && delivery_method === 'whatsapp') {
+      if (!whatsappResult.success && delivery_method === 'whatsapp') {
         console.log('WhatsApp failed, falling back to SMS');
-        smsSent = await sendViaSMS(phone_number, otpCode);
-        if (smsSent) {
+        smsResult = await sendViaSMS(phone_number, otpCode);
+        if (smsResult.success) {
           actualDeliveryMethod = 'sms';
+        } else {
+          lastErrorCode = smsResult.error_code;
+          lastErrorMessage = smsResult.error_message;
         }
       }
     }
 
     // Check if at least one delivery succeeded
-    const deliverySuccessful = smsSent || whatsappSent;
+    const deliverySuccessful = smsResult.success || whatsappResult.success;
 
     if (!deliverySuccessful) {
+      // Return specific error code for better client-side handling
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to send OTP via any delivery method',
-          details: 'Both SMS and WhatsApp delivery failed. Please check your phone number and try again.'
+          error: 'Failed to send OTP',
+          error_code: lastErrorCode || 'DELIVERY_FAILED',
+          details: lastErrorMessage || 'Unable to deliver verification code. Please check your phone number and try again.',
+          delivery_attempts: {
+            sms: { success: smsResult.success, error: smsResult.error_message },
+            whatsapp: { success: whatsappResult.success, error: whatsappResult.error_message }
+          }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
       );
@@ -215,10 +261,10 @@ serve(async (req) => {
         otp_type,
         delivery_method: actualDeliveryMethod,
         expires_at: expiresAt,
-        sms_sent: smsSent,
-        sms_sent_at: smsSent ? new Date().toISOString() : null,
-        whatsapp_sent: whatsappSent,
-        whatsapp_sent_at: whatsappSent ? new Date().toISOString() : null,
+        sms_sent: smsResult.success,
+        sms_sent_at: smsResult.success ? new Date().toISOString() : null,
+        whatsapp_sent: whatsappResult.success,
+        whatsapp_sent_at: whatsappResult.success ? new Date().toISOString() : null,
         ip_address: clientIp,
         user_agent: userAgent,
       })
@@ -237,8 +283,8 @@ serve(async (req) => {
         success: true,
         message: 'OTP sent successfully',
         delivery_status: {
-          sms: smsSent,
-          whatsapp: whatsappSent,
+          sms: smsResult.success,
+          whatsapp: whatsappResult.success,
         },
         expires_at: expiresAt,
         otp_id: otpRecord.id,
