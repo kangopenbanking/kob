@@ -81,24 +81,31 @@ Deno.serve(async (req) => {
 
     console.log('Creating PostiQ code for coordinates:', { latitude, longitude });
 
+    // Use hardcoded base URL as fallback - the correct URL should end with /functions/v1
+    const baseUrl = Deno.env.get('POSTIQ_BASE_URL') || 'https://postiq.cam/functions/v1';
+    // Ensure the base URL is correct (should end with /functions/v1)
+    const apiBaseUrl = baseUrl.endsWith('/functions/v1') 
+      ? baseUrl 
+      : 'https://postiq.cam/functions/v1';
+    
+    const fullUrl = `${apiBaseUrl}/api-create-postcode`;
+    console.log('Calling PostiQ API at:', fullUrl);
+
     // Call PostiQ API
-    const postiqResponse = await fetch(
-      `${Deno.env.get('POSTIQ_BASE_URL')}/api-create-postcode`,
-      {
-        method: 'POST',
-        headers: {
-          'X-API-Key': Deno.env.get('POSTIQ_API_KEY')!,
-          'X-API-Secret': Deno.env.get('POSTIQ_API_SECRET')!,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          latitude,
-          longitude,
-          precision,
-          ...addressDetails
-        })
-      }
-    );
+    const postiqResponse = await fetch(fullUrl, {
+      method: 'POST',
+      headers: {
+        'X-API-Key': Deno.env.get('POSTIQ_API_KEY')!,
+        'X-API-Secret': Deno.env.get('POSTIQ_API_SECRET')!,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        latitude,
+        longitude,
+        precision,
+        ...addressDetails
+      })
+    });
 
     // Check content type before parsing
     const contentType = postiqResponse.headers.get('content-type') || '';
