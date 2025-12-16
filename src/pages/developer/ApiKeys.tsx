@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -202,17 +201,14 @@ export default function ApiKeys() {
 
   if (loading) {
     return (
-      <DeveloperLayout>
-        <div className="flex items-center justify-center h-64">
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </DeveloperLayout>
+      <div className="flex items-center justify-center h-64">
+        <p className="text-muted-foreground">Loading...</p>
+      </div>
     );
   }
 
   return (
-    <DeveloperLayout>
-      <div className="space-y-6">
+    <div className="space-y-6 p-6">
         <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">API Keys</h1>
@@ -496,6 +492,5 @@ export default function ApiKeys() {
           </DialogContent>
         </Dialog>
       </div>
-    </DeveloperLayout>
   );
 }
