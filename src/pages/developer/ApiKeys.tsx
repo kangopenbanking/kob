@@ -103,7 +103,21 @@ export default function ApiKeys() {
 
   const handleCreateApp = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to create API credentials",
+          variant: "destructive"
+        });
+        navigate('/auth');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('developer-register-app', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: formData
       });
 
@@ -129,11 +143,11 @@ export default function ApiKeys() {
         api_environment: "sandbox",
         rate_limit_tier: "free"
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating app:', error);
       toast({
         title: "Error",
-        description: "Failed to create API credentials",
+        description: error.message || "Failed to create API credentials",
         variant: "destructive"
       });
     }

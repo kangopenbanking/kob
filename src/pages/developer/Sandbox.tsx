@@ -77,7 +77,17 @@ export default function Sandbox() {
   const createSandboxAccount = async () => {
     setSubmitting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please log in to create a sandbox account');
+        navigate('/auth');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('sandbox-create-account', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: { company_name: companyName, website, description }
       });
 
@@ -96,7 +106,17 @@ export default function Sandbox() {
   const createApiKey = async () => {
     setSubmitting(true);
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error('Please log in to create an API key');
+        navigate('/auth');
+        return;
+      }
+
       const { data, error } = await supabase.functions.invoke('sandbox-create-api-key', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: { key_name: keyName || 'Default Key' }
       });
 
