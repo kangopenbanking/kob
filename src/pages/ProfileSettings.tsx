@@ -26,7 +26,7 @@ export default function ProfileSettings() {
   
   const [countryCode, setCountryCode] = useState('+237');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState<'sms' | 'whatsapp' | 'both'>('both');
+  const [deliveryMethod, setDeliveryMethod] = useState<'sms' | 'whatsapp' | 'auto'>('auto');
   const [otpCode, setOtpCode] = useState('');
   const [showOTPInput, setShowOTPInput] = useState(false);
   const [pinCode, setPinCode] = useState('');
@@ -260,7 +260,7 @@ export default function ProfileSettings() {
 
               <div className="space-y-2">
                 <Label>Delivery Method</Label>
-                <RadioGroup value={deliveryMethod} onValueChange={(v: any) => setDeliveryMethod(v)}>
+                <RadioGroup value={deliveryMethod} onValueChange={(v: 'sms' | 'whatsapp' | 'auto') => setDeliveryMethod(v)}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="sms" id="sms-pref" />
                     <Label htmlFor="sms-pref" className="font-normal">SMS</Label>
@@ -270,8 +270,8 @@ export default function ProfileSettings() {
                     <Label htmlFor="whatsapp-pref" className="font-normal">WhatsApp</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="both" id="both-pref" />
-                    <Label htmlFor="both-pref" className="font-normal">Both</Label>
+                    <RadioGroupItem value="auto" id="auto-pref" />
+                    <Label htmlFor="auto-pref" className="font-normal">Auto (SMS with WhatsApp fallback)</Label>
                   </div>
                 </RadioGroup>
               </div>
