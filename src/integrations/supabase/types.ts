@@ -293,49 +293,73 @@ export type Database = {
       api_clients: {
         Row: {
           allowed_ips: Json | null
+          api_environment: string | null
           client_id: string
           client_name: string
           client_secret_hash: string
           created_at: string | null
+          developer_company: string | null
+          developer_email: string | null
+          developer_use_case: string | null
           expires_at: string | null
           grant_types: Json
           id: string
           institution_id: string | null
           is_active: boolean | null
+          last_request_at: string | null
           last_rotated_at: string | null
+          monthly_requests_limit: number | null
+          rate_limit_tier: string | null
           redirect_uris: Json
+          requests_used: number | null
           scopes: Json
           updated_at: string | null
         }
         Insert: {
           allowed_ips?: Json | null
+          api_environment?: string | null
           client_id: string
           client_name: string
           client_secret_hash: string
           created_at?: string | null
+          developer_company?: string | null
+          developer_email?: string | null
+          developer_use_case?: string | null
           expires_at?: string | null
           grant_types?: Json
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          last_request_at?: string | null
           last_rotated_at?: string | null
+          monthly_requests_limit?: number | null
+          rate_limit_tier?: string | null
           redirect_uris?: Json
+          requests_used?: number | null
           scopes?: Json
           updated_at?: string | null
         }
         Update: {
           allowed_ips?: Json | null
+          api_environment?: string | null
           client_id?: string
           client_name?: string
           client_secret_hash?: string
           created_at?: string | null
+          developer_company?: string | null
+          developer_email?: string | null
+          developer_use_case?: string | null
           expires_at?: string | null
           grant_types?: Json
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          last_request_at?: string | null
           last_rotated_at?: string | null
+          monthly_requests_limit?: number | null
+          rate_limit_tier?: string | null
           redirect_uris?: Json
+          requests_used?: number | null
           scopes?: Json
           updated_at?: string | null
         }

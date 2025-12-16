@@ -445,3 +445,7 @@ verify_jwt = true
 # Institution Registration
 [functions.institution-register]
 verify_jwt = true
+
+# Institution API Client Creation
+[functions.institution-create-client]
+verify_jwt = true

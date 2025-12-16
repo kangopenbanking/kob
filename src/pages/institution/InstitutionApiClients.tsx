@@ -42,9 +42,12 @@ export default function InstitutionApiClients() {
   const [clients, setClients] = useState<ApiClient[]>([]);
   const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [secretDialogOpen, setSecretDialogOpen] = useState(false);
   const [newClientName, setNewClientName] = useState("");
   const [newRedirectUri, setNewRedirectUri] = useState("");
   const [creating, setCreating] = useState(false);
+  const [newClientId, setNewClientId] = useState("");
+  const [newClientSecret, setNewClientSecret] = useState("");
 
   useEffect(() => {
     loadClients();
@@ -111,7 +114,21 @@ export default function InstitutionApiClients() {
     
     setCreating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('admin-create-client', {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication required",
+          description: "Please log in to create an API client",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('institution-create-client', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        },
         body: {
           client_name: newClientName,
           institution_id: institutionId,
@@ -123,19 +140,25 @@ export default function InstitutionApiClients() {
 
       if (error) throw error;
 
+      // Show secret dialog with credentials
+      setNewClientId(data.client_id);
+      setNewClientSecret(data.client_secret);
+      setCreateDialogOpen(false);
+      setSecretDialogOpen(true);
+      setNewClientName("");
+      setNewRedirectUri("");
+      
       toast({
         title: "API Client Created",
         description: "Your new API client has been created successfully.",
       });
 
-      setCreateDialogOpen(false);
-      setNewClientName("");
-      setNewRedirectUri("");
       loadClients();
     } catch (error: any) {
+      console.error('Error creating client:', error);
       toast({
         title: "Error creating client",
-        description: error.message,
+        description: error.message || "Failed to create API client",
         variant: "destructive",
       });
     } finally {
@@ -228,6 +251,52 @@ export default function InstitutionApiClients() {
                   </Button>
                   <Button onClick={createClient} disabled={!newClientName || creating}>
                     {creating ? "Creating..." : "Create Client"}
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+
+            {/* Secret Dialog */}
+            <Dialog open={secretDialogOpen} onOpenChange={setSecretDialogOpen}>
+              <DialogContent className="max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>API Client Created</DialogTitle>
+                  <DialogDescription>
+                    Save these credentials securely. The client secret will not be shown again.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                      ⚠️ Store your client secret in a secure location. You will not be able to view it again.
+                    </p>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Client ID</Label>
+                    <div className="flex gap-2">
+                      <Input value={newClientId} readOnly className="font-mono text-sm" />
+                      <Button variant="outline" size="sm" onClick={() => copyToClipboard(newClientId, "Client ID")}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Client Secret</Label>
+                    <div className="flex gap-2">
+                      <Input value={newClientSecret} readOnly className="font-mono text-sm" />
+                      <Button variant="outline" size="sm" onClick={() => copyToClipboard(newClientSecret, "Client Secret")}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-end">
+                  <Button onClick={() => {
+                    setSecretDialogOpen(false);
+                    setNewClientId("");
+                    setNewClientSecret("");
+                  }}>
+                    I've Saved My Credentials
                   </Button>
                 </div>
               </DialogContent>
