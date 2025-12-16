@@ -1,5 +1,4 @@
 // Shared security utilities for edge functions
-import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
 
 /**
  * Generate a cryptographically secure token (256-bit)
@@ -11,18 +10,47 @@ export function generateSecureToken(): string {
 }
 
 /**
- * Hash a secret using bcrypt (for client secrets, passwords)
+ * Hash a secret using SHA-256 with salt (compatible with Edge Functions)
  */
 export async function hashSecret(secret: string): Promise<string> {
-  return await bcrypt.hash(secret, '12');
+  // Generate a random salt
+  const salt = generateSecureToken().substring(0, 32);
+  
+  // Combine salt and secret
+  const encoder = new TextEncoder();
+  const data = encoder.encode(salt + secret);
+  
+  // Hash using SHA-256
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  
+  // Return salt:hash format
+  return `${salt}:${hashHex}`;
 }
 
 /**
  * Verify a secret against a hash
  */
-export async function verifySecret(secret: string, hash: string): Promise<boolean> {
+export async function verifySecret(secret: string, storedHash: string): Promise<boolean> {
   try {
-    return await bcrypt.compare(secret, hash);
+    const [salt, hash] = storedHash.split(':');
+    if (!salt || !hash) return false;
+    
+    // Recompute hash with same salt
+    const encoder = new TextEncoder();
+    const data = encoder.encode(salt + secret);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const computedHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    
+    // Constant-time comparison
+    if (hash.length !== computedHash.length) return false;
+    let result = 0;
+    for (let i = 0; i < hash.length; i++) {
+      result |= hash.charCodeAt(i) ^ computedHash.charCodeAt(i);
+    }
+    return result === 0;
   } catch {
     return false;
   }
