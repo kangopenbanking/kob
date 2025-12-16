@@ -198,6 +198,123 @@ export type Database = {
           },
         ]
       }
+      address_collection_items: {
+        Row: {
+          added_at: string | null
+          address_id: string
+          collection_id: string
+          id: string
+        }
+        Insert: {
+          added_at?: string | null
+          address_id: string
+          collection_id: string
+          id?: string
+        }
+        Update: {
+          added_at?: string | null
+          address_id?: string
+          collection_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "address_collection_items_address_id_fkey"
+            columns: ["address_id"]
+            isOneToOne: false
+            referencedRelation: "user_addresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "address_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "address_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      address_collections: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          is_default: boolean | null
+          name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_default?: boolean | null
+          name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      address_imports: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          error_details: Json | null
+          failed_imports: number | null
+          file_name: string
+          file_type: string | null
+          id: string
+          started_at: string | null
+          status: string | null
+          successful_imports: number | null
+          total_rows: number | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_details?: Json | null
+          failed_imports?: number | null
+          file_name: string
+          file_type?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string | null
+          successful_imports?: number | null
+          total_rows?: number | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          error_details?: Json | null
+          failed_imports?: number | null
+          file_name?: string
+          file_type?: string | null
+          id?: string
+          started_at?: string | null
+          status?: string | null
+          successful_imports?: number | null
+          total_rows?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_anomaly_reports: {
         Row: {
           ai_analysis: string
@@ -7842,6 +7959,60 @@ export type Database = {
           last_used_at?: string | null
           os?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      user_addresses: {
+        Row: {
+          created_at: string | null
+          full_address: string | null
+          id: string
+          is_primary: boolean | null
+          is_verified: boolean | null
+          label: string
+          latitude: number | null
+          longitude: number | null
+          metadata: Json | null
+          notes: string | null
+          postiq_code: string | null
+          updated_at: string | null
+          user_id: string
+          verification_method: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          full_address?: string | null
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          label: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          postiq_code?: string | null
+          updated_at?: string | null
+          user_id: string
+          verification_method?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          full_address?: string | null
+          id?: string
+          is_primary?: boolean | null
+          is_verified?: boolean | null
+          label?: string
+          latitude?: number | null
+          longitude?: number | null
+          metadata?: Json | null
+          notes?: string | null
+          postiq_code?: string | null
+          updated_at?: string | null
+          user_id?: string
+          verification_method?: string | null
+          verified_at?: string | null
         }
         Relationships: []
       }
