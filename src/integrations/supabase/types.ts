@@ -3718,6 +3718,42 @@ export type Database = {
           },
         ]
       }
+      idempotency_keys: {
+        Row: {
+          client_id: string
+          created_at: string
+          endpoint: string
+          expires_at: string
+          id: string
+          idempotency_key: string
+          payload_hash: string
+          response_body: Json | null
+          response_status: number | null
+        }
+        Insert: {
+          client_id: string
+          created_at?: string
+          endpoint: string
+          expires_at?: string
+          id?: string
+          idempotency_key: string
+          payload_hash: string
+          response_body?: Json | null
+          response_status?: number | null
+        }
+        Update: {
+          client_id?: string
+          created_at?: string
+          endpoint?: string
+          expires_at?: string
+          id?: string
+          idempotency_key?: string
+          payload_hash?: string
+          response_body?: Json | null
+          response_status?: number | null
+        }
+        Relationships: []
+      }
       incident_logs: {
         Row: {
           affected_services: string[] | null
@@ -4016,6 +4052,57 @@ export type Database = {
             columns: ["main_branch_id"]
             isOneToOne: false
             referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interest_accruals: {
+        Row: {
+          accrual_date: string
+          accrued_amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          id: string
+          interest_rate: number
+          journal_entry_id: string | null
+          savings_account_id: string
+        }
+        Insert: {
+          accrual_date: string
+          accrued_amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          id?: string
+          interest_rate: number
+          journal_entry_id?: string | null
+          savings_account_id: string
+        }
+        Update: {
+          accrual_date?: string
+          accrued_amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          journal_entry_id?: string | null
+          savings_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interest_accruals_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interest_accruals_savings_account_id_fkey"
+            columns: ["savings_account_id"]
+            isOneToOne: false
+            referencedRelation: "savings_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -4407,6 +4494,111 @@ export type Database = {
           },
         ]
       }
+      journal_entries: {
+        Row: {
+          created_at: string
+          description: string
+          entry_date: string
+          entry_number: string
+          id: string
+          institution_id: string | null
+          is_reversed: boolean
+          metadata: Json | null
+          posted_by: string | null
+          reference_id: string | null
+          reference_type: string | null
+          reversal_of: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          entry_date?: string
+          entry_number: string
+          id?: string
+          institution_id?: string | null
+          is_reversed?: boolean
+          metadata?: Json | null
+          posted_by?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          reversal_of?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          entry_date?: string
+          entry_number?: string
+          id?: string
+          institution_id?: string | null
+          is_reversed?: boolean
+          metadata?: Json | null
+          posted_by?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          reversal_of?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_entries_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_entries_reversal_of_fkey"
+            columns: ["reversal_of"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      journal_lines: {
+        Row: {
+          created_at: string
+          credit: number
+          debit: number
+          description: string | null
+          id: string
+          journal_entry_id: string
+          ledger_account_id: string
+        }
+        Insert: {
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          journal_entry_id: string
+          ledger_account_id: string
+        }
+        Update: {
+          created_at?: string
+          credit?: number
+          debit?: number
+          description?: string | null
+          id?: string
+          journal_entry_id?: string
+          ledger_account_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journal_lines_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "journal_lines_ledger_account_id_fkey"
+            columns: ["ledger_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jwt_secrets: {
         Row: {
           created_at: string | null
@@ -4505,6 +4697,66 @@ export type Database = {
           verified_by?: string | null
         }
         Relationships: []
+      }
+      ledger_accounts: {
+        Row: {
+          account_code: string
+          account_name: string
+          account_type: string
+          balance: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          institution_id: string | null
+          is_active: boolean
+          parent_account_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_code: string
+          account_name: string
+          account_type: string
+          balance?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean
+          parent_account_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_code?: string
+          account_name?: string
+          account_type?: string
+          balance?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean
+          parent_account_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ledger_accounts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ledger_accounts_parent_account_id_fkey"
+            columns: ["parent_account_id"]
+            isOneToOne: false
+            referencedRelation: "ledger_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       load_test_results: {
         Row: {
@@ -4750,6 +5002,41 @@ export type Database = {
           },
         ]
       }
+      loan_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          loan_id: string
+          metadata: Json | null
+          performed_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          loan_id: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          loan_id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_events_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loan_payments: {
         Row: {
           amount: number
@@ -4966,6 +5253,129 @@ export type Database = {
             columns: ["loan_account_id"]
             isOneToOne: false
             referencedRelation: "loan_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_repayments: {
+        Row: {
+          amount: number
+          created_at: string
+          fees_paid: number
+          id: string
+          interest_paid: number
+          journal_entry_id: string | null
+          loan_id: string
+          payment_method: string | null
+          payment_reference: string | null
+          penalty_paid: number
+          principal_paid: number
+          schedule_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          fees_paid?: number
+          id?: string
+          interest_paid?: number
+          journal_entry_id?: string | null
+          loan_id: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          penalty_paid?: number
+          principal_paid?: number
+          schedule_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          fees_paid?: number
+          id?: string
+          interest_paid?: number
+          journal_entry_id?: string | null
+          loan_id?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          penalty_paid?: number
+          principal_paid?: number
+          schedule_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_repayments_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "loan_repayments_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: false
+            referencedRelation: "loan_schedule"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_schedule: {
+        Row: {
+          created_at: string
+          due_date: string
+          fee_amount: number
+          id: string
+          installment_number: number
+          interest_amount: number
+          loan_id: string
+          paid_amount: number
+          paid_at: string | null
+          principal_amount: number
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          due_date: string
+          fee_amount?: number
+          id?: string
+          installment_number: number
+          interest_amount?: number
+          loan_id: string
+          paid_amount?: number
+          paid_at?: string | null
+          principal_amount?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          due_date?: string
+          fee_amount?: number
+          id?: string
+          installment_number?: number
+          interest_amount?: number
+          loan_id?: string
+          paid_amount?: number
+          paid_at?: string | null
+          principal_amount?: number
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_schedule_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
             referencedColumns: ["id"]
           },
         ]
@@ -5290,6 +5700,94 @@ export type Database = {
           used_at?: string | null
         }
         Relationships: []
+      }
+      payment_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          new_status: string | null
+          payment_id: string
+          performed_by: string | null
+          previous_status: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          payment_id: string
+          performed_by?: string | null
+          previous_status?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          payment_id?: string
+          performed_by?: string | null
+          previous_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_routes: {
+        Row: {
+          attempt_number: number
+          created_at: string
+          error_message: string | null
+          external_reference: string | null
+          id: string
+          metadata: Json | null
+          payment_id: string
+          rail: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          attempt_number?: number
+          created_at?: string
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_id: string
+          rail: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          attempt_number?: number
+          created_at?: string
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_id?: string
+          rail?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_routes_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "payments"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payments: {
         Row: {
@@ -8314,6 +8812,42 @@ export type Database = {
           },
         ]
       }
+      webhook_inbox: {
+        Row: {
+          created_at: string
+          event_id: string | null
+          id: string
+          is_processed: boolean
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          signature: string | null
+          source: string
+        }
+        Insert: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          is_processed?: boolean
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          signature?: string | null
+          source: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string | null
+          id?: string
+          is_processed?: boolean
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          signature?: string | null
+          source?: string
+        }
+        Relationships: []
+      }
       webhooks: {
         Row: {
           client_id: string
@@ -8553,6 +9087,7 @@ export type Database = {
       cleanup_expired_auth_codes: { Args: never; Returns: undefined }
       cleanup_expired_auth_records: { Args: never; Returns: undefined }
       cleanup_expired_certificates: { Args: never; Returns: undefined }
+      cleanup_expired_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
       cleanup_expired_par_requests: { Args: never; Returns: undefined }
       encrypt_sandbox_credentials: {
