@@ -27,7 +27,7 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/aisp-create-consent"
+          endpoint="/v1/aisp/consents"
           description="Create a new AISP consent to access customer account information"
           requestBody={`{
   "Data": {
@@ -38,15 +38,15 @@ export default function AispReference() {
       "ReadTransactionsBasic",
       "ReadTransactionsDetail"
     ],
-    "ExpirationDateTime": "2025-12-31T23:59:59Z"
+    "ExpirationDateTime": "2026-12-31T23:59:59Z"
   }
 }`}
           response={`{
   "Data": {
     "ConsentId": "consent_abc123",
     "Status": "AwaitingAuthorisation",
-    "CreationDateTime": "2025-10-27T10:00:00Z",
-    "StatusUpdateDateTime": "2025-10-27T10:00:00Z",
+    "CreationDateTime": "2026-02-16T10:00:00Z",
+    "StatusUpdateDateTime": "2026-02-16T10:00:00Z",
     "Permissions": [
       "ReadAccountsBasic",
       "ReadAccountsDetail",
@@ -54,7 +54,7 @@ export default function AispReference() {
       "ReadTransactionsBasic",
       "ReadTransactionsDetail"
     ],
-    "ExpirationDateTime": "2025-12-31T23:59:59Z"
+    "ExpirationDateTime": "2026-12-31T23:59:59Z"
   }
 }`}
         />
@@ -66,7 +66,7 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="GET"
-          endpoint="/aisp-accounts"
+          endpoint="/v1/aisp/accounts"
           description="Retrieve all accounts associated with the authenticated customer"
           parameters={[
             { name: "x-consent-id", type: "string", required: true, description: "Valid AISP consent ID" }
@@ -89,14 +89,14 @@ export default function AispReference() {
     ]
   },
   "Links": {
-    "Self": "/aisp/accounts"
+    "Self": "/v1/aisp/accounts"
   }
 }`}
         />
 
         <ApiEndpoint
           method="GET"
-          endpoint="/api-account-detail/{accountId}"
+          endpoint="/v1/aisp/accounts/{accountId}"
           description="Get detailed information for a specific account"
           parameters={[
             { name: "accountId", type: "string", required: true, description: "Unique account identifier" },
@@ -128,7 +128,7 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="GET"
-          endpoint="/aisp-balances/{accountId}"
+          endpoint="/v1/aisp/accounts/{accountId}/balances"
           description="Retrieve current balance information for an account"
           parameters={[
             { name: "accountId", type: "string", required: true, description: "Unique account identifier" },
@@ -145,7 +145,7 @@ export default function AispReference() {
         },
         "CreditDebitIndicator": "Credit",
         "Type": "InterimAvailable",
-        "DateTime": "2025-10-27T10:00:00Z"
+        "DateTime": "2026-02-16T10:00:00Z"
       },
       {
         "AccountId": "acc_123456",
@@ -155,7 +155,7 @@ export default function AispReference() {
         },
         "CreditDebitIndicator": "Credit",
         "Type": "InterimBooked",
-        "DateTime": "2025-10-27T10:00:00Z"
+        "DateTime": "2026-02-16T10:00:00Z"
       }
     ]
   }
@@ -169,13 +169,15 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="GET"
-          endpoint="/aisp-transactions/{accountId}"
-          description="Retrieve transaction history for an account with optional filtering"
+          endpoint="/v1/aisp/accounts/{accountId}/transactions"
+          description="Retrieve transaction history for an account with optional filtering and pagination"
           parameters={[
             { name: "accountId", type: "string", required: true, description: "Unique account identifier" },
             { name: "x-consent-id", type: "string", required: true, description: "Valid AISP consent ID" },
             { name: "fromBookingDateTime", type: "string", required: false, description: "Start date for transaction history (ISO 8601)" },
-            { name: "toBookingDateTime", type: "string", required: false, description: "End date for transaction history (ISO 8601)" }
+            { name: "toBookingDateTime", type: "string", required: false, description: "End date for transaction history (ISO 8601)" },
+            { name: "limit", type: "integer", required: false, description: "Number of results per page (default: 25, max: 100)" },
+            { name: "offset", type: "integer", required: false, description: "Offset for pagination (default: 0)" }
           ]}
           response={`{
   "Data": {
@@ -189,7 +191,7 @@ export default function AispReference() {
         },
         "CreditDebitIndicator": "Debit",
         "Status": "Booked",
-        "BookingDateTime": "2025-10-26T14:30:00Z",
+        "BookingDateTime": "2026-02-15T14:30:00Z",
         "TransactionInformation": "Mobile Money Transfer",
         "Balance": {
           "Amount": {
@@ -201,6 +203,11 @@ export default function AispReference() {
         }
       }
     ]
+  },
+  "Meta": {
+    "TotalCount": 156,
+    "Limit": 25,
+    "Offset": 0
   }
 }`}
         />
@@ -212,7 +219,7 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="GET"
-          endpoint="/aisp-beneficiaries/{accountId}"
+          endpoint="/v1/aisp/accounts/{accountId}/beneficiaries"
           description="Get list of beneficiaries for an account"
           parameters={[
             { name: "accountId", type: "string", required: true, description: "Unique account identifier" },
@@ -242,7 +249,7 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="GET"
-          endpoint="/aisp-standing-orders/{accountId}"
+          endpoint="/v1/aisp/accounts/{accountId}/standing-orders"
           description="Retrieve standing orders configured for an account"
           parameters={[
             { name: "accountId", type: "string", required: true, description: "Unique account identifier" },
@@ -256,9 +263,9 @@ export default function AispReference() {
         "StandingOrderId": "so_001",
         "Frequency": "Monthly",
         "Reference": "Subscription Payment",
-        "FirstPaymentDateTime": "2025-01-01T00:00:00Z",
-        "NextPaymentDateTime": "2025-11-01T00:00:00Z",
-        "FinalPaymentDateTime": "2026-01-01T00:00:00Z",
+        "FirstPaymentDateTime": "2026-01-01T00:00:00Z",
+        "NextPaymentDateTime": "2026-03-01T00:00:00Z",
+        "FinalPaymentDateTime": "2027-01-01T00:00:00Z",
         "FirstPaymentAmount": {
           "Amount": "5000.00",
           "Currency": "XAF"
@@ -280,7 +287,7 @@ export default function AispReference() {
         
         <ApiEndpoint
           method="GET"
-          endpoint="/aisp-direct-debits/{accountId}"
+          endpoint="/v1/aisp/accounts/{accountId}/direct-debits"
           description="Get direct debit mandates for an account"
           parameters={[
             { name: "accountId", type: "string", required: true, description: "Unique account identifier" },
@@ -295,7 +302,7 @@ export default function AispReference() {
         "MandateIdentification": "mandate_123",
         "DirectDebitStatusCode": "Active",
         "Name": "Utility Company",
-        "PreviousPaymentDateTime": "2025-09-27T00:00:00Z",
+        "PreviousPaymentDateTime": "2026-01-27T00:00:00Z",
         "PreviousPaymentAmount": {
           "Amount": "12000.00",
           "Currency": "XAF"

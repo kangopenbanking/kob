@@ -18,7 +18,7 @@ export default function MobileMoneyReference() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Mobile money transactions are processed in XAF (Central African Franc). Supported providers: MTN, Orange, Express Union.
+          Mobile money transactions are processed in XAF. All POST endpoints require an <code className="bg-muted px-2 py-1 rounded">Idempotency-Key</code> header (UUID, 24h expiry).
         </AlertDescription>
       </Alert>
 
@@ -52,8 +52,8 @@ export default function MobileMoneyReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/mobile-money-charge"
-          description="Initiate a mobile money collection from a customer's wallet"
+          endpoint="/v1/mobile-money/charge"
+          description="Initiate a mobile money collection from a customer's wallet. Requires Idempotency-Key header."
           requestBody={`{
   "amount": 5000,
   "currency": "XAF",
@@ -74,7 +74,7 @@ export default function MobileMoneyReference() {
     "currency": "XAF",
     "payment_type": "mobilemoneycm",
     "status": "pending",
-    "created_at": "2025-10-27T10:00:00Z"
+    "created_at": "2026-02-16T10:00:00Z"
   }
 }`}
         />
@@ -96,7 +96,7 @@ export default function MobileMoneyReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/mobile-money-verify"
+          endpoint="/v1/mobile-money/verify"
           description="Verify the status of a mobile money transaction"
           requestBody={`{
   "transaction_id": "4534334"
@@ -112,7 +112,7 @@ export default function MobileMoneyReference() {
     "currency": "XAF",
     "status": "successful",
     "payment_type": "mobilemoneycm",
-    "created_at": "2025-10-27T10:00:00Z",
+    "created_at": "2026-02-16T10:00:00Z",
     "customer": {
       "phone_number": "237677123456",
       "email": "customer@example.com",
@@ -129,8 +129,8 @@ export default function MobileMoneyReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/mobile-money-transfer"
-          description="Send money to a mobile money wallet (payouts/disbursements)"
+          endpoint="/v1/mobile-money/transfer"
+          description="Send money to a mobile money wallet (payouts/disbursements). Requires Idempotency-Key header."
           requestBody={`{
   "amount": 10000,
   "currency": "XAF",
@@ -150,7 +150,7 @@ export default function MobileMoneyReference() {
     "provider": "mtn",
     "status": "processing",
     "reference": "payout_67890",
-    "created_at": "2025-10-27T10:00:00Z"
+    "created_at": "2026-02-16T10:00:00Z"
   }
 }`}
         />
@@ -162,8 +162,8 @@ export default function MobileMoneyReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/mobile-money-to-bank"
-          description="Transfer funds from mobile money wallet to a bank account"
+          endpoint="/v1/mobile-money/to-bank"
+          description="Transfer funds from mobile money wallet to a bank account. Requires Idempotency-Key header."
           requestBody={`{
   "amount": 50000,
   "currency": "XAF",
@@ -187,7 +187,7 @@ export default function MobileMoneyReference() {
     "destination_account": "1234567890",
     "bank_code": "COBACMCX",
     "reference": "MM_TO_BANK_001",
-    "estimated_completion": "2025-10-27T14:00:00Z"
+    "estimated_completion": "2026-02-16T14:00:00Z"
   }
 }`}
         />
@@ -225,7 +225,7 @@ export default function MobileMoneyReference() {
       <Card>
         <CardHeader>
           <CardTitle>Webhook Notifications</CardTitle>
-          <CardDescription>Receive real-time payment updates</CardDescription>
+          <CardDescription>Receive real-time payment updates (v1 standard envelope)</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm mb-3">
@@ -234,6 +234,8 @@ export default function MobileMoneyReference() {
           <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
             <code>{`{
   "event": "mobilemoney.charge.completed",
+  "event_id": "evt_abc123",
+  "timestamp": "2026-02-16T10:05:00Z",
   "data": {
     "id": 4534334,
     "tx_ref": "order_12345",
@@ -246,9 +248,9 @@ export default function MobileMoneyReference() {
       "phone_number": "237677123456",
       "email": "customer@example.com",
       "name": "John Doe"
-    },
-    "created_at": "2025-10-27T10:00:00Z"
-  }
+    }
+  },
+  "signature": "hmac-sha256-signature"
 }`}</code>
           </pre>
         </CardContent>
@@ -257,29 +259,29 @@ export default function MobileMoneyReference() {
       {/* Error Codes */}
       <Card>
         <CardHeader>
-          <CardTitle>Common Error Codes</CardTitle>
-          <CardDescription>Handle these errors in your integration</CardDescription>
+          <CardTitle>Error Codes</CardTitle>
+          <CardDescription>Domain-prefixed mobile money error codes (RFC 7807)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div>
-              <p className="font-mono text-sm font-semibold">INSUFFICIENT_BALANCE</p>
+              <p className="font-mono text-sm font-semibold">MM_001</p>
               <p className="text-sm text-muted-foreground">Customer's mobile money wallet has insufficient funds</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">INVALID_PHONE_NUMBER</p>
+              <p className="font-mono text-sm font-semibold">MM_002</p>
               <p className="text-sm text-muted-foreground">Phone number format is invalid or not registered with provider</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">TRANSACTION_TIMEOUT</p>
+              <p className="font-mono text-sm font-semibold">MM_003</p>
               <p className="text-sm text-muted-foreground">Customer did not authorize payment within timeout period (usually 2 minutes)</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">PROVIDER_ERROR</p>
+              <p className="font-mono text-sm font-semibold">MM_004</p>
               <p className="text-sm text-muted-foreground">Mobile money operator service temporarily unavailable</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">DAILY_LIMIT_EXCEEDED</p>
+              <p className="font-mono text-sm font-semibold">MM_005</p>
               <p className="text-sm text-muted-foreground">Transaction amount exceeds customer's daily transaction limit</p>
             </div>
           </div>

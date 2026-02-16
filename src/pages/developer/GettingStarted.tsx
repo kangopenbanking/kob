@@ -50,7 +50,7 @@ export default function GettingStarted() {
         </CardContent>
       </Card>
 
-      {/* Step 2: Get Credentials */}
+      {/* Step 2: DCR */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -58,39 +58,51 @@ export default function GettingStarted() {
               2
             </div>
             <div>
-              <CardTitle>Obtain API Credentials</CardTitle>
-              <CardDescription>Generate your client ID and secret for API authentication</CardDescription>
+              <CardTitle>Dynamic Client Registration (DCR)</CardTitle>
+              <CardDescription>Register your application programmatically using your SSA JWT</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p>Once approved, access your API credentials from the dashboard:</p>
-          <ol className="list-decimal list-inside space-y-2 ml-4">
-            <li>Log in to your <Link to="/dashboard" className="text-primary hover:underline">Developer Dashboard</Link></li>
-            <li>Navigate to "API Credentials" section</li>
-            <li>Generate your <code className="bg-muted px-2 py-1 rounded">client_id</code> and <code className="bg-muted px-2 py-1 rounded">client_secret</code></li>
-            <li>Choose between Sandbox and Production environments</li>
-          </ol>
+          <p>After TPP approval, register your client application via DCR:</p>
           
-          <div className="bg-muted/50 border border-border rounded-lg p-4 space-y-2">
-            <p className="font-semibold flex items-center gap-2">
-              <Key className="h-4 w-4" /> Your Credentials
-            </p>
-            <div className="space-y-1 font-mono text-sm">
-              <p><span className="text-muted-foreground">Client ID:</span> your_client_id_here</p>
-              <p><span className="text-muted-foreground">Client Secret:</span> ••••••••••••••••</p>
-            </div>
-          </div>
+          <CodeBlock
+            examples={[
+              {
+                language: "curl",
+                label: "cURL",
+                code: `curl -X POST https://api.kangopenbanking.com/v1/dcr/register \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "software_statement": "YOUR_SSA_JWT",
+    "redirect_uris": ["https://yourapp.com/callback"],
+    "grant_types": ["client_credentials", "authorization_code"],
+    "scope": "openid accounts payments"
+  }'`
+              }
+            ]}
+          />
 
-          <Alert>
-            <AlertDescription>
-              <strong>Security Note:</strong> Never expose your client secret in client-side code or public repositories. Always store it securely on your backend server.
-            </AlertDescription>
-          </Alert>
+          <h4 className="font-semibold">Response</h4>
+          <CodeBlock
+            examples={[
+              {
+                language: "json",
+                code: `{
+  "client_id": "kob_live_xxxxxxxxxxxxxxxx",
+  "client_secret": "kob_secret_xxxxxxxxxxxxxxxx",
+  "client_id_issued_at": 1739750400,
+  "client_secret_expires_at": 0,
+  "grant_types": ["client_credentials", "authorization_code"],
+  "scope": "openid accounts payments"
+}`
+              }
+            ]}
+          />
         </CardContent>
       </Card>
 
-      {/* Step 3: Authentication */}
+      {/* Step 3: Get Credentials */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-3">
@@ -98,21 +110,18 @@ export default function GettingStarted() {
               3
             </div>
             <div>
-              <CardTitle>Implement OAuth 2.0 Authentication</CardTitle>
-              <CardDescription>Secure your API access with industry-standard OAuth 2.0</CardDescription>
+              <CardTitle>Obtain Access Token</CardTitle>
+              <CardDescription>Authenticate using OAuth 2.0 with form-encoded credentials</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p>KOB uses OAuth 2.0 Authorization Code Flow with PKCE for secure authentication:</p>
-          
-          <h4 className="font-semibold">Step 3.1: Generate Access Token</h4>
           <CodeBlock
             examples={[
               {
                 language: "curl",
                 label: "cURL",
-                code: `curl -X POST https://api.kangopenbanking.com/oauth-token \\
+                code: `curl -X POST https://api.kangopenbanking.com/v1/oauth/token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
@@ -123,7 +132,7 @@ export default function GettingStarted() {
                 language: "javascript",
                 label: "Node.js",
                 code: `const response = await fetch(
-  'https://api.kangopenbanking.com/oauth-token',
+  'https://api.kangopenbanking.com/v1/oauth/token',
   {
     method: 'POST',
     headers: {
@@ -147,7 +156,7 @@ const accessToken = data.access_token;`
                 code: `import requests
 
 response = requests.post(
-    'https://api.kangopenbanking.com/oauth-token',
+    'https://api.kangopenbanking.com/v1/oauth/token',
     data={
         'grant_type': 'client_credentials',
         'client_id': 'YOUR_CLIENT_ID',
@@ -176,6 +185,12 @@ access_token = data['access_token']`
               }
             ]}
           />
+
+          <Alert>
+            <AlertDescription>
+              <strong>Security Note:</strong> Never expose your client secret in client-side code or public repositories. Always store it securely on your backend server.
+            </AlertDescription>
+          </Alert>
         </CardContent>
       </Card>
 
@@ -193,14 +208,14 @@ access_token = data['access_token']`
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p>Let's make a simple API call to list accounts:</p>
+          <p>Let's make a simple API call to list accounts (requires an active AISP consent):</p>
           
           <CodeBlock
             examples={[
               {
                 language: "curl",
                 label: "cURL",
-                code: `curl -X GET https://api.kangopenbanking.com/aisp-accounts \\
+                code: `curl -X GET https://api.kangopenbanking.com/v1/aisp/accounts \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "x-consent-id: YOUR_CONSENT_ID"`
               },
@@ -208,7 +223,7 @@ access_token = data['access_token']`
                 language: "javascript",
                 label: "Node.js",
                 code: `const response = await fetch(
-  'https://api.kangopenbanking.com/aisp-accounts',
+  'https://api.kangopenbanking.com/v1/aisp/accounts',
   {
     headers: {
       'Authorization': \`Bearer \${accessToken}\`,
@@ -231,7 +246,7 @@ headers = {
 }
 
 response = requests.get(
-    'https://api.kangopenbanking.com/aisp-accounts',
+    'https://api.kangopenbanking.com/v1/aisp/accounts',
     headers=headers
 )
 

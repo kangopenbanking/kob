@@ -57,7 +57,7 @@ export default function CertificateReference() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted p-4 rounded-lg">
-            <code className="text-sm">POST /functions/v1/certificate-upload</code>
+            <code className="text-sm">POST /v1/certificates/upload</code>
           </div>
           
           <div>
@@ -71,6 +71,14 @@ export default function CertificateReference() {
           </div>
 
           <div>
+            <h4 className="font-semibold mb-2">Headers</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li><code className="bg-muted px-2 py-0.5 rounded">Authorization</code> — Bearer token</li>
+              <li><code className="bg-muted px-2 py-0.5 rounded">Idempotency-Key</code> — UUID (required for POST)</li>
+            </ul>
+          </div>
+
+          <div>
             <h4 className="font-semibold mb-2">Response</h4>
             <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
               <pre className="text-sm">{`{
@@ -79,8 +87,8 @@ export default function CertificateReference() {
   "fingerprint": "SHA256:hex:fingerprint",
   "subject_dn": "CN=Example TPP,O=Example Org",
   "issuer_dn": "CN=CA,O=Certificate Authority",
-  "valid_from": "2025-01-01T00:00:00Z",
-  "valid_until": "2026-01-01T00:00:00Z",
+  "valid_from": "2026-01-01T00:00:00Z",
+  "valid_until": "2027-01-01T00:00:00Z",
   "serial_number": "1234567890"
 }`}</pre>
             </div>
@@ -104,13 +112,13 @@ export default function CertificateReference() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted p-4 rounded-lg">
-            <code className="text-sm">GET /functions/v1/certificate-list?tpp_registration_id=uuid</code>
+            <code className="text-sm">GET /v1/certificates/list?tpp_registration_id=uuid</code>
           </div>
           
           <div>
             <h4 className="font-semibold mb-2">Query Parameters</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li><code className="bg-muted px-2 py-0.5 rounded">tpp_registration_id</code> (optional) - Filter by TPP registration</li>
+              <li><code className="bg-muted px-2 py-0.5 rounded">tpp_registration_id</code> (optional) — Filter by TPP registration</li>
             </ul>
           </div>
 
@@ -125,10 +133,10 @@ export default function CertificateReference() {
       "fingerprint": "SHA256:hex:fingerprint",
       "subject_dn": "CN=Example TPP",
       "status": "active",
-      "valid_until": "2026-01-01T00:00:00Z",
+      "valid_until": "2027-01-01T00:00:00Z",
       "usage_count": 42,
-      "last_used_at": "2025-10-30T12:00:00Z",
-      "days_until_expiry": 365
+      "last_used_at": "2026-02-15T12:00:00Z",
+      "days_until_expiry": 318
     }
   ],
   "count": 1
@@ -154,7 +162,7 @@ export default function CertificateReference() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-muted p-4 rounded-lg">
-            <code className="text-sm">POST /functions/v1/certificate-revoke</code>
+            <code className="text-sm">POST /v1/certificates/revoke</code>
           </div>
           
           <div>
@@ -168,12 +176,20 @@ export default function CertificateReference() {
           </div>
 
           <div>
+            <h4 className="font-semibold mb-2">Headers</h4>
+            <ul className="text-sm text-muted-foreground space-y-1">
+              <li><code className="bg-muted px-2 py-0.5 rounded">Authorization</code> — Bearer token</li>
+              <li><code className="bg-muted px-2 py-0.5 rounded">Idempotency-Key</code> — UUID (required for POST)</li>
+            </ul>
+          </div>
+
+          <div>
             <h4 className="font-semibold mb-2">Response</h4>
             <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
               <pre className="text-sm">{`{
   "success": true,
   "certificate_id": "uuid-of-certificate",
-  "revoked_at": "2025-10-31T00:00:00Z",
+  "revoked_at": "2026-02-16T00:00:00Z",
   "tokens_revoked": 5
 }`}</pre>
             </div>

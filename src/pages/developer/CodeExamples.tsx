@@ -54,7 +54,7 @@ interface Balance {
   Currency: string;
 }
 
-const API_BASE = 'https://api.kangopenbanking.com';
+const API_BASE = 'https://api.kangopenbanking.com/v1';
 
 export default function AccountDashboard() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -72,7 +72,7 @@ export default function AccountDashboard() {
       const consentId = localStorage.getItem('kob_consent_id');
 
       // Fetch accounts
-      const accountsRes = await axios.get(\`\${API_BASE}/aisp-accounts\`, {
+      const accountsRes = await axios.get(\`\${API_BASE}/aisp/accounts\`, {
         headers: {
           'Authorization': \`Bearer \${token}\`,
           'x-consent-id': consentId
@@ -87,7 +87,7 @@ export default function AccountDashboard() {
       await Promise.all(
         accountsList.map(async (account: Account) => {
           const balanceRes = await axios.get(
-            \`\${API_BASE}/aisp-balances/\${account.AccountId}\`,
+            \`\${API_BASE}/aisp/accounts/\${account.AccountId}/balances\`,
             {
               headers: {
                 'Authorization': \`Bearer \${token}\`,
@@ -111,33 +111,18 @@ export default function AccountDashboard() {
     }
   };
 
-  if (loading) {
-    return <div className="flex justify-center p-8">Loading...</div>;
-  }
-
-  if (error) {
-    return <div className="text-red-600 p-8">Error: {error}</div>;
-  }
+  if (loading) return <div className="flex justify-center p-8">Loading...</div>;
+  if (error) return <div className="text-red-600 p-8">Error: {error}</div>;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
       <h1 className="text-3xl font-bold mb-6">My Accounts</h1>
       <div className="grid gap-4">
         {accounts.map((account) => (
-          <div
-            key={account.AccountId}
-            className="border rounded-lg p-6 hover:shadow-lg transition-shadow"
-          >
-            <div className="flex justify-between items-start mb-4">
-              <div>
-                <h3 className="text-xl font-semibold">{account.Nickname}</h3>
-                <p className="text-gray-600">{account.AccountType}</p>
-              </div>
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
-                {account.Currency}
-              </span>
-            </div>
-            <div className="text-3xl font-bold">
+          <div key={account.AccountId} className="border rounded-lg p-6">
+            <h3 className="text-xl font-semibold">{account.Nickname}</h3>
+            <p className="text-muted-foreground">{account.AccountType}</p>
+            <div className="text-3xl font-bold mt-2">
               {balances[account.AccountId]?.Amount || '0.00'} XAF
             </div>
           </div>
@@ -160,7 +145,7 @@ export default function AccountDashboard() {
                   <Code className="h-5 w-5" />
                   Payment Checkout Flow
                 </CardTitle>
-                <CardDescription>Complete payment initiation with user authorization</CardDescription>
+                <CardDescription>Complete payment initiation with idempotency and status polling</CardDescription>
               </div>
               <Badge>React + TypeScript</Badge>
             </div>
@@ -174,21 +159,11 @@ export default function AccountDashboard() {
 import { useState } from 'react';
 import axios from 'axios';
 
-interface PaymentFormData {
-  amount: string;
-  beneficiaryAccount: string;
-  beneficiaryName: string;
-  reference: string;
-}
-
-const API_BASE = 'https://api.kangopenbanking.com';
+const API_BASE = 'https://api.kangopenbanking.com/v1';
 
 export default function PaymentCheckout() {
-  const [formData, setFormData] = useState<PaymentFormData>({
-    amount: '',
-    beneficiaryAccount: '',
-    beneficiaryName: '',
-    reference: ''
+  const [formData, setFormData] = useState({
+    amount: '', beneficiaryAccount: '', beneficiaryName: '', reference: ''
   });
   const [loading, setLoading] = useState(false);
   const [paymentId, setPaymentId] = useState<string | null>(null);
@@ -199,54 +174,45 @@ export default function PaymentCheckout() {
     try {
       const token = localStorage.getItem('kob_token');
 
-      // Step 1: Create payment consent
+      // Step 1: Create consent with Idempotency-Key
       const consentRes = await axios.post(
-        \`\${API_BASE}/pisp-create-consent\`,
+        \`\${API_BASE}/pisp/consents\`,
         {
           Data: {
             Initiation: {
-              InstructedAmount: {
-                Amount: formData.amount,
-                Currency: 'XAF'
-              },
+              InstructedAmount: { Amount: formData.amount, Currency: 'XAF' },
               CreditorAccount: {
                 Identification: formData.beneficiaryAccount,
                 Name: formData.beneficiaryName
               },
-              RemittanceInformation: {
-                Unstructured: formData.reference
-              }
+              RemittanceInformation: { Unstructured: formData.reference }
             }
           }
         },
         {
           headers: {
             'Authorization': \`Bearer \${token}\`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Idempotency-Key': crypto.randomUUID()
           }
         }
       );
 
       const consentId = consentRes.data.Data.ConsentId;
 
-      // Step 2: Initiate payment
+      // Step 2: Initiate payment with Idempotency-Key
       const paymentRes = await axios.post(
-        \`\${API_BASE}/pisp-domestic-payment\`,
+        \`\${API_BASE}/pisp/domestic-payments\`,
         {
           Data: {
             ConsentId: consentId,
             Initiation: {
-              InstructedAmount: {
-                Amount: formData.amount,
-                Currency: 'XAF'
-              },
+              InstructedAmount: { Amount: formData.amount, Currency: 'XAF' },
               CreditorAccount: {
                 Identification: formData.beneficiaryAccount,
                 Name: formData.beneficiaryName
               },
-              RemittanceInformation: {
-                Unstructured: formData.reference
-              },
+              RemittanceInformation: { Unstructured: formData.reference },
               EndToEndIdentification: \`REF-\${Date.now()}\`
             }
           }
@@ -254,33 +220,18 @@ export default function PaymentCheckout() {
         {
           headers: {
             'Authorization': \`Bearer \${token}\`,
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'Idempotency-Key': crypto.randomUUID()
           }
         }
       );
 
       const newPaymentId = paymentRes.data.Data.DomesticPaymentId;
       setPaymentId(newPaymentId);
-      setStatus('awaiting_authorization');
+      setStatus('pending');
 
-      // Step 3: Submit for processing (after user authorization)
-      setTimeout(async () => {
-        await axios.post(
-          \`\${API_BASE}/pisp-payment-submission\`,
-          { Data: { PaymentId: newPaymentId } },
-          {
-            headers: {
-              'Authorization': \`Bearer \${token}\`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        setStatus('processing');
-        
-        // Poll for status
-        pollPaymentStatus(newPaymentId);
-      }, 3000);
-
+      // Step 3: Poll for status
+      pollPaymentStatus(newPaymentId);
     } catch (error) {
       console.error('Payment failed:', error);
       setStatus('failed');
@@ -294,19 +245,16 @@ export default function PaymentCheckout() {
     const interval = setInterval(async () => {
       try {
         const res = await axios.get(
-          \`\${API_BASE}/pisp-payment-details/\${id}\`,
-          {
-            headers: { 'Authorization': \`Bearer \${token}\` }
-          }
+          \`\${API_BASE}/pisp/domestic-payments/\${id}\`,
+          { headers: { 'Authorization': \`Bearer \${token}\` } }
         );
         const paymentStatus = res.data.Data.Status;
         setStatus(paymentStatus);
         
-        if (paymentStatus === 'AcceptedSettlementCompleted') {
+        if (['completed', 'failed', 'cancelled'].includes(paymentStatus)) {
           clearInterval(interval);
         }
       } catch (error) {
-        console.error('Status check failed:', error);
         clearInterval(interval);
       }
     }, 2000);
@@ -315,72 +263,18 @@ export default function PaymentCheckout() {
   return (
     <div className="max-w-md mx-auto p-6">
       <h2 className="text-2xl font-bold mb-6">Make Payment</h2>
-      
-      {status === 'idle' && (
+      {status === 'idle' ? (
         <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Amount (XAF)</label>
-            <input
-              type="number"
-              value={formData.amount}
-              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-              className="w-full p-2 border rounded"
-              placeholder="50000"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Beneficiary Account</label>
-            <input
-              type="text"
-              value={formData.beneficiaryAccount}
-              onChange={(e) => setFormData({ ...formData, beneficiaryAccount: e.target.value })}
-              className="w-full p-2 border rounded"
-              placeholder="677123456"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Beneficiary Name</label>
-            <input
-              type="text"
-              value={formData.beneficiaryName}
-              onChange={(e) => setFormData({ ...formData, beneficiaryName: e.target.value })}
-              className="w-full p-2 border rounded"
-              placeholder="John Doe"
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-1">Reference</label>
-            <input
-              type="text"
-              value={formData.reference}
-              onChange={(e) => setFormData({ ...formData, reference: e.target.value })}
-              className="w-full p-2 border rounded"
-              placeholder="Payment for services"
-            />
-          </div>
-          
-          <button
-            onClick={initiatePayment}
-            disabled={loading}
-            className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-          >
+          {/* Form fields here */}
+          <button onClick={initiatePayment} disabled={loading}
+            className="w-full bg-primary text-primary-foreground py-2 rounded">
             {loading ? 'Processing...' : 'Pay Now'}
           </button>
         </div>
-      )}
-      
-      {status !== 'idle' && (
-        <div className="text-center">
-          <div className="mb-4">
-            <div className="text-lg font-semibold">Payment Status</div>
-            <div className="text-gray-600">Payment ID: {paymentId}</div>
-          </div>
-          <div className="p-4 bg-blue-50 rounded">
-            <div className="font-medium">{status}</div>
-          </div>
+      ) : (
+        <div className="text-center p-4 bg-muted rounded">
+          <p className="font-medium">Payment ID: {paymentId}</p>
+          <p className="mt-2">Status: <strong>{status}</strong></p>
         </div>
       )}
     </div>
@@ -400,7 +294,7 @@ export default function PaymentCheckout() {
                   <Code className="h-5 w-5" />
                   Mobile Money Integration
                 </CardTitle>
-                <CardDescription>Complete mobile money charge implementation</CardDescription>
+                <CardDescription>Complete mobile money charge with webhook handling</CardDescription>
               </div>
               <Badge>Node.js + Express</Badge>
             </div>
@@ -413,154 +307,81 @@ export default function PaymentCheckout() {
                   code: `// mobileMoneyRoutes.js
 const express = require('express');
 const axios = require('axios');
+const crypto = require('crypto');
 const router = express.Router();
 
-const API_BASE = 'https://api.kangopenbanking.com';
+const API_BASE = 'https://api.kangopenbanking.com/v1';
 
 // Initiate mobile money charge
 router.post('/charge', async (req, res) => {
   try {
     const { amount, phone_number, provider, email, fullname, order_id } = req.body;
 
-    // Get access token
-    const tokenRes = await axios.post(\`\${API_BASE}/oauth-token\`, 
+    // Get access token (form-encoded)
+    const tokenRes = await axios.post(\`\${API_BASE}/oauth/token\`, 
       new URLSearchParams({
         grant_type: 'client_credentials',
         client_id: process.env.KOB_CLIENT_ID,
         client_secret: process.env.KOB_CLIENT_SECRET,
         scope: 'payments'
-      })
+      }),
+      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
 
     const token = tokenRes.data.access_token;
 
-    // Initiate charge
+    // Initiate charge with Idempotency-Key
     const chargeRes = await axios.post(
-      \`\${API_BASE}/mobile-money-charge\`,
-      {
-        amount,
-        currency: 'XAF',
-        phone_number,
-        provider,
-        email,
-        tx_ref: order_id,
-        fullname
-      },
+      \`\${API_BASE}/mobile-money/charge\`,
+      { amount, currency: 'XAF', phone_number, provider, email, tx_ref: order_id, fullname },
       {
         headers: {
           'Authorization': \`Bearer \${token}\`,
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Idempotency-Key': crypto.randomUUID()
         }
       }
     );
 
-    // Store transaction in database
-    const transaction = {
-      id: chargeRes.data.data.id,
-      tx_ref: order_id,
-      amount,
-      phone_number,
-      status: 'pending',
-      created_at: new Date()
-    };
-
-    // Save to your database here
-    // await db.transactions.insert(transaction);
-
     res.json({
       success: true,
-      transaction_id: transaction.id,
+      transaction_id: chargeRes.data.data.id,
       message: 'Please check your phone to authorize payment'
     });
-
   } catch (error) {
-    console.error('Mobile money charge failed:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Verify mobile money transaction
-router.get('/verify/:transaction_id', async (req, res) => {
-  try {
-    const { transaction_id } = req.params;
-
-    // Get access token
-    const tokenRes = await axios.post(\`\${API_BASE}/oauth-token\`, 
-      new URLSearchParams({
-        grant_type: 'client_credentials',
-        client_id: process.env.KOB_CLIENT_ID,
-        client_secret: process.env.KOB_CLIENT_SECRET,
-        scope: 'payments'
-      })
-    );
-
-    const token = tokenRes.data.access_token;
-
-    // Verify transaction
-    const verifyRes = await axios.post(
-      \`\${API_BASE}/mobile-money-verify\`,
-      { transaction_id },
-      {
-        headers: {
-          'Authorization': \`Bearer \${token}\`,
-          'Content-Type': 'application/json'
-        }
-      }
-    );
-
-    const status = verifyRes.data.data.status;
-
-    // Update database
-    // await db.transactions.update({ id: transaction_id }, { status });
-
-    res.json({
-      success: true,
-      status,
-      data: verifyRes.data.data
-    });
-
-  } catch (error) {
-    console.error('Verification failed:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// Webhook handler
+// Webhook handler with HMAC-SHA256 signature verification
 router.post('/webhook', express.json(), (req, res) => {
+  const signature = req.headers['x-kob-signature'];
+  const payload = JSON.stringify(req.body);
+
+  const expectedSig = crypto
+    .createHmac('sha256', process.env.KOB_WEBHOOK_SECRET)
+    .update(payload)
+    .digest('hex');
+
+  if (!crypto.timingSafeEqual(
+    Buffer.from(signature || ''),
+    Buffer.from(expectedSig)
+  )) {
+    return res.status(401).json({ error: 'Invalid signature' });
+  }
+
   const event = req.body;
-
-  console.log('Webhook received:', event.event);
-
-  // Handle different event types
   switch (event.event) {
     case 'mobilemoney.charge.completed':
-      handleChargeCompleted(event.data);
+      console.log('Payment completed:', event.data.tx_ref);
       break;
     case 'mobilemoney.charge.failed':
-      handleChargeFailed(event.data);
+      console.log('Payment failed:', event.data.tx_ref);
       break;
   }
 
   res.status(200).json({ received: true });
 });
-
-async function handleChargeCompleted(data) {
-  console.log('Payment completed:', data.id);
-  // Update order status, send confirmation email, etc.
-  // await db.orders.update({ tx_ref: data.tx_ref }, { status: 'paid' });
-}
-
-async function handleChargeFailed(data) {
-  console.log('Payment failed:', data.id);
-  // Handle failure, notify user, etc.
-  // await db.orders.update({ tx_ref: data.tx_ref }, { status: 'failed' });
-}
 
 module.exports = router;`
                 }
@@ -596,14 +417,12 @@ module.exports = router;`
   private tokenExpiry: number = 0;
 
   async getToken(): Promise<string> {
-    // Return cached token if still valid
     if (this.token && Date.now() < this.tokenExpiry) {
       return this.token;
     }
 
-    // Fetch new token
     const response = await fetch(
-      'https://api.kangopenbanking.com/oauth-token',
+      'https://api.kangopenbanking.com/v1/oauth/token',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -618,7 +437,7 @@ module.exports = router;`
 
     const data = await response.json();
     this.token = data.access_token;
-    this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000; // Refresh 1 min early
+    this.tokenExpiry = Date.now() + (data.expires_in * 1000) - 60000;
 
     return this.token;
   }
@@ -635,58 +454,54 @@ export const tokenManager = new TokenManager();`
           <TabsContent value="error" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Comprehensive Error Handling</CardTitle>
+                <CardTitle>RFC 7807 Error Handling</CardTitle>
               </CardHeader>
               <CardContent>
                 <CodeBlock
                   examples={[
                     {
                       language: "typescript",
-                      code: `async function handleKOBRequest<T>(
+                      code: `interface KOBError {
+  error: string;
+  error_code: string;
+  message: string;
+  details?: Record<string, unknown>;
+  error_id: string;
+  timestamp: string;
+}
+
+async function handleKOBRequest<T>(
   requestFn: () => Promise<T>
 ): Promise<{ data?: T; error?: string }> {
   try {
     const data = await requestFn();
     return { data };
   } catch (error: any) {
-    // Handle specific KOB error codes
-    if (error.response?.data?.code) {
-      const code = error.response.data.code;
-      
-      switch (code) {
-        case 'INSUFFICIENT_FUNDS':
+    const kobError = error.response?.data as KOBError;
+    if (kobError?.error_code) {
+      switch (kobError.error_code) {
+        case 'PISP_004':
           return { error: 'Insufficient funds in account' };
-        case 'INVALID_CONSENT':
+        case 'PISP_002':
           return { error: 'Consent has expired. Please re-authorize.' };
-        case 'ACCOUNT_BLOCKED':
+        case 'PISP_003':
           return { error: 'Account is temporarily blocked' };
-        case 'RATE_LIMIT_EXCEEDED':
-          return { error: 'Too many requests. Please try again later.' };
+        case 'MM_003':
+          return { error: 'Payment timed out. Please try again.' };
         default:
-          return { error: error.response.data.error || 'Request failed' };
+          return { error: kobError.message || 'Request failed' };
       }
     }
-    
-    // Handle network errors
-    if (error.code === 'ECONNABORTED') {
-      return { error: 'Request timeout. Please try again.' };
-    }
-    
     return { error: 'An unexpected error occurred' };
   }
 }
 
 // Usage
 const { data, error } = await handleKOBRequest(() =>
-  axios.get('/aisp-accounts', { headers: { 'x-consent-id': consentId } })
-);
-
-if (error) {
-  console.error(error);
-  // Show user-friendly error message
-} else {
-  // Process data
-}`
+  axios.get('https://api.kangopenbanking.com/v1/aisp/accounts', {
+    headers: { 'x-consent-id': consentId }
+  })
+);`
                     }
                   ]}
                 />
@@ -697,7 +512,7 @@ if (error) {
           <TabsContent value="webhook" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Webhook Signature Verification</CardTitle>
+                <CardTitle>Webhook Signature Verification (HMAC-SHA256)</CardTitle>
               </CardHeader>
               <CardContent>
                 <CodeBlock
