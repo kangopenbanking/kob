@@ -130,7 +130,19 @@ serve(async (req) => {
       throw new Error('Failed to create payment');
     }
 
-    // Log payment creation event
+    // Track payment creation event
+    await supabase.from('payment_events').insert({
+      payment_id: payment.id,
+      event_type: 'created',
+      metadata: {
+        status: 'Pending',
+        consent_id,
+        amount: instructed_amount,
+        created_by: user.id
+      }
+    });
+
+    // Log consent event
     await supabase.rpc('log_consent_event', {
       _consent_id: consent_id,
       _consent_type: 'pisp',
