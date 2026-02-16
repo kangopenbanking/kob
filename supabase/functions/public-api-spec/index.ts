@@ -957,6 +957,18 @@ paths['/v1/admin/transactions/review'] = {
   get: { tags: ['Admin'], summary: 'Review transactions', operationId: 'adminTransactionReview', security: [{ bearerAuth: [] }], parameters: [...paginationParams, { name: 'status', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Transactions for review' }, ...errorResponses } },
 };
 
+paths['/v1/admin/loans'] = {
+  get: { tags: ['Admin'], summary: 'List all loans (admin)', operationId: 'adminListLoans', security: [{ bearerAuth: [] }], parameters: [...paginationParams, { name: 'status', in: 'query', schema: { type: 'string' } }, { name: 'user_id', in: 'query', schema: { type: 'string' } }, { name: 'product_id', in: 'query', schema: { type: 'string' } }], responses: listResponse('LoanApplication', 'Loan applications with accounts') },
+};
+
+paths['/v1/admin/savings'] = {
+  get: { tags: ['Admin'], summary: 'List all savings accounts (admin)', operationId: 'adminListSavings', security: [{ bearerAuth: [] }], parameters: [...paginationParams, { name: 'status', in: 'query', schema: { type: 'string' } }, { name: 'user_id', in: 'query', schema: { type: 'string' } }, { name: 'product_id', in: 'query', schema: { type: 'string' } }, { name: 'account_type', in: 'query', schema: { type: 'string' } }], responses: listResponse('SavingsAccount', 'Savings accounts with products') },
+};
+
+paths['/v1/admin/consents'] = {
+  get: { tags: ['Admin'], summary: 'List all consents (admin)', operationId: 'adminListConsents', security: [{ bearerAuth: [] }], parameters: [...paginationParams, { name: 'type', in: 'query', schema: { type: 'string', enum: ['aisp', 'pisp'], default: 'aisp' } }, { name: 'status', in: 'query', schema: { type: 'string' } }, { name: 'user_id', in: 'query', schema: { type: 'string' } }, { name: 'client_id', in: 'query', schema: { type: 'string' } }], responses: listResponse('Consent', 'AISP or PISP consents') },
+};
+
 paths['/v1/admin/staff/assign'] = {
   post: { tags: ['Admin'], summary: 'Assign staff to branch', operationId: 'adminAssignStaff', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['user_id', 'branch_id', 'role'], properties: { user_id: { type: 'string' }, branch_id: { type: 'string' }, role: { type: 'string' } } } } } }, responses: { '200': { description: 'Staff assigned' }, ...errorResponses } },
 };
