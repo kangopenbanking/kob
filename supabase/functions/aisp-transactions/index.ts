@@ -27,9 +27,11 @@ Deno.serve(async (req) => {
     const pathParts = url.pathname.split('/');
     const accountId = pathParts[pathParts.length - 2];
 
-    // Query parameters for date filtering
+    // Query parameters for date filtering and pagination
     const fromDate = url.searchParams.get('fromBookingDateTime');
     const toDate = url.searchParams.get('toBookingDateTime');
+    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '25', 10), 1), 100);
+    const offset = Math.max(parseInt(url.searchParams.get('offset') || '0', 10), 0);
 
     if (!accountId) {
       return new Response(
@@ -105,29 +107,45 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Count query for total (same filters, no pagination)
+    let countQuery = supabase
+      .from('transactions')
+      .select('id', { count: 'exact', head: true })
+      .eq('account_id', account.id);
+
     // Build transaction query with date filters
     let query = supabase
       .from('transactions')
       .select('*')
       .eq('account_id', account.id);
 
-    // Apply consent date range
+    // Apply consent date range to both queries
     if (consent?.transaction_from_date) {
       query = query.gte('booking_datetime', consent.transaction_from_date);
+      countQuery = countQuery.gte('booking_datetime', consent.transaction_from_date);
     }
     if (consent?.transaction_to_date) {
       query = query.lte('booking_datetime', consent.transaction_to_date);
+      countQuery = countQuery.lte('booking_datetime', consent.transaction_to_date);
     }
 
-    // Apply query parameters
+    // Apply query parameters to both queries
     if (fromDate) {
       query = query.gte('booking_datetime', fromDate);
+      countQuery = countQuery.gte('booking_datetime', fromDate);
     }
     if (toDate) {
       query = query.lte('booking_datetime', toDate);
+      countQuery = countQuery.lte('booking_datetime', toDate);
     }
 
-    query = query.order('booking_datetime', { ascending: false }).limit(100);
+    // Get total count
+    const { count: totalCount } = await countQuery;
+
+    // Apply pagination
+    query = query
+      .order('booking_datetime', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     const { data: transactions, error: txError } = await query;
 
@@ -177,10 +195,13 @@ Deno.serve(async (req) => {
         }) || []
       },
       Links: {
-        Self: `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/transactions`
+        Self: `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/transactions?limit=${limit}&offset=${offset}`
       },
       Meta: {
-        TotalPages: 1
+        TotalPages: Math.ceil((totalCount || 0) / limit),
+        TotalCount: totalCount || 0,
+        Limit: limit,
+        Offset: offset
       }
     };
 
