@@ -58,6 +58,34 @@ serve(async (req) => {
     console.log('Flutterwave webhook received:', payload);
 
     const { event, data } = payload;
+
+    // --- Webhook deduplication via webhook_inbox ---
+    const webhookId = data?.id?.toString() || data?.flw_ref || data?.reference || crypto.randomUUID();
+    const inboxKey = `flutterwave:${event}:${webhookId}`;
+
+    const { data: existingWebhook } = await supabase
+      .from('webhook_inbox')
+      .select('id, is_processed')
+      .eq('source', 'flutterwave')
+      .eq('event_id', inboxKey)
+      .single();
+
+    if (existingWebhook?.is_processed) {
+      console.log(`Duplicate webhook skipped: ${inboxKey}`);
+      return new Response(JSON.stringify({ success: true, message: 'Already processed' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Record in webhook_inbox
+    const { data: inboxRecord } = await supabase.from('webhook_inbox').upsert({
+      source: 'flutterwave',
+      event_id: inboxKey,
+      payload,
+      signature,
+      is_processed: false,
+    }, { onConflict: 'source,event_id' }).select('id').single();
     
     // Handle transfer and charge events
     if (event === 'transfer.completed' || event === 'charge.completed') {
@@ -145,6 +173,14 @@ serve(async (req) => {
           });
         }
       }
+    }
+
+    // Mark webhook as processed
+    if (inboxRecord?.id) {
+      await supabase.from('webhook_inbox').update({
+        is_processed: true,
+        processed_at: new Date().toISOString()
+      }).eq('id', inboxRecord.id);
     }
 
     return new Response(JSON.stringify({
