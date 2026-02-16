@@ -25,6 +25,57 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const body = await req.json();
+
+    // --- Idempotency support ---
+    const idempotencyKey = req.headers.get('Idempotency-Key');
+    if (idempotencyKey) {
+      // Check for existing idempotency record
+      const { data: existing } = await supabase
+        .from('idempotency_keys')
+        .select('response_body, response_status')
+        .eq('idempotency_key', idempotencyKey)
+        .eq('endpoint', 'dcr-register')
+        .eq('status', 'completed')
+        .maybeSingle();
+
+      if (existing) {
+        // Return cached response
+        return new Response(
+          JSON.stringify(existing.response_body),
+          {
+            status: existing.response_status || 201,
+            headers: {
+              ...corsHeaders,
+              'Content-Type': 'application/json',
+              'Cache-Control': 'no-store',
+              'X-Idempotent-Replayed': 'true',
+            },
+          },
+        );
+      }
+
+      // Lock the key
+      const { error: lockError } = await supabase
+        .from('idempotency_keys')
+        .insert({
+          idempotency_key: idempotencyKey,
+          endpoint: 'dcr-register',
+          method: 'POST',
+          status: 'processing',
+          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        });
+
+      if (lockError) {
+        // Duplicate key constraint means another request is processing
+        if (lockError.code === '23505') {
+          return new Response(
+            JSON.stringify({ error: 'conflict', error_description: 'Request with this Idempotency-Key is already being processed' }),
+            { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+          );
+        }
+      }
+    }
+
     const { 
       software_statement,
       redirect_uris,
@@ -135,6 +186,19 @@ Deno.serve(async (req) => {
       environment: registration.environment,
       client_id_issued_at: Math.floor(new Date(registration.created_at).getTime() / 1000),
     };
+
+    // Persist idempotency result
+    if (idempotencyKey) {
+      await supabase
+        .from('idempotency_keys')
+        .update({
+          status: 'completed',
+          response_status: 201,
+          response_body: response,
+        })
+        .eq('idempotency_key', idempotencyKey)
+        .eq('endpoint', 'dcr-register');
+    }
 
     return new Response(JSON.stringify(response), {
       status: 201,
