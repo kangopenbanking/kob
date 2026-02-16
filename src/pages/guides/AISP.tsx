@@ -162,9 +162,10 @@ export default function AISP() {
                   Before accessing any account information, you must create a consent request that specifies the data you need and how long you need access.
                 </p>
                 <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                  <pre className="font-mono text-sm">{`POST /aisp/create-consent
-Authorization: Bearer YOUR_API_KEY
+                <pre className="font-mono text-sm">{`POST /v1/aisp/consents
+Authorization: Bearer {access_token}
 Content-Type: application/json
+x-consent-id: consent_abc123
 
 {
   "permissions": [
@@ -172,9 +173,9 @@ Content-Type: application/json
     "ReadBalances",
     "ReadTransactionsDetail"
   ],
-  "expirationDateTime": "2025-12-31T23:59:59Z",
-  "transactionFromDateTime": "2024-01-01T00:00:00Z",
-  "transactionToDateTime": "2025-12-31T23:59:59Z"
+  "expirationDateTime": "2026-12-31T23:59:59Z",
+  "transactionFromDateTime": "2025-01-01T00:00:00Z",
+  "transactionToDateTime": "2026-12-31T23:59:59Z"
 }`}</pre>
                 </div>
               </div>

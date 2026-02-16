@@ -109,10 +109,10 @@ grant_type=authorization_code
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Simple API key authentication available for sandbox testing and non-sensitive operations.
+                  API key authentication is available for <strong>sandbox testing only</strong>. Production environments must use OAuth 2.0 Bearer tokens.
                 </p>
                 <div className="bg-muted/50 p-3 rounded-lg font-mono text-xs">
-                  X-API-Key: YOUR_API_KEY
+                  X-API-Key: YOUR_SANDBOX_KEY (sandbox only)
                 </div>
               </CardContent>
             </Card>

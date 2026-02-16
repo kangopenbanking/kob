@@ -90,7 +90,7 @@ export default function CreditAPIDocumentation() {
           <h2 className="text-3xl font-bold mb-6">Authentication</h2>
           <CreditApiEndpoint
             method="POST"
-            endpoint="/functions/v1/credit-api-auth"
+            endpoint="/v1/credit/auth"
             description="Authenticate using your API credentials to receive a Bearer token"
             requestBody={{
               api_key: "kob_live_abc123def456",
@@ -110,7 +110,7 @@ export default function CreditAPIDocumentation() {
             codeExamples={[
               {
                 language: "curl",
-                code: `curl -X POST https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/credit-api-auth \\
+                code: `curl -X POST https://api.kangopenbanking.com/v1/credit/auth \\
   -H "Content-Type: application/json" \\
   -d '{
     "api_key": "kob_live_abc123def456",
@@ -119,7 +119,7 @@ export default function CreditAPIDocumentation() {
               },
               {
                 language: "javascript",
-                code: `const response = await fetch('/functions/v1/credit-api-auth', {
+                code: `const response = await fetch('/v1/credit/auth', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -135,7 +135,7 @@ const { access_token } = await response.json();`
                 code: `import requests
 
 response = requests.post(
-    'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/credit-api-auth',
+    'https://api.kangopenbanking.com/v1/credit/auth',
     json={
         'api_key': os.getenv('CREDIT_API_KEY'),
         'api_secret': os.getenv('CREDIT_API_SECRET')
@@ -154,7 +154,7 @@ access_token = data['access_token']`
           <h2 className="text-3xl font-bold mb-6">Query Credit Score</h2>
           <CreditApiEndpoint
             method="POST"
-            endpoint="/functions/v1/credit-api-query-score"
+            endpoint="/v1/credit/query"
             description="Query a customer's credit score with their explicit consent"
             parameters={[
               { name: "Authorization", type: "header", required: true, description: "Bearer {access_token}" }
@@ -171,15 +171,15 @@ access_token = data['access_token']`
               scoring_model: "blended",
               confidence_level: 0.91,
               risk_category: "medium",
-              calculated_at: "2025-01-15T10:30:00Z",
+              calculated_at: "2026-01-15T10:30:00Z",
               inquiry_id: "inq_uuid",
-              next_update_date: "2025-02-14",
+              next_update_date: "2026-02-14",
               external_bureau_used: true
             }}
             codeExamples={[
               {
                 language: "curl",
-                code: `curl -X POST https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/credit-api-query-score \\
+                code: `curl -X POST https://api.kangopenbanking.com/v1/credit/query \\
   -H "Authorization: Bearer eyJhbGc..." \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -190,7 +190,7 @@ access_token = data['access_token']`
               },
               {
                 language: "javascript",
-                code: `const response = await fetch('/functions/v1/credit-api-query-score', {
+                code: `const response = await fetch('/v1/credit/query', {
   method: 'POST',
   headers: {
     'Authorization': \`Bearer \${access_token}\`,
@@ -349,7 +349,7 @@ import { useState } from 'react';
 
 const checkCreditScore = async (email: string, consentId: string) => {
   // Step 1: Authenticate
-  const authRes = await fetch('/functions/v1/credit-api-auth', {
+  const authRes = await fetch('/v1/credit/auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -360,7 +360,7 @@ const checkCreditScore = async (email: string, consentId: string) => {
   const { access_token } = await authRes.json();
 
   // Step 2: Query score
-  const scoreRes = await fetch('/functions/v1/credit-api-query-score', {
+  const scoreRes = await fetch('/v1/credit/query', {
     method: 'POST',
     headers: {
       'Authorization': \`Bearer \${access_token}\`,
@@ -412,7 +412,7 @@ async function getCreditScore(email, consentRef) {
   try {
     // Authenticate
     const authResponse = await axios.post(
-      'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/credit-api-auth',
+      'https://api.kangopenbanking.com/v1/credit/auth',
       {
         api_key: process.env.CREDIT_API_KEY,
         api_secret: process.env.CREDIT_API_SECRET
@@ -423,7 +423,7 @@ async function getCreditScore(email, consentRef) {
     
     // Query score
     const scoreResponse = await axios.post(
-      'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/credit-api-query-score',
+      'https://api.kangopenbanking.com/v1/credit/query',
       {
         user_identifier: email,
         consent_reference: consentRef,

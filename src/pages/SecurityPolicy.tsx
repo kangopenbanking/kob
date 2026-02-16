@@ -9,7 +9,7 @@ export default function SecurityPolicy() {
         <Shield className="h-10 w-10 text-primary" />
         <h1 className="text-4xl font-bold">Security Policy</h1>
       </div>
-      <p className="text-sm text-muted-foreground mb-8">Last updated: October 18, 2025</p>
+      <p className="text-sm text-muted-foreground mb-8">Last updated: February 16, 2026</p>
       
       <ScrollArea className="h-[calc(100vh-200px)]">
         <div className="space-y-8 pr-4">

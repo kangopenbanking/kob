@@ -108,7 +108,7 @@ export const Footer = () => {
         
         <div className="border-t mt-8 pt-8 space-y-4 text-sm text-muted-foreground">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>© 2025 Kang <span style={{ color: '#9fe870' }}>Open</span> Banking. All rights reserved.</p>
+            <p>© 2026 Kang <span style={{ color: '#9fe870' }}>Open</span> Banking. All rights reserved.</p>
             <div className="flex gap-4">
               <Link to="/status" className="hover:text-primary transition-colors">Status</Link>
               <Link to="/security-policy" className="hover:text-primary transition-colors">Security</Link>
