@@ -74,47 +74,49 @@ const Documentation = () => {
   const apiEndpoints = [
     {
       method: "GET",
-      endpoint: "/api/v1/accounts",
-      description: "Retrieve account information",
-      example: `curl -X GET "https://api.kangopenbanking.com/v1/accounts" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+      endpoint: "/v1/aisp/accounts",
+      description: "List accounts linked to a consent (AISP)",
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "x-consent-id: consent_uuid" \\
   -H "Content-Type: application/json"`
     },
     {
       method: "POST",
-      endpoint: "/api/v1/payments/initiate",
-      description: "Initiate a payment transaction",
-      example: `curl -X POST "https://api.kangopenbanking.com/v1/payments/initiate" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+      endpoint: "/v1/pisp/domestic-payments",
+      description: "Initiate a domestic payment (PISP)",
+      example: `curl -X POST "https://api.kangopenbanking.com/v1/pisp/domestic-payments" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Idempotency-Key: 550e8400-e29b-41d4-a716-446655440000" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "amount": 10000,
+    "amount": 50000,
     "currency": "XAF",
-    "recipient": "account_id",
-    "description": "Payment description"
+    "debtor_account": "CM21 10003 00100 0123456789 023",
+    "creditor_account": "CM21 10003 00200 9876543210 045"
+  }'`
+    },
+    {
+      method: "POST",
+      endpoint: "/v1/mobile-money/charge",
+      description: "Initiate a mobile money charge",
+      example: `curl -X POST "https://api.kangopenbanking.com/v1/mobile-money/charge" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Idempotency-Key: 660e8400-e29b-41d4-a716-446655440001" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "amount": 5000,
+    "currency": "XAF",
+    "phone_number": "237670000000",
+    "network": "MTN"
   }'`
     },
     {
       method: "GET",
-      endpoint: "/api/v1/transactions",
-      description: "List transactions for an account",
-      example: `curl -X GET "https://api.kangopenbanking.com/v1/transactions?account_id=ACC123" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
+      endpoint: "/v1/health",
+      description: "API health check (no auth required)",
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/health" \\
   -H "Content-Type: application/json"`
-    },
-    {
-      method: "POST",
-      endpoint: "/api/v1/transfers",
-      description: "Transfer funds between accounts",
-      example: `curl -X POST "https://api.kangopenbanking.com/v1/transfers" \\
-  -H "Authorization: Bearer YOUR_API_KEY" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "from_account": "ACC123",
-    "to_account": "ACC456",
-    "amount": 5000,
-    "currency": "XAF"
-  }'`
     }
   ];
 
@@ -135,7 +137,7 @@ const Documentation = () => {
               "name": "Kang Open Banking"
             },
             "datePublished": "2025-01-05",
-            "dateModified": "2025-11-05"
+            "dateModified": "2026-02-16"
           }}
         />
         <div className="max-w-5xl mx-auto">
@@ -429,19 +431,33 @@ const Documentation = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="text-2xl">Authentication</CardTitle>
-                <CardDescription>Secure your API requests with bearer token authentication</CardDescription>
+                <CardDescription>OAuth 2.0 with Dynamic Client Registration (DCR)</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-muted-foreground">
-                  All API requests must include your API key in the Authorization header using Bearer authentication:
+                  Kang Open Banking uses <strong>OAuth 2.0</strong> for authentication. Obtain an access token via the token endpoint and include it in the <code>Authorization</code> header:
                 </p>
+                <div className="bg-muted/50 p-4 rounded-lg font-mono text-sm space-y-2">
+                  <div>POST /v1/oauth/token</div>
+                  <div>Content-Type: application/x-www-form-urlencoded</div>
+                  <div className="mt-2">grant_type=client_credentials&client_id=YOUR_ID&client_secret=YOUR_SECRET&scope=accounts+payments</div>
+                </div>
                 <div className="bg-muted/50 p-4 rounded-lg font-mono text-sm">
-                  Authorization: Bearer YOUR_API_KEY
+                  Authorization: Bearer {"<access_token>"}
+                </div>
+                <div className="space-y-2">
+                  <p className="text-sm font-semibold">Supported Grant Types</p>
+                  <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
+                    <li><code>client_credentials</code> — Server-to-server, no user context</li>
+                    <li><code>authorization_code</code> — User-delegated access (AISP/PISP consents)</li>
+                    <li><code>refresh_token</code> — Rotate expired access tokens</li>
+                  </ul>
                 </div>
                 <div className="bg-accent/10 border-l-4 border-accent p-4 rounded">
-                  <p className="text-sm font-semibold mb-1">Security Best Practice</p>
+                  <p className="text-sm font-semibold mb-1">Dynamic Client Registration (DCR)</p>
                   <p className="text-sm text-muted-foreground">
-                    Never expose your production API keys in client-side code. Always make API calls from your secure backend.
+                    Register your TPP programmatically via <code>POST /v1/dcr/register</code>. See the{" "}
+                    <Link to="/developer/quick-start" className="text-primary hover:underline">Quick Start Guide</Link> for full setup instructions.
                   </p>
                 </div>
               </CardContent>
@@ -455,24 +471,34 @@ const Documentation = () => {
                 <CardTitle className="text-2xl">Response Format</CardTitle>
                 <CardDescription>All responses are returned in JSON format</CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  Success responses return domain-specific JSON. All errors follow the <strong>RFC 7807</strong> error model:
+                </p>
                 <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                  <pre className="font-mono text-sm">{`{
-  "status": "success",
-  "data": {
-    // Response data
-  },
-  "timestamp": "2025-01-01T12:00:00Z"
+                  <pre className="font-mono text-sm">{`// Success Response (example: list accounts)
+{
+  "data": [ ... ],
+  "pagination": {
+    "total": 142,
+    "limit": 25,
+    "offset": 0,
+    "has_more": true
+  }
 }
 
-// Error Response
+// Error Response (RFC 7807)
 {
-  "status": "error",
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human-readable error message"
+  "error": "insufficient_funds",
+  "error_code": "PISP_004",
+  "message": "The debtor account has insufficient funds for this payment.",
+  "details": {
+    "available_balance": 25000,
+    "requested_amount": 50000,
+    "currency": "XAF"
   },
-  "timestamp": "2025-01-01T12:00:00Z"
+  "error_id": "err_a1b2c3d4",
+  "timestamp": "2026-02-16T10:30:00Z"
 }`}</pre>
                 </div>
               </CardContent>
@@ -509,8 +535,9 @@ const Documentation = () => {
                     Register a new X.509 client certificate for your TPP registration
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/certificate-upload
+                    <pre className="font-mono text-sm">{`POST /v1/certificates/upload
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440010
 
 {
   "certificate_pem": "-----BEGIN CERTIFICATE-----\\n...\\n-----END CERTIFICATE-----",
@@ -528,7 +555,7 @@ Authorization: Bearer YOUR_ACCESS_TOKEN
                     Retrieve all registered certificates with status and usage information
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`GET /functions/v1/certificate-list?tpp_registration_id=uuid
+                    <pre className="font-mono text-sm">{`GET /v1/certificates/list?tpp_registration_id=uuid
 Authorization: Bearer YOUR_ACCESS_TOKEN`}</pre>
                   </div>
                 </div>
@@ -542,8 +569,9 @@ Authorization: Bearer YOUR_ACCESS_TOKEN`}</pre>
                     Revoke a certificate and immediately invalidate all associated access tokens
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/certificate-revoke
+                    <pre className="font-mono text-sm">{`POST /v1/certificates/revoke
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440011
 
 {
   "certificate_id": "uuid-of-certificate",
@@ -590,8 +618,9 @@ Authorization: Bearer YOUR_ACCESS_TOKEN
                     Submit a loan application with automatic credit score verification and decision
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-2">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/loan-apply
+                    <pre className="font-mono text-sm">{`POST /v1/loans/apply
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440020
 Content-Type: application/json
 
 {
@@ -633,8 +662,9 @@ Response:
                     Preview loan terms including monthly payment, total interest, and repayment schedule
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/loan-calculate
+                    <pre className="font-mono text-sm">{`POST /v1/loans/calculate
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440021
 
 {
   "amount": 500000,
@@ -661,8 +691,9 @@ Response:
                     Process a loan repayment and update account standing
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/loan-repay
+                    <pre className="font-mono text-sm">{`POST /v1/loans/repay
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440022
 
 {
   "loan_account_id": "uuid",
@@ -675,7 +706,7 @@ Response:
   "transaction_id": "uuid",
   "status": "success",
   "remaining_balance": 444500,
-  "next_due_date": "2025-02-15"
+  "next_due_date": "2026-03-15"
 }`}</pre>
                   </div>
                 </div>
@@ -706,8 +737,9 @@ Response:
                     Open a new savings account with optional initial deposit and goal setting
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-2">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/savings-create
+                    <pre className="font-mono text-sm">{`POST /v1/savings/create
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440030
 
 {
   "product_id": "uuid",
@@ -747,8 +779,9 @@ Response:
                     Add funds to a savings account
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/savings-deposit
+                    <pre className="font-mono text-sm">{`POST /v1/savings/deposit
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440031
 
 {
   "account_id": "uuid",
@@ -774,8 +807,9 @@ Response:
                     Withdraw funds from a savings account (subject to product rules)
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/savings-withdraw
+                    <pre className="font-mono text-sm">{`POST /v1/savings/withdraw
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440032
 
 {
   "account_id": "uuid",
@@ -820,8 +854,9 @@ Response:
                     Retrieve current credit score with breakdown of contributing factors (soft inquiry)
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-2">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/credit-score-fetch
+                    <pre className="font-mono text-sm">{`POST /v1/credit/score
 Authorization: Bearer YOUR_ACCESS_TOKEN
+x-consent-id: consent_uuid
 
 {
   "user_id": "uuid",
@@ -833,8 +868,8 @@ Response:
 {
   "score": 720,
   "score_range": "Good",
-  "calculated_at": "2025-01-15T10:30:00Z",
-  "expires_at": "2025-02-15T10:30:00Z",
+  "calculated_at": "2026-02-16T10:30:00Z",
+  "expires_at": "2026-03-16T10:30:00Z",
   "factors": {
     "payment_history": 35,
     "amounts_owed": 28,
@@ -886,8 +921,10 @@ Response:
                     Create a comprehensive credit report with detailed analysis (hard inquiry)
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/credit-report-generate
+                    <pre className="font-mono text-sm">{`POST /v1/credit/report
 Authorization: Bearer YOUR_ACCESS_TOKEN
+x-consent-id: consent_uuid
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440040
 
 {
   "user_id": "uuid",
@@ -911,7 +948,7 @@ Response:
     "public_records": []
   },
   "risk_assessment": "Low",
-  "generated_at": "2025-01-15T10:30:00Z"
+  "generated_at": "2026-02-16T10:30:00Z"
 }`}</pre>
                   </div>
                   <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-4 rounded-lg mt-3">
@@ -956,7 +993,7 @@ Response:
                     Obtain an access token using your institution API credentials
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/credit-api-auth
+                    <pre className="font-mono text-sm">{`POST /v1/credit/auth
 
 {
   "api_key": "your_institution_api_key",
@@ -986,8 +1023,10 @@ Response:
                     Retrieve a customer's credit score with proper consent (hard inquiry)
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-3">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/credit-api-query-score
+                    <pre className="font-mono text-sm">{`POST /v1/credit/query
 Authorization: Bearer {access_token_from_auth}
+x-consent-id: consent_uuid
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440041
 
 {
   "user_identifier": "237670000000",
@@ -1000,7 +1039,7 @@ Response:
   "user_id": "uuid",
   "credit_score": 720,
   "score_range": "Good",
-  "calculated_at": "2025-01-15T10:30:00Z",
+  "calculated_at": "2026-02-16T10:30:00Z",
   "risk_category": "low",
   "inquiry_id": "uuid",
   "cost_xaf": 35
@@ -1151,8 +1190,9 @@ Response:
                     Send a single email or SMS to a recipient using a predefined template
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-4">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/send-communication
+                    <pre className="font-mono text-sm">{`POST /v1/communications/send
 Authorization: Bearer YOUR_ACCESS_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440050
 Content-Type: application/json
 
 {
@@ -1168,7 +1208,7 @@ Content-Type: application/json
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    onClick={() => copyToClipboard(`curl -X POST "https://api.kangopenbanking.com/v1/send-communication" \\
+                    onClick={() => copyToClipboard(`curl -X POST "https://api.kangopenbanking.com/v1/communications/send" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -1194,8 +1234,9 @@ Content-Type: application/json
                     Send emails to multiple institutions (Admin only)
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mb-4">
-                    <pre className="font-mono text-sm">{`POST /functions/v1/send-bulk-communication
+                    <pre className="font-mono text-sm">{`POST /v1/communications/bulk
 Authorization: Bearer YOUR_ADMIN_TOKEN
+Idempotency-Key: 550e8400-e29b-41d4-a716-446655440051
 Content-Type: application/json
 
 {
@@ -1213,7 +1254,7 @@ Content-Type: application/json
                     variant="outline"
                     size="sm"
                     className="gap-2"
-                    onClick={() => copyToClipboard(`curl -X POST "https://api.kangopenbanking.com/v1/send-bulk-communication" \\
+                    onClick={() => copyToClipboard(`curl -X POST "https://api.kangopenbanking.com/v1/communications/bulk" \\
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{
