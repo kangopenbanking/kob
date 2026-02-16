@@ -1,327 +1,227 @@
 
 
-# Kang Open Banking - Full Audit and Build Plan (15 Checkpoints)
+# Update Admin, Institution, and Developer Backends to v1 API Standards
 
-## Scope Assessment
+## Problem Summary
 
-This is a comprehensive audit and build initiative covering the entire KOB platform: 150+ edge functions, 75+ database migrations, full API spec alignment, and new domain implementations. The platform is built on React/Vite (frontend) with Supabase Edge Functions (backend) and Postgres (database).
-
----
-
-## Current State Summary
-
-**What exists today:**
-- 150+ edge functions across OAuth, AISP, PISP, Savings, Loans, Mobile Money, Flutterwave, Certificates, Admin, KYC, CrediQ, WooCommerce, ISO20022, SWIFT, and more
-- 75+ database migrations with tables for accounts, consents, payments, savings, loans, certificates, and compliance
-- OpenAPI spec served dynamically via `public-api-spec` edge function (4,139 lines)
-- Postman collection served via `postman-collection` edge function
-- Shared middleware: role-based auth, security utilities, mTLS support, token validation
-- Public docs site at `/documentation` with SEO, sitemap, robots.txt
-
-**What is missing or needs work:**
-- No `/v1` prefix on any endpoints (all are flat function names)
-- No idempotency support on any write endpoint
-- No ledger/double-entry accounting system (no tables, no functions)
-- No Redis (not available in Supabase Edge Functions environment)
-- Savings exists but lacks interest accrual job endpoint
-- Loans exist but lack schedule generation, repayment allocation, and full lifecycle
-- No contract tests or test infrastructure
-- OpenAPI spec is v3.0.3, not v3.1; not fully aligned with all implemented endpoints
-- No seed script
+After auditing all admin, institution, and developer-facing pages, there are **systemic issues** across the codebase where API endpoint paths, error models, authentication patterns, and documentation do not align with the v1 API standards established in Checkpoints 1-15.
 
 ---
 
-## Checkpoint-by-Checkpoint Plan
+## Issues Found
 
-### CHECKPOINT 1: Repo Boot + Inventory
+### A. Admin Pages
 
-**Actions:**
-- Create `/docs/inventory.md` documenting:
-  - Backend: Supabase Edge Functions (Deno runtime), Postgres via Lovable Cloud
-  - All 150+ edge functions listed with their JWT verification status
-  - Environment variables (from `.env` and Supabase secrets)
-  - How to run locally (npm run dev for frontend; edge functions deploy automatically)
-- Verify the application builds and runs via the preview URL
+**1. `src/pages/admin/ApiDocumentation.tsx` (Admin Swagger Generator)**
+- OpenAPI version says `3.0.0` -- should be `3.1.0`
+- Only 31 endpoints listed; missing ~40+ endpoints added in checkpoints (loan-approve, loan-disburse, savings-accrue-interest, journal-post, ledger-accounts, ledger-balance, admin-list-loans, admin-list-savings, admin-list-consents, admin-reports, pisp-payment-submission, pisp-payment-details, mobile-money-verify, mobile-money-to-bank, dcr-register, oauth-authorize, par-request, etc.)
+- Server URL exposes raw Supabase project URL -- should use `https://api.kangopenbanking.com/v1`
+- Error schema only has `error` and `message` -- missing RFC 7807 fields: `error_code`, `details`, `error_id`, `timestamp`
+- Missing tags: Admin, Ledger, DCR/Registration
+- Paths use bare function names (`/aisp-accounts`) not v1-prefixed paths (`/v1/aisp/accounts`)
+- Title says "KoB Banking API" -- should be "Kang Open Banking API"
+- Counter text says "70+" but only 31 endpoints
 
-**Output:** `/docs/inventory.md`
+**2. `src/pages/admin/ApiTesting.tsx` (Admin API Tester)**
+- Same 31-endpoint list as ApiDocumentation, missing the same ~40+ endpoints
+- No Idempotency-Key header support for POST endpoints
+- Missing categories: Admin, Ledger, DCR
 
----
+### B. Developer Pages
 
-### CHECKPOINT 2: Spec Reconciliation (Gap Report)
+**3. `src/pages/developer/GettingStarted.tsx`**
+- OAuth token URL uses `/oauth-token` instead of `/v1/oauth/token`
+- AISP accounts URL uses `/aisp-accounts` instead of `/v1/aisp/accounts`
+- Token request sends JSON body but the v1 spec requires `application/x-www-form-urlencoded`
+- Missing DCR step (register via SSA before obtaining tokens)
+- Missing `x-consent-id` header in AISP examples
+- Stale dates (2025 instead of 2026)
 
-**Actions:**
-- Parse the existing `public-api-spec` edge function (4,139 lines of OpenAPI)
-- Parse the `postman-collection` edge function
-- Cross-reference with all 150+ implemented edge functions
-- Generate gap table: Endpoint | In OpenAPI | In Postman | In Backend | Fix Action | Priority
+**4. `src/pages/developer/QuickStart.tsx`**
+- All URLs use `/functions/v1/oauth-token` and `/functions/v1/aisp-accounts` -- should be `https://api.kangopenbanking.com/v1/oauth/token` and `/v1/aisp/accounts`
+- OAuth token request sends JSON instead of form-encoded
+- Missing `x-consent-id` header in account fetch example
+- Missing Idempotency-Key mention
 
-**Key gaps already identified:**
-- Many edge functions exist in code but may not be in OpenAPI/Postman (e.g., CrediQ endpoints, WooCommerce endpoints, PostiQ endpoints)
-- No `/v1` prefix anywhere
-- Missing tags for some domains
+**5. `src/pages/developer/AispReference.tsx`**
+- Endpoints use bare function names: `/aisp-create-consent`, `/aisp-accounts`, `/aisp-balances/{accountId}`, `/api-account-detail/{accountId}`
+- Should use: `/v1/aisp/consents`, `/v1/aisp/accounts`, `/v1/aisp/accounts/{accountId}/balances`, `/v1/aisp/accounts/{accountId}`
+- Stale dates (2025)
+- Missing pagination parameters in transactions endpoint
+- Missing RFC 7807 error examples
 
-**Output:** `/docs/gap-report.md`
+**6. `src/pages/developer/PispReference.tsx`**
+- Same bare function name pattern: `/pisp-create-consent`, `/pisp-domestic-payment`, `/pisp-payment-submission`, `/pisp-payment-details/{paymentId}`
+- Should use: `/v1/pisp/consents`, `/v1/pisp/domestic-payments`, `/v1/pisp/payment-submissions`, `/v1/pisp/domestic-payments/{paymentId}`
+- Payment status lifecycle uses `AcceptedSettlementInProgress` / `AcceptedSettlementCompleted` instead of the v1 standard: `pending -> authorized -> submitted -> completed`
+- Error codes use generic names (`INSUFFICIENT_FUNDS`) instead of domain-prefixed codes (`PISP_004`)
+- Missing Idempotency-Key header in POST examples
+- Stale dates (2025)
 
----
+**7. `src/pages/developer/MobileMoneyReference.tsx`**
+- Endpoints use bare function names: `/mobile-money-charge`, `/mobile-money-verify`, `/mobile-money-transfer`, `/mobile-money-to-bank`
+- Should use: `/v1/mobile-money/charge`, `/v1/mobile-money/verify`, `/v1/mobile-money/transfer`, `/v1/mobile-money/to-bank`
+- Error codes use generic names instead of domain-prefixed codes (`MM_001`)
+- Missing Idempotency-Key headers on POST examples
+- Webhook event format doesn't match v1 standard envelope
 
-### CHECKPOINT 3: Target API Design (Single Source of Truth)
+**8. `src/pages/developer/BankingReference.tsx`**
+- Same bare function name pattern for all endpoints
+- Should use v1 paths: `/v1/banking/reconcile`, `/v1/banking/statement`, etc.
+- Stale dates
 
-**Actions:**
-- Rewrite the `public-api-spec` edge function to serve OpenAPI 3.1 spec with all paths under `/v1`
-- Add schemas for: Error model (RFC 7807 style), Pagination, Idempotency headers, Status lifecycle enums
-- Add examples in XAF and Cameroon context
-- Create `/docs/api-styleguide.md` covering:
-  - Error format: `{ error, error_code, details, error_id }`
-  - Pagination: cursor-based with `limit`, `offset`, `total`
-  - Idempotency: `Idempotency-Key` header on all POST/PUT endpoints
-  - Status lifecycles for payments, consents, loans, savings
+**9. `src/pages/developer/CertificateReference.tsx`**
+- Paths show `/functions/v1/certificate-upload`, `/functions/v1/certificate-list`, `/functions/v1/certificate-revoke`
+- Should use: `/v1/certificates/upload`, `/v1/certificates/list`, `/v1/certificates/revoke`
 
-**Note on `/v1` prefix:** Since Supabase Edge Functions are invoked by function name (e.g., `/functions/v1/aisp-accounts`), the `/v1` is already implicit in the URL path. The OpenAPI spec will document paths as `/v1/aisp/accounts` etc. with the custom domain routing handling the mapping. Deprecated aliases will be documented for any renamed endpoints.
+**10. `src/pages/developer/CodeExamples.tsx`**
+- All code examples use bare endpoint paths (`/aisp-accounts`, `/pisp-create-consent`, `/oauth-token`)
+- No Idempotency-Key headers in payment examples
+- Missing `x-consent-id` header in some examples
 
-**Output:** Updated `public-api-spec` function, `/docs/api-styleguide.md`
+**11. `src/pages/developer/ApiPlayground.tsx`**
+- Uses `API_CONFIG.BASE_URL` which resolves to `/functions/v1` path -- correct for internal calls, but displayed paths lack v1 prefixing for user-facing documentation
+- Limited endpoint list (only 5 endpoints)
 
----
+### C. Institution Pages
 
-### CHECKPOINT 4: DB Schema + Migrations + Seed
-
-**Actions:**
-- Create migration for missing tables:
-  - `idempotency_keys` (key, response, status, created_at, expires_at)
-  - `ledger_accounts` (id, account_type, name, currency, balance, institution_id)
-  - `journal_entries` (id, entry_date, description, reference_type, reference_id)
-  - `journal_lines` (id, journal_entry_id, ledger_account_id, debit, credit)
-  - `loan_schedule` (id, loan_id, installment_number, due_date, principal, interest, fees, status)
-  - `loan_repayments` (id, loan_id, schedule_id, amount, principal_paid, interest_paid, fees_paid)
-  - `loan_events` (id, loan_id, event_type, metadata, created_at)
-  - `interest_accruals` (id, savings_account_id, accrual_date, rate, amount, balance_before, balance_after)
-  - `payment_routes` (id, payment_id, rail, external_ref, status)
-  - `payment_events` (id, payment_id, event_type, metadata)
-  - `webhook_inbox` (id, source, payload, signature, processed, created_at)
-- Existing tables that are already present: tenants(institutions), users(profiles), api_clients, certificates(client_certificates), consents(aisp_consents/pisp_consents), payments, savings_products, savings_accounts, savings_transactions, loan_products, loan_applications
-- Create seed script for test/demo data
-- Create `/docs/db-schema.md`
-
-**Output:** Migration SQL, seed script, `/docs/db-schema.md`
-
----
-
-### CHECKPOINT 5: Auth + Directory Implementation
-
-**Already implemented:**
-- `oauth-token` with PKCE, mTLS, rate limiting
-- `oauth-authorize`, `oauth-introspect`, `par-endpoint`, `dcr-register`
-- `jwks-endpoint`, `oidc-config`
-- `certificate-upload`, `certificate-list`, `certificate-revoke`
-- `api-health`, `system-health-check`
-- Role middleware with admin gating
-
-**Actions needed:**
-- Add a `/v1/ready` endpoint (simple readiness probe)
-- Ensure all auth endpoints have adequate test coverage
-- Add idempotency support to `dcr-register`
-- Update OpenAPI spec entries
-
-**Output:** New `api-ready` edge function, test documentation
+**12. `src/pages/institution/InstitutionApiClients.tsx`**
+- Functionally correct (uses Supabase client directly, not API paths)
+- Missing display of OAuth scopes aligned with v1 standard (`openid`, `accounts`, `balances`, `transactions`, `payments`, `offline_access`)
+- No mention of rate tier information
 
 ---
 
-### CHECKPOINT 6: AISP Implementation
+## Implementation Plan
 
-**Already implemented:**
-- `aisp-accounts`, `aisp-balances`, `aisp-transactions`
-- `aisp-beneficiaries`, `aisp-standing-orders`, `aisp-direct-debits`
-- `aisp-create-consent`, `consent-authorize`, `consent-revoke`
+### Phase 1: Admin Pages (2 files)
 
-**Actions needed:**
-- Ensure pagination/filtering on `aisp-transactions` (verify cursor/offset params)
-- Add integration test examples
-- Create `/docs/aisp-examples.md` with curl samples
+**File: `src/pages/admin/ApiDocumentation.tsx`**
+- Update `EDGE_FUNCTIONS` array from 31 to ~70+ endpoints covering all domains
+- Add missing categories: Admin, Ledger, DCR/Registration
+- Update all paths to use v1-prefixed format (e.g., `/v1/aisp/accounts`)
+- Change OpenAPI version from `3.0.0` to `3.1.0`
+- Update server URL to `https://api.kangopenbanking.com/v1`
+- Update title to "Kang Open Banking API"
+- Expand Error schema to include all 6 RFC 7807 fields (`error`, `error_code`, `message`, `details`, `error_id`, `timestamp`)
+- Add missing tags: Admin, Ledger, DCR, ISO20022
+- Update counter text to reflect actual endpoint count
 
-**Output:** `/docs/aisp-examples.md`
+**File: `src/pages/admin/ApiTesting.tsx`**
+- Sync `API_ENDPOINTS` array with the updated list from ApiDocumentation
+- Add Idempotency-Key header input for POST endpoints
+- Add missing categories and endpoints
 
----
+### Phase 2: Developer Pages (8 files)
 
-### CHECKPOINT 7: PISP Payments
+**File: `src/pages/developer/GettingStarted.tsx`**
+- Update all URLs to use `https://api.kangopenbanking.com/v1/oauth/token` and `/v1/aisp/accounts`
+- Fix token request to use `application/x-www-form-urlencoded` content type
+- Add DCR registration as Step 1 (before obtaining tokens)
+- Update dates to 2026
+- Add `x-consent-id` header to AISP examples
 
-**Already implemented:**
-- `pisp-create-consent`, `pisp-domestic-payment`, `pisp-payment-details`, `pisp-payment-submission`
+**File: `src/pages/developer/QuickStart.tsx`**
+- Replace all `/functions/v1/` URLs with `https://api.kangopenbanking.com/v1/`
+- Fix OAuth token request from JSON to form-encoded
+- Add `x-consent-id` header to account examples
+- Update dates to 2026
 
-**Actions needed:**
-- Add idempotency support to payment submission
-- Add `payment_events` tracking on status transitions
-- Ensure status lifecycle: `pending` -> `authorized` -> `submitted` -> `completed`/`failed`
-- Create event subscription mechanism via webhooks
-- Create `/docs/pisp-examples.md`
+**File: `src/pages/developer/AispReference.tsx`**
+- Replace all endpoint paths with v1 format:
+  - `/aisp-create-consent` -> `/v1/aisp/consents`
+  - `/aisp-accounts` -> `/v1/aisp/accounts`
+  - `/aisp-balances/{accountId}` -> `/v1/aisp/accounts/{accountId}/balances`
+  - `/api-account-detail/{accountId}` -> `/v1/aisp/accounts/{accountId}`
+  - `/aisp-transactions/{accountId}` -> `/v1/aisp/accounts/{accountId}/transactions`
+  - `/aisp-beneficiaries/{accountId}` -> `/v1/aisp/accounts/{accountId}/beneficiaries`
+  - `/aisp-standing-orders/{accountId}` -> `/v1/aisp/accounts/{accountId}/standing-orders`
+  - `/aisp-direct-debits/{accountId}` -> `/v1/aisp/accounts/{accountId}/direct-debits`
+- Add pagination parameters to transactions endpoint
+- Update dates to 2026
 
-**Output:** Updated PISP functions with idempotency, `/docs/pisp-examples.md`
+**File: `src/pages/developer/PispReference.tsx`**
+- Replace all endpoint paths with v1 format:
+  - `/pisp-create-consent` -> `/v1/pisp/consents`
+  - `/pisp-domestic-payment` -> `/v1/pisp/domestic-payments`
+  - `/pisp-payment-submission` -> `/v1/pisp/payment-submissions`
+  - `/pisp-payment-details/{paymentId}` -> `/v1/pisp/domestic-payments/{paymentId}`
+  - `/bulk-transfers` -> `/v1/pisp/bulk-transfers`
+  - `/swift-mt103-generator` -> `/v1/banking/swift/mt103`
+- Update payment status lifecycle to match v1: `pending -> authorized -> submitted -> completed / failed / cancelled`
+- Replace error codes with domain-prefixed versions (e.g., `PISP_004` for insufficient funds)
+- Add `Idempotency-Key` header to POST examples
+- Update dates to 2026
 
----
+**File: `src/pages/developer/MobileMoneyReference.tsx`**
+- Replace endpoint paths with v1 format:
+  - `/mobile-money-charge` -> `/v1/mobile-money/charge`
+  - `/mobile-money-verify` -> `/v1/mobile-money/verify`
+  - `/mobile-money-transfer` -> `/v1/mobile-money/transfer`
+  - `/mobile-money-to-bank` -> `/v1/mobile-money/to-bank`
+- Replace error codes with MM_-prefixed codes
+- Add `Idempotency-Key` header to POST examples
+- Update webhook event format to match v1 standard
 
-### CHECKPOINT 8: Rails - Flutterwave + Webhooks
+**File: `src/pages/developer/BankingReference.tsx`**
+- Replace all endpoint paths with v1 format
+- Update dates to 2026
 
-**Already implemented:**
-- `facilitated-mobile-money-charge`, `flutterwave-bank-transfer`, `flutterwave-transfer-webhook`
-- `flutterwave-list-banks`, `flutterwave-verify-bank`
-- Webhook signature verification exists in `flutterwave-transfer-webhook`
+**File: `src/pages/developer/CertificateReference.tsx`**
+- Replace paths:
+  - `/functions/v1/certificate-upload` -> `/v1/certificates/upload`
+  - `/functions/v1/certificate-list` -> `/v1/certificates/list`
+  - `/functions/v1/certificate-revoke` -> `/v1/certificates/revoke`
 
-**Actions needed:**
-- Add webhook deduplication via `webhook_inbox` table
-- Add reconciliation logic for stuck payments (recon job)
-- Ensure webhook signature failure returns 401 without mutating state (already partially done)
-- Create `/docs/flutterwave-integration.md`
+**File: `src/pages/developer/CodeExamples.tsx`**
+- Update all API_BASE references from `https://api.kangopenbanking.com` to `https://api.kangopenbanking.com/v1`
+- Update all endpoint paths to v1 format
+- Add `Idempotency-Key` headers to payment POST examples
 
-**Output:** Updated webhook handler with dedupe, `/docs/flutterwave-integration.md`
+### Phase 3: Developer Portal Markdown Files (6 files)
 
----
+Create the 6 production-ready markdown files in `docs/portal/`:
 
-### CHECKPOINT 9: Ledger (Double-Entry)
+1. **`docs/portal/quickstart.md`** -- 5-minute onboarding with DCR, OAuth, and first AISP call
+2. **`docs/portal/authentication.md`** -- OAuth grants, DCR, mTLS, scopes, rate limits
+3. **`docs/portal/aisp-guide.md`** -- Consent lifecycle, all 7 AISP endpoints with pagination
+4. **`docs/portal/pisp-guide.md`** -- Payment lifecycle, idempotency rules, status polling
+5. **`docs/portal/error-reference.md`** -- RFC 7807 schema, all domain error code catalogues
+6. **`docs/portal/flutterwave-setup.md`** -- Mobile money and bank transfer flows, webhook verification
 
-**Not yet implemented - NEW BUILD**
-
-**Actions:**
-- Create `ledger-accounts`, `journal-post`, `ledger-balance` edge functions
-- Implement posting rules:
-  - Payment received: DR Cash, CR Revenue
-  - Loan disbursement: DR Loan Receivable, CR Cash
-  - Loan repayment: DR Cash, CR Loan Receivable + CR Interest Income
-  - Savings deposit: DR Cash, CR Customer Liability
-  - Savings withdrawal: DR Customer Liability, CR Cash
-  - Interest accrual: DR Interest Expense, CR Interest Payable
-- Ensure balanced journal entries (sum of debits = sum of credits)
-- Admin-only access via role middleware
-
-**Output:** New edge functions, migration, `/docs/ledger-model.md`
-
----
-
-### CHECKPOINT 10: Savings (Full Lifecycle)
-
-**Partially implemented:**
-- `savings-create`, `savings-deposit`, `savings-withdraw` exist
-- `savings_products`, `savings_accounts`, `savings_transactions` tables exist
-
-**Actions needed:**
-- Create `savings-accrue-interest` edge function (cron-compatible)
-- Create `interest_accruals` table for tracking
-- Integrate with ledger (post journal entries on deposit/withdraw/accrue)
-- Create `/docs/savings-guide.md`
-
-**Output:** New interest accrual function, `/docs/savings-guide.md`
-
----
-
-### CHECKPOINT 11: Loans (Full Lifecycle)
-
-**Partially implemented:**
-- `loan-apply`, `loan-calculate`, `loan-repay` exist
-- `loan_products`, `loan_applications` tables exist
-
-**Actions needed:**
-- Create `loan-approve` edge function (admin)
-- Create `loan-disburse` edge function (with ledger posting)
-- Create `loan-generate-schedule` edge function
-- Create `loan_schedule`, `loan_repayments`, `loan_events` tables
-- Implement repayment allocation (principal/interest/fees split)
-- Integrate with ledger
-- Create `/docs/loans-guide.md`
-
-**Output:** New loan lifecycle functions, migration, `/docs/loans-guide.md`
+All portal docs will use the v1 path format, current dates (2026), RFC 7807 error examples, and Idempotency-Key headers throughout.
 
 ---
-
-### CHECKPOINT 12: Admin + Audit + Reporting
-
-**Partially implemented:**
-- `admin-metrics`, `admin-transaction-review`, `admin-webhooks`, `admin-system-config` exist
-- `audit_logs`, `security_audit_logs`, `compliance_reports` tables exist
-- `generate_compliance_report` DB function exists
-
-**Actions needed:**
-- Add admin listing endpoints for loans, savings, consents with filtering
-- Ensure RBAC enforcement on all admin endpoints (already using role middleware)
-- Create `/docs/admin-api.md`
-
-**Output:** `/docs/admin-api.md`
-
----
-
-### CHECKPOINT 13: Postman + Contract Tests
-
-**Actions:**
-- Update the `postman-collection` edge function to match all endpoints in OpenAPI
-- Ensure 1:1 correspondence between OpenAPI paths and Postman requests
-- Create contract test documentation showing response schema validation
-- Export as `/docs/kob.postman_collection.json` (static file)
-
-**Output:** `/docs/kob.postman_collection.json`, `/docs/contract-test-report.md`
-
----
-
-### CHECKPOINT 14: Public Docs - Indexable
-
-**Already implemented:**
-- Documentation page at `/documentation` with SSR-friendly React rendering
-- `robots.txt` allows crawling of all documentation paths
-- SEO component with meta tags, OG tags, canonical URLs
-- Sitemap reference in robots.txt
-
-**Actions needed:**
-- Add downloadable OpenAPI YAML/JSON and Postman collection links (already partially done)
-- Verify no `noindex` headers/tags on documentation pages
-- Add tag-based navigation for API domains
-- Create `/docs/docs-publish.md` with indexing checklist
-
-**Output:** `/docs/docs-publish.md`, verified indexing
-
----
-
-### CHECKPOINT 15: Final Report
-
-**Actions:**
-- Create `/docs/final-gap-closure-report.md` with:
-  - Original issues and resolutions
-  - Endpoint coverage table (target: 100%)
-  - Test coverage metrics
-  - Remaining TODOs
-  - Run instructions and deployment notes
-  - PASS/FAIL matrix for all checkpoints
-
-**Output:** `/docs/final-gap-closure-report.md`
-
----
-
-## Important Constraints and Notes
-
-1. **Redis:** Supabase Edge Functions do not support Redis. Rate limiting is handled via Postgres `rate_limits` table with the `check_rate_limit` DB function. This is functionally equivalent for the current scale.
-
-2. **No terminal access:** All changes are made through Lovable's file editing and migration tools. No CLI commands can be run directly.
-
-3. **Edge function deployment:** Functions deploy automatically when code is written. No manual deployment step needed.
-
-4. **Implementation order:** Checkpoints 1-3 (documentation/inventory) will be done first, then 4 (DB schema), then 5-12 (implementation), then 13-15 (validation/docs).
-
-5. **Scope management:** This is an extremely large undertaking. Each checkpoint will be implemented incrementally, with the most critical gaps (idempotency, ledger, loan lifecycle) prioritized.
 
 ## Technical Details
 
-### New Database Tables Required
-- `idempotency_keys`: Prevents duplicate processing of write operations
-- `ledger_accounts`, `journal_entries`, `journal_lines`: Double-entry accounting
-- `loan_schedule`, `loan_repayments`, `loan_events`: Full loan lifecycle
-- `interest_accruals`: Savings interest tracking
-- `payment_events`, `payment_routes`: Payment status tracking
-- `webhook_inbox`: Webhook deduplication
+### v1 Path Convention
+All user-facing documentation will reference paths as:
+```text
+https://api.kangopenbanking.com/v1/{domain}/{resource}
+```
+These map to edge functions internally, but developers see clean RESTful paths.
 
-### New Edge Functions Required
-- `api-ready`: Readiness probe
-- `ledger-accounts`, `journal-post`, `ledger-balance`: Ledger system
-- `savings-accrue-interest`: Interest calculation cron
-- `loan-approve`, `loan-disburse`, `loan-generate-schedule`: Loan lifecycle
+### Files Changed Summary
 
-### Files to Create/Update
-- 10+ new edge functions
-- 1 large database migration
-- 1 seed script
-- 10+ documentation files in `/docs/`
-- Updated `public-api-spec` and `postman-collection` functions
+| File | Action | Key Changes |
+|------|--------|-------------|
+| `src/pages/admin/ApiDocumentation.tsx` | Update | 70+ endpoints, v1 paths, OpenAPI 3.1, RFC 7807 errors |
+| `src/pages/admin/ApiTesting.tsx` | Update | Sync endpoints, add Idempotency-Key support |
+| `src/pages/developer/GettingStarted.tsx` | Update | v1 URLs, form-encoded auth, DCR step, 2026 dates |
+| `src/pages/developer/QuickStart.tsx` | Update | v1 URLs, form-encoded auth, consent headers |
+| `src/pages/developer/AispReference.tsx` | Update | v1 paths for all 8 endpoints, pagination, 2026 dates |
+| `src/pages/developer/PispReference.tsx` | Update | v1 paths, status lifecycle, PISP_ error codes, idempotency |
+| `src/pages/developer/MobileMoneyReference.tsx` | Update | v1 paths, MM_ error codes, idempotency, webhook format |
+| `src/pages/developer/BankingReference.tsx` | Update | v1 paths, 2026 dates |
+| `src/pages/developer/CertificateReference.tsx` | Update | v1 paths |
+| `src/pages/developer/CodeExamples.tsx` | Update | v1 base URL and paths, idempotency headers |
+| `docs/portal/quickstart.md` | Create | Public quickstart guide |
+| `docs/portal/authentication.md` | Create | OAuth/DCR/mTLS reference |
+| `docs/portal/aisp-guide.md` | Create | AISP consent + endpoints guide |
+| `docs/portal/pisp-guide.md` | Create | PISP lifecycle + idempotency guide |
+| `docs/portal/error-reference.md` | Create | Complete error code catalogue |
+| `docs/portal/flutterwave-setup.md` | Create | Flutterwave integration guide |
+
+Total: **10 files updated + 6 files created = 16 files**
 
