@@ -1,0 +1,163 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Kang Open Banking API",
+    "version": "2.0.0",
+    "description": "COBAC-compliant Open Banking API for Cameroon and the CEMAC region. Enables account information (AISP), payment initiation (PISP), credit scoring, mobile money integration (MTN, Orange), virtual cards, and ISO 20022 messaging. Full dynamic specification available at the x-full-spec-url below.",
+    "x-full-spec-url": "https://api.kangopenbanking.com/functions/v1/public-api-spec",
+    "contact": {
+      "name": "Kang Open Banking Developer Support",
+      "email": "developers@kangopenbanking.com",
+      "url": "https://kangopenbanking.com/developer"
+    },
+    "license": {
+      "name": "Proprietary",
+      "url": "https://kangopenbanking.com/terms"
+    }
+  },
+  "servers": [
+    {
+      "url": "https://api.kangopenbanking.com/v1",
+      "description": "Production"
+    },
+    {
+      "url": "https://api.kangopenbanking.com/v1",
+      "description": "Sandbox (use sandbox API keys)",
+      "x-environment": "sandbox"
+    }
+  ],
+  "security": [
+    { "oauth2": ["accounts", "payments"] },
+    { "bearerAuth": [] }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "API Health Check",
+        "operationId": "getHealth",
+        "tags": ["System"],
+        "security": [],
+        "responses": {
+          "200": { "description": "API is healthy" }
+        }
+      }
+    },
+    "/oauth/token": {
+      "post": {
+        "summary": "Request Access Token",
+        "operationId": "createToken",
+        "tags": ["Authentication"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "grant_type": { "type": "string", "enum": ["client_credentials", "authorization_code"] },
+                  "client_id": { "type": "string" },
+                  "client_secret": { "type": "string" }
+                },
+                "required": ["grant_type", "client_id", "client_secret"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Access token issued" }
+        }
+      }
+    },
+    "/aisp/accounts": {
+      "get": {
+        "summary": "List Accounts",
+        "operationId": "listAccounts",
+        "tags": ["AISP"],
+        "parameters": [
+          { "name": "x-consent-id", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of accounts" }
+        }
+      }
+    },
+    "/pisp/domestic-payments": {
+      "post": {
+        "summary": "Initiate Domestic Payment",
+        "operationId": "createDomesticPayment",
+        "tags": ["PISP"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "x-consent-id", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": { "description": "Payment initiated" }
+        }
+      }
+    },
+    "/mobile-money/charge": {
+      "post": {
+        "summary": "Charge Mobile Money",
+        "operationId": "chargeMobileMoney",
+        "tags": ["Mobile Money"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": { "description": "Charge initiated" }
+        }
+      }
+    },
+    "/credit/query": {
+      "post": {
+        "summary": "Query Credit Score",
+        "operationId": "queryCreditScore",
+        "tags": ["Credit Scoring"],
+        "responses": {
+          "200": { "description": "Credit score result" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "oauth2": {
+        "type": "oauth2",
+        "flows": {
+          "clientCredentials": {
+            "tokenUrl": "https://api.kangopenbanking.com/v1/oauth/token",
+            "scopes": {
+              "accounts": "Access account information",
+              "balances": "Access account balances",
+              "transactions": "Access transaction history",
+              "payments": "Initiate payments"
+            }
+          },
+          "authorizationCode": {
+            "authorizationUrl": "https://api.kangopenbanking.com/v1/oauth/authorize",
+            "tokenUrl": "https://api.kangopenbanking.com/v1/oauth/token",
+            "scopes": {
+              "openid": "OpenID Connect",
+              "accounts": "Access account information",
+              "payments": "Initiate payments"
+            }
+          }
+        }
+      },
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  },
+  "tags": [
+    { "name": "System", "description": "Health and status endpoints" },
+    { "name": "Authentication", "description": "OAuth 2.0 token management" },
+    { "name": "AISP", "description": "Account Information Service Provider" },
+    { "name": "PISP", "description": "Payment Initiation Service Provider" },
+    { "name": "Mobile Money", "description": "MTN and Orange Money integration" },
+    { "name": "Credit Scoring", "description": "Credit score queries and reports" }
+  ]
+}
