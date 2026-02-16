@@ -2,8 +2,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
-import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal, Shield } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Building2, Code, Book, ArrowLeft, Copy, CheckCircle2, DollarSign, TrendingUp, Wallet, AlertTriangle, Download, ExternalLink, Terminal, Shield, CreditCard, Smartphone, FileText, Lock, BarChart3, Users } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { API_CONFIG } from "@/config/api";
 import { SEO } from "@/components/SEO";
@@ -150,6 +150,42 @@ const Documentation = () => {
               Complete reference for integrating Kang Open Banking API into your financial institution
             </p>
           </div>
+
+          {/* Tag-Based Domain Navigation */}
+          <section className="mb-12">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-2xl">API Domains</CardTitle>
+                <CardDescription>Browse documentation by API domain</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { label: "OAuth & Auth", icon: Lock, path: "/developer/quick-start", color: "bg-primary/10 text-primary border-primary/20" },
+                    { label: "AISP", icon: FileText, path: "/developer/aisp-reference", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20" },
+                    { label: "PISP", icon: CreditCard, path: "/developer/pisp-reference", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20" },
+                    { label: "Loans", icon: DollarSign, path: "/credit-api-documentation", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20" },
+                    { label: "Savings", icon: TrendingUp, path: "/developer/banking-reference", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" },
+                    { label: "Mobile Money", icon: Smartphone, path: "/developer/mobile-money-reference", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20" },
+                    { label: "Certificates", icon: Shield, path: "/guides/certificates", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" },
+                    { label: "Webhooks", icon: Terminal, path: "/developer/webhooks-guide", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20" },
+                    { label: "Admin", icon: Users, path: "/developer/console", color: "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20" },
+                    { label: "Ledger", icon: BarChart3, path: "/developer/banking-reference", color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20" },
+                  ].map((domain) => (
+                    <Link key={domain.label} to={domain.path}>
+                      <Badge
+                        variant="outline"
+                        className={`${domain.color} px-4 py-2 text-sm font-medium cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2`}
+                      >
+                        <domain.icon className="h-4 w-4" />
+                        {domain.label}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </section>
 
           {/* API Integrations Section */}
           <section className="mb-12">
