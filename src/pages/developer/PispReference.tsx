@@ -18,7 +18,7 @@ export default function PispReference() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          All PISP endpoints require Strong Customer Authentication (SCA). Users must authorize payments through their banking app or SMS OTP.
+          All PISP POST endpoints require an <code className="bg-muted px-2 py-1 rounded">Idempotency-Key</code> header (UUID, 24h expiry) and Strong Customer Authentication (SCA).
         </AlertDescription>
       </Alert>
 
@@ -26,20 +26,22 @@ export default function PispReference() {
       <Card>
         <CardHeader>
           <CardTitle>Payment Status Lifecycle</CardTitle>
-          <CardDescription>Understanding payment states</CardDescription>
+          <CardDescription>Understanding payment states (v1 standard)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">Pending</Badge>
+            <Badge variant="outline" className="bg-yellow-500/10 text-yellow-700 dark:text-yellow-400">pending</Badge>
             <span className="text-muted-foreground">→</span>
-            <Badge variant="outline" className="bg-blue-500/10 text-blue-700 dark:text-blue-400">AcceptedSettlementInProgress</Badge>
+            <Badge variant="outline" className="bg-blue-500/10 text-blue-700 dark:text-blue-400">authorized</Badge>
             <span className="text-muted-foreground">→</span>
-            <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">AcceptedSettlementCompleted</Badge>
+            <Badge variant="outline" className="bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">submitted</Badge>
+            <span className="text-muted-foreground">→</span>
+            <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400">completed</Badge>
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400">Rejected</Badge>
+            <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400">failed</Badge>
             <span className="text-muted-foreground">/</span>
-            <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400">Failed</Badge>
+            <Badge variant="outline" className="bg-red-500/10 text-red-700 dark:text-red-400">cancelled</Badge>
           </div>
         </CardContent>
       </Card>
@@ -50,8 +52,8 @@ export default function PispReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/pisp-create-consent"
-          description="Create a PISP consent for payment initiation"
+          endpoint="/v1/pisp/consents"
+          description="Create a PISP consent for payment initiation. Requires Idempotency-Key header."
           requestBody={`{
   "Data": {
     "Initiation": {
@@ -72,9 +74,9 @@ export default function PispReference() {
           response={`{
   "Data": {
     "ConsentId": "pisp_consent_xyz789",
-    "Status": "AwaitingAuthorisation",
-    "CreationDateTime": "2025-10-27T10:00:00Z",
-    "StatusUpdateDateTime": "2025-10-27T10:00:00Z",
+    "Status": "pending",
+    "CreationDateTime": "2026-02-16T10:00:00Z",
+    "StatusUpdateDateTime": "2026-02-16T10:00:00Z",
     "Initiation": {
       "InstructedAmount": {
         "Amount": "50000.00",
@@ -87,7 +89,7 @@ export default function PispReference() {
     }
   },
   "Links": {
-    "Self": "/pisp/consents/pisp_consent_xyz789"
+    "Self": "/v1/pisp/consents/pisp_consent_xyz789"
   }
 }`}
         />
@@ -99,8 +101,8 @@ export default function PispReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/pisp-domestic-payment"
-          description="Initiate a domestic payment within Cameroon"
+          endpoint="/v1/pisp/domestic-payments"
+          description="Initiate a domestic payment within Cameroon. Requires Idempotency-Key header."
           requestBody={`{
   "Data": {
     "ConsentId": "pisp_consent_xyz789",
@@ -128,9 +130,9 @@ export default function PispReference() {
   "Data": {
     "DomesticPaymentId": "pay_abc123",
     "ConsentId": "pisp_consent_xyz789",
-    "Status": "Pending",
-    "CreationDateTime": "2025-10-27T10:05:00Z",
-    "StatusUpdateDateTime": "2025-10-27T10:05:00Z",
+    "Status": "pending",
+    "CreationDateTime": "2026-02-16T10:05:00Z",
+    "StatusUpdateDateTime": "2026-02-16T10:05:00Z",
     "Initiation": {
       "InstructedAmount": {
         "Amount": "50000.00",
@@ -146,15 +148,15 @@ export default function PispReference() {
     }
   },
   "Links": {
-    "Self": "/pisp/domestic-payments/pay_abc123"
+    "Self": "/v1/pisp/domestic-payments/pay_abc123"
   }
 }`}
         />
 
         <ApiEndpoint
           method="POST"
-          endpoint="/pisp-payment-submission"
-          description="Submit a payment for processing after user authorization"
+          endpoint="/v1/pisp/payment-submissions"
+          description="Submit a payment for processing after user authorization. Requires Idempotency-Key header."
           requestBody={`{
   "Data": {
     "PaymentId": "pay_abc123"
@@ -164,18 +166,18 @@ export default function PispReference() {
   "Data": {
     "DomesticPaymentId": "pay_abc123",
     "ConsentId": "pisp_consent_xyz789",
-    "Status": "AcceptedSettlementInProgress",
-    "CreationDateTime": "2025-10-27T10:05:00Z",
-    "StatusUpdateDateTime": "2025-10-27T10:10:00Z",
-    "ExpectedExecutionDateTime": "2025-10-27T14:00:00Z",
-    "ExpectedSettlementDateTime": "2025-10-27T16:00:00Z"
+    "Status": "submitted",
+    "CreationDateTime": "2026-02-16T10:05:00Z",
+    "StatusUpdateDateTime": "2026-02-16T10:10:00Z",
+    "ExpectedExecutionDateTime": "2026-02-16T14:00:00Z",
+    "ExpectedSettlementDateTime": "2026-02-16T16:00:00Z"
   }
 }`}
         />
 
         <ApiEndpoint
           method="GET"
-          endpoint="/pisp-payment-details/{paymentId}"
+          endpoint="/v1/pisp/domestic-payments/{paymentId}"
           description="Retrieve payment status and details"
           parameters={[
             { name: "paymentId", type: "string", required: true, description: "Unique payment identifier" }
@@ -184,9 +186,9 @@ export default function PispReference() {
   "Data": {
     "DomesticPaymentId": "pay_abc123",
     "ConsentId": "pisp_consent_xyz789",
-    "Status": "AcceptedSettlementCompleted",
-    "CreationDateTime": "2025-10-27T10:05:00Z",
-    "StatusUpdateDateTime": "2025-10-27T16:00:00Z",
+    "Status": "completed",
+    "CreationDateTime": "2026-02-16T10:05:00Z",
+    "StatusUpdateDateTime": "2026-02-16T16:00:00Z",
     "Initiation": {
       "InstructedAmount": {
         "Amount": "50000.00",
@@ -208,8 +210,8 @@ export default function PispReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/bulk-transfers"
-          description="Process multiple payments in a single batch"
+          endpoint="/v1/pisp/bulk-transfers"
+          description="Process multiple payments in a single batch. Requires Idempotency-Key header."
           requestBody={`{
   "transfers": [
     {
@@ -218,7 +220,7 @@ export default function PispReference() {
       "beneficiary_account": "677111222",
       "beneficiary_name": "Alice Johnson",
       "reference": "Salary Payment",
-      "narration": "October Salary"
+      "narration": "February Salary"
     },
     {
       "amount": "15000.00",
@@ -226,10 +228,10 @@ export default function PispReference() {
       "beneficiary_account": "677333444",
       "beneficiary_name": "Bob Williams",
       "reference": "Salary Payment",
-      "narration": "October Salary"
+      "narration": "February Salary"
     }
   ],
-  "batch_reference": "PAYROLL_OCT_2025"
+  "batch_reference": "PAYROLL_FEB_2026"
 }`}
           response={`{
   "batch_id": "batch_001",
@@ -238,7 +240,7 @@ export default function PispReference() {
   "successful": 0,
   "failed": 0,
   "pending": 2,
-  "created_at": "2025-10-27T10:00:00Z",
+  "created_at": "2026-02-16T10:00:00Z",
   "transfers": [
     {
       "transfer_id": "txn_001",
@@ -268,8 +270,8 @@ export default function PispReference() {
 
         <ApiEndpoint
           method="POST"
-          endpoint="/swift-mt103-generator"
-          description="Generate SWIFT MT103 message for international payment"
+          endpoint="/v1/banking/swift/mt103/generate"
+          description="Generate SWIFT MT103 message for international payment. Requires Idempotency-Key header."
           requestBody={`{
   "ordering_customer": "John Doe\\n123 Main St\\nBamenda, Cameroon",
   "ordering_institution": "COBACMCX",
@@ -277,12 +279,12 @@ export default function PispReference() {
   "beneficiary_institution": "BNPAFRPP",
   "amount": "1000.00",
   "currency": "EUR",
-  "value_date": "2025-10-27",
-  "remittance_info": "Invoice Payment INV-2025-001"
+  "value_date": "2026-02-17",
+  "remittance_info": "Invoice Payment INV-2026-001"
 }`}
           response={`{
   "mt103_message": "{1:F01COBACMCXAXXX0000000000}...",
-  "transaction_reference": "REF20251027001",
+  "transaction_reference": "REF20260217001",
   "status": "generated"
 }`}
         />
@@ -291,30 +293,38 @@ export default function PispReference() {
       {/* Error Codes */}
       <Card>
         <CardHeader>
-          <CardTitle>Common Error Codes</CardTitle>
-          <CardDescription>Handle these errors gracefully in your application</CardDescription>
+          <CardTitle>Error Codes</CardTitle>
+          <CardDescription>Domain-prefixed PISP error codes (RFC 7807)</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             <div>
-              <p className="font-mono text-sm font-semibold">INSUFFICIENT_FUNDS</p>
-              <p className="text-sm text-muted-foreground">The debtor account has insufficient balance for the payment</p>
+              <p className="font-mono text-sm font-semibold">PISP_001</p>
+              <p className="text-sm text-muted-foreground">Missing Idempotency-Key header on POST request</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">INVALID_CONSENT</p>
-              <p className="text-sm text-muted-foreground">The consent ID is invalid, expired, or has been revoked</p>
+              <p className="font-mono text-sm font-semibold">PISP_002</p>
+              <p className="text-sm text-muted-foreground">Invalid or expired consent ID</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">ACCOUNT_BLOCKED</p>
-              <p className="text-sm text-muted-foreground">The account is temporarily blocked or frozen</p>
+              <p className="font-mono text-sm font-semibold">PISP_003</p>
+              <p className="text-sm text-muted-foreground">Account blocked or frozen</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">LIMIT_EXCEEDED</p>
+              <p className="font-mono text-sm font-semibold">PISP_004</p>
+              <p className="text-sm text-muted-foreground">Insufficient funds in debtor account</p>
+            </div>
+            <div>
+              <p className="font-mono text-sm font-semibold">PISP_005</p>
               <p className="text-sm text-muted-foreground">Payment amount exceeds daily or transaction limits</p>
             </div>
             <div>
-              <p className="font-mono text-sm font-semibold">SCA_REQUIRED</p>
-              <p className="text-sm text-muted-foreground">Strong Customer Authentication is required for this payment</p>
+              <p className="font-mono text-sm font-semibold">PISP_006</p>
+              <p className="text-sm text-muted-foreground">Strong Customer Authentication (SCA) required</p>
+            </div>
+            <div>
+              <p className="font-mono text-sm font-semibold">PISP_007</p>
+              <p className="text-sm text-muted-foreground">Duplicate Idempotency-Key with different payload</p>
             </div>
           </div>
         </CardContent>
@@ -328,12 +338,12 @@ export default function PispReference() {
         </CardHeader>
         <CardContent className="space-y-3">
           <div>
-            <p className="font-semibold mb-1">1. Implement Idempotency</p>
-            <p className="text-sm text-muted-foreground">Use unique reference IDs to prevent duplicate payments if requests are retried.</p>
+            <p className="font-semibold mb-1">1. Always Use Idempotency-Key</p>
+            <p className="text-sm text-muted-foreground">Include a unique UUID in the Idempotency-Key header for all POST requests to prevent duplicate payments.</p>
           </div>
           <div>
             <p className="font-semibold mb-1">2. Monitor Payment Status</p>
-            <p className="text-sm text-muted-foreground">Poll payment status or use webhooks to track payment progression through settlement.</p>
+            <p className="text-sm text-muted-foreground">Poll payment status or use webhooks to track payment progression: pending → authorized → submitted → completed.</p>
           </div>
           <div>
             <p className="font-semibold mb-1">3. Handle SCA Flow</p>

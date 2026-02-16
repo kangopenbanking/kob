@@ -17,7 +17,7 @@ export default function BankingReference() {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Banking operations APIs are designed for financial institutions and enterprise applications requiring advanced banking functionality.
+          Banking operations APIs are designed for financial institutions and enterprise applications. All POST endpoints require an <code className="bg-muted px-2 py-1 rounded">Idempotency-Key</code> header.
         </AlertDescription>
       </Alert>
 
@@ -27,12 +27,12 @@ export default function BankingReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/bank-reconcile"
-          description="Reconcile bank transactions with internal records"
+          endpoint="/v1/banking/reconcile"
+          description="Reconcile bank transactions with internal records. Requires Idempotency-Key header."
           requestBody={`{
   "account_id": "acc_123456",
-  "start_date": "2025-10-01",
-  "end_date": "2025-10-27",
+  "start_date": "2026-02-01",
+  "end_date": "2026-02-16",
   "expected_balance": "500000.00"
 }`}
           response={`{
@@ -40,8 +40,8 @@ export default function BankingReference() {
   "reconciliation_id": "recon_001",
   "account_id": "acc_123456",
   "period": {
-    "start_date": "2025-10-01",
-    "end_date": "2025-10-27"
+    "start_date": "2026-02-01",
+    "end_date": "2026-02-16"
   },
   "summary": {
     "total_transactions": 156,
@@ -54,16 +54,7 @@ export default function BankingReference() {
     "closing_balance": "500000.00",
     "expected_balance": "500000.00",
     "difference": "0.00"
-  },
-  "unmatched_transactions": [
-    {
-      "transaction_id": "txn_789",
-      "date": "2025-10-15",
-      "amount": "5000.00",
-      "type": "debit",
-      "description": "Unknown transaction"
-    }
-  ]
+  }
 }`}
         />
       </div>
@@ -74,12 +65,12 @@ export default function BankingReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/generate-bank-statement"
-          description="Generate PDF bank statements for a specified period"
+          endpoint="/v1/banking/statement"
+          description="Generate PDF bank statements for a specified period. Requires Idempotency-Key header."
           requestBody={`{
   "account_id": "acc_123456",
-  "start_date": "2025-10-01",
-  "end_date": "2025-10-31",
+  "start_date": "2026-02-01",
+  "end_date": "2026-02-28",
   "format": "pdf",
   "include_images": true
 }`}
@@ -88,11 +79,11 @@ export default function BankingReference() {
   "statement_id": "stmt_001",
   "account_id": "acc_123456",
   "period": {
-    "start_date": "2025-10-01",
-    "end_date": "2025-10-31"
+    "start_date": "2026-02-01",
+    "end_date": "2026-02-28"
   },
-  "download_url": "https://storage.example.com/statements/stmt_001.pdf",
-  "expires_at": "2025-11-27T10:00:00Z",
+  "download_url": "https://storage.kangopenbanking.com/statements/stmt_001.pdf",
+  "expires_at": "2026-03-16T10:00:00Z",
   "summary": {
     "opening_balance": "450000.00",
     "closing_balance": "500000.00",
@@ -110,20 +101,20 @@ export default function BankingReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/iso20022-pain001-parser"
-          description="Parse ISO 20022 pain.001 payment initiation messages"
+          endpoint="/v1/banking/iso20022/pain001"
+          description="Parse ISO 20022 pain.001 payment initiation messages. Requires Idempotency-Key header."
           requestBody={`{
   "xml_message": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<Document xmlns=\\"urn:iso:std:iso:20022:tech:xsd:pain.001.001.09\\">...</Document>"
 }`}
           response={`{
   "status": "success",
-  "message_id": "MSG20251027001",
-  "creation_date_time": "2025-10-27T10:00:00Z",
+  "message_id": "MSG20260216001",
+  "creation_date_time": "2026-02-16T10:00:00Z",
   "number_of_transactions": 1,
   "control_sum": "50000.00",
   "payment_information": {
     "payment_id": "PMT001",
-    "requested_execution_date": "2025-10-28",
+    "requested_execution_date": "2026-02-17",
     "debtor": {
       "name": "ABC Corporation",
       "account": "1234567890"
@@ -140,7 +131,7 @@ export default function BankingReference() {
           "account": "9876543210"
         },
         "creditor_agent": "BGFICMCX",
-        "remittance_info": "Invoice INV-2025-001"
+        "remittance_info": "Invoice INV-2026-001"
       }
     ]
   }
@@ -149,8 +140,8 @@ export default function BankingReference() {
 
         <ApiEndpoint
           method="POST"
-          endpoint="/iso20022-pacs008-generator"
-          description="Generate ISO 20022 pacs.008 payment instruction messages"
+          endpoint="/v1/banking/iso20022/pacs008"
+          description="Generate ISO 20022 pacs.008 payment instruction messages. Requires Idempotency-Key header."
           requestBody={`{
   "instruction_id": "INSTR001",
   "end_to_end_id": "E2E001",
@@ -162,20 +153,20 @@ export default function BankingReference() {
   "creditor_name": "XYZ Ltd",
   "creditor_account": "9876543210",
   "creditor_agent": "BGFICMCX",
-  "remittance_info": "Invoice INV-2025-001"
+  "remittance_info": "Invoice INV-2026-001"
 }`}
           response={`{
   "status": "success",
-  "message_id": "PACS20251027001",
+  "message_id": "PACS20260216001",
   "xml_message": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<Document xmlns=\\"urn:iso:std:iso:20022:tech:xsd:pacs.008.001.08\\">...</Document>",
-  "created_at": "2025-10-27T10:00:00Z"
+  "created_at": "2026-02-16T10:00:00Z"
 }`}
         />
 
         <ApiEndpoint
           method="POST"
-          endpoint="/iso20022-camt053-parser"
-          description="Parse ISO 20022 camt.053 bank statement messages"
+          endpoint="/v1/banking/iso20022/camt053"
+          description="Parse ISO 20022 camt.053 bank statement messages. Requires Idempotency-Key header."
           requestBody={`{
   "xml_message": "<?xml version=\\"1.0\\" encoding=\\"UTF-8\\"?>\\n<Document xmlns=\\"urn:iso:std:iso:20022:tech:xsd:camt.053.001.08\\">...</Document>"
 }`}
@@ -184,23 +175,23 @@ export default function BankingReference() {
   "statement_id": "STMT001",
   "account": "1234567890",
   "currency": "XAF",
-  "from_date": "2025-10-01",
-  "to_date": "2025-10-31",
+  "from_date": "2026-02-01",
+  "to_date": "2026-02-28",
   "opening_balance": {
     "amount": "450000.00",
-    "date": "2025-10-01"
+    "date": "2026-02-01"
   },
   "closing_balance": {
     "amount": "500000.00",
-    "date": "2025-10-31"
+    "date": "2026-02-28"
   },
   "entries": [
     {
       "entry_reference": "E001",
       "amount": "15000.00",
       "credit_debit_indicator": "CRDT",
-      "booking_date": "2025-10-15",
-      "value_date": "2025-10-15",
+      "booking_date": "2026-02-15",
+      "value_date": "2026-02-15",
       "remittance_info": "Customer Payment"
     }
   ]
@@ -214,8 +205,8 @@ export default function BankingReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/swift-mt103-generator"
-          description="Generate SWIFT MT103 single customer credit transfer messages"
+          endpoint="/v1/banking/swift/mt103/generate"
+          description="Generate SWIFT MT103 single customer credit transfer messages. Requires Idempotency-Key header."
           requestBody={`{
   "ordering_customer": "John Doe\\n123 Main St\\nBamenda, Cameroon",
   "ordering_institution": "COBACMCX",
@@ -223,73 +214,65 @@ export default function BankingReference() {
   "beneficiary_institution": "BNPAFRPP",
   "amount": "1000.00",
   "currency": "EUR",
-  "value_date": "2025-10-27",
-  "remittance_info": "Invoice Payment INV-2025-001"
+  "value_date": "2026-02-17",
+  "remittance_info": "Invoice Payment INV-2026-001"
 }`}
           response={`{
   "status": "success",
-  "mt103_message": "{1:F01COBACMCXAXXX0000000000}{2:O1030800251027BNPAFRPPAXXX00000000002510270800N}{3:{108:REF20251027001}}{4:\\n:20:REF20251027001\\n:23B:CRED\\n:32A:251027EUR1000,00\\n:50K:John Doe\\n123 Main St\\nBamenda, Cameroon\\n:52A:COBACMCX\\n:59:Jane Smith\\n456 Oak Ave\\nParis, France\\n:70:Invoice Payment INV-2025-001\\n-}",
-  "transaction_reference": "REF20251027001",
-  "created_at": "2025-10-27T10:00:00Z"
+  "mt103_message": "{1:F01COBACMCXAXXX0000000000}...",
+  "transaction_reference": "REF20260217001",
+  "created_at": "2026-02-16T10:00:00Z"
 }`}
         />
 
         <ApiEndpoint
           method="POST"
-          endpoint="/swift-mt103-parser"
-          description="Parse SWIFT MT103 messages"
+          endpoint="/v1/banking/swift/mt103/parse"
+          description="Parse SWIFT MT103 messages. Requires Idempotency-Key header."
           requestBody={`{
-  "mt103_message": "{1:F01COBACMCXAXXX0000000000}{2:O1030800251027BNPAFRPPAXXX00000000002510270800N}{3:{108:REF20251027001}}{4:\\n:20:REF20251027001\\n:23B:CRED\\n:32A:251027EUR1000,00\\n:50K:John Doe\\n123 Main St\\nBamenda, Cameroon\\n:52A:COBACMCX\\n:59:Jane Smith\\n456 Oak Ave\\nParis, France\\n:70:Invoice Payment INV-2025-001\\n-}"
+  "mt103_message": "{1:F01COBACMCXAXXX0000000000}{2:O1030800260217BNPAFRPPAXXX00000000002602170800N}..."
 }`}
           response={`{
   "status": "success",
-  "transaction_reference": "REF20251027001",
+  "transaction_reference": "REF20260217001",
   "bank_operation_code": "CRED",
-  "value_date": "2025-10-27",
+  "value_date": "2026-02-17",
   "amount": "1000.00",
   "currency": "EUR",
   "ordering_customer": "John Doe\\n123 Main St\\nBamenda, Cameroon",
   "ordering_institution": "COBACMCX",
   "beneficiary": "Jane Smith\\n456 Oak Ave\\nParis, France",
   "beneficiary_institution": "BNPAFRPP",
-  "remittance_info": "Invoice Payment INV-2025-001"
+  "remittance_info": "Invoice Payment INV-2026-001"
 }`}
         />
 
         <ApiEndpoint
           method="POST"
-          endpoint="/swift-mt940-parser"
-          description="Parse SWIFT MT940 customer statement messages"
+          endpoint="/v1/banking/swift/mt940/parse"
+          description="Parse SWIFT MT940 customer statement messages. Requires Idempotency-Key header."
           requestBody={`{
-  "mt940_message": "{1:F01COBACMCXAXXX0000000000}{2:I940COBACMCXXXXXN}{4:\\n:20:STMT001\\n:25:1234567890\\n:28C:1/1\\n:60F:C251001XAF450000,00\\n:61:2510151015C15000,00NMSCNONREF//E001\\n:86:Customer Payment\\n:62F:C251031XAF500000,00\\n-}"
+  "mt940_message": "{1:F01COBACMCXAXXX0000000000}{2:I940COBACMCXXXXXN}{4:\\n:20:STMT001\\n:25:1234567890\\n...}"
 }`}
           response={`{
   "status": "success",
   "statement_reference": "STMT001",
   "account_identification": "1234567890",
-  "statement_number": "1",
-  "sequence_number": "1",
   "opening_balance": {
     "amount": "450000.00",
     "currency": "XAF",
-    "date": "2025-10-01",
-    "credit_debit": "C"
+    "date": "2026-02-01"
   },
   "closing_balance": {
     "amount": "500000.00",
     "currency": "XAF",
-    "date": "2025-10-31",
-    "credit_debit": "C"
+    "date": "2026-02-28"
   },
   "transactions": [
     {
-      "value_date": "2025-10-15",
-      "entry_date": "2025-10-15",
+      "value_date": "2026-02-15",
       "credit_debit": "C",
       "amount": "15000.00",
-      "transaction_code": "NMSC",
-      "reference": "NONREF",
-      "transaction_details": "E001",
       "information": "Customer Payment"
     }
   ]
@@ -303,8 +286,8 @@ export default function BankingReference() {
         
         <ApiEndpoint
           method="POST"
-          endpoint="/bank-sync"
-          description="Synchronize bank account data with external banking systems"
+          endpoint="/v1/banking/sync"
+          description="Synchronize bank account data with external banking systems. Requires Idempotency-Key header."
           requestBody={`{
   "institution_id": "inst_001",
   "accounts": ["acc_123456", "acc_789012"]
@@ -314,19 +297,13 @@ export default function BankingReference() {
   "sync_id": "sync_001",
   "institution_id": "inst_001",
   "synced_accounts": 2,
-  "sync_timestamp": "2025-10-27T10:00:00Z",
+  "sync_timestamp": "2026-02-16T10:00:00Z",
   "results": [
     {
       "account_id": "acc_123456",
       "status": "synced",
       "transactions_fetched": 15,
-      "last_transaction_date": "2025-10-26"
-    },
-    {
-      "account_id": "acc_789012",
-      "status": "synced",
-      "transactions_fetched": 8,
-      "last_transaction_date": "2025-10-25"
+      "last_transaction_date": "2026-02-15"
     }
   ]
 }`}
@@ -353,12 +330,8 @@ export default function BankingReference() {
             <p className="text-sm text-muted-foreground">Store generated statements with encryption and maintain audit trails.</p>
           </div>
           <div>
-            <p className="font-semibold mb-1">4. Monitor Message Processing</p>
-            <p className="text-sm text-muted-foreground">Track ISO 20022 and SWIFT message lifecycle for compliance and troubleshooting.</p>
-          </div>
-          <div>
-            <p className="font-semibold mb-1">5. Handle Bulk Operations Efficiently</p>
-            <p className="text-sm text-muted-foreground">Use batch processing for large transaction volumes to optimize performance.</p>
+            <p className="font-semibold mb-1">4. Use Idempotency-Key Headers</p>
+            <p className="text-sm text-muted-foreground">All POST requests must include a unique Idempotency-Key UUID to prevent duplicate processing.</p>
           </div>
         </CardContent>
       </Card>

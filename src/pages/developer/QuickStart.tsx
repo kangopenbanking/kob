@@ -23,37 +23,37 @@ export default function QuickStart() {
 
   const codeExamples = {
     curl: {
-      auth: `curl -X POST "https://api.kangopenbanking.com/functions/v1/oauth-token" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "grant_type": "client_credentials",
-    "client_id": "YOUR_CLIENT_ID",
-    "client_secret": "YOUR_CLIENT_SECRET"
-  }'`,
-      accounts: `curl -X GET "https://api.kangopenbanking.com/functions/v1/aisp-accounts" \\
+      auth: `curl -X POST "https://api.kangopenbanking.com/v1/oauth/token" \\
+  -H "Content-Type: application/x-www-form-urlencoded" \\
+  -d "grant_type=client_credentials" \\
+  -d "client_id=YOUR_CLIENT_ID" \\
+  -d "client_secret=YOUR_CLIENT_SECRET" \\
+  -d "scope=accounts payments"`,
+      accounts: `curl -X GET "https://api.kangopenbanking.com/v1/aisp/accounts" \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
-  -H "Content-Type: application/json"`
+  -H "x-consent-id: YOUR_CONSENT_ID"`
     },
     javascript: {
       auth: `const response = await fetch(
-  'https://api.kangopenbanking.com/functions/v1/oauth-token',
+  'https://api.kangopenbanking.com/v1/oauth/token',
   {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
       grant_type: 'client_credentials',
       client_id: 'YOUR_CLIENT_ID',
-      client_secret: 'YOUR_CLIENT_SECRET'
+      client_secret: 'YOUR_CLIENT_SECRET',
+      scope: 'accounts payments'
     })
   }
 );
 const { access_token } = await response.json();`,
       accounts: `const response = await fetch(
-  'https://api.kangopenbanking.com/functions/v1/aisp-accounts',
+  'https://api.kangopenbanking.com/v1/aisp/accounts',
   {
     headers: {
       'Authorization': \`Bearer \${accessToken}\`,
-      'Content-Type': 'application/json'
+      'x-consent-id': consentId
     }
   }
 );
@@ -63,21 +63,22 @@ const accounts = await response.json();`
       auth: `import requests
 
 response = requests.post(
-    'https://api.kangopenbanking.com/functions/v1/oauth-token',
-    json={
+    'https://api.kangopenbanking.com/v1/oauth/token',
+    data={
         'grant_type': 'client_credentials',
         'client_id': 'YOUR_CLIENT_ID',
-        'client_secret': 'YOUR_CLIENT_SECRET'
+        'client_secret': 'YOUR_CLIENT_SECRET',
+        'scope': 'accounts payments'
     }
 )
 access_token = response.json()['access_token']`,
       accounts: `headers = {
     'Authorization': f'Bearer {access_token}',
-    'Content-Type': 'application/json'
+    'x-consent-id': consent_id
 }
 
 response = requests.get(
-    'https://api.kangopenbanking.com/functions/v1/aisp-accounts',
+    'https://api.kangopenbanking.com/v1/aisp/accounts',
     headers=headers
 )
 accounts = response.json()`
@@ -137,7 +138,7 @@ accounts = response.json()`
               <div className="flex-1">
                 <CardTitle className="text-2xl mb-2">Obtain Access Token</CardTitle>
                 <CardDescription className="text-base">
-                  Authenticate using OAuth 2.0 client credentials flow
+                  Authenticate using OAuth 2.0 client credentials flow (form-encoded)
                 </CardDescription>
               </div>
             </div>
@@ -149,63 +150,27 @@ accounts = response.json()`
                 <TabsTrigger value="javascript">JavaScript</TabsTrigger>
                 <TabsTrigger value="python">Python</TabsTrigger>
               </TabsList>
-              <TabsContent value="curl">
-                <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(codeExamples.curl.auth, "curl-auth")}
-                  >
-                    {copiedId === "curl-auth" ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <pre className="text-sm overflow-x-auto pr-8">
-                    <code>{codeExamples.curl.auth}</code>
-                  </pre>
-                </div>
-              </TabsContent>
-              <TabsContent value="javascript">
-                <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(codeExamples.javascript.auth, "js-auth")}
-                  >
-                    {copiedId === "js-auth" ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <pre className="text-sm overflow-x-auto pr-8">
-                    <code>{codeExamples.javascript.auth}</code>
-                  </pre>
-                </div>
-              </TabsContent>
-              <TabsContent value="python">
-                <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(codeExamples.python.auth, "py-auth")}
-                  >
-                    {copiedId === "py-auth" ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <pre className="text-sm overflow-x-auto pr-8">
-                    <code>{codeExamples.python.auth}</code>
-                  </pre>
-                </div>
-              </TabsContent>
+              {(["curl", "javascript", "python"] as const).map((lang) => (
+                <TabsContent key={lang} value={lang}>
+                  <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyToClipboard(codeExamples[lang].auth, `${lang}-auth`)}
+                    >
+                      {copiedId === `${lang}-auth` ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <pre className="text-sm overflow-x-auto pr-8">
+                      <code>{codeExamples[lang].auth}</code>
+                    </pre>
+                  </div>
+                </TabsContent>
+              ))}
             </Tabs>
           </CardContent>
         </Card>
@@ -220,7 +185,7 @@ accounts = response.json()`
               <div className="flex-1">
                 <CardTitle className="text-2xl mb-2">Make Your First API Call</CardTitle>
                 <CardDescription className="text-base">
-                  Retrieve account information using your access token
+                  Retrieve account information using your access token and consent ID
                 </CardDescription>
               </div>
             </div>
@@ -232,63 +197,27 @@ accounts = response.json()`
                 <TabsTrigger value="javascript">JavaScript</TabsTrigger>
                 <TabsTrigger value="python">Python</TabsTrigger>
               </TabsList>
-              <TabsContent value="curl">
-                <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(codeExamples.curl.accounts, "curl-acc")}
-                  >
-                    {copiedId === "curl-acc" ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <pre className="text-sm overflow-x-auto pr-8">
-                    <code>{codeExamples.curl.accounts}</code>
-                  </pre>
-                </div>
-              </TabsContent>
-              <TabsContent value="javascript">
-                <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(codeExamples.javascript.accounts, "js-acc")}
-                  >
-                    {copiedId === "js-acc" ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <pre className="text-sm overflow-x-auto pr-8">
-                    <code>{codeExamples.javascript.accounts}</code>
-                  </pre>
-                </div>
-              </TabsContent>
-              <TabsContent value="python">
-                <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute top-2 right-2"
-                    onClick={() => copyToClipboard(codeExamples.python.accounts, "py-acc")}
-                  >
-                    {copiedId === "py-acc" ? (
-                      <CheckCircle className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <Copy className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <pre className="text-sm overflow-x-auto pr-8">
-                    <code>{codeExamples.python.accounts}</code>
-                  </pre>
-                </div>
-              </TabsContent>
+              {(["curl", "javascript", "python"] as const).map((lang) => (
+                <TabsContent key={lang} value={lang}>
+                  <div className="bg-muted/50 p-4 rounded-lg relative mt-4">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2"
+                      onClick={() => copyToClipboard(codeExamples[lang].accounts, `${lang}-acc`)}
+                    >
+                      {copiedId === `${lang}-acc` ? (
+                        <CheckCircle className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Copy className="h-4 w-4" />
+                      )}
+                    </Button>
+                    <pre className="text-sm overflow-x-auto pr-8">
+                      <code>{codeExamples[lang].accounts}</code>
+                    </pre>
+                  </div>
+                </TabsContent>
+              ))}
             </Tabs>
           </CardContent>
         </Card>
