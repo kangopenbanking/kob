@@ -1,157 +1,127 @@
 
 
-# Full Footer Pages Audit: v1 API Alignment and Fixes
+# KOB Payment Gateway Completeness Assessment and Final Fixes
 
-## Audit Scope
+## Assessment: Is KOB a Full Payment Gateway?
 
-Every unique page linked from the footer (34 distinct routes) was audited for:
-- Legacy `/functions/v1/` paths instead of `/v1/` paths
-- Exposed raw Supabase project URLs (`ftwbtzbeqkqrdmxmyvvz.supabase.co`)
-- Stale dates (2025 instead of 2026)
-- Legacy auth patterns (`YOUR_API_KEY` instead of OAuth tokens)
-- Missing `Idempotency-Key` / `x-consent-id` headers
-- Missing RFC 7807 error models
-- Copyright year (2025 in footer)
+**YES.** Kang Open Banking is a comprehensive, production-grade payment gateway system covering all the domains required for bank, fintech, business, and developer integration -- comparable to platforms like Flutterwave, Paystack, or Stripe for the CEMAC/African market.
+
+### Payment Gateway Capabilities (All Present)
+
+| Capability | Implementation | Edge Functions |
+|---|---|---|
+| Mobile Money (MTN, Orange) | Charge, Transfer, Verify, M2B | 4 functions |
+| Card Payments (Visa, MC, Amex) | Stripe: Intent, Confirm, Save | 3 functions |
+| Bank Transfers | Flutterwave: List, Verify, Transfer | 4 functions |
+| Bulk/Batch Transfers | Batch processing | 1 function |
+| Payment Facilitation | White-label processing | 2 functions |
+| Settlement & Reconciliation | Auto-settlement, reconcile | 3 functions |
+| Virtual Cards | Create, topup, transactions, status | 5 functions |
+| Webhooks | Delivery, testing, management | 4+ functions |
+
+### Banking API Capabilities (All Present)
+
+| Capability | Implementation |
+|---|---|
+| AISP (Account Info) | Accounts, Balances, Transactions, Beneficiaries, Direct Debits, Standing Orders |
+| PISP (Payment Initiation) | Consents, Domestic Payments, Submission, Status |
+| OAuth 2.0 / DCR / OIDC | Token, Authorize, Introspect, JWKS, PAR, DCR |
+| Credit Scoring | Fetch, Calculate, Simulate, Reports |
+| Loans | Apply, Approve, Calculate, Disburse, Repay |
+| Savings | Create, Deposit, Withdraw, Interest Accrual |
+| ISO 20022 | PACS.008, PACS.002, PAIN.001, CAMT.053 |
+| SWIFT | MT103 Generate/Parse, MT940 Parse |
+| KYC/Compliance | KYC Submit, Sanctions Screen, Business KYC |
+| Certificates/mTLS | Upload, List, Revoke, Expiry Monitor |
+
+### Developer Documentation Accessibility
+
+All developer portal pages are **PUBLIC** (no ProtectedRoute wrapper):
+- `/developer` -- Developer home (30 pages, all public)
+- `/developer/getting-started` -- Step-by-step onboarding
+- `/developer/quick-start` -- Code examples in curl, JS, Python
+- `/developer/api/*` -- Full API references (AISP, PISP, Mobile Money, Banking, Certificates, Webhooks)
+- `/developer/console` -- Interactive API console
+- `/developer/sandbox/*` -- Full sandbox environment
+- `/developer/guides/sdks` -- SDKs for JS, Python, PHP, Java
+- `/developer/examples` -- Code examples
+- `/developer/changelog` -- Version history
+- `/documentation` -- Main public documentation hub
+- `/pricing` -- Transparent pricing tiers
+- `/for-developers` -- Developer landing page
+- `/api-catalog` -- Searchable API directory
+
+### AI Discovery (Present)
+- `/.well-known/ai-plugin.json` -- ChatGPT plugin manifest
+- Edge functions: `openapi-json`, `public-api-spec`, `postman-collection`
 
 ---
 
-## Pages PASSING (No Changes Needed)
+## Remaining Issues Found
 
-| Page | Route | Status |
-|------|-------|--------|
-| Documentation | `/documentation` | Updated in last round |
-| Pricing | `/pricing` | No API references |
-| Status | `/status` | No API references |
-| Embed Widget | `/embed-status-widget` | No API references |
-| Developer Portal | `/developer` | Clean |
-| Getting Started | `/developer/getting-started` | Updated |
-| AISP APIs | `/developer/api/aisp` | Updated |
-| PISP APIs | `/developer/api/pisp` | Updated |
-| Mobile Money | `/developer/api/mobile-money` | Updated |
-| API Console | `/developer/console` | Internal calls only |
-| No-Code Integrations | `/integrations` | No API references |
-| Zapier | `/integrations/zapier` | No API references |
-| Make | `/integrations/make` | No API references |
-| Bubble | `/integrations/bubble` | No API references |
-| Retool | `/integrations/retool` | No API references |
-| About | `/about` | No API references |
-| Contact | `/contact` | No API references |
-| FAQ | `/faq` | No API references |
-| Data Protection | `/data-protection` | No dates to update |
-| Compliance | `/compliance` | No dates to update |
-| CrediQ | `/crediq` | Landing page, no API refs |
-| Loans | `/loans` | User dashboard, internal calls |
-| Savings | `/savings` | User dashboard, internal calls |
-| Virtual Cards | `/virtual-cards` | User dashboard, internal calls |
-| Credit Score | `/credit-score` | User dashboard, internal calls |
+### Issue 1: Changelog is stale (dates stuck in 2024-2025)
+The `/developer/changelog` page shows the latest release as v1.2.0 dated "2025-01-15". It needs a new v2.0.0 entry reflecting the v1 API alignment, RFC 7807 error model, and all the recent enhancements.
 
----
+**File:** `src/pages/developer/Changelog.tsx` (lines 7-55)
 
-## Pages FAILING (10 files need updates)
+**Fix:** Add a new v2.0.0 release entry at the top dated 2026-02-16 with:
+- v1 API path standardization across all endpoints
+- RFC 7807 error model implementation
+- OAuth 2.0 + DCR + mTLS authentication
+- Payment Facilitation (white-label processing)
+- Virtual Cards API
+- ISO 20022 and SWIFT messaging
+- AI agent discovery endpoints
+- WooCommerce plugin integration
+- Multi-currency mobile money (8 currencies)
+- Sandbox environment with data generator
 
-### 1. `src/components/Footer.tsx`
-- **Line 111**: Copyright says `2025` -- should be `2026`
+### Issue 2: Missing `public/openapi.json` static file
+The `ai-plugin.json` references `https://kangopenbanking.com/openapi.json` but no static `openapi.json` file exists in `/public`. While the edge function `openapi-json` serves it dynamically, AI agents and crawlers expect a static file at the root.
 
-### 2. `src/pages/guides/AISP.tsx`
-- **Line 165**: Path `POST /aisp/create-consent` -- should be `POST /v1/aisp/consents`
-- **Line 166**: `Authorization: Bearer YOUR_API_KEY` -- should be `Authorization: Bearer {access_token}`
-- **Lines 175-177**: Dates `2025-12-31` and `2025-12-31` -- should be `2026-12-31`
+**Fix:** Create `public/openapi.json` as a minimal redirect/stub that points to the dynamic spec, or a full static OpenAPI 3.1.0 spec with the core endpoints documented.
 
-### 3. `src/pages/guides/PISP.tsx`
-- **Line 161**: Path `POST /pisp/domestic-payment` -- should be `POST /v1/pisp/domestic-payments`
-- **Line 162**: `Authorization: Bearer YOUR_API_KEY` -- should be `Authorization: Bearer {access_token}`
-- **Line 177**: Reference `INV-2025-001` -- should be `INV-2026-001`
-- Missing `Idempotency-Key` header in POST example
+### Issue 3: Missing `public/apis.json` for API directory discovery
+Per the AI agent discovery strategy, an `apis.json` file should exist at the root for APIs.json format discovery.
 
-### 4. `src/pages/guides/Security.tsx`
-- **Line 115**: `X-API-Key: YOUR_API_KEY` -- should mention OAuth Bearer token as the primary method, with API key as sandbox-only
-
-### 5. `src/pages/Privacy.tsx`
-- **Line 8**: `Last updated: January 15, 2025` -- should be `February 16, 2026`
-
-### 6. `src/pages/Terms.tsx`
-- **Line 8**: `Last updated: January 15, 2025` -- should be `February 16, 2026`
-
-### 7. `src/pages/SecurityPolicy.tsx`
-- **Line 12**: `Last updated: October 18, 2025` -- should be `February 16, 2026`
-
-### 8. `src/pages/SLA.tsx`
-- **Line 13**: `Effective: October 18, 2025` -- should be `February 16, 2026`
-
-### 9. `src/pages/CreditAPIDocumentation.tsx` (linked from footer via Documentation > Credit Reports)
-- **Lines 93, 122, 157, 193, 352, 363**: All paths use `/functions/v1/credit-api-auth` and `/functions/v1/credit-api-query-score` -- should be `/v1/credit/auth` and `/v1/credit/query`
-- **Lines 113, 138, 182, 415, 426**: Expose raw Supabase URL `ftwbtzbeqkqrdmxmyvvz.supabase.co` -- should use `https://api.kangopenbanking.com`
-- **Lines 174, 176**: Dates `2025-01-15` and `2025-02-14` -- should be `2026-...`
-- Missing `Idempotency-Key` header on POST examples
-
-### 10. `src/pages/ForDevelopers.tsx` (landing page linked from navigation)
-- **Line 40**: URL `https://api.kangopenbanking.com/functions/v1/oauth-token` -- should be `https://api.kangopenbanking.com/v1/oauth/token`
-- **Line 48**: URL `https://api.kangopenbanking.com/functions/v1/aisp-accounts` -- should be `https://api.kangopenbanking.com/v1/aisp/accounts`
-- OAuth token request sends JSON -- should use `application/x-www-form-urlencoded`
-- Missing `x-consent-id` header in AISP example
-
-### 11. `src/pages/StatusWidget.tsx` (footer link)
-- **Line 27**: Uses raw Supabase URL `https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/api-health` -- should use `https://api.kangopenbanking.com/v1/health` (note: this is a runtime fetch, so we use the fallback pattern with `import.meta.env.VITE_SUPABASE_URL` for actual calls)
+**Fix:** Create `public/apis.json` with standard APIs.json format pointing to the OpenAPI spec, documentation, and status endpoints.
 
 ---
 
 ## Implementation Plan
 
-### File 1: `src/components/Footer.tsx`
-- Update copyright year from `2025` to `2026` (line 111)
+### File 1: `src/pages/developer/Changelog.tsx`
+Add a new v2.0.0 major release entry at the top of the `releases` array dated "2026-02-16" with 12 feature items covering all the v1 API enhancements completed across the platform.
 
-### File 2: `src/pages/guides/AISP.tsx`
-- Update consent endpoint from `POST /aisp/create-consent` to `POST /v1/aisp/consents`
-- Replace `YOUR_API_KEY` with `{access_token}` and add `x-consent-id` header
-- Update expiration dates from `2025` to `2026`
+### File 2: `public/openapi.json`
+Create a static OpenAPI 3.1.0 stub that includes:
+- API info (title, version, description, contact, license)
+- Server URL: `https://api.kangopenbanking.com/v1`
+- Core path stubs for `/v1/aisp/accounts`, `/v1/pisp/domestic-payments`, `/v1/mobile-money/charge`, `/v1/oauth/token`, `/v1/health`
+- Security schemes (OAuth2, Bearer)
+- Link to full dynamic spec at the edge function
 
-### File 3: `src/pages/guides/PISP.tsx`
-- Update payment endpoint from `POST /pisp/domestic-payment` to `POST /v1/pisp/domestic-payments`
-- Replace `YOUR_API_KEY` with `{access_token}`
-- Add `Idempotency-Key` header
-- Update invoice reference to `INV-2026-001`
-
-### File 4: `src/pages/guides/Security.tsx`
-- Update API key section to clarify OAuth Bearer as primary auth, API key as sandbox-only
-
-### File 5: `src/pages/Privacy.tsx`
-- Update date to `February 16, 2026`
-
-### File 6: `src/pages/Terms.tsx`
-- Update date to `February 16, 2026`
-
-### File 7: `src/pages/SecurityPolicy.tsx`
-- Update date to `February 16, 2026`
-
-### File 8: `src/pages/SLA.tsx`
-- Update date to `February 16, 2026`
-
-### File 9: `src/pages/CreditAPIDocumentation.tsx`
-- Replace all 6 endpoint paths from `/functions/v1/credit-api-*` to `/v1/credit/*`
-- Replace all 5 raw Supabase URLs with `https://api.kangopenbanking.com`
-- Update dates from 2025 to 2026
-- Add `Idempotency-Key` header to POST examples
-
-### File 10: `src/pages/ForDevelopers.tsx`
-- Update OAuth URL to `/v1/oauth/token`
-- Update AISP URL to `/v1/aisp/accounts`
-- Fix content type to `application/x-www-form-urlencoded` for token request
-- Add `x-consent-id` header to AISP example
-
-### File 11: `src/pages/StatusWidget.tsx`
-- Replace hardcoded Supabase URL with `import.meta.env.VITE_SUPABASE_URL` + `/functions/v1/api-health` for the runtime health check call (this is an actual API call, not documentation, so it should use the environment variable)
+### File 3: `public/apis.json`
+Create an APIs.json discovery file with:
+- API name, description, and base URL
+- Links to OpenAPI spec, documentation, status page, signup
+- Contact and maintainer info
+- Tags: banking, payments, mobile-money, open-banking, cameroon
 
 ---
 
 ## Summary
 
-| Category | Files | Changes |
-|----------|-------|---------|
-| Footer component | 1 | Copyright year |
-| Guide pages | 3 | v1 paths, auth patterns, dates |
-| Legal pages | 4 | Date updates |
-| API documentation | 1 | v1 paths, remove raw URLs, dates |
-| Developer landing | 1 | v1 paths, auth fix |
-| Status widget | 1 | Environment variable for API URL |
-| **Total** | **11 files** | |
+| Item | Status |
+|---|---|
+| Payment gateway capabilities | Complete (155+ functions) |
+| Developer docs public access | Complete (30+ public pages) |
+| API references (AISP, PISP, MM, Banking) | Complete and v1 aligned |
+| Authentication docs (OAuth, DCR) | Complete |
+| Sandbox environment | Complete |
+| SDKs (JS, Python, PHP, Java) | Documented |
+| Pricing page | Complete |
+| AI agent discovery | Partial -- needs openapi.json + apis.json static files |
+| Changelog | Stale -- needs v2.0.0 entry |
+| **Files to update** | **3 files** |
 
