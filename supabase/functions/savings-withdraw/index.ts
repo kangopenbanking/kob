@@ -22,6 +22,11 @@ serve(async (req) => {
       }
     );
 
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('Unauthorized');
@@ -82,12 +87,10 @@ serve(async (req) => {
       throw new Error(`Maximum ${product.max_withdrawals_per_month} withdrawals per month exceeded`);
     }
 
-    // Check sufficient balance
     if (parseFloat(savingsAccount.available_balance) < amount) {
       throw new Error('Insufficient available balance');
     }
 
-    // Check minimum balance requirement
     const remainingBalance = parseFloat(savingsAccount.current_balance) - amount;
     if (product.min_balance && remainingBalance < product.min_balance && remainingBalance > 0) {
       throw new Error(`Minimum balance of ${product.min_balance} XAF must be maintained`);
@@ -108,16 +111,18 @@ serve(async (req) => {
       throw new Error('Failed to update savings balance');
     }
 
+    const txRef = `WTH-${Date.now()}`;
+
     // Record transaction
     await supabase.from('savings_transactions').insert({
-      savings_account_id: savings_account_id,
+      savings_account_id,
       user_id: user.id,
       transaction_type: 'withdrawal',
-      amount: amount,
+      amount,
       balance_after: remainingBalance,
-      destination_account_id: destination_account_id,
+      destination_account_id,
       description: 'Withdrawal from savings',
-      reference: `WTH-${Date.now()}`,
+      reference: txRef,
     });
 
     // Update account balance record
@@ -130,6 +135,49 @@ serve(async (req) => {
       balance_datetime: new Date().toISOString(),
     });
 
+    // ── Ledger integration: DR Customer Deposits, CR Cash ──
+    try {
+      const { data: ledgerAccounts } = await serviceSupabase
+        .from('ledger_accounts')
+        .select('id, account_code')
+        .in('account_code', ['1000', '2000']);
+
+      const cashAcct = ledgerAccounts?.find(a => a.account_code === '1000');
+      const depositsAcct = ledgerAccounts?.find(a => a.account_code === '2000');
+
+      if (cashAcct && depositsAcct) {
+        const entryNumber = `SAV-WTH-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+        const { data: journalEntry } = await serviceSupabase
+          .from('journal_entries')
+          .insert({
+            entry_number: entryNumber,
+            entry_date: new Date().toISOString().split('T')[0],
+            description: `Savings withdrawal - ${amount} XAF`,
+            reference_type: 'savings',
+            reference_id: savings_account_id,
+            is_reversed: false,
+          })
+          .select('id')
+          .single();
+
+        if (journalEntry) {
+          await serviceSupabase.from('journal_lines').insert([
+            { journal_entry_id: journalEntry.id, ledger_account_id: depositsAcct.id, debit: amount, credit: 0 },
+            { journal_entry_id: journalEntry.id, ledger_account_id: cashAcct.id, debit: 0, credit: amount },
+          ]);
+
+          // Update ledger balances
+          const { data: cashBal } = await serviceSupabase.from('ledger_accounts').select('balance').eq('id', cashAcct.id).single();
+          const { data: depBal } = await serviceSupabase.from('ledger_accounts').select('balance').eq('id', depositsAcct.id).single();
+          if (cashBal) await serviceSupabase.from('ledger_accounts').update({ balance: (cashBal.balance || 0) - amount }).eq('id', cashAcct.id);
+          if (depBal) await serviceSupabase.from('ledger_accounts').update({ balance: (depBal.balance || 0) - amount }).eq('id', depositsAcct.id);
+        }
+      }
+    } catch (ledgerErr) {
+      console.error('Ledger posting failed (non-blocking):', ledgerErr);
+    }
+
     console.log('Withdrawal successful. New balance:', remainingBalance);
 
     return new Response(
@@ -137,7 +185,7 @@ serve(async (req) => {
         success: true,
         new_balance: remainingBalance,
         withdrawals_remaining: (product.max_withdrawals_per_month || 999) - (withdrawalsThisMonth + 1),
-        transaction_ref: `WTH-${Date.now()}`,
+        transaction_ref: txRef,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
