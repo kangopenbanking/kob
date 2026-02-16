@@ -24,7 +24,7 @@ const StatusWidget = () => {
       setIsRetrying(attemptNumber > 0);
       
       try {
-        const response = await fetch("https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/api-health");
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/api-health`);
         const endTime = Date.now();
         const responseTime = endTime - startTime;
         

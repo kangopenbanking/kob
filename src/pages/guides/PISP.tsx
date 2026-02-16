@@ -158,9 +158,10 @@ export default function PISP() {
 
               <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mt-6">
                 <p className="text-xs text-muted-foreground font-semibold uppercase mb-2">Example: Domestic Payment Request</p>
-                <pre className="font-mono text-sm">{`POST /pisp/domestic-payment
-Authorization: Bearer YOUR_API_KEY
+                <pre className="font-mono text-sm">{`POST /v1/pisp/domestic-payments
+Authorization: Bearer {access_token}
 Content-Type: application/json
+Idempotency-Key: unique-request-id-abc123
 
 {
   "consentId": "consent_abc123",
@@ -174,7 +175,7 @@ Content-Type: application/json
     "name": "Recipient Name"
   },
   "remittanceInformation": {
-    "reference": "INV-2025-001",
+    "reference": "INV-2026-001",
     "unstructured": "Invoice Payment"
   }
 }`}</pre>
