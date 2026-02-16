@@ -1,121 +1,157 @@
 
-# Full Health Audit: Documentation.tsx v1 API Alignment
 
-## Audit Status
+# Full Footer Pages Audit: v1 API Alignment and Fixes
 
-### Already Updated (Passing)
-- `src/pages/admin/ApiDocumentation.tsx` -- 70+ endpoints, v1 paths, OpenAPI 3.1.0, RFC 7807 errors
-- `src/pages/admin/ApiTesting.tsx` -- synced endpoints, Idempotency-Key support
-- `src/pages/developer/AispReference.tsx` -- v1 paths
-- `src/pages/developer/PispReference.tsx` -- v1 paths, PISP_ error codes
-- `src/pages/developer/MobileMoneyReference.tsx` -- v1 paths, MM_ error codes
-- `src/pages/developer/BankingReference.tsx` -- v1 paths
-- `src/pages/developer/CertificateReference.tsx` -- v1 paths
-- `src/pages/developer/GettingStarted.tsx` -- v1 URLs, form-encoded auth
-- `src/pages/developer/QuickStart.tsx` -- v1 URLs
-- `src/pages/developer/CodeExamples.tsx` -- v1 paths, idempotency headers
-- `docs/portal/*` -- all 7 markdown files created with v1 standards
-- Domain navigation links (lines 162-173) -- fixed in last round
+## Audit Scope
 
-### Failing: `src/pages/Documentation.tsx` (Main Public Page)
-
-This is the primary public-facing documentation page at `/documentation`. It has **28 legacy path references** that were never updated to v1.
-
-| Line(s) | Current (Legacy) | Should Be (v1) |
-|---------|-------------------|----------------|
-| 74-118 | `apiEndpoints` array uses `/api/v1/accounts`, `/api/v1/payments/initiate`, `/api/v1/transactions`, `/api/v1/transfers` | Replace with real v1 endpoints: `/v1/aisp/accounts`, `/v1/pisp/domestic-payments`, `/v1/mobile-money/charge`, `/v1/health` |
-| 79-80 | `Authorization: Bearer YOUR_API_KEY` | Should mention OAuth token, not "API_KEY" |
-| 138 | `dateModified: "2025-11-05"` | `"2026-02-16"` |
-| 137 | `datePublished: "2025-01-05"` | Keep or update |
-| 427-448 | Auth section says "Bearer YOUR_API_KEY" only | Add OAuth 2.0 grants, DCR reference, link to `/developer/quick-start` |
-| 459-476 | Response format shows `{ status, data, timestamp }` envelope | Replace with RFC 7807 error model: `error`, `error_code`, `message`, `details`, `error_id`, `timestamp` |
-| 465 | Timestamp `2025-01-01T12:00:00Z` | `2026-02-16T12:00:00Z` |
-| 512 | `POST /functions/v1/certificate-upload` | `POST /v1/certificates/upload` |
-| 531 | `GET /functions/v1/certificate-list` | `GET /v1/certificates/list` |
-| 545 | `POST /functions/v1/certificate-revoke` | `POST /v1/certificates/revoke` |
-| 593 | `POST /functions/v1/loan-apply` | `POST /v1/loans/apply` |
-| 636 | `POST /functions/v1/loan-calculate` | `POST /v1/loans/calculate` |
-| 664 | `POST /functions/v1/loan-repay` | `POST /v1/loans/repay` |
-| 678 | `next_due_date: "2025-02-15"` | `"2026-03-15"` |
-| 709 | `POST /functions/v1/savings-create` | `POST /v1/savings/create` |
-| 750 | `POST /functions/v1/savings-deposit` | `POST /v1/savings/deposit` |
-| 777 | `POST /functions/v1/savings-withdraw` | `POST /v1/savings/withdraw` |
-| 823 | `POST /functions/v1/credit-score-fetch` | `POST /v1/credit/score` |
-| 836-837 | `calculated_at: "2025-01-15..."` | `2026-...` |
-| 889 | `POST /functions/v1/credit-report-generate` | `POST /v1/credit/report` |
-| 914 | `generated_at: "2025-01-15..."` | `2026-...` |
-| 959 | `POST /functions/v1/credit-api-auth` | `POST /v1/credit/auth` |
-| 989 | `POST /functions/v1/credit-api-query-score` | `POST /v1/credit/query` |
-| 1003 | `calculated_at: "2025-01-15..."` | `2026-...` |
-| 1154 | `POST /functions/v1/send-communication` | `POST /v1/communications/send` |
-| 1197 | `POST /functions/v1/send-bulk-communication` | `POST /v1/communications/bulk` |
-| 1171 | curl URL uses `/v1/send-communication` | `/v1/communications/send` |
-| 1216 | curl URL uses `/v1/send-bulk-communication` | `/v1/communications/bulk` |
-
-**Missing from Documentation.tsx:**
-- No `Idempotency-Key` header on any POST examples (loans, savings, payments)
-- No `x-consent-id` header on AISP/credit examples
-- No link to the developer portal guides (`docs/portal/`)
+Every unique page linked from the footer (34 distinct routes) was audited for:
+- Legacy `/functions/v1/` paths instead of `/v1/` paths
+- Exposed raw Supabase project URLs (`ftwbtzbeqkqrdmxmyvvz.supabase.co`)
+- Stale dates (2025 instead of 2026)
+- Legacy auth patterns (`YOUR_API_KEY` instead of OAuth tokens)
+- Missing `Idempotency-Key` / `x-consent-id` headers
+- Missing RFC 7807 error models
+- Copyright year (2025 in footer)
 
 ---
 
-## Public Banking API Completeness Assessment
+## Pages PASSING (No Changes Needed)
 
-The platform covers all domains required for a full public banking API comparable to Flutterwave:
+| Page | Route | Status |
+|------|-------|--------|
+| Documentation | `/documentation` | Updated in last round |
+| Pricing | `/pricing` | No API references |
+| Status | `/status` | No API references |
+| Embed Widget | `/embed-status-widget` | No API references |
+| Developer Portal | `/developer` | Clean |
+| Getting Started | `/developer/getting-started` | Updated |
+| AISP APIs | `/developer/api/aisp` | Updated |
+| PISP APIs | `/developer/api/pisp` | Updated |
+| Mobile Money | `/developer/api/mobile-money` | Updated |
+| API Console | `/developer/console` | Internal calls only |
+| No-Code Integrations | `/integrations` | No API references |
+| Zapier | `/integrations/zapier` | No API references |
+| Make | `/integrations/make` | No API references |
+| Bubble | `/integrations/bubble` | No API references |
+| Retool | `/integrations/retool` | No API references |
+| About | `/about` | No API references |
+| Contact | `/contact` | No API references |
+| FAQ | `/faq` | No API references |
+| Data Protection | `/data-protection` | No dates to update |
+| Compliance | `/compliance` | No dates to update |
+| CrediQ | `/crediq` | Landing page, no API refs |
+| Loans | `/loans` | User dashboard, internal calls |
+| Savings | `/savings` | User dashboard, internal calls |
+| Virtual Cards | `/virtual-cards` | User dashboard, internal calls |
+| Credit Score | `/credit-score` | User dashboard, internal calls |
 
-| Domain | Edge Functions | v1 Paths | Status |
-|--------|---------------|----------|--------|
-| OAuth / DCR / OIDC | 7 functions | Updated | Ready |
-| AISP (Account Info) | 8 functions | Updated | Ready |
-| PISP (Payments) | 5 functions | Updated | Ready |
-| Mobile Money | 4 functions | Updated | Ready |
-| Flutterwave Payments | 4 functions | Updated | Ready |
-| Stripe Payments | 3 functions | Updated | Ready |
-| Credit Scoring | 5 functions | Updated | Ready |
-| Loans | 6 functions | Updated | Ready |
-| Savings | 4 functions | Updated | Ready |
-| Ledger (Double-Entry) | 3 functions | Updated | Ready |
-| Virtual Cards | 5 functions | Updated | Ready |
-| KYC / Compliance | 3 functions | Updated | Ready |
-| ISO 20022 / SWIFT | 6 functions | Updated | Ready |
-| Webhooks | 4 functions | Updated | Ready |
-| Certificates / mTLS | 3 functions | Updated | Ready |
-| Communications | 2 functions | Needs fix | Fix below |
-| Admin / Reports | 5+ functions | Updated | Ready |
-| Sandbox | 6 functions | Updated | Ready |
-| WooCommerce | 6 functions | Updated | Ready |
+---
 
-**Total: 155+ edge functions across 19 domains -- this is a full banking API.**
+## Pages FAILING (10 files need updates)
 
-The only remaining gap is the main `/documentation` page which is the public entry point and still shows legacy paths.
+### 1. `src/components/Footer.tsx`
+- **Line 111**: Copyright says `2025` -- should be `2026`
+
+### 2. `src/pages/guides/AISP.tsx`
+- **Line 165**: Path `POST /aisp/create-consent` -- should be `POST /v1/aisp/consents`
+- **Line 166**: `Authorization: Bearer YOUR_API_KEY` -- should be `Authorization: Bearer {access_token}`
+- **Lines 175-177**: Dates `2025-12-31` and `2025-12-31` -- should be `2026-12-31`
+
+### 3. `src/pages/guides/PISP.tsx`
+- **Line 161**: Path `POST /pisp/domestic-payment` -- should be `POST /v1/pisp/domestic-payments`
+- **Line 162**: `Authorization: Bearer YOUR_API_KEY` -- should be `Authorization: Bearer {access_token}`
+- **Line 177**: Reference `INV-2025-001` -- should be `INV-2026-001`
+- Missing `Idempotency-Key` header in POST example
+
+### 4. `src/pages/guides/Security.tsx`
+- **Line 115**: `X-API-Key: YOUR_API_KEY` -- should mention OAuth Bearer token as the primary method, with API key as sandbox-only
+
+### 5. `src/pages/Privacy.tsx`
+- **Line 8**: `Last updated: January 15, 2025` -- should be `February 16, 2026`
+
+### 6. `src/pages/Terms.tsx`
+- **Line 8**: `Last updated: January 15, 2025` -- should be `February 16, 2026`
+
+### 7. `src/pages/SecurityPolicy.tsx`
+- **Line 12**: `Last updated: October 18, 2025` -- should be `February 16, 2026`
+
+### 8. `src/pages/SLA.tsx`
+- **Line 13**: `Effective: October 18, 2025` -- should be `February 16, 2026`
+
+### 9. `src/pages/CreditAPIDocumentation.tsx` (linked from footer via Documentation > Credit Reports)
+- **Lines 93, 122, 157, 193, 352, 363**: All paths use `/functions/v1/credit-api-auth` and `/functions/v1/credit-api-query-score` -- should be `/v1/credit/auth` and `/v1/credit/query`
+- **Lines 113, 138, 182, 415, 426**: Expose raw Supabase URL `ftwbtzbeqkqrdmxmyvvz.supabase.co` -- should use `https://api.kangopenbanking.com`
+- **Lines 174, 176**: Dates `2025-01-15` and `2025-02-14` -- should be `2026-...`
+- Missing `Idempotency-Key` header on POST examples
+
+### 10. `src/pages/ForDevelopers.tsx` (landing page linked from navigation)
+- **Line 40**: URL `https://api.kangopenbanking.com/functions/v1/oauth-token` -- should be `https://api.kangopenbanking.com/v1/oauth/token`
+- **Line 48**: URL `https://api.kangopenbanking.com/functions/v1/aisp-accounts` -- should be `https://api.kangopenbanking.com/v1/aisp/accounts`
+- OAuth token request sends JSON -- should use `application/x-www-form-urlencoded`
+- Missing `x-consent-id` header in AISP example
+
+### 11. `src/pages/StatusWidget.tsx` (footer link)
+- **Line 27**: Uses raw Supabase URL `https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/api-health` -- should use `https://api.kangopenbanking.com/v1/health` (note: this is a runtime fetch, so we use the fallback pattern with `import.meta.env.VITE_SUPABASE_URL` for actual calls)
 
 ---
 
 ## Implementation Plan
 
-### Single file update: `src/pages/Documentation.tsx`
+### File 1: `src/components/Footer.tsx`
+- Update copyright year from `2025` to `2026` (line 111)
 
-1. **Replace `apiEndpoints` array** (lines 74-118) with 4 real v1 examples:
-   - `GET /v1/aisp/accounts` -- List accounts (with `x-consent-id` header)
-   - `POST /v1/pisp/domestic-payments` -- Initiate payment (with `Idempotency-Key`)
-   - `POST /v1/mobile-money/charge` -- Mobile money charge (with `Idempotency-Key`)
-   - `GET /v1/health` -- Health check (no auth)
+### File 2: `src/pages/guides/AISP.tsx`
+- Update consent endpoint from `POST /aisp/create-consent` to `POST /v1/aisp/consents`
+- Replace `YOUR_API_KEY` with `{access_token}` and add `x-consent-id` header
+- Update expiration dates from `2025` to `2026`
 
-2. **Update Authentication section** (lines 427-448): Expand to mention OAuth 2.0, DCR, and link to QuickStart guide
+### File 3: `src/pages/guides/PISP.tsx`
+- Update payment endpoint from `POST /pisp/domestic-payment` to `POST /v1/pisp/domestic-payments`
+- Replace `YOUR_API_KEY` with `{access_token}`
+- Add `Idempotency-Key` header
+- Update invoice reference to `INV-2026-001`
 
-3. **Replace Response Format** (lines 459-476): Show RFC 7807 error model with all 6 fields
+### File 4: `src/pages/guides/Security.tsx`
+- Update API key section to clarify OAuth Bearer as primary auth, API key as sandbox-only
 
-4. **Fix all 14 endpoint paths** from `/functions/v1/...` to `/v1/...` format:
-   - Certificate endpoints (3 paths)
-   - Loan endpoints (3 paths)
-   - Savings endpoints (3 paths)
-   - Credit endpoints (3 paths)
-   - Communication endpoints (2 paths)
+### File 5: `src/pages/Privacy.tsx`
+- Update date to `February 16, 2026`
 
-5. **Add `Idempotency-Key` header** to all POST examples (loans, savings, payments)
+### File 6: `src/pages/Terms.tsx`
+- Update date to `February 16, 2026`
 
-6. **Update all dates** from 2025 to 2026
+### File 7: `src/pages/SecurityPolicy.tsx`
+- Update date to `February 16, 2026`
 
-7. **Update structured data** `dateModified` to `2026-02-16`
+### File 8: `src/pages/SLA.tsx`
+- Update date to `February 16, 2026`
 
-No other files need changes -- this is the last remaining file with legacy patterns.
+### File 9: `src/pages/CreditAPIDocumentation.tsx`
+- Replace all 6 endpoint paths from `/functions/v1/credit-api-*` to `/v1/credit/*`
+- Replace all 5 raw Supabase URLs with `https://api.kangopenbanking.com`
+- Update dates from 2025 to 2026
+- Add `Idempotency-Key` header to POST examples
+
+### File 10: `src/pages/ForDevelopers.tsx`
+- Update OAuth URL to `/v1/oauth/token`
+- Update AISP URL to `/v1/aisp/accounts`
+- Fix content type to `application/x-www-form-urlencoded` for token request
+- Add `x-consent-id` header to AISP example
+
+### File 11: `src/pages/StatusWidget.tsx`
+- Replace hardcoded Supabase URL with `import.meta.env.VITE_SUPABASE_URL` + `/functions/v1/api-health` for the runtime health check call (this is an actual API call, not documentation, so it should use the environment variable)
+
+---
+
+## Summary
+
+| Category | Files | Changes |
+|----------|-------|---------|
+| Footer component | 1 | Copyright year |
+| Guide pages | 3 | v1 paths, auth patterns, dates |
+| Legal pages | 4 | Date updates |
+| API documentation | 1 | v1 paths, remove raw URLs, dates |
+| Developer landing | 1 | v1 paths, auth fix |
+| Status widget | 1 | Environment variable for API URL |
+| **Total** | **11 files** | |
+
