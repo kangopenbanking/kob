@@ -1,16 +1,16 @@
 {
   "name": "Kang Open Banking",
-  "description": "Open Banking API for Cameroon",
+  "description": "COBAC-compliant Open Banking and Payment Gateway API for Cameroon and the CEMAC region",
   "url": "https://kangopenbanking.com",
   "created": "2024-01-01",
-  "modified": "2025-01-24",
-  "specificationVersion": "0.16",
+  "modified": "2026-02-16",
+  "specificationVersion": "0.18",
   "apis": [
     {
       "name": "Kang Open Banking API",
-      "description": "COBAC-compliant banking API for Cameroon enabling account information, payment initiation, credit scoring, and mobile money integration",
+      "description": "Full payment gateway and open banking API: AISP, PISP, mobile money (MTN, Orange), card payments, virtual cards, credit scoring, ISO 20022, and SWIFT messaging for the CEMAC region",
       "image": "https://kangopenbanking.com/kob-logo.png",
-      "baseURL": "https://api.kangopenbanking.com",
+      "baseURL": "https://api.kangopenbanking.com/v1",
       "humanURL": "https://kangopenbanking.com/developer",
       "tags": [
         "banking",
@@ -21,7 +21,11 @@
         "credit-scoring",
         "open-banking",
         "fintech",
-        "africa"
+        "africa",
+        "payment-gateway",
+        "virtual-cards",
+        "iso20022",
+        "swift"
       ],
       "properties": [
         {
@@ -29,7 +33,7 @@
           "url": "https://kangopenbanking.com/openapi.json"
         },
         {
-          "type": "X-openapi-original",
+          "type": "X-openapi-dynamic",
           "url": "https://api.kangopenbanking.com/functions/v1/public-api-spec"
         },
         {
@@ -41,16 +45,28 @@
           "url": "https://kangopenbanking.com/developer"
         },
         {
+          "type": "X-getting-started",
+          "url": "https://kangopenbanking.com/developer/getting-started"
+        },
+        {
           "type": "X-api-explorer",
           "url": "https://kangopenbanking.com/developer/api-explorer"
         },
         {
-          "type": "X-terms-of-service",
-          "url": "https://kangopenbanking.com/terms"
+          "type": "X-sandbox",
+          "url": "https://kangopenbanking.com/developer/sandbox"
         },
         {
-          "type": "X-contact",
-          "url": "https://kangopenbanking.com/contact"
+          "type": "X-sdks",
+          "url": "https://kangopenbanking.com/developer/guides/sdks"
+        },
+        {
+          "type": "X-status",
+          "url": "https://kangopenbanking.com/status"
+        },
+        {
+          "type": "X-terms-of-service",
+          "url": "https://kangopenbanking.com/terms"
         },
         {
           "type": "X-pricing",
@@ -63,11 +79,15 @@
         {
           "type": "X-signup",
           "url": "https://kangopenbanking.com/register"
+        },
+        {
+          "type": "X-ai-plugin",
+          "url": "https://kangopenbanking.com/.well-known/ai-plugin.json"
         }
       ],
       "contact": [
         {
-          "FN": "Kang Open Banking Support",
+          "FN": "Kang Open Banking Developer Support",
           "email": "developers@kangopenbanking.com",
           "X-twitter": "kangopenbanking"
         }
@@ -78,7 +98,8 @@
   "maintainers": [
     {
       "FN": "Kang Open Banking",
-      "email": "developers@kangopenbanking.com"
+      "email": "developers@kangopenbanking.com",
+      "url": "https://kangopenbanking.com"
     }
   ]
 }

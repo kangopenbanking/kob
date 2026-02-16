@@ -6,6 +6,27 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.0.0",
+      date: "2026-02-16",
+      type: "major",
+      changes: [
+        { type: "feature", description: "v1 API path standardization across all endpoints (/v1/ prefix)" },
+        { type: "feature", description: "RFC 7807 error model with domain-prefixed codes (AISP_001, PISP_002)" },
+        { type: "feature", description: "OAuth 2.0 + Dynamic Client Registration (DCR) + mTLS authentication" },
+        { type: "feature", description: "Payment Facilitation API for white-label payment processing" },
+        { type: "feature", description: "Virtual Cards API (create, topup, freeze, transactions)" },
+        { type: "feature", description: "ISO 20022 messaging (PACS.008, PACS.002, PAIN.001, CAMT.053)" },
+        { type: "feature", description: "SWIFT MT103/MT940 message generation and parsing" },
+        { type: "feature", description: "AI agent discovery endpoints (ai-plugin.json, OpenAPI, APIs.json)" },
+        { type: "feature", description: "WooCommerce plugin integration for e-commerce merchants" },
+        { type: "feature", description: "Multi-currency mobile money support (8 CEMAC currencies)" },
+        { type: "feature", description: "Sandbox environment with synthetic data generator" },
+        { type: "improvement", description: "Idempotency-Key header enforcement on all write operations" },
+        { type: "improvement", description: "Standardized offset-based pagination across all list endpoints" },
+        { type: "improvement", description: "Enhanced webhook delivery with retry and dead-letter queue" },
+      ]
+    },
+    {
       version: "1.2.0",
       date: "2025-01-15",
       type: "minor",
