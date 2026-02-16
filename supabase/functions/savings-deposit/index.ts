@@ -22,6 +22,11 @@ serve(async (req) => {
       }
     );
 
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    );
+
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       throw new Error('Unauthorized');
@@ -47,12 +52,11 @@ serve(async (req) => {
       throw new Error('Savings account is not active');
     }
 
-    // Check if account is locked (fixed deposit)
     if (savingsAccount.is_locked) {
       throw new Error('Cannot deposit to locked fixed deposit account');
     }
 
-    // Validate source account has sufficient balance (if provided)
+    // Validate source account balance
     if (source_account_id) {
       const { data: sourceBalance } = await supabase
         .from('account_balances')
@@ -80,16 +84,18 @@ serve(async (req) => {
       throw new Error('Failed to update savings balance');
     }
 
+    const txRef = `DEP-${Date.now()}`;
+
     // Record transaction
     await supabase.from('savings_transactions').insert({
-      savings_account_id: savings_account_id,
+      savings_account_id,
       user_id: user.id,
       transaction_type: 'deposit',
-      amount: amount,
+      amount,
       balance_after: newBalance,
-      source_account_id: source_account_id,
+      source_account_id,
       description: 'Deposit to savings',
-      reference: `DEP-${Date.now()}`,
+      reference: txRef,
     });
 
     // Update account balance record
@@ -101,6 +107,49 @@ serve(async (req) => {
       currency: 'XAF',
       balance_datetime: new Date().toISOString(),
     });
+
+    // ── Ledger integration: DR Cash, CR Customer Deposits ──
+    try {
+      const { data: ledgerAccounts } = await serviceSupabase
+        .from('ledger_accounts')
+        .select('id, account_code')
+        .in('account_code', ['1000', '2000']);
+
+      const cashAcct = ledgerAccounts?.find(a => a.account_code === '1000');
+      const depositsAcct = ledgerAccounts?.find(a => a.account_code === '2000');
+
+      if (cashAcct && depositsAcct) {
+        const entryNumber = `SAV-DEP-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+        const { data: journalEntry } = await serviceSupabase
+          .from('journal_entries')
+          .insert({
+            entry_number: entryNumber,
+            entry_date: new Date().toISOString().split('T')[0],
+            description: `Savings deposit - ${amount} XAF`,
+            reference_type: 'savings',
+            reference_id: savings_account_id,
+            is_reversed: false,
+          })
+          .select('id')
+          .single();
+
+        if (journalEntry) {
+          await serviceSupabase.from('journal_lines').insert([
+            { journal_entry_id: journalEntry.id, ledger_account_id: cashAcct.id, debit: amount, credit: 0 },
+            { journal_entry_id: journalEntry.id, ledger_account_id: depositsAcct.id, debit: 0, credit: amount },
+          ]);
+
+          // Update ledger balances
+          const { data: cashBal } = await serviceSupabase.from('ledger_accounts').select('balance').eq('id', cashAcct.id).single();
+          const { data: depBal } = await serviceSupabase.from('ledger_accounts').select('balance').eq('id', depositsAcct.id).single();
+          if (cashBal) await serviceSupabase.from('ledger_accounts').update({ balance: (cashBal.balance || 0) + amount }).eq('id', cashAcct.id);
+          if (depBal) await serviceSupabase.from('ledger_accounts').update({ balance: (depBal.balance || 0) + amount }).eq('id', depositsAcct.id);
+        }
+      }
+    } catch (ledgerErr) {
+      console.error('Ledger posting failed (non-blocking):', ledgerErr);
+    }
 
     // Check if goal reached
     let goalReached = false;
@@ -115,7 +164,7 @@ serve(async (req) => {
         success: true,
         new_balance: newBalance,
         goal_reached: goalReached,
-        transaction_ref: `DEP-${Date.now()}`,
+        transaction_ref: txRef,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
