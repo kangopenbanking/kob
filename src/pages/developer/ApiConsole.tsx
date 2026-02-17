@@ -14,39 +14,39 @@ import { DocNavigation } from "@/components/developer/DocNavigation";
 
 const API_ENDPOINTS = {
   AISP: [
-    { value: "/aisp-accounts", label: "List Accounts", method: "GET" },
-    { value: "/aisp-balances/{accountId}", label: "Get Balances", method: "GET" },
-    { value: "/aisp-transactions/{accountId}", label: "Get Transactions", method: "GET" },
-    { value: "/aisp-create-consent", label: "Create Consent", method: "POST" },
+    { value: "/v1/aisp/accounts", label: "List Accounts", method: "GET" },
+    { value: "/v1/aisp/accounts/{accountId}/balances", label: "Get Balances", method: "GET" },
+    { value: "/v1/aisp/accounts/{accountId}/transactions", label: "Get Transactions", method: "GET" },
+    { value: "/v1/aisp/consents", label: "Create Consent", method: "POST" },
   ],
   PISP: [
-    { value: "/pisp-create-consent", label: "Create Payment Consent", method: "POST" },
-    { value: "/pisp-domestic-payment", label: "Initiate Domestic Payment", method: "POST" },
-    { value: "/pisp-payment-submission", label: "Submit Payment", method: "POST" },
-    { value: "/pisp-payment-details/{paymentId}", label: "Get Payment Details", method: "GET" },
+    { value: "/v1/pisp/consents", label: "Create Payment Consent", method: "POST" },
+    { value: "/v1/pisp/domestic-payments", label: "Initiate Domestic Payment", method: "POST" },
+    { value: "/v1/pisp/payment-submissions", label: "Submit Payment", method: "POST" },
+    { value: "/v1/pisp/domestic-payments/{paymentId}", label: "Get Payment Details", method: "GET" },
   ],
   "Mobile Money": [
-    { value: "/mobile-money-charge", label: "Charge Customer", method: "POST" },
-    { value: "/mobile-money-verify", label: "Verify Transaction", method: "POST" },
-    { value: "/mobile-money-transfer", label: "Send Money", method: "POST" },
-    { value: "/mobile-money-to-bank", label: "Mobile Money to Bank", method: "POST" },
+    { value: "/v1/mobile-money/charge", label: "Charge Customer", method: "POST" },
+    { value: "/v1/mobile-money/verify", label: "Verify Transaction", method: "POST" },
+    { value: "/v1/mobile-money/transfer", label: "Send Money", method: "POST" },
+    { value: "/v1/mobile-money/to-bank", label: "Mobile Money to Bank", method: "POST" },
   ],
   Banking: [
-    { value: "/bank-reconcile", label: "Reconcile Transactions", method: "POST" },
-    { value: "/generate-bank-statement", label: "Generate Statement", method: "POST" },
-    { value: "/iso20022-pain001-parser", label: "Parse ISO 20022 Payment", method: "POST" },
-    { value: "/swift-mt103-generator", label: "Generate SWIFT MT103", method: "POST" },
+    { value: "/v1/banking/reconcile", label: "Reconcile Transactions", method: "POST" },
+    { value: "/v1/banking/statement", label: "Generate Statement", method: "POST" },
+    { value: "/v1/banking/iso20022/pain001", label: "Parse ISO 20022 Payment", method: "POST" },
+    { value: "/v1/banking/swift/mt103/generate", label: "Generate SWIFT MT103", method: "POST" },
   ],
 };
 
 const EXAMPLE_BODIES = {
-  "/aisp-create-consent": JSON.stringify({
+  "/v1/aisp/consents": JSON.stringify({
     Data: {
       Permissions: ["ReadAccountsBasic", "ReadBalances", "ReadTransactionsBasic"],
-      ExpirationDateTime: "2025-12-31T23:59:59Z"
+      ExpirationDateTime: "2026-12-31T23:59:59Z"
     }
   }, null, 2),
-  "/pisp-create-consent": JSON.stringify({
+  "/v1/pisp/consents": JSON.stringify({
     Data: {
       Initiation: {
         InstructedAmount: { Amount: "50000.00", Currency: "XAF" },
@@ -55,7 +55,7 @@ const EXAMPLE_BODIES = {
       }
     }
   }, null, 2),
-  "/pisp-domestic-payment": JSON.stringify({
+  "/v1/pisp/domestic-payments": JSON.stringify({
     Data: {
       ConsentId: "pisp_consent_xyz789",
       Initiation: {
@@ -67,7 +67,7 @@ const EXAMPLE_BODIES = {
       }
     }
   }, null, 2),
-  "/mobile-money-charge": JSON.stringify({
+  "/v1/mobile-money/charge": JSON.stringify({
     amount: 5000,
     currency: "XAF",
     phone_number: "237677123456",
@@ -82,7 +82,7 @@ export default function ApiConsole() {
   const [apiCategory, setApiCategory] = useState("AISP");
   const [endpoint, setEndpoint] = useState("");
   const [method, setMethod] = useState("GET");
-  const [headers, setHeaders] = useState("Authorization: Bearer YOUR_ACCESS_TOKEN\nx-consent-id: YOUR_CONSENT_ID");
+  const [headers, setHeaders] = useState("Authorization: Bearer YOUR_ACCESS_TOKEN\nx-consent-id: YOUR_CONSENT_ID\nIdempotency-Key: 550e8400-e29b-41d4-a716-446655440000");
   const [body, setBody] = useState("");
   const [response, setResponse] = useState("");
   const [loading, setLoading] = useState(false);

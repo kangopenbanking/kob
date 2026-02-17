@@ -279,8 +279,8 @@ const PaymentFacilitation = () => {
                     examples={[{
                       language: "json",
                       code: `{
-  "period_start": "2025-01-01T00:00:00Z",
-  "period_end": "2025-01-31T23:59:59Z"
+  "period_start": "2026-01-01T00:00:00Z",
+  "period_end": "2026-01-31T23:59:59Z"
 }`
                     }]}
                   />
@@ -295,8 +295,8 @@ const PaymentFacilitation = () => {
   "success": true,
   "institution_id": "uuid",
   "institution_name": "Your Institution",
-  "period_start": "2025-01-01T00:00:00Z",
-  "period_end": "2025-01-31T23:59:59Z",
+  "period_start": "2026-01-01T00:00:00Z",
+  "period_end": "2026-01-31T23:59:59Z",
   "total_inflows": 500000,
   "total_outflows": 150000,
   "total_kob_fees": 8750,

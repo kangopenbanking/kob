@@ -319,7 +319,7 @@ const Documentation = () => {
                     Access your dashboard to generate sandbox and production API keys
                   </p>
                   <div className="bg-muted/50 p-4 rounded-lg font-mono text-sm mt-3">
-                    Authorization: Bearer YOUR_API_KEY
+                    Authorization: Bearer {"<access_token>"}
                   </div>
                 </div>
 

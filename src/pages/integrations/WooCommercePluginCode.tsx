@@ -65,7 +65,7 @@ if (!defined('ABSPATH')) exit;
 
 define('WFK_VERSION', '1.0.0');
 define('WFK_PLUGIN_FILE', __FILE__);
-define('WFK_API_BASE_URL', 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1');
+define('WFK_API_BASE_URL', 'https://api.kangopenbanking.com/v1');
 
 // Check WooCommerce dependency
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
