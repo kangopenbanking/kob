@@ -162,7 +162,7 @@ export default function WebhooksGuide() {
                   code: `{
   "id": "evt_abc123def456",
   "event": "payment.completed",
-  "created_at": "2025-10-27T10:30:00Z",
+  "created_at": "2026-10-27T10:30:00Z",
   "data": {
     "payment_id": "pay_xyz789",
     "consent_id": "consent_123",
@@ -179,9 +179,9 @@ export default function WebhooksGuide() {
       "identification": "677987654",
       "name": "John Doe"
     },
-    "reference": "INV-2025-001",
-    "created_at": "2025-10-27T10:00:00Z",
-    "completed_at": "2025-10-27T10:30:00Z"
+    "reference": "INV-2026-001",
+    "created_at": "2026-10-27T10:00:00Z",
+    "completed_at": "2026-10-27T10:30:00Z"
   },
   "api_version": "v1"
 }`

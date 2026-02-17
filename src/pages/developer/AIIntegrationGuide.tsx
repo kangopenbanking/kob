@@ -298,40 +298,45 @@ class KangOpenBanking {
 
   async authenticate(code: string): Promise<void> {
     const response = await axios.post(
-      \`\${this.baseUrl}/functions/v1/oauth-token\`,
-      {
+      \`\${this.baseUrl}/v1/oauth/token\`,
+      new URLSearchParams({
         grant_type: 'authorization_code',
         code,
         client_id: this.config.clientId,
         client_secret: this.config.clientSecret,
         redirect_uri: this.config.redirectUri,
+      }).toString(),
+      {
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       }
     );
     this.accessToken = response.data.access_token;
   }
 
-  async getAccounts() {
+  async getAccounts(consentId: string) {
     if (!this.accessToken) throw new Error('Not authenticated');
     
     const response = await axios.get(
-      \`\${this.baseUrl}/functions/v1/aisp-accounts\`,
+      \`\${this.baseUrl}/v1/aisp/accounts\`,
       {
         headers: {
           Authorization: \`Bearer \${this.accessToken}\`,
+          'x-consent-id': consentId,
         },
       }
     );
     return response.data.accounts;
   }
 
-  async getBalance(accountId: string) {
+  async getBalance(accountId: string, consentId: string) {
     if (!this.accessToken) throw new Error('Not authenticated');
     
     const response = await axios.get(
-      \`\${this.baseUrl}/functions/v1/aisp-balances/\${accountId}\`,
+      \`\${this.baseUrl}/v1/aisp/accounts/\${accountId}/balances\`,
       {
         headers: {
           Authorization: \`Bearer \${this.accessToken}\`,
+          'x-consent-id': consentId,
         },
       }
     );
@@ -348,8 +353,8 @@ const kob = new KangOpenBanking({
 
 // After OAuth callback
 await kob.authenticate(authCode);
-const accounts = await kob.getAccounts();
-const balance = await kob.getBalance(accounts[0].accountId);`}</code>
+const accounts = await kob.getAccounts('consent_abc123');
+const balance = await kob.getBalance(accounts[0].accountId, 'consent_abc123');`}</code>
               </pre>
             </CardContent>
           </Card>
