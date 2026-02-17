@@ -11,7 +11,7 @@ export default function FintechDevelopers() {
     {
       icon: Code2,
       title: "RESTful API Architecture",
-      description: "Clean, intuitive endpoints following OpenAPI 3.0 specifications"
+      description: "Clean, intuitive endpoints following OpenAPI 3.1 specifications"
     },
     {
       icon: Zap,
@@ -103,7 +103,7 @@ export default function FintechDevelopers() {
             <Card className="p-6 bg-card/50 backdrop-blur">
               <pre className="text-sm overflow-x-auto">
                 <code>{`// Get account balances in 3 lines of code
-const kob = new KangOpenBanking({ apiKey: 'your_key' });
+const kob = new KangOpenBanking({ accessToken: '{access_token}' });
 const accounts = await kob.accounts.list();
 console.log(accounts[0].balance); // 1,250,000 XAF`}</code>
               </pre>
