@@ -92,7 +92,7 @@ const result = await kob.mobileMoney.charge({
 });
 
 console.log(result.status); // 'success'
-console.log(result.transactionId); // 'MM-2024-...'`}</code>
+console.log(result.transactionId); // 'MM-2026-...'`}</code>
               </pre>
             </Card>
           </div>

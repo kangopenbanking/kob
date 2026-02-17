@@ -281,7 +281,7 @@ export default function KYCVerification() {
                 <CheckCircle className="h-5 w-5 text-green-600" />
                 <div>
                   <p className="font-medium">Identity Verification</p>
-                  <p className="text-sm text-muted-foreground">Completed on Jan 15, 2025</p>
+                  <p className="text-sm text-muted-foreground">Completed on Feb 16, 2026</p>
                 </div>
               </div>
               <span className="text-sm text-green-600 font-medium">Approved</span>
