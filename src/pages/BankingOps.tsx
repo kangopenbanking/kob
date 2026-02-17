@@ -98,49 +98,39 @@ export default function BankingOps() {
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Banking Operations</h1>
-            <p className="text-muted-foreground mt-2">
-              Manage inter-bank transfers, reconciliation, and bank integrations
-            </p>
-          </div>
+    <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Banking Operations</h1>
+          <p className="text-muted-foreground mt-1">
+            Manage inter-bank transfers, reconciliation, and bank integrations
+          </p>
         </div>
 
         <Tabs defaultValue="transfers" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-8 lg:w-auto">
-            <TabsTrigger value="transfers" className="gap-2">
-              <ArrowLeftRight className="h-4 w-4" />
-              Transfers
+          <TabsList className="inline-flex h-10 items-center rounded-full bg-muted p-1 text-muted-foreground overflow-x-auto">
+            <TabsTrigger value="transfers" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <ArrowLeftRight className="h-3.5 w-3.5" />Transfers
             </TabsTrigger>
-            <TabsTrigger value="reconciliation" className="gap-2">
-              <FileCheck className="h-4 w-4" />
-              Reconciliation
+            <TabsTrigger value="reconciliation" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <FileCheck className="h-3.5 w-3.5" />Reconciliation
             </TabsTrigger>
-            <TabsTrigger value="banks" className="gap-2">
-              <Building2 className="h-4 w-4" />
-              Banks
+            <TabsTrigger value="banks" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <Building2 className="h-3.5 w-3.5" />Banks
             </TabsTrigger>
-            <TabsTrigger value="bulk" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Bulk
+            <TabsTrigger value="bulk" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <Upload className="h-3.5 w-3.5" />Bulk
             </TabsTrigger>
-            <TabsTrigger value="import" className="gap-2">
-              <Upload className="h-4 w-4" />
-              Import
+            <TabsTrigger value="import" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <Upload className="h-3.5 w-3.5" />Import
             </TabsTrigger>
-            <TabsTrigger value="payments" className="gap-2">
-              <CreditCard className="h-4 w-4" />
-              Payments
+            <TabsTrigger value="payments" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <CreditCard className="h-3.5 w-3.5" />Payments
             </TabsTrigger>
-            <TabsTrigger value="mobile-to-bank" className="gap-2">
-              <ArrowLeftRight className="h-4 w-4" />
-              Mobile to Bank
+            <TabsTrigger value="mobile-to-bank" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <ArrowLeftRight className="h-3.5 w-3.5" />Mobile→Bank
             </TabsTrigger>
-            <TabsTrigger value="monitoring" className="gap-2">
-              <FileCheck className="h-4 w-4" />
-              Monitoring
+            <TabsTrigger value="monitoring" className="rounded-full px-3 text-xs data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm gap-1.5">
+              <FileCheck className="h-3.5 w-3.5" />Monitoring
             </TabsTrigger>
           </TabsList>
 

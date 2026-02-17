@@ -38,47 +38,49 @@ export function BalanceWidget({
       size="medium"
       onHide={onHide}
       onRemove={onRemove}
-      className="bg-gradient-to-br from-primary/10 to-accent/10"
+      className="bg-card"
     >
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-full bg-primary/10">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
               <Wallet className="h-6 w-6 text-primary" />
             </div>
             <div>
-              <p className="text-3xl font-bold">
+              <p className="text-4xl font-bold tracking-tight">
                 {showBalance ? formatCurrency(balance) : "••••••"}
               </p>
+              <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{currency}</span>
             </div>
           </div>
           <Button
             variant="ghost"
             size="sm"
+            className="rounded-full h-9 w-9 p-0"
             onClick={() => setShowBalance(!showBalance)}
           >
             {showBalance ? (
-              <EyeOff className="h-4 w-4" />
+              <EyeOff className="h-4 w-4 text-muted-foreground" />
             ) : (
-              <Eye className="h-4 w-4" />
+              <Eye className="h-4 w-4 text-muted-foreground" />
             )}
           </Button>
         </div>
 
         {changePercent !== 0 && (
-          <div className="flex items-center gap-2 text-sm">
+          <div className="flex items-center gap-2">
             {changePercent > 0 ? (
-              <>
-                <TrendingUp className="h-4 w-4 text-green-500" />
-                <span className="text-green-500">+{changePercent}%</span>
-              </>
+              <span className="status-pill bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400">
+                <TrendingUp className="mr-1 h-3 w-3" />
+                +{changePercent}%
+              </span>
             ) : (
-              <>
-                <TrendingDown className="h-4 w-4 text-red-500" />
-                <span className="text-red-500">{changePercent}%</span>
-              </>
+              <span className="status-pill bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400">
+                <TrendingDown className="mr-1 h-3 w-3" />
+                {changePercent}%
+              </span>
             )}
-            <span className="text-muted-foreground">vs last month</span>
+            <span className="text-xs text-muted-foreground">vs last month</span>
           </div>
         )}
       </div>

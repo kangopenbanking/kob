@@ -278,20 +278,20 @@ export default function MobileMoney() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold">Mobile Money</h1>
-          <p className="text-muted-foreground">Manage MTN and Orange Money transactions</p>
+          <h1 className="text-3xl font-bold tracking-tight">Mobile Money</h1>
+          <p className="text-muted-foreground mt-1">Manage MTN and Orange Money transactions</p>
         </div>
         <Dialog open={isAddAccountOpen} onOpenChange={setIsAddAccountOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="rounded-full">
               <Plus className="mr-2 h-4 w-4" />
               Add Account
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="rounded-xl">
             <DialogHeader>
               <DialogTitle>Add Mobile Money Account</DialogTitle>
               <DialogDescription>Add your MTN or Orange Money account</DialogDescription>
@@ -330,7 +330,7 @@ export default function MobileMoney() {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleAddAccount} disabled={loading} className="w-full">
+              <Button onClick={handleAddAccount} disabled={loading} className="w-full rounded-full">
                 {loading ? "Adding..." : "Add Account"}
               </Button>
             </div>
@@ -340,13 +340,15 @@ export default function MobileMoney() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {accounts.map((account) => (
-          <Card key={account.id}>
+          <Card key={account.id} className="rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-200">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <Smartphone className="h-5 w-5 text-primary" />
-                <Badge variant={account.provider === "mtn" ? "default" : "secondary"}>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${account.provider === "mtn" ? "bg-amber-50 dark:bg-amber-950" : "bg-orange-50 dark:bg-orange-950"}`}>
+                  <Smartphone className={`h-5 w-5 ${account.provider === "mtn" ? "text-amber-600" : "text-orange-600"}`} />
+                </div>
+                <span className={`status-pill ${account.provider === "mtn" ? "bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400" : "bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-400"}`}>
                   {account.provider.toUpperCase()}
-                </Badge>
+                </span>
               </div>
             </CardHeader>
             <CardContent>
@@ -358,17 +360,17 @@ export default function MobileMoney() {
       </div>
 
       <Tabs defaultValue="charge" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="charge">Receive Payment</TabsTrigger>
-          <TabsTrigger value="transfer">Send Money</TabsTrigger>
-          <TabsTrigger value="history">History</TabsTrigger>
+        <TabsList className="inline-flex h-10 items-center rounded-full bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="charge" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Receive Payment</TabsTrigger>
+          <TabsTrigger value="transfer" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Send Money</TabsTrigger>
+          <TabsTrigger value="history" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">History</TabsTrigger>
         </TabsList>
 
         <TabsContent value="charge">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Receive Payment</CardTitle>
-              <CardDescription>Charge a mobile money account</CardDescription>
+              <CardTitle className="text-base font-semibold">Receive Payment</CardTitle>
+              <CardDescription className="text-xs">Charge a mobile money account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -444,10 +446,10 @@ export default function MobileMoney() {
         </TabsContent>
 
         <TabsContent value="transfer">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Send Money</CardTitle>
-              <CardDescription>Transfer money to a mobile money account</CardDescription>
+              <CardTitle className="text-base font-semibold">Send Money</CardTitle>
+              <CardDescription className="text-xs">Transfer money to a mobile money account</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -532,10 +534,10 @@ export default function MobileMoney() {
         </TabsContent>
 
         <TabsContent value="history">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Transaction History</CardTitle>
-              <CardDescription>View all your mobile money transactions</CardDescription>
+              <CardTitle className="text-base font-semibold">Transaction History</CardTitle>
+              <CardDescription className="text-xs">View all your mobile money transactions</CardDescription>
             </CardHeader>
             <CardContent>
               <Table>

@@ -131,7 +131,71 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
+}
+
+/* Modern Dashboard Utilities (PayPal + Stripe inspired) */
+.dashboard-card {
+  @apply rounded-xl border-0 shadow-sm transition-all duration-200;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.08);
+}
+
+.stat-card {
+  @apply rounded-xl bg-card p-6 shadow-sm transition-all duration-200;
+}
+
+.stat-card:hover {
+  box-shadow: 0 4px 12px hsl(var(--foreground) / 0.08);
+  transform: translateY(-1px);
+}
+
+.stat-value {
+  @apply text-3xl font-bold tracking-tight text-foreground;
+}
+
+.stat-label {
+  @apply text-sm font-medium text-muted-foreground;
+}
+
+.section-header {
+  @apply text-lg font-semibold tracking-tight text-foreground;
+}
+
+.section-description {
+  @apply text-sm text-muted-foreground mt-0.5;
+}
+
+.data-row {
+  @apply rounded-lg px-4 py-3 transition-colors duration-150;
+}
+
+.data-row:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+.status-pill {
+  @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium;
+}
+
+.empty-state {
+  @apply flex flex-col items-center justify-center py-12 text-center;
+}
+
+.empty-state-icon {
+  @apply mb-4 rounded-full bg-muted p-4;
+}
+
+.dashboard-header {
+  @apply sticky top-0 z-10 flex h-14 items-center gap-4 bg-background/80 backdrop-blur-sm px-4 sm:px-6;
+  box-shadow: 0 1px 3px hsl(var(--foreground) / 0.04);
+}
+
+.dashboard-content {
+  background-color: hsl(var(--muted) / 0.3);
 }
 
 /* Animated gradient banner effect */

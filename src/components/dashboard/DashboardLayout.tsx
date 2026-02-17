@@ -120,7 +120,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </Sidebar>
 
         <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-4 sm:px-6">
+          <header className="dashboard-header">
             <SidebarTrigger className="-ml-1">
               <Menu className="h-5 w-5" />
             </SidebarTrigger>
@@ -130,7 +130,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <NotificationCenter />
           </header>
 
-          <main className="flex-1 p-4 sm:p-6 overflow-auto">
+          <main className="flex-1 p-6 sm:p-8 overflow-auto dashboard-content">
             {children || <Outlet />}
           </main>
         </div>
