@@ -1,9 +1,25 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
+import { verify } from 'https://deno.land/x/djwt@v3.0.2/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+async function getJwtKey(): Promise<CryptoKey> {
+  const secret = Deno.env.get('JWT_SECRET');
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is not set');
+  }
+
+  return await crypto.subtle.importKey(
+    'raw',
+    new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['verify']
+  );
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -25,21 +41,15 @@ Deno.serve(async (req) => {
     }
 
     const token = authHeader.substring(7);
-    let clientData;
-    
+
+    // Verify JWT with cryptographic signature
+    let clientData: any;
     try {
-      clientData = JSON.parse(atob(token));
+      const jwtKey = await getJwtKey();
+      clientData = await verify(token, jwtKey);
     } catch {
       return new Response(
-        JSON.stringify({ error: 'Invalid token format' }),
-        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check token expiry
-    if (clientData.exp < Math.floor(Date.now() / 1000)) {
-      return new Response(
-        JSON.stringify({ error: 'Token expired' }),
+        JSON.stringify({ error: 'Invalid or expired token' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -47,9 +57,17 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { user_identifier, consent_reference, purpose = 'credit_assessment' } = body;
 
-    if (!user_identifier) {
+    // Validate user_identifier format to prevent injection
+    if (!user_identifier || typeof user_identifier !== 'string') {
       return new Response(
         JSON.stringify({ error: 'user_identifier is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (user_identifier.length > 255 || !/^[a-zA-Z0-9@.+_\-]+$/.test(user_identifier)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid user_identifier format' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -78,14 +96,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Find user by identifier (email, phone, or national ID)
-    const { data: users } = await supabase
+    // Find user by identifier using separate parameterized queries (prevents SQL injection)
+    const { data: userByEmail } = await supabase
       .from('profiles')
       .select('id, email, full_name')
-      .or(`email.eq.${user_identifier},phone.eq.${user_identifier}`)
+      .eq('email', user_identifier)
       .limit(1);
 
-    const user = users?.[0];
+    const { data: userByPhone } = !userByEmail?.length
+      ? await supabase
+          .from('profiles')
+          .select('id, email, full_name')
+          .eq('phone', user_identifier)
+          .limit(1)
+      : { data: null };
+
+    const user = userByEmail?.[0] || userByPhone?.[0];
     if (!user) {
       return new Response(
         JSON.stringify({ error: 'User not found' }),
@@ -164,9 +190,8 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     console.error('Error querying credit score:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
     return new Response(
-      JSON.stringify({ error: 'Failed to query credit score', details: message }),
+      JSON.stringify({ error: 'Failed to query credit score' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
