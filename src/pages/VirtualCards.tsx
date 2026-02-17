@@ -4,7 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, CreditCard, ArrowUpCircle, List } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Plus, CreditCard, List } from "lucide-react";
 import { VirtualCardDisplay } from "@/components/virtual-cards/VirtualCardDisplay";
 import { CreateCardForm } from "@/components/virtual-cards/CreateCardForm";
 import { TopUpForm } from "@/components/virtual-cards/TopUpForm";
@@ -21,13 +22,9 @@ const VirtualCards = () => {
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-
       const response = await supabase.functions.invoke('virtual-card-list', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
+        headers: { Authorization: `Bearer ${session.access_token}` },
       });
-
       if (response.error) throw response.error;
       return response.data;
     },
@@ -35,118 +32,91 @@ const VirtualCards = () => {
 
   const cards = cardsData?.cards || [];
 
-  const handleCreateCard = () => {
-    setShowCreateForm(true);
-  };
-
-  const handleTopUp = (card: any) => {
-    setSelectedCard(card);
-    setShowTopUpForm(true);
-  };
-
-  const handleViewTransactions = (card: any) => {
-    setSelectedCard(card);
-  };
+  const handleCreateCard = () => setShowCreateForm(true);
+  const handleTopUp = (card: any) => { setSelectedCard(card); setShowTopUpForm(true); };
+  const handleViewTransactions = (card: any) => setSelectedCard(card);
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-8 px-4">
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading virtual cards...</p>
-          </div>
+      <div className="space-y-6">
+        <Skeleton className="h-10 w-48" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-56 rounded-xl" />)}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Virtual Cards</h1>
-        <p className="text-muted-foreground">
-          Create USD virtual cards for online purchases worldwide. Top up with your local currency.
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Virtual Cards</h1>
+        <p className="text-muted-foreground mt-1">
+          Create USD virtual cards for online purchases worldwide.
         </p>
       </div>
 
       {showCreateForm ? (
-        <Card className="mb-8">
+        <Card className="rounded-xl border-0 shadow-sm">
+          <div className="h-1 w-full bg-primary" />
           <CardHeader>
-            <CardTitle>Create New Virtual Card</CardTitle>
-            <CardDescription>
-              Create a new USD virtual card for online transactions
-            </CardDescription>
+            <CardTitle className="text-base font-semibold">Create New Virtual Card</CardTitle>
+            <CardDescription className="text-xs">Create a new USD virtual card for online transactions</CardDescription>
           </CardHeader>
           <CardContent>
             <CreateCardForm
-              onSuccess={() => {
-                setShowCreateForm(false);
-                refetch();
-                toast.success('Virtual card created successfully!');
-              }}
+              onSuccess={() => { setShowCreateForm(false); refetch(); toast.success('Virtual card created!'); }}
               onCancel={() => setShowCreateForm(false)}
             />
           </CardContent>
         </Card>
       ) : showTopUpForm && selectedCard ? (
-        <Card className="mb-8">
+        <Card className="rounded-xl border-0 shadow-sm">
+          <div className="h-1 w-full bg-green-500" />
           <CardHeader>
-            <CardTitle>Top Up Card</CardTitle>
-            <CardDescription>
-              Add funds to {selectedCard.card_name}
-            </CardDescription>
+            <CardTitle className="text-base font-semibold">Top Up Card</CardTitle>
+            <CardDescription className="text-xs">Add funds to {selectedCard.card_name}</CardDescription>
           </CardHeader>
           <CardContent>
             <TopUpForm
               card={selectedCard}
-              onSuccess={() => {
-                setShowTopUpForm(false);
-                setSelectedCard(null);
-                refetch();
-                toast.success('Card topped up successfully!');
-              }}
-              onCancel={() => {
-                setShowTopUpForm(false);
-                setSelectedCard(null);
-              }}
+              onSuccess={() => { setShowTopUpForm(false); setSelectedCard(null); refetch(); toast.success('Card topped up!'); }}
+              onCancel={() => { setShowTopUpForm(false); setSelectedCard(null); }}
             />
           </CardContent>
         </Card>
       ) : (
         <>
           {cards.length === 0 ? (
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-16">
-                <CreditCard className="h-16 w-16 text-muted-foreground mb-4" />
-                <h3 className="text-xl font-semibold mb-2">No Virtual Cards Yet</h3>
-                <p className="text-muted-foreground text-center mb-6 max-w-md">
+            <Card className="rounded-xl border-0 shadow-sm">
+              <CardContent className="empty-state py-20">
+                <div className="empty-state-icon">
+                  <CreditCard className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold mb-1">No Virtual Cards Yet</h3>
+                <p className="text-sm text-muted-foreground text-center mb-4 max-w-md">
                   Create your first USD virtual card to start making online purchases worldwide.
                 </p>
-                <Button onClick={handleCreateCard} size="lg">
-                  <Plus className="mr-2 h-5 w-5" />
-                  Create Your First Card
+                <Button className="rounded-full" size="lg" onClick={handleCreateCard}>
+                  <Plus className="mr-2 h-5 w-5" />Create Your First Card
                 </Button>
               </CardContent>
             </Card>
           ) : (
             <>
-              <div className="flex justify-end mb-6">
-                <Button onClick={handleCreateCard}>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create New Card
+              <div className="flex justify-end">
+                <Button className="rounded-full" onClick={handleCreateCard}>
+                  <Plus className="mr-2 h-4 w-4" />Create New Card
                 </Button>
               </div>
 
               <Tabs defaultValue="cards" className="space-y-6">
-                <TabsList>
-                  <TabsTrigger value="cards">
-                    <CreditCard className="mr-2 h-4 w-4" />
-                    My Cards
+                <TabsList className="inline-flex h-10 items-center rounded-full bg-muted p-1 text-muted-foreground">
+                  <TabsTrigger value="cards" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                    <CreditCard className="mr-2 h-4 w-4" />My Cards
                   </TabsTrigger>
-                  <TabsTrigger value="transactions">
-                    <List className="mr-2 h-4 w-4" />
-                    Transactions
+                  <TabsTrigger value="transactions" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
+                    <List className="mr-2 h-4 w-4" />Transactions
                   </TabsTrigger>
                 </TabsList>
 
@@ -168,11 +138,10 @@ const VirtualCards = () => {
                   {selectedCard ? (
                     <CardTransactions card={selectedCard} />
                   ) : (
-                    <Card>
-                      <CardContent className="py-16 text-center">
-                        <p className="text-muted-foreground">
-                          Select a card from the "My Cards" tab to view transactions
-                        </p>
+                    <Card className="rounded-xl border-0 shadow-sm">
+                      <CardContent className="empty-state">
+                        <div className="empty-state-icon"><List className="h-6 w-6 text-muted-foreground" /></div>
+                        <p className="text-sm text-muted-foreground">Select a card to view transactions</p>
                       </CardContent>
                     </Card>
                   )}

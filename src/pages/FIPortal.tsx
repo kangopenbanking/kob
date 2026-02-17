@@ -132,12 +132,12 @@ export default function FIPortal() {
     <InstitutionLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">{t('fiDashboard')}</h1>
-          <p className="text-muted-foreground mt-2">{institution.institution_name}</p>
+          <h1 className="text-3xl font-bold tracking-tight">{t('fiDashboard')}</h1>
+          <p className="text-muted-foreground mt-1">{institution.institution_name}</p>
           {isDeveloper && (
-            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">🚀 Developer Mode Active</h3>
-              <p className="text-sm text-blue-800 dark:text-blue-200">
+            <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-xl">
+              <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-1 text-sm">🚀 Developer Mode Active</h3>
+              <p className="text-xs text-blue-800 dark:text-blue-200">
                 You have access to sandbox environment and API credentials
               </p>
             </div>
@@ -192,60 +192,36 @@ export default function FIPortal() {
 
       {/* Metrics Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('transactions')}</CardTitle>
-            <Activity className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalTransactions}</div>
-            <p className="text-xs text-muted-foreground">Last 30 days</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Volume</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.totalVolume.toLocaleString()} XAF</div>
-            <p className="text-xs text-muted-foreground">Total processed</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('accounts')}</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.activeAccounts}</div>
-            <p className="text-xs text-muted-foreground">Active accounts</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('apiUsage')}</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{metrics.apiCalls}</div>
-            <p className="text-xs text-muted-foreground">API calls</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: t('transactions'), value: metrics.totalTransactions, sub: "Last 30 days", icon: Activity, color: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400" },
+          { label: "Volume", value: `${metrics.totalVolume.toLocaleString()} XAF`, sub: "Total processed", icon: DollarSign, color: "bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400" },
+          { label: t('accounts'), value: metrics.activeAccounts, sub: "Active accounts", icon: Users, color: "bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
+          { label: t('apiUsage'), value: metrics.apiCalls, sub: "API calls", icon: TrendingUp, color: "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400" },
+        ].map((stat) => (
+          <Card key={stat.label} className="rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-200">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${stat.color}`}>
+                  <stat.icon className="h-4 w-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="overview" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="transactions">{t('transactions')}</TabsTrigger>
-          <TabsTrigger value="analytics">{t('analytics')}</TabsTrigger>
-          <TabsTrigger value="compliance">{t('compliance')}</TabsTrigger>
-          <TabsTrigger value="fees">Fees & Billing</TabsTrigger>
-          <TabsTrigger value="credit-api">Credit API</TabsTrigger>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="inline-flex h-10 items-center rounded-full bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="overview" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Overview</TabsTrigger>
+          <TabsTrigger value="transactions" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">{t('transactions')}</TabsTrigger>
+          <TabsTrigger value="analytics" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">{t('analytics')}</TabsTrigger>
+          <TabsTrigger value="compliance" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">{t('compliance')}</TabsTrigger>
+          <TabsTrigger value="fees" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Fees</TabsTrigger>
+          <TabsTrigger value="credit-api" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Credit API</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

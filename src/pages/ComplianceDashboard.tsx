@@ -79,92 +79,54 @@ export default function ComplianceDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Compliance Dashboard</h1>
-            <p className="text-muted-foreground">
-              Monitor KYC, AML, and regulatory compliance
-            </p>
+            <h1 className="text-3xl font-bold tracking-tight">Compliance Dashboard</h1>
+            <p className="text-muted-foreground mt-1">Monitor KYC, AML, and regulatory compliance</p>
           </div>
-        <Button onClick={fetchComplianceData} disabled={loading}>
-          {loading ? (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-              Refreshing...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh Data
-            </>
-          )}
-        </Button>
-      </div>
+          <Button onClick={fetchComplianceData} disabled={loading} variant="outline" size="sm" className="rounded-full">
+            <RefreshCw className={`mr-2 h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? "Refreshing..." : "Refresh"}
+          </Button>
+        </div>
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">KYC Verifications</CardTitle>
-            <Shield className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{kycStats?.length || 0}</div>
-            <p className="text-xs text-muted-foreground">Total submissions</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Alerts</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {alerts.filter(a => a.status === 'open').length}
-            </div>
-            <p className="text-xs text-muted-foreground">Requires attention</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Regulatory Reports</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{reports.length}</div>
-            <p className="text-xs text-muted-foreground">This period</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compliance Rate</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">98.5%</div>
-            <p className="text-xs text-muted-foreground">Above target</p>
-          </CardContent>
-        </Card>
+        {[
+          { label: "KYC Verifications", value: kycStats?.length || 0, sub: "Total submissions", icon: Shield, color: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400" },
+          { label: "Active Alerts", value: alerts.filter(a => a.status === 'open').length, sub: "Requires attention", icon: AlertTriangle, color: "bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400" },
+          { label: "Regulatory Reports", value: reports.length, sub: "This period", icon: FileText, color: "bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
+          { label: "Compliance Rate", value: "98.5%", sub: "Above target", icon: TrendingUp, color: "bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400" },
+        ].map((stat) => (
+          <Card key={stat.label} className="rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-200">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-muted-foreground">{stat.label}</p>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${stat.color}`}>
+                  <stat.icon className="h-4 w-4" />
+                </div>
+              </div>
+              <p className="text-2xl font-bold tracking-tight">{stat.value}</p>
+              <p className="text-xs text-muted-foreground">{stat.sub}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Main Content Tabs */}
-      <Tabs defaultValue="alerts" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="alerts">Transaction Alerts</TabsTrigger>
-          <TabsTrigger value="kyc">KYC Status</TabsTrigger>
-          <TabsTrigger value="reports">Regulatory Reports</TabsTrigger>
-          <TabsTrigger value="sanctions">Sanctions Screening</TabsTrigger>
+      <Tabs defaultValue="alerts" className="space-y-6">
+        <TabsList className="inline-flex h-10 items-center rounded-full bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="alerts" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Alerts</TabsTrigger>
+          <TabsTrigger value="kyc" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">KYC</TabsTrigger>
+          <TabsTrigger value="reports" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Reports</TabsTrigger>
+          <TabsTrigger value="sanctions" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">Sanctions</TabsTrigger>
         </TabsList>
 
         <TabsContent value="alerts" className="space-y-4">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Transaction Monitoring Alerts</CardTitle>
-              <CardDescription>Real-time AML and fraud detection alerts</CardDescription>
+              <CardTitle className="text-base font-semibold">Transaction Monitoring Alerts</CardTitle>
+              <CardDescription className="text-xs">Real-time AML and fraud detection alerts</CardDescription>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-[400px]">

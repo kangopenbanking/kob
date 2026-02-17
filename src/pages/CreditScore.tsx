@@ -208,7 +208,7 @@ export default function CreditScore() {
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
   return (
-    <div className="container mx-auto p-6 space-y-8">
+    <div className="space-y-8">
       {/* PostiQ Feature Showcase */}
       <PostiQFeatureShowcase 
         hasVerification={!!verification}
@@ -219,17 +219,17 @@ export default function CreditScore() {
         {/* Header Section */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-4xl font-bold mb-2">Your Credit Score</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold tracking-tight">Your Credit Score</h1>
+            <p className="text-muted-foreground mt-1">
               Last updated: {scoreData?.calculated_at ? new Date(scoreData.calculated_at).toLocaleDateString() : 'Never'}
             </p>
           </div>
           <div className="flex gap-2">
-            <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline">
+            <Button onClick={handleRefresh} disabled={isRefreshing} variant="outline" className="rounded-full" size="sm">
               <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               Refresh
             </Button>
-            <Button asChild>
+            <Button asChild className="rounded-full" size="sm">
               <Link to="/credit-report">
                 <FileText className="mr-2 h-4 w-4" />
                 Full Report
@@ -244,7 +244,7 @@ export default function CreditScore() {
         </div>
 
         {/* Hero Section - Score Display with Type and Confidence */}
-        <Card className="overflow-hidden mb-8">
+        <Card className="overflow-hidden mb-8 rounded-xl border-0 shadow-sm">
           <CardContent className="p-8">
             <div className="grid md:grid-cols-2 gap-8 items-center">
               <div className="flex justify-center">

@@ -163,12 +163,10 @@ export default function CrediQDashboard() {
   const rating = getScoreRating(Number(creditScore.score));
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 py-8">
-        <div className="container mx-auto px-4">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-4xl font-bold mb-2">Your Credit Health</h1>
-            <p className="text-muted-foreground">
+    <div className="space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Your Credit Health</h1>
+            <p className="text-muted-foreground mt-1">
               Track your CrediQ score and follow your action plan to improve
             </p>
           </div>
@@ -177,7 +175,7 @@ export default function CrediQDashboard() {
           <div className="grid lg:grid-cols-3 gap-6 mb-6">
             {/* Score Display */}
             <div className="lg:col-span-2">
-              <Card className="p-8">
+              <Card className="p-8 rounded-xl border-0 shadow-sm">
                 <div className="flex flex-col md:flex-row items-center gap-8">
                   <div className="flex-shrink-0">
                     <CircularScoreDisplay 
@@ -221,7 +219,7 @@ export default function CrediQDashboard() {
 
             {/* Quick Stats */}
             <div className="space-y-4">
-              <Card className="p-6">
+              <Card className="p-6 rounded-xl border-0 shadow-sm">
                 <div className="flex items-start gap-3 mb-4">
                   <TrendingUp className="h-5 w-5 text-green-600 mt-1" />
                   <div>
@@ -232,7 +230,7 @@ export default function CrediQDashboard() {
                 </div>
               </Card>
 
-              <Card className="p-6">
+              <Card className="p-6 rounded-xl border-0 shadow-sm">
                 <div className="flex items-start gap-3">
                   <CheckCircle className="h-5 w-5 text-blue-600 mt-1" />
                   <div>
@@ -248,14 +246,14 @@ export default function CrediQDashboard() {
 
           {/* Action Plan */}
           {actionPlans.length > 0 && (
-            <Card className="p-6 mb-6">
-              <h2 className="text-2xl font-bold mb-6">Your Action Plan</h2>
+            <Card className="p-6 mb-6 rounded-xl border-0 shadow-sm">
+              <h2 className="text-lg font-semibold tracking-tight mb-6">Your Action Plan</h2>
               
               <div className="space-y-4">
                 {actionPlans.map((action) => (
                   <div 
                     key={action.id}
-                    className="flex items-start gap-4 p-4 rounded-lg border hover:bg-muted/50 transition-colors"
+                    className="flex items-start gap-4 p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors"
                   >
                     <div className="mt-1">
                       {getStatusIcon(action.status)}
@@ -296,8 +294,8 @@ export default function CrediQDashboard() {
           )}
 
           {/* Tips */}
-          <Card className="p-6">
-            <h3 className="font-semibold mb-4">💡 Quick Tips</h3>
+          <Card className="p-6 rounded-xl border-0 shadow-sm">
+            <h3 className="text-base font-semibold mb-4">💡 Quick Tips</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Your score updates automatically when you make payments or open accounts</li>
               <li>• Complete KYC verification to unlock +50 points</li>
@@ -305,7 +303,6 @@ export default function CrediQDashboard() {
               <li>• We'll email you when your score changes significantly</li>
             </ul>
           </Card>
-        </div>
-      </div>
+    </div>
   );
 }

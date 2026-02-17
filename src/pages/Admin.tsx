@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Building2, 
   Users, 
@@ -29,31 +30,26 @@ const Admin = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   
-  // Stats
   const [totalInstitutions, setTotalInstitutions] = useState(0);
   const [totalConsents, setTotalConsents] = useState(0);
   const [totalPayments, setTotalPayments] = useState(0);
   const [activeConsents, setActiveConsents] = useState(0);
   
-  // Data
   const [pendingRegistrations, setPendingRegistrations] = useState<any[]>([]);
   const [recentConsents, setRecentConsents] = useState<any[]>([]);
   const [recentPayments, setRecentPayments] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   
-  // Branch creation dialog state
   const [branchDialogOpen, setBranchDialogOpen] = useState(false);
   const [selectedInstitutionForBranch, setSelectedInstitutionForBranch] = useState<{id: string; name: string} | null>(null);
 
   useEffect(() => {
-    // ProtectedRoute already verifies admin access, so we can directly load data
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      // Load stats
       const [institutionsRes, consentsRes, paymentsRes] = await Promise.all([
         supabase.from('institutions').select('id', { count: 'exact' }),
         supabase.from('aisp_consents').select('id', { count: 'exact' }),
@@ -64,7 +60,6 @@ const Admin = () => {
       setTotalConsents(consentsRes.count || 0);
       setTotalPayments(paymentsRes.count || 0);
 
-      // Active consents (AISP)
       const { count: activeCount } = await supabase
         .from('aisp_consents')
         .select('id', { count: 'exact' })
@@ -73,7 +68,6 @@ const Admin = () => {
       
       setActiveConsents(activeCount || 0);
 
-      // Pending registrations
       const { data: pending } = await supabase
         .from('institutions')
         .select('*, profiles(full_name, email)')
@@ -83,7 +77,6 @@ const Admin = () => {
       
       setPendingRegistrations(pending || []);
 
-      // Recent consents
       const { data: consents } = await supabase
         .from('aisp_consents')
         .select('*, profiles(full_name)')
@@ -92,7 +85,6 @@ const Admin = () => {
       
       setRecentConsents(consents || []);
 
-      // Recent payments
       const { data: payments } = await supabase
         .from('payments')
         .select('*, profiles(full_name)')
@@ -101,7 +93,6 @@ const Admin = () => {
       
       setRecentPayments(payments || []);
 
-      // Audit logs
       const { data: logs } = await supabase
         .from('consent_events')
         .select('*')
@@ -124,14 +115,12 @@ const Admin = () => {
 
   const approveInstitution = async (institutionId: string) => {
     try {
-      // Get institution details to enable sandbox for developers
       const { data: institution } = await supabase
         .from('institutions')
         .select('institution_type, user_id, institution_name')
         .eq('id', institutionId)
         .single();
 
-      // Get user email
       const { data: profile } = await supabase
         .from('profiles')
         .select('email')
@@ -140,7 +129,6 @@ const Admin = () => {
 
       if (!institution) throw new Error('Institution not found');
 
-      // Generate sandbox credentials for developers
       let sandboxClientId: string | null = null;
       let sandboxClientSecret: string | null = null;
       
@@ -149,12 +137,10 @@ const Admin = () => {
         sandboxClientSecret = `sk_${crypto.randomUUID()}${crypto.randomUUID()}`.replace(/-/g, '');
       }
 
-      // Security Fix: Approve institution first, then use secure function to encrypt credentials
       const updateData: any = { 
         status: 'approved',
         approved_at: new Date().toISOString(),
         sandbox_access: institution.institution_type === 'developer'
-        // Note: sandbox_credentials will be encrypted separately using secure function
       };
 
       const { error } = await supabase
@@ -164,7 +150,6 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Security Fix: Encrypt and store sandbox credentials using secure function
       if (sandboxClientId && sandboxClientSecret) {
         const { error: encryptError } = await supabase.rpc('encrypt_sandbox_credentials', {
           _institution_id: institutionId,
@@ -174,11 +159,9 @@ const Admin = () => {
         
         if (encryptError) {
           console.error('Failed to encrypt sandbox credentials:', encryptError);
-          // Still continue with approval, credentials can be regenerated
         }
       }
 
-      // Log audit event using secure logging function
       await supabase.rpc('log_audit_event', {
         _action_type: 'institution_approved',
         _entity_type: 'institution',
@@ -190,8 +173,6 @@ const Admin = () => {
         }
       });
 
-      // Send approval notification email
-      // Note: Only send client_id in email, never send plain-text secret
       try {
         await supabase.functions.invoke('send-communication', {
           body: {
@@ -202,7 +183,6 @@ const Admin = () => {
               institution_name: institution.institution_name,
               portal_url: `${window.location.origin}/fi-portal`,
               client_id: sandboxClientId || '',
-              // Security Fix: Send secret only once via secure channel
               client_secret: sandboxClientSecret || '',
               is_developer: institution.institution_type === 'developer',
               security_note: 'Please save your client secret securely. It will not be shown again.'
@@ -213,7 +193,6 @@ const Admin = () => {
         console.error('Failed to send approval email:', emailError);
       }
 
-      // Open branch creation dialog
       setSelectedInstitutionForBranch({
         id: institutionId,
         name: institution.institution_name
@@ -239,14 +218,12 @@ const Admin = () => {
     if (!reason) return;
 
     try {
-      // Get institution details and user email
       const { data: institution } = await supabase
         .from('institutions')
         .select('user_id, institution_name, institution_type')
         .eq('id', institutionId)
         .single();
 
-      // Get user email from profiles
       const { data: profile } = await supabase
         .from('profiles')
         .select('email')
@@ -265,7 +242,6 @@ const Admin = () => {
 
       if (error) throw error;
 
-      // Log audit event using secure logging function
       await supabase.rpc('log_audit_event', {
         _action_type: 'institution_rejected',
         _entity_type: 'institution',
@@ -277,7 +253,6 @@ const Admin = () => {
         }
       });
 
-      // Send rejection notification email
       try {
         await supabase.functions.invoke('send-communication', {
           body: {
@@ -328,10 +303,14 @@ const Admin = () => {
     const Icon = config.icon;
 
     return (
-      <Badge variant={config.variant} className="flex items-center gap-1 w-fit">
-        <Icon className="h-3 w-3" />
+      <span className={`status-pill ${
+        status === 'Authorised' || status === 'AcceptedSettlementCompleted' ? 'bg-green-50 text-green-700 dark:bg-green-950 dark:text-green-400' :
+        status === 'Rejected' ? 'bg-red-50 text-red-700 dark:bg-red-950 dark:text-red-400' :
+        'bg-muted text-muted-foreground'
+      }`}>
+        <Icon className="h-3 w-3 mr-1" />
         {status}
-      </Badge>
+      </span>
     );
   };
 
@@ -347,287 +326,150 @@ const Admin = () => {
 
   if (loading) {
     return (
-      <div className="container mx-auto px-4 py-8 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading admin dashboard...</p>
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-10 w-72" />
+          <Skeleton className="h-5 w-96" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-28 rounded-xl" />)}
+        </div>
+        <div className="grid gap-4 md:grid-cols-4">
+          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
         </div>
       </div>
     );
   }
 
+  const navCards = [
+    { title: "User Management", icon: Users, path: '/admin/users', description: "Manage platform users" },
+    { title: "API Clients", icon: Key, path: '/admin/api-clients', description: "OAuth client credentials" },
+    { title: "Sandbox", icon: TestTube, path: '/admin/sandbox', description: "Developer testing environment" },
+    { title: "Security", icon: Shield, path: '/admin/security', description: "Security monitoring" },
+    { title: "Audit Logs", icon: FileText, path: '/admin/audit-logs', description: "System activity logs" },
+    { title: "System Config", icon: Shield, path: '/admin/system-config', description: "Platform configuration" },
+    { title: "Webhooks", icon: Activity, path: '/admin/webhooks', description: "Event notifications" },
+    { title: "Transactions", icon: DollarSign, path: '/admin/transactions', description: "Transaction monitoring" },
+    { title: "Health Monitor", icon: Activity, path: '/admin/health', description: "System health checks" },
+    { title: "RLS Monitoring", icon: Shield, path: '/admin/rls-monitoring', description: "Row-level security" },
+  ];
+
+  const stats = [
+    { label: "Total Institutions", value: totalInstitutions, sub: `${pendingRegistrations.length} pending`, icon: Building2, color: "bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400" },
+    { label: "Total Consents", value: totalConsents, sub: `${activeConsents} active`, icon: FileText, color: "bg-green-50 text-green-600 dark:bg-green-950 dark:text-green-400" },
+    { label: "Total Payments", value: totalPayments, sub: "All payment requests", icon: DollarSign, color: "bg-purple-50 text-purple-600 dark:bg-purple-950 dark:text-purple-400" },
+    { label: "Audit Events", value: auditLogs.length, sub: "Recent events tracked", icon: Activity, color: "bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400" },
+  ];
+
   return (
-    <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold">
-            Platform Management
-          </h1>
-          <p className="text-muted-foreground mt-2">
-            Monitor and manage the Kash Open Banking platform
-          </p>
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Platform Management</h1>
+        <p className="text-muted-foreground mt-1">
+          Monitor and manage the Kash Open Banking platform
+        </p>
+      </div>
 
-        {/* Quick Access Navigation */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/users')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                User Management
-              </CardTitle>
-            </CardHeader>
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {stats.map((stat) => (
+          <Card key={stat.label} className="rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-200">
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between mb-3">
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-1">{stat.label}</p>
+                  <p className="stat-value">{stat.value}</p>
+                </div>
+                <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${stat.color}`}>
+                  <stat.icon className="h-5 w-5" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">{stat.sub}</p>
+            </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/api-clients')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                API Clients
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/sandbox')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TestTube className="h-5 w-5" />
-                Sandbox
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/security')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                Security
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
+        ))}
+      </div>
 
-        {/* Phase 2 Features */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/audit-logs')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Audit Logs
-              </CardTitle>
-            </CardHeader>
+      {/* Quick Navigation */}
+      <div className="grid gap-3 md:grid-cols-5">
+        {navCards.map((card) => (
+          <Card
+            key={card.title}
+            className="rounded-xl border-0 shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
+            onClick={() => navigate(card.path)}
+          >
+            <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted group-hover:bg-primary/10 transition-colors">
+                <card.icon className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              </div>
+              <p className="text-xs font-medium">{card.title}</p>
+            </CardContent>
           </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/system-config')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                System Config
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/webhooks')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Webhooks
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/transactions')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <DollarSign className="h-5 w-5" />
-                Transactions
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Monitoring & Health */}
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/health')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Health Monitor
-              </CardTitle>
-            </CardHeader>
-          </Card>
-          <Card className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => navigate('/admin/rls-monitoring')}>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Shield className="h-5 w-5" />
-                RLS Monitoring
-              </CardTitle>
-            </CardHeader>
-          </Card>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Institutions</p>
-                <p className="text-3xl font-bold">{totalInstitutions}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Building2 className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {pendingRegistrations.length} pending approval
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Consents</p>
-                <p className="text-3xl font-bold">{totalConsents}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                <FileText className="h-6 w-6 text-accent" />
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {activeConsents} currently active
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Total Payments</p>
-                <p className="text-3xl font-bold">{totalPayments}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-primary" />
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              All payment requests
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <p className="text-sm text-muted-foreground mb-1">Audit Events</p>
-                <p className="text-3xl font-bold">{auditLogs.length}</p>
-              </div>
-              <div className="h-12 w-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                <Activity className="h-6 w-6 text-accent" />
-              </div>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Recent events tracked
-            </p>
-          </CardContent>
-        </Card>
+        ))}
       </div>
 
       {/* Main Content Tabs */}
       <Tabs defaultValue="registrations" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
-          <TabsTrigger value="registrations">
+        <TabsList className="inline-flex h-10 items-center rounded-full bg-muted p-1 text-muted-foreground">
+          <TabsTrigger value="registrations" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <Building2 className="h-4 w-4 mr-2" />
             Registrations
           </TabsTrigger>
-          <TabsTrigger value="consents">
+          <TabsTrigger value="consents" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <FileText className="h-4 w-4 mr-2" />
             Consents
           </TabsTrigger>
-          <TabsTrigger value="payments">
+          <TabsTrigger value="payments" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <DollarSign className="h-4 w-4 mr-2" />
             Payments
           </TabsTrigger>
-          <TabsTrigger value="fees">
+          <TabsTrigger value="fees" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <DollarSign className="h-4 w-4 mr-2" />
-            Fee Management
+            Fees
           </TabsTrigger>
-          <TabsTrigger value="audit">
+          <TabsTrigger value="audit" className="rounded-full px-4 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm">
             <Activity className="h-4 w-4 mr-2" />
-            Audit Logs
+            Audit
           </TabsTrigger>
         </TabsList>
 
-        {/* Pending Registrations */}
         <TabsContent value="registrations">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Pending Institution Registrations</CardTitle>
-              <CardDescription>
-                Review and approve new institution applications
-              </CardDescription>
+              <CardTitle className="text-base font-semibold">Pending Institution Registrations</CardTitle>
+              <CardDescription className="text-xs">Review and approve new institution applications</CardDescription>
             </CardHeader>
             <CardContent>
               {pendingRegistrations.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No pending registrations
+                <div className="empty-state">
+                  <div className="empty-state-icon"><Building2 className="h-6 w-6 text-muted-foreground" /></div>
+                  <p className="text-sm text-muted-foreground">No pending registrations</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-3">
                   {pendingRegistrations.map((institution) => (
-                    <div
-                      key={institution.id}
-                      className="p-4 border rounded-lg space-y-3"
-                    >
+                    <div key={institution.id} className="rounded-xl bg-muted/30 p-4 space-y-3">
                       <div className="flex items-start justify-between">
                         <div>
-                          <h4 className="font-semibold text-lg">
-                            {institution.institution_name}
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {institution.institution_type} • {institution.country}
-                          </p>
+                          <h4 className="font-semibold">{institution.institution_name}</h4>
+                          <p className="text-xs text-muted-foreground">{institution.institution_type} • {institution.country}</p>
                         </div>
-                        <Badge variant="secondary">
-                          <Clock className="h-3 w-3 mr-1" />
-                          Pending
-                        </Badge>
+                        <span className="status-pill bg-amber-50 text-amber-700 dark:bg-amber-950 dark:text-amber-400">
+                          <Clock className="h-3 w-3 mr-1" />Pending
+                        </span>
                       </div>
-                      
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Registration #:</span>
-                          <p className="font-mono">{institution.registration_number}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Contact:</span>
-                          <p>{institution.profiles?.email}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Address:</span>
-                          <p>{institution.address}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Applied:</span>
-                          <p>{formatDate(institution.created_at)}</p>
-                        </div>
+                      <div className="grid grid-cols-2 gap-3 text-sm">
+                        <div><span className="text-xs text-muted-foreground">Registration #</span><p className="font-mono text-xs">{institution.registration_number}</p></div>
+                        <div><span className="text-xs text-muted-foreground">Contact</span><p className="text-xs">{institution.profiles?.email}</p></div>
+                        <div><span className="text-xs text-muted-foreground">Address</span><p className="text-xs">{institution.address}</p></div>
+                        <div><span className="text-xs text-muted-foreground">Applied</span><p className="text-xs">{formatDate(institution.created_at)}</p></div>
                       </div>
-
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          onClick={() => approveInstitution(institution.id)}
-                          className="flex-1"
-                        >
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          Approve
+                      <div className="flex gap-2 pt-1">
+                        <Button size="sm" className="flex-1 rounded-full" onClick={() => approveInstitution(institution.id)}>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />Approve
                         </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => rejectInstitution(institution.id)}
-                          className="flex-1"
-                        >
-                          <XCircle className="h-4 w-4 mr-2" />
-                          Reject
+                        <Button size="sm" variant="destructive" className="flex-1 rounded-full" onClick={() => rejectInstitution(institution.id)}>
+                          <XCircle className="h-4 w-4 mr-2" />Reject
                         </Button>
                       </div>
                     </div>
@@ -638,54 +480,33 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        {/* Recent Consents */}
         <TabsContent value="consents">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Recent Consents</CardTitle>
-              <CardDescription>
-                Monitor AISP consent activity across the platform
-              </CardDescription>
+              <CardTitle className="text-base font-semibold">Recent Consents</CardTitle>
+              <CardDescription className="text-xs">Monitor AISP consent activity</CardDescription>
             </CardHeader>
             <CardContent>
               {recentConsents.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No consents found
+                <div className="empty-state">
+                  <div className="empty-state-icon"><FileText className="h-6 w-6 text-muted-foreground" /></div>
+                  <p className="text-sm text-muted-foreground">No consents found</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {recentConsents.map((consent) => (
-                    <div
-                      key={consent.id}
-                      className="p-4 border rounded-lg"
-                    >
-                      <div className="flex items-start justify-between mb-3">
+                    <div key={consent.id} className="data-row rounded-xl">
+                      <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-mono text-sm text-muted-foreground">
-                            {consent.consent_id}
-                          </p>
-                          <p className="font-medium">
-                            User: {consent.profiles?.full_name || 'Unknown'}
-                          </p>
+                          <p className="font-mono text-xs text-muted-foreground">{consent.consent_id}</p>
+                          <p className="text-sm font-medium">{consent.profiles?.full_name || 'Unknown'}</p>
                         </div>
                         {getStatusBadge(consent.status)}
                       </div>
-                      
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Client ID:</span>
-                          <p className="font-mono text-xs truncate">
-                            {consent.client_id}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Created:</span>
-                          <p>{formatDate(consent.created_at)}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Expires:</span>
-                          <p>{formatDate(consent.expiration_date)}</p>
-                        </div>
+                      <div className="grid grid-cols-3 gap-3 text-xs">
+                        <div><span className="text-muted-foreground">Client ID</span><p className="font-mono truncate">{consent.client_id}</p></div>
+                        <div><span className="text-muted-foreground">Created</span><p>{formatDate(consent.created_at)}</p></div>
+                        <div><span className="text-muted-foreground">Expires</span><p>{formatDate(consent.expiration_date)}</p></div>
                       </div>
                     </div>
                   ))}
@@ -695,56 +516,33 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        {/* Recent Payments */}
         <TabsContent value="payments">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Recent Payments</CardTitle>
-              <CardDescription>
-                Monitor PISP payment transactions
-              </CardDescription>
+              <CardTitle className="text-base font-semibold">Recent Payments</CardTitle>
+              <CardDescription className="text-xs">Monitor PISP payment transactions</CardDescription>
             </CardHeader>
             <CardContent>
               {recentPayments.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No payments found
+                <div className="empty-state">
+                  <div className="empty-state-icon"><DollarSign className="h-6 w-6 text-muted-foreground" /></div>
+                  <p className="text-sm text-muted-foreground">No payments found</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {recentPayments.map((payment) => (
-                    <div
-                      key={payment.id}
-                      className="p-4 border rounded-lg"
-                    >
-                      <div className="flex items-start justify-between mb-3">
+                    <div key={payment.id} className="data-row rounded-xl">
+                      <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-mono text-sm text-muted-foreground">
-                            {payment.payment_id}
-                          </p>
-                          <p className="font-medium">
-                            User: {payment.profiles?.full_name || 'Unknown'}
-                          </p>
+                          <p className="font-mono text-xs text-muted-foreground">{payment.payment_id}</p>
+                          <p className="text-sm font-medium">{payment.profiles?.full_name || 'Unknown'}</p>
                         </div>
                         {getStatusBadge(payment.status)}
                       </div>
-                      
-                      <div className="grid grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-muted-foreground">Amount:</span>
-                          <p className="font-semibold">
-                            {payment.instructed_amount?.amount} {payment.instructed_amount?.currency}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Creditor:</span>
-                          <p className="truncate">
-                            {payment.creditor_account?.name}
-                          </p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Created:</span>
-                          <p>{formatDate(payment.created_at)}</p>
-                        </div>
+                      <div className="grid grid-cols-3 gap-3 text-xs">
+                        <div><span className="text-muted-foreground">Amount</span><p className="font-semibold">{payment.instructed_amount?.amount} {payment.instructed_amount?.currency}</p></div>
+                        <div><span className="text-muted-foreground">Creditor</span><p className="truncate">{payment.creditor_account?.name}</p></div>
+                        <div><span className="text-muted-foreground">Created</span><p>{formatDate(payment.created_at)}</p></div>
                       </div>
                     </div>
                   ))}
@@ -754,67 +552,47 @@ const Admin = () => {
           </Card>
         </TabsContent>
 
-        {/* Fee Management */}
         <TabsContent value="fees">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Fee Management System</CardTitle>
-              <CardDescription>
-                Configure transaction fees and manage billing for institutions
-              </CardDescription>
+              <CardTitle className="text-base font-semibold">Fee Management System</CardTitle>
+              <CardDescription className="text-xs">Configure transaction fees and manage billing</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <Button onClick={() => navigate('/fee-management')}>
-                  Open Fee Management Dashboard
-                </Button>
-                <Button onClick={() => navigate('/admin/payment-facilitation')} variant="outline">
-                  Payment Facilitation & Settlements
-                </Button>
+              <div className="grid md:grid-cols-2 gap-3">
+                <Button className="rounded-full" onClick={() => navigate('/fee-management')}>Open Fee Management Dashboard</Button>
+                <Button className="rounded-full" variant="outline" onClick={() => navigate('/admin/payment-facilitation')}>Payment Facilitation & Settlements</Button>
               </div>
-              <p className="text-sm text-muted-foreground">
-                Manage fee structures, transaction fees, invoices, waivers, and automated settlements for facilitated payments.
+              <p className="text-xs text-muted-foreground">
+                Manage fee structures, transaction fees, invoices, waivers, and automated settlements.
               </p>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Audit Logs */}
         <TabsContent value="audit">
-          <Card>
+          <Card className="rounded-xl border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Audit Event Logs</CardTitle>
-              <CardDescription>
-                System activity and consent event tracking
-              </CardDescription>
+              <CardTitle className="text-base font-semibold">Audit Event Logs</CardTitle>
+              <CardDescription className="text-xs">System activity and consent event tracking</CardDescription>
             </CardHeader>
             <CardContent>
               {auditLogs.length === 0 ? (
-                <div className="text-center py-8 text-muted-foreground">
-                  No audit logs found
+                <div className="empty-state">
+                  <div className="empty-state-icon"><Activity className="h-6 w-6 text-muted-foreground" /></div>
+                  <p className="text-sm text-muted-foreground">No audit logs found</p>
                 </div>
               ) : (
-                <div className="space-y-3">
+                <div className="space-y-1">
                   {auditLogs.map((log) => (
-                    <div
-                      key={log.id}
-                      className="p-3 border rounded-lg text-sm"
-                    >
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="outline">{log.event_type}</Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(log.created_at)}
-                        </span>
+                    <div key={log.id} className="data-row rounded-xl text-sm">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="status-pill bg-muted text-muted-foreground">{log.event_type}</span>
+                        <span className="text-[10px] text-muted-foreground">{formatDate(log.created_at)}</span>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-xs">
-                        <div>
-                          <span className="text-muted-foreground">Consent:</span>
-                          <p className="font-mono">{log.consent_id}</p>
-                        </div>
-                        <div>
-                          <span className="text-muted-foreground">Type:</span>
-                          <p className="uppercase">{log.consent_type}</p>
-                        </div>
+                        <div><span className="text-muted-foreground">Consent:</span> <span className="font-mono">{log.consent_id}</span></div>
+                        <div><span className="text-muted-foreground">Type:</span> <span className="uppercase">{log.consent_type}</span></div>
                       </div>
                     </div>
                   ))}
@@ -825,7 +603,6 @@ const Admin = () => {
         </TabsContent>
       </Tabs>
 
-      {/* Branch Creation Dialog */}
       {selectedInstitutionForBranch && (
         <CreateBranchDialog
           open={branchDialogOpen}
