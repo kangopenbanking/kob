@@ -784,56 +784,59 @@ export default function Architecture() {
         <div className="max-w-4xl mx-auto">
           <h3 className="text-2xl font-bold text-foreground mb-2 text-center">Glossary</h3>
           <p className="text-muted-foreground text-center mb-8 text-sm">Full meaning of abbreviations used on this page</p>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3 text-sm">
+          <div className="grid sm:grid-cols-2 gap-x-8 gap-y-4 text-sm">
             {[
-              ["AISP", "Account Information Service Provider"],
-              ["AML", "Anti-Money Laundering"],
-              ["API", "Application Programming Interface"],
-              ["AUP", "Acceptable Use Policy"],
-              ["BEAC", "Bank of Central African States (Banque des États de l'Afrique Centrale)"],
-              ["BICEC", "Banque Internationale du Cameroun pour l'Épargne et le Crédit"],
-              ["CBCA", "Canada Business Corporations Act"],
-              ["CEMAC", "Central African Economic and Monetary Community"],
-              ["CFT", "Combating the Financing of Terrorism"],
-              ["COBAC", "Central African Banking Commission (Commission Bancaire de l'Afrique Centrale)"],
-              ["DevEx", "Developer Experience"],
-              ["DSS", "Data Security Standard"],
-              ["GHS", "Ghanaian Cedi"],
-              ["ISO 20022", "International Standard for Electronic Financial Messaging"],
-              ["JS", "JavaScript"],
-              ["KES", "Kenyan Shilling"],
-              ["KOB", "Kang Open Banking"],
-              ["KYB", "Know Your Business"],
-              ["KYC", "Know Your Customer"],
-              ["MNO", "Mobile Network Operator"],
-              ["mTLS", "Mutual Transport Layer Security"],
-              ["NGN", "Nigerian Naira"],
-              ["OAuth", "Open Authorization"],
-              ["OpenAPI", "Open API Specification"],
-              ["PCI", "Payment Card Industry"],
-              ["PHP", "PHP: Hypertext Preprocessor"],
-              ["PISP", "Payment Initiation Service Provider"],
-              ["PKCE", "Proof Key for Code Exchange"],
-              ["REST", "Representational State Transfer"],
-              ["RWF", "Rwandan Franc"],
-              ["SCA", "Strong Customer Authentication"],
-              ["SCB", "Société Commerciale de Banque"],
-              ["SDK", "Software Development Kit"],
-              ["SLA", "Service Level Agreement"],
-              ["SWIFT", "Society for Worldwide Interbank Financial Telecommunication"],
-              ["3DS2", "3-D Secure Version 2"],
-              ["TPP", "Third-Party Provider"],
-              ["TZS", "Tanzanian Shilling"],
-              ["UBA", "United Bank for Africa"],
-              ["UGX", "Ugandan Shilling"],
-              ["USD", "United States Dollar"],
-              ["USSD", "Unstructured Supplementary Service Data"],
-              ["XAF", "Central African CFA Franc"],
-              ["ZAR", "South African Rand"],
-            ].map(([abbr, full]) => (
-              <div key={abbr} className="flex gap-2 py-1 border-b border-border/50">
-                <span className="font-mono font-bold text-primary whitespace-nowrap">{abbr}</span>
-                <span className="text-muted-foreground">{full}</span>
+              ["AISP", "Account Information Service Provider", "Licensed entity that accesses bank account data on behalf of users with their consent."],
+              ["AML", "Anti-Money Laundering", "Regulations and procedures to prevent criminals from disguising illegally obtained funds."],
+              ["API", "Application Programming Interface", "A set of rules that allows software applications to communicate with each other."],
+              ["AUP", "Acceptable Use Policy", "Rules defining how a platform's services may and may not be used."],
+              ["BEAC", "Bank of Central African States", "The central bank for CEMAC member states, responsible for monetary policy and currency issuance."],
+              ["BICEC", "Banque Internationale du Cameroun pour l'Épargne et le Crédit", "A major commercial bank operating in Cameroon."],
+              ["CBCA", "Canada Business Corporations Act", "Federal legislation governing the incorporation and regulation of businesses in Canada."],
+              ["CEMAC", "Central African Economic and Monetary Community", "An economic union of six Central African countries sharing the CFA franc."],
+              ["CFT", "Combating the Financing of Terrorism", "Measures to detect and prevent funds from being used to support terrorist activities."],
+              ["COBAC", "Central African Banking Commission", "The regional banking supervisor that regulates financial institutions across CEMAC."],
+              ["DevEx", "Developer Experience", "The overall quality of tools, docs, and workflows provided to software developers."],
+              ["DSS", "Data Security Standard", "A set of security requirements for organisations that handle payment card data."],
+              ["GHS", "Ghanaian Cedi", "The official currency of Ghana."],
+              ["ISO 20022", "International Standard for Electronic Financial Messaging", "A universal messaging framework for financial transactions including payments and securities."],
+              ["JS", "JavaScript", "A widely used programming language for web and server-side development."],
+              ["KES", "Kenyan Shilling", "The official currency of Kenya."],
+              ["KOB", "Kang Open Banking", "Cameroon's unified open banking platform connecting banks, mobile money, and fintechs."],
+              ["KYB", "Know Your Business", "Due-diligence process to verify the identity and legitimacy of a business entity."],
+              ["KYC", "Know Your Customer", "Identity verification process required before onboarding individual customers."],
+              ["MNO", "Mobile Network Operator", "A telecoms company that provides mobile phone and data services (e.g. MTN, Orange)."],
+              ["mTLS", "Mutual Transport Layer Security", "Two-way certificate authentication ensuring both client and server verify each other's identity."],
+              ["NGN", "Nigerian Naira", "The official currency of Nigeria."],
+              ["OAuth", "Open Authorization", "An industry-standard protocol for delegated access without sharing passwords."],
+              ["OpenAPI", "Open API Specification", "A machine-readable format for describing, producing, and consuming REST APIs."],
+              ["PCI", "Payment Card Industry", "A global council that sets security standards for organisations handling card payments."],
+              ["PHP", "PHP: Hypertext Preprocessor", "A server-side scripting language widely used for web development."],
+              ["PISP", "Payment Initiation Service Provider", "Licensed entity that initiates bank payments on behalf of users with their consent."],
+              ["PKCE", "Proof Key for Code Exchange", "An OAuth 2.0 extension that prevents authorization code interception attacks."],
+              ["REST", "Representational State Transfer", "An architectural style for building scalable web APIs using standard HTTP methods."],
+              ["RWF", "Rwandan Franc", "The official currency of Rwanda."],
+              ["SCA", "Strong Customer Authentication", "Multi-factor authentication required for electronic payments to reduce fraud."],
+              ["SCB", "Société Commerciale de Banque", "A commercial bank operating in Cameroon, part of the Attijariwafa Bank group."],
+              ["SDK", "Software Development Kit", "A collection of tools, libraries, and documentation for building applications on a platform."],
+              ["SLA", "Service Level Agreement", "A formal commitment defining uptime, response times, and support guarantees."],
+              ["SWIFT", "Society for Worldwide Interbank Financial Telecommunication", "A global messaging network used by banks to securely exchange financial instructions."],
+              ["3DS2", "3-D Secure Version 2", "A fraud-prevention protocol that adds an extra verification step for online card payments."],
+              ["TPP", "Third-Party Provider", "An external company authorised to access bank data or initiate payments via open banking APIs."],
+              ["TZS", "Tanzanian Shilling", "The official currency of Tanzania."],
+              ["UBA", "United Bank for Africa", "A pan-African financial services group operating in 20+ countries."],
+              ["UGX", "Ugandan Shilling", "The official currency of Uganda."],
+              ["USD", "United States Dollar", "The official currency of the United States and the world's primary reserve currency."],
+              ["USSD", "Unstructured Supplementary Service Data", "A mobile protocol enabling real-time, session-based communication without internet access."],
+              ["XAF", "Central African CFA Franc", "The common currency of CEMAC member states, pegged to the euro."],
+              ["ZAR", "South African Rand", "The official currency of South Africa."],
+            ].map(([abbr, full, meaning]) => (
+              <div key={abbr} className="py-2 border-b border-border/50">
+                <div className="flex items-baseline gap-2">
+                  <span className="font-mono font-bold text-primary whitespace-nowrap">{abbr}</span>
+                  <span className="font-medium text-foreground">{full}</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{meaning}</p>
               </div>
             ))}
           </div>
