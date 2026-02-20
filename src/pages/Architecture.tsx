@@ -779,6 +779,67 @@ export default function Architecture() {
         </div>
       </section>
 
+      {/* ── Glossary ── */}
+      <section className="py-14 px-6 bg-muted/30 border-t">
+        <div className="max-w-4xl mx-auto">
+          <h3 className="text-2xl font-bold text-foreground mb-2 text-center">Glossary</h3>
+          <p className="text-muted-foreground text-center mb-8 text-sm">Full meaning of abbreviations used on this page</p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3 text-sm">
+            {[
+              ["AISP", "Account Information Service Provider"],
+              ["AML", "Anti-Money Laundering"],
+              ["API", "Application Programming Interface"],
+              ["AUP", "Acceptable Use Policy"],
+              ["BEAC", "Bank of Central African States (Banque des États de l'Afrique Centrale)"],
+              ["BICEC", "Banque Internationale du Cameroun pour l'Épargne et le Crédit"],
+              ["CBCA", "Canada Business Corporations Act"],
+              ["CEMAC", "Central African Economic and Monetary Community"],
+              ["CFT", "Combating the Financing of Terrorism"],
+              ["COBAC", "Central African Banking Commission (Commission Bancaire de l'Afrique Centrale)"],
+              ["DevEx", "Developer Experience"],
+              ["DSS", "Data Security Standard"],
+              ["GHS", "Ghanaian Cedi"],
+              ["ISO 20022", "International Standard for Electronic Financial Messaging"],
+              ["JS", "JavaScript"],
+              ["KES", "Kenyan Shilling"],
+              ["KOB", "Kang Open Banking"],
+              ["KYB", "Know Your Business"],
+              ["KYC", "Know Your Customer"],
+              ["MNO", "Mobile Network Operator"],
+              ["mTLS", "Mutual Transport Layer Security"],
+              ["NGN", "Nigerian Naira"],
+              ["OAuth", "Open Authorization"],
+              ["OpenAPI", "Open API Specification"],
+              ["PCI", "Payment Card Industry"],
+              ["PHP", "PHP: Hypertext Preprocessor"],
+              ["PISP", "Payment Initiation Service Provider"],
+              ["PKCE", "Proof Key for Code Exchange"],
+              ["REST", "Representational State Transfer"],
+              ["RWF", "Rwandan Franc"],
+              ["SCA", "Strong Customer Authentication"],
+              ["SCB", "Société Commerciale de Banque"],
+              ["SDK", "Software Development Kit"],
+              ["SLA", "Service Level Agreement"],
+              ["SWIFT", "Society for Worldwide Interbank Financial Telecommunication"],
+              ["3DS2", "3-D Secure Version 2"],
+              ["TPP", "Third-Party Provider"],
+              ["TZS", "Tanzanian Shilling"],
+              ["UBA", "United Bank for Africa"],
+              ["UGX", "Ugandan Shilling"],
+              ["USD", "United States Dollar"],
+              ["USSD", "Unstructured Supplementary Service Data"],
+              ["XAF", "Central African CFA Franc"],
+              ["ZAR", "South African Rand"],
+            ].map(([abbr, full]) => (
+              <div key={abbr} className="flex gap-2 py-1 border-b border-border/50">
+                <span className="font-mono font-bold text-primary whitespace-nowrap">{abbr}</span>
+                <span className="text-muted-foreground">{full}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── CTA ── */}
       <section className="py-14 px-6 text-center bg-background">
         <div className="max-w-lg mx-auto space-y-4">
