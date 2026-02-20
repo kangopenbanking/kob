@@ -153,6 +153,8 @@ import StatusWidget from "./pages/StatusWidget";
 import EmbedStatusWidget from "./pages/EmbedStatusWidget";
 import LiveDemo from "./pages/LiveDemo";
 import Architecture from "./pages/Architecture";
+import KeyFunctionsSummary from "./pages/KeyFunctionsSummary";
+import ROICalculator from "./pages/ROICalculator";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -332,6 +334,8 @@ function App() {
             <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
             <Route path="/demo" element={<Layout><LiveDemo /></Layout>} />
             <Route path="/architecture" element={<Layout><Architecture /></Layout>} />
+            <Route path="/key-functions" element={<Layout><KeyFunctionsSummary /></Layout>} />
+            <Route path="/roi-calculator" element={<Layout><ROICalculator /></Layout>} />
             <Route path="/payment-facilitation" element={<Layout><PaymentFacilitation /></Layout>} />
             <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
