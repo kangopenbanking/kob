@@ -32,6 +32,7 @@ import {
 import heroBanner from "@/assets/hero-banner-kob.png";
 import crediqHeroBg from "@/assets/crediq-hero-bg.png";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
+import { ProductTour } from "@/components/ProductTour";
 
 const Index = () => {
   return (
@@ -1082,6 +1083,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      <ProductTour />
     </div>
   );
 };
