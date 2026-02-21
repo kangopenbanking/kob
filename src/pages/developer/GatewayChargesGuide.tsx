@@ -32,6 +32,26 @@ const GatewayChargesGuide = () => (
     <ApiEndpoint method="GET" endpoint="/v1/gateway/charges?merchant_id={id}&status={status}&channel={channel}&from={date}&to={date}&limit=50&offset=0" description="List charges with filters."
       response={JSON.stringify({ data: [], total: 0, limit: 50, offset: 0 }, null, 2)}
     />
+
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/verify" description="Verify a charge by polling the provider (Flutterwave or Stripe) for the latest status and syncing it to the gateway."
+      response={JSON.stringify({ id: "chg_uuid", status: "successful", provider: "flutterwave", provider_ref: "FLW-1234", amount: 5000, currency: "XAF", channel: "mobile_money", verified_at: "2026-02-21T10:05:00Z" }, null, 2)}
+      parameters={[
+        { name: "chargeId", type: "uuid", required: true, description: "The charge ID to verify against the provider" },
+      ]}
+    />
+
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/cancel" description="Cancel a pending charge before it is processed by the provider."
+      response={JSON.stringify({ id: "chg_uuid", status: "cancelled", cancelled_at: "2026-02-21T10:02:00Z" }, null, 2)}
+    />
+
+    <ApiEndpoint method="GET" endpoint="/v1/gateway/fee-estimate?amount={amount}&channel={channel}&currency={currency}" description="Preview transaction fees and net amount before creating a charge."
+      response={JSON.stringify({ amount: 5000, currency: "XAF", channel: "mobile_money", fee_amount: 200, net_amount: 4800, fee_percentage: "3%", fixed_fee: 50 }, null, 2)}
+      parameters={[
+        { name: "amount", type: "number", required: true, description: "Transaction amount" },
+        { name: "channel", type: "string", required: true, description: "mobile_money | card | bank_transfer" },
+        { name: "currency", type: "string", required: false, description: "ISO 4217 code, default XAF" },
+      ]}
+    />
   </div>
 );
 

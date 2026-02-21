@@ -75,6 +75,14 @@ Deno.serve(async (req) => {
       { key: 'institution_id', value: 'INSTITUTION_UUID', type: 'string' },
       { key: 'webhook_id', value: 'WEBHOOK_UUID', type: 'string' },
       { key: 'branch_id', value: 'BRANCH_UUID', type: 'string' },
+      { key: 'merchant_id', value: 'MERCHANT_UUID', type: 'string' },
+      { key: 'charge_id', value: 'CHARGE_UUID', type: 'string' },
+      { key: 'payout_id', value: 'PAYOUT_UUID', type: 'string' },
+      { key: 'batch_id', value: 'BATCH_UUID', type: 'string' },
+      { key: 'refund_id', value: 'REFUND_UUID', type: 'string' },
+      { key: 'dispute_id', value: 'DISPUTE_UUID', type: 'string' },
+      { key: 'settlement_id', value: 'SETTLEMENT_UUID', type: 'string' },
+      { key: 'beneficiary_id', value: 'BENEFICIARY_UUID', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
@@ -557,6 +565,56 @@ Deno.serve(async (req) => {
             body: { app_name: 'My FinTech App', redirect_uris: ['https://app.example.com/callback'], use_case: 'payment_aggregation' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
+        ],
+      },
+
+      // ── Payment Gateway ─────────────────────────────────────────────
+      {
+        name: 'Payment Gateway',
+        item: [
+          r('Create Charge', 'POST', '/v1/gateway/charges', {
+            body: { merchant_id: '{{merchant_id}}', amount: 5000, currency: 'XAF', channel: 'mobile_money', customer_phone: '237677123456', tx_ref: 'order_001' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Charge', 'GET', '/v1/gateway/charges/{{charge_id}}'),
+          r('List Charges', 'GET', '/v1/gateway/charges', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
+          r('Verify Charge', 'POST', '/v1/gateway/charges/{{charge_id}}/verify', { desc: 'Poll provider for real-time status sync' }),
+          r('Cancel Charge', 'POST', '/v1/gateway/charges/{{charge_id}}/cancel'),
+          r('Fee Estimate', 'GET', '/v1/gateway/fee-estimate', { query: [{ key: 'amount', value: '5000' }, { key: 'channel', value: 'mobile_money' }, { key: 'currency', value: 'XAF' }] }),
+          r('Create Refund', 'POST', '/v1/gateway/refunds', {
+            body: { charge_id: '{{charge_id}}', amount: 5000, reason: 'Customer request' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Refund', 'GET', '/v1/gateway/refunds/{{refund_id}}'),
+          r('List Refunds', 'GET', '/v1/gateway/refunds', { query: [{ key: 'limit', value: '50' }] }),
+          r('Create Payout', 'POST', '/v1/gateway/payouts', {
+            body: { merchant_id: '{{merchant_id}}', amount: 10000, currency: 'XAF', channel: 'mobile_money', beneficiary_phone: '237677123456', beneficiary_name: 'Jean Dupont', tx_ref: 'pay_001' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Payout', 'GET', '/v1/gateway/payouts/{{payout_id}}'),
+          r('List Payouts', 'GET', '/v1/gateway/payouts', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
+          r('Create Payout Batch', 'POST', '/v1/gateway/payout-batches', {
+            body: { merchant_id: '{{merchant_id}}', currency: 'XAF', items: [{ amount: 5000, channel: 'mobile_money', beneficiary_phone: '237677111111', beneficiary_name: 'Alice' }] },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Payout Batch', 'GET', '/v1/gateway/payout-batches/{{batch_id}}'),
+          r('List Disputes', 'GET', '/v1/gateway/disputes', { query: [{ key: 'limit', value: '50' }] }),
+          r('Get Dispute', 'GET', '/v1/gateway/disputes/{{dispute_id}}'),
+          r('Submit Dispute Evidence', 'POST', '/v1/gateway/disputes/{{dispute_id}}/evidence', {
+            body: { evidence_text: 'Customer received goods on 2026-02-18.', evidence_type: 'receipt' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Settlements', 'GET', '/v1/gateway/settlements', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'limit', value: '50' }] }),
+          r('Get Settlement', 'GET', '/v1/gateway/settlements/{{settlement_id}}'),
+          r('Create Beneficiary', 'POST', '/v1/gateway/beneficiaries', {
+            body: { merchant_id: '{{merchant_id}}', name: 'Jean Dupont', channel: 'mobile_money', phone: '237677123456' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Beneficiaries', 'GET', '/v1/gateway/beneficiaries', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Delete Beneficiary', 'DELETE', '/v1/gateway/beneficiaries/{{beneficiary_id}}'),
+          r('Transaction Report', 'GET', '/v1/gateway/reports/transactions', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'from', value: '2026-02-01' }, { key: 'to', value: '2026-02-28' }] }),
+          r('Settlement Report', 'GET', '/v1/gateway/reports/settlements', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Export Transactions CSV', 'GET', '/v1/gateway/export/transactions', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'format', value: 'csv' }] }),
         ],
       },
     ],
