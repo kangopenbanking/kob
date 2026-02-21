@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield, Puzzle } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import {
   Sidebar,
@@ -16,43 +16,71 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 
-import { ShoppingCart } from "lucide-react";
-
 const navSections = [
   {
-    title: "Getting Started",
+    title: "Introduction",
     icon: Home,
     items: [
+      { title: "Overview", path: "/developer" },
+      { title: "Quickstart", path: "/developer/getting-started" },
       { title: "Integration Workflow", path: "/integration-workflow" },
-      { title: "Quick Start", path: "/developer/getting-started" },
+      { title: "SDKs & Libraries", path: "/developer/guides/sdks" },
+      { title: "Changelog", path: "/developer/changelog" },
+    ],
+  },
+  {
+    title: "Core Concepts",
+    icon: BookOpen,
+    items: [
       { title: "Authentication", path: "/developer/getting-started/authentication" },
-      { title: "First API Call", path: "/developer/getting-started/first-call" },
-    ],
-  },
-  {
-    title: "API Reference",
-    icon: Code,
-    items: [
-      { title: "AISP APIs", path: "/developer/api/aisp" },
-      { title: "PISP APIs", path: "/developer/api/pisp" },
-      { title: "Mobile Money", path: "/developer/api/mobile-money" },
-      { title: "Banking Operations", path: "/developer/api/banking" },
-      { title: "Certificates", path: "/developer/api/certificates" },
       { title: "Webhooks", path: "/developer/api/webhooks" },
+      { title: "Risk & Audit Logs", path: "/developer/api/risk-audit" },
+      { title: "Sandbox & Testing", path: "/developer/sandbox" },
     ],
   },
   {
-    title: "Security & Compliance",
-    icon: Shield,
+    title: "Collections — Inflow",
+    icon: CreditCard,
     items: [
-      { title: "mTLS Certificates", path: "/developer/certificates" },
-      { title: "Security Guide", path: "/guides/security" },
-      { title: "Certificate Guide", path: "/guides/certificates" },
+      { title: "Gateway Quickstart", path: "/developer/gateway/quickstart" },
+      { title: "Charges (Collect)", path: "/developer/gateway/charges" },
+      { title: "Mobile Money", path: "/developer/api/mobile-money" },
+      { title: "PISP (Bank Pay)", path: "/developer/api/pisp" },
+      { title: "Gateway Webhooks", path: "/developer/gateway/webhooks" },
+    ],
+  },
+  {
+    title: "Transfers — Outflow",
+    icon: Wallet,
+    items: [
+      { title: "Payouts", path: "/developer/gateway/payouts" },
+      { title: "Beneficiaries", path: "/developer/api/beneficiaries" },
+      { title: "Settlements", path: "/developer/gateway/settlements" },
+      { title: "Refunds & Reversals", path: "/developer/gateway/refunds" },
+    ],
+  },
+  {
+    title: "Disputes & Reporting",
+    icon: FileText,
+    items: [
+      { title: "Disputes", path: "/developer/gateway/disputes" },
+      { title: "Transaction Exports", path: "/developer/api/exports" },
+      { title: "Settlement Reports", path: "/developer/api/settlements" },
+    ],
+  },
+  {
+    title: "Open Banking APIs",
+    icon: Database,
+    items: [
+      { title: "AISP (Accounts)", path: "/developer/api/aisp" },
+      { title: "Banking Operations", path: "/developer/api/banking" },
+      { title: "Credit Scoring", path: "/developer/payment-facilitation" },
+      { title: "Certificates (mTLS)", path: "/developer/certificates" },
     ],
   },
   {
     title: "Tools & Testing",
-    icon: Zap,
+    icon: Terminal,
     items: [
       { title: "API Keys", path: "/developer/api-keys" },
       { title: "API Explorer", path: "/developer/api-explorer" },
@@ -60,25 +88,31 @@ const navSections = [
       { title: "API Playground", path: "/developer/api-playground" },
       { title: "API Testing", path: "/developer/api-testing" },
       { title: "Code Examples", path: "/developer/examples" },
-      { title: "Sandbox Environment", path: "/developer/sandbox" },
-      { title: "Usage Analytics", path: "/developer/sandbox/usage" },
-      { title: "Webhooks", path: "/developer/sandbox/webhooks" },
-      { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
       { title: "Data Generator", path: "/developer/sandbox/data-generator" },
+      { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
     ],
   },
   {
-    title: "E-Commerce Integration",
+    title: "Integration Guides",
+    icon: Globe,
+    items: [
+      { title: "Web Applications", path: "/developer/guides/web" },
+      { title: "Mobile Applications", path: "/developer/guides/mobile" },
+      { title: "AI Integration", path: "/developer/ai-integration-guide" },
+      { title: "Payment Facilitation", path: "/developer/payment-facilitation" },
+    ],
+  },
+  {
+    title: "E-Commerce",
     icon: ShoppingCart,
     items: [
       { title: "WooCommerce Plugin", path: "/woo-for-kang" },
       { title: "Register Store", path: "/integrations/woocommerce-merchant-register" },
-      { title: "Documentation", path: "/integrations/woocommerce-docs" },
-      { title: "Plugin Code", path: "/integrations/woocommerce-plugin-code" },
+      { title: "Plugin Docs", path: "/integrations/woocommerce-docs" },
     ],
   },
   {
-    title: "No-Code Integration",
+    title: "No-Code",
     icon: Puzzle,
     items: [
       { title: "Overview", path: "/integrations" },
@@ -119,7 +153,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
           <SidebarContent className="scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {navSections.map((section) => (
               <SidebarGroup key={section.title}>
-                <SidebarGroupLabel className="flex items-center gap-2">
+                <SidebarGroupLabel className="flex items-center gap-2 uppercase text-xs font-bold tracking-wider text-muted-foreground">
                   <section.icon className="h-4 w-4" />
                   {section.title}
                 </SidebarGroupLabel>
@@ -148,6 +182,11 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
               <Code className="h-5 w-5" />
               <span className="font-semibold">Developer Portal</span>
             </Link>
+            <nav className="hidden md:flex items-center gap-4 ml-6">
+              <Link to="/developer/getting-started" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</Link>
+              <Link to="/developer/api-explorer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Reference</Link>
+              <Link to="/developer/changelog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Changelog</Link>
+            </nav>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
