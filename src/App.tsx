@@ -54,6 +54,11 @@ import GatewayRefundsGuide from "./pages/developer/GatewayRefundsGuide";
 import GatewaySettlementsGuide from "./pages/developer/GatewaySettlementsGuide";
 import GatewayDisputesGuide from "./pages/developer/GatewayDisputesGuide";
 import GatewayWebhooksGuide from "./pages/developer/GatewayWebhooksGuide";
+import GatewayPaymentLinksGuide from "./pages/developer/GatewayPaymentLinksGuide";
+import GatewaySubscriptionsGuide from "./pages/developer/GatewaySubscriptionsGuide";
+import GatewaySplitPaymentsGuide from "./pages/developer/GatewaySplitPaymentsGuide";
+import GatewayTokenizationGuide from "./pages/developer/GatewayTokenizationGuide";
+import GatewayChargeEventsGuide from "./pages/developer/GatewayChargeEventsGuide";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -348,6 +353,11 @@ function App() {
               <Route path="gateway/settlements" element={<GatewaySettlementsGuide />} />
               <Route path="gateway/disputes" element={<GatewayDisputesGuide />} />
               <Route path="gateway/webhooks" element={<GatewayWebhooksGuide />} />
+              <Route path="gateway/payment-links" element={<GatewayPaymentLinksGuide />} />
+              <Route path="gateway/subscriptions" element={<GatewaySubscriptionsGuide />} />
+              <Route path="gateway/split-payments" element={<GatewaySplitPaymentsGuide />} />
+              <Route path="gateway/tokenization" element={<GatewayTokenizationGuide />} />
+              <Route path="gateway/charge-events" element={<GatewayChargeEventsGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<Sandbox />} />

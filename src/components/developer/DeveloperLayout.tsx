@@ -44,6 +44,8 @@ const navSections = [
     items: [
       { title: "Gateway Quickstart", path: "/developer/gateway/quickstart" },
       { title: "Charges (Collect)", path: "/developer/gateway/charges" },
+      { title: "Payment Links", path: "/developer/gateway/payment-links" },
+      { title: "Subscriptions", path: "/developer/gateway/subscriptions" },
       { title: "Mobile Money", path: "/developer/api/mobile-money" },
       { title: "PISP (Bank Pay)", path: "/developer/api/pisp" },
       { title: "Gateway Webhooks", path: "/developer/gateway/webhooks" },
@@ -54,6 +56,7 @@ const navSections = [
     icon: Wallet,
     items: [
       { title: "Payouts", path: "/developer/gateway/payouts" },
+      { title: "Split Payments", path: "/developer/gateway/split-payments" },
       { title: "Beneficiaries", path: "/developer/api/beneficiaries" },
       { title: "Settlements", path: "/developer/gateway/settlements" },
       { title: "Refunds & Reversals", path: "/developer/gateway/refunds" },
@@ -64,6 +67,8 @@ const navSections = [
     icon: FileText,
     items: [
       { title: "Disputes", path: "/developer/gateway/disputes" },
+      { title: "Charge Events", path: "/developer/gateway/charge-events" },
+      { title: "Tokenization", path: "/developer/gateway/tokenization" },
       { title: "Transaction Exports", path: "/developer/api/exports" },
       { title: "Settlement Reports", path: "/developer/api/settlements" },
     ],

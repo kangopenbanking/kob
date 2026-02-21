@@ -615,6 +615,42 @@ Deno.serve(async (req) => {
           r('Transaction Report', 'GET', '/v1/gateway/reports/transactions', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'from', value: '2026-02-01' }, { key: 'to', value: '2026-02-28' }] }),
           r('Settlement Report', 'GET', '/v1/gateway/reports/settlements', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
           r('Export Transactions CSV', 'GET', '/v1/gateway/export/transactions', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'format', value: 'csv' }] }),
+          // Payment Links
+          r('Create Payment Link', 'POST', '/v1/gateway/payment-links', {
+            body: { merchant_id: '{{merchant_id}}', title: 'Invoice #1234', amount: 25000, currency: 'XAF', description: 'Payment for services', redirect_url: 'https://yoursite.com/thanks', max_uses: 1 },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Payment Link', 'GET', '/v1/gateway/payment-links', { query: [{ key: 'slug', value: 'pay-abc123' }], desc: 'Public – no auth required' }),
+          r('List Payment Links', 'GET', '/v1/gateway/payment-links', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          // Subscriptions
+          r('Create Payment Plan', 'POST', '/v1/gateway/payment-plans', {
+            body: { merchant_id: '{{merchant_id}}', name: 'Premium Monthly', amount: 15000, currency: 'XAF', interval: 'monthly', interval_count: 1, duration: 12 },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Create Subscription', 'POST', '/v1/gateway/subscriptions', {
+            body: { merchant_id: '{{merchant_id}}', plan_id: 'PLAN_UUID', customer_email: 'john@example.com', customer_phone: '237677123456' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Cancel Subscription', 'POST', '/v1/gateway/subscriptions/cancel', {
+            body: { subscription_id: 'SUB_UUID', reason: 'Customer request' },
+          }),
+          // Split Payments
+          r('Create Subaccount', 'POST', '/v1/gateway/subaccounts', {
+            body: { merchant_id: '{{merchant_id}}', subaccount_name: 'Seller A', settlement_bank: 'SGCM', account_number: '1234567890', split_type: 'percentage', split_value: 20 },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Subaccounts', 'GET', '/v1/gateway/subaccounts', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          // Tokenization
+          r('Create Customer', 'POST', '/v1/gateway/customers', {
+            body: { merchant_id: '{{merchant_id}}', email: 'john@example.com', name: 'John Doe', phone: '+237677123456' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Charge Token', 'POST', '/v1/gateway/charges/token', {
+            body: { merchant_id: '{{merchant_id}}', token_id: 'TOKEN_UUID', amount: 10000, currency: 'XAF', tx_ref: 'recurring_001' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          // Charge Events
+          r('Get Charge Events', 'GET', '/v1/gateway/charges/{{charge_id}}/events', { desc: 'Full lifecycle event timeline for a charge' }),
         ],
       },
     ],
