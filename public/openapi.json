@@ -464,17 +464,55 @@
         }
       }
     },
-    "/gateway/payment-links/{slug}": {
+    "/gateway/payment-links/{linkId}": {
       "get": {
         "summary": "Get Payment Link",
         "operationId": "getPaymentLink",
         "tags": ["Payment Links"],
         "security": [],
         "parameters": [
-          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+          { "name": "linkId", "in": "path", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
           "200": { "description": "Payment link details" }
+        }
+      },
+      "put": {
+        "summary": "Update Payment Link",
+        "operationId": "updatePaymentLink",
+        "tags": ["Payment Links"],
+        "parameters": [
+          { "name": "linkId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "status": { "type": "string", "enum": ["active", "inactive", "expired"] },
+                  "expires_at": { "type": "string", "format": "date-time" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment link updated" }
+        }
+      },
+      "delete": {
+        "summary": "Delete Payment Link",
+        "operationId": "deletePaymentLink",
+        "tags": ["Payment Links"],
+        "parameters": [
+          { "name": "linkId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "204": { "description": "Payment link deleted" }
         }
       }
     },
@@ -509,6 +547,55 @@
         "responses": {
           "200": { "description": "Payment plan created" }
         }
+      },
+      "get": {
+        "summary": "List Payment Plans",
+        "operationId": "listPaymentPlans",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of payment plans" }
+        }
+      }
+    },
+    "/gateway/payment-plans/{planId}": {
+      "get": {
+        "summary": "Get Payment Plan",
+        "operationId": "getPaymentPlan",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "planId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Payment plan details" }
+        }
+      },
+      "put": {
+        "summary": "Update Payment Plan",
+        "operationId": "updatePaymentPlan",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "planId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "status": { "type": "string", "enum": ["active", "inactive"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment plan updated" }
+        }
       }
     },
     "/gateway/subscriptions": {
@@ -539,6 +626,30 @@
         },
         "responses": {
           "200": { "description": "Subscription created" }
+        }
+      },
+      "get": {
+        "summary": "List Subscriptions",
+        "operationId": "listSubscriptions",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of subscriptions" }
+        }
+      }
+    },
+    "/gateway/subscriptions/{subscriptionId}": {
+      "get": {
+        "summary": "Get Subscription",
+        "operationId": "getSubscription",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "subscriptionId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Subscription details" }
         }
       }
     },
@@ -610,7 +721,69 @@
         }
       }
     },
+    "/gateway/subaccounts/{subaccountId}": {
+      "get": {
+        "summary": "Get Subaccount",
+        "operationId": "getSubaccount",
+        "tags": ["Split Payments"],
+        "parameters": [
+          { "name": "subaccountId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Subaccount details" }
+        }
+      },
+      "put": {
+        "summary": "Update Subaccount",
+        "operationId": "updateSubaccount",
+        "tags": ["Split Payments"],
+        "parameters": [
+          { "name": "subaccountId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subaccount_name": { "type": "string" },
+                  "split_type": { "type": "string", "enum": ["percentage", "flat"] },
+                  "split_value": { "type": "number" },
+                  "is_active": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Subaccount updated" }
+        }
+      },
+      "delete": {
+        "summary": "Delete Subaccount",
+        "operationId": "deleteSubaccount",
+        "tags": ["Split Payments"],
+        "parameters": [
+          { "name": "subaccountId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "204": { "description": "Subaccount deleted" }
+        }
+      }
+    },
     "/gateway/customers": {
+      "get": {
+        "summary": "List Customers",
+        "operationId": "listCustomers",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of customers" }
+        }
+      },
       "post": {
         "summary": "Create Customer",
         "operationId": "createCustomer",
@@ -637,6 +810,101 @@
         },
         "responses": {
           "200": { "description": "Customer created" }
+        }
+      }
+    },
+    "/gateway/customers/{customerId}": {
+      "get": {
+        "summary": "Get Customer",
+        "operationId": "getCustomer",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Customer details" }
+        }
+      },
+      "put": {
+        "summary": "Update Customer",
+        "operationId": "updateCustomer",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "phone": { "type": "string" },
+                  "metadata": { "type": "object" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Customer updated" }
+        }
+      }
+    },
+    "/gateway/customers/{customerId}/tokens": {
+      "get": {
+        "summary": "List Customer Tokens",
+        "operationId": "listCustomerTokens",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of saved payment tokens" }
+        }
+      }
+    },
+    "/gateway/customers/{customerId}/tokens/{tokenId}": {
+      "delete": {
+        "summary": "Revoke Customer Token",
+        "operationId": "revokeCustomerToken",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "tokenId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Token revoked" }
+        }
+      }
+    },
+    "/gateway/exchange-rate": {
+      "get": {
+        "summary": "Get Exchange Rate",
+        "operationId": "getGatewayExchangeRate",
+        "tags": ["Payment Gateway"],
+        "parameters": [
+          { "name": "from", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "to", "in": "query", "required": true, "schema": { "type": "string" } },
+          { "name": "amount", "in": "query", "required": false, "schema": { "type": "number" } }
+        ],
+        "responses": {
+          "200": { "description": "Exchange rate result" }
+        }
+      }
+    },
+    "/gateway/payouts/{payoutId}/retry": {
+      "post": {
+        "summary": "Retry Failed Payout",
+        "operationId": "retryPayout",
+        "tags": ["Payment Gateway"],
+        "parameters": [
+          { "name": "payoutId", "in": "path", "required": true, "schema": { "type": "string" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Payout retried" }
         }
       }
     },
@@ -735,6 +1003,7 @@
     { "name": "Subscriptions", "description": "Recurring billing plans and customer subscriptions" },
     { "name": "Split Payments", "description": "Marketplace subaccounts and charge split distribution" },
     { "name": "Tokenization", "description": "Customer profiles and saved payment method tokens" },
-    { "name": "Charge Events", "description": "Granular charge lifecycle event timeline" }
+    { "name": "Charge Events", "description": "Granular charge lifecycle event timeline" },
+    { "name": "Payment Gateway", "description": "Exchange rates and payout management" }
   ]
 }

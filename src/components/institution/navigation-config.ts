@@ -3,6 +3,7 @@ import {
   CreditCard, Building2, ArrowUpDown, DollarSign, TrendingUp, ShoppingCart,
   Store, Shield, UserCheck, Wallet, MapPin, Banknote, PiggyBank, BookOpen,
   Receipt, KeyRound, ScrollText, UserPlus, ShieldAlert, Bell, Mail,
+  Link2, RefreshCw, GitBranch, Contact,
 } from "lucide-react";
 
 export const institutionNavigation = [
@@ -57,6 +58,15 @@ export const institutionNavigation = [
       { title: "Webhooks", path: "/fi-portal/webhooks", icon: Webhook, sectionKey: "webhooks" },
       { title: "Credit API", path: "/fi-portal/credit-api", icon: TrendingUp, sectionKey: "credit-api" },
       { title: "Documentation", path: "/documentation", icon: FileText, sectionKey: "api-clients" },
+    ]
+  },
+  {
+    title: "Payment Gateway",
+    items: [
+      { title: "Payment Links", path: "/fi-portal/gateway-payment-links", icon: Link2, sectionKey: "gateway-payment-links" },
+      { title: "Subscriptions & Plans", path: "/fi-portal/gateway-subscriptions", icon: RefreshCw, sectionKey: "gateway-subscriptions" },
+      { title: "Subaccounts", path: "/fi-portal/gateway-subaccounts", icon: GitBranch, sectionKey: "gateway-subaccounts" },
+      { title: "Gateway Customers", path: "/fi-portal/gateway-customers", icon: Contact, sectionKey: "gateway-customers" },
     ]
   },
   {
@@ -126,4 +136,8 @@ export const ALL_PORTAL_SECTIONS = [
   { key: 'profile', label: 'Institution Profile' },
   { key: 'team', label: 'Team Members' },
   { key: 'settings', label: 'Settings' },
+  { key: 'gateway-payment-links', label: 'Payment Links' },
+  { key: 'gateway-subscriptions', label: 'Subscriptions & Plans' },
+  { key: 'gateway-subaccounts', label: 'Subaccounts' },
+  { key: 'gateway-customers', label: 'Gateway Customers' },
 ];
