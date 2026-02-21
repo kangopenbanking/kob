@@ -141,7 +141,7 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
             </div>
           </div>
 
-          <SidebarContent className="px-2 py-2">
+          <SidebarContent className="px-2 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {institutionNavigation.map((section, idx) => (
               <SidebarGroup key={section.title}>
                 <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-3 py-2">
