@@ -34,6 +34,31 @@ serve(async (req) => {
     const { data: merchant } = await supabase.from('gateway_merchants').select('*').eq('id', merchant_id).eq('user_id', user.id).single();
     if (!merchant) return new Response(JSON.stringify({ error: 'merchant_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+    // ─── Limit & Velocity Checks ───
+    // Single charge limit
+    if (merchant.single_charge_limit && amount > merchant.single_charge_limit) {
+      return new Response(JSON.stringify({ error: 'limit_exceeded', message: `Amount exceeds single charge limit of ${merchant.single_charge_limit}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Daily charge limit
+    if (merchant.daily_charge_limit) {
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const { data: dailyCharges } = await supabase.from('gateway_charges').select('amount').eq('merchant_id', merchant_id).gte('created_at', todayStart.toISOString()).in('status', ['pending', 'processing', 'successful']);
+      const dailyTotal = (dailyCharges || []).reduce((sum, c) => sum + (c.amount || 0), 0);
+      if (dailyTotal + amount > merchant.daily_charge_limit) {
+        return new Response(JSON.stringify({ error: 'daily_limit_exceeded', message: `Daily charge limit of ${merchant.daily_charge_limit} would be exceeded` }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
+    // Velocity check (max charges in time window)
+    if (merchant.velocity_max_charges && merchant.velocity_window_minutes) {
+      const windowStart = new Date(Date.now() - merchant.velocity_window_minutes * 60 * 1000).toISOString();
+      const { count } = await supabase.from('gateway_charges').select('id', { count: 'exact', head: true }).eq('merchant_id', merchant_id).gte('created_at', windowStart);
+      if ((count || 0) >= merchant.velocity_max_charges) {
+        return new Response(JSON.stringify({ error: 'velocity_exceeded', message: `Max ${merchant.velocity_max_charges} charges per ${merchant.velocity_window_minutes} minutes exceeded` }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
     // Idempotency
     const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
     if (idempotencyKey) {
@@ -79,6 +104,12 @@ serve(async (req) => {
       charge.status = 'failed';
       charge.failure_reason = providerErr.message;
     }
+
+    // Audit trail
+    await supabase.from('audit_logs').insert({
+      action_type: 'gateway_charge_created', entity_type: 'gateway_charge', entity_id: charge.id,
+      performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref },
+    }).then(() => {}).catch(() => {}); // fire-and-forget
 
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

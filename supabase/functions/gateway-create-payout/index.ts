@@ -28,6 +28,16 @@ serve(async (req) => {
     const { data: merchant } = await supabase.from('gateway_merchants').select('*').eq('id', merchant_id).eq('user_id', user.id).single();
     if (!merchant) return new Response(JSON.stringify({ error: 'merchant_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
+    // Daily payout limit check
+    if (merchant.daily_payout_limit) {
+      const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
+      const { data: dailyPayouts } = await supabase.from('gateway_payouts').select('amount').eq('merchant_id', merchant_id).gte('created_at', todayStart.toISOString()).in('status', ['pending', 'processing', 'successful']);
+      const dailyTotal = (dailyPayouts || []).reduce((sum, p) => sum + (p.amount || 0), 0);
+      if (dailyTotal + amount > merchant.daily_payout_limit) {
+        return new Response(JSON.stringify({ error: 'daily_payout_limit_exceeded', message: `Daily payout limit of ${merchant.daily_payout_limit} would be exceeded` }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
     const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
     if (idempotencyKey) {
       const { data: existing } = await supabase.from('gateway_payouts').select('*').eq('idempotency_key', idempotencyKey).eq('merchant_id', merchant_id).maybeSingle();
@@ -55,6 +65,12 @@ serve(async (req) => {
       payout.status = 'failed';
       payout.failure_reason = providerErr.message;
     }
+
+    // Audit trail
+    await supabase.from('audit_logs').insert({
+      action_type: 'gateway_payout_created', entity_type: 'gateway_payout', entity_id: payout.id,
+      performed_by: user.id, details: { merchant_id, amount, channel, status: payout.status, tx_ref },
+    }).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify(payout), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

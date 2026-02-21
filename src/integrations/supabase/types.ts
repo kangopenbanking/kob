@@ -4171,20 +4171,76 @@ export type Database = {
           },
         ]
       }
+      gateway_merchant_api_keys: {
+        Row: {
+          api_key_hash: string
+          api_key_prefix: string
+          created_at: string | null
+          environment: string
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          label: string | null
+          last_used_at: string | null
+          merchant_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          api_key_hash: string
+          api_key_prefix: string
+          created_at?: string | null
+          environment?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          last_used_at?: string | null
+          merchant_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          api_key_hash?: string
+          api_key_prefix?: string
+          created_at?: string | null
+          environment?: string
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          label?: string | null
+          last_used_at?: string | null
+          merchant_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_merchant_api_keys_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_merchants: {
         Row: {
           business_email: string | null
           business_name: string
           business_phone: string | null
           created_at: string
+          daily_charge_limit: number | null
+          daily_payout_limit: number | null
           environment: string
           id: string
           institution_id: string | null
           kyb_status: string
           metadata: Json | null
+          monthly_volume_limit: number | null
+          single_charge_limit: number | null
           status: string
           updated_at: string
           user_id: string
+          velocity_max_charges: number | null
+          velocity_window_minutes: number | null
           webhook_secret: string | null
           webhook_url: string | null
         }
@@ -4193,14 +4249,20 @@ export type Database = {
           business_name: string
           business_phone?: string | null
           created_at?: string
+          daily_charge_limit?: number | null
+          daily_payout_limit?: number | null
           environment?: string
           id?: string
           institution_id?: string | null
           kyb_status?: string
           metadata?: Json | null
+          monthly_volume_limit?: number | null
+          single_charge_limit?: number | null
           status?: string
           updated_at?: string
           user_id: string
+          velocity_max_charges?: number | null
+          velocity_window_minutes?: number | null
           webhook_secret?: string | null
           webhook_url?: string | null
         }
@@ -4209,14 +4271,20 @@ export type Database = {
           business_name?: string
           business_phone?: string | null
           created_at?: string
+          daily_charge_limit?: number | null
+          daily_payout_limit?: number | null
           environment?: string
           id?: string
           institution_id?: string | null
           kyb_status?: string
           metadata?: Json | null
+          monthly_volume_limit?: number | null
+          single_charge_limit?: number | null
           status?: string
           updated_at?: string
           user_id?: string
+          velocity_max_charges?: number | null
+          velocity_window_minutes?: number | null
           webhook_secret?: string | null
           webhook_url?: string | null
         }
