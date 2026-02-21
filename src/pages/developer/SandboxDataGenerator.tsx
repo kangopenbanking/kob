@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2, Database, CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
 
 export default function SandboxDataGenerator() {
   const navigate = useNavigate();
@@ -45,7 +45,7 @@ export default function SandboxDataGenerator() {
   };
 
   return (
-    <DeveloperLayout>
+    <div className="max-w-4xl mx-auto space-y-6">
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Sandbox Data Generator</h1>
@@ -233,6 +233,6 @@ export default function SandboxDataGenerator() {
           </CardContent>
         </Card>
       </div>
-    </DeveloperLayout>
+    </div>
   );
 }

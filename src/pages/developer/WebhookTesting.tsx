@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2, Send, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
 
 const eventTemplates = {
   rate_limit_warning: {
@@ -143,16 +143,14 @@ export default function WebhookTesting() {
 
   if (loading) {
     return (
-      <DeveloperLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DeveloperLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DeveloperLayout>
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Webhook Testing Tool</h1>
@@ -330,6 +328,6 @@ export default function WebhookTesting() {
           </CardContent>
         </Card>
       </div>
-    </DeveloperLayout>
+    </div>
   );
 }
