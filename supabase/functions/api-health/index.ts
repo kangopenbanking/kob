@@ -38,8 +38,12 @@ serve(async (req) => {
       try {
         const baseUrl = Deno.env.get('CARDYFIE_BASE_URL');
         const apiKey = Deno.env.get('CARDYFIE_API_KEY');
+        console.log('Cardyfie health check - baseUrl:', baseUrl ? `${baseUrl.substring(0, 30)}...` : 'NOT SET');
+        console.log('Cardyfie health check - apiKey:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NOT SET');
         if (!baseUrl || !apiKey) return false;
-        const response = await fetch(`${baseUrl}/card/currencies`, {
+        const url = `${baseUrl}/card/currencies`;
+        console.log('Cardyfie health check URL:', url);
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Authorization': `Bearer ${apiKey}`,
@@ -47,8 +51,14 @@ serve(async (req) => {
           },
           signal: AbortSignal.timeout(5000)
         });
+        console.log('Cardyfie health check response:', response.status, response.statusText);
+        if (!response.ok) {
+          const body = await response.text();
+          console.log('Cardyfie error body:', body.substring(0, 500));
+        }
         return response.ok;
-      } catch {
+      } catch (err) {
+        console.error('Cardyfie health check error:', err);
         return false;
       }
     }
