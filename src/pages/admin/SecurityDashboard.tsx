@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Key, AlertTriangle, RefreshCw, CheckCircle2 } from "lucide-react";
-import { AdminLayout } from "@/components/admin/AdminLayout";
+
 
 export default function SecurityDashboard() {
   const [jwtSecrets, setJwtSecrets] = useState<any[]>([]);
@@ -107,17 +107,14 @@ export default function SecurityDashboard() {
 
   if (loading) {
     return (
-      <AdminLayout>
-        <div className="flex items-center justify-center h-96">
-          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AdminLayout>
+      <div className="flex items-center justify-center h-96">
+        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <AdminLayout>
-      <div className="space-y-6">
+    <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Security Dashboard</h1>
           <Button onClick={() => loadSecurityData()}>
@@ -240,7 +237,6 @@ export default function SecurityDashboard() {
             )}
           </div>
         </Card>
-      </div>
-    </AdminLayout>
+    </div>
   );
 }
