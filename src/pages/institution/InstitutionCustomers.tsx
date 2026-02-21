@@ -89,7 +89,7 @@ export default function InstitutionCustomers() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted"><Users className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-purple/10 border border-fi-purple/20"><Users className="h-5 w-5 text-fi-purple" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Customers</h1>
             <p className="text-xs text-muted-foreground">Manage customers, KYC, due diligence, and sanctions</p>
@@ -103,15 +103,15 @@ export default function InstitutionCustomers() {
 
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: "Total Customers", value: customers.length, icon: Users },
-          { label: "KYC Verifications", value: kycVerifications.length, icon: UserCheck },
-          { label: "Due Diligence", value: dueDiligence.length, icon: Shield },
-          { label: "Sanctions Screenings", value: sanctions.length, icon: AlertTriangle },
+          { label: "Total Customers", value: customers.length, icon: Users, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
+          { label: "KYC Verifications", value: kycVerifications.length, icon: UserCheck, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+          { label: "Due Diligence", value: dueDiligence.length, icon: Shield, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+          { label: "Sanctions Screenings", value: sanctions.length, icon: AlertTriangle, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
         ].map(s => (
           <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : s.value}</div></CardContent>
           </Card>

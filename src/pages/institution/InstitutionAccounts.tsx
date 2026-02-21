@@ -161,7 +161,7 @@ export default function InstitutionAccounts() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted"><Wallet className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-blue/10 border border-fi-blue/20"><Wallet className="h-5 w-5 text-fi-blue" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Accounts</h1>
             <p className="text-xs text-muted-foreground">Manage institution accounts and balances</p>
@@ -208,14 +208,14 @@ export default function InstitutionAccounts() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: "Total Accounts", value: accounts.length, icon: Wallet },
-          { label: "Active Accounts", value: accounts.filter(a => a.is_active).length, icon: TrendingUp },
-          { label: "Total Balance", value: `${totalBalance.toLocaleString()} XAF`, icon: Wallet },
+          { label: "Total Accounts", value: accounts.length, icon: Wallet, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+          { label: "Active Accounts", value: accounts.filter(a => a.is_active).length, icon: TrendingUp, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+          { label: "Total Balance", value: `${totalBalance.toLocaleString()} XAF`, icon: Wallet, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
         ].map(s => (
           <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-20" /> : s.value}</div></CardContent>
           </Card>

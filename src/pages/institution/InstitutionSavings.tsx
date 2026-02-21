@@ -51,7 +51,7 @@ export default function InstitutionSavings() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted"><PiggyBank className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-green/10 border border-fi-green/20"><PiggyBank className="h-5 w-5 text-fi-green" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Savings</h1>
             <p className="text-xs text-muted-foreground">Manage savings products, accounts, and interest</p>
@@ -62,15 +62,15 @@ export default function InstitutionSavings() {
 
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: "Products", value: products.length, icon: PiggyBank },
-          { label: "Accounts", value: savingsAccounts.length, icon: PiggyBank },
-          { label: "Total Balance", value: `${totalBalance.toLocaleString()} XAF`, icon: ArrowUpDown },
-          { label: "Interest Accruals", value: interestAccruals.length, icon: Percent },
+          { label: "Products", value: products.length, icon: PiggyBank, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+          { label: "Accounts", value: savingsAccounts.length, icon: PiggyBank, color: "text-fi-teal bg-fi-teal/10 border-fi-teal/20" },
+          { label: "Total Balance", value: `${totalBalance.toLocaleString()} XAF`, icon: ArrowUpDown, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
+          { label: "Interest Accruals", value: interestAccruals.length, icon: Percent, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
         ].map(s => (
           <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : s.value}</div></CardContent>
           </Card>
