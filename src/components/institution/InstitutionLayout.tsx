@@ -138,7 +138,8 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
 
   const isActivePath = (path: string) => {
     if (path === "/fi-portal") return location.pathname === path;
-    return location.pathname.startsWith(path);
+    // Exact match or path followed by / to avoid prefix collisions like /customers vs /customer-onboarding
+    return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
   return (

@@ -9132,6 +9132,7 @@ export type Database = {
           transaction_type: string
         }[]
       }
+      get_staff_institution_id: { Args: { _user_id: string }; Returns: string }
       get_user_postiq_verification: {
         Args: { p_user_id: string }
         Returns: {
@@ -9158,6 +9159,10 @@ export type Database = {
       hash_ip_address: { Args: { ip_address: unknown }; Returns: string }
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
+        Returns: boolean
+      }
+      is_institution_staff_admin: {
+        Args: { _institution_id: string; _user_id: string }
         Returns: boolean
       }
       log_audit_event: {
