@@ -41,6 +41,12 @@ import SandboxWebhooks from "./pages/developer/SandboxWebhooks";
 import WebhookTesting from "./pages/developer/WebhookTesting";
 import SandboxDataGenerator from "./pages/developer/SandboxDataGenerator";
 import ApiPlayground from "./pages/developer/ApiPlayground";
+import RefundsReference from "./pages/developer/RefundsReference";
+import BeneficiariesReference from "./pages/developer/BeneficiariesReference";
+import SettlementsReference from "./pages/developer/SettlementsReference";
+import DisputesReference from "./pages/developer/DisputesReference";
+import ExportsReference from "./pages/developer/ExportsReference";
+import RiskAuditReference from "./pages/developer/RiskAuditReference";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -322,6 +328,12 @@ function App() {
               <Route path="api/banking" element={<BankingReference />} />
               <Route path="api/certificates" element={<CertificateReference />} />
               <Route path="api/webhooks" element={<WebhooksGuide />} />
+              <Route path="api/refunds" element={<RefundsReference />} />
+              <Route path="api/beneficiaries" element={<BeneficiariesReference />} />
+              <Route path="api/settlements" element={<SettlementsReference />} />
+              <Route path="api/disputes" element={<DisputesReference />} />
+              <Route path="api/exports" element={<ExportsReference />} />
+              <Route path="api/risk-audit" element={<RiskAuditReference />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<Sandbox />} />
