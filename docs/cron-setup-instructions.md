@@ -37,7 +37,7 @@ jobs:
       - name: Trigger automated billing edge function
         run: |
           curl -X POST \
-            https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron \
+            https://api.kangopenbanking.com/functions/v1/automated-billing-cron \
             -H "Content-Type: application/json"
 ```
 
@@ -71,7 +71,7 @@ If you prefer not to use GitHub Actions, you can use external cron services:
 **Setup**:
 1. Create account at https://cron-job.org
 2. Create new cron job:
-   - **URL**: `https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron`
+   - **URL**: `https://api.kangopenbanking.com/functions/v1/automated-billing-cron`
    - **Method**: POST
    - **Schedule**: `0 0 * * *` (daily at midnight)
    - **Headers**: `Content-Type: application/json`
@@ -85,7 +85,7 @@ If you prefer not to use GitHub Actions, you can use external cron services:
 **Setup**:
 1. Sign up at https://www.easycron.com
 2. Add cron job:
-   - **URL**: `https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron`
+   - **URL**: `https://api.kangopenbanking.com/functions/v1/automated-billing-cron`
    - **Cron Expression**: `0 0 * * *`
    - **HTTP Method**: POST
 3. Save and enable
@@ -97,7 +97,7 @@ If you prefer not to use GitHub Actions, you can use external cron services:
 **Setup**:
 1. Create account at https://uptimerobot.com
 2. Add HTTP(s) monitor:
-   - **URL**: `https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron`
+   - **URL**: `https://api.kangopenbanking.com/functions/v1/automated-billing-cron`
    - **Monitoring Interval**: 1 day
    - **Monitor Type**: HTTP(s)
 3. Enable monitor
@@ -111,7 +111,7 @@ If you prefer not to use GitHub Actions, you can use external cron services:
 You can test the billing function manually using curl:
 
 ```bash
-curl -X POST https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron \
+curl -X POST https://api.kangopenbanking.com/functions/v1/automated-billing-cron \
   -H "Content-Type: application/json" \
   -d '{}'
 ```
@@ -334,7 +334,7 @@ If automated billing fails, admins can manually generate invoices:
 
 ### Edge Function Endpoint
 
-**URL**: `https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/automated-billing-cron`
+**URL**: `https://api.kangopenbanking.com/functions/v1/automated-billing-cron`
 
 **Method**: POST
 
