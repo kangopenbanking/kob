@@ -3969,6 +3969,62 @@ export type Database = {
         }
         Relationships: []
       }
+      gateway_beneficiaries: {
+        Row: {
+          account_number: string | null
+          bank_code: string | null
+          bank_name: string | null
+          channel: string
+          created_at: string
+          email: string | null
+          id: string
+          is_active: boolean
+          merchant_id: string
+          metadata: Json | null
+          name: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          channel?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          merchant_id: string
+          metadata?: Json | null
+          name: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          channel?: string
+          created_at?: string
+          email?: string | null
+          id?: string
+          is_active?: boolean
+          merchant_id?: string
+          metadata?: Json | null
+          name?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_beneficiaries_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_charges: {
         Row: {
           amount: number
