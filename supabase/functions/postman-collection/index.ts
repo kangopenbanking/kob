@@ -651,6 +651,41 @@ Deno.serve(async (req) => {
           }),
           // Charge Events
           r('Get Charge Events', 'GET', '/v1/gateway/charges/{{charge_id}}/events', { desc: 'Full lifecycle event timeline for a charge' }),
+          // CRUD - Payment Links
+          r('Update Payment Link', 'PUT', '/v1/gateway/payment-links/{{payment_link_id}}', {
+            body: { title: 'Updated Invoice', amount: 30000, status: 'active' },
+          }),
+          r('Delete Payment Link', 'DELETE', '/v1/gateway/payment-links/{{payment_link_id}}'),
+          // CRUD - Payment Plans
+          r('Get Payment Plan', 'GET', '/v1/gateway/payment-plans/{{plan_id}}'),
+          r('List Payment Plans', 'GET', '/v1/gateway/payment-plans', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Update Payment Plan', 'PUT', '/v1/gateway/payment-plans/{{plan_id}}', {
+            body: { name: 'Updated Plan', status: 'inactive' },
+          }),
+          // CRUD - Subscriptions
+          r('Get Subscription', 'GET', '/v1/gateway/subscriptions/{{subscription_id}}'),
+          r('List Subscriptions', 'GET', '/v1/gateway/subscriptions', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          // CRUD - Subaccounts
+          r('Get Subaccount', 'GET', '/v1/gateway/subaccounts/{{subaccount_id}}'),
+          r('Update Subaccount', 'PUT', '/v1/gateway/subaccounts/{{subaccount_id}}', {
+            body: { subaccount_name: 'Updated Seller', split_value: 25 },
+          }),
+          r('Delete Subaccount', 'DELETE', '/v1/gateway/subaccounts/{{subaccount_id}}'),
+          // CRUD - Customers
+          r('List Customers', 'GET', '/v1/gateway/customers', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Get Customer', 'GET', '/v1/gateway/customers/{{customer_id}}'),
+          r('Update Customer', 'PUT', '/v1/gateway/customers/{{customer_id}}', {
+            body: { name: 'Jane Doe', phone: '+237677999888' },
+          }),
+          // CRUD - Customer Tokens
+          r('List Customer Tokens', 'GET', '/v1/gateway/customers/{{customer_id}}/tokens'),
+          r('Revoke Customer Token', 'DELETE', '/v1/gateway/customers/{{customer_id}}/tokens/{{token_id}}'),
+          // Exchange Rate
+          r('Get Exchange Rate', 'GET', '/v1/gateway/exchange-rate', { query: [{ key: 'from', value: 'XAF' }, { key: 'to', value: 'USD' }, { key: 'amount', value: '100000' }] }),
+          // Retry Payout
+          r('Retry Failed Payout', 'POST', '/v1/gateway/payouts/{{payout_id}}/retry', {
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
         ],
       },
     ],
