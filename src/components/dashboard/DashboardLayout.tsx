@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { Button } from "@/components/ui/button";
 import { 
   ArrowLeft, 
@@ -127,7 +128,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <div className="flex-1 min-w-0">
               <Breadcrumbs />
             </div>
-            <NotificationCenter />
+            <div className="flex items-center gap-2">
+              <NotificationCenter />
+              <UserProfileMenu variant="dashboard" />
+            </div>
           </header>
 
           <main className="flex-1 p-6 sm:p-8 overflow-auto dashboard-content">

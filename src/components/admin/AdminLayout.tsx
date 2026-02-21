@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, Shield } from "lucide-react";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 import {
   Sidebar,
   SidebarContent,
@@ -14,7 +15,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { RealtimeAlertNotifications } from "@/components/admin/RealtimeAlertNotifications";
+
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { adminNavigation } from "@/components/admin/admin-navigation-config";
@@ -82,7 +83,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </div>
             <div className="flex items-center gap-2">
               <NotificationCenter />
-              <RealtimeAlertNotifications />
+              <UserProfileMenu variant="admin" />
             </div>
           </header>
 

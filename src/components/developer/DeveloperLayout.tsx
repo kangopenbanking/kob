@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Code, Home, Zap, Shield, Puzzle } from "lucide-react";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 import {
   Sidebar,
   SidebarContent,
@@ -148,9 +149,12 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
               <span className="font-semibold">Developer Portal</span>
             </Link>
             <div className="flex-1" />
-            <Button variant="outline" onClick={() => navigate('/dashboard')}>
-              Dashboard
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
+                Dashboard
+              </Button>
+              <UserProfileMenu variant="developer" />
+            </div>
           </header>
 
           <main className="flex-1 p-6">
