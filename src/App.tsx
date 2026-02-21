@@ -132,6 +132,13 @@ import CreditManagement from "./pages/admin/CreditManagement";
 import WooForKang from "./pages/WooForKang";
 import PaymentFacilitation from "./pages/PaymentFacilitation";
 import PaymentFacilitationDev from "./pages/developer/PaymentFacilitation";
+import DisputeManagement from "./pages/admin/DisputeManagement";
+import ReconciliationDashboard from "./pages/admin/ReconciliationDashboard";
+import PayoutManagement from "./pages/admin/PayoutManagement";
+import FraudDetection from "./pages/admin/FraudDetection";
+import ExchangeRateManagement from "./pages/admin/ExchangeRateManagement";
+import RevenueAnalytics from "./pages/admin/RevenueAnalytics";
+import EmailTemplates from "./pages/admin/EmailTemplates";
 import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
 import CrediQ from "./pages/CrediQ";
 import CrediQOnboarding from "./pages/CrediQOnboarding";
@@ -279,7 +286,21 @@ function App() {
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
               <Route path="security-dashboard" element={<SecurityDashboard />} />
+              {/* Phase 1: Fixed orphaned routes - now inside admin layout */}
+              <Route path="fee-management" element={<FeeManagement />} />
+              <Route path="system-monitoring" element={<SystemMonitoring />} />
+              <Route path="communications" element={<Communications />} />
+              <Route path="compliance-dashboard" element={<ComplianceDashboard />} />
+              {/* Phase 2: New critical pages */}
+              <Route path="disputes" element={<DisputeManagement />} />
+              <Route path="reconciliation" element={<ReconciliationDashboard />} />
+              <Route path="payouts" element={<PayoutManagement />} />
+              <Route path="fraud-detection" element={<FraudDetection />} />
+              <Route path="exchange-rates" element={<ExchangeRateManagement />} />
+              <Route path="revenue" element={<RevenueAnalytics />} />
+              <Route path="email-templates" element={<EmailTemplates />} />
             </Route>
+            {/* Legacy redirects for old orphaned routes - keep for backward compatibility */}
             <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SystemMonitoring /></AdminLayout></ProtectedRoute>} />
             <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><AdminLayout><FeeManagement /></AdminLayout></ProtectedRoute>} />
             <Route path="/communications" element={<ProtectedRoute requiredRole="admin"><AdminLayout><Communications /></AdminLayout></ProtectedRoute>} />

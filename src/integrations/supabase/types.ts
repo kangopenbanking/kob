@@ -315,6 +315,87 @@ export type Database = {
         }
         Relationships: []
       }
+      admin_exchange_rates: {
+        Row: {
+          base_currency: string
+          created_at: string
+          effective_from: string | null
+          effective_rate: number | null
+          effective_until: string | null
+          id: string
+          is_active: boolean | null
+          margin_percentage: number | null
+          rate: number
+          set_by: string | null
+          source: string | null
+          target_currency: string
+          updated_at: string
+        }
+        Insert: {
+          base_currency: string
+          created_at?: string
+          effective_from?: string | null
+          effective_rate?: number | null
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean | null
+          margin_percentage?: number | null
+          rate: number
+          set_by?: string | null
+          source?: string | null
+          target_currency: string
+          updated_at?: string
+        }
+        Update: {
+          base_currency?: string
+          created_at?: string
+          effective_from?: string | null
+          effective_rate?: number | null
+          effective_until?: string | null
+          id?: string
+          is_active?: boolean | null
+          margin_percentage?: number | null
+          rate?: number
+          set_by?: string | null
+          source?: string | null
+          target_currency?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      admin_portal_permissions: {
+        Row: {
+          can_manage: boolean | null
+          can_view: boolean | null
+          created_at: string
+          granted_by: string | null
+          id: string
+          section_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_manage?: boolean | null
+          can_view?: boolean | null
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          section_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_manage?: boolean | null
+          can_view?: boolean | null
+          created_at?: string
+          granted_by?: string | null
+          id?: string
+          section_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_anomaly_reports: {
         Row: {
           ai_analysis: string
@@ -3411,6 +3492,128 @@ export type Database = {
           },
         ]
       }
+      disputes: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          dispute_type: string
+          evidence_urls: string[] | null
+          id: string
+          institution_id: string | null
+          metadata: Json | null
+          payment_id: string | null
+          reason: string
+          resolution: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+          transaction_ref: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          dispute_type?: string
+          evidence_urls?: string[] | null
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          payment_id?: string | null
+          reason: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          transaction_ref?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          dispute_type?: string
+          evidence_urls?: string[] | null
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          payment_id?: string | null
+          reason?: string
+          resolution?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+          transaction_ref?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "disputes_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_templates: {
+        Row: {
+          body_html: string
+          body_text: string | null
+          category: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          last_sent_at: string | null
+          name: string
+          send_count: number | null
+          subject: string
+          template_key: string
+          updated_at: string
+          variables: string[] | null
+        }
+        Insert: {
+          body_html: string
+          body_text?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          name: string
+          send_count?: number | null
+          subject: string
+          template_key: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Update: {
+          body_html?: string
+          body_text?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_sent_at?: string | null
+          name?: string
+          send_count?: number | null
+          subject?: string
+          template_key?: string
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
       enterprise_leads: {
         Row: {
           assigned_to: string | null
@@ -3717,6 +3920,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      fraud_rules: {
+        Row: {
+          action: string
+          conditions: Json
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          last_triggered_at: string | null
+          rule_name: string
+          rule_type: string
+          severity: string
+          trigger_count: number | null
+          updated_at: string
+        }
+        Insert: {
+          action?: string
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          rule_name: string
+          rule_type?: string
+          severity?: string
+          trigger_count?: number | null
+          updated_at?: string
+        }
+        Update: {
+          action?: string
+          conditions?: Json
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          last_triggered_at?: string | null
+          rule_name?: string
+          rule_type?: string
+          severity?: string
+          trigger_count?: number | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       idempotency_keys: {
         Row: {
@@ -5851,6 +6102,77 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payouts: {
+        Row: {
+          amount: number
+          bank_account_number: string | null
+          bank_code: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          currency: string
+          failed_reason: string | null
+          id: string
+          institution_id: string
+          metadata: Json | null
+          payout_method: string
+          processed_at: string | null
+          reference: string | null
+          retry_count: number | null
+          scheduled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          bank_account_number?: string | null
+          bank_code?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failed_reason?: string | null
+          id?: string
+          institution_id: string
+          metadata?: Json | null
+          payout_method?: string
+          processed_at?: string | null
+          reference?: string | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          bank_account_number?: string | null
+          bank_code?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          failed_reason?: string | null
+          id?: string
+          institution_id?: string
+          metadata?: Json | null
+          payout_method?: string
+          processed_at?: string | null
+          reference?: string | null
+          retry_count?: number | null
+          scheduled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       phone_otp_codes: {
         Row: {
@@ -9150,6 +9472,14 @@ export type Database = {
           _period_start: string
         }
         Returns: string
+      }
+      get_admin_portal_sections: {
+        Args: { _user_id: string }
+        Returns: {
+          can_manage: boolean
+          can_view: boolean
+          section_key: string
+        }[]
       }
       get_daily_fee_summary: {
         Args: {
