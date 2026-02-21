@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -167,7 +167,7 @@ export default function InstitutionAnalytics() {
   };
 
   return (
-    <InstitutionLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -389,6 +389,6 @@ export default function InstitutionAnalytics() {
           </TabsContent>
         </Tabs>
       </div>
-    </InstitutionLayout>
+    </>
   );
 }

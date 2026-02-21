@@ -1,4 +1,4 @@
-import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+
 import { FacilitatedPaymentsCard } from "@/components/institution/FacilitatedPaymentsCard";
 import { CreditApiIntegrationWidget } from "@/components/credit-api/CreditApiIntegrationWidget";
 import { useState, useEffect } from "react";
@@ -112,7 +112,7 @@ export default function FIPortal() {
 
   if (!institution) {
     return (
-      <InstitutionLayout>
+      <>
         <Card>
           <CardHeader>
             <CardTitle>Financial Institution Portal</CardTitle>
@@ -121,7 +121,7 @@ export default function FIPortal() {
             </CardDescription>
           </CardHeader>
         </Card>
-      </InstitutionLayout>
+      </>
     );
   }
 
@@ -129,7 +129,7 @@ export default function FIPortal() {
   const sandboxCreds = institution.sandbox_credentials as any;
 
   return (
-    <InstitutionLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">{t('fiDashboard')}</h1>
@@ -322,7 +322,7 @@ export default function FIPortal() {
         </TabsContent>
       </Tabs>
       </div>
-    </InstitutionLayout>
+    </>
   );
 }
 
