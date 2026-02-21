@@ -1,128 +1,170 @@
 
 
-# FI Portal Banking Management System -- Full Audit & Build Plan
+# FI Portal -- Comprehensive Banking Operations Expansion Plan
 
-## Current State
+## Executive Summary
 
-The `/fi-portal` currently has 12 pages:
-- Dashboard, Analytics, Transactions, Payments, Settlement, API Clients, Webhooks, Credit API, Compliance, Profile, Team, Settings, WooCommerce
+After a thorough audit of all 140+ database tables against the current 22 FI Portal pages, I identified **7 missing management modules** and **critical workflow gaps** in the existing pages. The biggest gap is that the current portal is read-only -- a bank teller or relationship manager cannot actually **onboard a customer, open an account, or process a loan** from the portal. This plan addresses both the missing pages and the missing create/edit workflows.
 
-## Gap Analysis
+---
 
-The database contains 140+ tables covering full core banking functionality, but the FI Portal is missing **10 critical banking management pages** that institutions need to operate as a bank/credit union:
+## Part A: Gaps in Existing Pages (Workflow Enhancements)
 
-| Missing Feature | Database Tables Available | Priority |
+The current pages only display data. A real bank needs staff to **create, update, and approve** records. The following existing pages need action capabilities:
+
+| Page | Current State | What is Missing |
 |---|---|---|
-| **Accounts Management** | `accounts`, `account_balances` | Critical |
-| **Branch Management** | `branches` | Critical |
-| **Loans Management** | `loan_products`, `loan_applications`, `loan_schedule`, `loan_repayments`, `loan_events` | Critical |
-| **Savings Management** | `savings_products`, `savings_accounts`, `savings_transactions`, `interest_accruals` | Critical |
-| **Customer/KYC Management** | `kyc_verifications`, `customer_due_diligence`, `sanctions_screening` | Critical |
-| **Beneficiaries & Standing Orders** | `beneficiaries`, `standing_orders`, `direct_debits` | High |
-| **Ledger / Accounting** | `ledger_accounts`, `journal_entries`, `journal_lines` | High |
-| **Audit Logs** | `audit_logs`, `security_audit_logs` | High |
-| **Invoices & Billing** | `institution_invoices`, `transaction_fees`, `fee_structures` | Medium |
-| **Consent Management** | `aisp_consents`, `pisp_consents`, `consent_events` | Medium |
+| **Accounts** | Read-only list | Create personal/business account, freeze/close account, view per-account transaction history |
+| **Customers** | KYC list only | Register a new customer (walk-in), initiate KYC verification, approve/reject KYC, run sanctions screening |
+| **Loans** | Read-only tabs | Create loan application on behalf of customer, approve/reject applications, record manual repayments |
+| **Savings** | Read-only tabs | Open savings account for customer, record deposits/withdrawals |
+| **Branches** | Read-only list | Create new branch, edit branch details, assign staff to branches |
+| **Beneficiaries** | Read-only list | Add beneficiary, create standing order, set up direct debit on behalf of customer |
 
-## Implementation Plan
+---
 
-### 1. Accounts Management (`/fi-portal/accounts`)
-- List all institution accounts with balances
-- View account details, transaction history per account
-- Account status management (active/frozen/closed)
-- Query `accounts` + `account_balances` by `institution_id`
+## Part B: Missing Pages (New Modules)
 
-### 2. Branch Management (`/fi-portal/branches`)
-- List all branches for the institution
-- Create new branches (sub-branches)
-- Edit branch details (address, phone, email, status)
-- Toggle branch active/inactive
-- Query `branches` by `institution_id`
+### 1. Customer Onboarding (`/fi-portal/customer-onboarding`)
+**The core missing workflow.** When a person or business walks into a branch:
 
-### 3. Loans Management (`/fi-portal/loans`)
-- Tabs: Products | Applications | Active Loans | Repayments
-- View loan products offered by the institution
-- Track loan applications and their status (applied, approved, disbursed, etc.)
-- View amortization schedules (`loan_schedule`)
-- Record and track repayments (`loan_repayments`)
-- Loan lifecycle event trail (`loan_events`)
+- **Step 1 -- Registration**: Bank staff enters customer personal details (name, phone, email, address, date of birth, nationality). Creates a `profiles` record.
+- **Step 2 -- KYC/Identity Verification**: Staff uploads ID documents (passport, national ID), captures selfie. Creates `kyc_verifications` record. Staff can approve/reject.
+- **Step 3 -- Due Diligence**: Staff completes CDD questionnaire (occupation, source of income, PEP status, expected transaction volume). Creates `customer_due_diligence` record.
+- **Step 4 -- Sanctions Screening**: Automatic or manual screening against lists. Creates `sanctions_screening` record.
+- **Step 5 -- Account Opening**: Staff selects account type (personal current, savings, business), sets currency, and opens the account. Creates `accounts` + `account_balances` records.
+- **Step 6 -- For Businesses**: Additional business KYC form (registration number, directors, beneficial owners, VAT). Creates `business_kyc` + `business_account_signatories` records.
 
-### 4. Savings Management (`/fi-portal/savings`)
-- Tabs: Products | Accounts | Transactions | Interest
-- Savings products catalog
-- Active savings accounts list
-- Deposits/withdrawals history (`savings_transactions`)
-- Interest accrual tracking (`interest_accruals`)
+Tables used: `profiles`, `kyc_verifications`, `customer_due_diligence`, `sanctions_screening`, `accounts`, `account_balances`, `business_kyc`, `business_account_signatories`
 
-### 5. Customer KYC Management (`/fi-portal/customers`)
-- List customers with KYC status
-- View KYC verification details
-- Customer due diligence records
-- Sanctions screening results
-- Risk scoring summary
+### 2. Staff & HR Management (`/fi-portal/staff`)
+Manage bank employees across branches.
 
-### 6. Beneficiaries & Standing Orders (`/fi-portal/beneficiaries`)
-- Registered beneficiaries list
-- Active standing orders
-- Direct debits management
-- Status monitoring
+- List all staff with branch assignments, positions, departments
+- Assign/reassign staff to branches
+- Track employment type (full-time, contract, part-time)
+- Active/inactive status management
 
-### 7. Ledger / Accounting (`/fi-portal/ledger`)
-- Chart of accounts view (`ledger_accounts`)
-- Journal entries browser (`journal_entries` + `journal_lines`)
-- Account balance summaries
-- Debit/Credit validation display
+Table: `staff_assignments`
 
-### 8. Audit Trail (`/fi-portal/audit`)
-- Searchable audit log viewer
-- Filter by action type, entity, date range
-- Security event log
-- Export capability
+### 3. Incident Management (`/fi-portal/incidents`)
+Track operational incidents (system outages, fraud attempts, compliance breaches).
 
-### 9. Invoices & Billing (`/fi-portal/billing`)
-- Invoice list with status (pending, paid, overdue)
-- Fee structure overview
-- Fee waivers applied
-- Monthly billing summary
+- Log new incidents with severity (critical/high/medium/low)
+- Assign incidents to staff members
+- Track resolution status and notes
+- Filter by type, severity, status
 
-### 10. Consent Management (`/fi-portal/consents`)
-- AISP consent dashboard (active, revoked, expired counts)
-- PISP consent tracking
-- Consent event timeline
-- Revocation capability
+Table: `incident_logs`
 
-### Navigation Update
+### 4. Regulatory Reporting (`/fi-portal/regulatory`)
+Generate and submit reports to COBAC and other regulators.
 
-Add 4 new sidebar sections to `InstitutionLayout.tsx`:
+- Create regulatory reports (anti-money laundering, prudential, statistical)
+- Track submission status and acknowledgments
+- Store report data and file attachments
+- Period-based reporting (monthly, quarterly, annual)
+
+Table: `regulatory_reports`
+
+### 5. SWIFT & ISO 20022 Messages (`/fi-portal/messaging`)
+View international payment messages and standards.
+
+- Tabs: SWIFT Messages | ISO 20022 Messages
+- View inbound/outbound message history
+- Message status tracking (sent, received, validated, failed)
+- Parsed data display with XML raw view option
+
+Tables: `swift_messages`, `iso20022_messages`
+
+### 6. Exchange Rates (`/fi-portal/exchange-rates`)
+View and manage currency exchange rates.
+
+- Current exchange rate display (XAF to major currencies)
+- Rate source and validity tracking
+- Historical rate lookup
+
+Table: `exchange_rates_cache`
+
+### 7. Notifications & Alerts (`/fi-portal/alerts`)
+System alerts and notification management for the institution.
+
+- Active system alerts (security, compliance, operational)
+- Notification preferences configuration
+- Alert severity and acknowledgment tracking
+
+Tables: `system_alerts`, `notification_preferences`
+
+---
+
+## Part C: Enhanced Existing Pages
+
+### Accounts Page Enhancement
+- Add "Open Account" button with a dialog/form (account type, currency, holder name, identification)
+- Add per-row actions: View Details, View Transactions, Freeze, Close
+- Show balance inline for each account
+- Separate tabs for Personal Accounts vs Business Accounts
+
+### Customers Page Enhancement  
+- Add "Register Customer" button launching the onboarding wizard
+- Add per-customer actions: View Profile, Initiate KYC, Run Screening
+- Add a unified customer list (not just KYC records) showing all customers with their account count and KYC status
+
+### Branches Page Enhancement
+- Add "Create Branch" dialog
+- Add staff count per branch
+- Add per-branch actions: Edit, View Staff, Deactivate
+
+---
+
+## Navigation Update
+
+Add new items to the sidebar:
 
 ```text
-Banking Operations
-  - Accounts        /fi-portal/accounts
-  - Branches         /fi-portal/branches
-  - Loans            /fi-portal/loans
-  - Savings          /fi-portal/savings
-  - Customers        /fi-portal/customers
+Banking Operations (updated)
+  - Accounts           /fi-portal/accounts
+  - Customer Onboarding /fi-portal/customer-onboarding
+  - Branches            /fi-portal/branches
+  - Loans               /fi-portal/loans
+  - Savings             /fi-portal/savings
+  - Customers           /fi-portal/customers
 
-Financial Management
-  - Beneficiaries    /fi-portal/beneficiaries
-  - Ledger           /fi-portal/ledger
-  - Billing          /fi-portal/billing
+Operations & Risk
+  - Staff Management    /fi-portal/staff
+  - Incidents           /fi-portal/incidents
+  - Exchange Rates      /fi-portal/exchange-rates
+  - Alerts              /fi-portal/alerts
 
-Governance
-  - Consents         /fi-portal/consents
-  - Audit Trail      /fi-portal/audit
+Regulatory & Messaging
+  - Regulatory Reports  /fi-portal/regulatory
+  - SWIFT / ISO 20022   /fi-portal/messaging
 ```
 
-### Routing Update
+---
 
-Add 10 new routes nested under the existing `/fi-portal` parent in `App.tsx`.
+## Implementation Summary
 
-## Technical Details
+| Task | Files |
+|---|---|
+| Customer Onboarding wizard (new) | `src/pages/institution/InstitutionCustomerOnboarding.tsx` |
+| Staff Management (new) | `src/pages/institution/InstitutionStaff.tsx` |
+| Incident Management (new) | `src/pages/institution/InstitutionIncidents.tsx` |
+| Regulatory Reporting (new) | `src/pages/institution/InstitutionRegulatory.tsx` |
+| SWIFT/ISO Messages (new) | `src/pages/institution/InstitutionMessaging.tsx` |
+| Exchange Rates (new) | `src/pages/institution/InstitutionExchangeRates.tsx` |
+| System Alerts (new) | `src/pages/institution/InstitutionAlerts.tsx` |
+| Enhanced Accounts page | `src/pages/institution/InstitutionAccounts.tsx` (rewrite) |
+| Enhanced Customers page | `src/pages/institution/InstitutionCustomers.tsx` (rewrite) |
+| Enhanced Branches page | `src/pages/institution/InstitutionBranches.tsx` (update) |
+| Navigation update | `src/components/institution/InstitutionLayout.tsx` |
+| Routing update | `src/App.tsx` |
 
-- All 10 new pages follow the same pattern as existing pages: `useState` + `useEffect` + `supabase` client queries
-- Every page filters data by `institution_id` derived from the logged-in user's institution record
-- No new database migrations needed -- all tables already exist
-- No new edge functions needed -- all reads use the client SDK with existing RLS policies
-- Each page includes: loading skeleton, empty state, refresh button, date formatting, status badges
-- Existing sidebar navigation groups will be reorganized into 6 sections total for clarity
+## Technical Notes
+
+- No new database tables or migrations needed -- all tables already exist
+- Customer Onboarding is the largest new feature: a multi-step wizard with file upload (using existing `kyc-documents` storage bucket)
+- All pages follow the established pattern: `useState` + `useEffect` + Supabase client queries filtered by `institution_id`
+- Create/update operations will use the Supabase client SDK with existing RLS policies
+- The onboarding wizard will create auth users via an edge function (since client-side `auth.admin.createUser` is not available)
 
