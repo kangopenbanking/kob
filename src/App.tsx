@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -300,11 +300,11 @@ function App() {
               <Route path="revenue" element={<RevenueAnalytics />} />
               <Route path="email-templates" element={<EmailTemplates />} />
             </Route>
-            {/* Legacy redirects for old orphaned routes - keep for backward compatibility */}
-            <Route path="/system-monitoring" element={<ProtectedRoute requiredRole="admin"><AdminLayout><SystemMonitoring /></AdminLayout></ProtectedRoute>} />
-            <Route path="/fee-management" element={<ProtectedRoute requiredRole="admin"><AdminLayout><FeeManagement /></AdminLayout></ProtectedRoute>} />
-            <Route path="/communications" element={<ProtectedRoute requiredRole="admin"><AdminLayout><Communications /></AdminLayout></ProtectedRoute>} />
-            <Route path="/compliance-dashboard" element={<ProtectedRoute requiredRole="admin"><AdminLayout><ComplianceDashboard /></AdminLayout></ProtectedRoute>} />
+            {/* Legacy redirects for old orphaned routes */}
+            <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
+            <Route path="/fee-management" element={<Navigate to="/admin/fee-management" replace />} />
+            <Route path="/communications" element={<Navigate to="/admin/communications" replace />} />
+            <Route path="/compliance-dashboard" element={<Navigate to="/admin/compliance-dashboard" replace />} />
             
             {/* New Developer Portal */}
             <Route path="/developer" element={<DeveloperLayout />}>

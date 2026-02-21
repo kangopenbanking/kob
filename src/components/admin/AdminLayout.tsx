@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
-import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { Outlet, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Menu } from "lucide-react";
+import { Menu, Shield } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -18,13 +18,13 @@ import { RealtimeAlertNotifications } from "@/components/admin/RealtimeAlertNoti
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { adminNavigation } from "@/components/admin/admin-navigation-config";
+import { Badge } from "@/components/ui/badge";
 
 interface AdminLayoutProps {
   children?: ReactNode;
 }
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const navigate = useNavigate();
   const location = useLocation();
 
   const isActivePath = (path: string) => {
@@ -36,16 +36,17 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r" collapsible="icon">
-          <div className="p-4 border-b">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="w-full justify-start"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              <span className="truncate">Back</span>
-            </Button>
+          {/* KOB Admin Branding Header */}
+          <div className="p-4 border-b bg-primary/5">
+            <Link to="/admin" className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Shield className="h-5 w-5" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-sm font-bold tracking-tight">KOB Admin</span>
+                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 w-fit">Super Admin</Badge>
+              </div>
+            </Link>
           </div>
 
           <SidebarContent>

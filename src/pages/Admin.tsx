@@ -560,7 +560,7 @@ const Admin = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-3">
-                <Button className="rounded-full" onClick={() => navigate('/fee-management')}>Open Fee Management Dashboard</Button>
+                <Button className="rounded-full" onClick={() => navigate('/admin/fee-management')}>Open Fee Management Dashboard</Button>
                 <Button className="rounded-full" variant="outline" onClick={() => navigate('/admin/payment-facilitation')}>Payment Facilitation & Settlements</Button>
               </div>
               <p className="text-xs text-muted-foreground">
