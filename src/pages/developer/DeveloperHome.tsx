@@ -100,9 +100,67 @@ export default function DeveloperHome() {
         </Card>
       </div>
 
-      {/* Core APIs */}
+      {/* Payment Gateway — Primary CTA */}
       <div className="space-y-4">
-        <h2 className="text-3xl font-bold">Core APIs</h2>
+        <h2 className="text-3xl font-bold">Payment Gateway</h2>
+        <p className="text-muted-foreground">Accept payments and send payouts with a single unified API.</p>
+        <div className="grid md:grid-cols-3 gap-6">
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Zap className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Collect Payments</CardTitle>
+                  <CardDescription>Charge cards, mobile money & bank transfers</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Link to="/developer/gateway/charges">
+                <Button variant="outline" className="w-full">Charges Guide</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Wallet className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Send Payouts</CardTitle>
+                  <CardDescription>Disbursements to bank accounts & mobile wallets</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Link to="/developer/gateway/payouts">
+                <Button variant="outline" className="w-full">Payouts Guide</Button>
+              </Link>
+            </CardContent>
+          </Card>
+
+          <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <Shield className="h-6 w-6 text-primary" />
+                <div>
+                  <CardTitle>Disputes & Refunds</CardTitle>
+                  <CardDescription>Handle chargebacks and issue refunds</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Link to="/developer/gateway/disputes">
+                <Button variant="outline" className="w-full">Disputes Guide</Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Open Banking APIs */}
+      <div className="space-y-4">
+        <h2 className="text-3xl font-bold">Open Banking APIs</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
@@ -110,20 +168,14 @@ export default function DeveloperHome() {
                 <Database className="h-6 w-6 text-primary" />
                 <div>
                   <CardTitle>Account Information (AISP)</CardTitle>
-                  <CardDescription>
-                    Access account details, balances, and transaction history
-                  </CardDescription>
+                  <CardDescription>Access account details, balances, and transaction history</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Retrieve customer account data with their consent. Perfect for personal finance apps, budgeting tools, and financial aggregators.
-              </p>
+              <p className="text-sm text-muted-foreground">Retrieve customer account data with their consent. Perfect for personal finance apps, budgeting tools, and financial aggregators.</p>
               <Link to="/developer/api/aisp">
-                <Button variant="outline" className="w-full">
-                  View AISP Documentation
-                </Button>
+                <Button variant="outline" className="w-full">View AISP Documentation</Button>
               </Link>
             </CardContent>
           </Card>
@@ -134,20 +186,14 @@ export default function DeveloperHome() {
                 <Zap className="h-6 w-6 text-primary" />
                 <div>
                   <CardTitle>Payment Initiation (PISP)</CardTitle>
-                  <CardDescription>
-                    Initiate domestic and international payments securely
-                  </CardDescription>
+                  <CardDescription>Initiate domestic and international payments securely</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Enable payment initiation directly from bank accounts. Ideal for checkout flows, bill payments, and business-to-business transfers.
-              </p>
+              <p className="text-sm text-muted-foreground">Enable payment initiation directly from bank accounts. Ideal for checkout flows, bill payments, and business-to-business transfers.</p>
               <Link to="/developer/api/pisp">
-                <Button variant="outline" className="w-full">
-                  View PISP Documentation
-                </Button>
+                <Button variant="outline" className="w-full">View PISP Documentation</Button>
               </Link>
             </CardContent>
           </Card>
@@ -158,20 +204,14 @@ export default function DeveloperHome() {
                 <Smartphone className="h-6 w-6 text-primary" />
                 <div>
                   <CardTitle>Mobile Money</CardTitle>
-                  <CardDescription>
-                    Integrate MTN, Orange Money, and Express Union
-                  </CardDescription>
+                  <CardDescription>Integrate MTN, Orange Money, and Express Union</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Support mobile money payments across Cameroon's major providers. Essential for e-commerce and financial inclusion.
-              </p>
+              <p className="text-sm text-muted-foreground">Support mobile money payments across Cameroon's major providers. Essential for e-commerce and financial inclusion.</p>
               <Link to="/developer/api/mobile-money">
-                <Button variant="outline" className="w-full">
-                  View Mobile Money Documentation
-                </Button>
+                <Button variant="outline" className="w-full">View Mobile Money Documentation</Button>
               </Link>
             </CardContent>
           </Card>
@@ -182,68 +222,14 @@ export default function DeveloperHome() {
                 <Webhook className="h-6 w-6 text-primary" />
                 <div>
                   <CardTitle>Webhooks</CardTitle>
-                  <CardDescription>
-                    Receive real-time notifications for events
-                  </CardDescription>
+                  <CardDescription>Receive real-time notifications for events</CardDescription>
                 </div>
               </div>
             </CardHeader>
             <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Stay informed about payment status changes, consent updates, and account events with our webhook system.
-              </p>
+              <p className="text-sm text-muted-foreground">Stay informed about payment status changes, consent updates, and account events with our webhook system.</p>
               <Link to="/developer/api/webhooks">
-                <Button variant="outline" className="w-full">
-                  View Webhooks Documentation
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <DollarSign className="h-6 w-6 text-primary" />
-                <div>
-                  <CardTitle>Loans & Savings</CardTitle>
-                  <CardDescription>
-                    Loan applications, repayments, and savings management
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Enable lending and savings products with automated credit checks, interest calculations, and repayment tracking.
-              </p>
-              <Link to="/documentation">
-                <Button variant="outline" className="w-full">
-                  View Loans & Savings API
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-3">
-                <TrendingUp className="h-6 w-6 text-primary" />
-                <div>
-                  <CardTitle>Credit Scoring</CardTitle>
-                  <CardDescription>
-                    Comprehensive credit scoring and reporting system
-                  </CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Access credit scores (300-850), detailed reports, and monitoring. B2B APIs available for financial institutions.
-              </p>
-              <Link to="/documentation">
-                <Button variant="outline" className="w-full">
-                  View Credit Scoring API
-                </Button>
+                <Button variant="outline" className="w-full">View Webhooks Documentation</Button>
               </Link>
             </CardContent>
           </Card>
