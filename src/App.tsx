@@ -110,6 +110,16 @@ import InstitutionCompliance from "./pages/institution/InstitutionCompliance";
 import InstitutionProfile from "./pages/institution/InstitutionProfile";
 import InstitutionTeam from "./pages/institution/InstitutionTeam";
 import InstitutionSettings from "./pages/institution/InstitutionSettings";
+import InstitutionAccounts from "./pages/institution/InstitutionAccounts";
+import InstitutionBranches from "./pages/institution/InstitutionBranches";
+import InstitutionLoans from "./pages/institution/InstitutionLoans";
+import InstitutionSavings from "./pages/institution/InstitutionSavings";
+import InstitutionCustomers from "./pages/institution/InstitutionCustomers";
+import InstitutionBeneficiaries from "./pages/institution/InstitutionBeneficiaries";
+import InstitutionLedger from "./pages/institution/InstitutionLedger";
+import InstitutionAudit from "./pages/institution/InstitutionAudit";
+import InstitutionBilling from "./pages/institution/InstitutionBilling";
+import InstitutionConsents from "./pages/institution/InstitutionConsents";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
 import WooForKang from "./pages/WooForKang";
@@ -210,6 +220,16 @@ function App() {
               <Route path="profile" element={<InstitutionProfile />} />
               <Route path="team" element={<InstitutionTeam />} />
               <Route path="settings" element={<InstitutionSettings />} />
+              <Route path="accounts" element={<InstitutionAccounts />} />
+              <Route path="branches" element={<InstitutionBranches />} />
+              <Route path="loans" element={<InstitutionLoans />} />
+              <Route path="savings" element={<InstitutionSavings />} />
+              <Route path="customers" element={<InstitutionCustomers />} />
+              <Route path="beneficiaries" element={<InstitutionBeneficiaries />} />
+              <Route path="ledger" element={<InstitutionLedger />} />
+              <Route path="audit" element={<InstitutionAudit />} />
+              <Route path="billing" element={<InstitutionBilling />} />
+              <Route path="consents" element={<InstitutionConsents />} />
             </Route>
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
