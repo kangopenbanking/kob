@@ -50,6 +50,13 @@ serve(async (req) => {
 
     if (insertErr) throw insertErr;
 
+    // Webhook event: subscription.created
+    await supabase.from('gateway_charge_events').insert({
+      charge_id: subscription.id,
+      event_type: 'subscription.created',
+      details: { subscription_id: subscription.id, plan_id, customer_email },
+    }).then(() => {}).catch(() => {});
+
     // Audit
     await supabase.from('audit_logs').insert({
       action_type: 'gateway_subscription_created', entity_type: 'gateway_subscription', entity_id: subscription.id,

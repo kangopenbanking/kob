@@ -18,40 +18,34 @@ serve(async (req) => {
     if (authError || !user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const body = await req.json();
-    const { subscription_id, reason } = body;
+    const { customer_id, name, phone, email, metadata } = body;
 
-    if (!subscription_id) return new Response(JSON.stringify({ error: 'subscription_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!customer_id) return new Response(JSON.stringify({ error: 'customer_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    // Verify ownership via merchant
-    const { data: sub } = await supabase
-      .from('gateway_subscriptions')
+    const { data: customer } = await supabase
+      .from('gateway_customers')
       .select('*, gateway_merchants!inner(user_id)')
-      .eq('id', subscription_id)
+      .eq('id', customer_id)
       .single();
 
-    if (!sub || sub.gateway_merchants.user_id !== user.id) {
+    if (!customer || customer.gateway_merchants.user_id !== user.id) {
       return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (sub.status === 'cancelled') {
-      return new Response(JSON.stringify({ error: 'already_cancelled' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    const updates: Record<string, unknown> = {};
+    if (name !== undefined) updates.name = name;
+    if (phone !== undefined) updates.phone = phone;
+    if (email !== undefined) updates.email = email;
+    if (metadata !== undefined) updates.metadata = metadata;
 
     const { data: updated, error: updateErr } = await supabase
-      .from('gateway_subscriptions')
-      .update({ status: 'cancelled', cancel_reason: reason, cancelled_at: new Date().toISOString() })
-      .eq('id', subscription_id)
+      .from('gateway_customers')
+      .update(updates)
+      .eq('id', customer_id)
       .select()
       .single();
 
     if (updateErr) throw updateErr;
-
-    // Webhook event: subscription.cancelled
-    await supabase.from('gateway_charge_events').insert({
-      charge_id: sub.last_charge_id || sub.id,
-      event_type: 'subscription.cancelled',
-      details: { subscription_id, reason, cancelled_at: new Date().toISOString() },
-    }).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify(updated), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

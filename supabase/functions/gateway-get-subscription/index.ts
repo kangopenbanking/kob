@@ -17,15 +17,13 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (authError || !user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const body = await req.json();
-    const { subscription_id, reason } = body;
-
+    const url = new URL(req.url);
+    const subscription_id = url.searchParams.get('subscription_id');
     if (!subscription_id) return new Response(JSON.stringify({ error: 'subscription_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    // Verify ownership via merchant
     const { data: sub } = await supabase
       .from('gateway_subscriptions')
-      .select('*, gateway_merchants!inner(user_id)')
+      .select('*, gateway_payment_plans(*), gateway_merchants!inner(user_id)')
       .eq('id', subscription_id)
       .single();
 
@@ -33,27 +31,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (sub.status === 'cancelled') {
-      return new Response(JSON.stringify({ error: 'already_cancelled' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    const { data: updated, error: updateErr } = await supabase
-      .from('gateway_subscriptions')
-      .update({ status: 'cancelled', cancel_reason: reason, cancelled_at: new Date().toISOString() })
-      .eq('id', subscription_id)
-      .select()
-      .single();
-
-    if (updateErr) throw updateErr;
-
-    // Webhook event: subscription.cancelled
-    await supabase.from('gateway_charge_events').insert({
-      charge_id: sub.last_charge_id || sub.id,
-      event_type: 'subscription.cancelled',
-      details: { subscription_id, reason, cancelled_at: new Date().toISOString() },
-    }).then(() => {}).catch(() => {});
-
-    return new Response(JSON.stringify(updated), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return new Response(JSON.stringify(sub), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }

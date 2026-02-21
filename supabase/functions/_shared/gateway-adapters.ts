@@ -260,6 +260,12 @@ export function calculateGatewayFee(amount: number, channel: string): { fee: num
   } else if (channel === 'bank_transfer') {
     feeRate = 0.02;
     fixedFee = 75;
+  } else if (channel === 'apple_pay' || channel === 'google_pay') {
+    feeRate = 0.035;
+    fixedFee = 100;
+  } else if (channel === 'ussd') {
+    feeRate = 0.025;
+    fixedFee = 25;
   }
 
   const fee = Math.round(amount * feeRate + fixedFee);

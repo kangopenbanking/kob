@@ -27,7 +27,14 @@ serve(async (req) => {
     const {
       merchant_id, amount, currency = 'XAF', channel, customer_email, customer_phone, customer_name,
       tx_ref, metadata, payment_link_id, subaccounts, settlement_currency,
+      save_token, customer_id,
     } = body;
+
+    // Validate channel
+    const validChannels = ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd'];
+    if (channel && !validChannels.includes(channel)) {
+      return new Response(JSON.stringify({ error: 'invalid_channel', message: `Channel must be one of: ${validChannels.join(', ')}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     if (!merchant_id || !amount || !channel || !tx_ref) {
       return new Response(JSON.stringify({ error: 'missing_fields', message: 'merchant_id, amount, channel, tx_ref are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -171,10 +178,34 @@ serve(async (req) => {
       }
     }
 
+    // ─── Save Token (after successful charge) ───
+    if (save_token && customer_id && charge.status === 'successful' && providerResult) {
+      try {
+        const tokenData = providerResult.provider_raw?.data?.card || providerResult.provider_raw?.data?.authorization || {};
+        await supabase.from('gateway_customer_tokens').insert({
+          customer_id,
+          token: tokenData.token || providerResult.provider_ref,
+          channel,
+          provider: charge.provider,
+          last4: tokenData.last4 || tokenData.last_4digits || null,
+          expiry: tokenData.expiry || null,
+          metadata: { provider_ref: providerResult.provider_ref },
+        }).then(() => {}).catch(() => {});
+      } catch { /* token save is best-effort */ }
+    }
+
+    // ─── Payment Link Completion Event ───
+    if (payment_link_id && charge.status === 'successful') {
+      await supabase.from('gateway_charge_events').insert({
+        charge_id: charge.id, event_type: 'payment_link.completed',
+        details: { payment_link_id },
+      }).then(() => {}).catch(() => {});
+    }
+
     // Audit trail
     await supabase.from('audit_logs').insert({
       action_type: 'gateway_charge_created', entity_type: 'gateway_charge', entity_id: charge.id,
-      performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref, payment_link_id, settlement_currency },
+      performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref, payment_link_id, settlement_currency, save_token },
     }).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
