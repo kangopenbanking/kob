@@ -1,26 +1,7 @@
 import { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft, 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  Shield, 
-  Activity, 
-  FileText, 
-  Webhook, 
-  DollarSign,
-  Key,
-  Database,
-  AlertTriangle,
-  ScrollText,
-  Building2,
-  Mail,
-  CreditCard,
-  Database as DatabaseIcon,
-  ShoppingCart
-} from "lucide-react";
+import { ArrowLeft, Menu } from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -36,72 +17,7 @@ import {
 import { RealtimeAlertNotifications } from "@/components/admin/RealtimeAlertNotifications";
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { NotificationCenter } from "@/components/NotificationCenter";
-import { Menu } from "lucide-react";
-
-const adminNavigation = [
-  {
-    title: "Overview",
-    items: [
-      { title: "Dashboard", path: "/admin", icon: LayoutDashboard },
-      { title: "Fee Management", path: "/fee-management", icon: DollarSign },
-      { title: "System Monitoring", path: "/system-monitoring", icon: Activity },
-      { title: "System Alerts", path: "/admin/system-alerts", icon: AlertTriangle },
-    ]
-  },
-  {
-    title: "Registration & Verification",
-    items: [
-      { title: "Institution Approvals", path: "/admin", icon: Building2 },
-      { title: "Institution Verification", path: "/admin/institution-verification", icon: Shield },
-      { title: "KYC Verification", path: "/admin/kyc-verification", icon: Shield },
-      { title: "Business KYC (KYB)", path: "/admin/business-kyc", icon: Building2 },
-      { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: Key },
-    ]
-  },
-  {
-    title: "Management",
-    items: [
-      { title: "User Management", path: "/admin/users", icon: Users },
-      { title: "Branch Management", path: "/admin/branches", icon: Building2 },
-      { title: "API Clients", path: "/admin/api-clients", icon: Key },
-      { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
-      { title: "Communications", path: "/communications", icon: Mail },
-      { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
-      { title: "WooCommerce Plugin", path: "/admin/woocommerce-plugin", icon: ShoppingCart },
-      { title: "Sandbox", path: "/admin/sandbox", icon: Database },
-    ]
-  },
-  {
-    title: "API & Performance",
-    items: [
-      { title: "API Testing", path: "/admin/api-testing", icon: Activity },
-      { title: "API Performance", path: "/admin/api-performance", icon: Activity },
-      { title: "Rate Limiting", path: "/admin/rate-limits", icon: Shield },
-      { title: "API Documentation", path: "/admin/api-docs", icon: FileText },
-      { title: "Load Testing", path: "/admin/load-testing", icon: Activity },
-      { title: "AI Anomaly Detection", path: "/admin/anomaly-detection", icon: AlertTriangle },
-    ]
-  },
-  {
-    title: "Security & Compliance",
-    items: [
-      { title: "Security Monitoring", path: "/admin/security", icon: Shield },
-      { title: "Transaction Monitoring", path: "/admin/transactions", icon: Activity },
-      { title: "Consent Data Management", path: "/admin/consent-data", icon: DatabaseIcon },
-      { title: "Audit Trail", path: "/admin/audit-trail", icon: FileText },
-      { title: "Audit Logs", path: "/admin/audit-logs", icon: FileText },
-      { title: "Credit Management", path: "/admin/credit-management", icon: DollarSign },
-    ]
-  },
-  {
-    title: "Configuration",
-    items: [
-      { title: "System Config", path: "/admin/system-config", icon: Settings },
-      { title: "Compliance Dashboard", path: "/compliance-dashboard", icon: ScrollText },
-      { title: "API Health", path: "/admin/api-health", icon: Activity },
-    ]
-  }
-];
+import { adminNavigation } from "@/components/admin/admin-navigation-config";
 
 interface AdminLayoutProps {
   children?: ReactNode;
@@ -112,7 +28,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   const location = useLocation();
 
   const isActivePath = (path: string) => {
-    return location.pathname === path;
+    if (path === "/admin") return location.pathname === "/admin";
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (
