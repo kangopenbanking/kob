@@ -1,132 +1,16 @@
 import { ReactNode } from "react";
-import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { Outlet, useNavigate, useLocation, Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft, 
-  LayoutDashboard, 
-  Users, 
-  Settings, 
-  FileText, 
-  Activity, 
-  Key,
-  Webhook,
-  CreditCard,
-  Building2,
-  ArrowUpDown,
-  DollarSign,
-  TrendingUp,
-  ShoppingCart,
-  Store,
-  Shield,
-  UserCheck,
-  Wallet,
-  MapPin,
-  Banknote,
-  PiggyBank,
-  BookOpen,
-  Receipt,
-  KeyRound,
-  ScrollText,
-  UserPlus,
-  ShieldAlert,
-  Bell,
-  Mail
-} from "lucide-react";
+import { ArrowLeft, Building2 } from "lucide-react";
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarProvider,
-  SidebarTrigger,
+  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
+  SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
+  SidebarProvider, SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
-
-const institutionNavigation = [
-  {
-    title: "Overview",
-    items: [
-      { title: "Dashboard", path: "/fi-portal", icon: LayoutDashboard },
-      { title: "Analytics", path: "/fi-portal/analytics", icon: Activity },
-    ]
-  },
-  {
-    title: "Banking Operations",
-    items: [
-      { title: "Accounts", path: "/fi-portal/accounts", icon: Wallet },
-      { title: "Customer Onboarding", path: "/fi-portal/customer-onboarding", icon: UserPlus },
-      { title: "Branches", path: "/fi-portal/branches", icon: MapPin },
-      { title: "Loans", path: "/fi-portal/loans", icon: Banknote },
-      { title: "Savings", path: "/fi-portal/savings", icon: PiggyBank },
-      { title: "Customers", path: "/fi-portal/customers", icon: UserCheck },
-    ]
-  },
-  {
-    title: "Payments & Transactions",
-    items: [
-      { title: "Transactions", path: "/fi-portal/transactions", icon: ArrowUpDown },
-      { title: "Payments", path: "/fi-portal/payments", icon: CreditCard },
-      { title: "Settlement", path: "/fi-portal/settlement", icon: DollarSign },
-    ]
-  },
-  {
-    title: "Financial Management",
-    items: [
-      { title: "Beneficiaries", path: "/fi-portal/beneficiaries", icon: Users },
-      { title: "Ledger", path: "/fi-portal/ledger", icon: BookOpen },
-      { title: "Billing", path: "/fi-portal/billing", icon: Receipt },
-      { title: "Exchange Rates", path: "/fi-portal/exchange-rates", icon: TrendingUp },
-    ]
-  },
-  {
-    title: "Operations & Risk",
-    items: [
-      { title: "Staff Management", path: "/fi-portal/staff", icon: Users },
-      { title: "Incidents", path: "/fi-portal/incidents", icon: ShieldAlert },
-      { title: "Alerts", path: "/fi-portal/alerts", icon: Bell },
-    ]
-  },
-  {
-    title: "API Management",
-    items: [
-      { title: "API Clients", path: "/fi-portal/api-clients", icon: Key },
-      { title: "API Keys", path: "/developer/api-keys", icon: Key },
-      { title: "Webhooks", path: "/fi-portal/webhooks", icon: Webhook },
-      { title: "Credit API", path: "/fi-portal/credit-api", icon: TrendingUp },
-      { title: "Documentation", path: "/documentation", icon: FileText },
-    ]
-  },
-  {
-    title: "E-Commerce",
-    items: [
-      { title: "WooCommerce", path: "/fi-portal/woocommerce", icon: ShoppingCart },
-      { title: "Register Store", path: "/integrations/woocommerce-merchant-register", icon: Store },
-    ]
-  },
-  {
-    title: "Governance & Messaging",
-    items: [
-      { title: "Consents", path: "/fi-portal/consents", icon: KeyRound },
-      { title: "Audit Trail", path: "/fi-portal/audit", icon: ScrollText },
-      { title: "KYB Documents", path: "/business-kyb-submission", icon: FileText },
-      { title: "Compliance", path: "/fi-portal/compliance", icon: Shield },
-      { title: "Regulatory Reports", path: "/fi-portal/regulatory", icon: FileText },
-      { title: "SWIFT / ISO 20022", path: "/fi-portal/messaging", icon: Mail },
-    ]
-  },
-  {
-    title: "Settings",
-    items: [
-      { title: "Institution Profile", path: "/fi-portal/profile", icon: Building2 },
-      { title: "Team Members", path: "/fi-portal/team", icon: Users },
-      { title: "Settings", path: "/fi-portal/settings", icon: Settings },
-    ]
-  }
-];
+import { Loader2 } from "lucide-react";
+import { institutionNavigation } from "./navigation-config";
+import { useStaffPermissions } from "@/hooks/useStaffPermissions";
 
 interface InstitutionLayoutProps {
   children?: ReactNode;
@@ -135,12 +19,37 @@ interface InstitutionLayoutProps {
 export function InstitutionLayout({ children }: InstitutionLayoutProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isOwner, isStaff, loading, canAccess } = useStaffPermissions();
 
   const isActivePath = (path: string) => {
     if (path === "/fi-portal") return location.pathname === path;
-    // Exact match or path followed by / to avoid prefix collisions like /customers vs /customer-onboarding
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
+
+  // Extract current section key from path for access check
+  const currentPathSection = location.pathname.replace('/fi-portal/', '').split('/')[0];
+  const currentSectionKey = currentPathSection === 'fi-portal' || currentPathSection === '' ? 'dashboard' : currentPathSection;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  // If staff user tries to access a restricted section, redirect to dashboard
+  if (isStaff && !isOwner && !canAccess(currentSectionKey)) {
+    return <Navigate to="/fi-portal" replace />;
+  }
+
+  // Filter navigation based on permissions
+  const filteredNavigation = institutionNavigation
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => canAccess(item.sectionKey)),
+    }))
+    .filter(section => section.items.length > 0);
 
   return (
     <SidebarProvider>
@@ -153,13 +62,15 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold truncate">FI Portal</p>
-                <p className="text-[11px] text-sidebar-foreground/60">Banking Admin</p>
+                <p className="text-[11px] text-sidebar-foreground/60">
+                  {isStaff && !isOwner ? 'Staff Access' : 'Banking Admin'}
+                </p>
               </div>
             </div>
           </div>
 
           <SidebarContent className="px-2 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {institutionNavigation.map((section, idx) => (
+            {filteredNavigation.map((section) => (
               <SidebarGroup key={section.title}>
                 <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-3 py-2">
                   {section.title}
@@ -187,8 +98,8 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
           </SidebarContent>
 
           <div className="mt-auto border-t border-border/60 p-3">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="sm"
               onClick={() => navigate(-1)}
               className="w-full justify-start text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground"
