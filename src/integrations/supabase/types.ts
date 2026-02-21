@@ -3969,6 +3969,532 @@ export type Database = {
         }
         Relationships: []
       }
+      gateway_charges: {
+        Row: {
+          amount: number
+          channel: string
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          failure_reason: string | null
+          fee_amount: number | null
+          id: string
+          idempotency_key: string | null
+          merchant_id: string
+          metadata: Json | null
+          net_amount: number | null
+          provider: string
+          provider_raw: Json | null
+          provider_ref: string | null
+          status: string
+          tx_ref: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          channel: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          failure_reason?: string | null
+          fee_amount?: number | null
+          id?: string
+          idempotency_key?: string | null
+          merchant_id: string
+          metadata?: Json | null
+          net_amount?: number | null
+          provider: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          status?: string
+          tx_ref: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          channel?: string
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          failure_reason?: string | null
+          fee_amount?: number | null
+          id?: string
+          idempotency_key?: string | null
+          merchant_id?: string
+          metadata?: Json | null
+          net_amount?: number | null
+          provider?: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          status?: string
+          tx_ref?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_charges_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_disputes: {
+        Row: {
+          amount: number
+          charge_id: string
+          created_at: string
+          currency: string
+          evidence_data: Json | null
+          evidence_due_by: string | null
+          evidence_submitted: boolean | null
+          id: string
+          merchant_id: string
+          provider: string
+          provider_raw: Json | null
+          provider_ref: string | null
+          reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          charge_id: string
+          created_at?: string
+          currency?: string
+          evidence_data?: Json | null
+          evidence_due_by?: string | null
+          evidence_submitted?: boolean | null
+          id?: string
+          merchant_id: string
+          provider: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          charge_id?: string
+          created_at?: string
+          currency?: string
+          evidence_data?: Json | null
+          evidence_due_by?: string | null
+          evidence_submitted?: boolean | null
+          id?: string
+          merchant_id?: string
+          provider?: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_disputes_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_disputes_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_merchants: {
+        Row: {
+          business_email: string | null
+          business_name: string
+          business_phone: string | null
+          created_at: string
+          environment: string
+          id: string
+          institution_id: string | null
+          kyb_status: string
+          metadata: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          business_email?: string | null
+          business_name: string
+          business_phone?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          institution_id?: string | null
+          kyb_status?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          business_email?: string | null
+          business_name?: string
+          business_phone?: string | null
+          created_at?: string
+          environment?: string
+          id?: string
+          institution_id?: string | null
+          kyb_status?: string
+          metadata?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_merchants_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_payout_batches: {
+        Row: {
+          completed_count: number | null
+          created_at: string
+          currency: string
+          failed_count: number | null
+          id: string
+          idempotency_key: string | null
+          item_count: number
+          merchant_id: string
+          metadata: Json | null
+          status: string
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          completed_count?: number | null
+          created_at?: string
+          currency?: string
+          failed_count?: number | null
+          id?: string
+          idempotency_key?: string | null
+          item_count?: number
+          merchant_id: string
+          metadata?: Json | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          completed_count?: number | null
+          created_at?: string
+          currency?: string
+          failed_count?: number | null
+          id?: string
+          idempotency_key?: string | null
+          item_count?: number
+          merchant_id?: string
+          metadata?: Json | null
+          status?: string
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_payout_batches_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_payouts: {
+        Row: {
+          amount: number
+          batch_id: string | null
+          beneficiary_account: string | null
+          beneficiary_bank: string | null
+          beneficiary_name: string | null
+          beneficiary_phone: string | null
+          channel: string
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          fee_amount: number | null
+          id: string
+          idempotency_key: string | null
+          merchant_id: string
+          metadata: Json | null
+          narration: string | null
+          provider: string
+          provider_raw: Json | null
+          provider_ref: string | null
+          status: string
+          tx_ref: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          batch_id?: string | null
+          beneficiary_account?: string | null
+          beneficiary_bank?: string | null
+          beneficiary_name?: string | null
+          beneficiary_phone?: string | null
+          channel: string
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          fee_amount?: number | null
+          id?: string
+          idempotency_key?: string | null
+          merchant_id: string
+          metadata?: Json | null
+          narration?: string | null
+          provider: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          status?: string
+          tx_ref: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          batch_id?: string | null
+          beneficiary_account?: string | null
+          beneficiary_bank?: string | null
+          beneficiary_name?: string | null
+          beneficiary_phone?: string | null
+          channel?: string
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          fee_amount?: number | null
+          id?: string
+          idempotency_key?: string | null
+          merchant_id?: string
+          metadata?: Json | null
+          narration?: string | null
+          provider?: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          status?: string
+          tx_ref?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_payouts_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_payout_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_payouts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_refunds: {
+        Row: {
+          amount: number
+          charge_id: string
+          created_at: string
+          currency: string
+          id: string
+          idempotency_key: string | null
+          merchant_id: string
+          provider: string
+          provider_raw: Json | null
+          provider_ref: string | null
+          reason: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          charge_id: string
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          merchant_id: string
+          provider: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          charge_id?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          idempotency_key?: string | null
+          merchant_id?: string
+          provider?: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          reason?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_refunds_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_refunds_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_settlements: {
+        Row: {
+          amount: number
+          charges_count: number | null
+          created_at: string
+          currency: string
+          fees_total: number | null
+          id: string
+          merchant_id: string
+          metadata: Json | null
+          net_amount: number | null
+          payout_ref: string | null
+          period_end: string
+          period_start: string
+          settled_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          charges_count?: number | null
+          created_at?: string
+          currency?: string
+          fees_total?: number | null
+          id?: string
+          merchant_id: string
+          metadata?: Json | null
+          net_amount?: number | null
+          payout_ref?: string | null
+          period_end: string
+          period_start: string
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          charges_count?: number | null
+          created_at?: string
+          currency?: string
+          fees_total?: number | null
+          id?: string
+          merchant_id?: string
+          metadata?: Json | null
+          net_amount?: number | null
+          payout_ref?: string | null
+          period_end?: string
+          period_start?: string
+          settled_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_settlements_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_webhook_events: {
+        Row: {
+          attempts: number | null
+          created_at: string
+          delivered_at: string | null
+          event_type: string
+          id: string
+          last_response_body: string | null
+          last_response_code: number | null
+          max_attempts: number | null
+          merchant_id: string
+          next_retry_at: string | null
+          payload: Json
+          status: string
+        }
+        Insert: {
+          attempts?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          event_type: string
+          id?: string
+          last_response_body?: string | null
+          last_response_code?: number | null
+          max_attempts?: number | null
+          merchant_id: string
+          next_retry_at?: string | null
+          payload: Json
+          status?: string
+        }
+        Update: {
+          attempts?: number | null
+          created_at?: string
+          delivered_at?: string | null
+          event_type?: string
+          id?: string
+          last_response_body?: string | null
+          last_response_code?: number | null
+          max_attempts?: number | null
+          merchant_id?: string
+          next_retry_at?: string | null
+          payload?: Json
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_webhook_events_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       idempotency_keys: {
         Row: {
           client_id: string

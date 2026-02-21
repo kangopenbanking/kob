@@ -47,6 +47,13 @@ import SettlementsReference from "./pages/developer/SettlementsReference";
 import DisputesReference from "./pages/developer/DisputesReference";
 import ExportsReference from "./pages/developer/ExportsReference";
 import RiskAuditReference from "./pages/developer/RiskAuditReference";
+import GatewayQuickstart from "./pages/developer/GatewayQuickstart";
+import GatewayChargesGuide from "./pages/developer/GatewayChargesGuide";
+import GatewayPayoutsGuide from "./pages/developer/GatewayPayoutsGuide";
+import GatewayRefundsGuide from "./pages/developer/GatewayRefundsGuide";
+import GatewaySettlementsGuide from "./pages/developer/GatewaySettlementsGuide";
+import GatewayDisputesGuide from "./pages/developer/GatewayDisputesGuide";
+import GatewayWebhooksGuide from "./pages/developer/GatewayWebhooksGuide";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -334,6 +341,13 @@ function App() {
               <Route path="api/disputes" element={<DisputesReference />} />
               <Route path="api/exports" element={<ExportsReference />} />
               <Route path="api/risk-audit" element={<RiskAuditReference />} />
+              <Route path="gateway/quickstart" element={<GatewayQuickstart />} />
+              <Route path="gateway/charges" element={<GatewayChargesGuide />} />
+              <Route path="gateway/payouts" element={<GatewayPayoutsGuide />} />
+              <Route path="gateway/refunds" element={<GatewayRefundsGuide />} />
+              <Route path="gateway/settlements" element={<GatewaySettlementsGuide />} />
+              <Route path="gateway/disputes" element={<GatewayDisputesGuide />} />
+              <Route path="gateway/webhooks" element={<GatewayWebhooksGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<Sandbox />} />
