@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Plus, RefreshCw, Check, X, AlertCircle } from "lucide-react";
@@ -266,20 +267,54 @@ export default function WebhookManagement() {
 function WebhookForm({ onSubmit }: { onSubmit: (data: any) => void }) {
   const [formData, setFormData] = useState({
     url: "",
+    client_id: "",
     events: ["transaction.completed", "transaction.failed"],
     secret: "",
     is_active: true
   });
 
+  const { data: clients } = useQuery({
+    queryKey: ["webhook-form-clients"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("api_clients")
+        .select("client_id, client_name")
+        .eq("is_active", true)
+        .order("client_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.url || !formData.client_id) return;
     onSubmit(formData);
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label>Webhook URL</Label>
+        <Label>Client *</Label>
+        <Select
+          value={formData.client_id}
+          onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+        >
+          <SelectTrigger>
+            <SelectValue placeholder="Select API client" />
+          </SelectTrigger>
+          <SelectContent>
+            {clients?.map((client) => (
+              <SelectItem key={client.client_id} value={client.client_id}>
+                {client.client_name || client.client_id}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Webhook URL *</Label>
         <Input
           placeholder="https://your-domain.com/webhooks"
           value={formData.url}
@@ -323,7 +358,7 @@ function WebhookForm({ onSubmit }: { onSubmit: (data: any) => void }) {
         <Label>Active</Label>
       </div>
 
-      <Button type="submit" className="w-full">Create Webhook</Button>
+      <Button type="submit" className="w-full" disabled={!formData.url || !formData.client_id}>Create Webhook</Button>
     </form>
   );
 }
