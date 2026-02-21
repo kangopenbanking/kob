@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Key, Plus, Copy, Eye, EyeOff, Trash2, Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
 
 import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
 
@@ -158,17 +158,15 @@ export default function Sandbox() {
 
   if (loading) {
     return (
-      <DeveloperLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DeveloperLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   if (!account) {
     return (
-      <DeveloperLayout>
+      <>
         <div className="max-w-2xl mx-auto space-y-6">
           <div>
             <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>
@@ -228,12 +226,12 @@ export default function Sandbox() {
             </CardContent>
           </Card>
         </div>
-      </DeveloperLayout>
+      </>
     );
   }
 
   return (
-    <DeveloperLayout>
+    <>
       <div className="max-w-4xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>
@@ -496,6 +494,6 @@ export default function Sandbox() {
           </CardContent>
         </Card>
       </div>
-    </DeveloperLayout>
+    </>
   );
 }

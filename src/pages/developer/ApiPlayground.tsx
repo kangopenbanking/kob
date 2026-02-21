@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Play, Copy, CheckCircle, Key } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
 import { API_CONFIG } from "@/config/api";
 
 export default function ApiPlayground() {
@@ -148,8 +148,7 @@ console.log(data);`;
   };
 
   return (
-    <DeveloperLayout>
-      <div className="container mx-auto px-4 py-12 max-w-6xl">
+    <div className="container mx-auto px-4 py-12 max-w-6xl">
         <div className="mb-8">
           <Badge className="mb-4">
             <Key className="mr-1 h-3 w-3" />
@@ -343,7 +342,6 @@ console.log(data);`;
             </Card>
           </div>
         </div>
-      </div>
-    </DeveloperLayout>
+    </div>
   );
 }

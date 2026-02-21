@@ -9,7 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Webhook, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function SandboxWebhooks() {
@@ -133,16 +133,14 @@ export default function SandboxWebhooks() {
 
   if (loading) {
     return (
-      <DeveloperLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DeveloperLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DeveloperLayout>
+    <div className="max-w-6xl mx-auto space-y-6">
       <div className="max-w-6xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">Webhook Management</h1>
@@ -337,6 +335,6 @@ export default function SandboxWebhooks() {
           </CardContent>
         </Card>
       </div>
-    </DeveloperLayout>
+    </div>
   );
 }
