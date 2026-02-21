@@ -61,9 +61,26 @@ serve(async (req) => {
       await supabase.from('gateway_refunds').update({ status: result.status, provider_ref: result.provider_ref, provider_raw: result.provider_raw }).eq('id', refund.id);
       refund.status = result.status;
       refund.provider_ref = result.provider_ref;
+
+      // Emit refund webhook event
+      const eventType = result.status === 'successful' ? 'refund.completed' : 'refund.failed';
+      await supabase.from('gateway_webhook_events').insert({
+        merchant_id: charge.merchant_id,
+        event_type: eventType,
+        payload: { refund_id: refund.id, charge_id: charge.id, status: result.status, amount: refundAmount, currency: charge.currency },
+        status: 'pending', next_retry_at: new Date().toISOString(),
+      });
     } catch (providerErr) {
       await supabase.from('gateway_refunds').update({ status: 'failed' }).eq('id', refund.id);
       refund.status = 'failed';
+
+      // Emit refund.failed webhook event
+      await supabase.from('gateway_webhook_events').insert({
+        merchant_id: charge.merchant_id,
+        event_type: 'refund.failed',
+        payload: { refund_id: refund.id, charge_id: charge.id, status: 'failed', amount: refundAmount },
+        status: 'pending', next_retry_at: new Date().toISOString(),
+      });
     }
 
     return new Response(JSON.stringify(refund), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
