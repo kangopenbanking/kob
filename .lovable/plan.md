@@ -1,256 +1,130 @@
 
-# Kang Open Banking -- Full Payment Gateway Upgrade Plan
-
-## Overview
-
-This plan upgrades the existing Kang Open Banking platform into a full payment gateway comparable to Flutterwave, adding a unified `/v1/gateway/*` namespace while preserving all existing Open Banking (AISP/PISP), Credit Scoring, Mobile Money, and other endpoints.
-
-The work is organized into 6 implementation batches, each building on the previous one.
-
----
+# KOB Payment Gateway -- Gap Analysis vs Flutterwave
 
 ## Current State Summary
 
-**What exists and works well:**
-- 155+ edge functions covering AISP, PISP, OAuth, Mobile Money (Flutterwave), Card Payments (Stripe), Bank Transfers, Webhooks, Settlements, KYC/KYB, Virtual Cards, ISO 20022, SWIFT
-- Comprehensive public OpenAPI spec (dynamic via `public-api-spec` edge function, ~1190 lines)
-- Double-entry ledger system with journal posting
-- Fee calculation engine with tiered/hybrid models
-- Settlement calculation and processing
-- Webhook delivery with HMAC signing and retry logic
-- Idempotency key management
-- Developer portal with 30+ pages, sandbox tools, API playground
-- Admin portal with 36 management pages
-- FI Portal with 29 institution management pages
+The KOB gateway already has strong coverage across core payment operations:
 
-**Key Gaps (what this upgrade adds):**
-1. No unified "Gateway" charge/payout/refund object model -- payments are fragmented across `/v1/mobile-money/*`, `/v1/stripe/*`, `/v1/flutterwave/*`
-2. No merchant onboarding flow separate from institution registration
-3. No canonical Charge, Payout, Refund, Dispute objects with provider-agnostic status mapping
-4. No `/v1/gateway/*` namespace for a Flutterwave-like developer experience
-5. Missing gateway-specific developer docs (charges guide, payouts guide, etc.)
-6. No sitemap.xml or robots.txt for SEO indexability
-7. Static `openapi.json` is out of sync with dynamic `public-api-spec` edge function
-
----
-
-## Batch 1: Database Schema -- Gateway Tables
-
-Create new database tables for the unified payment gateway model. All existing tables remain untouched.
-
-**New tables:**
-- `gateway_merchants` -- Merchant entity (links to existing `institutions` or standalone). Fields: id, user_id, institution_id (nullable), business_name, status (draft/submitted/verified/active/suspended), kyb_status, environment, webhook_secret, created_at
-- `gateway_charges` -- Canonical charge object. Fields: id, merchant_id, amount, currency, channel (mobile_money/card/bank_transfer), status (pending/processing/successful/failed/cancelled), provider (flutterwave/stripe), provider_ref, provider_raw (jsonb), customer_email, customer_phone, tx_ref, fee_amount, net_amount, metadata, idempotency_key, created_at, updated_at
-- `gateway_payouts` -- Canonical payout. Fields: id, merchant_id, amount, currency, channel, status, provider, provider_ref, beneficiary_id, batch_id, narration, fee_amount, created_at
-- `gateway_payout_batches` -- Batch payouts. Fields: id, merchant_id, total_amount, currency, status (pending/processing/completed/partial_failure), item_count, created_at
-- `gateway_refunds` -- Canonical refund. Fields: id, charge_id, merchant_id, amount, currency, status, reason, provider_ref, created_at
-- `gateway_disputes` -- Card disputes. Fields: id, charge_id, merchant_id, amount, currency, status, reason, evidence_due_by, provider_ref, created_at
-- `gateway_settlements` -- Settlement records. Fields: id, merchant_id, amount, currency, status, period_start, period_end, charges_count, fees_total, payout_ref, settled_at
-- `gateway_webhook_events` -- Outbound merchant webhook log. Fields: id, merchant_id, event_type, payload, status, attempts, next_retry_at, created_at
-
-**RLS policies:** All tables use merchant_id scoping with admin bypass. Service role for webhook/settlement processing.
+**Fully Implemented (no action needed):**
+- Charges (create, list, get, cancel, verify) with Flutterwave + Stripe adapters
+- Payouts (create, list, get) + batch payouts
+- Refunds (create, list, get) with webhook events
+- Disputes (create via Stripe webhook, list, get, submit evidence)
+- Settlements (list, get, report)
+- Beneficiary management (CRUD)
+- Merchant onboarding with KYB lifecycle
+- Per-merchant API keys (sandbox/production)
+- Webhook delivery with HMAC signing, 7-retry backoff, delivery logs
+- Inbound webhook handlers (Flutterwave + Stripe) with dedupe
+- Idempotency-Key on write endpoints
+- Stuck transaction reconciliation cron (every 15 min)
+- Fee breakdown on every transaction (percent + fixed)
+- Merchant limits (single, daily, velocity)
+- Audit trail logging
+- Transaction exports
 
 ---
 
-## Batch 2: Gateway Edge Functions (Core API)
+## Missing Features (6 gaps to reach Flutterwave parity)
 
-Create new edge functions under the gateway namespace. Each maps to a `/v1/gateway/*` endpoint.
+### 1. Payment Links / Hosted Checkout Page
+Flutterwave's most popular merchant feature -- a no-code way to accept payments via a shareable URL.
 
-### Charges
-- `gateway-create-charge` -- Routes to Flutterwave (MoMo) or Stripe (card) based on `channel` param. Creates canonical `gateway_charges` record, calls provider adapter, returns unified response.
-- `gateway-get-charge` -- Fetch charge by ID with provider status sync
-- `gateway-list-charges` -- List with filters (date, status, channel, customer)
-- `gateway-cancel-charge` -- Cancel pending charge if supported
+**What's needed:**
+- `gateway_payment_links` table (amount, currency, title, description, redirect_url, expiry, status, custom_fields)
+- `gateway-create-payment-link` edge function (generates a unique short URL)
+- `gateway-get-payment-link` edge function
+- `gateway-list-payment-links` edge function
+- A hosted checkout page route (`/pay/:link_id`) that renders a branded payment form and calls `gateway-create-charge` on submission
 
-### Payouts
-- `gateway-create-payout` -- Single payout via Flutterwave bank transfer or MoMo transfer
-- `gateway-get-payout` -- Fetch payout status
-- `gateway-list-payouts` -- List with filters
-- `gateway-create-payout-batch` -- Bulk payout creation
-- `gateway-get-payout-batch` -- Batch status with item breakdown
+### 2. Subscriptions / Recurring Payments (Payment Plans)
+Flutterwave supports payment plans that auto-charge customers on a schedule.
 
-### Refunds
-- `gateway-create-refund` -- Refund a charge (Stripe refund or MoMo compensation payout)
-- `gateway-get-refund` -- Fetch refund status
-- `gateway-list-refunds` -- List refunds
+**What's needed:**
+- `gateway_payment_plans` table (name, amount, currency, interval: daily/weekly/monthly/yearly, duration, merchant_id)
+- `gateway_subscriptions` table (plan_id, customer_email, status, next_charge_at, charges_made)
+- `gateway-create-payment-plan` edge function
+- `gateway-create-subscription` edge function
+- `gateway-cancel-subscription` edge function
+- `gateway-subscription-charge-cron` edge function (scheduled job to auto-charge active subscriptions)
 
-### Settlements
-- `gateway-list-settlements` -- Merchant settlements
-- `gateway-get-settlement` -- Settlement detail with line items
+### 3. Split Payments / Subaccounts
+Marketplace feature where a charge is automatically split between the merchant and sub-merchants.
 
-### Disputes
-- `gateway-list-disputes` -- From Stripe webhook events
-- `gateway-get-dispute` -- Dispute detail
-- `gateway-submit-evidence` -- Upload dispute evidence
+**What's needed:**
+- `gateway_subaccounts` table (merchant_id, subaccount_name, settlement_bank, account_number, split_type: percentage/flat, split_value)
+- `gateway-create-subaccount` edge function
+- `gateway-list-subaccounts` edge function
+- Update `gateway-create-charge` to accept an optional `subaccounts` array and record split details
+- `gateway_charge_splits` table to track per-charge split allocations
 
-### Provider Webhooks (Inbound)
-- `gateway-webhook-flutterwave` -- Verify hash, dedupe, update canonical charge/payout status, trigger outbound merchant webhooks
-- `gateway-webhook-stripe` -- Verify Stripe signature, dedupe, handle charge/dispute/refund events
+### 4. Customer Tokenization (for Gateway Charges)
+Flutterwave lets merchants save customer payment details for one-click repeat payments. KOB has `saved_cards` for end-users but not a gateway-level customer token system for merchants.
 
-### Merchant Webhooks (Outbound)
-- `gateway-deliver-webhook` -- Deliver signed events to merchant endpoints with retry
+**What's needed:**
+- `gateway_customers` table (merchant_id, email, phone, name, metadata)
+- `gateway_customer_tokens` table (customer_id, provider, token_ref, channel, last4, expiry, is_active)
+- `gateway-create-customer` edge function
+- `gateway-charge-token` edge function (charge a saved token without re-entering details)
+- Update `gateway-create-charge` to optionally return a reusable token when `save_token: true` is passed
 
-### Provider Adapter Pattern
-Create a shared module `supabase/functions/_shared/gateway-adapters.ts` with:
-- `createFlutterwaveCharge()`, `createStripeCharge()` -- provider-specific logic
-- `mapFlutterwaveStatus()`, `mapStripeStatus()` -- normalize to canonical statuses
-- Common interface for all provider operations
+### 5. Transaction Timeline / Events Log (per charge)
+Flutterwave exposes a detailed event timeline for each transaction (created, processing, OTP sent, successful, webhook delivered). KOB tracks status changes but doesn't expose a per-transaction event timeline.
 
----
+**What's needed:**
+- `gateway_charge_events` table (charge_id, event_type, timestamp, details)
+- Insert events at each lifecycle stage in `gateway-create-charge`, `gateway-verify-charge`, webhook handlers
+- `gateway-get-charge-events` edge function (returns timeline for a specific charge)
 
-## Batch 3: OpenAPI Spec Update
+### 6. Multi-Currency / FX Rate Quotes
+Flutterwave provides real-time exchange rates and lets merchants accept payments in one currency and settle in another.
 
-Update the dynamic `public-api-spec` edge function to include all `/v1/gateway/*` paths with full request/response schemas.
-
-**New schemas to add:**
-- `GatewayCharge`, `GatewayPayout`, `GatewayPayoutBatch`, `GatewayRefund`, `GatewayDispute`, `GatewaySettlement`, `GatewayMerchant`
-
-**New tag:** `Gateway` -- "Unified Payment Gateway (charges, payouts, refunds, settlements)"
-
-**Also update `public/openapi.json`** to stay in sync as the static fallback.
-
-Mark existing `/v1/mobile-money/*`, `/v1/stripe/*`, `/v1/flutterwave/*` endpoints with `x-deprecated: true` and `description` noting "Use /v1/gateway/* for new integrations."
-
----
-
-## Batch 4: Developer Portal -- Gateway Documentation Pages
-
-Create new developer portal pages for the gateway API:
-
-- `src/pages/developer/GatewayQuickstart.tsx` -- Getting started with the Gateway API (auth, first charge, webhook setup)
-- `src/pages/developer/GatewayChargesGuide.tsx` -- Charges reference (MoMo, Card, Bank Transfer channels)
-- `src/pages/developer/GatewayPayoutsGuide.tsx` -- Single and batch payouts
-- `src/pages/developer/GatewayRefundsGuide.tsx` -- Refund flows by channel
-- `src/pages/developer/GatewaySettlementsGuide.tsx` -- Settlement schedules and reports
-- `src/pages/developer/GatewayDisputesGuide.tsx` -- Card dispute management
-- `src/pages/developer/GatewayWebhooksGuide.tsx` -- Event types, signature verification, retry policy
-
-**Update navigation:** Add "Payment Gateway" section to developer sidebar with all new pages.
-
-**Update `src/App.tsx`:** Register routes under `/developer/gateway/*`.
-
-**Update `src/pages/Documentation.tsx`:** Add Gateway section to the main docs hub with links to all gateway guides.
+**What's needed:**
+- `gateway-get-exchange-rate` edge function (wraps Flutterwave's `/rates` endpoint for XAF/USD/EUR/GBP pairs)
+- Add optional `settlement_currency` field to `gateway_charges` so merchants can charge in USD but settle in XAF
+- Record the applied exchange rate and converted amounts on the charge record
 
 ---
 
-## Batch 5: SEO and Public Indexability
+## Technical Implementation Details
 
-- Create `public/sitemap.xml` listing all public documentation routes
-- Create `public/robots.txt` allowing indexing of docs, blocking admin/fi-portal
-- Add SEO meta tags to all new gateway documentation pages
-- Ensure OpenAPI spec download links and Postman collection links are functional on the docs page
+### Database Changes (single migration)
+- Create 7 new tables: `gateway_payment_links`, `gateway_payment_plans`, `gateway_subscriptions`, `gateway_subaccounts`, `gateway_charge_splits`, `gateway_customers`, `gateway_customer_tokens`, `gateway_charge_events`
+- Add `payment_link_id` column to `gateway_charges`
+- Add `subscription_id` column to `gateway_charges`
+- Add `settlement_currency`, `exchange_rate`, `settled_amount` columns to `gateway_charges`
+- RLS policies for all new tables (merchant ownership via user_id)
+
+### New Edge Functions (12 total)
+1. `gateway-create-payment-link`
+2. `gateway-get-payment-link`
+3. `gateway-list-payment-links`
+4. `gateway-create-payment-plan`
+5. `gateway-create-subscription`
+6. `gateway-cancel-subscription`
+7. `gateway-subscription-charge-cron`
+8. `gateway-create-subaccount`
+9. `gateway-list-subaccounts`
+10. `gateway-create-customer`
+11. `gateway-charge-token`
+12. `gateway-get-charge-events`
+
+### Modified Edge Functions (2)
+- `gateway-create-charge` -- add support for payment_link_id, subaccounts split, save_token, settlement_currency
+- `gateway-get-exchange-rate` (can reuse existing `exchange-rate-get` or extend it)
+
+### New Cron Job (1)
+- `gateway-subscription-charge-cron` -- runs hourly, finds subscriptions where `next_charge_at <= now()`, creates charges, updates next_charge_at
+
+### New Frontend Route (1)
+- `/pay/:link_id` -- hosted checkout page for payment links
 
 ---
 
-## Batch 6: End-to-End Testing and Verification
-
-After all implementations:
-
-1. **Database verification** -- Query all new gateway tables to confirm schema
-2. **Edge function deployment** -- Deploy all new gateway functions
-3. **API testing** -- Call each gateway endpoint via curl to verify:
-   - Create charge (MoMo channel)
-   - Create charge (card channel)  
-   - List charges with filters
-   - Create payout
-   - Create refund
-   - List settlements
-4. **OpenAPI spec verification** -- Fetch `/functions/v1/public-api-spec` and verify all gateway paths are present
-5. **Developer portal verification** -- Navigate to each new gateway doc page and verify rendering
-6. **Backward compatibility** -- Verify existing `/v1/mobile-money/charge`, `/v1/stripe/payment-intent`, etc. still work
-
----
-
-## Technical Details
-
-### Canonical Status Mapping
-
-```text
-Provider Status          --> Gateway Status
-------------------------------------------
-Flutterwave: successful  --> successful
-Flutterwave: pending     --> processing
-Flutterwave: failed      --> failed
-Stripe: succeeded        --> successful
-Stripe: processing       --> processing
-Stripe: requires_action  --> pending
-Stripe: canceled         --> cancelled
-```
-
-### Gateway Charge Response Shape
-
-```text
-{
-  "id": "chg_uuid",
-  "merchant_id": "mch_uuid",
-  "amount": 5000,
-  "currency": "XAF",
-  "channel": "mobile_money",
-  "status": "processing",
-  "provider": "flutterwave",
-  "provider_ref": "FLW-1234",
-  "fee_amount": 175,
-  "net_amount": 4825,
-  "customer": { "phone": "237677123456" },
-  "tx_ref": "order_12345",
-  "created_at": "2026-02-21T10:00:00Z"
-}
-```
-
-### Webhook Event Types (Outbound to Merchants)
-
-- `charge.successful`, `charge.failed`
-- `payout.completed`, `payout.failed`
-- `refund.completed`, `refund.failed`
-- `dispute.created`, `dispute.won`, `dispute.lost`
-- `settlement.paid`
-
-### Files to Create (Summary)
-
-**Edge Functions (15 new):**
-- `supabase/functions/gateway-create-charge/index.ts`
-- `supabase/functions/gateway-get-charge/index.ts`
-- `supabase/functions/gateway-list-charges/index.ts`
-- `supabase/functions/gateway-create-payout/index.ts`
-- `supabase/functions/gateway-get-payout/index.ts`
-- `supabase/functions/gateway-list-payouts/index.ts`
-- `supabase/functions/gateway-create-payout-batch/index.ts`
-- `supabase/functions/gateway-create-refund/index.ts`
-- `supabase/functions/gateway-get-refund/index.ts`
-- `supabase/functions/gateway-list-refunds/index.ts`
-- `supabase/functions/gateway-list-settlements/index.ts`
-- `supabase/functions/gateway-list-disputes/index.ts`
-- `supabase/functions/gateway-webhook-flutterwave/index.ts`
-- `supabase/functions/gateway-webhook-stripe/index.ts`
-- `supabase/functions/gateway-deliver-webhook/index.ts`
-
-**Shared Module:**
-- `supabase/functions/_shared/gateway-adapters.ts`
-
-**Developer Portal Pages (7 new):**
-- `src/pages/developer/GatewayQuickstart.tsx`
-- `src/pages/developer/GatewayChargesGuide.tsx`
-- `src/pages/developer/GatewayPayoutsGuide.tsx`
-- `src/pages/developer/GatewayRefundsGuide.tsx`
-- `src/pages/developer/GatewaySettlementsGuide.tsx`
-- `src/pages/developer/GatewayDisputesGuide.tsx`
-- `src/pages/developer/GatewayWebhooksGuide.tsx`
-
-**Public Assets:**
-- `public/sitemap.xml`
-- `public/robots.txt`
-
-**Files to Edit:**
-- `supabase/functions/public-api-spec/index.ts` (add gateway paths + schemas)
-- `public/openapi.json` (sync with dynamic spec)
-- `src/App.tsx` (register gateway doc routes)
-- `src/pages/Documentation.tsx` (add gateway section)
-- Developer sidebar navigation component
-- `supabase/config.toml` (JWT settings for new functions)
-
-### What is NOT Changed (Backward Compatibility)
-
-- All existing `/v1/mobile-money/*`, `/v1/stripe/*`, `/v1/flutterwave/*`, `/v1/pisp/*`, `/v1/aisp/*` endpoints remain functional
-- All existing database tables remain untouched
-- All existing admin, FI portal, and developer portal pages remain functional
-- Existing webhook infrastructure continues to work independently
+## Priority Order
+1. **Payment Links** -- highest merchant demand, fastest to ship
+2. **Customer Tokenization** -- enables repeat payments
+3. **Subscriptions** -- depends on tokenization
+4. **Split Payments** -- marketplace feature
+5. **Charge Events Timeline** -- developer experience improvement
+6. **Multi-Currency FX** -- advanced feature
