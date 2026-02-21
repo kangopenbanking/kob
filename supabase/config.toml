@@ -449,3 +449,44 @@ verify_jwt = true
 # Institution API Client Creation
 [functions.institution-create-client]
 verify_jwt = true
+
+# Gateway Payment Functions
+
+[functions.gateway-create-charge]
+verify_jwt = false
+
+[functions.gateway-create-payment-link]
+verify_jwt = false
+
+[functions.gateway-get-payment-link]
+verify_jwt = false
+
+[functions.gateway-list-payment-links]
+verify_jwt = false
+
+[functions.gateway-create-payment-plan]
+verify_jwt = false
+
+[functions.gateway-create-subscription]
+verify_jwt = false
+
+[functions.gateway-cancel-subscription]
+verify_jwt = false
+
+[functions.gateway-create-subaccount]
+verify_jwt = false
+
+[functions.gateway-list-subaccounts]
+verify_jwt = false
+
+[functions.gateway-create-customer]
+verify_jwt = false
+
+[functions.gateway-charge-token]
+verify_jwt = false
+
+[functions.gateway-get-charge-events]
+verify_jwt = false
+
+[functions.gateway-subscription-charge-cron]
+verify_jwt = false

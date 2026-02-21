@@ -4025,6 +4025,83 @@ export type Database = {
           },
         ]
       }
+      gateway_charge_events: {
+        Row: {
+          charge_id: string
+          created_at: string
+          details: Json | null
+          event_type: string
+          id: string
+        }
+        Insert: {
+          charge_id: string
+          created_at?: string
+          details?: Json | null
+          event_type: string
+          id?: string
+        }
+        Update: {
+          charge_id?: string
+          created_at?: string
+          details?: Json | null
+          event_type?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_charge_events_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_charges"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_charge_splits: {
+        Row: {
+          charge_id: string
+          created_at: string
+          id: string
+          split_amount: number
+          split_type: string
+          split_value: number
+          subaccount_id: string
+        }
+        Insert: {
+          charge_id: string
+          created_at?: string
+          id?: string
+          split_amount: number
+          split_type: string
+          split_value: number
+          subaccount_id: string
+        }
+        Update: {
+          charge_id?: string
+          created_at?: string
+          id?: string
+          split_amount?: number
+          split_type?: string
+          split_value?: number
+          subaccount_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_charge_splits_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_charge_splits_subaccount_id_fkey"
+            columns: ["subaccount_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_subaccounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_charges: {
         Row: {
           amount: number
@@ -4034,6 +4111,7 @@ export type Database = {
           customer_email: string | null
           customer_name: string | null
           customer_phone: string | null
+          exchange_rate: number | null
           failure_reason: string | null
           fee_amount: number | null
           id: string
@@ -4041,10 +4119,14 @@ export type Database = {
           merchant_id: string
           metadata: Json | null
           net_amount: number | null
+          payment_link_id: string | null
           provider: string
           provider_raw: Json | null
           provider_ref: string | null
+          settled_amount: number | null
+          settlement_currency: string | null
           status: string
+          subscription_id: string | null
           tx_ref: string
           updated_at: string
         }
@@ -4056,6 +4138,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          exchange_rate?: number | null
           failure_reason?: string | null
           fee_amount?: number | null
           id?: string
@@ -4063,10 +4146,14 @@ export type Database = {
           merchant_id: string
           metadata?: Json | null
           net_amount?: number | null
+          payment_link_id?: string | null
           provider: string
           provider_raw?: Json | null
           provider_ref?: string | null
+          settled_amount?: number | null
+          settlement_currency?: string | null
           status?: string
+          subscription_id?: string | null
           tx_ref: string
           updated_at?: string
         }
@@ -4078,6 +4165,7 @@ export type Database = {
           customer_email?: string | null
           customer_name?: string | null
           customer_phone?: string | null
+          exchange_rate?: number | null
           failure_reason?: string | null
           fee_amount?: number | null
           id?: string
@@ -4085,16 +4173,122 @@ export type Database = {
           merchant_id?: string
           metadata?: Json | null
           net_amount?: number | null
+          payment_link_id?: string | null
           provider?: string
           provider_raw?: Json | null
           provider_ref?: string | null
+          settled_amount?: number | null
+          settlement_currency?: string | null
           status?: string
+          subscription_id?: string | null
           tx_ref?: string
           updated_at?: string
         }
         Relationships: [
           {
             foreignKeyName: "gateway_charges_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_charges_payment_link_id_fkey"
+            columns: ["payment_link_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_payment_links"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_charges_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_customer_tokens: {
+        Row: {
+          channel: string
+          created_at: string
+          customer_id: string
+          expiry: string | null
+          id: string
+          is_active: boolean
+          last4: string | null
+          metadata: Json | null
+          provider: string
+          token_ref: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          customer_id: string
+          expiry?: string | null
+          id?: string
+          is_active?: boolean
+          last4?: string | null
+          metadata?: Json | null
+          provider: string
+          token_ref: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          customer_id?: string
+          expiry?: string | null
+          id?: string
+          is_active?: boolean
+          last4?: string | null
+          metadata?: Json | null
+          provider?: string
+          token_ref?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_customer_tokens_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_customers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          merchant_id: string
+          metadata: Json | null
+          name: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          merchant_id: string
+          metadata?: Json | null
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          merchant_id?: string
+          metadata?: Json | null
+          name?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_customers_merchant_id_fkey"
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "gateway_merchants"
@@ -4294,6 +4488,124 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_payment_links: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          custom_fields: Json | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          max_uses: number | null
+          merchant_id: string
+          metadata: Json | null
+          redirect_url: string | null
+          slug: string
+          status: string
+          title: string
+          updated_at: string
+          use_count: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          custom_fields?: Json | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          merchant_id: string
+          metadata?: Json | null
+          redirect_url?: string | null
+          slug: string
+          status?: string
+          title: string
+          updated_at?: string
+          use_count?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          custom_fields?: Json | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          max_uses?: number | null
+          merchant_id?: string
+          metadata?: Json | null
+          redirect_url?: string | null
+          slug?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          use_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_payment_links_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_payment_plans: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          duration: number | null
+          id: string
+          interval: string
+          interval_count: number
+          is_active: boolean
+          merchant_id: string
+          metadata: Json | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          duration?: number | null
+          id?: string
+          interval?: string
+          interval_count?: number
+          is_active?: boolean
+          merchant_id: string
+          metadata?: Json | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          duration?: number | null
+          id?: string
+          interval?: string
+          interval_count?: number
+          is_active?: boolean
+          merchant_id?: string
+          metadata?: Json | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_payment_plans_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]
@@ -4562,6 +4874,128 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_subaccounts: {
+        Row: {
+          account_number: string | null
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          merchant_id: string
+          metadata: Json | null
+          settlement_bank: string | null
+          split_type: string
+          split_value: number
+          subaccount_name: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          merchant_id: string
+          metadata?: Json | null
+          settlement_bank?: string | null
+          split_type?: string
+          split_value: number
+          subaccount_name: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          merchant_id?: string
+          metadata?: Json | null
+          settlement_bank?: string | null
+          split_type?: string
+          split_value?: number
+          subaccount_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_subaccounts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_subscriptions: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          charges_made: number
+          created_at: string
+          customer_email: string
+          customer_name: string | null
+          customer_phone: string | null
+          id: string
+          last_charge_id: string | null
+          merchant_id: string
+          metadata: Json | null
+          next_charge_at: string
+          plan_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          charges_made?: number
+          created_at?: string
+          customer_email: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          last_charge_id?: string | null
+          merchant_id: string
+          metadata?: Json | null
+          next_charge_at: string
+          plan_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          charges_made?: number
+          created_at?: string
+          customer_email?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          id?: string
+          last_charge_id?: string | null
+          merchant_id?: string
+          metadata?: Json | null
+          next_charge_at?: string
+          plan_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_subscriptions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_payment_plans"
             referencedColumns: ["id"]
           },
         ]
