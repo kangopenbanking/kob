@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { LanguageProvider } from "@/lib/i18n/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { RoleGuard } from "@/components/RoleGuard";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
@@ -220,7 +221,7 @@ function App() {
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<Layout><ProtectedRoute><BusinessKYBSubmission /></ProtectedRoute></Layout>} />
             {/* Institution Portal Routes - Nested with InstitutionLayout */}
-            <Route path="/fi-portal" element={<ProtectedRoute><InstitutionLayout /></ProtectedRoute>}>
+            <Route path="/fi-portal" element={<ProtectedRoute><RoleGuard allowedRoles={['institution', 'staff']} redirectTo="/dashboard"><InstitutionLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<FIPortal />} />
               <Route path="transactions" element={<InstitutionTransactions />} />
               <Route path="analytics" element={<InstitutionAnalytics />} />
@@ -307,7 +308,7 @@ function App() {
             <Route path="/compliance-dashboard" element={<Navigate to="/admin/compliance-dashboard" replace />} />
             
             {/* New Developer Portal */}
-            <Route path="/developer" element={<DeveloperLayout />}>
+            <Route path="/developer" element={<ProtectedRoute><RoleGuard allowedRoles={['developer']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<DeveloperHome />} />
               <Route path="getting-started" element={<GettingStarted />} />
               <Route path="getting-started/authentication" element={<GettingStarted />} />
