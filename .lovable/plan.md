@@ -1,178 +1,128 @@
 
-# Modern UI Enhancement: PayPal + Stripe Design System
 
-## Overview
+# FI Portal Banking Management System -- Full Audit & Build Plan
 
-Transform all KOB dashboard pages to a modern, premium fintech aesthetic inspired by PayPal's clean data presentation and Stripe's elegant developer-focused design. This is a **UI-only** change -- no modifications to any core features, logic, API calls, or data handling.
+## Current State
 
-## Design Principles (PayPal + Stripe Hybrid)
+The `/fi-portal` currently has 12 pages:
+- Dashboard, Analytics, Transactions, Payments, Settlement, API Clients, Webhooks, Credit API, Compliance, Profile, Team, Settings, WooCommerce
 
-| Principle | PayPal Influence | Stripe Influence |
-|-----------|-----------------|-----------------|
-| Color | Neutral grays with blue accents, warm whites | Purple-to-blue gradients, crisp whites |
-| Typography | Large, bold headlines (Inter/system font), generous line-height | Clean monospace for data, tight letter-spacing for headings |
-| Cards | Soft shadows, no visible borders, rounded-xl (16px) | Subtle borders, hover elevation, smooth transitions |
-| Spacing | Generous padding (24-32px), breathing room between sections | Compact data density with clear visual hierarchy |
-| Data Display | Large stat numbers with muted labels above | Inline badges, color-coded status indicators |
-| Loading States | Skeleton loaders instead of spinners | Pulse animations with content placeholders |
-| Empty States | Friendly illustrations/icons with clear CTAs | Minimal, text-focused with dashed borders |
+## Gap Analysis
 
-## Phased Implementation
+The database contains 140+ tables covering full core banking functionality, but the FI Portal is missing **10 critical banking management pages** that institutions need to operate as a bank/credit union:
 
-Due to the scale (15+ pages, 10+ shared components), this will be implemented in **3 phases** to avoid overwhelming changes.
+| Missing Feature | Database Tables Available | Priority |
+|---|---|---|
+| **Accounts Management** | `accounts`, `account_balances` | Critical |
+| **Branch Management** | `branches` | Critical |
+| **Loans Management** | `loan_products`, `loan_applications`, `loan_schedule`, `loan_repayments`, `loan_events` | Critical |
+| **Savings Management** | `savings_products`, `savings_accounts`, `savings_transactions`, `interest_accruals` | Critical |
+| **Customer/KYC Management** | `kyc_verifications`, `customer_due_diligence`, `sanctions_screening` | Critical |
+| **Beneficiaries & Standing Orders** | `beneficiaries`, `standing_orders`, `direct_debits` | High |
+| **Ledger / Accounting** | `ledger_accounts`, `journal_entries`, `journal_lines` | High |
+| **Audit Logs** | `audit_logs`, `security_audit_logs` | High |
+| **Invoices & Billing** | `institution_invoices`, `transaction_fees`, `fee_structures` | Medium |
+| **Consent Management** | `aisp_consents`, `pisp_consents`, `consent_events` | Medium |
 
----
+## Implementation Plan
 
-### Phase 1: Design Foundation and Shared Components (6 files)
+### 1. Accounts Management (`/fi-portal/accounts`)
+- List all institution accounts with balances
+- View account details, transaction history per account
+- Account status management (active/frozen/closed)
+- Query `accounts` + `account_balances` by `institution_id`
 
-Update the design tokens, shared layout components, and reusable widget system that cascade across all dashboards.
+### 2. Branch Management (`/fi-portal/branches`)
+- List all branches for the institution
+- Create new branches (sub-branches)
+- Edit branch details (address, phone, email, status)
+- Toggle branch active/inactive
+- Query `branches` by `institution_id`
 
-**File 1: `src/index.css`** -- Design token updates
-- Update `--radius` from `0.75rem` to `0.75rem` (keep) but add new utility classes
-- Add new CSS utilities: `.stat-card`, `.section-header`, `.data-row`, `.empty-state`
-- Add smooth card hover transitions: `transition: box-shadow 200ms ease, transform 200ms ease`
-- Add Stripe-style subtle gradient backgrounds for stat cards
-- Add PayPal-style large number typography class
-- Refine shadow system: softer defaults, more elevation on hover
+### 3. Loans Management (`/fi-portal/loans`)
+- Tabs: Products | Applications | Active Loans | Repayments
+- View loan products offered by the institution
+- Track loan applications and their status (applied, approved, disbursed, etc.)
+- View amortization schedules (`loan_schedule`)
+- Record and track repayments (`loan_repayments`)
+- Loan lifecycle event trail (`loan_events`)
 
-**File 2: `src/components/dashboard/DashboardWidget.tsx`** -- Widget container modernization
-- Remove visible borders, use shadow-only card styling
-- Increase border-radius to `rounded-xl` (16px)
-- Add subtle hover elevation effect (`hover:shadow-md transition-shadow`)
-- Modernize dropdown menu trigger to be more subtle (opacity on hover)
-- Add Stripe-style thin top-accent border option (colored line at top of card)
+### 4. Savings Management (`/fi-portal/savings`)
+- Tabs: Products | Accounts | Transactions | Interest
+- Savings products catalog
+- Active savings accounts list
+- Deposits/withdrawals history (`savings_transactions`)
+- Interest accrual tracking (`interest_accruals`)
 
-**File 3: `src/components/dashboard/DashboardLayout.tsx`** -- Layout refinement
-- Update main content area background to `bg-muted/30` (subtle off-white like PayPal)
-- Increase content padding to `p-6 sm:p-8` for more breathing room
-- Modernize header bar: remove border-b, use subtle shadow instead
-- Add smooth page transition feel
+### 5. Customer KYC Management (`/fi-portal/customers`)
+- List customers with KYC status
+- View KYC verification details
+- Customer due diligence records
+- Sanctions screening results
+- Risk scoring summary
 
-**File 4: `src/components/admin/AdminLayout.tsx`** -- Admin layout refinement
-- Same treatment as DashboardLayout
-- Subtle background tint for admin context
+### 6. Beneficiaries & Standing Orders (`/fi-portal/beneficiaries`)
+- Registered beneficiaries list
+- Active standing orders
+- Direct debits management
+- Status monitoring
 
-**File 5: `src/components/dashboard/widgets/BalanceWidget.tsx`** -- Hero balance card
-- Redesign as a "hero card" with larger typography (text-5xl for balance)
-- Replace gradient background with clean white + colored accent stripe on left
-- Add subtle currency badge
-- Stripe-style change indicator with up/down arrow pill
+### 7. Ledger / Accounting (`/fi-portal/ledger`)
+- Chart of accounts view (`ledger_accounts`)
+- Journal entries browser (`journal_entries` + `journal_lines`)
+- Account balance summaries
+- Debit/Credit validation display
 
-**File 6: `src/components/dashboard/widgets/QuickActionsWidget.tsx`** -- Action buttons
-- Redesign as pill-shaped action buttons (PayPal style)
-- Replace outline variant with filled soft-color backgrounds per action
-- Increase icon size, reduce text prominence
-- Add hover scale effect
+### 8. Audit Trail (`/fi-portal/audit`)
+- Searchable audit log viewer
+- Filter by action type, entity, date range
+- Security event log
+- Export capability
 
----
+### 9. Invoices & Billing (`/fi-portal/billing`)
+- Invoice list with status (pending, paid, overdue)
+- Fee structure overview
+- Fee waivers applied
+- Monthly billing summary
 
-### Phase 2: Core Dashboard Pages (5 files)
+### 10. Consent Management (`/fi-portal/consents`)
+- AISP consent dashboard (active, revoked, expired counts)
+- PISP consent tracking
+- Consent event timeline
+- Revocation capability
 
-**File 7: `src/pages/Dashboard.tsx`** -- Main user dashboard
-- Redesign stat summary row: large numbers with small labels, icon in colored circle
-- Modernize tab bar: pill-style tab indicators instead of underline
-- Transaction rows: remove border, use hover bg change, add avatar circles for debit/credit
-- Payment cards: cleaner layout with status pill badges
-- Consent cards: Stripe-style expandable detail rows
-- Loading state: skeleton loaders instead of "Loading..." text
-- Empty states: centered icon + text + CTA pattern
+### Navigation Update
 
-**File 8: `src/pages/Admin.tsx`** -- Admin dashboard
-- Stat cards: icon in larger colored circle (48px), number + label stacked
-- Quick access navigation cards: add subtle icon background, description text
-- Remove "Phase 2 Features" and "Monitoring & Health" section headers (flatten grid)
-- Tab bar: pill style
-- Registration cards: cleaner layout with status timeline feel
-- Audit log entries: timeline-style left-border indicators
+Add 4 new sidebar sections to `InstitutionLayout.tsx`:
 
-**File 9: `src/pages/Loans.tsx`** -- Loan dashboard
-- Stat row: PayPal-style large numbers with colored icons
-- Product cards grid: add hover elevation, cleaner spacing
-- Application status: Stripe-style colored status pills (green/blue/red/gray)
-- Loading text to skeleton
+```text
+Banking Operations
+  - Accounts        /fi-portal/accounts
+  - Branches         /fi-portal/branches
+  - Loans            /fi-portal/loans
+  - Savings          /fi-portal/savings
+  - Customers        /fi-portal/customers
 
-**File 10: `src/pages/Savings.tsx`** -- Savings dashboard
-- Summary cards: remove gradient, use clean white with colored left accent
-- Account cards: rounder, softer shadows, cleaner balance display
-- "Add new account" card: modern dashed pattern with hover fill
-- Transaction rows: same modernization as Dashboard transactions
+Financial Management
+  - Beneficiaries    /fi-portal/beneficiaries
+  - Ledger           /fi-portal/ledger
+  - Billing          /fi-portal/billing
 
-**File 11: `src/pages/VirtualCards.tsx`** -- Virtual cards
-- Empty state: larger icon, more padding, modern CTA button
-- Card grid: maintain existing VirtualCardDisplay but add hover shadow
-- Loading state: card skeleton placeholders
+Governance
+  - Consents         /fi-portal/consents
+  - Audit Trail      /fi-portal/audit
+```
 
----
+### Routing Update
 
-### Phase 3: Remaining Dashboard Pages (6 files)
-
-**File 12: `src/pages/MobileMoney.tsx`** -- Mobile money
-- Account cards: provider logo/color coding (MTN yellow, Orange orange)
-- Form cards: cleaner input spacing, modern label placement
-- Transaction history table: stripe-style hover rows
-
-**File 13: `src/pages/BankingOps.tsx`** -- Banking operations
-- Tab bar with 8 items: convert to horizontal scrollable pills
-- Transfer form: modern 2-column layout with cleaner inputs
-- Sub-tab nesting: cleaner visual hierarchy
-
-**File 14: `src/pages/CreditScore.tsx`** -- Credit score dashboard
-- Already well-designed, minor refinements only
-- Card containers: softer shadows, rounded-xl
-- Button group: pill-shaped variants
-
-**File 15: `src/pages/FIPortal.tsx`** -- Institution portal
-- Stat cards: same treatment as Admin stats
-- Sandbox credentials: modern code block styling
-- Tab content: consistent spacing
-
-**File 16: `src/pages/CrediQDashboard.tsx`** -- CrediQ dashboard
-- Score card: cleaner layout, more modern stat display
-- Action plan items: timeline-style layout with progress indicators
-- Tips card: modern callout style with icon
-
-**File 17: `src/pages/ComplianceDashboard.tsx`** -- Compliance
-- Stat cards and data rows: consistent with new design system
-
----
+Add 10 new routes nested under the existing `/fi-portal` parent in `App.tsx`.
 
 ## Technical Details
 
-### CSS Changes (`src/index.css`)
-- New utility classes for consistent stat cards, section headers, data rows
-- Refined shadow scale: `shadow-sm` for resting, `shadow-md` for hover, `shadow-lg` for active/focus
-- Card hover transition: `transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1)`
-- Skeleton loader refinement
-- Subtle background tints for dashboard areas
+- All 10 new pages follow the same pattern as existing pages: `useState` + `useEffect` + `supabase` client queries
+- Every page filters data by `institution_id` derived from the logged-in user's institution record
+- No new database migrations needed -- all tables already exist
+- No new edge functions needed -- all reads use the client SDK with existing RLS policies
+- Each page includes: loading skeleton, empty state, refresh button, date formatting, status badges
+- Existing sidebar navigation groups will be reorganized into 6 sections total for clarity
 
-### Component Pattern Changes
-- Stat cards: icon in 48px colored circle + stacked number/label (consistent across all pages)
-- Cards: `rounded-xl border-0 shadow-sm hover:shadow-md transition-all` (PayPal feel)
-- Tab bars: `rounded-full bg-muted p-1` container with `rounded-full` triggers (Stripe feel)
-- Status badges: `rounded-full px-3 py-1 text-xs font-medium` (pill shape)
-- Transaction rows: `rounded-lg p-4 hover:bg-muted/50 transition-colors` (no border)
-- Empty states: centered layout with muted icon, heading, description, CTA button
-- Loading states: skeleton placeholders using the existing `Skeleton` component
-- Section headers: `text-lg font-semibold tracking-tight` with optional description
-
-### What Will NOT Change
-- No changes to any `supabase` calls, queries, or function invocations
-- No changes to routing, navigation paths, or page structure
-- No changes to form validation, submission logic, or error handling
-- No changes to authentication flows or protected routes
-- No changes to state management patterns
-- No changes to any child component internal logic (e.g., `CircularScoreDisplay`, `LoanProductCard`, etc.)
-- No changes to the sidebar navigation items or structure
-
----
-
-## Summary
-
-| Phase | Files | Focus |
-|-------|-------|-------|
-| Phase 1 | 6 files | Design tokens, shared layouts, widget components |
-| Phase 2 | 5 files | Core user + admin dashboards |
-| Phase 3 | 6 files | Remaining service dashboards |
-| **Total** | **17 files** | UI-only, zero functional changes |
-
-The result will be a cohesive, premium fintech dashboard experience that blends PayPal's clean data presentation with Stripe's elegant, developer-grade polish -- applied consistently across every dashboard in the platform.
