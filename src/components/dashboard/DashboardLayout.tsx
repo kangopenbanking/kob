@@ -96,7 +96,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </Button>
           </div>
 
-          <SidebarContent>
+          <SidebarContent className="scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {dashboardNavigation.map((section) => (
               <SidebarGroup key={section.title}>
                 <SidebarGroupLabel>{section.title}</SidebarGroupLabel>

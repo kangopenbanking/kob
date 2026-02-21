@@ -115,7 +115,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
             </Button>
           </div>
 
-          <SidebarContent>
+          <SidebarContent className="scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {navSections.map((section) => (
               <SidebarGroup key={section.title}>
                 <SidebarGroupLabel className="flex items-center gap-2">
