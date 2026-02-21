@@ -91,9 +91,11 @@ serve(async (req) => {
           next_charge_at: nextCharge,
         }).eq('id', sub.id);
 
-        // Charge event
+        // Charge event - subscription recurring
+        const chargeStatus = charge.status || 'pending';
+        const subEventType = chargeStatus === 'failed' ? 'subscription.charge.failed' : 'subscription.charge.successful';
         await supabase.from('gateway_charge_events').insert({
-          charge_id: charge.id, event_type: 'charge.subscription_recurring',
+          charge_id: charge.id, event_type: subEventType,
           details: { subscription_id: sub.id, charges_made: sub.charges_made + 1 },
         }).then(() => {}).catch(() => {});
 

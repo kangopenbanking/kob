@@ -207,7 +207,7 @@ import LiveDemo from "./pages/LiveDemo";
 import Architecture from "./pages/Architecture";
 import KeyFunctionsSummary from "./pages/KeyFunctionsSummary";
 import ROICalculator from "./pages/ROICalculator";
-
+import PaymentCheckout from "./pages/PaymentCheckout";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -453,6 +453,7 @@ function App() {
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </TooltipProvider>
