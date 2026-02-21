@@ -149,7 +149,7 @@ All endpoints must return RFC 7807-style errors:
 ```bash
 # 1. Download collection from the API
 curl -o kob-collection.json \
-  https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/postman-collection
+  https://api.kangopenbanking.com/functions/v1/postman-collection
 
 # 2. Run with Newman + schema validation
 newman run kob-collection.json \

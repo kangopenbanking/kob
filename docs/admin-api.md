@@ -91,7 +91,7 @@ List all loan applications with their linked loan accounts.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/admin-list-loans?status=approved&limit=10"
+  "https://api.kangopenbanking.com/functions/v1/admin-list-loans?status=approved&limit=10"
 ```
 
 ### 2.2 `GET /v1/admin/list-savings` → `admin-list-savings`
@@ -109,7 +109,7 @@ List all savings accounts with product details and recent transactions.
 **Example:**
 ```bash
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/admin-list-savings?status=active&limit=20"
+  "https://api.kangopenbanking.com/functions/v1/admin-list-savings?status=active&limit=20"
 ```
 
 ### 2.3 `GET /v1/admin/list-consents` → `admin-list-consents`
@@ -128,11 +128,11 @@ List AISP or PISP consents.
 ```bash
 # AISP consents
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/admin-list-consents?status=Authorised"
+  "https://api.kangopenbanking.com/functions/v1/admin-list-consents?status=Authorised"
 
 # PISP consents
 curl -H "Authorization: Bearer $TOKEN" \
-  "https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/admin-list-consents?type=pisp&status=Authorised"
+  "https://api.kangopenbanking.com/functions/v1/admin-list-consents?type=pisp&status=Authorised"
 ```
 
 ---

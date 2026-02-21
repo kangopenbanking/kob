@@ -84,10 +84,10 @@ serve(async (req) => {
         database: dbOk ? 'operational' : 'degraded'
       },
       documentation: {
-        openapi: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec',
-        postman: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/postman-collection',
+        openapi: 'https://api.kangopenbanking.com/functions/v1/public-api-spec',
+        postman: 'https://api.kangopenbanking.com/functions/v1/postman-collection',
         explorer: 'https://kangopenbanking.com/developer/api-explorer',
-        oidc_discovery: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oidc-config'
+        oidc_discovery: 'https://api.kangopenbanking.com/functions/v1/oidc-config'
       },
       fapi_compliance: {
         profile: 'FAPI 1.0 Advanced',

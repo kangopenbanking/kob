@@ -214,7 +214,7 @@ Create test users with different scenarios:
 **Manual Test**:
 ```bash
 curl -X POST \
-  'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-weekly-digest' \
+  'https://api.kangopenbanking.com/functions/v1/crediq-send-weekly-digest' \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"user_id": "YOUR_TEST_USER_ID"}'
@@ -242,7 +242,7 @@ curl -X POST \
 **Manual Test**:
 ```bash
 curl -X POST \
-  'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-monthly-report' \
+  'https://api.kangopenbanking.com/functions/v1/crediq-send-monthly-report' \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"user_id": "YOUR_TEST_USER_ID"}'
@@ -338,7 +338,7 @@ Test error scenarios:
 ### 21. Health Check Endpoint
 - [ ] Navigate to edge function URL or use curl:
 ```bash
-curl https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-health-check
+curl https://api.kangopenbanking.com/functions/v1/crediq-health-check
 ```
 - [ ] Response status: 200 OK
 - [ ] JSON structure correct:
@@ -456,16 +456,16 @@ ___________________________
 
 ```bash
 # Health check
-curl https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-health-check
+curl https://api.kangopenbanking.com/functions/v1/crediq-health-check
 
 # Manual weekly digest
-curl -X POST https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-weekly-digest \
+curl -X POST https://api.kangopenbanking.com/functions/v1/crediq-send-weekly-digest \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"user_id": "USER_ID"}'
 
 # Manual monthly report
-curl -X POST https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/crediq-send-monthly-report \
+curl -X POST https://api.kangopenbanking.com/functions/v1/crediq-send-monthly-report \
   -H 'Authorization: Bearer YOUR_ANON_KEY' \
   -H 'Content-Type: application/json' \
   -d '{"user_id": "USER_ID"}'
