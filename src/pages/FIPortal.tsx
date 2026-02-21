@@ -107,14 +107,14 @@ export default function FIPortal() {
   const sandboxCreds = institution?.sandbox_credentials as any;
 
   const quickActions = [
-    { label: "Accounts", icon: Wallet, path: "/fi-portal/accounts", desc: "Manage accounts" },
-    { label: "Branches", icon: MapPin, path: "/fi-portal/branches", desc: "Branch network" },
-    { label: "Loans", icon: Banknote, path: "/fi-portal/loans", desc: "Lending products" },
-    { label: "Savings", icon: PiggyBank, path: "/fi-portal/savings", desc: "Savings products" },
-    { label: "Customers", icon: Users, path: "/fi-portal/customers", desc: "KYC & compliance" },
-    { label: "Transactions", icon: ArrowUpDown, path: "/fi-portal/transactions", desc: "Transaction history" },
-    { label: "Payments", icon: CreditCard, path: "/fi-portal/payments", desc: "Payment processing" },
-    { label: "Ledger", icon: BookOpen, path: "/fi-portal/ledger", desc: "Chart of accounts" },
+    { label: "Accounts", icon: Wallet, path: "/fi-portal/accounts", desc: "Manage accounts", color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+    { label: "Branches", icon: MapPin, path: "/fi-portal/branches", desc: "Branch network", color: "text-fi-teal bg-fi-teal/10 border-fi-teal/20" },
+    { label: "Loans", icon: Banknote, path: "/fi-portal/loans", desc: "Lending products", color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
+    { label: "Savings", icon: PiggyBank, path: "/fi-portal/savings", desc: "Savings products", color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+    { label: "Customers", icon: Users, path: "/fi-portal/customers", desc: "KYC & compliance", color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
+    { label: "Transactions", icon: ArrowUpDown, path: "/fi-portal/transactions", desc: "Transaction history", color: "text-fi-indigo bg-fi-indigo/10 border-fi-indigo/20" },
+    { label: "Payments", icon: CreditCard, path: "/fi-portal/payments", desc: "Payment processing", color: "text-fi-rose bg-fi-rose/10 border-fi-rose/20" },
+    { label: "Ledger", icon: BookOpen, path: "/fi-portal/ledger", desc: "Chart of accounts", color: "text-fi-cyan bg-fi-cyan/10 border-fi-cyan/20" },
   ];
 
   return (
@@ -122,8 +122,8 @@ export default function FIPortal() {
       {/* Page Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-muted">
-            <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-fi-blue/10 border border-fi-blue/20">
+            <LayoutDashboard className="h-5 w-5 text-fi-blue" />
           </div>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">{institution?.institution_name}</h1>
@@ -143,8 +143,8 @@ export default function FIPortal() {
         <Card className="border-border/60">
           <CardHeader className="pb-3">
             <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted">
-                <Activity className="h-4 w-4 text-muted-foreground" />
+              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-fi-blue/10 border border-fi-blue/20">
+                <Activity className="h-4 w-4 text-fi-blue" />
               </div>
               <div>
                 <CardTitle className="text-sm font-semibold">Sandbox API Credentials</CardTitle>
@@ -178,10 +178,10 @@ export default function FIPortal() {
       {/* Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {[
-          { label: t('transactions'), value: metrics.totalTransactions.toLocaleString(), sub: "Last 30 days", icon: Activity },
-          { label: "Volume", value: `${metrics.totalVolume.toLocaleString()} XAF`, sub: "Total processed", icon: DollarSign },
-          { label: t('accounts'), value: metrics.activeAccounts.toLocaleString(), sub: "Active accounts", icon: Users },
-          { label: t('apiUsage'), value: metrics.apiCalls.toLocaleString(), sub: "API calls (30d)", icon: TrendingUp },
+          { label: t('transactions'), value: metrics.totalTransactions.toLocaleString(), sub: "Last 30 days", icon: Activity, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+          { label: "Volume", value: `${metrics.totalVolume.toLocaleString()} XAF`, sub: "Total processed", icon: DollarSign, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+          { label: t('accounts'), value: metrics.activeAccounts.toLocaleString(), sub: "Active accounts", icon: Users, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
+          { label: t('apiUsage'), value: metrics.apiCalls.toLocaleString(), sub: "API calls (30d)", icon: TrendingUp, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
         ].map((stat) => (
           <Card key={stat.label} className="border-border/60">
             <CardContent className="p-5">
@@ -191,8 +191,8 @@ export default function FIPortal() {
                   <p className="mt-2 text-2xl font-bold tracking-tight">{stat.value}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{stat.sub}</p>
                 </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-muted">
-                  <stat.icon className="h-4 w-4 text-muted-foreground" />
+                <div className={`flex h-9 w-9 items-center justify-center rounded-lg border ${stat.color}`}>
+                  <stat.icon className="h-4 w-4" />
                 </div>
               </div>
             </CardContent>
@@ -211,8 +211,8 @@ export default function FIPortal() {
               className="group flex flex-col gap-2 rounded-xl border border-border/60 bg-card p-4 hover:border-primary/30 hover:shadow-sm transition-all duration-200"
             >
               <div className="flex items-center justify-between">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted">
-                  <action.icon className="h-4 w-4 text-muted-foreground" />
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${action.color}`}>
+                  <action.icon className="h-4 w-4" />
                 </div>
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
               </div>
@@ -238,8 +238,8 @@ export default function FIPortal() {
             <Card className="border-border/60">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted">
-                    <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-green/10 border border-fi-green/20">
+                    <CheckCircle2 className="h-4 w-4 text-fi-green" />
                   </div>
                   <CardTitle className="text-sm font-semibold">System Status</CardTitle>
                 </div>
@@ -256,7 +256,7 @@ export default function FIPortal() {
                       <span className="text-xs text-muted-foreground">{item.label}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium">{item.value}</span>
-                        <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        <span className="h-1.5 w-1.5 rounded-full bg-fi-green" />
                       </div>
                     </div>
                   ))}
@@ -267,8 +267,8 @@ export default function FIPortal() {
             <Card className="border-border/60">
               <CardHeader className="pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-indigo/10 border border-fi-indigo/20">
+                    <Clock className="h-4 w-4 text-fi-indigo" />
                   </div>
                   <CardTitle className="text-sm font-semibold">Recent Activity</CardTitle>
                 </div>
@@ -276,14 +276,14 @@ export default function FIPortal() {
               <CardContent>
                 <div className="space-y-2.5">
                   {[
-                    { label: "New account opened", time: "2 min ago", icon: Wallet },
-                    { label: "Loan application received", time: "15 min ago", icon: Banknote },
-                    { label: "Payment processed", time: "1 hr ago", icon: CreditCard },
-                    { label: "KYC verification completed", time: "2 hrs ago", icon: Shield },
+                    { label: "New account opened", time: "2 min ago", icon: Wallet, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+                    { label: "Loan application received", time: "15 min ago", icon: Banknote, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
+                    { label: "Payment processed", time: "1 hr ago", icon: CreditCard, color: "text-fi-rose bg-fi-rose/10 border-fi-rose/20" },
+                    { label: "KYC verification completed", time: "2 hrs ago", icon: Shield, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-3 py-1.5 border-b border-border/40 last:border-0">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-md border border-border bg-muted">
-                        <item.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <div className={`flex h-7 w-7 items-center justify-center rounded-md border ${item.color}`}>
+                        <item.icon className="h-3.5 w-3.5" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-xs font-medium truncate">{item.label}</p>
@@ -302,8 +302,8 @@ export default function FIPortal() {
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted">
-                  <Receipt className="h-4 w-4 text-muted-foreground" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-amber/10 border border-fi-amber/20">
+                  <Receipt className="h-4 w-4 text-fi-amber" />
                 </div>
                 <div>
                   <CardTitle className="text-sm font-semibold">Transaction Fees & Billing</CardTitle>
@@ -321,8 +321,8 @@ export default function FIPortal() {
           <Card className="border-border/60">
             <CardHeader className="pb-3">
               <div className="flex items-center gap-2.5">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted">
-                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-teal/10 border border-fi-teal/20">
+                  <TrendingUp className="h-4 w-4 text-fi-teal" />
                 </div>
                 <div>
                   <CardTitle className="text-sm font-semibold">Credit Scoring API</CardTitle>

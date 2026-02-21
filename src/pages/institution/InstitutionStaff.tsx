@@ -70,7 +70,7 @@ export default function InstitutionStaff() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted"><Users className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-indigo/10 border border-fi-indigo/20"><Users className="h-5 w-5 text-fi-indigo" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Staff Management</h1>
             <p className="text-xs text-muted-foreground">Manage staff assignments across branches</p>
@@ -111,14 +111,14 @@ export default function InstitutionStaff() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: "Total Staff", value: staff.length, icon: Users },
-          { label: "Active", value: staff.filter(s => s.is_active).length, icon: Briefcase },
-          { label: "Departments", value: new Set(staff.map(s => s.department).filter(Boolean)).size, icon: Users },
+          { label: "Total Staff", value: staff.length, icon: Users, color: "text-fi-indigo bg-fi-indigo/10 border-fi-indigo/20" },
+          { label: "Active", value: staff.filter(s => s.is_active).length, icon: Briefcase, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+          { label: "Departments", value: new Set(staff.map(s => s.department).filter(Boolean)).size, icon: Users, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
         ].map(s => (
           <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : s.value}</div></CardContent>
           </Card>

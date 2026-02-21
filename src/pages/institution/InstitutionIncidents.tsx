@@ -70,7 +70,7 @@ export default function InstitutionIncidents() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted"><ShieldAlert className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-rose/10 border border-fi-rose/20"><ShieldAlert className="h-5 w-5 text-fi-rose" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Incident Management</h1>
             <p className="text-xs text-muted-foreground">Track and resolve operational incidents</p>
@@ -119,14 +119,14 @@ export default function InstitutionIncidents() {
 
       <div className="grid gap-4 md:grid-cols-3">
         {[
-          { label: "Total Incidents", value: incidents.length, icon: ShieldAlert },
-          { label: "Open / Investigating", value: open, icon: Clock },
-          { label: "Critical", value: critical, icon: AlertTriangle },
+          { label: "Total Incidents", value: incidents.length, icon: ShieldAlert, color: "text-fi-rose bg-fi-rose/10 border-fi-rose/20" },
+          { label: "Open / Investigating", value: open, icon: Clock, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
+          { label: "Critical", value: critical, icon: AlertTriangle, color: "text-fi-red bg-fi-red/10 border-fi-red/20" },
         ].map(s => (
           <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : s.value}</div></CardContent>
           </Card>

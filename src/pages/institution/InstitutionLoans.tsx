@@ -51,7 +51,7 @@ export default function InstitutionLoans() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-muted"><Banknote className="h-5 w-5 text-muted-foreground" /></div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-amber/10 border border-fi-amber/20"><Banknote className="h-5 w-5 text-fi-amber" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Loans</h1>
             <p className="text-xs text-muted-foreground">Manage loan products, applications, and repayments</p>
@@ -62,15 +62,15 @@ export default function InstitutionLoans() {
 
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          { label: "Products", value: products.length, icon: Banknote },
-          { label: "Applications", value: applications.length, icon: FileText },
-          { label: "Active Loans", value: applications.filter(a => a.status === 'disbursed').length, icon: CreditCard },
-          { label: "Repayments", value: repayments.length, icon: Calendar },
+          { label: "Products", value: products.length, icon: Banknote, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
+          { label: "Applications", value: applications.length, icon: FileText, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+          { label: "Active Loans", value: applications.filter(a => a.status === 'disbursed').length, icon: CreditCard, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+          { label: "Repayments", value: repayments.length, icon: Calendar, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
         ].map(s => (
           <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-muted"><s.icon className="h-3.5 w-3.5 text-muted-foreground" /></div>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : s.value}</div></CardContent>
           </Card>

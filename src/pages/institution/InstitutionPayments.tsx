@@ -132,7 +132,7 @@ export default function InstitutionPayments() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Mobile Money</CardTitle>
-              <Smartphone className="h-4 w-4 text-muted-foreground" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-green/10 border border-fi-green/20"><Smartphone className="h-4 w-4 text-fi-green" /></div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{mobileMoneyTx.length}</div>
@@ -142,7 +142,7 @@ export default function InstitutionPayments() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Card Payments</CardTitle>
-              <CreditCard className="h-4 w-4 text-muted-foreground" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-rose/10 border border-fi-rose/20"><CreditCard className="h-4 w-4 text-fi-rose" /></div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{cardTx.length}</div>
@@ -152,7 +152,7 @@ export default function InstitutionPayments() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Bank Transfers</CardTitle>
-              <Building2 className="h-4 w-4 text-muted-foreground" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-blue/10 border border-fi-blue/20"><Building2 className="h-4 w-4 text-fi-blue" /></div>
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{bankTx.length}</div>

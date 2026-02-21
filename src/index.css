@@ -72,6 +72,20 @@ All colors MUST be HSL.
     --crediq-fair: 38 92% 50%; /* 580-669: Orange */
     --crediq-poor: 0 84% 60%; /* 300-579: Red */
     
+    /* FI Portal Page Accent Colors */
+    --fi-blue: 217 91% 55%;
+    --fi-green: 155 72% 40%;
+    --fi-amber: 38 92% 50%;
+    --fi-purple: 258 80% 58%;
+    --fi-teal: 172 66% 40%;
+    --fi-rose: 347 77% 50%;
+    --fi-indigo: 234 85% 56%;
+    --fi-emerald: 160 84% 39%;
+    --fi-orange: 25 95% 53%;
+    --fi-cyan: 192 91% 36%;
+    --fi-slate: 215 20% 50%;
+    --fi-red: 0 72% 51%;
+
     /* PostiQ Colors (postiq.cam theme) */
     --postiq-red: 4 91% 58%; /* #EF4444 - what3words comparison */
     --postiq-blue: 217 91% 60%; /* #3B82F6 - PostiQ Code */
