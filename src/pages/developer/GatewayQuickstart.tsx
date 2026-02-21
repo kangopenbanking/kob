@@ -53,7 +53,39 @@ Idempotency-Key: unique-key-123
     </Card>
 
     <Card>
-      <CardHeader><CardTitle>4. Set Up Webhooks</CardTitle></CardHeader>
+      <CardHeader><CardTitle>4. Verify the Charge</CardTitle></CardHeader>
+      <CardContent>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`POST /v1/gateway/charges/{chargeId}/verify
+
+// Response
+{
+  "id": "chg_uuid",
+  "status": "successful",
+  "provider": "flutterwave",
+  "verified_at": "2026-02-21T10:05:00Z"
+}`}</code></pre>
+        <p className="mt-3 text-muted-foreground">Polls the provider (Flutterwave/Stripe) for real-time status and syncs the canonical charge record.</p>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader><CardTitle>5. Preview Fees (Optional)</CardTitle></CardHeader>
+      <CardContent>
+        <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm"><code>{`GET /v1/gateway/fee-estimate?amount=5000&channel=mobile_money&currency=XAF
+
+// Response
+{
+  "amount": 5000,
+  "fee_amount": 200,
+  "net_amount": 4800,
+  "fee_percentage": "3%",
+  "fixed_fee": 50
+}`}</code></pre>
+      </CardContent>
+    </Card>
+
+    <Card>
+      <CardHeader><CardTitle>6. Set Up Webhooks</CardTitle></CardHeader>
       <CardContent>
         <p className="text-muted-foreground">Configure your merchant's <code>webhook_url</code> to receive events like <code>charge.successful</code>, <code>payout.completed</code>, and <code>dispute.created</code>. All events are HMAC-SHA256 signed.</p>
       </CardContent>
