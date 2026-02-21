@@ -49,7 +49,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </Link>
           </div>
 
-          <SidebarContent>
+          <SidebarContent className="scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {adminNavigation.map((section) => (
               <SidebarGroup key={section.title}>
                 <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
