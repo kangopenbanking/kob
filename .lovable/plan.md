@@ -1,74 +1,150 @@
 
 
-# Fix 19 USING(true) / WITH CHECK(true) RLS Policy Warnings
+# Staff Role-Based Access Control for FI Portal
 
-## Problem
+## Overview
 
-The database linter found 19 policies on non-SELECT operations that use `USING(true)` or `WITH CHECK(true)`, making them overly permissive. These fall into three categories:
+This plan adds a **staff access role system** to the FI Portal, allowing institution owners and admins to assign granular portal section access to staff members (e.g., a teller can only see Accounts and Transactions, while a branch manager can see everything in their branch). It also includes end-to-end testing of the institution and developer registration flows.
 
-## Analysis of All 19 Policies
+---
 
-### Category 1: Service-role policies (redundant -- service_role bypasses RLS)
-These can simply be **dropped** since the `service_role` always bypasses RLS:
+## Part 1: Staff Role & Access Control System
 
-| Table | Policy Name | Operation |
-|---|---|---|
-| `audit_logs` | "Only service role can insert audit logs" | INSERT |
-| `captcha_challenges` | "Service role can manage captcha challenges" | ALL |
-| `captcha_challenges` | "Service role only access" | ALL |
-| `woocommerce_transactions` | "Service role manages transactions" | ALL |
+### 1.1 Database Changes
 
-### Category 2: Public-role policies that should require `service_role` auth
-These are called by edge functions but incorrectly grant access to the anonymous/public role. Fix: replace `WITH CHECK (true)` with `WITH CHECK (auth.role() = 'service_role')`:
+**New table: `staff_portal_permissions`**
 
-| Table | Policy Name | Operation |
-|---|---|---|
-| `api_health_metrics` | "Service role can insert health metrics" | INSERT |
-| `communication_logs` | "System can insert communication logs" | INSERT |
-| `credit_api_usage_logs` | "System can create usage logs" | INSERT |
-| `credit_inquiries` | "System can create inquiries" | INSERT |
-| `credit_monitoring_alerts` | "System can create alerts" | INSERT |
-| `credit_reports` | "System can create credit reports" | INSERT |
-| `credit_score_history` | "System can create history" | INSERT |
-| `credit_scores` | "System can create credit scores" | INSERT |
-| `credit_scores` | "System can update credit scores" | UPDATE |
-| `external_credit_data_cache` | "System can manage cache" | ALL |
-| `idempotency_keys` | "Service role full access on idempotency_keys" | ALL |
-| `sca_challenges` | "System can create SCA challenges" | INSERT |
-| `security_audit_logs` | "System can insert audit logs" | INSERT |
-| `suspicious_activities` | "System can insert suspicious activities" | INSERT |
-| `system_health_checks` | "System can insert health checks" | INSERT |
-| `webhook_inbox` | "Service role full access on webhook_inbox" | ALL |
+Stores which FI Portal sections each staff member can access.
 
-### Category 3: Legitimate public INSERT (keep but tighten)
-| Table | Policy Name | Fix |
-|---|---|---|
-| `api_demo_logs` | "Anyone can log api demo usage" | Keep -- this is intentionally public for demo API |
-| `enterprise_leads` | "Anyone can submit enterprise leads" | Keep -- public lead form |
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid (PK) | Auto-generated |
+| staff_assignment_id | uuid (FK -> staff_assignments) | Links to the staff member |
+| section_key | text | Portal section identifier (e.g., `accounts`, `branches`, `loans`) |
+| can_view | boolean | Read access |
+| can_manage | boolean | Write/edit access |
+| granted_by | uuid | User who granted the permission |
+| granted_at | timestamptz | When granted |
 
-### Category 4: Authenticated but too broad
-| Table | Policy Name | Fix |
-|---|---|---|
-| `consent_events` | "Service role can insert consent events" | Restrict to `auth.role() = 'service_role'` |
+**New app_role enum value: `staff`**
 
-## Migration SQL
+Add `staff` to the `app_role` enum so staff members can log in and be routed to the FI Portal with restricted access.
 
-A single migration will:
+**New security definer function: `get_staff_portal_sections`**
 
-1. **DROP** 4 redundant service_role policies (Category 1)
-2. **DROP and RECREATE** 16 public-role policies with `auth.role() = 'service_role'` check (Category 2 + 4)
-3. **Leave** 2 intentionally-public policies unchanged but mark as accepted (Category 3)
+Returns the list of section_keys a staff user is allowed to access for their institution.
 
-This reduces warnings from 19 to 2 (the two intentionally public insert tables).
+**RLS Policies on `staff_portal_permissions`:**
+- Institution owners and admins can SELECT/INSERT/UPDATE/DELETE
+- Staff members can SELECT their own permissions
+
+### 1.2 Frontend Changes
+
+**A. Update `InstitutionStaff.tsx` - Staff Assignment Dialog**
+- Add a multi-select checklist of portal sections when assigning staff
+- Section options: `dashboard`, `analytics`, `accounts`, `customer-onboarding`, `branches`, `loans`, `savings`, `customers`, `transactions`, `payments`, `settlement`, `beneficiaries`, `ledger`, `billing`, `exchange-rates`, `staff`, `incidents`, `alerts`, `api-clients`, `webhooks`, `credit-api`, `woocommerce`, `consents`, `audit`, `compliance`, `regulatory`, `messaging`, `profile`, `team`, `settings`
+- Predefined role templates: Teller (accounts, transactions, customers), Branch Manager (all branch operations), Compliance Officer (regulatory, audit, compliance, incidents), Loan Officer (loans, customers, accounts)
+
+**B. Update `InstitutionLayout.tsx` - Sidebar Filtering**
+- Add a `useStaffPermissions` hook that:
+  1. Checks if the current user is the institution owner (full access)
+  2. If not, fetches their `staff_portal_permissions` and filters the sidebar navigation to only show permitted sections
+- Greyed-out or hidden menu items for sections without access
+- Redirect to dashboard if user navigates to a restricted section
+
+**C. Create `src/hooks/useStaffPermissions.ts`**
+- Fetches current user's staff assignment and portal permissions
+- Returns `{ isOwner, allowedSections, loading, canAccess(sectionKey) }`
+- Used by InstitutionLayout to filter navigation and by individual pages for access guards
+
+**D. Update `FIPortal.tsx` (Dashboard)**
+- Staff users see a filtered dashboard with only their permitted quick action cards
+- Metrics cards filtered based on section access
+
+### 1.3 Edge Function: `staff-assign`
+
+A secure edge function that:
+1. Validates the caller is the institution owner or admin
+2. Creates the staff_assignment record
+3. Assigns the `staff` role to the user via `user_roles`
+4. Creates `staff_portal_permissions` entries based on selected sections
+5. Logs an audit event
+
+This replaces the current client-side direct insert to properly handle the `staff` role assignment (which requires service role access).
+
+---
+
+## Part 2: End-to-End Registration Testing
+
+### 2.1 Institution Registration Flow
+Test the complete flow:
+1. Sign up a new user at `/auth`
+2. Navigate to `/register`
+3. Select institution type (Bank)
+4. Fill all required fields (name, registration number, phone in `+237XXXXXXXXX` format, address)
+5. Submit and verify redirect to `/pending-approval`
+6. Verify database records: `institutions` (status=pending), `user_roles` (role=institution), `audit_logs`
+
+### 2.2 Developer Registration Flow
+Test the complete flow:
+1. Sign up a new user at `/auth`
+2. Navigate to `/register`
+3. Select "Developer / Third Party"
+4. Fill all required fields
+5. Submit and verify redirect to `/pending-approval`
+6. Verify database records
+
+### 2.3 Staff Access Flow (Post-Implementation)
+1. Log in as institution owner
+2. Navigate to Staff Management
+3. Assign a staff member with specific section permissions
+4. Log in as the staff member
+5. Verify sidebar shows only permitted sections
+6. Verify direct URL access to restricted sections is blocked
+
+---
 
 ## Technical Details
 
-- No code changes needed -- edge functions already use the service role key
-- No functional impact -- edge functions authenticate as `service_role` which matches the new check
-- The 2 remaining public INSERT policies (`api_demo_logs`, `enterprise_leads`) are intentional and acceptable
+### Migration SQL Summary
 
-## Files Modified
+```text
+-- Add 'staff' to app_role enum
+ALTER TYPE public.app_role ADD VALUE IF NOT EXISTS 'staff';
 
-- One new migration file in `supabase/migrations/`
-- No application code changes
+-- Create staff_portal_permissions table
+CREATE TABLE public.staff_portal_permissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  staff_assignment_id uuid REFERENCES staff_assignments(id) ON DELETE CASCADE,
+  section_key text NOT NULL,
+  can_view boolean DEFAULT true,
+  can_manage boolean DEFAULT false,
+  granted_by uuid,
+  granted_at timestamptz DEFAULT now(),
+  UNIQUE(staff_assignment_id, section_key)
+);
+
+-- Enable RLS + policies
+-- Security definer function for fetching staff sections
+```
+
+### Files to Create
+- `src/hooks/useStaffPermissions.ts` - Staff permission hook
+- `supabase/functions/staff-assign/index.ts` - Secure staff assignment edge function
+
+### Files to Modify
+- `src/pages/institution/InstitutionStaff.tsx` - Add section permission UI to assignment dialog
+- `src/components/institution/InstitutionLayout.tsx` - Filter sidebar based on staff permissions
+- `src/pages/FIPortal.tsx` - Filter quick actions for staff users
+- Each institution sub-page - Add access guard using `useStaffPermissions`
+
+### Predefined Role Templates
+
+| Template | Sections |
+|----------|----------|
+| Teller | accounts, transactions, customers, payments |
+| Branch Manager | dashboard, accounts, customer-onboarding, branches, loans, savings, customers, transactions, payments, staff, incidents |
+| Compliance Officer | dashboard, regulatory, audit, compliance, incidents, customers, consents |
+| Loan Officer | dashboard, loans, customers, accounts, ledger |
+| IT / API Manager | dashboard, api-clients, webhooks, credit-api, woocommerce, settings |
 
