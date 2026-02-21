@@ -6,6 +6,22 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.1.0",
+      date: "2026-02-21",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Payment Links API — shareable no-code checkout URLs with slug-based lookup" },
+        { type: "feature", description: "Subscriptions API — payment plans with automated cron-based recurring billing" },
+        { type: "feature", description: "Split Payments — marketplace subaccounts with percentage/flat split distribution" },
+        { type: "feature", description: "Customer Tokenization — save payment methods and charge tokens for one-click checkout" },
+        { type: "feature", description: "Charge Events timeline — granular lifecycle tracking for every charge" },
+        { type: "feature", description: "Multi-currency FX support — real-time exchange rates for cross-currency settlements" },
+        { type: "improvement", description: "Enhanced gateway-create-charge with payment_link_id, subaccounts, and settlement_currency" },
+        { type: "improvement", description: "OpenAPI spec updated to v2.1.0 with 5 new tag domains and 12 new endpoints" },
+        { type: "improvement", description: "Postman collection expanded with 15 new requests for all gateway features" },
+      ]
+    },
+    {
       version: "2.0.0",
       date: "2026-02-16",
       type: "major",

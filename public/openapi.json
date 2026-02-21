@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "2.0.0",
-    "description": "COBAC-compliant Open Banking API for Cameroon and the CEMAC region. Enables account information (AISP), payment initiation (PISP), refunds, credit scoring, mobile money integration (MTN, Orange), virtual cards, settlements, disputes, transaction exports, risk management, audit trails, and ISO 20022 messaging. Full dynamic specification available at the x-full-spec-url below.",
+    "version": "2.1.0",
+    "description": "COBAC-compliant Open Banking API for Cameroon and the CEMAC region. Enables account information (AISP), payment initiation (PISP), refunds, credit scoring, mobile money integration (MTN, Orange), virtual cards, settlements, disputes, transaction exports, risk management, audit trails, ISO 20022 messaging, payment links, recurring subscriptions, split payments, customer tokenization, and charge event timelines. Full dynamic specification available at the x-full-spec-url below.",
     "x-full-spec-url": "https://api.kangopenbanking.com/functions/v1/public-api-spec",
     "contact": {
       "name": "Kang Open Banking Developer Support",
@@ -418,6 +418,271 @@
           "201": { "description": "API client created" }
         }
       }
+    },
+    "/gateway/payment-links": {
+      "post": {
+        "summary": "Create Payment Link",
+        "operationId": "createPaymentLink",
+        "tags": ["Payment Links"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": { "type": "string", "format": "uuid" },
+                  "title": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "currency": { "type": "string", "default": "XAF" },
+                  "description": { "type": "string" },
+                  "redirect_url": { "type": "string", "format": "uri" },
+                  "max_uses": { "type": "integer" },
+                  "expires_at": { "type": "string", "format": "date-time" }
+                },
+                "required": ["merchant_id", "title", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment link created" }
+        }
+      },
+      "get": {
+        "summary": "List Payment Links",
+        "operationId": "listPaymentLinks",
+        "tags": ["Payment Links"],
+        "parameters": [
+          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of payment links" }
+        }
+      }
+    },
+    "/gateway/payment-links/{slug}": {
+      "get": {
+        "summary": "Get Payment Link",
+        "operationId": "getPaymentLink",
+        "tags": ["Payment Links"],
+        "security": [],
+        "parameters": [
+          { "name": "slug", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Payment link details" }
+        }
+      }
+    },
+    "/gateway/payment-plans": {
+      "post": {
+        "summary": "Create Payment Plan",
+        "operationId": "createPaymentPlan",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": { "type": "string", "format": "uuid" },
+                  "name": { "type": "string" },
+                  "amount": { "type": "number" },
+                  "currency": { "type": "string", "default": "XAF" },
+                  "interval": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
+                  "interval_count": { "type": "integer", "default": 1 },
+                  "duration": { "type": "integer" }
+                },
+                "required": ["merchant_id", "name", "amount"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Payment plan created" }
+        }
+      }
+    },
+    "/gateway/subscriptions": {
+      "post": {
+        "summary": "Create Subscription",
+        "operationId": "createSubscription",
+        "tags": ["Subscriptions"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": { "type": "string", "format": "uuid" },
+                  "plan_id": { "type": "string", "format": "uuid" },
+                  "customer_email": { "type": "string", "format": "email" },
+                  "customer_phone": { "type": "string" },
+                  "customer_name": { "type": "string" }
+                },
+                "required": ["merchant_id", "plan_id", "customer_email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Subscription created" }
+        }
+      }
+    },
+    "/gateway/subscriptions/cancel": {
+      "post": {
+        "summary": "Cancel Subscription",
+        "operationId": "cancelSubscription",
+        "tags": ["Subscriptions"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "subscription_id": { "type": "string", "format": "uuid" },
+                  "reason": { "type": "string" }
+                },
+                "required": ["subscription_id"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Subscription cancelled" }
+        }
+      }
+    },
+    "/gateway/subaccounts": {
+      "post": {
+        "summary": "Create Subaccount",
+        "operationId": "createSubaccount",
+        "tags": ["Split Payments"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": { "type": "string", "format": "uuid" },
+                  "subaccount_name": { "type": "string" },
+                  "settlement_bank": { "type": "string" },
+                  "account_number": { "type": "string" },
+                  "split_type": { "type": "string", "enum": ["percentage", "flat"] },
+                  "split_value": { "type": "number" }
+                },
+                "required": ["merchant_id", "subaccount_name", "split_value"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Subaccount created" }
+        }
+      },
+      "get": {
+        "summary": "List Subaccounts",
+        "operationId": "listSubaccounts",
+        "tags": ["Split Payments"],
+        "parameters": [
+          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of subaccounts" }
+        }
+      }
+    },
+    "/gateway/customers": {
+      "post": {
+        "summary": "Create Customer",
+        "operationId": "createCustomer",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": { "type": "string", "format": "uuid" },
+                  "email": { "type": "string", "format": "email" },
+                  "name": { "type": "string" },
+                  "phone": { "type": "string" }
+                },
+                "required": ["merchant_id", "email"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Customer created" }
+        }
+      }
+    },
+    "/gateway/charges/token": {
+      "post": {
+        "summary": "Charge Saved Token",
+        "operationId": "chargeToken",
+        "tags": ["Tokenization"],
+        "parameters": [
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "merchant_id": { "type": "string", "format": "uuid" },
+                  "token_id": { "type": "string", "format": "uuid" },
+                  "amount": { "type": "number" },
+                  "currency": { "type": "string", "default": "XAF" },
+                  "tx_ref": { "type": "string" }
+                },
+                "required": ["merchant_id", "token_id", "amount", "tx_ref"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Token charge result" }
+        }
+      }
+    },
+    "/gateway/charges/{chargeId}/events": {
+      "get": {
+        "summary": "Get Charge Events",
+        "operationId": "getChargeEvents",
+        "tags": ["Charge Events"],
+        "parameters": [
+          { "name": "chargeId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Charge event timeline" }
+        }
+      }
     }
   },
   "components": {
@@ -465,6 +730,11 @@
     { "name": "Exports", "description": "Transaction data exports in CSV, JSON, PDF" },
     { "name": "Credit Scoring", "description": "Credit score queries and reports" },
     { "name": "Risk & Operations", "description": "Risk rules, transaction limits, and audit trails" },
-    { "name": "Admin", "description": "Platform administration endpoints" }
+    { "name": "Admin", "description": "Platform administration endpoints" },
+    { "name": "Payment Links", "description": "No-code shareable payment links with hosted checkout" },
+    { "name": "Subscriptions", "description": "Recurring billing plans and customer subscriptions" },
+    { "name": "Split Payments", "description": "Marketplace subaccounts and charge split distribution" },
+    { "name": "Tokenization", "description": "Customer profiles and saved payment method tokens" },
+    { "name": "Charge Events", "description": "Granular charge lifecycle event timeline" }
   ]
 }
