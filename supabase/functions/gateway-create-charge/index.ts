@@ -24,7 +24,10 @@ serve(async (req) => {
     if (authError || !user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const body = await req.json();
-    const { merchant_id, amount, currency = 'XAF', channel, customer_email, customer_phone, customer_name, tx_ref, metadata } = body;
+    const {
+      merchant_id, amount, currency = 'XAF', channel, customer_email, customer_phone, customer_name,
+      tx_ref, metadata, payment_link_id, subaccounts, settlement_currency,
+    } = body;
 
     if (!merchant_id || !amount || !channel || !tx_ref) {
       return new Response(JSON.stringify({ error: 'missing_fields', message: 'merchant_id, amount, channel, tx_ref are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -35,12 +38,10 @@ serve(async (req) => {
     if (!merchant) return new Response(JSON.stringify({ error: 'merchant_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     // ─── Limit & Velocity Checks ───
-    // Single charge limit
     if (merchant.single_charge_limit && amount > merchant.single_charge_limit) {
       return new Response(JSON.stringify({ error: 'limit_exceeded', message: `Amount exceeds single charge limit of ${merchant.single_charge_limit}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Daily charge limit
     if (merchant.daily_charge_limit) {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
       const { data: dailyCharges } = await supabase.from('gateway_charges').select('amount').eq('merchant_id', merchant_id).gte('created_at', todayStart.toISOString()).in('status', ['pending', 'processing', 'successful']);
@@ -50,7 +51,6 @@ serve(async (req) => {
       }
     }
 
-    // Velocity check (max charges in time window)
     if (merchant.velocity_max_charges && merchant.velocity_window_minutes) {
       const windowStart = new Date(Date.now() - merchant.velocity_window_minutes * 60 * 1000).toISOString();
       const { count } = await supabase.from('gateway_charges').select('id', { count: 'exact', head: true }).eq('merchant_id', merchant_id).gte('created_at', windowStart);
@@ -66,8 +66,32 @@ serve(async (req) => {
       if (existing) return new Response(JSON.stringify(existing), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' } });
     }
 
+    // Payment link validation
+    if (payment_link_id) {
+      const { data: link } = await supabase.from('gateway_payment_links').select('*').eq('id', payment_link_id).eq('merchant_id', merchant_id).single();
+      if (!link) return new Response(JSON.stringify({ error: 'payment_link_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (link.status !== 'active') return new Response(JSON.stringify({ error: 'payment_link_inactive' }), { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (link.expires_at && new Date(link.expires_at) < new Date()) return new Response(JSON.stringify({ error: 'payment_link_expired' }), { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (link.max_uses && link.use_count >= link.max_uses) return new Response(JSON.stringify({ error: 'payment_link_exhausted' }), { status: 410, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+      // Increment use count
+      await supabase.from('gateway_payment_links').update({ use_count: link.use_count + 1 }).eq('id', payment_link_id);
+    }
+
     // Fee calculation
     const { fee, net } = calculateGatewayFee(amount, channel);
+
+    // FX rate for settlement currency
+    let exchangeRate = null;
+    let settledAmount = null;
+    if (settlement_currency && settlement_currency !== currency) {
+      try {
+        const fxRes = await fetch(`https://api.frankfurter.app/latest?from=${currency}&to=${settlement_currency}`);
+        const fxData = await fxRes.json();
+        exchangeRate = fxData.rates?.[settlement_currency];
+        if (exchangeRate) settledAmount = Math.round(net * exchangeRate * 100) / 100;
+      } catch { /* FX lookup failed, proceed without */ }
+    }
 
     // Determine provider
     const provider = channel === 'card' ? 'stripe' : 'flutterwave';
@@ -78,9 +102,19 @@ serve(async (req) => {
       customer_email, customer_phone, customer_name, tx_ref,
       fee_amount: fee, net_amount: net, metadata: metadata || {},
       idempotency_key: idempotencyKey,
+      payment_link_id: payment_link_id || null,
+      settlement_currency: settlement_currency || null,
+      exchange_rate: exchangeRate,
+      settled_amount: settledAmount,
     }).select().single();
 
     if (insertErr) throw insertErr;
+
+    // Charge event: created
+    await supabase.from('gateway_charge_events').insert({
+      charge_id: charge.id, event_type: 'charge.created',
+      details: { channel, amount, currency, provider, payment_link_id, settlement_currency },
+    }).then(() => {}).catch(() => {});
 
     // Call provider
     let providerResult;
@@ -99,17 +133,49 @@ serve(async (req) => {
 
       charge.status = providerResult.status;
       charge.provider_ref = providerResult.provider_ref;
+
+      // Charge event: provider responded
+      await supabase.from('gateway_charge_events').insert({
+        charge_id: charge.id, event_type: `charge.${providerResult.status}`,
+        details: { provider_ref: providerResult.provider_ref },
+      }).then(() => {}).catch(() => {});
     } catch (providerErr) {
       await supabase.from('gateway_charges').update({ status: 'failed', failure_reason: providerErr.message }).eq('id', charge.id);
       charge.status = 'failed';
       charge.failure_reason = providerErr.message;
+
+      await supabase.from('gateway_charge_events').insert({
+        charge_id: charge.id, event_type: 'charge.failed',
+        details: { error: providerErr.message },
+      }).then(() => {}).catch(() => {});
+    }
+
+    // ─── Split Payments ───
+    if (subaccounts && Array.isArray(subaccounts) && subaccounts.length > 0) {
+      for (const split of subaccounts) {
+        const { data: subaccount } = await supabase.from('gateway_subaccounts').select('*').eq('id', split.subaccount_id).eq('merchant_id', merchant_id).eq('is_active', true).single();
+        if (!subaccount) continue;
+
+        let splitAmount = 0;
+        if (subaccount.split_type === 'percentage') {
+          splitAmount = Math.round(net * subaccount.split_value / 100);
+        } else {
+          splitAmount = Math.min(subaccount.split_value, net);
+        }
+
+        await supabase.from('gateway_charge_splits').insert({
+          charge_id: charge.id, subaccount_id: subaccount.id,
+          split_type: subaccount.split_type, split_value: subaccount.split_value,
+          split_amount: splitAmount,
+        }).then(() => {}).catch(() => {});
+      }
     }
 
     // Audit trail
     await supabase.from('audit_logs').insert({
       action_type: 'gateway_charge_created', entity_type: 'gateway_charge', entity_id: charge.id,
-      performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref },
-    }).then(() => {}).catch(() => {}); // fire-and-forget
+      performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref, payment_link_id, settlement_currency },
+    }).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
