@@ -40,6 +40,7 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
 
 const institutionNavigation = [
   {
@@ -120,34 +121,41 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
   const location = useLocation();
 
   const isActivePath = (path: string) => {
-    return location.pathname === path;
+    if (path === "/fi-portal") return location.pathname === path;
+    return location.pathname.startsWith(path);
   };
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="border-r">
-          <div className="p-4 border-b">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="w-full justify-start"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back
-            </Button>
+      <div className="min-h-screen flex w-full bg-muted/30">
+        <Sidebar className="border-r border-border/60">
+          <div className="p-4 border-b border-border/60">
+            <div className="flex items-center gap-3 px-1">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                <Building2 className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold truncate">FI Portal</p>
+                <p className="text-[11px] text-sidebar-foreground/60">Banking Admin</p>
+              </div>
+            </div>
           </div>
 
-          <SidebarContent>
-            {institutionNavigation.map((section) => (
+          <SidebarContent className="px-2 py-2">
+            {institutionNavigation.map((section, idx) => (
               <SidebarGroup key={section.title}>
-                <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
+                <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-3 py-2">
+                  {section.title}
+                </SidebarGroupLabel>
                 <SidebarGroupContent>
                   <SidebarMenu>
                     {section.items.map((item) => (
                       <SidebarMenuItem key={item.path}>
-                        <SidebarMenuButton asChild isActive={isActivePath(item.path)}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={isActivePath(item.path)}
+                          className="h-9 rounded-md text-[13px] font-medium"
+                        >
                           <Link to={item.path}>
                             <item.icon className="h-4 w-4" />
                             <span>{item.title}</span>
@@ -160,11 +168,24 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
               </SidebarGroup>
             ))}
           </SidebarContent>
+
+          <div className="mt-auto border-t border-border/60 p-3">
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate(-1)}
+              className="w-full justify-start text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground"
+            >
+              <ArrowLeft className="mr-2 h-3.5 w-3.5" />
+              Back
+            </Button>
+          </div>
         </Sidebar>
 
-        <div className="flex-1 flex flex-col">
-          <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-background px-6">
+        <div className="flex-1 flex flex-col min-w-0">
+          <header className="sticky top-0 z-10 flex h-12 items-center gap-4 border-b border-border/60 bg-background/95 backdrop-blur-sm px-6">
             <SidebarTrigger />
+            <Separator orientation="vertical" className="h-5" />
             <div className="flex-1" />
           </header>
 
