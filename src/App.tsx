@@ -17,6 +17,7 @@ import Register from "./pages/Register";
 import IntegrationWorkflow from "./pages/IntegrationWorkflow";
 import Pricing from "./pages/Pricing";
 import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
 import DeveloperHome from "./pages/developer/DeveloperHome";
 import GettingStarted from "./pages/developer/GettingStarted";
 import AispReference from "./pages/developer/AispReference";
@@ -194,19 +195,22 @@ function App() {
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<Layout><ProtectedRoute><BusinessKYBSubmission /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal" element={<Layout><ProtectedRoute><FIPortal /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/transactions" element={<Layout><ProtectedRoute><InstitutionTransactions /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/analytics" element={<Layout><ProtectedRoute><InstitutionAnalytics /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/api-clients" element={<Layout><ProtectedRoute><InstitutionApiClients /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/woocommerce" element={<Layout><ProtectedRoute><WooCommerceDashboard /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/settlement" element={<Layout><ProtectedRoute><InstitutionSettlement /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/payments" element={<Layout><ProtectedRoute><InstitutionPayments /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/webhooks" element={<Layout><ProtectedRoute><InstitutionWebhooks /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/credit-api" element={<Layout><ProtectedRoute><InstitutionCreditApi /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/compliance" element={<Layout><ProtectedRoute><InstitutionCompliance /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/profile" element={<Layout><ProtectedRoute><InstitutionProfile /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/team" element={<Layout><ProtectedRoute><InstitutionTeam /></ProtectedRoute></Layout>} />
-            <Route path="/fi-portal/settings" element={<Layout><ProtectedRoute><InstitutionSettings /></ProtectedRoute></Layout>} />
+            {/* Institution Portal Routes - Nested with InstitutionLayout */}
+            <Route path="/fi-portal" element={<ProtectedRoute><InstitutionLayout /></ProtectedRoute>}>
+              <Route index element={<FIPortal />} />
+              <Route path="transactions" element={<InstitutionTransactions />} />
+              <Route path="analytics" element={<InstitutionAnalytics />} />
+              <Route path="api-clients" element={<InstitutionApiClients />} />
+              <Route path="woocommerce" element={<WooCommerceDashboard />} />
+              <Route path="settlement" element={<InstitutionSettlement />} />
+              <Route path="payments" element={<InstitutionPayments />} />
+              <Route path="webhooks" element={<InstitutionWebhooks />} />
+              <Route path="credit-api" element={<InstitutionCreditApi />} />
+              <Route path="compliance" element={<InstitutionCompliance />} />
+              <Route path="profile" element={<InstitutionProfile />} />
+              <Route path="team" element={<InstitutionTeam />} />
+              <Route path="settings" element={<InstitutionSettings />} />
+            </Route>
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
             {/* Admin Routes - Nested with AdminLayout */}
