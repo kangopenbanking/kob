@@ -17,7 +17,7 @@ import Register from "./pages/Register";
 import IntegrationWorkflow from "./pages/IntegrationWorkflow";
 import Pricing from "./pages/Pricing";
 import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
-import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+import { InstitutionLayout } from "@/components/institution/InstitutionLayout"; // fi-portal sidebar
 import DeveloperHome from "./pages/developer/DeveloperHome";
 import GettingStarted from "./pages/developer/GettingStarted";
 import AispReference from "./pages/developer/AispReference";
