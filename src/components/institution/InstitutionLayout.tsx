@@ -18,7 +18,15 @@ import {
   ShoppingCart,
   Store,
   Shield,
-  UserCheck
+  UserCheck,
+  Wallet,
+  MapPin,
+  Banknote,
+  PiggyBank,
+  BookOpen,
+  Receipt,
+  KeyRound,
+  ScrollText
 } from "lucide-react";
 import {
   Sidebar,
@@ -42,11 +50,29 @@ const institutionNavigation = [
     ]
   },
   {
+    title: "Banking Operations",
+    items: [
+      { title: "Accounts", path: "/fi-portal/accounts", icon: Wallet },
+      { title: "Branches", path: "/fi-portal/branches", icon: MapPin },
+      { title: "Loans", path: "/fi-portal/loans", icon: Banknote },
+      { title: "Savings", path: "/fi-portal/savings", icon: PiggyBank },
+      { title: "Customers", path: "/fi-portal/customers", icon: UserCheck },
+    ]
+  },
+  {
     title: "Payments & Transactions",
     items: [
       { title: "Transactions", path: "/fi-portal/transactions", icon: ArrowUpDown },
       { title: "Payments", path: "/fi-portal/payments", icon: CreditCard },
       { title: "Settlement", path: "/fi-portal/settlement", icon: DollarSign },
+    ]
+  },
+  {
+    title: "Financial Management",
+    items: [
+      { title: "Beneficiaries", path: "/fi-portal/beneficiaries", icon: Users },
+      { title: "Ledger", path: "/fi-portal/ledger", icon: BookOpen },
+      { title: "Billing", path: "/fi-portal/billing", icon: Receipt },
     ]
   },
   {
@@ -67,8 +93,10 @@ const institutionNavigation = [
     ]
   },
   {
-    title: "Compliance",
+    title: "Governance",
     items: [
+      { title: "Consents", path: "/fi-portal/consents", icon: KeyRound },
+      { title: "Audit Trail", path: "/fi-portal/audit", icon: ScrollText },
       { title: "KYB Documents", path: "/business-kyb-submission", icon: FileText },
       { title: "Compliance", path: "/fi-portal/compliance", icon: Shield },
     ]
