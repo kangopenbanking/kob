@@ -60,16 +60,10 @@ export default function InstitutionCustomerOnboarding() {
     if (!reg.full_name || !reg.email) { toast({ title: "Name and email are required", variant: "destructive" }); return; }
     setSaving(true);
     try {
-      // Create profile directly (edge function would create auth user in production)
-      const tempId = crypto.randomUUID();
-      const { error } = await supabase.from("profiles").insert({
-        id: tempId,
-        full_name: reg.full_name,
-        email: reg.email,
-        phone_number: reg.phone || null,
-      });
-      if (error) throw error;
-      setCreatedUserId(tempId);
+      // Use the authenticated user's ID for all onboarding records
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      setCreatedUserId(user.id);
       toast({ title: "Customer registered" });
       setStep(1);
     } catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
@@ -103,9 +97,9 @@ export default function InstitutionCustomerOnboarding() {
         user_id: createdUserId,
         occupation: cdd.occupation || null,
         source_of_income: cdd.source_of_income || null,
-        annual_income: cdd.annual_income ? Number(cdd.annual_income) : null,
+        estimated_annual_income: cdd.annual_income ? Number(cdd.annual_income) : null,
         pep_status: cdd.pep_status,
-        expected_monthly_volume: cdd.expected_monthly_volume ? Number(cdd.expected_monthly_volume) : null,
+        expected_transaction_volume: cdd.expected_monthly_volume ? Number(cdd.expected_monthly_volume) : null,
         country_of_residence: cdd.country_of_residence || null,
         risk_category: cdd.pep_status ? "enhanced" : "standard",
       });
