@@ -21,7 +21,7 @@ export default function InstitutionStaff() {
   const [branches, setBranches] = useState<any[]>([]);
   const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full-time" });
+  const [form, setForm] = useState({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full_time" });
   const [saving, setSaving] = useState(false);
 
   useEffect(() => { loadData(); }, []);
@@ -60,7 +60,7 @@ export default function InstitutionStaff() {
       if (error) throw error;
       toast({ title: "Staff member assigned" });
       setDialogOpen(false);
-      setForm({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full-time" });
+      setForm({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full_time" });
       loadData();
     } catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
     finally { setSaving(false); }
@@ -95,8 +95,8 @@ export default function InstitutionStaff() {
                   <Select value={form.employment_type} onValueChange={v => setForm(f => ({...f, employment_type: v}))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="full-time">Full-time</SelectItem>
-                      <SelectItem value="part-time">Part-time</SelectItem>
+                      <SelectItem value="full_time">Full-time</SelectItem>
+                      <SelectItem value="part_time">Part-time</SelectItem>
                       <SelectItem value="contract">Contract</SelectItem>
                     </SelectContent>
                   </Select>
