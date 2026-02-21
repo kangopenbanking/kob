@@ -7504,6 +7504,44 @@ export type Database = {
           },
         ]
       }
+      staff_portal_permissions: {
+        Row: {
+          can_manage: boolean | null
+          can_view: boolean | null
+          granted_at: string | null
+          granted_by: string | null
+          id: string
+          section_key: string
+          staff_assignment_id: string
+        }
+        Insert: {
+          can_manage?: boolean | null
+          can_view?: boolean | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          section_key: string
+          staff_assignment_id: string
+        }
+        Update: {
+          can_manage?: boolean | null
+          can_view?: boolean | null
+          granted_at?: string | null
+          granted_by?: string | null
+          id?: string
+          section_key?: string
+          staff_assignment_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_portal_permissions_staff_assignment_id_fkey"
+            columns: ["staff_assignment_id"]
+            isOneToOne: false
+            referencedRelation: "staff_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       standing_orders: {
         Row: {
           account_id: string
@@ -9133,6 +9171,14 @@ export type Database = {
         }[]
       }
       get_staff_institution_id: { Args: { _user_id: string }; Returns: string }
+      get_staff_portal_sections: {
+        Args: { _user_id: string }
+        Returns: {
+          can_manage: boolean
+          can_view: boolean
+          section_key: string
+        }[]
+      }
       get_user_postiq_verification: {
         Args: { p_user_id: string }
         Returns: {
@@ -9159,6 +9205,10 @@ export type Database = {
       hash_ip_address: { Args: { ip_address: unknown }; Returns: string }
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
+        Returns: boolean
+      }
+      is_institution_owner: {
+        Args: { _institution_id: string; _user_id: string }
         Returns: boolean
       }
       is_institution_staff_admin: {
@@ -9245,7 +9295,7 @@ export type Database = {
       account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN"
       account_subtype: "Current" | "Savings" | "CreditCard" | "Loan"
       account_type: "Business" | "Personal"
-      app_role: "admin" | "institution" | "moderator" | "personal"
+      app_role: "admin" | "institution" | "moderator" | "personal" | "staff"
       card_funding_status:
         | "pending"
         | "processing"
@@ -9464,7 +9514,7 @@ export const Constants = {
       account_scheme: ["LOCAL_BANK", "MOMO", "IBAN"],
       account_subtype: ["Current", "Savings", "CreditCard", "Loan"],
       account_type: ["Business", "Personal"],
-      app_role: ["admin", "institution", "moderator", "personal"],
+      app_role: ["admin", "institution", "moderator", "personal", "staff"],
       card_funding_status: [
         "pending",
         "processing",

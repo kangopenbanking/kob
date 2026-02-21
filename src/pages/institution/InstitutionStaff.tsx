@@ -10,9 +10,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RefreshCw, Users, Plus, Briefcase } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { RefreshCw, Users, Plus, Briefcase, Shield } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { ALL_PORTAL_SECTIONS, ROLE_TEMPLATES } from "@/components/institution/navigation-config";
 
 export default function InstitutionStaff() {
   const navigate = useNavigate();
@@ -21,8 +25,11 @@ export default function InstitutionStaff() {
   const [branches, setBranches] = useState<any[]>([]);
   const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [form, setForm] = useState({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full_time" });
   const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({
+    user_id: "", position: "", department: "", branch_id: "", employment_type: "full_time",
+    role_template: "", sections: [] as string[],
+  });
 
   useEffect(() => { loadData(); }, []);
 
@@ -44,23 +51,47 @@ export default function InstitutionStaff() {
     finally { setLoading(false); }
   };
 
+  const handleTemplateChange = (template: string) => {
+    setForm(f => ({
+      ...f,
+      role_template: template,
+      sections: template && ROLE_TEMPLATES[template as keyof typeof ROLE_TEMPLATES]
+        ? ROLE_TEMPLATES[template as keyof typeof ROLE_TEMPLATES].sections
+        : f.sections,
+    }));
+  };
+
+  const toggleSection = (key: string) => {
+    setForm(f => ({
+      ...f,
+      role_template: '', // clear template when manually toggling
+      sections: f.sections.includes(key)
+        ? f.sections.filter(s => s !== key)
+        : [...f.sections, key],
+    }));
+  };
+
   const handleCreate = async () => {
     if (!institutionId || !form.user_id || !form.position) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("staff_assignments").insert({
-        institution_id: institutionId,
-        user_id: form.user_id,
-        position: form.position,
-        department: form.department || null,
-        branch_id: form.branch_id || null,
-        employment_type: form.employment_type,
-        start_date: new Date().toISOString(),
+      const { data, error } = await supabase.functions.invoke('staff-assign', {
+        body: {
+          user_id: form.user_id,
+          institution_id: institutionId,
+          branch_id: form.branch_id || null,
+          position: form.position,
+          department: form.department || null,
+          employment_type: form.employment_type,
+          role_template: form.role_template || undefined,
+          sections: form.role_template ? undefined : form.sections,
+        },
       });
       if (error) throw error;
-      toast({ title: "Staff member assigned" });
+      if (data?.error) throw new Error(data.error);
+      toast({ title: "Staff member assigned", description: `Granted access to ${data.sections?.length || 0} portal sections` });
       setDialogOpen(false);
-      setForm({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full_time" });
+      setForm({ user_id: "", position: "", department: "", branch_id: "", employment_type: "full_time", role_template: "", sections: [] });
       loadData();
     } catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
     finally { setSaving(false); }
@@ -73,36 +104,84 @@ export default function InstitutionStaff() {
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-indigo/10 border border-fi-indigo/20"><Users className="h-5 w-5 text-fi-indigo" /></div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Staff Management</h1>
-            <p className="text-xs text-muted-foreground">Manage staff assignments across branches</p>
+            <p className="text-xs text-muted-foreground">Manage staff assignments and portal access</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild><Button size="sm"><Plus className="h-3.5 w-3.5 mr-1.5" />Assign Staff</Button></DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-lg max-h-[90vh]">
               <DialogHeader><DialogTitle>Assign Staff Member</DialogTitle></DialogHeader>
-              <div className="space-y-4 pt-2">
-                <div><Label>User ID</Label><Input placeholder="User UUID" value={form.user_id} onChange={e => setForm(f => ({...f, user_id: e.target.value}))} /></div>
-                <div><Label>Position</Label><Input placeholder="e.g. Branch Manager" value={form.position} onChange={e => setForm(f => ({...f, position: e.target.value}))} /></div>
-                <div><Label>Department</Label><Input placeholder="e.g. Operations" value={form.department} onChange={e => setForm(f => ({...f, department: e.target.value}))} /></div>
-                <div><Label>Branch</Label>
-                  <Select value={form.branch_id} onValueChange={v => setForm(f => ({...f, branch_id: v}))}>
-                    <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
-                    <SelectContent>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.branch_name}</SelectItem>)}</SelectContent>
-                  </Select>
+              <ScrollArea className="max-h-[70vh] pr-4">
+                <div className="space-y-4 pt-2">
+                  <div><Label>User ID</Label><Input placeholder="User UUID" value={form.user_id} onChange={e => setForm(f => ({...f, user_id: e.target.value}))} /></div>
+                  <div><Label>Position</Label><Input placeholder="e.g. Branch Manager" value={form.position} onChange={e => setForm(f => ({...f, position: e.target.value}))} /></div>
+                  <div><Label>Department</Label><Input placeholder="e.g. Operations" value={form.department} onChange={e => setForm(f => ({...f, department: e.target.value}))} /></div>
+                  <div><Label>Branch</Label>
+                    <Select value={form.branch_id} onValueChange={v => setForm(f => ({...f, branch_id: v}))}>
+                      <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
+                      <SelectContent>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.branch_name}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                  <div><Label>Employment Type</Label>
+                    <Select value={form.employment_type} onValueChange={v => setForm(f => ({...f, employment_type: v}))}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="full_time">Full-time</SelectItem>
+                        <SelectItem value="part_time">Part-time</SelectItem>
+                        <SelectItem value="contract">Contract</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <div className="flex items-center gap-2 mb-3">
+                      <Shield className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-semibold">Portal Access Permissions</Label>
+                    </div>
+
+                    <div className="mb-3">
+                      <Label className="text-xs text-muted-foreground">Role Template</Label>
+                      <Select value={form.role_template} onValueChange={handleTemplateChange}>
+                        <SelectTrigger><SelectValue placeholder="Custom (select sections below)" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="custom">Custom</SelectItem>
+                          {Object.entries(ROLE_TEMPLATES).map(([key, tmpl]) => (
+                            <SelectItem key={key} value={key}>{tmpl.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      {ALL_PORTAL_SECTIONS.map(section => (
+                        <label
+                          key={section.key}
+                          className="flex items-center gap-2 rounded-md border border-border/60 px-3 py-2 text-xs cursor-pointer hover:bg-muted/50 transition-colors"
+                        >
+                          <Checkbox
+                            checked={form.sections.includes(section.key)}
+                            onCheckedChange={() => toggleSection(section.key)}
+                          />
+                          <span className="truncate">{section.label}</span>
+                        </label>
+                      ))}
+                    </div>
+
+                    {form.sections.length > 0 && (
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {form.sections.length} section{form.sections.length > 1 ? 's' : ''} selected
+                      </p>
+                    )}
+                  </div>
+
+                  <Button className="w-full" onClick={handleCreate} disabled={saving || !form.user_id || !form.position}>
+                    {saving ? "Assigning..." : "Assign Staff"}
+                  </Button>
                 </div>
-                <div><Label>Employment Type</Label>
-                  <Select value={form.employment_type} onValueChange={v => setForm(f => ({...f, employment_type: v}))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="full_time">Full-time</SelectItem>
-                      <SelectItem value="part_time">Part-time</SelectItem>
-                      <SelectItem value="contract">Contract</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <Button className="w-full" onClick={handleCreate} disabled={saving || !form.user_id || !form.position}>{saving ? "Assigning..." : "Assign Staff"}</Button>
-              </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
           <Button variant="outline" size="sm" onClick={loadData} disabled={loading}><RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />Refresh</Button>
