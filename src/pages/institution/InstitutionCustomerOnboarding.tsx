@@ -66,9 +66,7 @@ export default function InstitutionCustomerOnboarding() {
         id: tempId,
         full_name: reg.full_name,
         email: reg.email,
-        phone: reg.phone || null,
-        date_of_birth: reg.date_of_birth || null,
-        nationality: reg.nationality || null,
+        phone_number: reg.phone || null,
       });
       if (error) throw error;
       setCreatedUserId(tempId);
