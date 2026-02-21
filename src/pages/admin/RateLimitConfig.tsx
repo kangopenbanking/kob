@@ -65,13 +65,20 @@ export default function RateLimitConfig() {
 
   const updateRateLimit = useMutation({
     mutationFn: async (config: any) => {
-      // For now, just log the configuration
-      // In production, this would call an admin endpoint to update rate limits
-      console.log("Rate limit config:", config);
+      // Update the api_client's rate limit settings
+      const { error } = await supabase
+        .from("api_clients")
+        .update({
+          monthly_requests_limit: config.limit * Math.ceil((30 * 24 * 60) / config.window_minutes),
+          rate_limit_tier: `${config.limit}/${config.window_minutes}m`,
+        })
+        .eq("client_id", config.client_id);
+      if (error) throw error;
       return config;
     },
     onSuccess: () => {
-      toast({ title: "Rate limit configuration saved (demo mode)" });
+      queryClient.invalidateQueries({ queryKey: ["api-clients"] });
+      toast({ title: "Rate limit configuration saved" });
       setOpen(false);
     },
     onError: (error: any) => {

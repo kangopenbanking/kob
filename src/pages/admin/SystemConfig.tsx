@@ -12,7 +12,7 @@ import { Settings, Save, RefreshCw, Shield, Zap, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 
-interface SystemConfig {
+interface SystemConfigData {
   maintenance_mode: boolean;
   allow_new_registrations: boolean;
   max_api_rate_limit: number;
@@ -27,7 +27,7 @@ export default function SystemConfig() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [config, setConfig] = useState<SystemConfig>({
+  const [config, setConfig] = useState<SystemConfigData>({
     maintenance_mode: false,
     allow_new_registrations: true,
     max_api_rate_limit: 1000,
@@ -64,18 +64,35 @@ export default function SystemConfig() {
   const loadConfig = async () => {
     try {
       setLoading(true);
-      // In a real implementation, this would load from a system_config table
-      // For now, using default values
-      setConfig({
-        maintenance_mode: false,
-        allow_new_registrations: true,
-        max_api_rate_limit: 1000,
-        session_timeout_minutes: 60,
-        password_min_length: 8,
-        require_2fa: false,
-        email_notifications_enabled: true,
-        webhook_retry_attempts: 3
-      });
+      const { data, error } = await supabase
+        .from('system_config')
+        .select('key, value')
+        .in('key', [
+          'security.password_min_length',
+          'security.mfa_required',
+          'rate_limit.default',
+          'webhook.retry_attempts'
+        ]);
+
+      if (error) throw error;
+
+      if (data && data.length > 0) {
+        const configMap: Record<string, any> = {};
+        data.forEach((row: any) => {
+          configMap[row.key] = row.value;
+        });
+
+        setConfig(prev => ({
+          ...prev,
+          password_min_length: typeof configMap['security.password_min_length'] === 'number' 
+            ? configMap['security.password_min_length'] : prev.password_min_length,
+          require_2fa: configMap['security.mfa_required'] === true,
+          max_api_rate_limit: configMap['rate_limit.default']?.requests_per_minute 
+            ? configMap['rate_limit.default'].requests_per_minute * 60 : prev.max_api_rate_limit,
+          webhook_retry_attempts: typeof configMap['webhook.retry_attempts'] === 'number' 
+            ? configMap['webhook.retry_attempts'] : prev.webhook_retry_attempts,
+        }));
+      }
     } catch (error) {
       logger.error('Error loading config:', error);
       toast.error('Failed to load configuration');
@@ -87,8 +104,22 @@ export default function SystemConfig() {
   const saveConfig = async () => {
     try {
       setSaving(true);
-      // In a real implementation, this would save to a system_config table
-      logger.info('Saving system configuration:', config);
+      
+      const updates = [
+        { key: 'security.password_min_length', value: config.password_min_length, category: 'security' },
+        { key: 'security.mfa_required', value: config.require_2fa, category: 'security' },
+        { key: 'rate_limit.default', value: { requests_per_minute: Math.round(config.max_api_rate_limit / 60), burst_size: 100 }, category: 'security' },
+        { key: 'webhook.retry_attempts', value: config.webhook_retry_attempts, category: 'webhooks' },
+      ];
+
+      for (const update of updates) {
+        const { error } = await supabase
+          .from('system_config')
+          .update({ value: update.value, updated_at: new Date().toISOString() })
+          .eq('key', update.key);
+
+        if (error) throw error;
+      }
       
       toast.success('Configuration saved successfully');
     } catch (error) {
@@ -172,7 +203,7 @@ export default function SystemConfig() {
                 <Input
                   type="number"
                   value={config.session_timeout_minutes}
-                  onChange={(e) => setConfig({ ...config, session_timeout_minutes: parseInt(e.target.value) })}
+                  onChange={(e) => setConfig({ ...config, session_timeout_minutes: parseInt(e.target.value) || 60 })}
                 />
               </div>
             </CardContent>
@@ -191,7 +222,7 @@ export default function SystemConfig() {
                 <Input
                   type="number"
                   value={config.password_min_length}
-                  onChange={(e) => setConfig({ ...config, password_min_length: parseInt(e.target.value) })}
+                  onChange={(e) => setConfig({ ...config, password_min_length: parseInt(e.target.value) || 8 })}
                 />
               </div>
 
@@ -223,7 +254,7 @@ export default function SystemConfig() {
                 <Input
                   type="number"
                   value={config.max_api_rate_limit}
-                  onChange={(e) => setConfig({ ...config, max_api_rate_limit: parseInt(e.target.value) })}
+                  onChange={(e) => setConfig({ ...config, max_api_rate_limit: parseInt(e.target.value) || 1000 })}
                 />
               </div>
 
@@ -232,7 +263,7 @@ export default function SystemConfig() {
                 <Input
                   type="number"
                   value={config.webhook_retry_attempts}
-                  onChange={(e) => setConfig({ ...config, webhook_retry_attempts: parseInt(e.target.value) })}
+                  onChange={(e) => setConfig({ ...config, webhook_retry_attempts: parseInt(e.target.value) || 3 })}
                 />
               </div>
             </CardContent>
@@ -275,9 +306,9 @@ export default function SystemConfig() {
               <Save className="h-4 w-4 mr-2" />
               Save Configuration
             </>
-        )}
-      </Button>
+          )}
+        </Button>
+      </div>
     </div>
-  </div>
-);
+  );
 }

@@ -46,11 +46,13 @@ export default function ExchangeRateManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-exchange-rates"] });
-      toast.success("Exchange rate added");
+      toast.success("Exchange rate added successfully");
       setNewRate({ base: "USD", target: "XAF", rate: "", margin: "0" });
     },
-    onError: () => toast.error("Failed to add rate"),
+    onError: (error: any) => toast.error(`Failed to add rate: ${error.message}`),
   });
+
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   return (
     <div className="space-y-6">
@@ -59,7 +61,7 @@ export default function ExchangeRateManagement() {
           <h1 className="text-3xl font-bold">Exchange Rate Management</h1>
           <p className="text-muted-foreground mt-2">Set and manage currency exchange rates for XAF/XOF/EUR/USD</p>
         </div>
-        <Dialog>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Rate</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader><DialogTitle>Add Exchange Rate</DialogTitle></DialogHeader>
@@ -80,7 +82,9 @@ export default function ExchangeRateManagement() {
               </div>
               <div><Label>Rate</Label><Input type="number" step="0.0001" value={newRate.rate} onChange={(e) => setNewRate({ ...newRate, rate: e.target.value })} placeholder="e.g. 610.50" /></div>
               <div><Label>Margin (%)</Label><Input type="number" step="0.01" value={newRate.margin} onChange={(e) => setNewRate({ ...newRate, margin: e.target.value })} placeholder="e.g. 1.5" /></div>
-              <Button onClick={() => addRate.mutate()} disabled={!newRate.rate} className="w-full">Save Rate</Button>
+              <Button onClick={() => { addRate.mutate(); setDialogOpen(false); }} disabled={!newRate.rate || addRate.isPending} className="w-full">
+                {addRate.isPending ? "Saving..." : "Save Rate"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
