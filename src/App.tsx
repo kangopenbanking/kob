@@ -120,6 +120,13 @@ import InstitutionLedger from "./pages/institution/InstitutionLedger";
 import InstitutionAudit from "./pages/institution/InstitutionAudit";
 import InstitutionBilling from "./pages/institution/InstitutionBilling";
 import InstitutionConsents from "./pages/institution/InstitutionConsents";
+import InstitutionCustomerOnboarding from "./pages/institution/InstitutionCustomerOnboarding";
+import InstitutionStaff from "./pages/institution/InstitutionStaff";
+import InstitutionIncidents from "./pages/institution/InstitutionIncidents";
+import InstitutionRegulatory from "./pages/institution/InstitutionRegulatory";
+import InstitutionMessaging from "./pages/institution/InstitutionMessaging";
+import InstitutionExchangeRates from "./pages/institution/InstitutionExchangeRates";
+import InstitutionAlerts from "./pages/institution/InstitutionAlerts";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
 import WooForKang from "./pages/WooForKang";
@@ -230,6 +237,13 @@ function App() {
               <Route path="audit" element={<InstitutionAudit />} />
               <Route path="billing" element={<InstitutionBilling />} />
               <Route path="consents" element={<InstitutionConsents />} />
+              <Route path="customer-onboarding" element={<InstitutionCustomerOnboarding />} />
+              <Route path="staff" element={<InstitutionStaff />} />
+              <Route path="incidents" element={<InstitutionIncidents />} />
+              <Route path="regulatory" element={<InstitutionRegulatory />} />
+              <Route path="messaging" element={<InstitutionMessaging />} />
+              <Route path="exchange-rates" element={<InstitutionExchangeRates />} />
+              <Route path="alerts" element={<InstitutionAlerts />} />
             </Route>
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
