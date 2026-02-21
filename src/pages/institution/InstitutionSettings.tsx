@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,10 +66,10 @@ export default function InstitutionSettings() {
     }
   };
 
-  if (loading) return <InstitutionLayout><Card><CardContent className="py-12 text-center text-muted-foreground">Loading...</CardContent></Card></InstitutionLayout>;
+  if (loading) return <Card><CardContent className="py-12 text-center text-muted-foreground">Loading...</CardContent></Card>;
 
   return (
-    <InstitutionLayout>
+    <>
       <div className="space-y-6">
         <div>
           <h1 className="text-3xl font-bold">Settings</h1>
@@ -160,6 +160,6 @@ export default function InstitutionSettings() {
           </Button>
         </div>
       </div>
-    </InstitutionLayout>
+    </>
   );
 }

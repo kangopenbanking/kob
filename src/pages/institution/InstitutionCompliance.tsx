@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -65,7 +65,7 @@ export default function InstitutionCompliance() {
   };
 
   return (
-    <InstitutionLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -166,6 +166,6 @@ export default function InstitutionCompliance() {
           </CardContent>
         </Card>
       </div>
-    </InstitutionLayout>
+    </>
   );
 }

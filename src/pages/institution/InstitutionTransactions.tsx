@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -149,7 +149,7 @@ export default function InstitutionTransactions() {
   const totalPages = Math.ceil(pagination.total / pagination.limit);
 
   return (
-    <InstitutionLayout>
+    <>
       <div className="space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
@@ -308,6 +308,6 @@ export default function InstitutionTransactions() {
           </CardContent>
         </Card>
       </div>
-    </InstitutionLayout>
+    </>
   );
 }
