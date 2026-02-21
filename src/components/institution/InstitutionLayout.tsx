@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation, Link, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Building2 } from "lucide-react";
+import { UserProfileMenu } from "@/components/UserProfileMenu";
 import {
   Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
   SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem,
@@ -115,6 +116,7 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <div className="flex-1" />
+            <UserProfileMenu variant="institution" />
           </header>
 
           <main className="flex-1 p-6">
