@@ -98,6 +98,21 @@ const Documentation = () => {
     },
     {
       method: "POST",
+      endpoint: "/v1/payments/refund",
+      description: "Initiate a full or partial refund for a completed payment",
+      example: `curl -X POST "https://api.kangopenbanking.com/v1/payments/refund" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Idempotency-Key: 770e8400-e29b-41d4-a716-446655440002" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "payment_id": "pay_abc123",
+    "amount": 25000,
+    "currency": "XAF",
+    "reason": "customer_request"
+  }'`
+    },
+    {
+      method: "POST",
       endpoint: "/v1/mobile-money/charge",
       description: "Initiate a mobile money charge",
       example: `curl -X POST "https://api.kangopenbanking.com/v1/mobile-money/charge" \\
@@ -110,6 +125,30 @@ const Documentation = () => {
     "phone_number": "237670000000",
     "network": "MTN"
   }'`
+    },
+    {
+      method: "GET",
+      endpoint: "/v1/banks",
+      description: "List supported banks for a country",
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/banks?country=CM" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Content-Type: application/json"`
+    },
+    {
+      method: "GET",
+      endpoint: "/v1/settlements/reports",
+      description: "Retrieve settlement reports with transaction breakdown",
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/settlements/reports?from_date=2026-02-01&to_date=2026-02-16" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Content-Type: application/json"`
+    },
+    {
+      method: "GET",
+      endpoint: "/v1/audit/logs",
+      description: "Query the immutable audit trail",
+      example: `curl -X GET "https://api.kangopenbanking.com/v1/audit/logs?entity_type=payment&limit=25" \\
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
+  -H "Content-Type: application/json"`
     },
     {
       method: "GET",
@@ -166,9 +205,15 @@ const Documentation = () => {
                     { label: "OAuth & Auth", icon: Lock, path: "/developer/quick-start", color: "bg-primary/10 text-primary border-primary/20" },
                     { label: "AISP", icon: FileText, path: "/developer/api/aisp", color: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20" },
                     { label: "PISP", icon: CreditCard, path: "/developer/api/pisp", color: "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20" },
+                    { label: "Refunds", icon: DollarSign, path: "/developer/api/refunds", color: "bg-pink-500/10 text-pink-700 dark:text-pink-400 border-pink-500/20" },
+                    { label: "Beneficiaries", icon: Users, path: "/developer/api/beneficiaries", color: "bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-500/20" },
                     { label: "Loans", icon: DollarSign, path: "/credit-api-docs", color: "bg-orange-500/10 text-orange-700 dark:text-orange-400 border-orange-500/20" },
                     { label: "Savings", icon: TrendingUp, path: "/developer/api/banking", color: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20" },
                     { label: "Mobile Money", icon: Smartphone, path: "/developer/api/mobile-money", color: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20" },
+                    { label: "Settlements", icon: BarChart3, path: "/developer/api/settlements", color: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400 border-cyan-500/20" },
+                    { label: "Disputes", icon: AlertTriangle, path: "/developer/api/disputes", color: "bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20" },
+                    { label: "Exports", icon: Download, path: "/developer/api/exports", color: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/20" },
+                    { label: "Risk & Audit", icon: Shield, path: "/developer/api/risk-audit", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" },
                     { label: "Certificates", icon: Shield, path: "/guides/certificates", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" },
                     { label: "Webhooks", icon: Terminal, path: "/developer/api/webhooks", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20" },
                     { label: "Admin", icon: Users, path: "/developer/console", color: "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20" },
