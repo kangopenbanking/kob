@@ -34,12 +34,16 @@ serve(async (req) => {
       }
     }
 
-    async function checkStripeHealth(): Promise<boolean> {
+    async function checkCardyfieHealth(): Promise<boolean> {
       try {
-        const response = await fetch('https://api.stripe.com/v1/products?limit=1', {
+        const baseUrl = Deno.env.get('CARDYFIE_BASE_URL');
+        const apiKey = Deno.env.get('CARDYFIE_API_KEY');
+        if (!baseUrl || !apiKey) return false;
+        const response = await fetch(`${baseUrl}/card/currencies`, {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${Deno.env.get('STRIPE_SECRET_KEY')}`
+            'Authorization': `Bearer ${apiKey}`,
+            'Accept': 'application/json',
           },
           signal: AbortSignal.timeout(5000)
         });
@@ -59,13 +63,13 @@ serve(async (req) => {
     }
 
     // Execute health checks in parallel
-    const [flutterwaveOk, stripeOk, dbOk] = await Promise.all([
+    const [flutterwaveOk, cardyfieOk, dbOk] = await Promise.all([
       checkFlutterwaveHealth(),
-      checkStripeHealth(),
+      checkCardyfieHealth(),
       checkDatabaseHealth()
     ]);
 
-    const allServicesOk = flutterwaveOk && stripeOk && dbOk;
+    const allServicesOk = flutterwaveOk && cardyfieOk && dbOk;
 
     const health = {
       status: allServicesOk ? 'operational' : 'degraded',
@@ -79,7 +83,7 @@ serve(async (req) => {
         mobile_money: flutterwaveOk ? 'operational' : 'degraded',
         banking: flutterwaveOk ? 'operational' : 'degraded',
         credit_scoring: dbOk ? 'operational' : 'degraded',
-        virtual_cards: stripeOk ? 'operational' : 'degraded',
+        virtual_cards: cardyfieOk ? 'operational' : 'degraded',
         webhooks: 'operational',
         database: dbOk ? 'operational' : 'degraded'
       },
