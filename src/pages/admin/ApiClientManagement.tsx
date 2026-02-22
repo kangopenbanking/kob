@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -13,6 +14,21 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Key, Copy, Eye, EyeOff, RefreshCw, Ban, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+
+const ALL_SCOPES = [
+  { value: 'openid', label: 'OpenID Connect', description: 'Identity verification' },
+  { value: 'accounts', label: 'Accounts', description: 'Account information' },
+  { value: 'balances', label: 'Balances', description: 'Balance queries' },
+  { value: 'transactions', label: 'Transactions', description: 'Transaction history' },
+  { value: 'payments', label: 'Payments', description: 'Payment initiation' },
+  { value: 'offline_access', label: 'Offline Access', description: 'Refresh token' },
+];
+
+const ALL_GRANT_TYPES = [
+  { value: 'client_credentials', label: 'Client Credentials', description: 'Server-to-server' },
+  { value: 'authorization_code', label: 'Authorization Code', description: 'User-delegated access' },
+  { value: 'refresh_token', label: 'Refresh Token', description: 'Token rotation' },
+];
 
 interface ApiClient {
   id: string;
@@ -34,8 +50,8 @@ export default function ApiClientManagement() {
   const [newClientData, setNewClientData] = useState({
     client_name: '',
     redirect_uris: '',
-    scopes: 'accounts,transactions',
-    grant_types: 'authorization_code,refresh_token',
+    scopes: ALL_SCOPES.map(s => s.value),
+    grant_types: ALL_GRANT_TYPES.map(g => g.value),
     institution_id: ''
   });
   const [createdSecret, setCreatedSecret] = useState<{ client_id: string; client_secret: string } | null>(null);
@@ -87,9 +103,9 @@ export default function ApiClientManagement() {
       const { data, error } = await supabase.functions.invoke('admin-create-client', {
         body: {
           client_name: newClientData.client_name,
-          redirect_uris: newClientData.redirect_uris.split(',').map(u => u.trim()),
-          scopes: newClientData.scopes.split(',').map(s => s.trim()),
-          grant_types: newClientData.grant_types.split(',').map(g => g.trim()),
+          redirect_uris: newClientData.redirect_uris.split(',').map(u => u.trim()).filter(Boolean),
+          scopes: newClientData.scopes,
+          grant_types: newClientData.grant_types,
           institution_id: newClientData.institution_id || null
         }
       });
@@ -107,8 +123,8 @@ export default function ApiClientManagement() {
       setNewClientData({
         client_name: '',
         redirect_uris: '',
-        scopes: 'accounts,transactions',
-        grant_types: 'authorization_code,refresh_token',
+        scopes: ALL_SCOPES.map(s => s.value),
+        grant_types: ALL_GRANT_TYPES.map(g => g.value),
         institution_id: ''
       });
     } catch (error) {
@@ -195,18 +211,54 @@ export default function ApiClientManagement() {
                       />
                     </div>
                     <div>
-                      <Label>Scopes (comma-separated)</Label>
-                      <Input
-                        value={newClientData.scopes}
-                        onChange={(e) => setNewClientData({ ...newClientData, scopes: e.target.value })}
-                      />
+                      <Label className="mb-2 block">Scopes</Label>
+                      <div className="grid grid-cols-2 gap-3">
+                        {ALL_SCOPES.map((scope) => (
+                          <div key={scope.value} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`scope-${scope.value}`}
+                              checked={newClientData.scopes.includes(scope.value)}
+                              onCheckedChange={(checked) => {
+                                setNewClientData(prev => ({
+                                  ...prev,
+                                  scopes: checked
+                                    ? [...prev.scopes, scope.value]
+                                    : prev.scopes.filter(s => s !== scope.value)
+                                }));
+                              }}
+                            />
+                            <label htmlFor={`scope-${scope.value}`} className="text-sm leading-none cursor-pointer">
+                              <span className="font-medium">{scope.label}</span>
+                              <span className="block text-xs text-muted-foreground">{scope.description}</span>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <div>
-                      <Label>Grant Types (comma-separated)</Label>
-                      <Input
-                        value={newClientData.grant_types}
-                        onChange={(e) => setNewClientData({ ...newClientData, grant_types: e.target.value })}
-                      />
+                      <Label className="mb-2 block">Grant Types</Label>
+                      <div className="grid grid-cols-1 gap-3">
+                        {ALL_GRANT_TYPES.map((grant) => (
+                          <div key={grant.value} className="flex items-start space-x-2">
+                            <Checkbox
+                              id={`grant-${grant.value}`}
+                              checked={newClientData.grant_types.includes(grant.value)}
+                              onCheckedChange={(checked) => {
+                                setNewClientData(prev => ({
+                                  ...prev,
+                                  grant_types: checked
+                                    ? [...prev.grant_types, grant.value]
+                                    : prev.grant_types.filter(g => g !== grant.value)
+                                }));
+                              }}
+                            />
+                            <label htmlFor={`grant-${grant.value}`} className="text-sm leading-none cursor-pointer">
+                              <span className="font-medium">{grant.label}</span>
+                              <span className="block text-xs text-muted-foreground">{grant.description}</span>
+                            </label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                     <DialogFooter>
                       <Button onClick={createClient}>Create Client</Button>
