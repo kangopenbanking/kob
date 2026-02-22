@@ -82,7 +82,10 @@ Deno.serve(async (req) => {
 
     console.log('Creating PostiQ code for coordinates:', { latitude, longitude });
 
-    const baseUrl = Deno.env.get('POSTIQ_BASE_URL') || POSTIQ_FALLBACK_URL;
+    // Use the correct PostiQ API base URL - the env var may contain the wrong domain
+    const envUrl = Deno.env.get('POSTIQ_BASE_URL');
+    // Only use env var if it points to the correct Supabase-hosted API, not the HTML landing page
+    const baseUrl = (envUrl && envUrl.includes('supabase.co')) ? envUrl : POSTIQ_FALLBACK_URL;
     const fullUrl = `${baseUrl}/api-create-postcode`;
     console.log('Calling PostiQ API at:', fullUrl);
 
