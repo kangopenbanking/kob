@@ -112,13 +112,13 @@ export function CreditApiIntegrationWidget({ institutionId }: CreditApiIntegrati
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          No Credit API credentials found for your institution. Contact admin to request access.
+          No Credit API credentials found for your institution. Please contact your platform administrator to request Credit API access.
           <div className="mt-3">
-            <Button size="sm" asChild>
-              <Link to="/admin/credit-management">
-                <Key className="mr-2 h-4 w-4" />
-                Request Access
-              </Link>
+            <Button size="sm" variant="outline" onClick={() => {
+              toast.info("A request has been sent to the platform administrator for Credit API access.");
+            }}>
+              <Key className="mr-2 h-4 w-4" />
+              Request Access
             </Button>
           </div>
         </AlertDescription>

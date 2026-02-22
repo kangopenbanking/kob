@@ -25,6 +25,20 @@ export default function CreditManagement() {
   });
   const queryClient = useQueryClient();
 
+  // Fetch institutions for the selector
+  const { data: institutions } = useQuery({
+    queryKey: ['institutions-list'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('institutions')
+        .select('id, institution_name')
+        .eq('status', 'approved')
+        .order('institution_name');
+      if (error) throw error;
+      return data;
+    },
+  });
+
   // Fetch API clients
   const { data: clients, isLoading: loadingClients } = useQuery({
     queryKey: ['credit-api-clients'],
@@ -138,7 +152,17 @@ export default function CreditManagement() {
       return;
     }
 
-    createClientMutation.mutate(newClient);
+    // Build payload, omitting institution_id if not selected
+    const payload: any = {
+      client_name: newClient.client_name,
+      client_type: newClient.client_type,
+      pricing_tier: newClient.pricing_tier,
+    };
+    if (newClient.institution_id) {
+      payload.institution_id = newClient.institution_id;
+    }
+
+    createClientMutation.mutate(payload);
   };
 
   if (loadingClients) {
@@ -208,6 +232,19 @@ export default function CreditManagement() {
                 </Select>
               </div>
             </div>
+              <div>
+                <Label>Institution (Optional)</Label>
+                <Select value={newClient.institution_id} onValueChange={(value) => setNewClient({ ...newClient, institution_id: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select an institution" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {institutions?.map((inst) => (
+                      <SelectItem key={inst.id} value={inst.id}>{inst.institution_name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
               <Button onClick={handleCreateClient} disabled={createClientMutation.isPending}>
