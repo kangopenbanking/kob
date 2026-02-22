@@ -11,7 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Plus, Key, TrendingUp, DollarSign } from 'lucide-react';
+import { Loader2, Plus, Key, TrendingUp, DollarSign, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import * as bcrypt from 'bcryptjs';
 
@@ -36,6 +36,34 @@ export default function CreditManagement() {
         .order('institution_name');
       if (error) throw error;
       return data;
+    },
+  });
+
+  // Fetch access requests
+  const { data: accessRequests } = useQuery({
+    queryKey: ['credit-api-access-requests'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('credit_api_access_requests')
+        .select('*, institutions(institution_name)')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const updateRequestMutation = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('credit_api_access_requests')
+        .update({ status, reviewed_by: user?.id, reviewed_at: new Date().toISOString() })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['credit-api-access-requests'] });
+      toast.success('Request updated');
     },
   });
 
@@ -306,6 +334,12 @@ export default function CreditManagement() {
       <Tabs defaultValue="clients" className="space-y-4">
         <TabsList>
           <TabsTrigger value="clients">API Clients</TabsTrigger>
+          <TabsTrigger value="requests">
+            Access Requests
+            {accessRequests && accessRequests.filter((r: any) => r.status === 'pending').length > 0 && (
+              <Badge variant="destructive" className="ml-2">{accessRequests.filter((r: any) => r.status === 'pending').length}</Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="usage">Usage Analytics</TabsTrigger>
           <TabsTrigger value="distribution">Score Distribution</TabsTrigger>
         </TabsList>
@@ -351,6 +385,71 @@ export default function CreditManagement() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="requests">
+          <Card>
+            <CardHeader>
+              <CardTitle>Credit API Access Requests</CardTitle>
+              <CardDescription>Review and approve institution access requests</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {accessRequests && accessRequests.length > 0 ? (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Institution</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Requested</TableHead>
+                      <TableHead>Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {accessRequests.map((req: any) => (
+                      <TableRow key={req.id}>
+                        <TableCell className="font-medium">
+                          {req.institutions?.institution_name || 'Unknown'}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={req.status === 'pending' ? 'secondary' : req.status === 'approved' ? 'default' : 'destructive'}>
+                            {req.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                            {req.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(req.created_at).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          {req.status === 'pending' && (
+                            <div className="flex gap-2">
+                              <Button
+                                size="sm"
+                                variant="default"
+                                onClick={() => updateRequestMutation.mutate({ id: req.id, status: 'approved' })}
+                                disabled={updateRequestMutation.isPending}
+                              >
+                                <CheckCircle className="h-3 w-3 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => updateRequestMutation.mutate({ id: req.id, status: 'rejected' })}
+                                disabled={updateRequestMutation.isPending}
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Reject
+                              </Button>
+                            </div>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No access requests</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

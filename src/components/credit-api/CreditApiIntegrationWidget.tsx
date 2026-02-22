@@ -2,9 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Key, TrendingUp, AlertTriangle, ExternalLink, Copy, CheckCircle2 } from "lucide-react";
+import { Key, TrendingUp, AlertTriangle, ExternalLink, Copy, CheckCircle2, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -107,19 +107,67 @@ export function CreditApiIntegrationWidget({ institutionId }: CreditApiIntegrati
     );
   }
 
+  // Check for existing pending request
+  const { data: existingRequest } = useQuery({
+    queryKey: ['credit-api-access-request', institutionId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('credit_api_access_requests')
+        .select('*')
+        .eq('institution_id', institutionId)
+        .eq('status', 'pending')
+        .maybeSingle();
+      return data;
+    },
+    enabled: !apiClient,
+  });
+
+  const requestAccessMutation = useMutation({
+    mutationFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { error } = await supabase
+        .from('credit_api_access_requests')
+        .insert({
+          institution_id: institutionId,
+          requested_by: user.id,
+        });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Access request sent to the platform administrator.");
+    },
+    onError: (error: any) => {
+      if (error.message?.includes('duplicate')) {
+        toast.info("You already have a pending access request.");
+      } else {
+        toast.error("Failed to send request: " + error.message);
+      }
+    },
+  });
+
   if (!apiClient) {
     return (
       <Alert>
         <AlertTriangle className="h-4 w-4" />
         <AlertDescription>
-          No Credit API credentials found for your institution. Please contact your platform administrator to request Credit API access.
+          No Credit API credentials found for your institution. Request access from the platform administrator.
           <div className="mt-3">
-            <Button size="sm" variant="outline" onClick={() => {
-              toast.info("A request has been sent to the platform administrator for Credit API access.");
-            }}>
-              <Key className="mr-2 h-4 w-4" />
-              Request Access
-            </Button>
+            {existingRequest ? (
+              <Badge variant="secondary">Access request pending — awaiting admin review</Badge>
+            ) : (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                onClick={() => requestAccessMutation.mutate()}
+                disabled={requestAccessMutation.isPending}
+              >
+                {requestAccessMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                <Key className="mr-2 h-4 w-4" />
+                Request Access
+              </Button>
+            )}
           </div>
         </AlertDescription>
       </Alert>
