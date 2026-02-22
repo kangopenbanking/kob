@@ -49,17 +49,15 @@ Deno.serve(async (req) => {
 
     const envUrl = Deno.env.get('POSTIQ_BASE_URL');
     const baseUrl = (envUrl && envUrl.includes('supabase.co')) ? envUrl : POSTIQ_FALLBACK_URL;
-    const fullUrl = `${baseUrl}/api-lookup-postcode`;
+    const fullUrl = `${baseUrl}/api-lookup-postcode?code=${encodeURIComponent(postiq_code)}`;
     console.log('Calling PostiQ API at:', fullUrl);
 
     const postiqResponse = await fetch(fullUrl, {
-      method: 'POST',
+      method: 'GET',
       headers: {
         'X-API-Key': Deno.env.get('POSTIQ_API_KEY')!,
         'X-API-Secret': Deno.env.get('POSTIQ_API_SECRET')!,
-        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ postiq_code })
     });
 
     const responseText = await postiqResponse.text();
@@ -93,7 +91,7 @@ Deno.serve(async (req) => {
     await supabase.from('postiq_api_usage').insert({
       user_id: user.id,
       endpoint: '/api-lookup-postcode',
-      method: 'POST',
+      method: 'GET',
       status_code: postiqResponse.status,
       credits_consumed: 1,
       request_data: { postiq_code },
