@@ -4105,6 +4105,8 @@ export type Database = {
       gateway_charges: {
         Row: {
           amount: number
+          capture_mode: string
+          captured_amount: number | null
           channel: string
           created_at: string
           currency: string
@@ -4132,6 +4134,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          capture_mode?: string
+          captured_amount?: number | null
           channel: string
           created_at?: string
           currency?: string
@@ -4159,6 +4163,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          capture_mode?: string
+          captured_amount?: number | null
           channel?: string
           created_at?: string
           currency?: string
@@ -4415,6 +4421,47 @@ export type Database = {
           },
         ]
       }
+      gateway_merchant_wallets: {
+        Row: {
+          available_balance: number
+          created_at: string
+          currency: string
+          id: string
+          ledger_balance: number
+          merchant_id: string
+          pending_balance: number
+          updated_at: string
+        }
+        Insert: {
+          available_balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          ledger_balance?: number
+          merchant_id: string
+          pending_balance?: number
+          updated_at?: string
+        }
+        Update: {
+          available_balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          ledger_balance?: number
+          merchant_id?: string
+          pending_balance?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_merchant_wallets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_merchants: {
         Row: {
           business_email: string | null
@@ -4424,6 +4471,7 @@ export type Database = {
           daily_charge_limit: number | null
           daily_payout_limit: number | null
           environment: string
+          fee_bearer: string
           id: string
           institution_id: string | null
           kyb_status: string
@@ -4446,6 +4494,7 @@ export type Database = {
           daily_charge_limit?: number | null
           daily_payout_limit?: number | null
           environment?: string
+          fee_bearer?: string
           id?: string
           institution_id?: string | null
           kyb_status?: string
@@ -4468,6 +4517,7 @@ export type Database = {
           daily_charge_limit?: number | null
           daily_payout_limit?: number | null
           environment?: string
+          fee_bearer?: string
           id?: string
           institution_id?: string | null
           kyb_status?: string
@@ -4996,6 +5046,62 @@ export type Database = {
             columns: ["plan_id"]
             isOneToOne: false
             referencedRelation: "gateway_payment_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_virtual_accounts: {
+        Row: {
+          account_number: string | null
+          bank_name: string | null
+          bvn: string | null
+          created_at: string
+          currency: string
+          email: string | null
+          expiry: string | null
+          id: string
+          merchant_id: string
+          metadata: Json | null
+          provider_ref: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          account_number?: string | null
+          bank_name?: string | null
+          bvn?: string | null
+          created_at?: string
+          currency?: string
+          email?: string | null
+          expiry?: string | null
+          id?: string
+          merchant_id: string
+          metadata?: Json | null
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string | null
+          bank_name?: string | null
+          bvn?: string | null
+          created_at?: string
+          currency?: string
+          email?: string | null
+          expiry?: string | null
+          id?: string
+          merchant_id?: string
+          metadata?: Json | null
+          provider_ref?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_virtual_accounts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]
@@ -10681,6 +10787,16 @@ export type Database = {
           _connection_id: string
           _error_message?: string
           _status: string
+        }
+        Returns: undefined
+      }
+      update_merchant_wallet: {
+        Args: {
+          _available_delta?: number
+          _currency: string
+          _ledger_delta?: number
+          _merchant_id: string
+          _pending_delta?: number
         }
         Returns: undefined
       }

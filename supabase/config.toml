@@ -490,3 +490,37 @@ verify_jwt = false
 
 [functions.gateway-subscription-charge-cron]
 verify_jwt = false
+
+# Round 3: OTP Validation & Preauthorization
+[functions.gateway-validate-charge]
+verify_jwt = false
+
+[functions.gateway-preauth-charge]
+verify_jwt = false
+
+[functions.gateway-capture-charge]
+verify_jwt = false
+
+[functions.gateway-void-charge]
+verify_jwt = false
+
+# Round 3: Virtual Accounts
+[functions.gateway-create-virtual-account]
+verify_jwt = false
+
+[functions.gateway-list-virtual-accounts]
+verify_jwt = false
+
+[functions.gateway-get-virtual-account]
+verify_jwt = false
+
+# Round 3: Bank/BVN Verification
+[functions.gateway-verify-bank-account]
+verify_jwt = false
+
+[functions.gateway-resolve-bvn]
+verify_jwt = false
+
+# Round 3: Merchant Balance
+[functions.gateway-get-merchant-balance]
+verify_jwt = false

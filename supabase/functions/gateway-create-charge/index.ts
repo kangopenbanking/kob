@@ -27,7 +27,7 @@ serve(async (req) => {
     const {
       merchant_id, amount, currency = 'XAF', channel, customer_email, customer_phone, customer_name,
       tx_ref, metadata, payment_link_id, subaccounts, settlement_currency,
-      save_token, customer_id,
+      save_token, customer_id, fee_bearer, capture_mode,
     } = body;
 
     // Validate channel
@@ -88,6 +88,10 @@ serve(async (req) => {
     // Fee calculation
     const { fee, net } = calculateGatewayFee(amount, channel);
 
+    // Fee bearer: if customer bears the fee, the total charged increases
+    const effectiveFeeBearer = fee_bearer || merchant.fee_bearer || 'merchant';
+    const chargedAmount = effectiveFeeBearer === 'customer' ? amount + fee : amount;
+
     // FX rate for settlement currency
     let exchangeRate = null;
     let settledAmount = null;
@@ -103,16 +107,20 @@ serve(async (req) => {
     // Determine provider
     const provider = channel === 'card' ? 'stripe' : 'flutterwave';
 
+    // Capture mode
+    const effectiveCaptureMode = capture_mode || 'auto';
+
     // Create charge record
     const { data: charge, error: insertErr } = await supabase.from('gateway_charges').insert({
-      merchant_id, amount, currency, channel, status: 'pending', provider,
+      merchant_id, amount: chargedAmount, currency, channel, status: 'pending', provider,
       customer_email, customer_phone, customer_name, tx_ref,
-      fee_amount: fee, net_amount: net, metadata: metadata || {},
+      fee_amount: fee, net_amount: net, metadata: { ...(metadata || {}), fee_bearer: effectiveFeeBearer },
       idempotency_key: idempotencyKey,
       payment_link_id: payment_link_id || null,
       settlement_currency: settlement_currency || null,
       exchange_rate: exchangeRate,
       settled_amount: settledAmount,
+      capture_mode: effectiveCaptureMode,
     }).select().single();
 
     if (insertErr) throw insertErr;
