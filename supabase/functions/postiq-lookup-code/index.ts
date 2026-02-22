@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const POSTIQ_FALLBACK_URL = 'https://uuxlcrvlljzoufjzmzid.supabase.co/functions/v1';
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -45,27 +47,42 @@ Deno.serve(async (req) => {
 
     console.log('Looking up PostiQ code:', postiq_code);
 
-    // Call PostiQ API
-    const postiqResponse = await fetch(
-      `${Deno.env.get('POSTIQ_BASE_URL')}/api-lookup-postcode`,
-      {
-        method: 'POST',
-        headers: {
-          'X-API-Key': Deno.env.get('POSTIQ_API_KEY')!,
-          'X-API-Secret': Deno.env.get('POSTIQ_API_SECRET')!,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ postiq_code })
-      }
-    );
+    const baseUrl = Deno.env.get('POSTIQ_BASE_URL') || POSTIQ_FALLBACK_URL;
+    const fullUrl = `${baseUrl}/api-lookup-postcode`;
+    console.log('Calling PostiQ API at:', fullUrl);
 
-    if (!postiqResponse.ok) {
-      const errorData = await postiqResponse.json().catch(() => ({ error: 'Unknown error' }));
-      console.error('PostiQ API error:', postiqResponse.status, errorData);
-      throw new Error(errorData.error || 'PostiQ API error');
+    const postiqResponse = await fetch(fullUrl, {
+      method: 'POST',
+      headers: {
+        'X-API-Key': Deno.env.get('POSTIQ_API_KEY')!,
+        'X-API-Secret': Deno.env.get('POSTIQ_API_SECRET')!,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ postiq_code })
+    });
+
+    const responseText = await postiqResponse.text();
+    console.log('PostiQ API response status:', postiqResponse.status);
+
+    // Guard against HTML responses
+    if (responseText.trim().toLowerCase().startsWith('<!doctype') || 
+        responseText.trim().startsWith('<html')) {
+      console.error('PostiQ API returned HTML instead of JSON');
+      throw new Error('PostiQ API error: Service returned HTML instead of JSON. The API might be down or authentication failed.');
     }
 
-    const postiqData = await postiqResponse.json();
+    let postiqData;
+    try {
+      postiqData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error('Failed to parse PostiQ response as JSON:', parseError);
+      throw new Error(`Invalid JSON response from PostiQ API: ${responseText.substring(0, 200)}`);
+    }
+
+    if (!postiqResponse.ok) {
+      console.error('PostiQ API error:', postiqResponse.status, postiqData);
+      throw new Error(postiqData.error || 'PostiQ API error');
+    }
 
     if (!postiqData.success) {
       throw new Error(postiqData.error || 'Failed to lookup PostiQ code');
@@ -77,7 +94,7 @@ Deno.serve(async (req) => {
       endpoint: '/api-lookup-postcode',
       method: 'POST',
       status_code: postiqResponse.status,
-      credits_consumed: postiqData.credits_consumed || 1,
+      credits_consumed: 1,
       request_data: { postiq_code },
       response_data: postiqData,
       ip_address: req.headers.get('x-forwarded-for') || null

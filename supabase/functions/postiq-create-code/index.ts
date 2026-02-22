@@ -5,6 +5,8 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const POSTIQ_FALLBACK_URL = 'https://uuxlcrvlljzoufjzmzid.supabase.co/functions/v1';
+
 interface CreatePostiQRequest {
   latitude: number;
   longitude: number;
@@ -64,7 +66,6 @@ Deno.serve(async (req) => {
     const body: CreatePostiQRequest = await req.json();
     const { latitude, longitude, precision = 'exact', ...addressDetails } = body;
 
-    // Validate coordinates
     if (!latitude || !longitude) {
       return new Response(
         JSON.stringify({ error: 'Latitude and longitude are required' }),
@@ -81,17 +82,10 @@ Deno.serve(async (req) => {
 
     console.log('Creating PostiQ code for coordinates:', { latitude, longitude });
 
-    // Use hardcoded base URL as fallback - the correct URL should end with /functions/v1
-    const baseUrl = Deno.env.get('POSTIQ_BASE_URL') || 'https://postiq.cam/functions/v1';
-    // Ensure the base URL is correct (should end with /functions/v1)
-    const apiBaseUrl = baseUrl.endsWith('/functions/v1') 
-      ? baseUrl 
-      : 'https://postiq.cam/functions/v1';
-    
-    const fullUrl = `${apiBaseUrl}/api-create-postcode`;
+    const baseUrl = Deno.env.get('POSTIQ_BASE_URL') || POSTIQ_FALLBACK_URL;
+    const fullUrl = `${baseUrl}/api-create-postcode`;
     console.log('Calling PostiQ API at:', fullUrl);
 
-    // Call PostiQ API
     const postiqResponse = await fetch(fullUrl, {
       method: 'POST',
       headers: {
@@ -107,23 +101,19 @@ Deno.serve(async (req) => {
       })
     });
 
-    // Check content type before parsing
     const contentType = postiqResponse.headers.get('content-type') || '';
     console.log('PostiQ API response status:', postiqResponse.status);
     console.log('PostiQ API content-type:', contentType);
 
-    // Read response as text first
     const responseText = await postiqResponse.text();
     console.log('PostiQ API response (first 500 chars):', responseText.substring(0, 500));
 
-    // Check if response is HTML (error page)
     if (responseText.trim().toLowerCase().startsWith('<!doctype') || 
         responseText.trim().startsWith('<html')) {
       console.error('PostiQ API returned HTML instead of JSON');
       throw new Error('PostiQ API error: Service returned HTML instead of JSON. The API might be down or authentication failed.');
     }
 
-    // Try to parse as JSON
     let postiqData;
     try {
       postiqData = JSON.parse(responseText);
@@ -143,24 +133,35 @@ Deno.serve(async (req) => {
 
     console.log('PostiQ code created:', postiqData.data.postiq_code);
 
+    // Parse postiq_precision ("lat,lng") into separate values
+    let parsedLat = latitude;
+    let parsedLng = longitude;
+    if (postiqData.data.postiq_precision) {
+      const parts = postiqData.data.postiq_precision.split(',');
+      if (parts.length === 2) {
+        parsedLat = parseFloat(parts[0]);
+        parsedLng = parseFloat(parts[1]);
+      }
+    }
+
     // Store verification in database
     const { data: verification, error: dbError } = await supabase
       .from('postiq_address_verifications')
       .insert({
         user_id: user.id,
         postiq_code: postiqData.data.postiq_code,
-        latitude: postiqData.data.latitude,
-        longitude: postiqData.data.longitude,
-        precision: postiqData.data.precision,
+        latitude: parsedLat,
+        longitude: parsedLng,
+        precision: postiqData.data.postiq_precision || `${latitude},${longitude}`,
         full_address: postiqData.data.full_address,
-        region: addressDetails.region,
-        district: addressDetails.district,
-        sector: addressDetails.sector,
+        region: postiqData.data.region || addressDetails.region,
+        district: postiqData.data.district || addressDetails.district,
+        sector: postiqData.data.sector || addressDetails.sector,
         area_name: addressDetails.area_name,
         road_name: addressDetails.road_name,
         house_number: addressDetails.house_number?.toString(),
         verification_method: 'gps',
-        credits_consumed: postiqData.credits_consumed || 1
+        credits_consumed: 1
       })
       .select()
       .single();
@@ -176,7 +177,7 @@ Deno.serve(async (req) => {
       endpoint: '/api-create-postcode',
       method: 'POST',
       status_code: postiqResponse.status,
-      credits_consumed: postiqData.credits_consumed || 1,
+      credits_consumed: 1,
       request_data: body,
       response_data: postiqData,
       ip_address: req.headers.get('x-forwarded-for') || null
@@ -213,8 +214,8 @@ Deno.serve(async (req) => {
           verification_id: verification.id,
           postiq_code: postiqData.data.postiq_code,
           full_address: postiqData.data.full_address,
-          latitude: postiqData.data.latitude,
-          longitude: postiqData.data.longitude,
+          latitude: parsedLat,
+          longitude: parsedLng,
           credit_score_boost: 50,
           message: 'Address verified successfully! Your credit score will increase by 50 points.'
         }
