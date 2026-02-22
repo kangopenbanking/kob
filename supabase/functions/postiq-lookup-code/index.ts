@@ -47,7 +47,8 @@ Deno.serve(async (req) => {
 
     console.log('Looking up PostiQ code:', postiq_code);
 
-    const baseUrl = Deno.env.get('POSTIQ_BASE_URL') || POSTIQ_FALLBACK_URL;
+    const envUrl = Deno.env.get('POSTIQ_BASE_URL');
+    const baseUrl = (envUrl && envUrl.includes('supabase.co')) ? envUrl : POSTIQ_FALLBACK_URL;
     const fullUrl = `${baseUrl}/api-lookup-postcode`;
     console.log('Calling PostiQ API at:', fullUrl);
 
