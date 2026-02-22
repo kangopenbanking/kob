@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Loader2, CheckCircle, XCircle, CreditCard } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -18,6 +19,8 @@ interface PaymentLink {
   redirect_url?: string;
   status: string;
   merchant_id: string;
+  fee_bearer?: string;
+  fee_amount?: number;
 }
 
 export default function PaymentCheckout() {
@@ -27,6 +30,13 @@ export default function PaymentCheckout() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<'success' | 'failed' | null>(null);
+
+  // OTP state
+  const [otpRequired, setOtpRequired] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [chargeId, setChargeId] = useState<string | null>(null);
+  const [flwRef, setFlwRef] = useState<string | null>(null);
+  const [submittingOtp, setSubmittingOtp] = useState(false);
 
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -39,18 +49,11 @@ export default function PaymentCheckout() {
 
   const fetchLink = async () => {
     try {
-      const { data, error } = await supabase.functions.invoke('gateway-get-payment-link', {
-        body: null,
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      // Use query param approach
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-get-payment-link?slug=${slug}`,
         { headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
       );
       const linkData = await res.json();
-
       if (linkData?.error || !linkData?.id) {
         setLink(null);
       } else {
@@ -61,6 +64,14 @@ export default function PaymentCheckout() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const getDisplayAmount = () => {
+    if (!link) return 0;
+    if (link.fee_bearer === 'customer' && link.fee_amount) {
+      return link.amount + link.fee_amount;
+    }
+    return link.amount;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,7 +105,14 @@ export default function PaymentCheckout() {
       );
 
       const chargeData = await res.json();
-      if (chargeData?.status === 'successful' || chargeData?.status === 'processing') {
+
+      if (chargeData?.status === 'processing' && !chargeData.redirect_url) {
+        // OTP required
+        setChargeId(chargeData.id);
+        setFlwRef(chargeData.provider_ref);
+        setOtpRequired(true);
+        toast({ title: "OTP Required", description: "Please enter the OTP sent to your device." });
+      } else if (chargeData?.status === 'successful') {
         setResult('success');
         if (chargeData.redirect_url) {
           setTimeout(() => window.location.href = chargeData.redirect_url, 2000);
@@ -104,7 +122,6 @@ export default function PaymentCheckout() {
       } else if (chargeData?.status === 'failed') {
         setResult('failed');
       } else {
-        // Pending/processing — show success
         setResult('success');
         toast({ title: "Payment initiated", description: "Please complete the payment on your device." });
       }
@@ -112,6 +129,40 @@ export default function PaymentCheckout() {
       setResult('failed');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleOtpSubmit = async () => {
+    if (!chargeId || otpValue.length < 4) return;
+    setSubmittingOtp(true);
+
+    try {
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-validate-charge`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({ charge_id: chargeId, otp: otpValue, flw_ref: flwRef }),
+        }
+      );
+
+      const data = await res.json();
+      if (data.status === 'successful') {
+        setResult('success');
+        if (link?.redirect_url) {
+          setTimeout(() => window.location.href = link.redirect_url!, 2000);
+        }
+      } else {
+        setResult('failed');
+      }
+    } catch {
+      setResult('failed');
+    } finally {
+      setSubmittingOtp(false);
     }
   };
 
@@ -159,12 +210,51 @@ export default function PaymentCheckout() {
             <XCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
             <h2 className="text-xl font-semibold">Payment Failed</h2>
             <p className="text-muted-foreground mt-2">Something went wrong. Please try again.</p>
-            <Button className="mt-4" onClick={() => setResult(null)}>Try Again</Button>
+            <Button className="mt-4" onClick={() => { setResult(null); setOtpRequired(false); setOtpValue(""); }}>Try Again</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
+
+  // OTP input screen
+  if (otpRequired) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader className="text-center">
+            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
+              <CreditCard className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle>Enter OTP</CardTitle>
+            <CardDescription>A verification code has been sent to your device. Enter it below to complete your payment.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="flex justify-center">
+              <InputOTP maxLength={6} value={otpValue} onChange={setOtpValue}>
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
+            <Button className="w-full" onClick={handleOtpSubmit} disabled={submittingOtp || otpValue.length < 4}>
+              {submittingOtp ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Verifying...</> : 'Verify & Pay'}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              Powered by Kang Open Banking • Secure payments
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  const displayAmount = getDisplayAmount();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -176,8 +266,13 @@ export default function PaymentCheckout() {
           <CardTitle>{link.title}</CardTitle>
           {link.description && <CardDescription>{link.description}</CardDescription>}
           <div className="text-3xl font-bold text-primary mt-2">
-            {new Intl.NumberFormat('fr-FR').format(link.amount)} {link.currency}
+            {new Intl.NumberFormat('fr-FR').format(displayAmount)} {link.currency}
           </div>
+          {link.fee_bearer === 'customer' && link.fee_amount && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Includes {new Intl.NumberFormat('fr-FR').format(link.fee_amount)} {link.currency} processing fee
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,7 +301,7 @@ export default function PaymentCheckout() {
               </Select>
             </div>
             <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Pay ${new Intl.NumberFormat('fr-FR').format(link.amount)} ${link.currency}`}
+              {submitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</> : `Pay ${new Intl.NumberFormat('fr-FR').format(displayAmount)} ${link.currency}`}
             </Button>
           </form>
           <p className="text-xs text-muted-foreground text-center mt-4">

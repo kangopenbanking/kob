@@ -76,6 +76,39 @@ serve(async (req) => {
       }
     }
 
+    // Handle virtual account credit events
+    const eventType = payload.event || payload.data?.event;
+    if (eventType === 'virtualaccount.credit' || payload.data?.virtual_account_number) {
+      const vaNumber = payload.data?.virtual_account_number;
+      if (vaNumber) {
+        const { data: va } = await supabase.from('gateway_virtual_accounts').select('*').eq('account_number', vaNumber).eq('status', 'active').maybeSingle();
+        if (va) {
+          const creditAmount = payload.data?.amount || 0;
+          const creditCurrency = payload.data?.currency || va.currency;
+          // Auto-create a charge for the virtual account credit
+          await supabase.from('gateway_charges').insert({
+            merchant_id: va.merchant_id, amount: creditAmount, currency: creditCurrency,
+            channel: 'bank_transfer', status: 'successful', provider: 'flutterwave',
+            provider_ref: payload.data?.flw_ref || eventId,
+            customer_email: va.email, tx_ref: `va-credit-${eventId}-${Date.now()}`,
+            fee_amount: 0, net_amount: creditAmount, metadata: { source: 'virtual_account', va_id: va.id },
+            provider_raw: payload,
+          });
+          // Update wallet
+          await supabase.rpc('update_merchant_wallet', {
+            _merchant_id: va.merchant_id, _currency: creditCurrency,
+            _pending_delta: creditAmount, _ledger_delta: creditAmount,
+          });
+          // Outbound webhook
+          await supabase.from('gateway_webhook_events').insert({
+            merchant_id: va.merchant_id, event_type: 'virtualaccount.credit',
+            payload: { va_id: va.id, amount: creditAmount, currency: creditCurrency },
+            status: 'pending', next_retry_at: new Date().toISOString(),
+          });
+        }
+      }
+    }
+
     return new Response(JSON.stringify({ status: 'ok' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     console.error('Gateway FLW webhook error:', err);
