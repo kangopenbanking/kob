@@ -59,6 +59,9 @@ import GatewaySubscriptionsGuide from "./pages/developer/GatewaySubscriptionsGui
 import GatewaySplitPaymentsGuide from "./pages/developer/GatewaySplitPaymentsGuide";
 import GatewayTokenizationGuide from "./pages/developer/GatewayTokenizationGuide";
 import GatewayChargeEventsGuide from "./pages/developer/GatewayChargeEventsGuide";
+import GatewayVirtualAccountsGuide from "./pages/developer/GatewayVirtualAccountsGuide";
+import GatewayMerchantWalletGuide from "./pages/developer/GatewayMerchantWalletGuide";
+import GatewayVerificationGuide from "./pages/developer/GatewayVerificationGuide";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -366,6 +369,9 @@ function App() {
               <Route path="gateway/split-payments" element={<GatewaySplitPaymentsGuide />} />
               <Route path="gateway/tokenization" element={<GatewayTokenizationGuide />} />
               <Route path="gateway/charge-events" element={<GatewayChargeEventsGuide />} />
+              <Route path="gateway/virtual-accounts" element={<GatewayVirtualAccountsGuide />} />
+              <Route path="gateway/merchant-wallet" element={<GatewayMerchantWalletGuide />} />
+              <Route path="gateway/verification" element={<GatewayVerificationGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />
               <Route path="sandbox" element={<Sandbox />} />

@@ -246,8 +246,8 @@ const schemas = {
       merchant_id: { type: 'string', format: 'uuid' },
       amount: { type: 'number', example: 5000 },
       currency: { type: 'string', example: 'XAF' },
-      channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer'] },
-      status: { type: 'string', enum: ['pending', 'processing', 'successful', 'failed', 'cancelled'] },
+      channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd'] },
+      status: { type: 'string', enum: ['pending', 'processing', 'successful', 'failed', 'cancelled', 'authorized', 'voided'] },
       provider: { type: 'string', enum: ['flutterwave', 'stripe'] },
       provider_ref: { type: 'string' },
       fee_amount: { type: 'number', example: 200 },
@@ -255,6 +255,9 @@ const schemas = {
       tx_ref: { type: 'string' },
       customer_phone: { type: 'string' },
       customer_email: { type: 'string' },
+      capture_mode: { type: 'string', enum: ['auto', 'manual'], default: 'auto' },
+      captured_amount: { type: 'number', example: 0 },
+      fee_bearer: { type: 'string', enum: ['merchant', 'customer'], default: 'merchant' },
       created_at: { type: 'string', format: 'date-time' },
     },
   },
@@ -339,6 +342,50 @@ const schemas = {
       net_amount: { type: 'number', example: 4800 },
       fee_percentage: { type: 'string', example: '3%' },
       fixed_fee: { type: 'number', example: 50 },
+    },
+  },
+  GatewayVirtualAccount: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      account_number: { type: 'string', example: '7825000123' },
+      bank_name: { type: 'string', example: 'Wema Bank' },
+      currency: { type: 'string', example: 'NGN' },
+      status: { type: 'string', enum: ['active', 'closed'] },
+      email: { type: 'string' },
+      expiry: { type: 'string', format: 'date-time' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayMerchantWallet: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      currency: { type: 'string', example: 'XAF' },
+      available_balance: { type: 'number', example: 500000 },
+      pending_balance: { type: 'number', example: 25000 },
+      ledger_balance: { type: 'number', example: 525000 },
+      updated_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayBankVerification: {
+    type: 'object',
+    properties: {
+      account_name: { type: 'string', example: 'John Doe' },
+      account_number: { type: 'string', example: '1234567890' },
+    },
+  },
+  GatewayBvnResolution: {
+    type: 'object',
+    properties: {
+      bvn: { type: 'string' },
+      first_name: { type: 'string' },
+      last_name: { type: 'string' },
+      middle_name: { type: 'string' },
+      date_of_birth: { type: 'string' },
+      phone_number: { type: 'string' },
     },
   },
 };
@@ -1257,6 +1304,48 @@ paths['/v1/gateway/export/transactions'] = {
   get: { tags: ['Payment Gateway'], summary: 'Export transactions as CSV', operationId: 'gatewayExportTransactions', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }, { name: 'format', in: 'query', schema: { type: 'string', default: 'csv' } }], responses: { '200': { description: 'CSV file download', content: { 'text/csv': { schema: { type: 'string' } } } }, ...errorResponses } },
 };
 
+// ─── Preauthorization (Auth + Capture) ───
+paths['/v1/gateway/charges/preauth'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create preauthorized charge', description: 'Hold funds on a card without immediately capturing. Uses Stripe PaymentIntent with capture_method=manual.', operationId: 'gatewayPreauthCharge', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'tx_ref'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 50000 }, currency: { type: 'string', default: 'USD' }, customer_email: { type: 'string' }, customer_name: { type: 'string' }, tx_ref: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Preauthorized charge created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCharge' } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/charges/{chargeId}/capture'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Capture authorized charge', description: 'Capture a previously authorized charge (full or partial).', operationId: 'gatewayCaptureCharge', security: [{ bearerAuth: [] }], parameters: [{ name: 'chargeId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: false, content: { 'application/json': { schema: { type: 'object', properties: { amount: { type: 'number', description: 'Partial capture amount. Omit for full capture.' } } } } } }, responses: { '200': { description: 'Charge captured', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, status: { type: 'string' }, captured_amount: { type: 'number' } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/charges/{chargeId}/void'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Void authorized charge', description: 'Release an authorized hold without capturing.', operationId: 'gatewayVoidCharge', security: [{ bearerAuth: [] }], parameters: [{ name: 'chargeId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['charge_id'], properties: { charge_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Charge voided', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, status: { type: 'string', example: 'voided' } } } } } }, ...errorResponses } },
+};
+
+// ─── OTP Validation ───
+paths['/v1/gateway/charges/validate'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Validate charge with OTP', description: 'Submit an OTP to complete a pending mobile money or card charge that requires validation.', operationId: 'gatewayValidateCharge', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['charge_id', 'otp'], properties: { charge_id: { type: 'string', format: 'uuid' }, otp: { type: 'string', example: '123456' }, flw_ref: { type: 'string', description: 'Flutterwave reference (optional, auto-resolved from charge)' } } } } } }, responses: { '200': { description: 'Charge validation result', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, status: { type: 'string', enum: ['successful', 'failed'] }, message: { type: 'string' } } } } } }, ...errorResponses } },
+};
+
+// ─── Virtual Accounts ───
+paths['/v1/gateway/virtual-accounts'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create virtual account', description: 'Provision a dedicated virtual account number for pay-with-transfer collection.', operationId: 'gatewayCreateVirtualAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'email'], properties: { merchant_id: { type: 'string', format: 'uuid' }, email: { type: 'string' }, bvn: { type: 'string' }, currency: { type: 'string', default: 'NGN' }, is_permanent: { type: 'boolean', default: false }, narration: { type: 'string' } } } } } }, responses: { '201': { description: 'Virtual account created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List virtual accounts', operationId: 'gatewayListVirtualAccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Virtual accounts list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/virtual-accounts/{accountId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get virtual account', operationId: 'gatewayGetVirtualAccount', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Virtual account details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayVirtualAccount' } } } }, ...errorResponses } },
+};
+
+// ─── Merchant Wallet / Balances ───
+paths['/v1/gateway/balances'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get merchant balances', description: 'Retrieve available, pending, and ledger balances across currencies.', operationId: 'gatewayGetMerchantBalance', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Merchant wallet balances', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayMerchantWallet' } } } } } } }, ...errorResponses } },
+};
+
+// ─── Bank / BVN Verification ───
+paths['/v1/gateway/verify-bank-account'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Verify bank account', description: 'Resolve a bank account number and retrieve the account holder name.', operationId: 'gatewayVerifyBankAccount', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'account_bank'], properties: { account_number: { type: 'string', example: '1234567890' }, account_bank: { type: 'string', example: '044', description: 'Bank code' } } } } } }, responses: { '200': { description: 'Account verification result', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayBankVerification' } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/resolve-bvn'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Resolve BVN', description: 'Resolve a Bank Verification Number (BVN) to retrieve identity details.', operationId: 'gatewayResolveBvn', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['bvn'], properties: { bvn: { type: 'string', example: '12345678901' } } } } } }, responses: { '200': { description: 'BVN resolution result', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayBvnResolution' } } } }, ...errorResponses } },
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Build the full spec object
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1316,7 +1405,7 @@ serve(async (req) => {
         { name: 'WooCommerce', description: 'WooCommerce payment plugin integration' },
         { name: 'Sandbox', description: 'Sandbox environment management' },
         { name: 'Developer', description: 'Developer app registration' },
-        { name: 'Payment Gateway', description: 'Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries' },
+        { name: 'Payment Gateway', description: 'Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification' },
       ],
       components: {
         securitySchemes: {

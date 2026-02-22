@@ -686,6 +686,43 @@ Deno.serve(async (req) => {
           r('Retry Failed Payout', 'POST', '/v1/gateway/payouts/{{payout_id}}/retry', {
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
+          // Preauthorization
+          r('Preauthorize Charge', 'POST', '/v1/gateway/charges/preauth', {
+            body: { merchant_id: '{{merchant_id}}', amount: 50000, currency: 'USD', customer_email: 'john@example.com', tx_ref: 'preauth_001' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Hold funds on a card without capturing',
+          }),
+          r('Capture Charge', 'POST', '/v1/gateway/charges/{{charge_id}}/capture', {
+            body: { amount: 50000 },
+            desc: 'Capture a preauthorized charge (full or partial)',
+          }),
+          r('Void Charge', 'POST', '/v1/gateway/charges/{{charge_id}}/void', {
+            body: { charge_id: '{{charge_id}}' },
+            desc: 'Release an authorized hold',
+          }),
+          // OTP Validation
+          r('Validate Charge (OTP)', 'POST', '/v1/gateway/charges/validate', {
+            body: { charge_id: '{{charge_id}}', otp: '123456' },
+            desc: 'Submit OTP to complete a pending charge',
+          }),
+          // Virtual Accounts
+          r('Create Virtual Account', 'POST', '/v1/gateway/virtual-accounts', {
+            body: { merchant_id: '{{merchant_id}}', email: 'merchant@example.com', currency: 'NGN', is_permanent: false },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Virtual Accounts', 'GET', '/v1/gateway/virtual-accounts', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Get Virtual Account', 'GET', '/v1/gateway/virtual-accounts/{{virtual_account_id}}'),
+          // Merchant Balances
+          r('Get Merchant Balances', 'GET', '/v1/gateway/balances', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          // KYC Verification
+          r('Verify Bank Account', 'POST', '/v1/gateway/verify-bank-account', {
+            body: { account_number: '1234567890', account_bank: '044' },
+            desc: 'Resolve bank account holder name',
+          }),
+          r('Resolve BVN', 'POST', '/v1/gateway/resolve-bvn', {
+            body: { bvn: '12345678901' },
+            desc: 'Resolve BVN to identity details',
+          }),
         ],
       },
     ],
