@@ -1,170 +1,169 @@
+# KOB Payment Gateway -- Remaining Gaps vs Flutterwave (Round 3)
 
-
-# KOB Payment Gateway -- Remaining Gaps vs Flutterwave (Round 2)
-
-The previous round closed 6 major gaps. This audit identifies **9 remaining gaps** -- a mix of missing CRUD endpoints for the new tables, missing frontend pages, and Flutterwave features not yet addressed.
+The previous two rounds closed 15 major gaps. This audit compares against Flutterwave's **complete** product surface and identifies **7 remaining feature areas** that would bring KOB to full parity.
 
 ---
 
-## Gap 1: Missing CRUD Endpoints for New Tables
+## Current Coverage Summary
 
-Several new tables were created but only partial endpoint coverage was built. Flutterwave exposes full CRUD on all resources.
-
-| Resource | Missing Endpoints |
-|---|---|
-| Payment Links | `gateway-update-payment-link` (update title/amount/status/expiry), `gateway-delete-payment-link` |
-| Payment Plans | `gateway-get-payment-plan`, `gateway-list-payment-plans`, `gateway-update-payment-plan` |
-| Subscriptions | `gateway-get-subscription`, `gateway-list-subscriptions` |
-| Subaccounts | `gateway-get-subaccount`, `gateway-update-subaccount`, `gateway-delete-subaccount` |
-| Customers | `gateway-list-customers`, `gateway-get-customer`, `gateway-update-customer` |
-| Customer Tokens | `gateway-list-customer-tokens`, `gateway-revoke-customer-token` |
-
-**Total: 14 new edge functions**
+KOB now covers: Charges (6 channels), Payouts (single + batch), Refunds, Disputes, Settlements, Payment Links (CRUD + hosted checkout), Subscriptions (plans + recurring cron), Split Payments (subaccounts + splits), Customer Tokenization, Charge Events, Exchange Rates, Webhooks (inbound + outbound), Beneficiaries, Transaction Export, Risk Limits, and Merchant Onboarding.
 
 ---
 
-## Gap 2: Hosted Checkout Page (`/pay/:slug`)
+## Gap 1: Preauthorization (Auth + Capture)
 
-The plan called for a hosted checkout frontend route but it was never built. The docs reference `/pay/:slug` but the route doesn't exist in `App.tsx`.
+Flutterwave supports **preauthorized charges** -- hold funds on a card without immediately capturing. KOB has no auth/capture flow.
 
 **What's needed:**
-- New page component `src/pages/PaymentCheckout.tsx`
-- Route in `App.tsx`: `/pay/:slug`
-- Fetches payment link details via `gateway-get-payment-link`
-- Renders a branded payment form (amount, phone/email, channel selector)
-- Submits via `gateway-create-charge` with `payment_link_id`
-- Shows success/failure state and optional redirect
+
+- Add `capture_mode` field to `gateway_charges` (`auto` or `manual`)
+- `gateway-preauth-charge` edge function -- creates a Stripe PaymentIntent with `capture_method: manual` or Flutterwave preauth
+- `gateway-capture-charge` edge function -- captures a previously authorized charge (full or partial)
+- `gateway-void-charge` edge function -- releases an authorized hold without capturing
+
+**Database change:** Add `capture_mode` and `captured_amount` columns to `gateway_charges`
 
 ---
 
-## Gap 3: Gateway-Level Exchange Rate Endpoint
+## Gap 2: Virtual Account Numbers (Pay-with-Transfer)
 
-The plan specified a `gateway-get-exchange-rate` endpoint under the `/v1/gateway/` namespace, but it was never created. The existing `exchange-rate-get` function exists for banking but is not exposed under the gateway namespace. Flutterwave has a dedicated `/rates` endpoint.
+Flutterwave provides **dedicated virtual account numbers** for merchants so customers can pay via bank transfer to a unique account. KOB has no virtual account endpoint under the gateway namespace.
 
 **What's needed:**
-- New `gateway-get-exchange-rate` edge function (can proxy to `exchange-rate-get` logic or the Frankfurter API directly)
-- Register in OpenAPI spec under Payment Gateway tag
+
+- `gateway_virtual_accounts` table (merchant_id, account_number, bank_name, provider_ref, status, currency, expiry)
+- `gateway-create-virtual-account` edge function -- provisions a virtual account via Flutterwave's `/v3/virtual-account-numbers` API
+- `gateway-list-virtual-accounts` edge function
+- `gateway-get-virtual-account` edge function
+- Webhook handler update to process `virtualaccount.credit` events and auto-create charges
 
 ---
 
-## Gap 4: Merchant Onboarding Dashboard for New Features
+## Gap 3: Bill Payments / Airtime / Data Bundles (DO NOT IMPLEMENT GAP 3)
 
-The FI portal Staff page (current route) and the merchant dashboard need UI sections for managing:
-- Payment Links (list, create, view details)
-- Subscriptions & Plans (list plans, view subscribers)
-- Subaccounts (list, create)
-- Customers & Tokens (list saved customers)
+Flutterwave offers a **Bills Payment** API for airtime top-ups, data bundles, cable TV, electricity, and other utility payments. KOB has no bill payment capability.
 
 **What's needed:**
-- Dashboard tabs/pages in the merchant gateway section for each new resource
+
+- `gateway_bill_payments` table (merchant_id, bill_type, biller_code, customer_ref, amount, status, provider_ref)
+- `gateway-create-bill-payment` edge function -- routes through Flutterwave's `/v3/bills` API
+- `gateway-list-bill-categories` edge function -- fetches available billers
+- `gateway-get-bill-payment` edge function -- retrieves bill payment status
+- Developer documentation page
 
 ---
 
-## Gap 5: Webhook Events for New Lifecycle Events
+## Gap 4: OTP Validation for Pending Charges
 
-The webhook system currently fires events for `charge.successful`, `charge.failed`, `payout.completed`, `payout.failed`, `refund.completed`. Flutterwave also fires:
-- `subscription.created`, `subscription.cancelled`, `subscription.charge.successful`, `subscription.charge.failed`
-- `payment_link.completed`
+Flutterwave charges (especially mobile money) often require an OTP step. KOB currently has no mechanism to submit an OTP to complete a pending charge.
 
 **What's needed:**
-- Add webhook event insertion in `gateway-create-subscription`, `gateway-cancel-subscription`, `gateway-subscription-charge-cron`
-- Add payment link completion event in the charge webhook handler when `payment_link_id` is present
+
+- `gateway-validate-charge` edge function -- accepts `charge_id` + `otp` and submits to Flutterwave's `/v3/validate-charge` endpoint
+- Update hosted checkout page (`PaymentCheckout.tsx`) to show an OTP input form when the charge status is `processing` and `redirect_url` is absent
 
 ---
 
-## Gap 6: `save_token` Support in `gateway-create-charge`
+## Gap 5: BVN / Account Verification under Gateway Namespace
 
-The plan specified that `gateway-create-charge` should accept `save_token: true` to automatically tokenize a customer's payment method after a successful charge. This was not implemented.
+Flutterwave provides BVN (Bank Verification Number) resolution and account number verification. KOB has `flutterwave-verify-bank` but it is not exposed under the gateway namespace.
 
 **What's needed:**
-- Accept `save_token` and `customer_id` in `gateway-create-charge` body
-- After successful provider response, extract token data from provider and insert into `gateway_customer_tokens`
+
+- `gateway-verify-bank-account` edge function -- wraps existing `flutterwave-verify-bank` logic under the `/v1/gateway/` namespace
+- `gateway-resolve-bvn` edge function -- resolves BVN via Flutterwave's `/v3/kyc/bvns/{bvn}` endpoint
+- Register both in OpenAPI spec
 
 ---
 
-## Gap 7: OpenAPI Spec & Postman Collection Updates
+## Gap 6: Transaction Fee Passthrough Configuration
 
-The 14 new endpoints from Gap 1, plus the exchange rate endpoint, need to be added to:
-- `public/openapi.json`
-- `supabase/functions/public-api-spec/index.ts`
-- `supabase/functions/postman-collection/index.ts`
-
----
-
-## Gap 8: Apple Pay / Google Pay / USSD Channels
-
-Flutterwave supports Apple Pay, Google Pay, and USSD as payment channels. KOB currently only supports `mobile_money`, `card`, and `bank_transfer`.
+Flutterwave allows merchants to configure whether the **customer or merchant bears the transaction fee** (pass-through fees). KOB always deducts fees from the merchant's net.
 
 **What's needed:**
-- Extend `gateway-create-charge` channel enum to include `apple_pay`, `google_pay`, `ussd`
-- Add adapter functions in `gateway-adapters.ts` (these would route through Flutterwave's orchestrator API)
-- Update fee calculation for new channels
+
+- Add `fee_bearer` column to `gateway_merchants` (`merchant` or `customer`, default `merchant`)
+- Accept optional `fee_bearer` override in `gateway-create-charge`
+- When `fee_bearer = customer`, add fee to the displayed amount on hosted checkout
+- Update fee display in `PaymentCheckout.tsx`
 
 ---
 
-## Gap 9: Transfer Retry / Requeue for Failed Payouts
+## Gap 7: Merchant Balance & Wallet
 
-Flutterwave allows merchants to retry failed transfers. KOB has no retry mechanism for payouts.
+Flutterwave provides a **balances** endpoint so merchants can check their available, pending, and ledger balances across currencies. KOB has no wallet/balance abstraction for merchants.
 
 **What's needed:**
-- `gateway-retry-payout` edge function that re-submits a failed payout to the provider
-- Status transition validation (only `failed` payouts can be retried)
+
+- `gateway_merchant_wallets` table (merchant_id, currency, available_balance, pending_balance, ledger_balance)
+- `gateway-get-merchant-balance` edge function
+- Auto-update balances on charge completion (increment pending), settlement (move pending to available), payout (decrement available)
+- Dashboard widget on the FI portal showing balances
 
 ---
 
 ## Priority Order
 
-1. **Missing CRUD Endpoints (Gap 1)** -- API completeness, highest impact
-2. **Hosted Checkout Page (Gap 2)** -- promised in docs, user-facing
-3. **save_token in create-charge (Gap 6)** -- enables tokenization flow
-4. **Webhook Events for New Lifecycles (Gap 5)** -- production reliability
-5. **Gateway Exchange Rate Endpoint (Gap 3)** -- API completeness
-6. **OpenAPI / Postman Updates (Gap 7)** -- developer experience
-7. **Payout Retry (Gap 9)** -- operational feature
-8. **Merchant Dashboard UI (Gap 4)** -- admin experience
-9. **Apple Pay / Google Pay / USSD (Gap 8)** -- advanced channels
+1. **OTP Validation (Gap 4)** -- critical for mobile money charge completion
+2. **Preauthorization (Gap 1)** -- essential for card-based marketplaces and hotels
+3. **Fee Passthrough (Gap 6)** -- quick merchant configuration win
+4. **Virtual Accounts (Gap 2)** -- alternative payment collection method
+5. **Merchant Balances (Gap 7)** -- operational visibility
+6. **Bank/BVN Verification (Gap 5)** -- KYC completeness
+7. **Bill Payments (Gap 3)** -- value-added service (DO NOT IMPLEMENT  THIS FEATURE)
 
 ---
 
 ## Technical Summary
 
-| Category | Count |
-|---|---|
-| New edge functions | 16 |
-| Modified edge functions | 3 |
-| New frontend pages | 2 |
-| Modified frontend files | 3 |
-| Modified docs/specs | 3 |
 
-### New Edge Functions (16)
-1. `gateway-update-payment-link`
-2. `gateway-delete-payment-link`
-3. `gateway-get-payment-plan`
-4. `gateway-list-payment-plans`
-5. `gateway-update-payment-plan`
-6. `gateway-get-subscription`
-7. `gateway-list-subscriptions`
-8. `gateway-get-subaccount`
-9. `gateway-update-subaccount`
-10. `gateway-delete-subaccount`
-11. `gateway-list-customers`
-12. `gateway-get-customer`
-13. `gateway-update-customer`
-14. `gateway-list-customer-tokens`
-15. `gateway-revoke-customer-token`
-16. `gateway-retry-payout`
+| Category                    | Count |
+| --------------------------- | ----- |
+| New edge functions          | 12    |
+| Modified edge functions     | 2     |
+| New database tables         | 3     |
+| Modified database tables    | 2     |
+| New/modified frontend files | 3     |
+| OpenAPI/Postman updates     | 2     |
 
-### Modified Edge Functions (3)
-- `gateway-create-charge` -- add `save_token` + `customer_id` support, extend channel enum
-- `gateway-subscription-charge-cron` -- add webhook events for subscription charges
-- `gateway-cancel-subscription` -- add webhook event
 
-### New Frontend
-- `src/pages/PaymentCheckout.tsx` -- hosted checkout for `/pay/:slug`
-- Route registration in `App.tsx`
+### New Edge Functions (12)
 
-### Spec Updates
-- `public/openapi.json` -- add all new endpoints
-- `supabase/functions/public-api-spec/index.ts` -- add paths
-- `supabase/functions/postman-collection/index.ts` -- add requests
+1. `gateway-preauth-charge`
+2. `gateway-capture-charge`
+3. `gateway-void-charge`
+4. `gateway-create-virtual-account`
+5. `gateway-list-virtual-accounts`
+6. `gateway-get-virtual-account`
+7. `gateway-create-bill-payment`
+8. `gateway-list-bill-categories`
+9. `gateway-get-bill-payment`
+10. `gateway-validate-charge`
+11. `gateway-verify-bank-account`
+12. `gateway-resolve-bvn`
 
+### New Edge Function (Wallet)
+
+13. `gateway-get-merchant-balance`
+
+### Modified Edge Functions (2)
+
+- `gateway-create-charge` -- accept `fee_bearer` and `capture_mode`
+- `gateway-webhook-flutterwave` -- handle `virtualaccount.credit` events
+
+### New Database Tables (3)
+
+- `gateway_virtual_accounts`
+- `gateway_bill_payments`
+- `gateway_merchant_wallets`
+
+### Modified Database Tables (2)
+
+- `gateway_charges` -- add `capture_mode`, `captured_amount` columns
+- `gateway_merchants` -- add `fee_bearer` column
+
+### Frontend Changes
+
+- Update `PaymentCheckout.tsx` -- OTP input step, fee display for customer-borne fees
+- New developer guide: `GatewayBillPaymentsGuide.tsx`
+- OpenAPI + Postman collection updates
