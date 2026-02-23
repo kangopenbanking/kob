@@ -568,6 +568,78 @@ Deno.serve(async (req) => {
         ],
       },
 
+      // ── Merchants ─────────────────────────────────────────────────
+      {
+        name: 'Merchants',
+        item: [
+          r('Create Merchant', 'POST', '/v1/merchants', {
+            body: { business_name: 'Ma Boutique Douala', business_email: 'contact@maboutique.cm', business_phone: '+237677123456' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Merchant', 'GET', '/v1/merchants', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('List Merchants', 'GET', '/v1/merchants'),
+          r('Update Merchant', 'PATCH', '/v1/merchants', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }], body: { business_name: 'Updated Name' } }),
+          r('Submit Merchant', 'POST', '/v1/merchants', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'action', value: 'submit' }], desc: 'DRAFT → SUBMITTED' }),
+          r('Activate Merchant (Admin)', 'POST', '/v1/merchants', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'action', value: 'activate' }], desc: 'VERIFIED → ACTIVE' }),
+          r('Suspend Merchant (Admin)', 'POST', '/v1/merchants', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'action', value: 'suspend' }] }),
+          r('Submit KYB', 'POST', '/v1/merchants/kyb', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'action', value: 'submit' }],
+            body: { registration_number: 'RC/DLA/2026/B/001', tax_id: 'TAX-CM-12345' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get KYB Status', 'GET', '/v1/merchants/kyb', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Review KYB (Admin)', 'POST', '/v1/merchants/kyb', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'action', value: 'review' }],
+            body: { decision: 'approved', reason: 'All documents verified' },
+          }),
+          r('Issue API Key', 'POST', '/v1/merchants/api-keys', {
+            body: { merchant_id: '{{merchant_id}}', environment: 'sandbox', label: 'Primary' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List API Keys', 'GET', '/v1/merchants/api-keys', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Revoke API Key', 'DELETE', '/v1/merchants/api-keys', { body: { key_id: 'KEY_UUID', merchant_id: '{{merchant_id}}' } }),
+          r('Rotate API Key', 'PATCH', '/v1/merchants/api-keys', { body: { key_id: 'KEY_UUID', merchant_id: '{{merchant_id}}' } }),
+          r('Add Settlement Account', 'POST', '/v1/merchants/settlement-accounts', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }],
+            body: { account_type: 'mobile_money', phone_number: '237677123456', currency: 'XAF', is_default: true },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Settlement Accounts', 'GET', '/v1/merchants/settlement-accounts', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Register Webhook', 'POST', '/v1/merchants/webhooks', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }],
+            body: { url: 'https://yourapp.com/webhooks/kob', events: ['charge.successful', 'payout.completed'], label: 'Production' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Webhooks', 'GET', '/v1/merchants/webhooks', { query: [{ key: 'merchant_id', value: '{{merchant_id}}' }] }),
+          r('Test Webhook Ping', 'POST', '/v1/merchants/webhooks', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'webhook_id', value: 'WH_UUID' }, { key: 'action', value: 'test' }],
+          }),
+          r('Webhook Deliveries', 'GET', '/v1/merchants/webhooks', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'webhook_id', value: 'WH_UUID' }, { key: 'action', value: 'deliveries' }],
+          }),
+        ],
+      },
+
+      // ── Reconciliation ──────────────────────────────────────────────
+      {
+        name: 'Reconciliation',
+        item: [
+          r('Run Reconciliation', 'POST', '/v1/gateway/reconciliation', {
+            body: { merchant_id: '{{merchant_id}}', provider: 'flutterwave', period_start: '2026-02-01T00:00:00Z', period_end: '2026-02-28T23:59:59Z' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Reconciliation Runs', 'GET', '/v1/gateway/reconciliation'),
+          r('Get Run Mismatches', 'GET', '/v1/gateway/reconciliation', { query: [{ key: 'run_id', value: 'RUN_UUID' }, { key: 'action', value: 'mismatches' }] }),
+          r('Resolve Mismatch', 'POST', '/v1/gateway/reconciliation', {
+            query: [{ key: 'mismatch_id', value: 'MM_UUID' }, { key: 'action', value: 'resolve' }],
+            body: { resolution_notes: 'Verified with provider' },
+          }),
+          r('Fee Report', 'GET', '/v1/gateway/reports/fees', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'from', value: '2026-02-01' }, { key: 'to', value: '2026-02-28' }],
+          }),
+        ],
+      },
+
       // ── Payment Gateway ─────────────────────────────────────────────
       {
         name: 'Payment Gateway',
