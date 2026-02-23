@@ -23,6 +23,7 @@ import {
   ArrowLeftRight,
   BarChart3,
   FileCode,
+  Store,
   type LucideIcon,
 } from "lucide-react";
 
@@ -60,6 +61,7 @@ export const adminNavigation: AdminNavSection[] = [
   {
     title: "Payments & Settlements",
     items: [
+      { title: "Merchant Management", path: "/admin/merchants", icon: Store },
       { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
       { title: "Dispute Management", path: "/admin/disputes", icon: Scale },
       { title: "Payout Management", path: "/admin/payouts", icon: Banknote },
