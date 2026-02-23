@@ -45,6 +45,17 @@ export function DashboardRouter() {
         return;
       }
 
+      // Check for merchant role
+      const { data: isMerchant } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'merchant' as any
+      });
+
+      if (isMerchant) {
+        navigate("/merchant", { replace: true });
+        return;
+      }
+
       // Check for institution
       const { data: institution } = await supabase
         .from("institutions")
@@ -107,6 +118,17 @@ export function useDashboardPath() {
 
         if (isAdmin) {
           setDashboardPath("/admin");
+          return;
+        }
+
+        // Check merchant role
+        const { data: isMerchant } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'merchant' as any
+        });
+
+        if (isMerchant) {
+          setDashboardPath("/merchant");
           return;
         }
 

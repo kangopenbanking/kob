@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 interface RoleGuardProps {
   children: React.ReactNode;
   /** Roles allowed to access this route. Admin always has access. */
-  allowedRoles: Array<'personal' | 'institution' | 'tpp' | 'staff' | 'developer'>;
+  allowedRoles: Array<'personal' | 'institution' | 'tpp' | 'staff' | 'developer' | 'merchant'>;
   /** Where to redirect unauthorized users (defaults to /dashboard) */
   redirectTo?: string;
 }
@@ -101,6 +101,21 @@ export const RoleGuard = ({ children, allowedRoles, redirectTo = '/dashboard' }:
             });
 
             if (isTpp) {
+              setAuthorized(true);
+              setLoading(false);
+              return;
+            }
+            continue;
+          }
+
+          // For merchant role, check via has_role
+          if (role === 'merchant') {
+            const { data: isMerchant } = await supabase.rpc('has_role', {
+              _user_id: user.id,
+              _role: 'merchant' as any,
+            });
+
+            if (isMerchant) {
               setAuthorized(true);
               setLoading(false);
               return;
