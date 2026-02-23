@@ -79,6 +79,36 @@ serve(async (req) => {
       return new Response(JSON.stringify({ status: 'revoked' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // PATCH - Rotate key (revoke old + create new atomically)
+    if (method === 'PATCH') {
+      const { key_id, merchant_id, environment, label } = await req.json();
+      if (!key_id || !merchant_id) return new Response(JSON.stringify({ error: 'key_id and merchant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+      const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).eq('user_id', user.id).single();
+      if (!merchant) return new Response(JSON.stringify({ error: 'merchant_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+      // Revoke old key
+      await supabase.from('gateway_merchant_api_keys').update({ is_active: false }).eq('id', key_id).eq('merchant_id', merchant_id);
+
+      // Create new key
+      const env = environment || 'sandbox';
+      const rawKey = crypto.randomUUID() + '-' + crypto.randomUUID();
+      const prefix = env === 'sandbox' ? `sk_test_${rawKey.slice(0, 8)}` : `sk_live_${rawKey.slice(0, 8)}`;
+      const fullKey = `${prefix}_${rawKey}`;
+      const encoder = new TextEncoder();
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(fullKey));
+      const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      const { data: newKey, error } = await supabase.from('gateway_merchant_api_keys').insert({
+        merchant_id, environment: env, api_key_prefix: prefix, api_key_hash: hashHex, label: label || 'Rotated key',
+      }).select('id, merchant_id, environment, api_key_prefix, label, is_active, created_at').single();
+      if (error) throw error;
+
+      return new Response(JSON.stringify({ ...newKey, api_key: fullKey, revoked_key_id: key_id, warning: 'Store this key securely. It will not be shown again.' }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

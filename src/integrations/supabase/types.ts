@@ -4465,6 +4465,65 @@ export type Database = {
           },
         ]
       }
+      gateway_merchant_settlement_accounts: {
+        Row: {
+          account_name: string | null
+          account_number: string
+          account_type: string
+          bank_code: string | null
+          bank_name: string | null
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          is_default: boolean
+          merchant_id: string
+          metadata: Json | null
+          phone_number: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number: string
+          account_type?: string
+          bank_code?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          merchant_id: string
+          metadata?: Json | null
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string
+          account_type?: string
+          bank_code?: string | null
+          bank_name?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          is_default?: boolean
+          merchant_id?: string
+          metadata?: Json | null
+          phone_number?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_merchant_settlement_accounts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_merchant_wallets: {
         Row: {
           available_balance: number
@@ -4499,6 +4558,56 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "gateway_merchant_wallets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_merchant_webhooks: {
+        Row: {
+          created_at: string
+          disabled_at: string | null
+          events: string[]
+          failure_count: number
+          id: string
+          is_active: boolean
+          label: string | null
+          merchant_id: string
+          secret: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          disabled_at?: string | null
+          events?: string[]
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          merchant_id: string
+          secret: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          disabled_at?: string | null
+          events?: string[]
+          failure_count?: number
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          merchant_id?: string
+          secret?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_merchant_webhooks_merchant_id_fkey"
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "gateway_merchants"
@@ -4847,6 +4956,121 @@ export type Database = {
           },
         ]
       }
+      gateway_reconciliation_mismatches: {
+        Row: {
+          created_at: string
+          id: string
+          internal_value: string | null
+          mismatch_type: string
+          object_id: string
+          object_type: string
+          provider_value: string | null
+          resolution_notes: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          run_id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          internal_value?: string | null
+          mismatch_type: string
+          object_id: string
+          object_type: string
+          provider_value?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          run_id: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          internal_value?: string | null
+          mismatch_type?: string
+          object_id?: string
+          object_type?: string
+          provider_value?: string | null
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          run_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_reconciliation_mismatches_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_reconciliation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_reconciliation_runs: {
+        Row: {
+          created_at: string
+          finished_at: string | null
+          id: string
+          initiated_by: string | null
+          matched: number | null
+          merchant_id: string | null
+          mismatched: number | null
+          period_end: string
+          period_start: string
+          provider: string | null
+          started_at: string | null
+          status: string
+          summary: Json | null
+          total_internal: number | null
+          total_provider: number | null
+        }
+        Insert: {
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          matched?: number | null
+          merchant_id?: string | null
+          mismatched?: number | null
+          period_end: string
+          period_start: string
+          provider?: string | null
+          started_at?: string | null
+          status?: string
+          summary?: Json | null
+          total_internal?: number | null
+          total_provider?: number | null
+        }
+        Update: {
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          initiated_by?: string | null
+          matched?: number | null
+          merchant_id?: string | null
+          mismatched?: number | null
+          period_end?: string
+          period_start?: string
+          provider?: string | null
+          started_at?: string | null
+          status?: string
+          summary?: Json | null
+          total_internal?: number | null
+          total_provider?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_reconciliation_runs_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_refunds: {
         Row: {
           amount: number
@@ -5146,6 +5370,66 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_webhook_deliveries: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          event_type: string
+          id: string
+          last_error: string | null
+          merchant_id: string
+          next_retry_at: string | null
+          payload: Json
+          response_body_snippet: string | null
+          response_code: number | null
+          status: string
+          webhook_id: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          event_type: string
+          id?: string
+          last_error?: string | null
+          merchant_id: string
+          next_retry_at?: string | null
+          payload?: Json
+          response_body_snippet?: string | null
+          response_code?: number | null
+          status?: string
+          webhook_id?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          event_type?: string
+          id?: string
+          last_error?: string | null
+          merchant_id?: string
+          next_retry_at?: string | null
+          payload?: Json
+          response_body_snippet?: string | null
+          response_code?: number | null
+          status?: string
+          webhook_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_webhook_deliveries_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_webhook_deliveries_webhook_id_fkey"
+            columns: ["webhook_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchant_webhooks"
             referencedColumns: ["id"]
           },
         ]
