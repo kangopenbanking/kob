@@ -44,6 +44,7 @@ const navSections = [
     items: [
       { title: "Gateway Quickstart", path: "/developer/gateway/quickstart" },
       { title: "Charges (Collect)", path: "/developer/gateway/charges" },
+      { title: "Verify Charge", path: "/developer/gateway/verification" },
       { title: "Payment Links", path: "/developer/gateway/payment-links" },
       { title: "Subscriptions", path: "/developer/gateway/subscriptions" },
       { title: "Mobile Money", path: "/developer/api/mobile-money" },
@@ -60,6 +61,8 @@ const navSections = [
       { title: "Beneficiaries", path: "/developer/api/beneficiaries" },
       { title: "Settlements", path: "/developer/gateway/settlements" },
       { title: "Refunds & Reversals", path: "/developer/gateway/refunds" },
+      { title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" },
+      { title: "Virtual Accounts", path: "/developer/gateway/virtual-accounts" },
     ],
   },
   {
