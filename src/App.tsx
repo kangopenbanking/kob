@@ -152,6 +152,7 @@ import InstitutionAlerts from "./pages/institution/InstitutionAlerts";
 import GatewayPaymentLinks from "./pages/institution/GatewayPaymentLinks";
 import GatewaySubscriptions from "./pages/institution/GatewaySubscriptions";
 import GatewaySubaccounts from "./pages/institution/GatewaySubaccounts";
+import GatewayMerchants from "./pages/institution/GatewayMerchants";
 import GatewayCustomers from "./pages/institution/GatewayCustomers";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
@@ -281,6 +282,7 @@ function App() {
               <Route path="gateway-subscriptions" element={<GatewaySubscriptions />} />
               <Route path="gateway-subaccounts" element={<GatewaySubaccounts />} />
               <Route path="gateway-customers" element={<GatewayCustomers />} />
+              <Route path="gateway-merchants" element={<GatewayMerchants />} />
             </Route>
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             

@@ -63,6 +63,7 @@ export const institutionNavigation = [
   {
     title: "Payment Gateway",
     items: [
+      { title: "Merchants", path: "/fi-portal/gateway-merchants", icon: Store, sectionKey: "gateway-merchants" },
       { title: "Payment Links", path: "/fi-portal/gateway-payment-links", icon: Link2, sectionKey: "gateway-payment-links" },
       { title: "Subscriptions & Plans", path: "/fi-portal/gateway-subscriptions", icon: RefreshCw, sectionKey: "gateway-subscriptions" },
       { title: "Subaccounts", path: "/fi-portal/gateway-subaccounts", icon: GitBranch, sectionKey: "gateway-subaccounts" },
@@ -136,6 +137,7 @@ export const ALL_PORTAL_SECTIONS = [
   { key: 'profile', label: 'Institution Profile' },
   { key: 'team', label: 'Team Members' },
   { key: 'settings', label: 'Settings' },
+  { key: 'gateway-merchants', label: 'Merchants' },
   { key: 'gateway-payment-links', label: 'Payment Links' },
   { key: 'gateway-subscriptions', label: 'Subscriptions & Plans' },
   { key: 'gateway-subaccounts', label: 'Subaccounts' },
