@@ -19,6 +19,7 @@ import IntegrationWorkflow from "./pages/IntegrationWorkflow";
 import Pricing from "./pages/Pricing";
 import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
 import { InstitutionLayout } from "@/components/institution/InstitutionLayout"; // fi-portal sidebar
+import { MerchantLayout } from "@/components/merchant/MerchantLayout";
 import DeveloperHome from "./pages/developer/DeveloperHome";
 import GettingStarted from "./pages/developer/GettingStarted";
 import AispReference from "./pages/developer/AispReference";
@@ -217,6 +218,22 @@ import Architecture from "./pages/Architecture";
 import KeyFunctionsSummary from "./pages/KeyFunctionsSummary";
 import ROICalculator from "./pages/ROICalculator";
 import PaymentCheckout from "./pages/PaymentCheckout";
+import MerchantDashboard from "./pages/merchant/MerchantDashboard";
+import MerchantTransactions from "./pages/merchant/MerchantTransactions";
+import MerchantPaymentLinks from "./pages/merchant/MerchantPaymentLinks";
+import MerchantCustomers from "./pages/merchant/MerchantCustomers";
+import MerchantSubscriptions from "./pages/merchant/MerchantSubscriptions";
+import MerchantPayouts from "./pages/merchant/MerchantPayouts";
+import MerchantSettlements from "./pages/merchant/MerchantSettlements";
+import MerchantRefunds from "./pages/merchant/MerchantRefunds";
+import MerchantApiKeys from "./pages/merchant/MerchantApiKeys";
+import MerchantWebhooks from "./pages/merchant/MerchantWebhooks";
+import MerchantSettlementAccounts from "./pages/merchant/MerchantSettlementAccounts";
+import MerchantSubaccounts from "./pages/merchant/MerchantSubaccounts";
+import MerchantKYB from "./pages/merchant/MerchantKYB";
+import MerchantDisputes from "./pages/merchant/MerchantDisputes";
+import MerchantProfile from "./pages/merchant/MerchantProfile";
+import MerchantAnalytics from "./pages/merchant/MerchantAnalytics";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -284,6 +301,25 @@ function App() {
               <Route path="gateway-subaccounts" element={<GatewaySubaccounts />} />
               <Route path="gateway-customers" element={<GatewayCustomers />} />
               <Route path="gateway-merchants" element={<GatewayMerchants />} />
+            </Route>
+            {/* Merchant Portal Routes */}
+            <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
+              <Route index element={<MerchantDashboard />} />
+              <Route path="transactions" element={<MerchantTransactions />} />
+              <Route path="payment-links" element={<MerchantPaymentLinks />} />
+              <Route path="customers" element={<MerchantCustomers />} />
+              <Route path="subscriptions" element={<MerchantSubscriptions />} />
+              <Route path="payouts" element={<MerchantPayouts />} />
+              <Route path="settlements" element={<MerchantSettlements />} />
+              <Route path="refunds" element={<MerchantRefunds />} />
+              <Route path="api-keys" element={<MerchantApiKeys />} />
+              <Route path="webhooks" element={<MerchantWebhooks />} />
+              <Route path="settlement-accounts" element={<MerchantSettlementAccounts />} />
+              <Route path="subaccounts" element={<MerchantSubaccounts />} />
+              <Route path="kyb" element={<MerchantKYB />} />
+              <Route path="disputes" element={<MerchantDisputes />} />
+              <Route path="profile" element={<MerchantProfile />} />
+              <Route path="analytics" element={<MerchantAnalytics />} />
             </Route>
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             

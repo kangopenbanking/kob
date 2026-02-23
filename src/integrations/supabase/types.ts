@@ -11153,7 +11153,13 @@ export type Database = {
       account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN"
       account_subtype: "Current" | "Savings" | "CreditCard" | "Loan"
       account_type: "Business" | "Personal"
-      app_role: "admin" | "institution" | "moderator" | "personal" | "staff"
+      app_role:
+        | "admin"
+        | "institution"
+        | "moderator"
+        | "personal"
+        | "staff"
+        | "merchant"
       card_funding_status:
         | "pending"
         | "processing"
@@ -11372,7 +11378,14 @@ export const Constants = {
       account_scheme: ["LOCAL_BANK", "MOMO", "IBAN"],
       account_subtype: ["Current", "Savings", "CreditCard", "Loan"],
       account_type: ["Business", "Personal"],
-      app_role: ["admin", "institution", "moderator", "personal", "staff"],
+      app_role: [
+        "admin",
+        "institution",
+        "moderator",
+        "personal",
+        "staff",
+        "merchant",
+      ],
       card_funding_status: [
         "pending",
         "processing",
