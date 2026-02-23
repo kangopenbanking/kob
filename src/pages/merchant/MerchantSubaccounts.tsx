@@ -36,16 +36,15 @@ export default function MerchantSubaccounts() {
     if (!merchantId || !form.business_name) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("gateway_subaccounts").insert({
+      const { error } = await supabase.from("gateway_subaccounts").insert([{
         merchant_id: merchantId,
-        subaccount_id: `SUB_${Date.now().toString(36).toUpperCase()}`,
-        business_name: form.business_name,
+        subaccount_name: form.business_name,
         split_type: form.split_type,
         split_value: Number(form.split_value) || 0,
-        account_bank: form.account_bank || null,
+        settlement_bank: form.account_bank || null,
         account_number: form.account_number || null,
         is_active: true,
-      });
+      }]);
       if (error) throw error;
       toast.success("Subaccount created");
       setDialogOpen(false);
@@ -118,9 +117,9 @@ export default function MerchantSubaccounts() {
                 <tbody>
                   {subs.map(s => (
                     <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30">
-                      <td className="py-3 px-4 font-medium">{s.business_name || s.subaccount_id}</td>
+                      <td className="py-3 px-4 font-medium">{s.subaccount_name || s.id}</td>
                       <td className="py-3 px-4">{s.split_value}{s.split_type === "percentage" ? "%" : " flat"}</td>
-                      <td className="py-3 px-4">{s.account_bank || "—"}</td>
+                      <td className="py-3 px-4">{s.settlement_bank || "—"}</td>
                       <td className="py-3 px-4"><Badge variant={s.is_active ? "default" : "secondary"}>{s.is_active ? "Active" : "Inactive"}</Badge></td>
                       <td className="py-3 px-4">
                         <div className="flex gap-1">

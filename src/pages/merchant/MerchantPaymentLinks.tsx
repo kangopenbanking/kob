@@ -46,7 +46,7 @@ export default function MerchantPaymentLinks() {
         amount: form.amount ? Number(form.amount) : null,
         currency: form.currency,
         slug: generateSlug(form.title),
-        is_active: true,
+        status: "active",
         redirect_url: form.redirect_url || null,
       });
       if (error) throw error;
@@ -64,7 +64,7 @@ export default function MerchantPaymentLinks() {
   };
 
   const toggleActive = async (id: string, current: boolean) => {
-    await supabase.from("gateway_payment_links").update({ is_active: !current }).eq("id", id);
+    await supabase.from("gateway_payment_links").update({ status: current ? "inactive" : "active" }).eq("id", id);
     toast.success(`Link ${current ? "deactivated" : "activated"}`);
     loadData();
   };
@@ -125,7 +125,7 @@ export default function MerchantPaymentLinks() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2">
                       <p className="font-medium truncate">{l.title}</p>
-                      <Badge variant={l.is_active ? "default" : "secondary"}>{l.is_active ? "Active" : "Inactive"}</Badge>
+                      <Badge variant={l.status === "active" ? "default" : "secondary"}>{l.status === "active" ? "Active" : "Inactive"}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground mt-0.5">
                       {l.amount ? `${Number(l.amount).toLocaleString()} ${l.currency}` : "Flexible amount"} · Created {l.created_at ? format(new Date(l.created_at), "MMM d, yyyy") : "—"}
@@ -134,7 +134,7 @@ export default function MerchantPaymentLinks() {
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="sm" onClick={() => copyLink(l.slug)} title="Copy link"><Copy className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => window.open(`/pay/${l.slug}`, "_blank")} title="Open"><ExternalLink className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleActive(l.id, l.is_active)}>{l.is_active ? "Disable" : "Enable"}</Button>
+                    <Button variant="ghost" size="sm" onClick={() => toggleActive(l.id, l.status === "active")}>{l.status === "active" ? "Disable" : "Enable"}</Button>
                     <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteLink(l.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>
                 </div>
