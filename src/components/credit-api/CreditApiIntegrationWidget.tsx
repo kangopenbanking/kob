@@ -82,32 +82,7 @@ export function CreditApiIntegrationWidget({ institutionId }: CreditApiIntegrati
     enabled: !!apiClient?.id
   });
 
-  const copyToClipboard = (text: string, field: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedField(field);
-    toast.success("Copied to clipboard");
-    setTimeout(() => setCopiedField(null), 2000);
-  };
-
-  const getDailyLimit = (tier: string) => {
-    const limits: Record<string, number> = {
-      free: 100,
-      standard: 5000,
-      premium: 50000,
-      enterprise: Infinity
-    };
-    return limits[tier] || 0;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="text-center py-8 text-muted-foreground">
-        Loading Credit API credentials...
-      </div>
-    );
-  }
-
-  // Check for existing pending request
+  // Check for existing pending request - MUST be before any conditional returns
   const { data: existingRequest } = useQuery({
     queryKey: ['credit-api-access-request', institutionId],
     queryFn: async () => {
@@ -146,6 +121,31 @@ export function CreditApiIntegrationWidget({ institutionId }: CreditApiIntegrati
       }
     },
   });
+
+  const copyToClipboard = (text: string, field: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    toast.success("Copied to clipboard");
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const getDailyLimit = (tier: string) => {
+    const limits: Record<string, number> = {
+      free: 100,
+      standard: 5000,
+      premium: 50000,
+      enterprise: Infinity
+    };
+    return limits[tier] || 0;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        Loading Credit API credentials...
+      </div>
+    );
+  }
 
   if (!apiClient) {
     return (
