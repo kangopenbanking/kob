@@ -44,14 +44,14 @@ export default function MerchantApiKeys() {
     setSaving(true);
     try {
       const key = generateKey();
-      const { error } = await supabase.from("gateway_merchant_api_keys").insert({
+      const { error } = await supabase.from("gateway_merchant_api_keys").insert([{
         merchant_id: merchantId,
-        key_prefix: key.substring(0, 12),
-        key_hash: key, // In production this would be hashed
+        api_key_prefix: key.substring(0, 12),
+        api_key_hash: key, // In production this would be hashed
         environment: form.environment,
         label: form.label || `${form.environment} key`,
         is_active: true,
-      });
+      }]);
       if (error) throw error;
       toast.success("API key generated! Copy it now — it won't be shown again in full.");
       navigator.clipboard.writeText(key);
@@ -133,11 +133,11 @@ export default function MerchantApiKeys() {
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2 font-mono text-sm bg-muted/50 p-3 rounded-md">
-                  <span className="flex-1 truncate">{visibleKeys.has(k.id) ? k.key_prefix + "••••••••••" : "••••••••••••••••"}</span>
+                  <span className="flex-1 truncate">{visibleKeys.has(k.id) ? (k.api_key_prefix || k.key_prefix) + "••••••••••" : "••••••••••••••••"}</span>
                   <Button variant="ghost" size="sm" onClick={() => toggleVisibility(k.id)}>
                     {visibleKeys.has(k.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(k.key_prefix); toast.success("Key prefix copied"); }}><Copy className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard.writeText(k.api_key_prefix || k.key_prefix); toast.success("Key prefix copied"); }}><Copy className="h-4 w-4" /></Button>
                   {k.is_active && (
                     <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => revokeKey(k.id)}>Revoke</Button>
                   )}
