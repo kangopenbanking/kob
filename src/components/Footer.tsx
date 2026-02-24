@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { Building2, MapPin, Package, Store } from "lucide-react";
+import { Building2, MapPin, Package } from "lucide-react";
 import { BrandName } from "./BrandName";
 
 export const Footer = () => {
@@ -85,20 +85,6 @@ export const Footer = () => {
               <li><Link to="/integrations/make" className="hover:text-primary transition-colors">Make</Link></li>
               <li><Link to="/integrations/bubble" className="hover:text-primary transition-colors">Bubble</Link></li>
               <li><Link to="/integrations/retool" className="hover:text-primary transition-colors">Retool</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4 flex items-center gap-1">
-              <Store className="h-4 w-4 text-primary" />
-              Merchants
-            </h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/merchant-register" className="hover:text-primary transition-colors">Become a Merchant</Link></li>
-              <li><Link to="/merchant" className="hover:text-primary transition-colors">Merchant Portal</Link></li>
-              <li><Link to="/developer/gateway/charges" className="hover:text-primary transition-colors">Accept Payments</Link></li>
-              <li><Link to="/developer/gateway/payouts" className="hover:text-primary transition-colors">Payouts</Link></li>
-              <li><Link to="/developer/gateway/disputes" className="hover:text-primary transition-colors">Disputes</Link></li>
             </ul>
           </div>
 
