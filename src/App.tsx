@@ -234,6 +234,7 @@ import MerchantKYB from "./pages/merchant/MerchantKYB";
 import MerchantDisputes from "./pages/merchant/MerchantDisputes";
 import MerchantProfile from "./pages/merchant/MerchantProfile";
 import MerchantAnalytics from "./pages/merchant/MerchantAnalytics";
+import MerchantRegister from "./pages/merchant/MerchantRegister";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -321,6 +322,7 @@ function App() {
               <Route path="profile" element={<MerchantProfile />} />
               <Route path="analytics" element={<MerchantAnalytics />} />
             </Route>
+            <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             
             {/* Admin Routes - Nested with AdminLayout */}
