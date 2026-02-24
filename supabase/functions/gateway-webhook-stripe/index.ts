@@ -75,13 +75,15 @@ serve(async (req) => {
       if (chargeId) {
         const { data: charge } = await supabase.from('gateway_charges').select('*').eq('provider_ref', chargeId).maybeSingle();
         if (charge) {
-          await supabase.from('gateway_disputes').insert({
+          const disputeRef = 'DSP-' + crypto.randomUUID().slice(0, 8).toUpperCase();
+          const { data: newDispute } = await supabase.from('gateway_disputes').insert({
             charge_id: charge.id, merchant_id: charge.merchant_id,
             amount: (obj.amount || 0) / 100, currency: (obj.currency || 'xaf').toUpperCase(),
             status: mapStripeDisputeStatus(obj.status), reason: obj.reason,
+            dispute_ref: disputeRef,
             evidence_due_by: obj.evidence_details?.due_by ? new Date(obj.evidence_details.due_by * 1000).toISOString() : null,
             provider: 'stripe', provider_ref: obj.id, provider_raw: obj,
-          });
+          }).select().single();
 
           await supabase.from('gateway_webhook_events').insert({
             merchant_id: charge.merchant_id,
@@ -89,6 +91,13 @@ serve(async (req) => {
             payload: { dispute_id: obj.id, charge_id: charge.id, amount: (obj.amount || 0) / 100, reason: obj.reason },
             status: 'pending', next_retry_at: new Date().toISOString(),
           });
+
+          // Send dispute notifications
+          if (newDispute) {
+            await supabase.functions.invoke('gateway-dispute-notify', {
+              body: { dispute_id: newDispute.id, event_type: 'dispute.created' },
+            });
+          }
         }
       }
     }
