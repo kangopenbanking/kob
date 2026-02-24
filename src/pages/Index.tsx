@@ -21,6 +21,7 @@ import {
   Rocket,
   Shield,
   Smartphone,
+  Store,
   TrendingUp,
   UserPlus,
   Users,
@@ -90,13 +91,13 @@ const Index = () => {
           <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Three Portals, One Platform
+              Four Portals, One Platform
             </h2>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Access the right tools for your role in the banking ecosystem
             </p>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1">
               <Code className="h-12 w-12 text-primary mb-4" />
               <h3 className="text-2xl font-bold mb-3">Developer Portal</h3>
@@ -144,6 +145,31 @@ const Index = () => {
               </ul>
               <Link to="/admin">
                 <Button className="w-full" variant="outline">Access Admin Portal</Button>
+              </Link>
+            </Card>
+
+            <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1">
+              <Store className="h-12 w-12 text-primary mb-4" />
+              <h3 className="text-2xl font-bold mb-3">Merchant Portal</h3>
+              <p className="text-muted-foreground mb-6">
+                Accept payments, manage disputes, and track settlements with self-service tools.
+              </p>
+              <ul className="space-y-2 mb-6 text-sm">
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Payment collection & payouts</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span>Dispute & chargeback management</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <span>KYB verification & API keys</span>
+                </li>
+              </ul>
+              <Link to="/merchant-register">
+                <Button className="w-full">Get Started as Merchant</Button>
               </Link>
             </Card>
 
