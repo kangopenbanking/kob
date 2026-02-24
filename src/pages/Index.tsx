@@ -168,8 +168,8 @@ const Index = () => {
                   <span>KYB verification & API keys</span>
                 </li>
               </ul>
-              <Link to="/merchant-register">
-                <Button className="w-full">Get Started as Merchant</Button>
+              <Link to="/for-merchants">
+                <Button className="w-full">Learn More</Button>
               </Link>
             </Card>
 

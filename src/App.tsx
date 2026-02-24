@@ -192,6 +192,7 @@ import TPPRegistrationReview from "./pages/admin/TPPRegistrationReview";
 import InstitutionVerification from "./pages/admin/InstitutionVerification";
 import BusinessKYBSubmission from "./pages/BusinessKYBSubmission";
 import ForDevelopers from "./pages/ForDevelopers";
+import ForMerchants from "./pages/ForMerchants";
 import ApiCatalog from "./pages/ApiCatalog";
 import QuickStart from "./pages/developer/QuickStart";
 import Playground from "./pages/developer/Playground";
@@ -434,6 +435,7 @@ function App() {
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
+            <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />
             <Route path="/api-catalog" element={<Layout><ApiCatalog /></Layout>} />
             
             {/* No-Code Integration Guides */}
