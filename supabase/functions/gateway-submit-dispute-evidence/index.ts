@@ -48,7 +48,12 @@ serve(async (req) => {
       }
     }
 
-    await supabase.from('gateway_disputes').update({ status: 'under_review', updated_at: new Date().toISOString() }).eq('id', dispute_id);
+    await supabase.from('gateway_disputes').update({ status: 'under_review', evidence_submitted: true, evidence_data: evidence, updated_at: new Date().toISOString() }).eq('id', dispute_id);
+
+    // Send evidence submitted notification
+    await supabase.functions.invoke('gateway-dispute-notify', {
+      body: { dispute_id, event_type: 'dispute.evidence_submitted' },
+    });
 
     const { gateway_merchants, ...disputeData } = dispute;
     return new Response(JSON.stringify({ ...disputeData, status: 'under_review' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
