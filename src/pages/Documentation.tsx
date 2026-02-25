@@ -184,6 +184,29 @@ const Documentation = () => {
 
       <div className="container mx-auto px-4 py-12 max-w-6xl space-y-12">
 
+        {/* Developer Portal CTA */}
+        <section>
+          <Card className="border-primary/20 bg-gradient-to-r from-primary/5 via-background to-primary/5">
+            <CardContent className="flex flex-col md:flex-row items-center gap-6 p-8">
+              <div className="flex-shrink-0 h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <Layers className="h-7 w-7 text-primary" />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                <h2 className="text-xl font-bold mb-1">Developer Portal</h2>
+                <p className="text-muted-foreground">
+                  Explore integration types, use cases, SDKs, code samples, security practices, and more — all in one place. Sign up to unlock sandbox access and advanced features.
+                </p>
+              </div>
+              <Button asChild size="lg" className="shrink-0">
+                <Link to="/developer">
+                  Visit Portal
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+
         {/* Base URLs */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Base URLs</h2>
