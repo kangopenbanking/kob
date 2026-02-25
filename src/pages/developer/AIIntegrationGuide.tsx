@@ -298,7 +298,7 @@ class KangOpenBanking {
 
   async authenticate(code: string): Promise<void> {
     const response = await axios.post(
-      \`\${this.baseUrl}/v1/oauth/token\`,
+      \`\${this.baseUrl}/functions/v1/oauth-token\`,
       new URLSearchParams({
         grant_type: 'authorization_code',
         code,

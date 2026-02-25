@@ -37,7 +37,7 @@ export default function ForDevelopers() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const quickStartCode = `curl -X POST "https://api.kangopenbanking.com/v1/oauth/token" \\
+  const quickStartCode = `curl -X POST "https://api.kangopenbanking.com/functions/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d 'grant_type=client_credentials&client_id=YOUR_CLIENT_ID&client_secret=YOUR_CLIENT_SECRET'`;
 

@@ -23,7 +23,7 @@ export default function QuickStart() {
 
   const codeExamples = {
     curl: {
-      auth: `curl -X POST "https://api.kangopenbanking.com/v1/oauth/token" \\
+      auth: `curl -X POST "https://api.kangopenbanking.com/functions/v1/oauth-token" \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
@@ -35,7 +35,7 @@ export default function QuickStart() {
     },
     javascript: {
       auth: `const response = await fetch(
-  'https://api.kangopenbanking.com/v1/oauth/token',
+  'https://api.kangopenbanking.com/functions/v1/oauth-token',
   {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -63,7 +63,7 @@ const accounts = await response.json();`
       auth: `import requests
 
 response = requests.post(
-    'https://api.kangopenbanking.com/v1/oauth/token',
+    'https://api.kangopenbanking.com/functions/v1/oauth-token',
     data={
         'grant_type': 'client_credentials',
         'client_id': 'YOUR_CLIENT_ID',
