@@ -121,7 +121,7 @@ export default function GettingStarted() {
               {
                 language: "curl",
                 label: "cURL",
-                code: `curl -X POST https://api.kangopenbanking.com/v1/oauth/token \\
+                code: `curl -X POST https://api.kangopenbanking.com/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
   -d "grant_type=client_credentials" \\
   -d "client_id=YOUR_CLIENT_ID" \\
@@ -132,7 +132,7 @@ export default function GettingStarted() {
                 language: "javascript",
                 label: "Node.js",
                 code: `const response = await fetch(
-  'https://api.kangopenbanking.com/v1/oauth/token',
+  'https://api.kangopenbanking.com/functions/v1/oauth-token',
   {
     method: 'POST',
     headers: {
@@ -156,7 +156,7 @@ const accessToken = data.access_token;`
                 code: `import requests
 
 response = requests.post(
-    'https://api.kangopenbanking.com/v1/oauth/token',
+    'https://api.kangopenbanking.com/functions/v1/oauth-token',
     data={
         'grant_type': 'client_credentials',
         'client_id': 'YOUR_CLIENT_ID',

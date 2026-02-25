@@ -422,7 +422,7 @@ module.exports = router;`
     }
 
     const response = await fetch(
-      'https://api.kangopenbanking.com/v1/oauth/token',
+      'https://api.kangopenbanking.com/functions/v1/oauth-token',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
