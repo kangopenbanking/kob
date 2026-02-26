@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Loader2, Send, CheckCircle2, XCircle, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 
 
 const eventTemplates = {
@@ -35,6 +36,7 @@ const eventTemplates = {
 export default function WebhookTesting() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [webhooks, setWebhooks] = useState<any[]>([]);
   const [testResult, setTestResult] = useState<any>(null);
@@ -59,9 +61,10 @@ export default function WebhookTesting() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/auth');
+        setLoading(false);
         return;
       }
+      setIsAuthenticated(true);
 
       // Fetch sandbox account
       const { data: accountData } = await supabase
@@ -145,6 +148,16 @@ export default function WebhookTesting() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Webhook Testing Tool</h1>
+        <p className="text-muted-foreground mb-4">Send test events to your registered webhooks</p>
+        <AuthRequiredAlert feature="webhook testing" />
       </div>
     );
   }

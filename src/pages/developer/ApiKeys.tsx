@@ -12,6 +12,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Key, Copy, CheckCircle, XCircle, Plus, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
+
+
+import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
 
 interface ApiClient {
   id: string;
@@ -31,6 +35,7 @@ interface ApiClient {
 export default function ApiKeys() {
   const [apiKeys, setApiKeys] = useState<ApiClient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showSecretDialog, setShowSecretDialog] = useState(false);
   const [newClientSecret, setNewClientSecret] = useState("");
@@ -54,9 +59,10 @@ export default function ApiKeys() {
   const checkAuthAndLoadKeys = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/auth");
+      setLoading(false);
       return;
     }
+    setIsAuthenticated(true);
     await loadApiKeys();
   };
 
@@ -106,10 +112,9 @@ export default function ApiKeys() {
       if (!session) {
         toast({
           title: "Authentication required",
-          description: "Please log in to create API credentials",
+          description: "Please sign in to create API credentials",
           variant: "destructive"
         });
-        navigate('/auth');
         return;
       }
 
@@ -203,6 +208,16 @@ export default function ApiKeys() {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">API Keys</h1>
+        <p className="text-muted-foreground mb-4">Manage your API credentials for accessing the platform</p>
+        <AuthRequiredAlert feature="API key management" />
       </div>
     );
   }
