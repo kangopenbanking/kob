@@ -15,7 +15,7 @@ const BankMore: React.FC = () => {
     { icon: Shield, label: 'KYC Status', description: 'Verification', path: 'kyc' },
     { icon: Bell, label: 'Notifications', description: 'Alerts & updates', path: 'more/alerts' },
     { icon: Settings, label: 'Settings', description: 'Account & security', path: 'more/settings' },
-    { icon: HelpCircle, label: 'Help & Support', description: 'FAQs & contact', path: '' },
+    { icon: HelpCircle, label: 'Help & Support', description: 'FAQs & contact', path: 'more/help' },
   ];
 
   const handleLogout = async () => {

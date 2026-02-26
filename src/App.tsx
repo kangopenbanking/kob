@@ -290,6 +290,15 @@ import BankHistory from "./pages/banking-app/BankHistory";
 import BankMore from "./pages/banking-app/BankMore";
 import BankSendMoney from "./pages/banking-app/BankSendMoney";
 import BankQRPay from "./pages/banking-app/BankQRPay";
+import BankMobileMoney from "./pages/banking-app/BankMobileMoney";
+import BankBills from "./pages/banking-app/BankBills";
+import BankReceive from "./pages/banking-app/BankReceive";
+import BankSavings from "./pages/banking-app/BankSavings";
+import BankLoans from "./pages/banking-app/BankLoans";
+import BankCreditScore from "./pages/banking-app/BankCreditScore";
+import BankSettings from "./pages/banking-app/BankSettings";
+import BankAlerts from "./pages/banking-app/BankAlerts";
+import BankHelp from "./pages/banking-app/BankHelp";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -618,9 +627,18 @@ function App() {
               <Route path="payments" element={<BankPayments />} />
               <Route path="payments/send" element={<BankSendMoney />} />
               <Route path="payments/qr" element={<BankQRPay />} />
+              <Route path="payments/mobile-money" element={<BankMobileMoney />} />
+              <Route path="payments/bills" element={<BankBills />} />
+              <Route path="payments/receive" element={<BankReceive />} />
               <Route path="cards" element={<BankCards />} />
               <Route path="history" element={<BankHistory />} />
               <Route path="more" element={<BankMore />} />
+              <Route path="more/savings" element={<BankSavings />} />
+              <Route path="more/loans" element={<BankLoans />} />
+              <Route path="more/credit" element={<BankCreditScore />} />
+              <Route path="more/settings" element={<BankSettings />} />
+              <Route path="more/alerts" element={<BankAlerts />} />
+              <Route path="more/help" element={<BankHelp />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
