@@ -8,30 +8,28 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Shield, UserCheck, Building2, Upload, CheckCircle, AlertTriangle } from "lucide-react";
+import { Shield, UserCheck, Building2, CheckCircle, AlertTriangle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { DocumentUploader } from "@/components/kyc/DocumentUploader";
 
 interface FormState {
-  // Tier 1
   fullName: string;
   dateOfBirth: string;
   nationality: string;
   phone: string;
-  // Tier 2
   idType: string;
   idNumber: string;
   idExpiry: string;
   addressLine1: string;
   addressCity: string;
   addressCountry: string;
-  // Tier 3 / EDD
   sourceOfFunds: string;
   occupation: string;
   employerName: string;
   annualIncome: string;
   purposeOfAccount: string;
   taxId: string;
-  // Business
   businessName: string;
   businessType: string;
   registrationNumber: string;
@@ -39,7 +37,6 @@ interface FormState {
   industry: string;
   annualTurnover: string;
   businessDescription: string;
-  // Declarations
   pepDeclaration: boolean;
   sanctionsDeclaration: boolean;
   accuracyDeclaration: boolean;
@@ -53,9 +50,40 @@ const initial: FormState = {
   pepDeclaration: false, sanctionsDeclaration: false, accuracyDeclaration: false,
 };
 
+interface DocPaths {
+  idFront: string;
+  idBack: string;
+  selfie: string;
+  proofOfAddress: string;
+  // KYB docs
+  registrationCertificate: string;
+  articlesOfAssociation: string;
+  taxCertificate: string;
+  businessProofOfAddress: string;
+  bankStatement: string;
+  boardResolution: string;
+  uboDeclaration: string;
+}
+
+const initialDocs: DocPaths = {
+  idFront: "", idBack: "", selfie: "", proofOfAddress: "",
+  registrationCertificate: "", articlesOfAssociation: "", taxCertificate: "",
+  businessProofOfAddress: "", bankStatement: "", boardResolution: "", uboDeclaration: "",
+};
+
 export default function KycDueDiligence() {
   const [form, setForm] = useState<FormState>(initial);
+  const [docs, setDocs] = useState<DocPaths>(initialDocs);
   const [tab, setTab] = useState("individual");
+  const [submitting, setSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
+
+  // Fetch user ID on mount
+  useState(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserId(data.user.id);
+    });
+  });
 
   const set = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm(f => ({ ...f, [field]: e.target.value }));
@@ -66,13 +94,97 @@ export default function KycDueDiligence() {
   const toggle = (field: keyof FormState) => () =>
     setForm(f => ({ ...f, [field]: !f[field] }));
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const setDoc = (field: keyof DocPaths) => (path: string) =>
+    setDocs(d => ({ ...d, [field]: path }));
+
+  const clearDoc = (field: keyof DocPaths) => () =>
+    setDocs(d => ({ ...d, [field]: "" }));
+
+  const getPublicUrl = (path: string) => {
+    if (!path) return "";
+    const { data } = supabase.storage.from("kyc-documents").getPublicUrl(path);
+    return data.publicUrl;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.accuracyDeclaration) {
       toast.error("You must confirm the accuracy declaration before submitting.");
       return;
     }
-    toast.success("KYC application submitted successfully. You will be notified once verification is complete.");
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast.error("You must be logged in to submit KYC.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      if (tab === "individual") {
+        // Validate required docs
+        if (!docs.idFront) { toast.error("Please upload your ID document (front)."); setSubmitting(false); return; }
+        if (!docs.selfie) { toast.error("Please upload a selfie photo."); setSubmitting(false); return; }
+        if (!docs.proofOfAddress) { toast.error("Please upload proof of address."); setSubmitting(false); return; }
+
+        const { data, error } = await supabase.functions.invoke("kyc-submit", {
+          body: {
+            verification_type: "identity",
+            document_type: form.idType || "national_id",
+            document_number: form.idNumber,
+            document_country: form.nationality || "CM",
+            document_expiry_date: form.idExpiry,
+            document_front_url: getPublicUrl(docs.idFront),
+            document_back_url: docs.idBack ? getPublicUrl(docs.idBack) : undefined,
+            selfie_url: getPublicUrl(docs.selfie),
+          },
+        });
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        toast.success("KYC verification submitted successfully. You will be notified once reviewed.");
+      } else {
+        // Business KYB
+        if (!docs.registrationCertificate) { toast.error("Please upload registration certificate."); setSubmitting(false); return; }
+        if (!docs.articlesOfAssociation) { toast.error("Please upload articles of association."); setSubmitting(false); return; }
+        if (!docs.businessProofOfAddress) { toast.error("Please upload business proof of address."); setSubmitting(false); return; }
+
+        const { data, error } = await supabase.functions.invoke("business-kyc-submit", {
+          body: {
+            business_name: form.businessName,
+            registration_number: form.registrationNumber,
+            business_type: form.businessType,
+            industry: form.industry,
+            business_address: {
+              street: form.addressLine1,
+              city: form.addressCity,
+              country: form.registrationCountry || "CM",
+            },
+            business_description: form.businessDescription,
+            annual_turnover: form.annualTurnover ? parseFloat(form.annualTurnover) : null,
+            registration_certificate_url: getPublicUrl(docs.registrationCertificate),
+            articles_of_association_url: getPublicUrl(docs.articlesOfAssociation),
+            tax_certificate_url: docs.taxCertificate ? getPublicUrl(docs.taxCertificate) : null,
+            proof_of_address_url: getPublicUrl(docs.businessProofOfAddress),
+            bank_statement_url: docs.bankStatement ? getPublicUrl(docs.bankStatement) : null,
+          },
+        });
+
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+
+        toast.success("Business KYB submitted successfully. You will be notified once reviewed.");
+      }
+
+      setForm(initial);
+      setDocs(initialDocs);
+    } catch (err: any) {
+      toast.error(err.message || "Submission failed. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -198,14 +310,52 @@ export default function KycDueDiligence() {
                     <Input id="addressCity" value={form.addressCity} onChange={set("addressCity")} />
                   </div>
                 </div>
-                <div className="p-4 border rounded-lg bg-muted/30 flex items-center gap-3">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Document Upload</p>
-                    <p className="text-xs text-muted-foreground">Upload your ID document and proof of address (utility bill or bank statement, less than 3 months old)</p>
+
+                {/* Document Upload Section */}
+                {userId && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    <DocumentUploader
+                      label="ID Document — Front"
+                      documentType="id_front"
+                      userId={userId}
+                      folder="kyc"
+                      required
+                      description="Passport, National ID, or Driver's License"
+                      onUploadComplete={setDoc("idFront")}
+                      onRemove={clearDoc("idFront")}
+                    />
+                    <DocumentUploader
+                      label="ID Document — Back"
+                      documentType="id_back"
+                      userId={userId}
+                      folder="kyc"
+                      description="Required for National ID cards"
+                      onUploadComplete={setDoc("idBack")}
+                      onRemove={clearDoc("idBack")}
+                    />
+                    <DocumentUploader
+                      label="Selfie / Liveness Photo"
+                      documentType="selfie"
+                      userId={userId}
+                      folder="kyc"
+                      required
+                      accept="image/jpeg,image/png,image/webp"
+                      description="Clear photo of your face for identity verification"
+                      onUploadComplete={setDoc("selfie")}
+                      onRemove={clearDoc("selfie")}
+                    />
+                    <DocumentUploader
+                      label="Proof of Address"
+                      documentType="proof_of_address"
+                      userId={userId}
+                      folder="kyc"
+                      required
+                      description="Utility bill or bank statement (less than 3 months old)"
+                      onUploadComplete={setDoc("proofOfAddress")}
+                      onRemove={clearDoc("proofOfAddress")}
+                    />
                   </div>
-                  <Button type="button" variant="outline" size="sm" className="ml-auto">Upload Files</Button>
-                </div>
+                )}
               </CardContent>
             </Card>
 
@@ -347,14 +497,78 @@ export default function KycDueDiligence() {
                   <Label htmlFor="businessDescription">Business Description *</Label>
                   <Textarea id="businessDescription" value={form.businessDescription} onChange={set("businessDescription")} placeholder="Describe your business activities, products/services, and target market" rows={3} />
                 </div>
-                <div className="p-4 border rounded-lg bg-muted/30 flex items-center gap-3">
-                  <Upload className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm font-medium">Business Document Upload</p>
-                    <p className="text-xs text-muted-foreground">RCCM certificate, articles of association, board resolution, UBO declaration, latest financial statements</p>
+
+                {/* Business Document Uploads */}
+                {userId && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
+                    <DocumentUploader
+                      label="Registration Certificate (RCCM)"
+                      documentType="registration_certificate"
+                      userId={userId}
+                      folder="kyb"
+                      required
+                      description="Official business registration certificate"
+                      onUploadComplete={setDoc("registrationCertificate")}
+                      onRemove={clearDoc("registrationCertificate")}
+                    />
+                    <DocumentUploader
+                      label="Articles of Association / Statutes"
+                      documentType="articles_of_association"
+                      userId={userId}
+                      folder="kyb"
+                      required
+                      description="Company bylaws or statutes"
+                      onUploadComplete={setDoc("articlesOfAssociation")}
+                      onRemove={clearDoc("articlesOfAssociation")}
+                    />
+                    <DocumentUploader
+                      label="Tax Certificate / Patente"
+                      documentType="tax_certificate"
+                      userId={userId}
+                      folder="kyb"
+                      description="Current tax registration certificate (optional)"
+                      onUploadComplete={setDoc("taxCertificate")}
+                      onRemove={clearDoc("taxCertificate")}
+                    />
+                    <DocumentUploader
+                      label="Proof of Business Address"
+                      documentType="business_proof_of_address"
+                      userId={userId}
+                      folder="kyb"
+                      required
+                      description="Utility bill or lease agreement"
+                      onUploadComplete={setDoc("businessProofOfAddress")}
+                      onRemove={clearDoc("businessProofOfAddress")}
+                    />
+                    <DocumentUploader
+                      label="Bank Statement"
+                      documentType="bank_statement"
+                      userId={userId}
+                      folder="kyb"
+                      description="Latest 3 months (optional)"
+                      onUploadComplete={setDoc("bankStatement")}
+                      onRemove={clearDoc("bankStatement")}
+                    />
+                    <DocumentUploader
+                      label="Board Resolution"
+                      documentType="board_resolution"
+                      userId={userId}
+                      folder="kyb"
+                      description="For companies with boards (optional)"
+                      onUploadComplete={setDoc("boardResolution")}
+                      onRemove={clearDoc("boardResolution")}
+                    />
+                    <DocumentUploader
+                      label="UBO Declaration Document"
+                      documentType="ubo_declaration"
+                      userId={userId}
+                      folder="kyb"
+                      description="Beneficial ownership declaration (optional)"
+                      onUploadComplete={setDoc("uboDeclaration")}
+                      onRemove={clearDoc("uboDeclaration")}
+                    />
                   </div>
-                  <Button type="button" variant="outline" size="sm" className="ml-auto">Upload Files</Button>
-                </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -388,8 +602,11 @@ export default function KycDueDiligence() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => setForm(initial)}>Reset Form</Button>
-          <Button type="submit" className="gap-2"><CheckCircle className="h-4 w-4" /> Submit KYC Application</Button>
+          <Button type="button" variant="outline" onClick={() => { setForm(initial); setDocs(initialDocs); }}>Reset Form</Button>
+          <Button type="submit" className="gap-2" disabled={submitting}>
+            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+            {submitting ? "Submitting..." : "Submit KYC Application"}
+          </Button>
         </div>
       </form>
     </div>
