@@ -1,76 +1,135 @@
 
 
-## Core Gateway Capabilities — E2E Audit & Gap Analysis
+## Open Banking & Transfers E2E Audit Plan
 
-### Audit Results: Feature-by-Feature Verification
+### Current State Summary
 
-| Feature | Edge Functions | OpenAPI Spec | Postman | Dev Portal Page | Status |
-|---------|--------------|-------------|---------|----------------|--------|
-| Card Processing (charge, 3DS) | `gateway-create-charge` (card→Stripe, requires_action for 3DS) | `/v1/gateway/charges` | Yes | `GatewayChargesGuide` | COMPLETE |
-| Tokenization | `gateway-create-customer`, `gateway-charge-token`, `gateway-list-customer-tokens`, `gateway-revoke-customer-token` | `/v1/gateway/customers`, `/v1/gateway/charges/token` | Yes | `GatewayTokenizationGuide` | COMPLETE |
-| Mobile Money | `gateway-create-charge` (mobile_money→Flutterwave), webhooks | `/v1/gateway/charges` | Yes | `GatewayChargesGuide` | COMPLETE |
-| Refund & Chargeback | `gateway-create-refund`, `gateway-get-refund`, `gateway-list-refunds` | `/v1/gateway/refunds` | Yes | `GatewayRefundsGuide` | COMPLETE |
-| Hosted Checkout | `gateway-create-payment-link`, `/pay/:slug` route | `/v1/gateway/payment-links` | Yes | `GatewayPaymentLinksGuide` | COMPLETE |
-| Payouts/Disbursements | `gateway-create-payout`, `gateway-create-payout-batch`, `gateway-retry-payout`, `gateway-fund-account`, `gateway-withdraw-to-bank` | All present | Yes | `GatewayPayoutsGuide`, `GatewayFundingGuide` | COMPLETE |
-| Webhook Subscriptions | `gateway-merchant-webhooks`, `gateway-deliver-webhook`, 24 event types | `/v1/gateway/webhooks` | Yes | `GatewayWebhooksGuide` | COMPLETE |
-| Recurring Billing | `gateway-create-payment-plan`, `gateway-create-subscription`, `gateway-cancel-subscription`, `gateway-subscription-charge-cron` | `/v1/gateway/payment-plans`, `/v1/gateway/subscriptions` | Yes | `GatewaySubscriptionsGuide` | COMPLETE |
-| Risk & Fraud | `transaction-monitor` (velocity, amount threshold, pattern anomaly) | **MISSING** | **MISSING** | `RiskAuditReference` (limits/audit only) | **GAP** |
-| Multi-currency/FX | `gateway-get-exchange-rate` (Frankfurter API), settlement_currency in charges | **MISSING** from gateway tag | Postman has it | `GatewayChargesGuide` mentions it | **GAP** |
-| SDKs & Libraries | N/A (documentation only) | N/A | N/A | `SDKsPage` (8 SDKs) | COMPLETE |
-| Fee Estimate | `gateway-fee-estimate` | Present | Present | `GatewayChargesGuide` | COMPLETE |
-| Invoice Generation | `generate-invoice` (admin-only) | **MISSING** | Present | **MISSING** from subscriptions guide | **GAP** |
+**AISP (Account Information) — COMPLETE:**
+- Edge functions: `aisp-create-consent`, `aisp-accounts`, `aisp-balances`, `aisp-transactions`, `aisp-beneficiaries`, `aisp-standing-orders`, `aisp-direct-debits`
+- Consent lifecycle: Create → Authorize (`consent-authorize`) → Use → Revoke (`consent-revoke`)
+- Expiry handled by `expire_old_consents()` DB function
+- Permission checks via `check_aisp_permission` and `check_aisp_permission_with_account` DB functions
+- Data access gated by `x-consent-id` header
+- OpenAPI spec: 8 AISP endpoints documented
+- Developer page: `AispReference.tsx` — fully documented with all endpoints and best practices
+- **No gaps found**
 
-### Identified Gaps (3 items)
+**PISP (Payment Initiation) — COMPLETE:**
+- Edge functions: `pisp-create-consent`, `pisp-domestic-payment`, `pisp-payment-submission`, `pisp-payment-details`
+- Payment lifecycle: Pending → Authorized → AcceptedSettlementInProgress → Completed/Failed
+- Idempotency-Key enforcement on payment-submission with 24h TTL and replay
+- Consent validation with expiry check (`expires_at > NOW()`)
+- Fee recording via `record_transaction_fee` RPC
+- OpenAPI spec: 4 PISP endpoints + consent management
+- Developer page: `PispReference.tsx` — fully documented with lifecycle, error codes, bulk payments, SWIFT/international
+- **No gaps found**
 
-#### Gap 1: Risk & Fraud API not in OpenAPI spec or Postman collection
-- `transaction-monitor` edge function exists and works (velocity checks, amount thresholds, pattern anomalies)
-- `RiskAuditReference.tsx` documents limits and audit trail but not the transaction scoring endpoint
-- Missing from OpenAPI spec: `/v1/risk/score-transaction`
-- Missing from Postman collection: "Score Transaction" request
+**Transfer Channels — Audit Results:**
 
-**Fix**: Add `/v1/gateway/risk/score` to OpenAPI spec and Postman collection. Update `RiskAuditReference.tsx` with the scoring endpoint documentation.
+| Transfer Type | Edge Function | OpenAPI Spec | Dev Portal Page | Status |
+|---|---|---|---|---|
+| Bank-to-Bank (internal accounts) | `api-transfers` | **MISSING** | **MISSING** | **GAP** |
+| FI-to-FI (institution) | `facilitated-bank-transfer` | `/v1/flutterwave/bank-transfer` (partial) | `BankingReference.tsx` (partial) | **GAP** |
+| MoMo-to-Bank | `mobile-money-to-bank` | `/v1/mobile-money/to-bank` | **MISSING** from BankingReference | **GAP** |
+| Card-to-Bank | `gateway-fund-account` + `gateway-withdraw-to-bank` | Both present | `GatewayFundingGuide.tsx`, `BankingReference.tsx` | COMPLETE |
+| Customer Account-to-External Bank | `gateway-withdraw-to-bank` | Present | `GatewayFundingGuide.tsx` | COMPLETE |
+| Bulk Transfers | `bulk-transfers` | `/v1/banking/bulk-transfers` | `PispReference.tsx` | COMPLETE |
+| External Bank Transfer (Flutterwave) | `flutterwave-bank-transfer` | `/v1/flutterwave/bank-transfer` | **MISSING** dedicated section | **GAP** |
+| FI Facilitated Bank Transfer | `facilitated-bank-transfer` | **MISSING** as distinct endpoint | **MISSING** | **GAP** |
 
-#### Gap 2: Gateway Exchange Rate not in OpenAPI spec under Payment Gateway tag
-- `gateway-get-exchange-rate` edge function exists and works
-- Only documented under Banking Operations as `/v1/banking/exchange-rate`
-- Missing as `/v1/gateway/exchange-rate` in the Payment Gateway tag for gateway-specific FX lookups
+### Identified Gaps (5 items)
 
-**Fix**: Add `/v1/gateway/exchange-rate` to OpenAPI spec under Payment Gateway tag. Already in Postman.
+#### Gap 1: Internal Account-to-Account Transfer not in OpenAPI spec
+- `api-transfers` edge function exists and works (validates ownership, checks balance, creates transaction, updates balance)
+- **Missing** from OpenAPI spec entirely — no `/v1/banking/internal-transfer` path
+- **Missing** from developer documentation pages
 
-#### Gap 3: Invoice generation not documented in Subscriptions guide
-- `generate-invoice` edge function exists (admin-only)
-- Not referenced in `GatewaySubscriptionsGuide.tsx`
-- Developers integrating recurring billing need to know invoices are auto-generated
+#### Gap 2: Facilitated Bank Transfer not documented as distinct endpoint
+- `facilitated-bank-transfer` edge function exists for institution-facilitated Flutterwave transfers with KOB fee calculation
+- Not documented as a separate endpoint in OpenAPI spec (only generic `/v1/flutterwave/bank-transfer`)
+- Missing from developer portal documentation
 
-**Fix**: Add a note/section to `GatewaySubscriptionsGuide.tsx` about invoice generation for subscription billing cycles.
+#### Gap 3: MoMo-to-Bank transfer missing from BankingReference page
+- OpenAPI spec has `/v1/mobile-money/to-bank` 
+- `BankingReference.tsx` doesn't mention this transfer type
+- No cross-reference in the transfer documentation
+
+#### Gap 4: No dedicated Transfers Guide page in developer portal
+- Multiple transfer types exist across different edge functions but no unified "Transfers & Fund Movement" documentation page
+- Transfer use cases are scattered across `PispReference.tsx`, `BankingReference.tsx`, and `GatewayFundingGuide.tsx`
+
+#### Gap 5: Missing E2E tests for Open Banking consent lifecycle and transfer flows
+- Current tests only cover gateway fee calculations and status mapping
+- No tests for AISP/PISP consent creation schemas, consent expiry logic, or transfer endpoint documentation coverage
+
+---
 
 ### Implementation Plan
 
-**Stage 1**: Add `/v1/gateway/risk/score` and `/v1/gateway/exchange-rate` to the OpenAPI spec (`public-api-spec/index.ts`)
+#### Stage 1: Add Internal Transfer endpoint to OpenAPI spec
+Add `/v1/banking/internal-transfer` to `public-api-spec/index.ts` under Banking Operations tag with full request/response schema matching `api-transfers` edge function.
 
-**Stage 2**: Add "Score Transaction" and "Gateway Exchange Rate" to Postman collection (`postman-collection/index.ts`)
+#### Stage 2: Add Facilitated Transfer endpoint to OpenAPI spec
+Add `/v1/banking/facilitated-transfer` to `public-api-spec/index.ts` under Banking Operations tag, documenting the institution-facilitated Flutterwave payout flow with KOB fee calculation.
 
-**Stage 3**: Update `RiskAuditReference.tsx` — add Transaction Risk Scoring endpoint documentation with request/response schema
+#### Stage 3: Add both endpoints to Postman collection
+Add "Internal Account Transfer" and "Facilitated Bank Transfer" requests to `postman-collection/index.ts`.
 
-**Stage 4**: Update `GatewaySubscriptionsGuide.tsx` — add invoice generation note
+#### Stage 4: Create unified Transfers Guide page
+Create `src/pages/developer/TransfersGuide.tsx` documenting all 6 transfer types:
 
-**Stage 5**: Update `gateway-fee-estimate` fee_breakdown to include `account_funding` and `ussd` channels
+```text
+Transfer Types Documented:
+1. Internal Account-to-Account (POST /v1/banking/internal-transfer)
+2. Bank-to-External-Bank via Flutterwave (POST /v1/flutterwave/bank-transfer)
+3. Institution Facilitated Transfer (POST /v1/banking/facilitated-transfer)
+4. Mobile Money to Bank (POST /v1/mobile-money/to-bank)
+5. Account Funding via Gateway (POST /v1/gateway/fund-account)
+6. Withdrawal to External Bank (POST /v1/gateway/withdraw-to-bank)
+```
 
-**Stage 6**: Update Changelog to v2.3.0
+Each with request/response schemas, use case descriptions, and error handling notes.
 
-**Stage 7**: Expand `src/test/gateway-integration.test.ts` with tests for USSD/Apple Pay/Google Pay fee calculations, and new OpenAPI endpoint coverage validation
+#### Stage 5: Update BankingReference.tsx
+Add "Mobile Money to Bank" and "Internal Account Transfer" sections with endpoint documentation and cross-links to TransfersGuide.
 
-**Stage 8**: Run final E2E tests
+#### Stage 6: Add route and navigation
+- Add route in `App.tsx`: `developer/api/transfers` → `TransfersGuide`
+- Add sidebar nav item in `DeveloperLayout.tsx` under Payments section: "Transfers & Fund Movement"
 
-### Files to modify:
-- `supabase/functions/public-api-spec/index.ts` — add 2 new paths
-- `supabase/functions/postman-collection/index.ts` — add 2 new requests
-- `supabase/functions/gateway-fee-estimate/index.ts` — update fee_breakdown for all channels
-- `src/pages/developer/RiskAuditReference.tsx` — add scoring endpoint
-- `src/pages/developer/GatewaySubscriptionsGuide.tsx` — add invoice note
-- `src/pages/developer/Changelog.tsx` — add v2.3.0 entry
-- `src/test/gateway-integration.test.ts` — expand test coverage
+#### Stage 7: Expand E2E test suite
+Add to `src/test/gateway-integration.test.ts`:
+- AISP consent creation schema validation
+- PISP payment lifecycle state validation
+- Internal transfer endpoint in OpenAPI spec
+- Facilitated transfer endpoint in OpenAPI spec
+- MoMo-to-bank endpoint in OpenAPI spec
+- All 6 transfer types documented verification
 
-### Non-Breaking Guarantee
-All changes are additive. No existing endpoints, routes, or data structures are modified. Only documentation synchronization and test expansion.
+#### Stage 8: Update Changelog to v2.4.0
+Add entries for:
+- Internal account transfer endpoint documented
+- Facilitated bank transfer endpoint documented
+- Unified Transfers Guide page added
+- BankingReference expanded with MoMo-to-bank and internal transfers
+- E2E test suite expanded with Open Banking consent and transfer coverage
+
+---
+
+### Technical Details
+
+**Files to create (1):**
+- `src/pages/developer/TransfersGuide.tsx` — Unified transfers documentation page (~250 lines)
+
+**Files to modify (6):**
+- `supabase/functions/public-api-spec/index.ts` — Add 2 new paths (internal-transfer, facilitated-transfer)
+- `supabase/functions/postman-collection/index.ts` — Add 2 new requests
+- `src/pages/developer/BankingReference.tsx` — Add MoMo-to-bank and internal transfer sections
+- `src/App.tsx` — Add TransfersGuide route
+- `src/components/developer/DeveloperLayout.tsx` — Add sidebar nav item
+- `src/pages/developer/Changelog.tsx` — Add v2.4.0 entry
+- `src/test/gateway-integration.test.ts` — Expand with Open Banking and transfer tests
+
+**Non-Breaking Guarantee:**
+All changes are additive. No existing endpoints, routes, edge functions, or data structures are modified. Only documentation synchronization, new page creation, and test expansion.
 
