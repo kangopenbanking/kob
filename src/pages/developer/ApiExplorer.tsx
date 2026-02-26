@@ -254,7 +254,7 @@ grant_type=client_credentials
           </div>
         ) : (
           <SwaggerUI
-            url={effectiveUrl}
+            url={`${effectiveUrl}?_t=${Date.now()}`}
             docExpansion="list"
             deepLinking={true}
             displayOperationId={true}
