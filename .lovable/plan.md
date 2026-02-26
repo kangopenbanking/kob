@@ -1,53 +1,60 @@
 
 
-## Current State
-All banking app instances share one React template. Differentiation is limited to branding fields in the `institutions` table: `institution_name`, `logo_url`, `primary_color`, `tagline`.
+## Analysis Summary
 
-## Proposed: Per-Institution Feature Configuration
+The per-institution customization system is **already fully implemented**:
 
-### 1. Database Migration
-Add a `app_config` JSONB column to the `institutions` table with defaults:
-```sql
-ALTER TABLE institutions 
-ADD COLUMN app_config jsonb DEFAULT '{
-  "features": {
-    "cards": true,
-    "savings": true,
-    "loans": true,
-    "credit_score": true,
-    "mobile_money": true,
-    "qr_payments": true,
-    "bill_payments": true
-  },
-  "home_layout": {
-    "show_balance_card": true,
-    "show_account_carousel": true,
-    "show_financial_services": true,
-    "show_recent_transactions": true
-  }
-}'::jsonb;
-```
+1. **Database**: `app_config` JSONB column on `institutions` table (migration exists)
+2. **TenantProvider**: Fetches `app_config`, exposes `features` and `homeLayout` via context
+3. **BankHome**: Conditionally renders balance card, account carousel, financial services, recent transactions, and quick actions based on feature flags
+4. **BottomNavigation**: Hides Cards tab when `features.cards === false`
+5. **BankMore**: Filters Savings/Loans/Credit Score menu items based on features
+6. **Admin Panel**: `FeatureConfigPanel` with toggle switches for all features and layout sections, persists to database
 
-### 2. TenantProvider Enhancement
-- Fetch `app_config` alongside branding fields
-- Expose feature flags via `useTenant()` context (e.g., `tenant.features.cards`)
+## Gaps Identified
 
-### 3. Conditional Feature Rendering
-- **BankHome**: Conditionally render Financial Services grid, Quick Actions based on flags
-- **BottomNavigation**: Hide Cards tab if `features.cards === false`
-- **BankMore**: Filter menu items based on enabled features
-- **Quick Actions**: Show/hide MoMo, QR Pay based on flags
+### 1. Route-Level Feature Guards
+Currently, if a feature is disabled (e.g., `cards: false`), the UI hides the navigation, but a user can still **directly navigate** to `/bank/:id/cards`, `/bank/:id/more/savings`, `/bank/:id/payments/mobile-money`, etc. Need a route guard component that checks feature flags and redirects to home if disabled.
 
-### 4. Admin Portal — App Config Editor
-- Add a "Features" tab to the existing `BankingAppManagement.tsx` page
-- Toggle switches for each feature per institution
-- Updates `app_config` JSONB via Supabase update
+### 2. Home Section Ordering
+The `home_layout` only has show/hide booleans. The user requested **rearranging home page sections**. Add a `section_order` array to `app_config` (e.g., `["balance_card", "account_carousel", "quick_actions", "financial_services", "recent_transactions"]`) and render sections in that order. The admin panel should allow drag-to-reorder.
+
+### 3. Payments Page Feature Gating
+`BankPayments.tsx` likely shows all payment options (Send, MoMo, QR, Bills) without checking feature flags. Should filter based on `features.mobile_money`, `features.qr_payments`, `features.bill_payments`.
+
+## Implementation Plan
+
+### Step 1: Create a `FeatureGate` wrapper component
+- New file: `src/components/pwa/FeatureGate.tsx`
+- Accepts a `featureKey` prop, checks `useTenant().features[featureKey]`
+- If disabled, redirects to `/bank/:id/home` with a toast message
+- Wrap feature-gated routes in `App.tsx`: cards, savings, loans, credit, mobile-money, qr, bills
+
+### Step 2: Gate the Payments page options
+- Edit `src/pages/banking-app/BankPayments.tsx`
+- Import `useTenant`, filter payment options by feature flags
+
+### Step 3: Add section ordering to `app_config`
+- Database migration: update the default `app_config` to include `"section_order": ["balance_card", "account_carousel", "quick_actions", "financial_services", "recent_transactions"]`
+- Update `TenantProvider` to expose `sectionOrder` from config
+- Update `BankHome.tsx` to render sections dynamically based on order array
+- Update admin `FeatureConfigPanel` with a reorderable list for home sections
+
+### Step 4: End-to-end verification
+- Test toggling features off in admin, confirm routes redirect
+- Test section reordering, confirm home page renders in new order
+- Confirm no existing functionality is broken
+
+### Files to Create
+- `src/components/pwa/FeatureGate.tsx`
 
 ### Files to Edit
-- `supabase/migrations/` — new migration for `app_config` column
-- `src/components/pwa/TenantProvider.tsx` — fetch and expose `app_config`
-- `src/pages/banking-app/BankHome.tsx` — conditional rendering
-- `src/components/pwa/BottomNavigation.tsx` — conditional tabs
-- `src/pages/banking-app/BankMore.tsx` — conditional menu items
-- `src/pages/admin/BankingAppManagement.tsx` — feature config UI
+- `src/App.tsx` — wrap feature-gated routes with `FeatureGate`
+- `src/pages/banking-app/BankPayments.tsx` — filter by features
+- `src/pages/banking-app/BankHome.tsx` — dynamic section ordering
+- `src/components/pwa/TenantProvider.tsx` — expose `sectionOrder`
+- `src/pages/admin/BankingAppManagement.tsx` — add section order editor
+
+### Database Migration
+- Update `app_config` default to include `section_order` array
 
