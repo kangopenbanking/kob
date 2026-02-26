@@ -1,18 +1,22 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, User } from 'lucide-react';
+import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from '@/components/pwa/TenantProvider';
 
 const BankMore: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
+  const { features } = useTenant();
 
-  const financialItems = [
-    { icon: PiggyBank, label: 'Savings', description: 'Goals & deposits', path: 'more/savings', color: 'bg-[hsl(var(--bank-mint))]', iconColor: 'text-[hsl(var(--bank-mint-fg))]' },
-    { icon: Landmark, label: 'Loans', description: 'Apply & manage', path: 'more/loans', color: 'bg-[hsl(var(--bank-coral))]', iconColor: 'text-white' },
-    { icon: BarChart3, label: 'Credit Score', description: 'CrediQ rating', path: 'more/credit', color: 'bg-[hsl(var(--bank-violet))]', iconColor: 'text-white' },
+  const allFinancialItems = [
+    { icon: PiggyBank, label: 'Savings', description: 'Goals & deposits', path: 'more/savings', color: 'bg-[hsl(var(--bank-mint))]', iconColor: 'text-[hsl(var(--bank-mint-fg))]', featureKey: 'savings' as const },
+    { icon: Landmark, label: 'Loans', description: 'Apply & manage', path: 'more/loans', color: 'bg-[hsl(var(--bank-coral))]', iconColor: 'text-white', featureKey: 'loans' as const },
+    { icon: BarChart3, label: 'Credit Score', description: 'CrediQ rating', path: 'more/credit', color: 'bg-[hsl(var(--bank-violet))]', iconColor: 'text-white', featureKey: 'credit_score' as const },
   ];
+
+  const financialItems = allFinancialItems.filter(item => features[item.featureKey] !== false);
 
   const accountItems = [
     { icon: Shield, label: 'KYC Status', description: 'Verification', path: 'kyc', color: 'bg-[hsl(var(--bank-teal))]', iconColor: 'text-white' },
@@ -26,7 +30,7 @@ const BankMore: React.FC = () => {
     navigate(`/bank/${institutionId}`);
   };
 
-  const renderItem = (item: typeof financialItems[0], i: number) => {
+  const renderItem = (item: typeof accountItems[0], i: number) => {
     const Icon = item.icon;
     return (
       <motion.button
@@ -56,12 +60,14 @@ const BankMore: React.FC = () => {
       <p className="mb-6 text-sm font-medium text-muted-foreground">Account services & settings</p>
 
       {/* Financial Services */}
-      <div className="mb-6">
-        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Financial Services</h3>
-        <div className="flex flex-col gap-1">
-          {financialItems.map((item, i) => renderItem(item, i))}
+      {financialItems.length > 0 && (
+        <div className="mb-6">
+          <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Financial Services</h3>
+          <div className="flex flex-col gap-1">
+            {financialItems.map((item, i) => renderItem(item, i))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Account & Settings */}
       <div className="mb-6">

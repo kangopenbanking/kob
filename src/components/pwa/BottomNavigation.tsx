@@ -2,11 +2,13 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, ArrowLeftRight, CreditCard, Clock, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTenant } from './TenantProvider';
 
 interface NavItem {
   label: string;
   icon: React.ElementType;
   path: string;
+  featureKey?: string;
 }
 
 interface BottomNavigationProps {
@@ -16,14 +18,20 @@ interface BottomNavigationProps {
 export const BottomNavigation: React.FC<BottomNavigationProps> = ({ basePath }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const tenant = useTenant();
 
-  const items: NavItem[] = [
+  const allItems: NavItem[] = [
     { label: 'Home', icon: Home, path: `${basePath}/home` },
     { label: 'Pay', icon: ArrowLeftRight, path: `${basePath}/payments` },
-    { label: 'Cards', icon: CreditCard, path: `${basePath}/cards` },
+    { label: 'Cards', icon: CreditCard, path: `${basePath}/cards`, featureKey: 'cards' },
     { label: 'History', icon: Clock, path: `${basePath}/history` },
     { label: 'More', icon: MoreHorizontal, path: `${basePath}/more` },
   ];
+
+  const items = allItems.filter((item) => {
+    if (!item.featureKey) return true;
+    return tenant.features[item.featureKey as keyof typeof tenant.features] !== false;
+  });
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
