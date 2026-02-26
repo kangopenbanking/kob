@@ -625,7 +625,7 @@ function App() {
             <Route path="/bank/:institutionId" element={<BankSplash />} />
             <Route path="/bank/:institutionId/auth" element={<BankAuth />} />
             <Route path="/bank/:institutionId/apply" element={<BankApply />} />
-            <Route path="/bank/:institutionId/kyc" element={<BankKYC />} />
+            <Route path="/bank/:institutionId/kyc" element={<BankingAppLayout />}><Route index element={<BankKYC />} /></Route>
             <Route path="/bank/:institutionId" element={<BankingAppLayout />}>
               <Route path="home" element={<BankHome />} />
               <Route path="payments" element={<BankPayments />} />
