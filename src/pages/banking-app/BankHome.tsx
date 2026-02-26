@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBankAccounts, useBankTransactions, useSavingsAccounts, useLoanApplications, useCreditScore } from '@/hooks/useBankingData';
-import { useTenant } from '@/components/pwa/TenantProvider';
+import { useTenant, HomeSectionKey } from '@/components/pwa/TenantProvider';
 
 const currencyColors: Record<string, { color: string; textColor: string }> = {
   XAF: { color: 'bg-[hsl(var(--bank-mint))]', textColor: 'text-[hsl(var(--bank-mint-fg))]' },
@@ -18,7 +18,7 @@ const BankHome: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
   const tenant = useTenant();
-  const { features, homeLayout } = tenant;
+  const { features, homeLayout, sectionOrder } = tenant;
   const [showBalance, setShowBalance] = useState(true);
   const [userName, setUserName] = useState('');
 
@@ -109,14 +109,13 @@ const BankHome: React.FC = () => {
     },
   ].filter(Boolean) as Array<{ key: string; onClick: () => void; className: string; icon: React.ReactNode; value: string | number; label: string; textClass: string }>;
 
-  return (
-    <div className="flex flex-col">
-      <PWATopBar userName={userName} />
-
-      <div className="flex flex-col gap-5 px-4 py-5">
-        {/* Total Balance Card */}
-        {homeLayout.show_balance_card && (
+  const renderSection = (key: HomeSectionKey) => {
+    switch (key) {
+      case 'balance_card':
+        if (!homeLayout.show_balance_card) return null;
+        return (
           <motion.div
+            key="balance_card"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             className="rounded-2xl bg-foreground p-6"
@@ -139,11 +138,12 @@ const BankHome: React.FC = () => {
               ) : '••••••••'}
             </p>
           </motion.div>
-        )}
+        );
 
-        {/* Account Cards - Horizontal Scroll */}
-        {homeLayout.show_account_carousel && accountCards.length > 0 && (
-          <div className="-mx-4 px-4">
+      case 'account_carousel':
+        if (!homeLayout.show_account_carousel || accountCards.length === 0) return null;
+        return (
+          <div key="account_carousel" className="-mx-4 px-4">
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {accountCards.map((account) => (
                 <motion.div
@@ -163,32 +163,35 @@ const BankHome: React.FC = () => {
               ))}
             </div>
           </div>
-        )}
+        );
 
-        {/* Quick Actions */}
-        <div className="flex justify-between px-2">
-          {quickActions.map((action) => {
-            const Icon = action.icon;
-            return (
-              <button
-                key={action.label}
-                onClick={() => action.path && navigate(`/bank/${institutionId}/${action.path}`)}
-                className="flex flex-col items-center gap-2"
-              >
-                <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
-                  <Icon className="h-6 w-6 text-white" strokeWidth={1.5} />
-                </div>
-                <span className="text-xs font-semibold text-foreground">{action.label}</span>
-              </button>
-            );
-          })}
-        </div>
+      case 'quick_actions':
+        return (
+          <div key="quick_actions" className="flex justify-between px-2">
+            {quickActions.map((action) => {
+              const Icon = action.icon;
+              return (
+                <button
+                  key={action.label}
+                  onClick={() => action.path && navigate(`/bank/${institutionId}/${action.path}`)}
+                  className="flex flex-col items-center gap-2"
+                >
+                  <div className={`flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
+                    <Icon className="h-6 w-6 text-white" strokeWidth={1.5} />
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">{action.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        );
 
-        {/* Financial Services Row */}
-        {homeLayout.show_financial_services && financialServiceItems.length > 0 && (
-          <div>
+      case 'financial_services':
+        if (!homeLayout.show_financial_services || financialServiceItems.length === 0) return null;
+        return (
+          <div key="financial_services">
             <h3 className="mb-3 text-base font-bold tracking-tight text-foreground">Financial Services</h3>
-            <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${financialServiceItems.length}, minmax(0, 1fr))` }}>
+            <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${financialServiceItems.length}, minmax(0, 1fr))` }}>
               {financialServiceItems.map((item) => (
                 <motion.button
                   key={item.key}
@@ -205,11 +208,12 @@ const BankHome: React.FC = () => {
               ))}
             </div>
           </div>
-        )}
+        );
 
-        {/* Recent Transactions */}
-        {homeLayout.show_recent_transactions && (
-          <div>
+      case 'recent_transactions':
+        if (!homeLayout.show_recent_transactions) return null;
+        return (
+          <div key="recent_transactions">
             <div className="mb-3 flex items-center justify-between">
               <h3 className="text-base font-bold tracking-tight text-foreground">Recent Transactions</h3>
               <button
@@ -267,7 +271,19 @@ const BankHome: React.FC = () => {
               </div>
             )}
           </div>
-        )}
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="flex flex-col">
+      <PWATopBar userName={userName} />
+
+      <div className="flex flex-col gap-5 px-4 py-5">
+        {sectionOrder.map((key) => renderSection(key))}
       </div>
     </div>
   );

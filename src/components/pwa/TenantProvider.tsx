@@ -12,6 +12,16 @@ export interface AppFeatures {
   bill_payments: boolean;
 }
 
+export type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions';
+
+export const defaultSectionOrder: HomeSectionKey[] = [
+  'balance_card',
+  'account_carousel',
+  'quick_actions',
+  'financial_services',
+  'recent_transactions',
+];
+
 export interface HomeLayout {
   show_balance_card: boolean;
   show_account_carousel: boolean;
@@ -28,6 +38,7 @@ interface TenantBranding {
   isLoading: boolean;
   features: AppFeatures;
   homeLayout: HomeLayout;
+  sectionOrder: HomeSectionKey[];
 }
 
 const defaultFeatures: AppFeatures = {
@@ -56,6 +67,7 @@ const defaultBranding: TenantBranding = {
   isLoading: true,
   features: defaultFeatures,
   homeLayout: defaultHomeLayout,
+  sectionOrder: defaultSectionOrder,
 };
 
 const TenantContext = createContext<TenantBranding>(defaultBranding);
@@ -92,6 +104,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const appConfig = inst.app_config || {};
       const features = { ...defaultFeatures, ...(appConfig.features || {}) };
       const homeLayout = { ...defaultHomeLayout, ...(appConfig.home_layout || {}) };
+      const sectionOrder: HomeSectionKey[] = Array.isArray(appConfig.section_order) ? appConfig.section_order : defaultSectionOrder;
 
       setBranding({
         id: inst.id,
@@ -102,6 +115,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         isLoading: false,
         features,
         homeLayout,
+        sectionOrder,
       });
     };
 

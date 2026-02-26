@@ -12,12 +12,14 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
-  Search, Loader2, Building2, Wallet, Settings2
+  Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 // ─── Types ───
+type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions';
+
 interface AppConfig {
   features: {
     cards: boolean;
@@ -34,11 +36,17 @@ interface AppConfig {
     show_financial_services: boolean;
     show_recent_transactions: boolean;
   };
+  section_order: HomeSectionKey[];
 }
+
+const defaultSectionOrder: HomeSectionKey[] = [
+  'balance_card', 'account_carousel', 'quick_actions', 'financial_services', 'recent_transactions',
+];
 
 const defaultAppConfig: AppConfig = {
   features: { cards: true, savings: true, loans: true, credit_score: true, mobile_money: true, qr_payments: true, bill_payments: true },
   home_layout: { show_balance_card: true, show_account_carousel: true, show_financial_services: true, show_recent_transactions: true },
+  section_order: defaultSectionOrder,
 };
 
 // ─── Hooks ───
@@ -229,6 +237,57 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         </CardContent>
       </Card>
 
+      {/* Section Order */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Home Section Order</CardTitle>
+          <CardDescription>Drag sections up/down to reorder the home screen</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2">
+          {(config.section_order || defaultSectionOrder).map((key, idx) => {
+            const sectionLabels: Record<HomeSectionKey, string> = {
+              balance_card: 'Balance Card',
+              account_carousel: 'Account Carousel',
+              quick_actions: 'Quick Actions',
+              financial_services: 'Financial Services',
+              recent_transactions: 'Recent Transactions',
+            };
+            return (
+              <div key={key} className="flex items-center gap-2 rounded-lg border p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <span className="flex-1 text-sm font-medium">{sectionLabels[key]}</span>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  disabled={idx === 0}
+                  onClick={() => {
+                    const order = [...(config.section_order || defaultSectionOrder)];
+                    [order[idx - 1], order[idx]] = [order[idx], order[idx - 1]];
+                    setConfig(prev => ({ ...prev, section_order: order }));
+                  }}
+                >
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7"
+                  disabled={idx === (config.section_order || defaultSectionOrder).length - 1}
+                  onClick={() => {
+                    const order = [...(config.section_order || defaultSectionOrder)];
+                    [order[idx], order[idx + 1]] = [order[idx + 1], order[idx]];
+                    setConfig(prev => ({ ...prev, section_order: order }));
+                  }}
+                >
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
+
       <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">
         {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         Save Configuration
@@ -260,7 +319,7 @@ export default function BankingAppManagement() {
   );
 
   const selectedAppConfig: AppConfig = selectedInst
-    ? { ...defaultAppConfig, ...(selectedInst.app_config || {}), features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) }, home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) } }
+    ? { ...defaultAppConfig, ...(selectedInst.app_config || {}), features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) }, home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) }, section_order: (selectedInst.app_config?.section_order || defaultSectionOrder) }
     : defaultAppConfig;
 
   return (

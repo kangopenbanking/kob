@@ -303,6 +303,7 @@ import BankSettings from "./pages/banking-app/BankSettings";
 import BankAlerts from "./pages/banking-app/BankAlerts";
 import BankHelp from "./pages/banking-app/BankHelp";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
+import { FeatureGate } from "./components/pwa/FeatureGate";
 import Apps from "./pages/Apps";
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -633,17 +634,17 @@ function App() {
               <Route path="home" element={<BankHome />} />
               <Route path="payments" element={<BankPayments />} />
               <Route path="payments/send" element={<BankSendMoney />} />
-              <Route path="payments/qr" element={<BankQRPay />} />
-              <Route path="payments/mobile-money" element={<BankMobileMoney />} />
-              <Route path="payments/bills" element={<BankBills />} />
+              <Route path="payments/qr" element={<FeatureGate featureKey="qr_payments"><BankQRPay /></FeatureGate>} />
+              <Route path="payments/mobile-money" element={<FeatureGate featureKey="mobile_money"><BankMobileMoney /></FeatureGate>} />
+              <Route path="payments/bills" element={<FeatureGate featureKey="bill_payments"><BankBills /></FeatureGate>} />
               <Route path="payments/receive" element={<BankReceive />} />
-              <Route path="cards" element={<BankCards />} />
+              <Route path="cards" element={<FeatureGate featureKey="cards"><BankCards /></FeatureGate>} />
               <Route path="history" element={<BankHistory />} />
               <Route path="more" element={<BankMore />} />
-              <Route path="more/savings" element={<BankSavings />} />
-              <Route path="more/savings/new" element={<BankNewSavings />} />
-              <Route path="more/loans" element={<BankLoans />} />
-              <Route path="more/credit" element={<BankCreditScore />} />
+              <Route path="more/savings" element={<FeatureGate featureKey="savings"><BankSavings /></FeatureGate>} />
+              <Route path="more/savings/new" element={<FeatureGate featureKey="savings"><BankNewSavings /></FeatureGate>} />
+              <Route path="more/loans" element={<FeatureGate featureKey="loans"><BankLoans /></FeatureGate>} />
+              <Route path="more/credit" element={<FeatureGate featureKey="credit_score"><BankCreditScore /></FeatureGate>} />
               <Route path="more/settings" element={<BankSettings />} />
               <Route path="more/alerts" element={<BankAlerts />} />
               <Route path="more/help" element={<BankHelp />} />
