@@ -23,8 +23,8 @@ const BankHome: React.FC = () => {
 
   const quickActions = [
     { icon: Send, label: 'Send', path: `payments/send` },
-    { icon: ArrowDownLeft, label: 'Receive', path: '' },
-    { icon: Smartphone, label: 'MoMo', path: 'payments' },
+    { icon: ArrowDownLeft, label: 'Receive', path: 'payments/receive' },
+    { icon: Smartphone, label: 'MoMo', path: 'payments/mobile-money' },
     { icon: QrCode, label: 'QR Pay', path: 'payments/qr' },
   ];
 

@@ -9,9 +9,9 @@ const BankPayments: React.FC = () => {
 
   const paymentOptions = [
     { icon: Send, label: 'Send Money', description: 'Transfer to bank or mobile', path: 'send' },
-    { icon: Smartphone, label: 'Mobile Money', description: 'MTN MoMo, Orange Money', path: '' },
+    { icon: Smartphone, label: 'Mobile Money', description: 'MTN MoMo, Orange Money', path: 'mobile-money' },
     { icon: QrCode, label: 'QR Pay', description: 'Scan or generate QR code', path: 'qr' },
-    { icon: FileText, label: 'Pay Bills', description: 'Electricity, water, internet', path: '' },
+    { icon: FileText, label: 'Pay Bills', description: 'Electricity, water, internet', path: 'bills' },
   ];
 
   return (
