@@ -18,7 +18,7 @@ const BankHome: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
   const tenant = useTenant();
-  const { features, homeLayout, sectionOrder } = tenant;
+  const { features, homeLayout, sectionOrder, layoutStyle } = tenant;
   const [showBalance, setShowBalance] = useState(true);
   const [userName, setUserName] = useState('');
 
@@ -113,6 +113,31 @@ const BankHome: React.FC = () => {
     switch (key) {
       case 'balance_card':
         if (!homeLayout.show_balance_card) return null;
+        if (layoutStyle === 'minimal') {
+          return (
+            <div key="balance_card" className="py-2">
+              <span className="text-xs font-medium uppercase tracking-widest text-muted-foreground">Total Balance</span>
+              <p className="mt-1 text-4xl font-light tracking-tight text-foreground">
+                {accountsLoading ? '...' : showBalance ? `XAF ${totalBalance.toLocaleString()}` : '••••••••'}
+              </p>
+            </div>
+          );
+        }
+        if (layoutStyle === 'classic') {
+          return (
+            <div key="balance_card" className="rounded-xl border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-muted-foreground">Total Balance</span>
+                <button onClick={() => setShowBalance(!showBalance)}>
+                  {showBalance ? <Eye className="h-4 w-4 text-muted-foreground" /> : <EyeOff className="h-4 w-4 text-muted-foreground" />}
+                </button>
+              </div>
+              <p className="mt-2 text-2xl font-bold text-foreground">
+                {accountsLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : showBalance ? `XAF ${totalBalance.toLocaleString()}` : '••••••••'}
+              </p>
+            </div>
+          );
+        }
         return (
           <motion.div
             key="balance_card"
@@ -166,6 +191,27 @@ const BankHome: React.FC = () => {
         );
 
       case 'quick_actions':
+        if (layoutStyle === 'classic') {
+          return (
+            <div key="quick_actions" className="grid grid-cols-2 gap-3">
+              {quickActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <button
+                    key={action.label}
+                    onClick={() => action.path && navigate(`/bank/${institutionId}/${action.path}`)}
+                    className="flex items-center gap-3 rounded-xl border bg-card p-3 text-left"
+                  >
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${action.color}`}>
+                      <Icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">{action.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+          );
+        }
         return (
           <div key="quick_actions" className="flex justify-between px-2">
             {quickActions.map((action) => {

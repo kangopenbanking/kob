@@ -12,6 +12,8 @@ export interface AppFeatures {
   bill_payments: boolean;
 }
 
+export type LayoutStyle = 'modern' | 'classic' | 'minimal';
+
 export type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions';
 
 export const defaultSectionOrder: HomeSectionKey[] = [
@@ -39,6 +41,7 @@ interface TenantBranding {
   features: AppFeatures;
   homeLayout: HomeLayout;
   sectionOrder: HomeSectionKey[];
+  layoutStyle: LayoutStyle;
 }
 
 const defaultFeatures: AppFeatures = {
@@ -68,6 +71,7 @@ const defaultBranding: TenantBranding = {
   features: defaultFeatures,
   homeLayout: defaultHomeLayout,
   sectionOrder: defaultSectionOrder,
+  layoutStyle: 'modern',
 };
 
 const TenantContext = createContext<TenantBranding>(defaultBranding);
@@ -105,6 +109,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const features = { ...defaultFeatures, ...(appConfig.features || {}) };
       const homeLayout = { ...defaultHomeLayout, ...(appConfig.home_layout || {}) };
       const sectionOrder: HomeSectionKey[] = Array.isArray(appConfig.section_order) ? appConfig.section_order : defaultSectionOrder;
+      const layoutStyle: LayoutStyle = (['modern', 'classic', 'minimal'] as const).includes(appConfig.layout_style) ? appConfig.layout_style : 'modern';
 
       setBranding({
         id: inst.id,
@@ -116,6 +121,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         features,
         homeLayout,
         sectionOrder,
+        layoutStyle,
       });
     };
 
