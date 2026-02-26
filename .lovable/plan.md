@@ -261,7 +261,7 @@ Main App Dashboard
 
 | Phase | App | Status | Tested | Approved |
 |-------|-----|--------|--------|----------|
-| 1 | Banking App (`/bank/:id`) | **NEXT** | -- | -- |
+| 1 | Banking App (`/bank/:id`) | **IN PROGRESS** | -- | -- |
 | 2 | Merchant App (`/merchant`) | Pending | -- | -- |
 | 3 | Customer App (`/app`) | Pending | -- | -- |
 

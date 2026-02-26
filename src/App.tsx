@@ -279,6 +279,18 @@ import MerchantDisputes from "./pages/merchant/MerchantDisputes";
 import MerchantProfile from "./pages/merchant/MerchantProfile";
 import MerchantAnalytics from "./pages/merchant/MerchantAnalytics";
 import MerchantRegister from "./pages/merchant/MerchantRegister";
+import BankSplash from "./pages/banking-app/BankSplash";
+import BankAuth from "./pages/banking-app/BankAuth";
+import BankApply from "./pages/banking-app/BankApply";
+import BankKYC from "./pages/banking-app/BankKYC";
+import BankHome from "./pages/banking-app/BankHome";
+import BankPayments from "./pages/banking-app/BankPayments";
+import BankCards from "./pages/banking-app/BankCards";
+import BankHistory from "./pages/banking-app/BankHistory";
+import BankMore from "./pages/banking-app/BankMore";
+import BankSendMoney from "./pages/banking-app/BankSendMoney";
+import BankQRPay from "./pages/banking-app/BankQRPay";
+import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -596,6 +608,21 @@ function App() {
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            {/* Banking App PWA Routes */}
+            <Route path="/bank/:institutionId" element={<BankSplash />} />
+            <Route path="/bank/:institutionId/auth" element={<BankAuth />} />
+            <Route path="/bank/:institutionId/apply" element={<BankApply />} />
+            <Route path="/bank/:institutionId/kyc" element={<BankKYC />} />
+            <Route path="/bank/:institutionId" element={<BankingAppLayout />}>
+              <Route path="home" element={<BankHome />} />
+              <Route path="payments" element={<BankPayments />} />
+              <Route path="payments/send" element={<BankSendMoney />} />
+              <Route path="payments/qr" element={<BankQRPay />} />
+              <Route path="cards" element={<BankCards />} />
+              <Route path="history" element={<BankHistory />} />
+              <Route path="more" element={<BankMore />} />
+            </Route>
+
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
