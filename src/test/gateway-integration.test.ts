@@ -87,6 +87,29 @@ describe("Gateway Adapters — Status Mapping", () => {
     expect(mapStripeDisputeStatus("lost")).toBe("lost");
     expect(mapStripeDisputeStatus("charge_refunded")).toBe("won");
   });
+
+  it("should map PayPal payout statuses correctly", async () => {
+    const { mapPayPalStatus } = await import("../../supabase/functions/_shared/gateway-adapters");
+    expect(mapPayPalStatus("SUCCESS")).toBe("successful");
+    expect(mapPayPalStatus("FAILED")).toBe("failed");
+    expect(mapPayPalStatus("PENDING")).toBe("processing");
+    expect(mapPayPalStatus("UNCLAIMED")).toBe("pending");
+    expect(mapPayPalStatus("RETURNED")).toBe("failed");
+    expect(mapPayPalStatus("ONHOLD")).toBe("processing");
+    expect(mapPayPalStatus("BLOCKED")).toBe("failed");
+    expect(mapPayPalStatus("REFUNDED")).toBe("failed");
+    expect(mapPayPalStatus("REVERSED")).toBe("failed");
+    expect(mapPayPalStatus("unknown_status")).toBe("pending");
+  });
+});
+
+describe("Gateway Adapters — PayPal Fee Calculation", () => {
+  it("should calculate paypal fees correctly", async () => {
+    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFee(10000, "paypal");
+    expect(fee).toBe(Math.round(10000 * 0.035 + 150)); // 500
+    expect(net).toBe(10000 - fee);
+  });
 });
 
 describe("API Configuration — Gateway Endpoints", () => {
@@ -146,7 +169,7 @@ describe("PISP Payment Lifecycle — State Validation", () => {
 });
 
 describe("Transfer Endpoints — Documentation Coverage", () => {
-  it("should have 6 distinct transfer channels defined", () => {
+  it("should have 7 distinct transfer channels defined", () => {
     const transferChannels = [
       "/v1/banking/internal-transfer",
       "/v1/flutterwave/bank-transfer",
@@ -154,9 +177,10 @@ describe("Transfer Endpoints — Documentation Coverage", () => {
       "/v1/mobile-money/to-bank",
       "/v1/gateway/fund-account",
       "/v1/gateway/withdraw-to-bank",
+      "/v1/gateway/payouts/paypal",
     ];
-    expect(transferChannels.length).toBe(6);
-    expect(new Set(transferChannels).size).toBe(6); // all unique
+    expect(transferChannels.length).toBe(7);
+    expect(new Set(transferChannels).size).toBe(7); // all unique
   });
 
   it("should have internal transfer endpoint path", () => {

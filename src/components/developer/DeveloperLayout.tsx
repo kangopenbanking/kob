@@ -110,6 +110,7 @@ const navSections = [
       { title: "Web Applications", path: "/developer/guides/web" },
       { title: "Mobile Applications", path: "/developer/guides/mobile" },
       { title: "AI Integration", path: "/developer/ai-integration-guide" },
+      { title: "PayPal Integration", path: "/developer/gateway/paypal" },
       { title: "Payment Facilitation", path: "/developer/payment-facilitation" },
     ],
   },

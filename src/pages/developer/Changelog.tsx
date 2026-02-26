@@ -6,6 +6,23 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.5.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "PayPal Payouts API — send money to PayPal/Venmo recipients via EMAIL, PHONE, or PAYPAL_ID" },
+        { type: "feature", description: "PayPal Withdrawal — withdraw KOB account balance to PayPal with automatic failure reversal" },
+        { type: "feature", description: "PayPal Webhook receiver with CRC32+SHA256 signature verification via PayPal's API" },
+        { type: "feature", description: "PayPal OAuth2 token adapter with in-memory caching and auto-refresh (5-min safety buffer)" },
+        { type: "feature", description: "PayPal fee tier added to gateway fee engine (3.5% + 150 XAF fixed)" },
+        { type: "improvement", description: "Developer portal: PayPal Integration Guide with authentication, payouts, withdrawals, webhooks docs" },
+        { type: "improvement", description: "OpenAPI spec updated with PayPal payout and withdrawal endpoints" },
+        { type: "improvement", description: "Postman collection expanded with PayPal Payout, Get Status, and Withdraw requests" },
+        { type: "improvement", description: "Gateway Webhooks Guide updated with PayPal event types" },
+        { type: "improvement", description: "Transfers Guide updated — 7 transfer channels (added PayPal)" },
+      ]
+    },
+    {
       version: "2.4.0",
       date: "2026-02-26",
       type: "minor",

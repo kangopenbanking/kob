@@ -21,8 +21,14 @@ const GatewayPayoutsGuide = () => (
       response={JSON.stringify({ id: "batch_uuid", status: "processing", total_amount: 13000, item_count: 2, completed_count: 0, failed_count: 0 }, null, 2)}
     />
 
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/payouts/paypal" description="Create a PayPal payout. Supports EMAIL, PHONE, or PAYPAL_ID recipient types. Currency must be PayPal-supported (USD, EUR, GBP — not XAF)."
+      requestBody={JSON.stringify({ merchant_id: "mch_uuid", amount: 5000, currency: "USD", recipient_type: "EMAIL", receiver: "recipient@example.com", note: "Invoice payment", tx_ref: "paypal_pay_001" }, null, 2)}
+      response={JSON.stringify({ id: "payout_uuid", batch_id: "PP-BATCH-123", status: "processing", provider: "paypal", amount: 5000, currency: "USD", fee_amount: 325, net_amount: 4675, tx_ref: "paypal_pay_001" }, null, 2)}
+    />
+
     <ApiEndpoint method="GET" endpoint="/v1/gateway/payouts?id={payoutId}" description="Retrieve a single payout." />
     <ApiEndpoint method="GET" endpoint="/v1/gateway/payouts?merchant_id={id}&status={status}&limit=50&offset=0" description="List payouts with filters." />
+    <p className="text-sm text-muted-foreground">For full PayPal integration details including withdrawals and webhooks, see the <a href="/developer/gateway/paypal" className="text-primary underline">PayPal Integration Guide</a>.</p>
   </div>
 );
 
