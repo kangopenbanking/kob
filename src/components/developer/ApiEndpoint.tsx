@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { JsonSyntax } from "@/components/developer/JsonSyntax";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
@@ -58,7 +59,7 @@ function DarkCodeBlock({ label, code }: { label: string; code: string }) {
       <div className="relative">
         <CopyButton text={code} />
         <pre className="p-4 overflow-x-auto">
-          <code className="text-sm font-mono text-gray-100">{code}</code>
+          <code className="text-sm font-mono text-gray-100"><JsonSyntax code={code} /></code>
         </pre>
       </div>
     </div>
