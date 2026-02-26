@@ -1,0 +1,1 @@
+ALTER TABLE public.credit_scores ADD COLUMN IF NOT EXISTS postiq_verification_score integer DEFAULT 0;

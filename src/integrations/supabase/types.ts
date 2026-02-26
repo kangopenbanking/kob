@@ -3161,6 +3161,7 @@ export type Database = {
           new_credit_score: number | null
           next_update_date: string | null
           payment_history_score: number | null
+          postiq_verification_score: number | null
           savings_behavior_score: number | null
           score: number
           score_factors: Json
@@ -3187,6 +3188,7 @@ export type Database = {
           new_credit_score?: number | null
           next_update_date?: string | null
           payment_history_score?: number | null
+          postiq_verification_score?: number | null
           savings_behavior_score?: number | null
           score: number
           score_factors: Json
@@ -3213,6 +3215,7 @@ export type Database = {
           new_credit_score?: number | null
           next_update_date?: string | null
           payment_history_score?: number | null
+          postiq_verification_score?: number | null
           savings_behavior_score?: number | null
           score?: number
           score_factors?: Json
