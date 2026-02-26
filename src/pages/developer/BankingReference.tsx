@@ -310,6 +310,56 @@ export default function BankingReference() {
         />
       </div>
 
+      {/* Account Funding & Withdrawals */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Account Funding & Withdrawals</h2>
+        <p className="text-muted-foreground mb-4">
+          Add funds to user accounts via Mobile Money, Card, or Bank Transfer. Withdraw from accounts to external banks.
+          See the full <a href="/developer/gateway/funding" className="text-primary underline">Account Funding & Withdrawals Guide</a> for details.
+        </p>
+
+        <ApiEndpoint
+          method="POST"
+          endpoint="/v1/gateway/fund-account"
+          description="Fund a KOB account via Mobile Money (Flutterwave), Card (Stripe), or Bank Transfer. Auto-credits on webhook completion."
+          requestBody={`{
+  "amount": 50000,
+  "currency": "XAF",
+  "channel": "mobile_money",
+  "account_id": "acc_uuid",
+  "source_phone": "237677123456"
+}`}
+          response={`{
+  "id": "chg_uuid",
+  "account_id": "acc_uuid",
+  "amount": 50000,
+  "status": "processing",
+  "fee_amount": 1250,
+  "redirect_url": "https://checkout.flutterwave.com/..."
+}`}
+        />
+
+        <ApiEndpoint
+          method="POST"
+          endpoint="/v1/gateway/withdraw-to-bank"
+          description="Withdraw funds from a KOB account to an external bank via Flutterwave transfer. Debits immediately; reverses on failure."
+          requestBody={`{
+  "amount": 25000,
+  "account_id": "acc_uuid",
+  "bank_code": "SGCM",
+  "account_number": "1234567890",
+  "beneficiary_name": "Jean Dupont"
+}`}
+          response={`{
+  "id": "pay_uuid",
+  "amount": 25000,
+  "fee_amount": 575,
+  "total_debited": 25575,
+  "status": "processing"
+}`}
+        />
+      </div>
+
       {/* Best Practices */}
       <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
         <CardHeader>
@@ -326,8 +376,8 @@ export default function BankingReference() {
             <p className="text-sm text-muted-foreground">Schedule daily reconciliation jobs to identify discrepancies early.</p>
           </div>
           <div>
-            <p className="font-semibold mb-1">3. Archive Statements Securely</p>
-            <p className="text-sm text-muted-foreground">Store generated statements with encryption and maintain audit trails.</p>
+            <p className="font-semibold mb-1">3. Use Account Funding APIs</p>
+            <p className="text-sm text-muted-foreground">Use the gateway fund-account and withdraw-to-bank endpoints for user-initiated account operations with automatic webhook-driven finalization.</p>
           </div>
           <div>
             <p className="font-semibold mb-1">4. Use Idempotency-Key Headers</p>
