@@ -1,198 +1,212 @@
 
 
-## PayPal Integration into Kang Open Banking v1 API
+## Full E2E API Audit — Gap Analysis & Fix Plan
 
-### Feature Gap Analysis
+### Audit Methodology
+Cross-referenced 3 sources: (1) 160+ edge functions in `supabase/functions/`, (2) OpenAPI spec in `public-api-spec/index.ts` (1524 lines, ~85 paths), (3) Postman collection in `postman-collection/index.ts` (867 lines, ~140 requests), and (4) Developer portal pages (55 pages).
 
-**PayPal Capabilities Required vs Current KOB State:**
+---
 
-| Capability | PayPal API | KOB Current State | Gap |
-|---|---|---|---|
-| OAuth2 Token Exchange | `POST /v1/oauth2/token` (Basic Auth, client_credentials) | OAuth2 implemented for KOB's own clients (oauth-token) | Need PayPal-specific OAuth2 adapter |
-| Payouts (Send Money) | `POST /v1/payments/payouts` (batch, up to 15k items) | Gateway payouts via Flutterwave only | Need PayPal payout adapter |
-| Payout Status | `GET /v1/payments/payouts/{id}` | Status polling for Flutterwave only | Need PayPal status polling |
-| Webhook Events | PayPal webhook signature verification (CRC32+SHA256) | HMAC-SHA256 webhook verification for Flutterwave/Stripe | Need PayPal webhook receiver |
-| Withdrawals to Bank | PayPal doesn't expose a direct "withdraw to bank" API; this is a PayPal dashboard action | Withdrawal to bank via Flutterwave payout | Can model as "PayPal payout to bank" using PayPal Payouts API |
-| Orders/Checkout | `POST /v2/checkout/orders` | Payment links exist for Stripe/Flutterwave | Optional — out of initial scope |
-| Fee Calculation | PayPal fees are provider-side (not KOB-calculated) | Fee calculation in gateway-adapters.ts | Need PayPal fee tier |
-| Status Mapping | PayPal statuses: SUCCESS, FAILED, PENDING, UNCLAIMED, RETURNED, ONHOLD, BLOCKED, REFUNDED, REVERSED | Mapping functions for Flutterwave & Stripe exist | Need `mapPayPalStatus()` |
-| Provider in GatewayCharge schema | `flutterwave`, `stripe` | Two providers | Add `paypal` to enum |
+### Critical Gaps Found
 
-**PayPal API Authentication:**
-- OAuth2 client_credentials grant
-- `POST https://api-m.sandbox.paypal.com/v1/oauth2/token` (sandbox)
-- `POST https://api-m.paypal.com/v1/oauth2/token` (production)
-- Basic Auth: `client_id:client_secret`
-- Returns `access_token` with `expires_in` (typically 32400s / 9 hours)
-- Token must be cached and refreshed before expiry
+#### GAP 1: 17 Gateway Endpoints Missing from OpenAPI Spec
 
-**PayPal Payouts API:**
-- `POST /v1/payments/payouts` — batch payouts (EMAIL, PHONE, PAYPAL_ID)
-- `sender_batch_id` provides built-in idempotency (30-day window)
-- Items: `recipient_type`, `amount`, `receiver`, `note`, `sender_item_id`
-- Currencies: USD, EUR, GBP, etc. (XAF NOT directly supported — requires conversion)
-- Webhook events: `PAYMENT.PAYOUTS-ITEM.SUCCEEDED`, `PAYMENT.PAYOUTS-ITEM.FAILED`, `PAYMENT.PAYOUTS-ITEM.BLOCKED`, etc.
+The Postman collection and edge functions include these endpoints, but the OpenAPI spec (`public-api-spec/index.ts`) does NOT define them:
 
-**PayPal Webhook Verification:**
-- Uses transmission ID, timestamp, webhook ID, and CRC32 checksum
-- Verify via `POST /v1/notifications/verify-webhook-signature`
+| # | Endpoint | Edge Function | In Postman | In OpenAPI |
+|---|----------|--------------|------------|------------|
+| 1 | `POST /v1/gateway/payment-links` | gateway-create-payment-link | Yes | **NO** |
+| 2 | `GET /v1/gateway/payment-links` | gateway-get-payment-link | Yes | **NO** |
+| 3 | `PUT /v1/gateway/payment-links/{id}` | gateway-update-payment-link | Yes | **NO** |
+| 4 | `DELETE /v1/gateway/payment-links/{id}` | gateway-delete-payment-link | Yes | **NO** |
+| 5 | `POST /v1/gateway/payment-plans` | gateway-create-payment-plan | Yes | **NO** |
+| 6 | `GET /v1/gateway/payment-plans/{id}` | gateway-get-payment-plan | Yes | **NO** |
+| 7 | `PUT /v1/gateway/payment-plans/{id}` | gateway-update-payment-plan | Yes | **NO** |
+| 8 | `POST /v1/gateway/subscriptions` | gateway-create-subscription | Yes | **NO** |
+| 9 | `GET /v1/gateway/subscriptions/{id}` | gateway-get-subscription | Yes | **NO** |
+| 10 | `POST /v1/gateway/subscriptions/cancel` | gateway-cancel-subscription | Yes | **NO** |
+| 11 | `POST /v1/gateway/subaccounts` | gateway-create-subaccount | Yes | **NO** |
+| 12 | `GET /v1/gateway/subaccounts/{id}` | gateway-get-subaccount | Yes | **NO** |
+| 13 | `PUT /v1/gateway/subaccounts/{id}` | gateway-update-subaccount | Yes | **NO** |
+| 14 | `DELETE /v1/gateway/subaccounts/{id}` | gateway-delete-subaccount | Yes | **NO** |
+| 15 | `POST /v1/gateway/customers` | gateway-create-customer | Yes | **NO** |
+| 16 | `GET /v1/gateway/customers` | gateway-list-customers | Yes | **NO** |
+| 17 | `GET /v1/gateway/customers/{id}` | gateway-get-customer | Yes | **NO** |
+| 18 | `PUT /v1/gateway/customers/{id}` | gateway-update-customer | Yes | **NO** |
+| 19 | `GET /v1/gateway/customers/{id}/tokens` | gateway-list-customer-tokens | Yes | **NO** |
+| 20 | `DELETE /v1/gateway/customers/{id}/tokens/{tokenId}` | gateway-revoke-customer-token | Yes | **NO** |
+| 21 | `POST /v1/gateway/charges/token` | gateway-charge-token | Yes | **NO** |
+| 22 | `GET /v1/gateway/charges/{id}/events` | gateway-get-charge-events | Yes | **NO** |
+| 23 | `POST /v1/gateway/reconciliation` | gateway-reconciliation | Yes | **NO** |
+| 24 | `GET /v1/gateway/reconciliation` | gateway-reconciliation | Yes | **NO** |
+| 25 | `GET /v1/gateway/reports/fees` | gateway-report-fees | Yes | **NO** |
+| 26 | `POST /v1/gateway/payouts/{id}/retry` | gateway-retry-payout | Yes | **NO** |
+
+#### GAP 2: Merchant Onboarding Endpoints Missing from OpenAPI Spec
+
+The Postman collection has a full "Merchants" section with 17 requests. None are in the OpenAPI spec:
+
+| # | Endpoint | Edge Function |
+|---|----------|--------------|
+| 1 | `POST /v1/merchants` (create) | gateway-merchant-lifecycle |
+| 2 | `GET /v1/merchants` (get/list) | gateway-merchant-lifecycle |
+| 3 | `PATCH /v1/merchants` (update) | gateway-merchant-lifecycle |
+| 4 | `POST /v1/merchants` (submit/activate/suspend) | gateway-merchant-lifecycle |
+| 5 | `POST /v1/merchants/kyb` | gateway-merchant-kyb |
+| 6 | `GET /v1/merchants/kyb` | gateway-merchant-kyb |
+| 7 | `POST /v1/merchants/api-keys` | gateway-merchant-keys |
+| 8 | `GET /v1/merchants/api-keys` | gateway-merchant-keys |
+| 9 | `DELETE /v1/merchants/api-keys` | gateway-merchant-keys |
+| 10 | `POST /v1/merchants/settlement-accounts` | gateway-merchant-settlement-accounts |
+| 11 | `GET /v1/merchants/settlement-accounts` | gateway-merchant-settlement-accounts |
+| 12 | `POST /v1/merchants/webhooks` | gateway-merchant-webhooks |
+| 13 | `GET /v1/merchants/webhooks` | gateway-merchant-webhooks |
+
+#### GAP 3: Fee Estimate Channel Enum Out of Date
+
+The OpenAPI spec at line 1237 has `enum: ['mobile_money', 'card', 'bank_transfer']` for the fee-estimate channel parameter, but the actual `calculateGatewayFee()` supports 8 channels: `mobile_money`, `card`, `bank_transfer`, `apple_pay`, `google_pay`, `ussd`, `account_funding`, `paypal`.
+
+#### GAP 4: Charge Channel Enum Incomplete
+
+The `POST /v1/gateway/charges` at line 1220 has `channel: { enum: ['mobile_money', 'card', 'bank_transfer'] }` but the `GatewayCharge` schema (line 249) correctly lists all 7 channels including `apple_pay`, `google_pay`, `ussd`, `paypal`. The endpoint request schema is inconsistent.
+
+#### GAP 5: Missing Payment Facilitation Tag in Tags List
+
+The `Payment Facilitation` tag is used in paths (lines 1377-1389) but is NOT listed in the tags array (lines 1429-1458).
+
+#### GAP 6: Duplicate Settlement Paths
+
+Lines 1141-1147 define `/v1/settlement/calculate` and `/v1/settlement/process` under the `Settlement` tag. Lines 1382-1389 redefine the same paths under the `Payment Facilitation` tag. The second definition overwrites the first. This is technically working but the Settlement tag entries are dead code.
+
+#### GAP 7: Developer Portal "Payment Facilitation" Duplicated in Sidebar
+
+In `DeveloperLayout.tsx`, "Payment Facilitation" appears in both "Open Banking APIs" (line 88) and "Integration Guides" (line 114). This is confusing.
 
 ---
 
 ### Implementation Plan
 
-#### Phase 1: Secrets & PayPal OAuth2 Adapter
+#### Phase 1: Add 39 Missing OpenAPI Paths (~biggest gap)
 
-**1a. Request PayPal API credentials** (2 secrets needed):
-- `PAYPAL_CLIENT_ID` — PayPal REST app client ID
-- `PAYPAL_CLIENT_SECRET` — PayPal REST app client secret
+**File: `supabase/functions/public-api-spec/index.ts`**
 
-**1b. Add PayPal adapter to gateway-adapters.ts:**
-- `mapPayPalStatus()` — map PayPal payout item statuses to KOB canonical statuses
-- `getPayPalAccessToken()` — OAuth2 token exchange with in-memory caching
-- `createPayPalPayout()` — batch payout creation via PayPal Payouts API
-- `getPayPalPayoutStatus()` — poll payout batch/item status
-- `calculateGatewayFee()` — add `paypal` channel (3.5% + $0.25 USD equivalent)
+Add the following path blocks after the existing Payment Gateway section:
 
-**1c. Create edge function: `paypal-oauth-token/index.ts`**
-- Internal utility endpoint for testing PayPal token exchange
-- Validates credentials and returns token metadata (not the raw token)
+**Payment Links (4 paths):**
+- `POST /v1/gateway/payment-links` — Create payment link
+- `GET /v1/gateway/payment-links` — List/get payment links (by slug or merchant_id)
+- `PUT /v1/gateway/payment-links/{linkId}` — Update payment link
+- `DELETE /v1/gateway/payment-links/{linkId}` — Delete payment link
 
-#### Phase 2: PayPal Payouts Edge Function
+**Payment Plans (4 paths):**
+- `POST /v1/gateway/payment-plans` — Create payment plan
+- `GET /v1/gateway/payment-plans` — List payment plans
+- `GET /v1/gateway/payment-plans/{planId}` — Get payment plan
+- `PUT /v1/gateway/payment-plans/{planId}` — Update payment plan
 
-**2a. Create edge function: `gateway-create-paypal-payout/index.ts`**
-- Accepts: `merchant_id`, `amount`, `currency`, `recipient_type` (EMAIL/PHONE/PAYPAL_ID), `receiver`, `note`, `tx_ref`
-- Calls `getPayPalAccessToken()` → `createPayPalPayout()`
-- Records payout in `gateway_payouts` table with `provider = 'paypal'`
-- Enforces idempotency via existing `idempotency_keys` table
-- Enforces merchant risk limits via existing velocity checks
+**Subscriptions (4 paths):**
+- `POST /v1/gateway/subscriptions` — Create subscription
+- `GET /v1/gateway/subscriptions` — List subscriptions
+- `GET /v1/gateway/subscriptions/{subscriptionId}` — Get subscription
+- `POST /v1/gateway/subscriptions/cancel` — Cancel subscription
 
-**2b. Create edge function: `gateway-get-paypal-payout/index.ts`**
-- Poll PayPal payout batch/item status
-- Update internal payout record status
+**Subaccounts / Split Payments (4 paths):**
+- `POST /v1/gateway/subaccounts` — Create subaccount
+- `GET /v1/gateway/subaccounts` — List subaccounts
+- `GET /v1/gateway/subaccounts/{subaccountId}` — Get subaccount
+- `PUT /v1/gateway/subaccounts/{subaccountId}` — Update subaccount
+- `DELETE /v1/gateway/subaccounts/{subaccountId}` — Delete subaccount
 
-#### Phase 3: PayPal Webhook Receiver
+**Customers & Tokenization (7 paths):**
+- `POST /v1/gateway/customers` — Create customer
+- `GET /v1/gateway/customers` — List customers
+- `GET /v1/gateway/customers/{customerId}` — Get customer
+- `PUT /v1/gateway/customers/{customerId}` — Update customer
+- `GET /v1/gateway/customers/{customerId}/tokens` — List customer tokens
+- `DELETE /v1/gateway/customers/{customerId}/tokens/{tokenId}` — Revoke token
+- `POST /v1/gateway/charges/token` — Charge a saved token
 
-**3a. Create edge function: `gateway-webhook-paypal/index.ts`**
-- Receives PayPal webhook events
-- Verifies signature via PayPal's verify-webhook-signature API
-- Handles events:
-  - `PAYMENT.PAYOUTS-ITEM.SUCCEEDED` → update payout status to `completed`
-  - `PAYMENT.PAYOUTS-ITEM.FAILED` → update payout status to `failed`
-  - `PAYMENT.PAYOUTS-ITEM.BLOCKED` → update payout status to `failed`
-  - `PAYMENT.PAYOUTS-ITEM.UNCLAIMED` → update payout status to `pending`
-  - `PAYMENT.PAYOUTS-ITEM.RETURNED` → update payout status to `failed`, trigger reversal
-- Deduplication via `webhook_inbox` table
-- Publishes to merchant outbound webhooks via existing `gateway-deliver-webhook`
-- Logs to `audit_logs`
+**Charge Events (1 path):**
+- `GET /v1/gateway/charges/{chargeId}/events` — Get charge event timeline
 
-**3b. Add secret: `PAYPAL_WEBHOOK_ID`** — PayPal webhook ID for signature verification
+**Reconciliation (2 paths):**
+- `POST /v1/gateway/reconciliation` — Run reconciliation
+- `GET /v1/gateway/reconciliation` — List runs / get mismatches
 
-#### Phase 4: PayPal Withdrawal Flow (KOB Account → PayPal → Bank)
+**Reports (1 path):**
+- `GET /v1/gateway/reports/fees` — Fee report
 
-**4a. Create edge function: `gateway-withdraw-to-paypal/index.ts`**
-- Debits KOB account balance
-- Initiates PayPal payout to user's PayPal email
-- On webhook success, marks withdrawal as completed
-- On webhook failure, reverses the debit (same pattern as `gateway-withdraw-to-bank`)
+**Retry (1 path):**
+- `POST /v1/gateway/payouts/{payoutId}/retry` — Retry failed payout
 
-#### Phase 5: OpenAPI Spec & Postman Collection Updates
+**Merchants (6 paths):**
+- `POST /v1/merchants` — Create/manage merchant (lifecycle actions)
+- `GET /v1/merchants` — List/get merchants
+- `PATCH /v1/merchants` — Update merchant
+- `POST /v1/merchants/kyb` — Submit/review KYB
+- `GET /v1/merchants/kyb` — Get KYB status
+- `POST /v1/merchants/api-keys` — Issue/list/revoke API keys
+- `POST /v1/merchants/settlement-accounts` — Add settlement account
+- `GET /v1/merchants/settlement-accounts` — List settlement accounts
+- `POST /v1/merchants/webhooks` — Register/manage merchant webhooks
+- `GET /v1/merchants/webhooks` — List webhooks
 
-**5a. Update `public-api-spec/index.ts`:**
-- Add `paypal` to `GatewayCharge.provider` and `GatewayPayout.channel` enums
-- Add 3 new paths:
-  - `POST /v1/gateway/payouts/paypal` — Create PayPal payout
-  - `GET /v1/gateway/payouts/paypal/{payoutId}` — Get PayPal payout status
-  - `POST /v1/gateway/withdraw-to-paypal` — Withdraw KOB balance to PayPal
-- Add PayPal webhook event types to webhook documentation
+Add new schemas: `GatewayPaymentLink`, `GatewayPaymentPlan`, `GatewaySubscription`, `GatewaySubaccount`, `GatewayCustomer`, `GatewayCustomerToken`, `GatewayChargeEvent`, `GatewayReconciliationRun`, `GatewayMerchant`.
 
-**5b. Update `postman-collection/index.ts`:**
-- Add "PayPal Payout" request
-- Add "Get PayPal Payout Status" request
-- Add "Withdraw to PayPal" request
+Add new tags: `Payment Facilitation`, `Merchant Onboarding`.
 
-#### Phase 6: Developer Portal Documentation
+#### Phase 2: Fix Enum Inconsistencies
 
-**6a. Create `src/pages/developer/PayPalIntegrationGuide.tsx`:**
-- Authentication setup (how to get PayPal credentials)
-- Payout flow with request/response examples
-- Withdrawal flow with diagrams
-- Webhook event reference
-- Error codes and troubleshooting
-- Currency limitations (XAF not directly supported — auto-conversion note)
+**File: `supabase/functions/public-api-spec/index.ts`**
 
-**6b. Update `TransfersGuide.tsx`:**
-- Add 7th transfer channel: "PayPal Payout" alongside the existing 6
+1. Update fee-estimate channel enum (line 1237) to include all 8 channels
+2. Update `POST /v1/gateway/charges` channel enum (line 1220) to match the schema (7 channels)
+3. Remove duplicate Settlement paths (lines 1141-1151) — the Payment Facilitation versions (lines 1382-1389) are more detailed
 
-**6c. Update `GatewayPayoutsGuide.tsx`:**
-- Add PayPal payout endpoint documentation
+#### Phase 3: Fix Developer Portal Sidebar Duplicate
 
-**6d. Update `GatewayWebhooksGuide.tsx`:**
-- Add PayPal webhook event types to event table
+**File: `src/components/developer/DeveloperLayout.tsx`**
 
-**6e. Add route in `App.tsx`:**
-- `developer/gateway/paypal` → `PayPalIntegrationGuide`
+Remove the duplicate "Payment Facilitation" entry from the "Integration Guides" section (line 114), keeping only the one in "Open Banking APIs" (line 88).
 
-**6f. Update `DeveloperLayout.tsx`:**
-- Add "PayPal Integration" under "Integration Guides" section
+#### Phase 4: Update Changelog
 
-#### Phase 7: Tests
+**File: `src/pages/developer/Changelog.tsx`**
 
-**7a. Expand `gateway-integration.test.ts`:**
-- PayPal status mapping tests (all 8 statuses)
-- PayPal fee calculation test
-- PayPal payout adapter schema validation
-- Provider enum includes `paypal`
+Add v2.6.0 entry:
+- OpenAPI spec expanded with 39 missing endpoint paths (Payment Links, Subscriptions, Split Payments, Tokenization, Charge Events, Reconciliation, Merchant Onboarding)
+- 9 new schemas added (GatewayPaymentLink, GatewayPaymentPlan, GatewaySubscription, etc.)
+- Fee estimate and charge channel enums updated to support all 8 channels
+- Payment Facilitation and Merchant Onboarding tags added to spec
+- Duplicate Settlement path definitions resolved
+- Developer portal sidebar de-duplicated
 
-#### Phase 8: Changelog
+#### Phase 5: Update Tests
 
-**8a. Update `Changelog.tsx` to v2.5.0:**
-- PayPal Payouts API — send money to PayPal/Venmo recipients
-- PayPal Withdrawal — withdraw KOB balance to PayPal
-- PayPal Webhook receiver with signature verification
-- PayPal OAuth2 token adapter with auto-refresh
-- Developer portal: PayPal Integration Guide
-- OpenAPI spec & Postman collection updated with PayPal endpoints
+**File: `src/test/gateway-integration.test.ts`**
+
+Add tests:
+- Verify all 8 fee channels produce correct calculations
+- Verify GatewayCharge schema has 7 channel types
+- Verify transfer channels count remains at 7
+- Add payment links, subscriptions, reconciliation endpoint path validation
 
 ---
 
-### Files to Create (4)
+### Files to Modify (4)
 
-| File | Purpose |
+| File | Changes |
 |---|---|
-| `supabase/functions/gateway-create-paypal-payout/index.ts` | PayPal batch payout edge function |
-| `supabase/functions/gateway-webhook-paypal/index.ts` | PayPal webhook receiver with signature verification |
-| `supabase/functions/gateway-withdraw-to-paypal/index.ts` | Withdraw KOB balance to PayPal recipient |
-| `src/pages/developer/PayPalIntegrationGuide.tsx` | Developer portal documentation page |
+| `supabase/functions/public-api-spec/index.ts` | Add 39 endpoint paths, 9 schemas, 2 tags, fix 2 enum inconsistencies, remove duplicate Settlement paths |
+| `src/components/developer/DeveloperLayout.tsx` | Remove duplicate sidebar entry |
+| `src/pages/developer/Changelog.tsx` | Add v2.6.0 release |
+| `src/test/gateway-integration.test.ts` | Expand test coverage |
 
-### Files to Modify (8)
+### No Files to Create
 
-| File | Change |
-|---|---|
-| `supabase/functions/_shared/gateway-adapters.ts` | Add `mapPayPalStatus()`, `getPayPalAccessToken()`, `createPayPalPayout()`, PayPal fee tier |
-| `supabase/functions/public-api-spec/index.ts` | Add 3 PayPal paths, update provider enums |
-| `supabase/functions/postman-collection/index.ts` | Add 3 PayPal requests |
-| `src/pages/developer/TransfersGuide.tsx` | Add PayPal as 7th transfer channel |
-| `src/pages/developer/GatewayPayoutsGuide.tsx` | Add PayPal payout endpoint |
-| `src/pages/developer/GatewayWebhooksGuide.tsx` | Add PayPal webhook events |
-| `src/components/developer/DeveloperLayout.tsx` | Add PayPal nav item |
-| `src/App.tsx` | Add PayPal guide route |
-| `src/pages/developer/Changelog.tsx` | Add v2.5.0 entry |
-| `src/test/gateway-integration.test.ts` | Add PayPal adapter tests |
-
-### Secrets Required (3)
-
-| Secret | Source |
-|---|---|
-| `PAYPAL_CLIENT_ID` | PayPal Developer Dashboard → App → Client ID |
-| `PAYPAL_CLIENT_SECRET` | PayPal Developer Dashboard → App → Secret |
-| `PAYPAL_WEBHOOK_ID` | PayPal Developer Dashboard → Webhooks → Webhook ID |
+All edge functions and developer pages already exist. This is purely an OpenAPI spec alignment and documentation synchronization task.
 
 ### Non-Breaking Guarantee
 
-All changes are additive. Existing Flutterwave and Stripe flows are untouched. The `paypal` provider is added alongside existing providers in enums and adapters. No database schema changes required — PayPal payouts use the existing `gateway_payouts` table with `provider = 'paypal'`.
-
-### Currency Note
-
-PayPal does not directly support XAF. The integration will document that PayPal payouts must use supported currencies (USD, EUR, GBP) and that merchants should use the existing `/v1/gateway/exchange-rate` endpoint for conversion before initiating PayPal payouts.
+All changes are additive spec documentation updates. No edge function logic, database schema, or frontend routing changes are needed.
 
