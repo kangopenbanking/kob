@@ -1,5 +1,8 @@
 // Gateway Provider Adapters — Unified interface for Flutterwave & Stripe
 
+// Deno runtime type declaration for edge functions (not available in Vite builds)
+declare const Deno: { env: { get(key: string): string | undefined } } | undefined;
+
 export interface ChargeRequest {
   amount: number;
   currency: string;
@@ -92,7 +95,7 @@ export function mapStripeDisputeStatus(status: string): string {
 // ─── Flutterwave Adapter ───
 
 export async function createFlutterwaveCharge(req: ChargeRequest): Promise<ChargeResult> {
-  const FLW_SECRET = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+  const FLW_SECRET = typeof Deno !== "undefined" ? Deno.env.get('FLUTTERWAVE_SECRET_KEY') : undefined;
   if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
 
   const body: Record<string, unknown> = {
@@ -133,7 +136,7 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
 }
 
 export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResult> {
-  const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
+  const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
   if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
   const params = new URLSearchParams();
@@ -165,7 +168,7 @@ export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResu
 // ─── Flutterwave Payout ───
 
 export async function createFlutterwavePayout(req: PayoutRequest): Promise<PayoutResult> {
-  const FLW_SECRET = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+  const FLW_SECRET = typeof Deno !== "undefined" ? Deno.env.get('FLUTTERWAVE_SECRET_KEY') : undefined;
   if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
 
   const body: Record<string, unknown> = {
@@ -204,7 +207,7 @@ export async function createFlutterwavePayout(req: PayoutRequest): Promise<Payou
 // ─── Stripe Refund ───
 
 export async function createStripeRefund(req: RefundRequest): Promise<RefundResult> {
-  const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
+  const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
   if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
   const params = new URLSearchParams();
