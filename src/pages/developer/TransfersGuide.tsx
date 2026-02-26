@@ -27,7 +27,7 @@ export default function TransfersGuide() {
       <Card>
         <CardHeader>
           <CardTitle>Transfer Channels Overview</CardTitle>
-          <CardDescription>Six distinct transfer rails are available depending on the use case</CardDescription>
+          <CardDescription>Seven distinct transfer rails are available depending on the use case</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-4">
@@ -38,6 +38,7 @@ export default function TransfersGuide() {
               { label: "Mobile Money to Bank", endpoint: "POST /v1/mobile-money/to-bank", badge: "MoMo → Bank" },
               { label: "Account Funding via Gateway", endpoint: "POST /v1/gateway/fund-account", badge: "Inflow" },
               { label: "Withdrawal to External Bank", endpoint: "POST /v1/gateway/withdraw-to-bank", badge: "Outflow" },
+              { label: "PayPal Payout / Withdrawal", endpoint: "POST /v1/gateway/payouts/paypal", badge: "PayPal" },
             ].map((ch) => (
               <div key={ch.endpoint} className="flex items-start gap-3 p-3 border rounded-lg">
                 <Badge variant="outline" className="shrink-0 mt-0.5">{ch.badge}</Badge>

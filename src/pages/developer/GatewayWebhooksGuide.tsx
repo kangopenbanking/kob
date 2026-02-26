@@ -29,6 +29,10 @@ const GatewayWebhooksGuide = () => (
                 ["dispute.won", "A dispute was resolved in your favor"],
                 ["dispute.lost", "A dispute was lost"],
                 ["settlement.paid", "A settlement was paid out"],
+                ["paypal.payout.succeeded", "A PayPal payout was delivered"],
+                ["paypal.payout.failed", "A PayPal payout failed"],
+                ["paypal.payout.blocked", "A PayPal payout was blocked by risk"],
+                ["paypal.payout.returned", "A PayPal payout was returned"],
               ].map(([event, desc]) => (
                 <tr key={event} className="border-b"><td className="py-2 font-mono text-xs">{event}</td><td className="text-muted-foreground">{desc}</td></tr>
               ))}

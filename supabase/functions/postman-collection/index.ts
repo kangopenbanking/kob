@@ -831,6 +831,20 @@ Deno.serve(async (req) => {
             query: [{ key: 'from', value: 'XAF' }, { key: 'to', value: 'USD' }, { key: 'amount', value: '100000' }],
             desc: 'Real-time FX rate lookup for multi-currency charges and settlements',
           }),
+          // PayPal Integration
+          r('Create PayPal Payout', 'POST', '/v1/gateway/payouts/paypal', {
+            body: { merchant_id: '{{merchant_id}}', amount: 5000, currency: 'USD', recipient_type: 'EMAIL', receiver: 'recipient@example.com', note: 'Invoice payment', tx_ref: 'paypal_pay_001' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Send money to a PayPal recipient (EMAIL, PHONE, or PAYPAL_ID)',
+          }),
+          r('Get PayPal Payout Status', 'GET', '/v1/gateway/payouts/{{payout_id}}', {
+            desc: 'Poll PayPal payout batch/item status',
+          }),
+          r('Withdraw to PayPal', 'POST', '/v1/gateway/withdraw-to-paypal', {
+            body: { amount: 10000, account_id: '{{account_id}}', paypal_email: 'user@example.com', currency: 'USD', narration: 'Balance withdrawal' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Withdraw KOB account balance to a PayPal email',
+          }),
         ],
       },
     ],

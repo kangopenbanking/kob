@@ -531,3 +531,13 @@ verify_jwt = false
 
 [functions.gateway-withdraw-to-bank]
 verify_jwt = false
+
+# PayPal Integration Functions
+[functions.gateway-create-paypal-payout]
+verify_jwt = false
+
+[functions.gateway-webhook-paypal]
+verify_jwt = false
+
+[functions.gateway-withdraw-to-paypal]
+verify_jwt = false

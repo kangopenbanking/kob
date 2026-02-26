@@ -246,9 +246,9 @@ const schemas = {
       merchant_id: { type: 'string', format: 'uuid' },
       amount: { type: 'number', example: 5000 },
       currency: { type: 'string', example: 'XAF' },
-      channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd'] },
+      channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'paypal'] },
       status: { type: 'string', enum: ['pending', 'processing', 'successful', 'failed', 'cancelled', 'authorized', 'voided'] },
-      provider: { type: 'string', enum: ['flutterwave', 'stripe'] },
+      provider: { type: 'string', enum: ['flutterwave', 'stripe', 'paypal'] },
       provider_ref: { type: 'string' },
       fee_amount: { type: 'number', example: 200 },
       net_amount: { type: 'number', example: 4800 },
@@ -268,7 +268,7 @@ const schemas = {
       merchant_id: { type: 'string', format: 'uuid' },
       amount: { type: 'number', example: 10000 },
       currency: { type: 'string', example: 'XAF' },
-      channel: { type: 'string', enum: ['mobile_money', 'bank_transfer'] },
+      channel: { type: 'string', enum: ['mobile_money', 'bank_transfer', 'paypal'] },
       status: { type: 'string', enum: ['pending', 'processing', 'completed', 'failed'] },
       beneficiary_name: { type: 'string' },
       beneficiary_phone: { type: 'string' },
@@ -1261,6 +1261,15 @@ paths['/v1/gateway/payout-batches'] = {
 
 paths['/v1/gateway/payout-batches/{batchId}'] = {
   get: { tags: ['Payment Gateway'], summary: 'Get payout batch', operationId: 'gatewayGetPayoutBatch', security: [{ bearerAuth: [] }], parameters: [{ name: 'batchId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Batch details' }, ...errorResponses } },
+};
+
+// ─── PayPal Payouts ───
+paths['/v1/gateway/payouts/paypal'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create PayPal payout', description: 'Send money to a PayPal recipient via EMAIL, PHONE, or PAYPAL_ID. Currency must be PayPal-supported (USD, EUR, GBP).', operationId: 'gatewayCreatePayPalPayout', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'currency', 'recipient_type', 'receiver', 'tx_ref'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 5000 }, currency: { type: 'string', example: 'USD', description: 'PayPal-supported currency (not XAF)' }, recipient_type: { type: 'string', enum: ['EMAIL', 'PHONE', 'PAYPAL_ID'] }, receiver: { type: 'string', example: 'recipient@example.com' }, note: { type: 'string' }, tx_ref: { type: 'string' } } } } } }, responses: { '201': { description: 'PayPal payout created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPayout' } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/withdraw-to-paypal'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Withdraw to PayPal', description: 'Withdraw KOB account balance to a PayPal email. Account is debited immediately with automatic reversal on failure.', operationId: 'gatewayWithdrawToPayPal', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'account_id', 'paypal_email'], properties: { amount: { type: 'number', example: 10000 }, account_id: { type: 'string', format: 'uuid' }, paypal_email: { type: 'string', format: 'email' }, currency: { type: 'string', default: 'USD' }, narration: { type: 'string' } } } } } }, responses: { '201': { description: 'Withdrawal initiated', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, amount: { type: 'number' }, fee_amount: { type: 'number' }, total_debited: { type: 'number' }, currency: { type: 'string' }, status: { type: 'string' }, paypal_email: { type: 'string' }, batch_id: { type: 'string' }, tx_ref: { type: 'string' } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/gateway/disputes'] = {
