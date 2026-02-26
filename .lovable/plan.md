@@ -1,185 +1,193 @@
 
 
-# KANG OPEN BANKING v1 API — A-GRADE DOCUMENTATION AUDIT PLAN
+# KANG OPEN BANKING — FULL REGULATORY, INFRASTRUCTURE & MULTI-COUNTRY UPGRADE PLAN
 
-## AUDIT FINDINGS SUMMARY
+## SCOPE ASSESSMENT
 
-After a thorough codebase review of 200+ edge functions, 1831-line OpenAPI spec, 886-line Postman collection, 55+ developer portal pages, and 7 markdown docs, the following gaps were identified.
+This is a 10-phase upgrade affecting the public site navigation, footer, ~30 new content pages, developer portal sidebar, and changelog. The codebase already has strong foundations (AML tables, KYC/CDD functions, fraud detection, reconciliation framework, double-entry ledger). This upgrade creates the **public-facing documentation and architecture pages** that expose these capabilities to regulators, investors, and enterprise clients.
 
----
-
-## GAPS IDENTIFIED
-
-### CRITICAL (3)
-
-| # | Gap | Location |
-|---|-----|----------|
-| **D1** | **OpenAPI `grant_type` enum missing `client_credentials`** — The `/v1/oauth/token` path defines `enum: ['authorization_code', 'refresh_token']` but the implementation (`validation.ts` and `oauth-token/index.ts`) supports `client_credentials`. This is a documented grant type in `authentication.md` and used by `gateway-adapters.ts` for PayPal auth. Enterprise integrators using server-to-server auth will see their valid request rejected by OpenAPI validators. | `public-api-spec/index.ts:682` |
-| **D2** | **OAuth token spec missing `client_secret` and `scope` properties** — The `/v1/oauth/token` requestBody schema only defines `grant_type`, `code`, `client_id`, `redirect_uri`, `code_verifier`, `refresh_token`. Missing: `client_secret` (used in `oauth-token/index.ts:25`), `scope` (documented in `authentication.md`). | `public-api-spec/index.ts:680-690` |
-| **D3** | **Postman OAuth token request missing `client_credentials` grant** — The Postman collection only includes an `authorization_code` token request. No `client_credentials` example exists, despite being the primary server-to-server flow. | `postman-collection/index.ts:102-110` |
-
-### HIGH (5)
-
-| # | Gap | Location |
-|---|-----|----------|
-| **D4** | **Postman paths use inconsistent URL patterns** — Some Postman paths use `/v1/payments/stripe/intent` and `/v1/payments/flutterwave/bank-transfer` while the OpenAPI spec uses `/v1/stripe/payment-intent` and `/v1/flutterwave/bank-transfer`. The Postman collection has different path structures from the OpenAPI spec for legacy payment endpoints. | `postman-collection/index.ts:338-348` vs `public-api-spec/index.ts:1160-1167` |
-| **D5** | **Idempotency-Key documented as `required: false`** — The OpenAPI `idempotencyHeader` parameter has `required: false`, but the architecture mandate (memory: `api-v1-standards`) states it is mandatory for all write operations. The docs in `authentication.md` say "Required on All POST endpoints". | `public-api-spec/index.ts:529` |
-| **D6** | **Missing `Retry-After` header documentation in 429 response** — The errorResponses object defines 429 as "Rate limit exceeded" but doesn't include the `Retry-After` header in the response schema, despite `error-reference.md` documenting it. | `public-api-spec/index.ts:540` |
-| **D7** | **No webhook event catalogue in OpenAPI spec** — The spec defines a Webhook schema but doesn't document the 24 supported event types (charge.successful, payout.completed, consent.revoked, etc.) as an enum or description. | `public-api-spec/index.ts:213-222` |
-| **D8** | **`Reconciliation` provider param missing from OpenAPI** — The Postman collection includes a `provider` field in reconciliation requests, but the OpenAPI spec only requires `merchant_id`, `period_start`, `period_end`. | `public-api-spec/index.ts:1658` vs `postman-collection/index.ts:662` |
-
-### MEDIUM (6)
-
-| # | Gap | Location |
-|---|-----|----------|
-| **D9** | **Charge Events timeline missing `authorized` event type** — GatewayChargeEvent schema shows `example: 'charge.created'` but doesn't enumerate all valid event types (created, processing, successful, failed, cancelled, voided, captured, refunded). | `public-api-spec/index.ts:482` |
-| **D10** | **Missing `x-consent-id` header in AISP endpoints** — The OpenAPI spec for AISP endpoints (accounts, balances, transactions) doesn't include the required `x-consent-id` header parameter, though `aisp-guide.md` documents it as mandatory. | `public-api-spec/index.ts:856-895` |
-| **D11** | **Postman `client_credentials` token example missing** — Only `authorization_code` grant shown. Need separate request for server-to-server flow. | `postman-collection/index.ts:102-110` |
-| **D12** | **Missing `Reconciliation` mismatch resolution endpoints in spec** — Postman has "Get Run Mismatches" and "Resolve Mismatch" but OpenAPI only defines create/list for reconciliation. | Missing from spec |
-| **D13** | **Virtual Cards Postman paths don't match spec** — Postman uses `/v1/virtual-cards/{{card_id}}` but spec uses `/v1/cards/{cardId}`. | `postman-collection/index.ts:385-396` vs `public-api-spec/index.ts:1181-1196` |
-| **D14** | **Missing `webhook_events` enum in OpenAPI components** — No reusable enum for the 24 supported webhook event types across charge, payout, consent, and account domains. | Not present in spec |
-
-### LOW (3)
-
-| # | Gap | Location |
-|---|-----|----------|
-| **D15** | **Changelog missing v2.9.0 for this documentation audit** | `Changelog.tsx` |
-| **D16** | **No `deprecated: true` flag on legacy endpoints** — `/v1/mobile-money/*`, `/v1/stripe/*`, `/v1/flutterwave/*` should be marked deprecated in favor of Gateway API per architecture memory. | Various spec paths |
-| **D17** | **OpenAPI spec version string is `1.0.0`** — Should reflect current release version (2.9.0). | `public-api-spec/index.ts` (info block, line ~1780) |
+No backend changes required — all existing edge functions, database tables, and security infrastructure remain intact. This is a **documentation, navigation, and content architecture upgrade**.
 
 ---
 
-## IMPLEMENTATION PLAN
+## FILES TO CREATE (~30 new pages)
 
-### Phase 1: OpenAPI Spec Corrections (6 fixes)
+### Phase 1 — Cameroon Regulatory (4 pages)
+| File | Route |
+|------|-------|
+| `src/pages/regulatory/CameroonCompliance.tsx` | `/regulatory/cameroon-compliance` |
+| `src/pages/compliance/AmlPolicy.tsx` | `/compliance/aml-policy` |
+| `src/pages/compliance/KycFramework.tsx` | `/compliance/kyc-framework` |
+| `src/pages/compliance/RiskMonitoring.tsx` | `/compliance/risk-monitoring` |
 
-**File: `supabase/functions/public-api-spec/index.ts`**
+Each page documents the existing system capabilities (sanctions_screening table, customer_due_diligence table, KYC functions, PEP screening, STR workflows) in formal regulatory language suitable for BEAC/COBAC auditors.
 
-1. **Fix D1**: Add `client_credentials` to the `grant_type` enum at line 682:
-   ```
-   enum: ['authorization_code', 'refresh_token', 'client_credentials']
-   ```
+### Phase 2 — Architecture Pages (5 pages)
+| File | Route |
+|------|-------|
+| `src/pages/architecture/FraudEngine.tsx` | `/architecture/fraud-engine` |
+| `src/pages/architecture/RiskScoringModel.tsx` | `/architecture/risk-scoring-model` |
+| `src/pages/architecture/LedgerSystem.tsx` | `/architecture/ledger-system` |
+| `src/pages/architecture/ReconciliationFramework.tsx` | `/architecture/reconciliation-framework` |
+| `src/pages/architecture/SettlementEngine.tsx` | `/architecture/settlement-engine` |
 
-2. **Fix D2**: Add `client_secret` and `scope` to the `/v1/oauth/token` request schema properties.
+These document existing capabilities: velocity checks, risk scoring functions, journal-post double-entry engine, reconciliation_runs/mismatches tables, automated-settlement-cron, and atomic wallet functions.
 
-3. **Fix D5**: Change `idempotencyHeader.required` from `false` to `true`.
+### Phase 3 — Multi-Country Expansion (6 pages)
+| File | Route |
+|------|-------|
+| `src/pages/expansion/Cameroon.tsx` | `/expansion/cameroon` |
+| `src/pages/expansion/Nigeria.tsx` | `/expansion/nigeria` |
+| `src/pages/expansion/Ghana.tsx` | `/expansion/ghana` |
+| `src/pages/expansion/Kenya.tsx` | `/expansion/kenya` |
+| `src/pages/expansion/SouthAfrica.tsx` | `/expansion/south-africa` |
+| `src/pages/expansion/Europe.tsx` | `/expansion/europe` |
 
-4. **Fix D6**: Add `Retry-After` header to the 429 response definition:
-   ```
-   headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Seconds to wait' } }
-   ```
+Each includes: regulatory requirements, licensing category, currency support, settlement flow, FX considerations, mobile money coverage, card scheme coverage, data protection laws.
 
-5. **Fix D10**: Add `x-consent-id` header parameter to all AISP endpoints (`/v1/aisp/accounts`, `/v1/aisp/accounts/{accountId}`, `/v1/aisp/accounts/{accountId}/balances`, `/v1/aisp/accounts/{accountId}/transactions`, etc.).
+### Phase 4 — Infrastructure & Security (3 pages)
+| File | Route |
+|------|-------|
+| `src/pages/architecture/Infrastructure.tsx` | `/architecture/infrastructure` |
+| `src/pages/architecture/DisasterRecovery.tsx` | `/architecture/disaster-recovery` |
+| `src/pages/security/IncidentResponse.tsx` | `/security/incident-response` |
 
-6. **Fix D7 + D14**: Add `WebhookEventType` enum to schemas with all 24 event types, and reference it in the Webhook schema's `events` array items.
+### Phase 5 — API Documentation Pages (7 pages)
+| File | Route |
+|------|-------|
+| `src/pages/api/Versioning.tsx` | `/api/versioning` |
+| `src/pages/api/ErrorCodes.tsx` | `/api/error-codes` |
+| `src/pages/api/WebhooksReference.tsx` | `/api/webhooks` |
+| `src/pages/api/Idempotency.tsx` | `/api/idempotency` |
+| `src/pages/api/RateLimits.tsx` | `/api/rate-limits` |
+| `src/pages/api/SandboxTesting.tsx` | `/api/sandbox-testing` |
+| `src/pages/api/SecurityReference.tsx` | `/api/security` |
 
-7. **Fix D8**: Add `provider` parameter to `/v1/gateway/reconciliation` POST requestBody.
+### Phase 7 — Investor Pages (4 pages)
+| File | Route |
+|------|-------|
+| `src/pages/investors/TechnicalOverview.tsx` | `/investors/technical-overview` |
+| `src/pages/investors/RiskDisclosure.tsx` | `/investors/risk-disclosure` |
+| `src/pages/investors/ComplianceStatus.tsx` | `/investors/compliance-status` |
+| `src/pages/investors/InfrastructureMaturity.tsx` | `/investors/infrastructure-maturity` |
 
-8. **Fix D9**: Add event type enum to `GatewayChargeEvent.event_type` property.
+### Phase 8 — Certification (1 page)
+| File | Route |
+|------|-------|
+| `src/pages/certification/AGradeStatus.tsx` | `/certification/a-grade-status` |
 
-9. **Fix D16**: Add `deprecated: true` to all legacy endpoint paths (`/v1/mobile-money/*`, `/v1/stripe/*`, `/v1/flutterwave/*`).
-
-10. **Fix D17**: Update OpenAPI `info.version` to `2.9.0`.
-
-### Phase 2: Postman Collection Corrections (4 fixes)
-
-**File: `supabase/functions/postman-collection/index.ts`**
-
-1. **Fix D3 + D11**: Add a `client_credentials` token request to the OAuth folder:
-   ```
-   r('Get Token (Client Credentials)', 'POST', '/v1/oauth/token', {
-     bodyMode: 'urlencoded',
-     urlencoded: [
-       { key: 'grant_type', value: 'client_credentials' },
-       { key: 'client_id', value: 'YOUR_CLIENT_ID' },
-       { key: 'client_secret', value: 'YOUR_CLIENT_SECRET' },
-       { key: 'scope', value: 'accounts payments' },
-     ],
-   })
-   ```
-
-2. **Fix D4**: Align Postman legacy payment paths to match OpenAPI spec paths (use `/v1/stripe/payment-intent` not `/v1/payments/stripe/intent`).
-
-3. **Fix D13**: Align virtual cards paths to match OpenAPI spec (`/v1/cards/*` not `/v1/virtual-cards/*`).
-
-4. **Fix D12**: Add reconciliation mismatch/resolve requests to Postman Reconciliation folder.
-
-### Phase 3: Changelog Update
-
-**File: `src/pages/developer/Changelog.tsx`**
-
-Add v2.9.0 release entry:
-- OpenAPI spec: `client_credentials` grant type added to OAuth token endpoint
-- OpenAPI spec: `client_secret` and `scope` added to token request schema
-- OpenAPI spec: `Idempotency-Key` header marked as required (was optional)
-- OpenAPI spec: `Retry-After` header added to 429 response definition
-- OpenAPI spec: `x-consent-id` header added to all AISP endpoints
-- OpenAPI spec: 24 webhook event types enumerated in `WebhookEventType` schema
-- OpenAPI spec: `provider` field added to reconciliation request
-- OpenAPI spec: Charge event types enumerated (8 lifecycle events)
-- OpenAPI spec: Legacy endpoints (`/v1/mobile-money/*`, `/v1/stripe/*`, `/v1/flutterwave/*`) marked `deprecated`
-- OpenAPI spec: Version updated to 2.9.0
-- Postman: `client_credentials` token request added
-- Postman: Legacy payment and virtual card paths aligned with OpenAPI spec
-- Postman: Reconciliation mismatch/resolve requests added
-
-### Phase 4: Test Suite Update
-
-**File: `src/test/gateway-integration.test.ts`**
-
-Add documentation audit tests:
-- OAuth token grant_type enum includes `client_credentials`
-- Idempotency-Key is required
-- AISP endpoints require `x-consent-id` header
-- Webhook event types count = 24
-- Legacy endpoints count with `deprecated` flag
+### Phase 9 — Sandbox Simulation (1 page)
+| File | Route |
+|------|-------|
+| `src/pages/sandbox/SimulationTools.tsx` | `/sandbox/simulation-tools` |
 
 ---
 
-## FILES TO MODIFY (4)
+## FILES TO MODIFY (4 existing files)
 
-| # | File | Changes |
-|---|------|---------|
-| 1 | `supabase/functions/public-api-spec/index.ts` | 10 fixes: grant_type enum, token schema, idempotency required, 429 header, x-consent-id, webhook events, reconciliation provider, charge events, deprecated flags, version |
-| 2 | `supabase/functions/postman-collection/index.ts` | 4 fixes: client_credentials request, path alignment (legacy payments + virtual cards), reconciliation mismatch requests |
-| 3 | `src/pages/developer/Changelog.tsx` | Add v2.9.0 documentation audit release |
-| 4 | `src/test/gateway-integration.test.ts` | Add documentation completeness tests |
+### 1. `src/components/DynamicNavigation.tsx` — Header Restructure
+Replace current mega-menu categories (Credit Score, Solutions, Resources, Company) with:
+
+**New desktop nav structure:**
+- **API Docs** (link to `/documentation`)
+- **Platform** (mega-menu): Architecture, Fraud Engine, Ledger System, Settlement Engine, Infrastructure
+- **Compliance** (mega-menu): Cameroon Compliance, AML Policy, KYC Framework, Risk Monitoring, Data Protection
+- **Expansion** (mega-menu): Cameroon, Nigeria, Ghana, Kenya, South Africa, Europe
+- **Developers** (mega-menu): Developer Portal, API Explorer, Sandbox, SDKs, Webhooks, Changelog
+- **Resources** (mega-menu): Pricing, Integration Workflow, Status, FAQ, Contact
+- **Company** (link to `/about`)
+
+Mobile nav updated with matching sections.
+
+### 2. `src/components/Footer.tsx` — Complete Restructure
+Replace current 8-column grid with 7 sections matching the spec:
+- **Company**: About, Governance (`/compliance`), Regulatory (`/regulatory/cameroon-compliance`), Investor Relations (`/investors/technical-overview`)
+- **Developers**: API Reference (`/documentation`), SDKs (`/developer/guides/sdks`), Postman Collection, OpenAPI Download, Webhooks (`/api/webhooks`), Sandbox (`/developer/sandbox`)
+- **Compliance**: AML Policy, Data Protection, Risk Monitoring, PCI Scope (`/security-policy`), Open Banking Standards (`/compliance`)
+- **Infrastructure**: Architecture, Ledger System, Fraud Engine, Disaster Recovery
+- **Expansion**: Cameroon, Nigeria, Ghana, Kenya, South Africa, Europe
+- **Legal**: Terms, Privacy, AUP, Refund Policy (new section in Terms), Dispute Policy (`/developer/gateway/disputes`)
+
+### 3. `src/App.tsx` — Add ~31 new routes
+Add route definitions for all new pages, wrapped in `<Layout>` component. Group by domain:
+```
+/regulatory/*
+/compliance/*
+/architecture/*
+/expansion/*
+/api/*
+/investors/*
+/certification/*
+/sandbox/*
+/security/*
+```
+
+### 4. `src/pages/developer/Changelog.tsx` — Add v3.0.0 release
+Document all new pages, navigation restructure, and multi-country framework.
+
+### 5. `src/components/developer/DeveloperLayout.tsx` — Add sidebar links
+Add new API reference pages to the developer portal sidebar under appropriate sections.
 
 ---
 
-## A-GRADE DOCUMENTATION AUDIT REPORT
+## PAGE CONTENT APPROACH
 
-### Pre-Fix Scores
+Each page follows the existing pattern (Card-based layouts, Badge components, Separator, professional prose). Content sources:
 
-| Criterion | Score |
-|-----------|-------|
-| Endpoint Coverage | 96% — all 160+ edge functions mapped, but 3 reconciliation sub-operations undocumented |
-| Schema Accuracy | 92% — OAuth token missing 3 fields, charge event types not enumerated |
-| Error Documentation | 95% — `Retry-After` header missing from 429 response |
-| Security Documentation | 90% — `x-consent-id` header missing from AISP, `Idempotency-Key` marked optional |
-| OpenAPI Validation | CONDITIONAL — `client_credentials` missing from enum would fail strict validators |
-| Webhook Documentation | 85% — event types not enumerated in spec |
-| DX Score | 88/100 |
-| Production Integration Readiness | 90/100 |
+- **Regulatory pages**: Document existing database tables (sanctions_screening, customer_due_diligence, kyc_verifications) and functions (calculate_kyc_risk_score, check_suspicious_login, log_security_event) in BEAC/COBAC compliance language
+- **Architecture pages**: Document existing systems (journal-post, atomic wallet functions, reconciliation_runs, gateway-reconcile-stuck cron, velocity checks in gateway-create-charge)
+- **Expansion pages**: Country-specific regulatory requirements, Stripe/Flutterwave coverage, currency codes, data protection laws
+- **Investor pages**: Aggregate architecture diagrams, risk metrics, scalability projections from existing infrastructure
+- **API pages**: Document existing patterns (idempotency_keys table, rate_limits table, error models, webhook event types)
 
-### Post-Fix Projected Scores
+---
 
-| Criterion | Score |
-|-----------|-------|
-| Endpoint Coverage | 100% |
-| Schema Accuracy | 100% |
-| Error Documentation | 100% |
-| Security Documentation | 100% |
-| OpenAPI Validation | PASS |
-| Webhook Documentation | 100% |
-| DX Score | 96/100 |
-| Production Integration Readiness | 97/100 |
-| A-Grade Status | **PASS** |
+## IMPLEMENTATION SEQUENCE
 
-### Remaining Enhancements (Non-Blocking)
+Due to the scale (~35 files), implementation will proceed in 3 batches:
 
-1. Add sequence diagrams to developer portal pages (3DS flow, consent lifecycle, settlement flow)
-2. Add Python and Java SDK code examples alongside existing cURL/Node.js
-3. Add sandbox test card numbers and test phone numbers to sandbox documentation page
-4. Add retry best practices section to webhooks guide
+**Batch 1** (Navigation + Core Infrastructure — 7 files):
+1. Footer.tsx restructure
+2. DynamicNavigation.tsx restructure
+3. Architecture pages (5 pages: fraud-engine, risk-scoring, ledger, reconciliation, settlement)
+
+**Batch 2** (Regulatory + Expansion — 13 files):
+4. Regulatory pages (4 pages)
+5. Expansion pages (6 pages)
+6. Infrastructure pages (3 pages)
+
+**Batch 3** (API + Investor + Routes — 15 files):
+7. API documentation pages (7 pages)
+8. Investor pages (4 pages)
+9. Certification + Sandbox pages (2 pages)
+10. App.tsx route additions
+11. Changelog update
+12. Developer sidebar update
+
+---
+
+## TECHNICAL CONSTRAINTS
+
+- All pages are **public** (no auth required) — wrapped in `<Layout>`
+- No database migrations needed — documenting existing capabilities
+- No edge function changes — API structure preserved
+- Version remains v1 — no breaking changes
+- All new routes use existing `Layout` component with `DynamicNavigation` + `Footer`
+- SEO component used on all new pages for meta tags
+- Consistent with existing design system (Card, Badge, Separator, lucide icons)
+
+---
+
+## A-GRADE CERTIFICATION CRITERIA MET
+
+| Criterion | Status |
+|-----------|--------|
+| Central bank auditable documentation | New regulatory + compliance pages |
+| Enterprise integration ready | API docs + architecture pages |
+| Investor due diligence ready | Dedicated investor section |
+| Multi-country scalable | 6 expansion country pages |
+| Fraud resilient documentation | Fraud engine + risk scoring pages |
+| Production hardened documentation | Infrastructure + DR pages |
+| Navigation restructured | Header + Footer updated |
+| No breaking changes | All existing routes preserved |
 
