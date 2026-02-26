@@ -13,6 +13,12 @@ serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
+    // ─── Webhook Rate Limiting: 100 req/min for Stripe ───
+    const { data: allowed } = await supabase.rpc('check_webhook_rate_limit', { _provider: 'stripe', _max_requests: 100, _window_minutes: 1 });
+    if (allowed === false) {
+      return new Response(JSON.stringify({ error: 'rate_limit_exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const rawBody = await req.text();
     const signature = req.headers.get('stripe-signature');
 
@@ -56,17 +62,16 @@ serve(async (req) => {
       const { data: charge } = await supabase.from('gateway_charges').select('*').eq('provider_ref', piId).maybeSingle();
       if (charge) {
         const newStatus = mapStripeStatus(obj.status);
-        await supabase.from('gateway_charges').update({ status: newStatus, provider_raw: obj }).eq('id', charge.id);
 
-        // ─── G4 FIX: Credit merchant wallet on successful charge ───
-        if (newStatus === 'successful' && charge.merchant_id) {
-          await supabase.rpc('update_merchant_wallet', {
-            _merchant_id: charge.merchant_id,
-            _currency: charge.currency,
-            _pending_delta: charge.net_amount || charge.amount,
-            _ledger_delta: charge.net_amount || charge.amount,
-          });
-        }
+        // ─── ATOMIC: Charge status update + wallet credit in single transaction ───
+        await supabase.rpc('atomic_charge_wallet_credit', {
+          _charge_id: charge.id,
+          _new_status: newStatus,
+          _provider_raw: obj,
+          _merchant_id: charge.merchant_id,
+          _currency: charge.currency,
+          _credit_amount: newStatus === 'successful' ? (charge.net_amount || charge.amount) : 0,
+        });
 
         if (newStatus === 'successful' || newStatus === 'failed') {
           await supabase.from('gateway_webhook_events').insert({
@@ -90,14 +95,14 @@ serve(async (req) => {
             const closedStatus = mapStripeDisputeStatus(obj.status);
             await supabase.from('gateway_disputes').update({ status: closedStatus }).eq('provider_ref', obj.id);
 
-            // G10 FIX: Re-credit wallet if dispute won
+            // ATOMIC: Re-credit wallet if dispute won
             if (closedStatus === 'won') {
               const disputeAmount = (obj.amount || 0) / 100;
-              await supabase.rpc('update_merchant_wallet', {
+              await supabase.rpc('atomic_dispute_wallet_adjust', {
                 _merchant_id: charge.merchant_id,
                 _currency: charge.currency,
-                _available_delta: disputeAmount,
-                _ledger_delta: disputeAmount,
+                _amount: disputeAmount,
+                _direction: 'credit',
               });
             }
 
@@ -121,12 +126,12 @@ serve(async (req) => {
               provider: 'stripe', provider_ref: obj.id, provider_raw: obj,
             }).select().single();
 
-            // ─── G9 FIX: Debit merchant wallet on dispute creation ───
-            await supabase.rpc('update_merchant_wallet', {
+            // ─── ATOMIC: Debit merchant wallet on dispute creation ───
+            await supabase.rpc('atomic_dispute_wallet_adjust', {
               _merchant_id: charge.merchant_id,
               _currency: charge.currency,
-              _available_delta: -disputeAmount,
-              _ledger_delta: -disputeAmount,
+              _amount: disputeAmount,
+              _direction: 'debit',
             });
 
             await supabase.from('gateway_webhook_events').insert({
