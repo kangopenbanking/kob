@@ -58,6 +58,7 @@ const navSections = [
     icon: Wallet,
     items: [
       { title: "Payouts", path: "/developer/gateway/payouts" },
+      { title: "Account Funding", path: "/developer/gateway/funding" },
       { title: "Split Payments", path: "/developer/gateway/split-payments" },
       { title: "Beneficiaries", path: "/developer/api/beneficiaries" },
       { title: "Settlements", path: "/developer/gateway/settlements" },

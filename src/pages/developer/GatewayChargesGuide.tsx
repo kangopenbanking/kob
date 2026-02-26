@@ -8,7 +8,7 @@ const GatewayChargesGuide = () => (
     <div>
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Charges API</h1>
-      <p className="text-muted-foreground mt-2">Collect payments from customers via mobile_money, card, or bank_transfer channels through a single endpoint. Supports OTP validation, preauthorization (auth + capture), and configurable fee bearer.</p>
+      <p className="text-muted-foreground mt-2">Collect payments from customers via mobile_money, card, or bank_transfer channels through a single endpoint. Supports OTP validation, preauthorization (auth + capture), and configurable fee bearer. To fund a KOB user account directly, see <a href="/developer/gateway/funding" className="text-primary underline">Account Funding</a>.</p>
     </div>
 
     <ApiEndpoint method="POST" endpoint="/v1/gateway/charges" description="Create a new charge. Routes automatically to Flutterwave (MoMo) or Stripe (card) based on channel. Supports fee_bearer and capture_mode overrides."

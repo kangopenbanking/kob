@@ -43,8 +43,33 @@ serve(async (req) => {
           provider_raw: payload,
         }).eq('id', charge.id);
 
-        // Trigger outbound merchant webhook
-        if (newStatus === 'successful' || newStatus === 'failed') {
+        // ─── Auto-credit account for fund_account charges ───
+        if (newStatus === 'successful' && charge.metadata?.fund_account && charge.metadata?.account_id) {
+          const accountId = charge.metadata.account_id;
+          const userId = charge.metadata.user_id;
+          // Credit the user's KOB account
+          await supabase.from('account_balances').insert({
+            account_id: accountId, balance_type: 'InterimAvailable',
+            amount: charge.amount, currency: charge.currency,
+            credit_debit_indicator: 'Credit',
+            balance_datetime: new Date().toISOString(),
+          });
+          await supabase.from('transactions').insert({
+            account_id: accountId, amount: charge.amount, currency: charge.currency,
+            credit_debit_indicator: 'Credit', status: 'Booked',
+            booking_date_time: new Date().toISOString(),
+            value_date_time: new Date().toISOString(),
+            transaction_information: `Account funding completed - ${charge.tx_ref}`,
+            transaction_reference: charge.tx_ref, user_id: userId,
+          }).then(() => {}).catch(() => {});
+          await supabase.from('audit_logs').insert({
+            action_type: 'gateway_fund_account_completed', entity_type: 'account', entity_id: accountId,
+            performed_by: userId, details: { amount: charge.amount, tx_ref: charge.tx_ref, provider_ref: charge.provider_ref },
+          }).then(() => {}).catch(() => {});
+        }
+
+        // Trigger outbound merchant webhook (only for merchant charges)
+        if ((newStatus === 'successful' || newStatus === 'failed') && charge.merchant_id) {
           await supabase.from('gateway_webhook_events').insert({
             merchant_id: charge.merchant_id,
             event_type: newStatus === 'successful' ? 'charge.successful' : 'charge.failed',
@@ -62,13 +87,45 @@ serve(async (req) => {
       const { data: payout } = await supabase.from('gateway_payouts').select('*').eq('tx_ref', reference).maybeSingle();
       if (payout) {
         const newStatus = mapFlutterwaveStatus(payload.data?.status || payload.status);
-        await supabase.from('gateway_payouts').update({ status: newStatus, provider_raw: payload }).eq('id', payout.id);
+        const mappedStatus = newStatus === 'successful' ? 'completed' : newStatus;
+        await supabase.from('gateway_payouts').update({ status: mappedStatus, provider_raw: payload }).eq('id', payout.id);
 
-        if (newStatus === 'successful' || newStatus === 'failed') {
+        // ─── Handle withdraw-to-bank payout completion/failure ───
+        if (payout.metadata?.withdraw_to_bank && payout.metadata?.account_id) {
+          const accountId = payout.metadata.account_id;
+          const userId = payout.metadata.user_id;
+
+          if (newStatus === 'failed') {
+            // Reverse the debit — credit back to user's account
+            const totalDebited = payout.amount + (payout.fee_amount || 0);
+            await supabase.from('account_balances').insert({
+              account_id: accountId, balance_type: 'InterimAvailable',
+              amount: totalDebited, currency: payout.currency,
+              credit_debit_indicator: 'Credit',
+              balance_datetime: new Date().toISOString(),
+            });
+            await supabase.from('audit_logs').insert({
+              action_type: 'gateway_withdraw_failed_reversed', entity_type: 'account', entity_id: accountId,
+              performed_by: userId, details: { amount: payout.amount, tx_ref: payout.tx_ref },
+            }).then(() => {}).catch(() => {});
+          } else if (newStatus === 'successful') {
+            // Mark debit transaction as completed
+            await supabase.from('transactions')
+              .update({ status: 'Booked' })
+              .eq('transaction_reference', payout.tx_ref);
+            await supabase.from('audit_logs').insert({
+              action_type: 'gateway_withdraw_completed', entity_type: 'account', entity_id: accountId,
+              performed_by: userId, details: { amount: payout.amount, tx_ref: payout.tx_ref },
+            }).then(() => {}).catch(() => {});
+          }
+        }
+
+        // Outbound merchant webhook (only for merchant payouts)
+        if ((newStatus === 'successful' || newStatus === 'failed') && payout.merchant_id) {
           await supabase.from('gateway_webhook_events').insert({
             merchant_id: payout.merchant_id,
             event_type: newStatus === 'successful' ? 'payout.completed' : 'payout.failed',
-            payload: { payout_id: payout.id, status: newStatus, amount: payout.amount },
+            payload: { payout_id: payout.id, status: mappedStatus, amount: payout.amount },
             status: 'pending',
             next_retry_at: new Date().toISOString(),
           });

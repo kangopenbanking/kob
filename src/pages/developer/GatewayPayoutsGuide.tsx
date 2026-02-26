@@ -8,7 +8,7 @@ const GatewayPayoutsGuide = () => (
     <div>
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Payouts API</h1>
-      <p className="text-muted-foreground mt-2">Disburse funds to beneficiaries via bank transfer or mobile money. Supports single and batch payouts.</p>
+      <p className="text-muted-foreground mt-2">Disburse funds to beneficiaries via bank transfer or mobile money. Supports single and batch payouts. For user account withdrawals to external banks, see the <a href="/developer/gateway/funding" className="text-primary underline">Account Funding & Withdrawals</a> guide.</p>
     </div>
 
     <ApiEndpoint method="POST" endpoint="/v1/gateway/payouts" description="Create a single payout."

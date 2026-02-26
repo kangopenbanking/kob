@@ -6,6 +6,21 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.2.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Account Funding API — Fund KOB accounts via Mobile Money, Card, or Bank Transfer (gateway-fund-account)" },
+        { type: "feature", description: "Withdraw to Bank API — Withdraw from KOB account to external bank via Flutterwave (gateway-withdraw-to-bank)" },
+        { type: "feature", description: "Auto-credit webhook handler — gateway-webhook-flutterwave auto-credits user account on successful fund-account charges" },
+        { type: "feature", description: "Withdrawal reversal — Automatic debit reversal when payout fails via webhook" },
+        { type: "feature", description: "Account funding fee tier (2.5%, 0 fixed) added to gateway adapters" },
+        { type: "improvement", description: "OpenAPI spec updated with /v1/gateway/fund-account and /v1/gateway/withdraw-to-bank endpoints" },
+        { type: "improvement", description: "Postman collection expanded with Fund Account and Withdraw to Bank requests" },
+        { type: "improvement", description: "Developer portal updated with Account Funding guide and sidebar navigation" },
+      ]
+    },
+    {
       version: "2.1.0",
       date: "2026-02-21",
       type: "minor",
