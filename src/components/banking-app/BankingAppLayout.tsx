@@ -10,7 +10,7 @@ export const BankingAppLayout: React.FC = () => {
   return (
     <TenantProvider>
       <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
-        <div className="flex-1 pb-14">
+        <div className="flex-1 pb-16">
           <Outlet />
         </div>
         <BottomNavigation basePath={basePath} />

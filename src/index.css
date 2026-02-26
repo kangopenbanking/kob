@@ -93,6 +93,24 @@ All colors MUST be HSL.
     --postiq-blue-light: 217 100% 97%; /* #DBEAFE - Light background */
     --postiq-red-dark: 4 84% 56%; /* #DC2626 - Hover state */
     --postiq-blue-dark: 217 91% 56%; /* #2563EB - Hover state */
+
+    /* Banking App Solid Card Colors */
+    --bank-mint: 158 64% 52%;
+    --bank-mint-fg: 158 64% 10%;
+    --bank-amber: 45 93% 58%;
+    --bank-amber-fg: 45 93% 12%;
+    --bank-coral: 12 76% 61%;
+    --bank-coral-fg: 0 0% 100%;
+    --bank-violet: 263 70% 58%;
+    --bank-violet-fg: 0 0% 100%;
+    --bank-teal: 174 72% 40%;
+    --bank-teal-fg: 0 0% 100%;
+    --bank-sky: 199 89% 48%;
+    --bank-sky-fg: 0 0% 100%;
+    --bank-rose: 340 82% 52%;
+    --bank-rose-fg: 0 0% 100%;
+    --bank-lime: 84 81% 44%;
+    --bank-lime-fg: 84 81% 10%;
   }
 
   .dark {

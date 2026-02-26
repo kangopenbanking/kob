@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Filter, Download, ArrowDownLeft, Send } from 'lucide-react';
+import { Search, Download, ArrowDownLeft, Send, Calendar } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -24,75 +24,92 @@ const BankHistory: React.FC = () => {
     return matchSearch && matchFilter;
   });
 
+  // Group by date
+  const grouped = filtered.reduce<Record<string, typeof filtered>>((acc, tx) => {
+    const label = tx.date === '2026-02-26' ? 'Today' : tx.date === '2026-02-25' ? 'Yesterday' : tx.date;
+    if (!acc[label]) acc[label] = [];
+    acc[label].push(tx);
+    return acc;
+  }, {});
+
   return (
     <div className="flex flex-col px-4 py-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">History</h1>
-        <Button variant="outline" size="sm" className="gap-1.5">
-          <Download className="h-4 w-4" strokeWidth={1.5} />
+      <div className="mb-5 flex items-center justify-between">
+        <h1 className="text-2xl font-bold tracking-tight text-foreground">History</h1>
+        <Button variant="outline" size="sm" className="gap-1.5 rounded-xl font-semibold">
+          <Download className="h-4 w-4" strokeWidth={2} />
           Export
         </Button>
       </div>
 
       {/* Search */}
-      <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+      <div className="relative mb-4">
+        <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
         <Input
           placeholder="Search transactions..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="pl-10"
+          className="rounded-2xl border-2 py-6 pl-11 text-base font-medium"
         />
       </div>
 
       {/* Filter tabs */}
-      <div className="mb-4 flex gap-2">
+      <div className="mb-5 flex gap-2">
         {(['all', 'credit', 'debit'] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
-            className={`rounded-full px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+            className={`rounded-xl px-4 py-2 text-sm font-bold capitalize transition-colors ${
               filter === f
-                ? 'bg-primary text-primary-foreground'
+                ? f === 'credit' ? 'bg-[hsl(var(--bank-mint))] text-[hsl(var(--bank-mint-fg))]'
+                  : f === 'debit' ? 'bg-[hsl(var(--bank-coral))] text-white'
+                  : 'bg-foreground text-background'
                 : 'bg-muted text-muted-foreground'
             }`}
           >
-            {f}
+            {f === 'all' ? 'All' : f === 'credit' ? 'Income' : 'Expense'}
           </button>
         ))}
       </div>
 
-      {/* Transactions */}
-      <div className="flex flex-col gap-1">
-        {filtered.map((tx, i) => (
-          <motion.div
-            key={tx.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: i * 0.03 }}
-            className="flex items-center justify-between rounded-xl px-3 py-3 transition-colors hover:bg-muted/50"
-          >
-            <div className="flex items-center gap-3">
-              <div className={`flex h-9 w-9 items-center justify-center rounded-full ${
-                tx.type === 'credit' ? 'bg-secondary/10' : 'bg-destructive/10'
-              }`}>
-                {tx.type === 'credit' ? (
-                  <ArrowDownLeft className="h-4 w-4 text-secondary" strokeWidth={1.5} />
-                ) : (
-                  <Send className="h-4 w-4 text-destructive" strokeWidth={1.5} />
-                )}
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">{tx.name}</p>
-                <p className="text-xs text-muted-foreground">{tx.date} · {tx.category}</p>
-              </div>
+      {/* Transactions grouped */}
+      <div className="flex flex-col gap-5">
+        {Object.entries(grouped).map(([dateLabel, txs]) => (
+          <div key={dateLabel}>
+            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">{dateLabel}</p>
+            <div className="flex flex-col gap-1">
+              {txs.map((tx, i) => (
+                <motion.div
+                  key={tx.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: i * 0.03 }}
+                  className="flex items-center justify-between rounded-2xl px-3 py-3.5 transition-colors hover:bg-muted/50"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                      tx.type === 'credit' ? 'bg-[hsl(var(--bank-mint))]/15' : 'bg-[hsl(var(--bank-coral))]/15'
+                    }`}>
+                      {tx.type === 'credit' ? (
+                        <ArrowDownLeft className="h-5 w-5 text-[hsl(var(--bank-teal))]" strokeWidth={1.5} />
+                      ) : (
+                        <Send className="h-5 w-5 text-[hsl(var(--bank-coral))]" strokeWidth={1.5} />
+                      )}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{tx.name}</p>
+                      <p className="text-xs font-medium text-muted-foreground">{tx.category}</p>
+                    </div>
+                  </div>
+                  <span className={`text-base font-bold ${
+                    tx.type === 'credit' ? 'text-[hsl(var(--bank-teal))]' : 'text-foreground'
+                  }`}>
+                    {tx.type === 'credit' ? '+' : ''}{tx.amount.toLocaleString()} XAF
+                  </span>
+                </motion.div>
+              ))}
             </div>
-            <span className={`text-sm font-semibold ${
-              tx.type === 'credit' ? 'text-secondary' : 'text-foreground'
-            }`}>
-              {tx.type === 'credit' ? '+' : ''}{tx.amount.toLocaleString()} XAF
-            </span>
-          </motion.div>
+          </div>
         ))}
       </div>
     </div>
