@@ -89,6 +89,16 @@ export default function Auth() {
     }
   }, [authStep]);
 
+  // Auto-refresh captcha every 4 minutes to prevent expiration
+  useEffect(() => {
+    if (authStep !== 'captcha') return;
+    const interval = setInterval(() => {
+      generateCaptcha();
+      toast({ title: 'Refreshed', description: 'Security challenge refreshed' });
+    }, 4 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [authStep]);
+
   const generateCaptcha = async () => {
     try {
       const { data, error } = await supabase.functions.invoke('captcha-generate');
@@ -131,7 +141,13 @@ export default function Auth() {
         setAuthStep('phone');
       }
     } catch (error: any) {
-      toast({ title: 'Incorrect', description: error.message || 'Please try again', variant: 'destructive' });
+      const msg = error.message || 'Please try again';
+      const isExpired = msg.toLowerCase().includes('expired');
+      toast({ 
+        title: isExpired ? 'Expired' : 'Incorrect', 
+        description: isExpired ? 'Captcha expired. A new one has been loaded.' : msg, 
+        variant: 'destructive' 
+      });
       generateCaptcha();
     } finally {
       setLoading(false);
