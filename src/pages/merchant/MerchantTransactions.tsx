@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Download, Search, Filter } from "lucide-react";
+import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { TransactionDetailSheet } from "@/components/ui/transaction-detail-sheet";
+import { DateRangePicker, type DateRange } from "@/components/ui/date-range-picker";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format } from "date-fns";
+import { Loader2, Download, Search, ArrowUpDown, CheckCircle2, XCircle } from "lucide-react";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
 
 export default function MerchantTransactions() {
   const [charges, setCharges] = useState<any[]>([]);
@@ -14,16 +19,33 @@ export default function MerchantTransactions() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [channelFilter, setChannelFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
+  const [totalCount, setTotalCount] = useState(0);
+  const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [dateRange, setDateRange] = useState<DateRange>({
+    from: startOfDay(subDays(new Date(), 29)),
+    to: endOfDay(new Date()),
+  });
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [page, pageSize, dateRange]);
 
   const loadData = async () => {
+    setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data: m } = await supabase.from("gateway_merchants").select("id").eq("user_id", user.id).maybeSingle();
     if (m) {
-      const { data } = await supabase.from("gateway_charges").select("*").eq("merchant_id", m.id).order("created_at", { ascending: false }).limit(200);
+      const from = (page - 1) * pageSize;
+      const { data, count } = await supabase.from("gateway_charges")
+        .select("*", { count: "exact" })
+        .eq("merchant_id", m.id)
+        .gte("created_at", dateRange.from.toISOString())
+        .lte("created_at", dateRange.to.toISOString())
+        .order("created_at", { ascending: false })
+        .range(from, from + pageSize - 1);
       setCharges(data || []);
+      setTotalCount(count || 0);
     }
     setLoading(false);
   };
@@ -37,10 +59,9 @@ export default function MerchantTransactions() {
 
   const channels = [...new Set(charges.map(c => c.channel).filter(Boolean))];
   const statuses = [...new Set(charges.map(c => c.status).filter(Boolean))];
-
-  const totalFiltered = filtered.reduce((s, c) => s + Number(c.amount || 0), 0);
-  const successfulFiltered = filtered.filter(c => c.status === "successful");
-  const successfulTotal = successfulFiltered.reduce((s, c) => s + Number(c.amount || 0), 0);
+  const successfulTotal = filtered.filter(c => c.status === "successful").reduce((s, c) => s + Number(c.amount || 0), 0);
+  const successCount = filtered.filter(c => c.status === "successful").length;
+  const failedCount = filtered.filter(c => c.status === "failed").length;
 
   const exportCSV = () => {
     const headers = ["Reference", "Amount", "Currency", "Status", "Channel", "Customer Email", "Date"];
@@ -55,9 +76,22 @@ export default function MerchantTransactions() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Transactions</h1><p className="text-muted-foreground">{filtered.length} transactions · {successfulTotal.toLocaleString()} {charges[0]?.currency || "XAF"} successful</p></div>
-        <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2"><Download className="h-4 w-4" />Export CSV</Button>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold">Transactions</h1>
+          <p className="text-muted-foreground">{totalCount.toLocaleString()} total · {successfulTotal.toLocaleString()} {charges[0]?.currency || "XAF"} successful</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <DateRangePicker value={dateRange} onChange={r => { setDateRange(r); setPage(1); }} />
+          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-2"><Download className="h-4 w-4" />Export</Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard title="Total Transactions" value={filtered.length.toLocaleString()} icon={<ArrowUpDown className="h-5 w-5" />} />
+        <StatCard title="Successful" value={successCount.toLocaleString()} icon={<CheckCircle2 className="h-5 w-5" />} />
+        <StatCard title="Failed" value={failedCount.toLocaleString()} icon={<XCircle className="h-5 w-5" />} />
       </div>
 
       {/* Filters */}
@@ -84,34 +118,39 @@ export default function MerchantTransactions() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead><tr className="border-b bg-muted/50">
-                <th className="text-left py-3 px-4">Reference</th>
-                <th className="text-left py-3 px-4">Amount</th>
-                <th className="text-left py-3 px-4">Status</th>
-                <th className="text-left py-3 px-4">Channel</th>
-                <th className="text-left py-3 px-4">Customer</th>
-                <th className="text-left py-3 px-4">Date</th>
-              </tr></thead>
-              <tbody>
-                {filtered.length === 0 ? (
-                  <tr><td colSpan={6} className="text-center py-12 text-muted-foreground">No transactions found</td></tr>
-                ) : filtered.map(c => (
-                  <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
-                    <td className="py-3 px-4 font-mono text-xs">{c.charge_ref}</td>
-                    <td className="py-3 px-4 font-medium">{Number(c.amount).toLocaleString()} {c.currency}</td>
-                    <td className="py-3 px-4"><Badge variant={c.status === "successful" ? "default" : c.status === "failed" ? "destructive" : "secondary"}>{c.status}</Badge></td>
-                    <td className="py-3 px-4">{c.channel || "—"}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{c.customer_email || "—"}</td>
-                    <td className="py-3 px-4 text-muted-foreground">{c.created_at ? format(new Date(c.created_at), "MMM d, yyyy HH:mm") : "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          {filtered.length === 0 ? (
+            <EmptyState icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />} title="No transactions found" description="Adjust your filters or date range" />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="border-b bg-muted/50">
+                  <th className="text-left py-3 px-4">Reference</th>
+                  <th className="text-left py-3 px-4">Amount</th>
+                  <th className="text-left py-3 px-4">Status</th>
+                  <th className="text-left py-3 px-4">Channel</th>
+                  <th className="text-left py-3 px-4">Customer</th>
+                  <th className="text-left py-3 px-4">Date</th>
+                </tr></thead>
+                <tbody>
+                  {filtered.map(c => (
+                    <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedTx(c)}>
+                      <td className="py-3 px-4 font-mono text-xs">{c.charge_ref}</td>
+                      <td className="py-3 px-4 font-medium">{Number(c.amount).toLocaleString()} {c.currency}</td>
+                      <td className="py-3 px-4"><Badge variant={c.status === "successful" ? "default" : c.status === "failed" ? "destructive" : "secondary"}>{c.status}</Badge></td>
+                      <td className="py-3 px-4">{c.channel || "—"}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{c.customer_email || "—"}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{c.created_at ? format(new Date(c.created_at), "MMM d, yyyy HH:mm") : "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <DataTablePagination page={page} pageSize={pageSize} totalCount={totalCount} onPageChange={setPage} onPageSizeChange={s => { setPageSize(s); setPage(1); }} />
         </CardContent>
       </Card>
+
+      <TransactionDetailSheet open={!!selectedTx} onOpenChange={o => !o && setSelectedTx(null)} transaction={selectedTx} />
     </div>
   );
 }

@@ -6,6 +6,27 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.1.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "New shared StatCard component with icon, trend indicator, and sparkline support — replaces ad-hoc metric cards across all portals" },
+        { type: "feature", description: "New DataTablePagination component with page size selector, first/last page controls, and range display" },
+        { type: "feature", description: "New EmptyState component with icon, title, description, and optional CTA — replaces plain 'No data' text" },
+        { type: "feature", description: "New DateRangePicker with presets (Today, 7d, 30d, 90d, This/Last month) and custom calendar range selection" },
+        { type: "feature", description: "New TransactionDetailSheet — slide-out panel showing full transaction details, timeline, and provider response JSON" },
+        { type: "improvement", description: "Merchant Dashboard: wallet balance cards, dispute count badge, quick actions (Payment Link, Invoice, API Keys, New Charge), sparkline revenue trend" },
+        { type: "improvement", description: "Merchant Analytics: KPI stat cards (Volume, Avg Tx, Refund Rate, Chargeback Rate), Area chart revenue trend, status donut chart, date range picker" },
+        { type: "improvement", description: "Merchant Payouts: search + status filters, summary stats, CSV export, pagination, detail sheet on click" },
+        { type: "improvement", description: "Merchant Settlements: summary stats (settled, fees, pending), search + filters, pagination, detail sheet on click" },
+        { type: "improvement", description: "Merchant Transactions: date range filter, pagination with page size selector, stat cards, detail sheet on click" },
+        { type: "improvement", description: "Merchant Refunds: search + status filter, summary stats, pagination, detail sheet on click" },
+        { type: "improvement", description: "FI Portal Analytics: replaced period dropdown with DateRangePicker, StatCard components, Area chart, donut with inner radius" },
+        { type: "improvement", description: "FI Portal Transactions: StatCard summary row, DataTablePagination, TransactionDetailSheet on row click" },
+        { type: "improvement", description: "Admin Transaction Monitoring: StatCard components replace manual Card+CardHeader pattern" },
+      ]
+    },
+    {
       version: "3.0.0",
       date: "2026-02-26",
       type: "major",
