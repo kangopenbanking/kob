@@ -1,186 +1,50 @@
 
 
-# Banking App vs V1 API — End-to-End Gap Analysis
+## Verification Results & Gaps Found
 
-## Audit Summary
+After reviewing the full codebase, here is the status of each requested feature:
 
-The Banking PWA has **20 pages** routed under `/bank/:institutionId/*` and the backend has **160+ edge functions**. The audit below maps every app feature to its corresponding API/backend implementation and identifies gaps.
+### Already Fully Wired (No Changes Needed)
 
----
+1. **Home Page** — Fetches real accounts, balances, transactions, savings, loans, and credit score via `useBankAccounts`, `useBankTransactions`, `useSavingsAccounts`, `useLoanApplications`, `useCreditScore` hooks. No mock data remains.
 
-## 1. HOME PAGE (`BankHome.tsx`)
+2. **Send Money** — Calls `api-transfers` edge function via `useSendTransfer` hook with real `source_account_id` from user's primary account.
 
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Fetch user name | `supabase.auth.getUser()` | YES | None |
-| Total balance display | `aisp-balances` edge function | **NO** — hardcoded `XAF 2,450,000` | **CRITICAL**: Must call `aisp-balances` or query `account_balances` table |
-| Multi-currency accounts | `aisp-accounts` edge function | **NO** — hardcoded `mockAccounts` array | **CRITICAL**: Must fetch from `accounts` table |
-| Recent transactions | `aisp-transactions` / `api-transactions` | **NO** — hardcoded `mockTransactions` | **CRITICAL**: Must fetch from `transactions` table |
-| Savings summary (410K) | `savings-create` / savings tables | **NO** — hardcoded value | **HIGH**: Should query `savings_accounts` for user |
-| Loans count (0) | `loan-apply` / loans tables | **NO** — hardcoded value | **HIGH**: Should query `loan_applications` for user |
-| Credit score (720) | `credit-score-fetch` | **NO** — hardcoded value | **HIGH**: Should call `credit-score-fetch` |
+3. **Mobile Money** — Calls `mobile-money-charge` edge function via `useMobileMoneyCharge` hook, passing `phone_number`, `amount`, `currency`, and `provider`.
 
-## 2. PAYMENTS PAGE (`BankPayments.tsx`)
+4. **Savings** — Queries `savings_accounts` table via `useSavingsAccounts`, creates goals via `savings-create`, deposits via `savings-deposit`, withdraws via `savings-withdraw`.
 
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Quick Send contacts | beneficiaries table | **NO** — hardcoded contacts | **MEDIUM**: Should fetch recent transfer recipients |
-| Navigation to sub-pages | Routes defined | YES | None |
+5. **Loans** — Queries `loan_applications` and `loan_products` tables, applies via `loan-apply` edge function.
 
-## 3. SEND MONEY (`BankSendMoney.tsx`)
+6. **Credit Score** — Calls `credit-score-fetch` edge function via `useCreditScore` hook, maps `score_factors` to display.
 
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| P2P transfer execution | `api-transfers` edge function | **NO** — uses `setTimeout` fake delay | **CRITICAL**: Must call `api-transfers` to create real transaction |
-| Fee calculation | `gateway-fee-estimate` | **NO** — hardcoded `XAF 0` | **HIGH**: Should call fee estimate API |
-| Recipient validation | `flutterwave-verify-bank` / account lookup | **NO** | **MEDIUM**: Should validate recipient exists |
-
-## 4. MOBILE MONEY (`BankMobileMoney.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| MoMo/Orange Money transfer | `mobile-money-charge`, `facilitated-mobile-money-charge` | **NO** — uses `setTimeout` fake delay | **CRITICAL**: Must call mobile money edge function |
-| Provider selection | Backend supports MTN/Orange | YES (UI only) | Need to pass provider to API |
-
-## 5. QR PAY (`BankQRPay.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Generate QR code | No dedicated edge function | **NO** — placeholder icon only | **HIGH**: Need to generate QR with account/payment data |
-| Scan QR code | Camera API | **NO** — button only, no scanner | **HIGH**: Need QR scanner integration |
-
-## 6. PAY BILLS (`BankBills.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Bill payment | `api-bills` edge function exists | **NO** — displays "coming soon" | **MEDIUM**: UI shell exists, needs API wiring |
-
-## 7. RECEIVE MONEY (`BankReceive.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Fetch account ID | `accounts` table query | **YES** | None |
-| Copy to clipboard | Browser API | **YES** | None |
-| Share functionality | — | **NO** — shows "coming soon" toast | **LOW** |
-
-## 8. CARDS PAGE (`BankCards.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| List virtual cards | `virtual-card-list` | **NO** — hardcoded single card | **CRITICAL**: Must call `virtual-card-list` |
-| Create new card | `virtual-card-create` (Cardyfie) | **NO** — button present, no action | **CRITICAL**: Must call `virtual-card-create` |
-| Top up card | `virtual-card-topup` | **NO** — button present, no action | **HIGH** |
-| Freeze/unfreeze card | `virtual-card-update-status` | **NO** — button present, no action | **HIGH** |
-| Card transactions | `virtual-card-transactions` | **NO** — not displayed | **HIGH** |
-
-## 9. HISTORY PAGE (`BankHistory.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Transaction list | `api-transactions` / `aisp-transactions` | **NO** — hardcoded `mockTransactions` | **CRITICAL**: Must fetch real transactions |
-| Search/filter | — | YES (client-side on mock data) | Works, but needs real data |
-| Export PDF/CSV | `generate-bank-statement` / `data-export` | **NO** — button present, no action | **HIGH**: Edge functions exist, need wiring |
-
-## 10. SAVINGS PAGE (`BankSavings.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| List savings goals | `savings_accounts` table | **NO** — hardcoded goals | **CRITICAL**: Must query savings accounts |
-| Create new goal | `savings-create` | **NO** — button present, no action | **CRITICAL** |
-| Deposit to savings | `savings-deposit` | **NO** | **HIGH** |
-| Withdraw from savings | `savings-withdraw` | **NO** | **HIGH** |
-| Interest accrual display | `savings-accrue-interest` | **NO** | **MEDIUM** |
-
-## 11. LOANS PAGE (`BankLoans.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| List active loans | `loan_applications` table | **NO** — hardcoded "No active loans" | **CRITICAL**: Must query user's loans |
-| Apply for loan | `loan-apply` | **NO** — button present, no action | **CRITICAL** |
-| Loan repayment | `loan-repay` | **NO** | **HIGH** |
-| EMI calculator | `loan-calculate` | **NO** | **MEDIUM** |
-| Loan products list | `loan_products` table | **NO** — hardcoded products | **HIGH** |
-
-## 12. CREDIT SCORE (`BankCreditScore.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Fetch score | `credit-score-fetch` | **NO** — hardcoded 720 | **CRITICAL** |
-| Score factors | `credit-score-calculate` | **NO** — hardcoded factors | **HIGH** |
-| Score simulation | `credit-score-simulate` | **NO** | **MEDIUM** |
-| Score tips | `credit-score-tips` | **NO** | **LOW** |
-
-## 13. KYC (`BankKYC.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| KYC wizard | `kyc-submit` edge function | **PARTIAL** — component exists via `KYCOnboardingWizard` | Need to verify wizard calls API |
-
-## 14. SETTINGS (`BankSettings.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Personal info edit | `profiles` table | **NO** — static list, no actions | **HIGH** |
-| PIN management | `pin-code-set`, `pin-code-verify` | **NO** | **HIGH** |
-| Security settings | `password-reset-with-pin` | **NO** | **MEDIUM** |
-| Language preference | `user_preferences` table | **NO** — setting exists in DB but not wired | **MEDIUM** |
-
-## 15. NOTIFICATIONS (`BankAlerts.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| List notifications | No dedicated notifications table | **NO** — hardcoded mock alerts | **HIGH**: Need to create or query notification source |
-
-## 16. HELP (`BankHelp.tsx`)
-
-| Feature | Backend Exists? | Wired? | Gap |
-|---|---|---|---|
-| Contact options | Static UI | YES (display only) | **LOW** |
+7. **History** — Fetches real transactions (limit 50), groups by date, search/filter client-side. Export button calls `generate-bank-statement` edge function.
 
 ---
 
-## Priority Summary
+### Gap Found: Multi-Tenancy Data Isolation
 
-### CRITICAL (8 gaps) — App shows fake data where real APIs exist:
-1. Home: Balance, accounts, transactions all hardcoded
-2. Send Money: No real transfer execution
-3. Mobile Money: No real MoMo charge
-4. Cards: No virtual card CRUD
-5. History: Hardcoded transactions
-6. Savings: No real savings data or creation
-7. Loans: No real loan data or application
-8. Credit Score: Hardcoded score
+**Critical Issue**: The `useBankingData.ts` hooks fetch `institutionId` from URL params but **never pass it as a filter** to database queries. This means:
 
-### HIGH (10 gaps) — Features with buttons but no backend wiring:
-- Export (PDF/CSV), Fee estimation, Card top-up/freeze, Savings deposit/withdraw, Loan repayment, Loan products from DB, Score factors from API, Settings actions, PIN management, Notifications
+- `useBankAccounts` reads `institutionId` but doesn't filter `accounts` by `institution_id`
+- All other hooks (`useBankTransactions`, `useSavingsAccounts`, `useLoanApplications`) don't filter by institution at all
+- Data is only filtered by `user_id`, not by institution — so a user in Bank A could see data from Bank B
 
-### MEDIUM/LOW (7 gaps) — Nice-to-have or "coming soon":
-- QR scanner, Bill payments, Recipient validation, Score simulation, Language, Share, Help
+### Implementation Plan
 
----
+**1. Fix multi-tenancy filtering in `useBankingData.ts`**
+- Add `.eq('institution_id', institutionId)` filter to `useBankAccounts` query
+- Pass `institutionId` to `useBankTransactions`, `useSavingsAccounts`, `useLoanApplications` hooks and filter queries accordingly
+- Include `institutionId` in query keys for all hooks so data re-fetches when switching banks
+- Pass `institution_id` in the request body to edge function calls (`api-transfers`, `mobile-money-charge`, `savings-create`, `loan-apply`, `credit-score-fetch`, `generate-bank-statement`)
 
-## Recommended Implementation Order
+**2. Update page components to pass `institutionId`**
+- Ensure all pages that call hooks which need institution context extract `institutionId` from `useParams()` and pass it through
 
-**Phase A** — Wire real data to existing pages (no new UI needed):
-1. Home: Fetch accounts, balances, transactions from DB
-2. History: Fetch transactions with pagination
-3. Cards: Fetch virtual cards from `virtual_cards` table
-4. Savings: Fetch savings accounts
-5. Loans: Fetch loan applications
-6. Credit Score: Call `credit-score-fetch`
+**3. No admin portal changes needed**
+- The admin portal already has full institution management via the existing Admin Portal RBAC system (transaction monitoring, merchant management, etc.)
+- Each banking app instance is already tenant-scoped via the URL pattern `/bank/:institutionId/*` and the `TenantProvider` handles branding
 
-**Phase B** — Wire actions to backend APIs:
-1. Send Money → `api-transfers`
-2. Mobile Money → `mobile-money-charge`
-3. Cards → `virtual-card-create`, `virtual-card-topup`, `virtual-card-update-status`
-4. Savings → `savings-create`, `savings-deposit`, `savings-withdraw`
-5. Loans → `loan-apply`, `loan-repay`
-6. History Export → `generate-bank-statement`
-
-**Phase C** — Secondary features:
-1. Settings → profile edit, PIN set/verify
-2. Notifications → real notification source
-3. Bill payments → `api-bills`
-4. QR code generation and scanning
-5. Fee estimation on transfers
+### Files to Edit
+- `src/hooks/useBankingData.ts` — Add `institution_id` filtering to all 6 query hooks and pass it in all 6 mutation bodies
 
