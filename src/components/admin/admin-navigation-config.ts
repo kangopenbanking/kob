@@ -1,4 +1,5 @@
 import {
+  Palette,
   LayoutDashboard,
   Users,
   Settings,
@@ -109,6 +110,7 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Configuration",
     items: [
       { title: "System Config", path: "/admin/system-config", icon: Settings },
+      { title: "Auth Branding", path: "/admin/auth-branding", icon: Palette },
       { title: "Compliance Dashboard", path: "/admin/compliance-dashboard", icon: ScrollText },
       { title: "API Health", path: "/admin/api-health", icon: Activity },
     ],
