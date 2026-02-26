@@ -388,6 +388,131 @@ const schemas = {
       phone_number: { type: 'string' },
     },
   },
+  // ─── New Schemas (v2.6.0) ──────────────────────────────────────
+  GatewayPaymentLink: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      name: { type: 'string', example: 'Product Payment' },
+      slug: { type: 'string', example: 'product-payment-abc123' },
+      amount: { type: 'number', example: 5000 },
+      currency: { type: 'string', example: 'XAF' },
+      status: { type: 'string', enum: ['active', 'inactive', 'expired'] },
+      redirect_url: { type: 'string' },
+      max_uses: { type: 'integer' },
+      use_count: { type: 'integer' },
+      expires_at: { type: 'string', format: 'date-time' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayPaymentPlan: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      name: { type: 'string', example: 'Monthly Pro Plan' },
+      amount: { type: 'number', example: 10000 },
+      currency: { type: 'string', example: 'XAF' },
+      interval: { type: 'string', enum: ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'] },
+      duration: { type: 'integer', description: 'Number of billing cycles (0 = unlimited)' },
+      status: { type: 'string', enum: ['active', 'cancelled', 'completed'] },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewaySubscription: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      plan_id: { type: 'string', format: 'uuid' },
+      customer_email: { type: 'string' },
+      customer_phone: { type: 'string' },
+      status: { type: 'string', enum: ['active', 'paused', 'cancelled', 'completed', 'past_due'] },
+      current_period_start: { type: 'string', format: 'date-time' },
+      current_period_end: { type: 'string', format: 'date-time' },
+      next_charge_date: { type: 'string', format: 'date-time' },
+      charges_count: { type: 'integer' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewaySubaccount: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      business_name: { type: 'string' },
+      settlement_bank: { type: 'string' },
+      account_number: { type: 'string' },
+      split_type: { type: 'string', enum: ['percentage', 'flat'] },
+      split_value: { type: 'number' },
+      country: { type: 'string', example: 'CM' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayCustomer: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      email: { type: 'string' },
+      phone: { type: 'string' },
+      name: { type: 'string' },
+      metadata: { type: 'object' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayCustomerToken: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      customer_id: { type: 'string', format: 'uuid' },
+      channel: { type: 'string', enum: ['mobile_money', 'card'] },
+      token_ref: { type: 'string' },
+      last4: { type: 'string', example: '1234' },
+      provider: { type: 'string' },
+      is_active: { type: 'boolean' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayChargeEvent: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      charge_id: { type: 'string', format: 'uuid' },
+      event_type: { type: 'string', example: 'charge.created' },
+      data: { type: 'object' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayReconciliationRun: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      merchant_id: { type: 'string', format: 'uuid' },
+      status: { type: 'string', enum: ['pending', 'running', 'completed', 'failed'] },
+      matched_count: { type: 'integer' },
+      mismatched_count: { type: 'integer' },
+      period_start: { type: 'string', format: 'date' },
+      period_end: { type: 'string', format: 'date' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
+  GatewayMerchant: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      user_id: { type: 'string', format: 'uuid' },
+      business_name: { type: 'string' },
+      business_type: { type: 'string' },
+      contact_email: { type: 'string' },
+      contact_phone: { type: 'string' },
+      country: { type: 'string', example: 'CM' },
+      status: { type: 'string', enum: ['pending', 'active', 'suspended', 'deactivated'] },
+      kyb_status: { type: 'string', enum: ['not_submitted', 'pending', 'approved', 'rejected'] },
+      logo_url: { type: 'string' },
+      created_at: { type: 'string', format: 'date-time' },
+    },
+  },
 };
 
 // ─── Reusable Parameters ───────────────────────────────────────────────────
@@ -1137,14 +1262,7 @@ paths['/v1/communications/bulk'] = {
   post: { tags: ['Communications'], summary: 'Send bulk communication', operationId: 'sendBulkCommunication', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { '200': { description: 'Bulk communication queued' }, ...errorResponses } },
 };
 
-// Settlement
-paths['/v1/settlement/calculate'] = {
-  post: { tags: ['Settlement'], summary: 'Calculate settlement', operationId: 'settlementCalculate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['institution_id', 'period_start', 'period_end'], properties: { institution_id: { type: 'string' }, period_start: { type: 'string', format: 'date-time' }, period_end: { type: 'string', format: 'date-time' } } } } } }, responses: { '200': { description: 'Settlement calculation' }, ...errorResponses } },
-};
-
-paths['/v1/settlement/process'] = {
-  post: { tags: ['Settlement'], summary: 'Process settlement', operationId: 'settlementProcess', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { '200': { description: 'Settlement processed' }, ...errorResponses } },
-};
+// Settlement (detailed definitions under Payment Facilitation below)
 
 paths['/v1/invoices/generate'] = {
   post: { tags: ['Settlement'], summary: 'Generate invoice', operationId: 'generateInvoice', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { '201': { description: 'Invoice generated' }, ...errorResponses } },
@@ -1217,7 +1335,7 @@ paths['/v1/developers/register'] = {
 // PAYMENT GATEWAY
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/gateway/charges'] = {
-  post: { tags: ['Payment Gateway'], summary: 'Create a charge', operationId: 'gatewayCreateCharge', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'channel', 'tx_ref'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 5000 }, currency: { type: 'string', default: 'XAF' }, channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer'] }, customer_phone: { type: 'string' }, customer_email: { type: 'string' }, tx_ref: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Charge created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCharge' } } } }, ...errorResponses } },
+  post: { tags: ['Payment Gateway'], summary: 'Create a charge', operationId: 'gatewayCreateCharge', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'channel', 'tx_ref'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 5000 }, currency: { type: 'string', default: 'XAF' }, channel: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'paypal'] }, customer_phone: { type: 'string' }, customer_email: { type: 'string' }, tx_ref: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Charge created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCharge' } } } }, ...errorResponses } },
   get: { tags: ['Payment Gateway'], summary: 'List charges', operationId: 'gatewayListCharges', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'status', in: 'query', schema: { type: 'string' } }, { name: 'channel', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }, ...paginationParams], responses: listResponse('GatewayCharge', 'Charges list') },
 };
 
@@ -1234,7 +1352,7 @@ paths['/v1/gateway/charges/{chargeId}/cancel'] = {
 };
 
 paths['/v1/gateway/fee-estimate'] = {
-  get: { tags: ['Payment Gateway'], summary: 'Estimate transaction fees', operationId: 'gatewayFeeEstimate', security: [{ bearerAuth: [] }], parameters: [{ name: 'amount', in: 'query', required: true, schema: { type: 'number' } }, { name: 'channel', in: 'query', required: true, schema: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer'] } }, { name: 'currency', in: 'query', schema: { type: 'string', default: 'XAF' } }], responses: { '200': { description: 'Fee estimate', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayFeeEstimate' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'Estimate transaction fees', operationId: 'gatewayFeeEstimate', security: [{ bearerAuth: [] }], parameters: [{ name: 'amount', in: 'query', required: true, schema: { type: 'number' } }, { name: 'channel', in: 'query', required: true, schema: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'account_funding', 'paypal'] } }, { name: 'currency', in: 'query', schema: { type: 'string', default: 'XAF' } }], responses: { '200': { description: 'Fee estimate', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayFeeEstimate' } } } }, ...errorResponses } },
 };
 
 paths['/v1/gateway/refunds'] = {
@@ -1399,6 +1517,146 @@ paths['/v1/gateway/exchange-rate'] = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// PAYMENT LINKS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/payment-links'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create payment link', operationId: 'gatewayCreatePaymentLink', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'name', 'amount'], properties: { merchant_id: { type: 'string', format: 'uuid' }, name: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string', default: 'XAF' }, redirect_url: { type: 'string' }, max_uses: { type: 'integer' }, expires_at: { type: 'string', format: 'date-time' } } } } } }, responses: { '201': { description: 'Payment link created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPaymentLink' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List payment links', operationId: 'gatewayListPaymentLinks', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'slug', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewayPaymentLink', 'Payment links') },
+};
+
+paths['/v1/gateway/payment-links/{linkId}'] = {
+  put: { tags: ['Payment Gateway'], summary: 'Update payment link', operationId: 'gatewayUpdatePaymentLink', security: [{ bearerAuth: [] }], parameters: [{ name: 'linkId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' }, amount: { type: 'number' }, status: { type: 'string' }, redirect_url: { type: 'string' } } } } } }, responses: { '200': { description: 'Payment link updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPaymentLink' } } } }, ...errorResponses } },
+  delete: { tags: ['Payment Gateway'], summary: 'Delete payment link', operationId: 'gatewayDeletePaymentLink', security: [{ bearerAuth: [] }], parameters: [{ name: 'linkId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '204': { description: 'Payment link deleted' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAYMENT PLANS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/payment-plans'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create payment plan', operationId: 'gatewayCreatePaymentPlan', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'name', 'amount', 'interval'], properties: { merchant_id: { type: 'string', format: 'uuid' }, name: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string', default: 'XAF' }, interval: { type: 'string', enum: ['daily', 'weekly', 'monthly', 'quarterly', 'yearly'] }, duration: { type: 'integer' } } } } } }, responses: { '201': { description: 'Plan created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPaymentPlan' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List payment plans', operationId: 'gatewayListPaymentPlans', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewayPaymentPlan', 'Payment plans') },
+};
+
+paths['/v1/gateway/payment-plans/{planId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get payment plan', operationId: 'gatewayGetPaymentPlan', security: [{ bearerAuth: [] }], parameters: [{ name: 'planId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Plan details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPaymentPlan' } } } }, ...errorResponses } },
+  put: { tags: ['Payment Gateway'], summary: 'Update payment plan', operationId: 'gatewayUpdatePaymentPlan', security: [{ bearerAuth: [] }], parameters: [{ name: 'planId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { name: { type: 'string' }, amount: { type: 'number' }, status: { type: 'string' } } } } } }, responses: { '200': { description: 'Plan updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPaymentPlan' } } } }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SUBSCRIPTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/subscriptions'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create subscription', operationId: 'gatewayCreateSubscription', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['plan_id', 'customer_email'], properties: { plan_id: { type: 'string', format: 'uuid' }, customer_email: { type: 'string' }, customer_phone: { type: 'string' }, token_id: { type: 'string', description: 'Saved payment token for recurring charges' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Subscription created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewaySubscription' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List subscriptions', operationId: 'gatewayListSubscriptions', security: [{ bearerAuth: [] }], parameters: [{ name: 'plan_id', in: 'query', schema: { type: 'string' } }, { name: 'status', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewaySubscription', 'Subscriptions') },
+};
+
+paths['/v1/gateway/subscriptions/{subscriptionId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get subscription', operationId: 'gatewayGetSubscription', security: [{ bearerAuth: [] }], parameters: [{ name: 'subscriptionId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Subscription details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewaySubscription' } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/subscriptions/cancel'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Cancel subscription', operationId: 'gatewayCancelSubscription', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['subscription_id'], properties: { subscription_id: { type: 'string', format: 'uuid' }, reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Subscription cancelled', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewaySubscription' } } } }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SUBACCOUNTS / SPLIT PAYMENTS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/subaccounts'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create subaccount', operationId: 'gatewayCreateSubaccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'business_name', 'settlement_bank', 'account_number'], properties: { merchant_id: { type: 'string', format: 'uuid' }, business_name: { type: 'string' }, settlement_bank: { type: 'string' }, account_number: { type: 'string' }, split_type: { type: 'string', enum: ['percentage', 'flat'] }, split_value: { type: 'number' }, country: { type: 'string', default: 'CM' } } } } } }, responses: { '201': { description: 'Subaccount created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewaySubaccount' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List subaccounts', operationId: 'gatewayListSubaccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewaySubaccount', 'Subaccounts') },
+};
+
+paths['/v1/gateway/subaccounts/{subaccountId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get subaccount', operationId: 'gatewayGetSubaccount', security: [{ bearerAuth: [] }], parameters: [{ name: 'subaccountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Subaccount details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewaySubaccount' } } } }, ...errorResponses } },
+  put: { tags: ['Payment Gateway'], summary: 'Update subaccount', operationId: 'gatewayUpdateSubaccount', security: [{ bearerAuth: [] }], parameters: [{ name: 'subaccountId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { business_name: { type: 'string' }, split_type: { type: 'string' }, split_value: { type: 'number' } } } } } }, responses: { '200': { description: 'Subaccount updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewaySubaccount' } } } }, ...errorResponses } },
+  delete: { tags: ['Payment Gateway'], summary: 'Delete subaccount', operationId: 'gatewayDeleteSubaccount', security: [{ bearerAuth: [] }], parameters: [{ name: 'subaccountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '204': { description: 'Subaccount deleted' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CUSTOMERS & TOKENIZATION
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/customers'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create customer', operationId: 'gatewayCreateCustomer', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'email'], properties: { merchant_id: { type: 'string', format: 'uuid' }, email: { type: 'string' }, phone: { type: 'string' }, name: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Customer created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCustomer' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List customers', operationId: 'gatewayListCustomers', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewayCustomer', 'Customers') },
+};
+
+paths['/v1/gateway/customers/{customerId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get customer', operationId: 'gatewayGetCustomer', security: [{ bearerAuth: [] }], parameters: [{ name: 'customerId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Customer details', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCustomer' } } } }, ...errorResponses } },
+  put: { tags: ['Payment Gateway'], summary: 'Update customer', operationId: 'gatewayUpdateCustomer', security: [{ bearerAuth: [] }], parameters: [{ name: 'customerId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { email: { type: 'string' }, phone: { type: 'string' }, name: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '200': { description: 'Customer updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCustomer' } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/customers/{customerId}/tokens'] = {
+  get: { tags: ['Payment Gateway'], summary: 'List customer tokens', operationId: 'gatewayListCustomerTokens', security: [{ bearerAuth: [] }], parameters: [{ name: 'customerId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Customer payment tokens', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayCustomerToken' } } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/gateway/customers/{customerId}/tokens/{tokenId}'] = {
+  delete: { tags: ['Payment Gateway'], summary: 'Revoke customer token', operationId: 'gatewayRevokeCustomerToken', security: [{ bearerAuth: [] }], parameters: [{ name: 'customerId', in: 'path', required: true, schema: { type: 'string' } }, { name: 'tokenId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '204': { description: 'Token revoked' }, ...errorResponses } },
+};
+
+paths['/v1/gateway/charges/token'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Charge a saved token', operationId: 'gatewayChargeToken', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['token_id', 'amount', 'tx_ref'], properties: { token_id: { type: 'string', format: 'uuid' }, amount: { type: 'number' }, currency: { type: 'string', default: 'XAF' }, tx_ref: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Token charge created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayCharge' } } } }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CHARGE EVENTS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/charges/{chargeId}/events'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get charge events', description: 'Retrieve the full event timeline for a charge.', operationId: 'gatewayGetChargeEvents', security: [{ bearerAuth: [] }], parameters: [{ name: 'chargeId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Charge event timeline', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/GatewayChargeEvent' } } } } } } }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RECONCILIATION
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/reconciliation'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Run reconciliation', operationId: 'gatewayRunReconciliation', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'period_start', 'period_end'], properties: { merchant_id: { type: 'string', format: 'uuid' }, period_start: { type: 'string', format: 'date' }, period_end: { type: 'string', format: 'date' } } } } } }, responses: { '200': { description: 'Reconciliation started', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayReconciliationRun' } } } }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List reconciliation runs', operationId: 'gatewayListReconciliationRuns', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewayReconciliationRun', 'Reconciliation runs') },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// REPORTS — FEES
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/reports/fees'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Fee report', operationId: 'gatewayReportFees', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string' } }, { name: 'to', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Fee report with totals by channel' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PAYOUT RETRY
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/payouts/{payoutId}/retry'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Retry failed payout', operationId: 'gatewayRetryPayout', security: [{ bearerAuth: [] }], parameters: [{ name: 'payoutId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], responses: { '200': { description: 'Payout retried', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayPayout' } } } }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MERCHANT ONBOARDING
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/merchants'] = {
+  post: { tags: ['Merchant Onboarding'], summary: 'Create merchant', operationId: 'merchantCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['business_name', 'business_type', 'contact_email'], properties: { business_name: { type: 'string' }, business_type: { type: 'string' }, contact_email: { type: 'string' }, contact_phone: { type: 'string' }, country: { type: 'string', default: 'CM' }, action: { type: 'string', enum: ['create', 'submit', 'activate', 'suspend'], default: 'create' } } } } } }, responses: { '201': { description: 'Merchant created', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayMerchant' } } } }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List merchants', operationId: 'merchantList', security: [{ bearerAuth: [] }], parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewayMerchant', 'Merchants') },
+  patch: { tags: ['Merchant Onboarding'], summary: 'Update merchant', operationId: 'merchantUpdate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { merchant_id: { type: 'string' }, business_name: { type: 'string' }, contact_email: { type: 'string' }, logo_url: { type: 'string' } } } } } }, responses: { '200': { description: 'Merchant updated', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayMerchant' } } } }, ...errorResponses } },
+};
+
+paths['/v1/merchants/kyb'] = {
+  post: { tags: ['Merchant Onboarding'], summary: 'Submit KYB verification', operationId: 'merchantSubmitKyb', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id'], properties: { merchant_id: { type: 'string' }, registration_number: { type: 'string' }, tax_id: { type: 'string' }, documents: { type: 'array', items: { type: 'object' } } } } } } }, responses: { '200': { description: 'KYB submitted' }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'Get KYB status', operationId: 'merchantGetKyb', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'KYB verification status' }, ...errorResponses } },
+};
+
+paths['/v1/merchants/api-keys'] = {
+  post: { tags: ['Merchant Onboarding'], summary: 'Issue API key', operationId: 'merchantIssueApiKey', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id'], properties: { merchant_id: { type: 'string' }, environment: { type: 'string', enum: ['sandbox', 'production'] } } } } } }, responses: { '201': { description: 'API key issued' }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List API keys', operationId: 'merchantListApiKeys', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'API keys list' }, ...errorResponses } },
+  delete: { tags: ['Merchant Onboarding'], summary: 'Revoke API key', operationId: 'merchantRevokeApiKey', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['key_id'], properties: { key_id: { type: 'string' } } } } } }, responses: { '204': { description: 'API key revoked' }, ...errorResponses } },
+};
+
+paths['/v1/merchants/settlement-accounts'] = {
+  post: { tags: ['Merchant Onboarding'], summary: 'Add settlement account', operationId: 'merchantAddSettlementAccount', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'account_number', 'bank_code'], properties: { merchant_id: { type: 'string' }, account_number: { type: 'string' }, bank_code: { type: 'string' }, bank_name: { type: 'string' }, currency: { type: 'string', default: 'XAF' } } } } } }, responses: { '201': { description: 'Settlement account added' }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List settlement accounts', operationId: 'merchantListSettlementAccounts', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Settlement accounts' }, ...errorResponses } },
+};
+
+paths['/v1/merchants/webhooks'] = {
+  post: { tags: ['Merchant Onboarding'], summary: 'Register merchant webhook', operationId: 'merchantRegisterWebhook', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'url', 'events'], properties: { merchant_id: { type: 'string' }, url: { type: 'string', format: 'uri' }, events: { type: 'array', items: { type: 'string' } } } } } } }, responses: { '201': { description: 'Webhook registered' }, ...errorResponses } },
+  get: { tags: ['Merchant Onboarding'], summary: 'List merchant webhooks', operationId: 'merchantListWebhooks', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Merchant webhooks' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -1455,7 +1713,9 @@ serve(async (req) => {
         { name: 'WooCommerce', description: 'WooCommerce payment plugin integration' },
         { name: 'Sandbox', description: 'Sandbox environment management' },
         { name: 'Developer', description: 'Developer app registration' },
-        { name: 'Payment Gateway', description: 'Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification' },
+        { name: 'Payment Gateway', description: 'Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation' },
+        { name: 'Payment Facilitation', description: 'White-label payment processing — facilitated charges, settlement calculation and processing' },
+        { name: 'Merchant Onboarding', description: 'Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks' },
       ],
       components: {
         securitySchemes: {

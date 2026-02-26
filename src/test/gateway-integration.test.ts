@@ -180,7 +180,7 @@ describe("Transfer Endpoints — Documentation Coverage", () => {
       "/v1/gateway/payouts/paypal",
     ];
     expect(transferChannels.length).toBe(7);
-    expect(new Set(transferChannels).size).toBe(7); // all unique
+    expect(new Set(transferChannels).size).toBe(7);
   });
 
   it("should have internal transfer endpoint path", () => {
@@ -198,5 +198,87 @@ describe("Transfer Endpoints — Documentation Coverage", () => {
   it("should have mobile-money-to-bank endpoint path", () => {
     const endpoint = "/v1/mobile-money/to-bank";
     expect(endpoint).toContain("/v1/mobile-money/");
+  });
+});
+
+describe("New Gateway Endpoints — Path Coverage (v2.6.0)", () => {
+  it("should have payment links CRUD endpoints", () => {
+    const endpoints = [
+      "POST /v1/gateway/payment-links",
+      "GET /v1/gateway/payment-links",
+      "PUT /v1/gateway/payment-links/{linkId}",
+      "DELETE /v1/gateway/payment-links/{linkId}",
+    ];
+    expect(endpoints.length).toBe(4);
+    expect(new Set(endpoints).size).toBe(4);
+  });
+
+  it("should have subscriptions lifecycle endpoints", () => {
+    const endpoints = [
+      "POST /v1/gateway/subscriptions",
+      "GET /v1/gateway/subscriptions",
+      "GET /v1/gateway/subscriptions/{subscriptionId}",
+      "POST /v1/gateway/subscriptions/cancel",
+    ];
+    expect(endpoints.length).toBe(4);
+  });
+
+  it("should have customer tokenization endpoints", () => {
+    const endpoints = [
+      "POST /v1/gateway/customers",
+      "GET /v1/gateway/customers",
+      "GET /v1/gateway/customers/{customerId}",
+      "PUT /v1/gateway/customers/{customerId}",
+      "GET /v1/gateway/customers/{customerId}/tokens",
+      "DELETE /v1/gateway/customers/{customerId}/tokens/{tokenId}",
+      "POST /v1/gateway/charges/token",
+    ];
+    expect(endpoints.length).toBe(7);
+  });
+
+  it("should have reconciliation endpoints", () => {
+    const endpoints = [
+      "POST /v1/gateway/reconciliation",
+      "GET /v1/gateway/reconciliation",
+    ];
+    expect(endpoints.length).toBe(2);
+  });
+
+  it("should have merchant onboarding endpoints", () => {
+    const endpoints = [
+      "POST /v1/merchants",
+      "GET /v1/merchants",
+      "PATCH /v1/merchants",
+      "POST /v1/merchants/kyb",
+      "GET /v1/merchants/kyb",
+      "POST /v1/merchants/api-keys",
+      "GET /v1/merchants/api-keys",
+      "DELETE /v1/merchants/api-keys",
+      "POST /v1/merchants/settlement-accounts",
+      "GET /v1/merchants/settlement-accounts",
+      "POST /v1/merchants/webhooks",
+      "GET /v1/merchants/webhooks",
+    ];
+    expect(endpoints.length).toBe(12);
+    expect(new Set(endpoints).size).toBe(12);
+  });
+
+  it("should have charge events and fee report endpoints", () => {
+    const endpoints = [
+      "GET /v1/gateway/charges/{chargeId}/events",
+      "GET /v1/gateway/reports/fees",
+      "POST /v1/gateway/payouts/{payoutId}/retry",
+    ];
+    expect(endpoints.length).toBe(3);
+  });
+
+  it("should have all 8 fee channels defined", () => {
+    const allChannels = [
+      "mobile_money", "card", "bank_transfer",
+      "apple_pay", "google_pay", "ussd",
+      "account_funding", "paypal",
+    ];
+    expect(allChannels.length).toBe(8);
+    expect(new Set(allChannels).size).toBe(8);
   });
 });
