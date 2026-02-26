@@ -10,15 +10,20 @@ interface SplashScreenProps {
 
 export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 2000 }) => {
   const tenant = useTenant();
+  const wConfig = tenant.walkthroughConfig || {};
 
   useEffect(() => {
     const timer = setTimeout(onComplete, duration);
     return () => clearTimeout(timer);
   }, [onComplete, duration]);
 
+  const bgStyle: React.CSSProperties = {};
+  if (wConfig.accent_color) bgStyle.backgroundColor = wConfig.accent_color;
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-primary"
+      style={bgStyle}
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.4 }}
@@ -29,9 +34,9 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration
         transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.1 }}
         className="flex flex-col items-center gap-6"
       >
-        {tenant.logoUrl ? (
+        {(wConfig.logo_url || tenant.logoUrl) ? (
           <img
-            src={tenant.logoUrl}
+            src={wConfig.logo_url || tenant.logoUrl!}
             alt={tenant.name}
             className="h-20 w-20 rounded-2xl object-contain bg-primary-foreground p-2"
           />
