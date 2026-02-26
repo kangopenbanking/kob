@@ -23,44 +23,57 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
   const [userEmail, setUserEmail] = useState<string>("");
   const [userRole, setUserRole] = useState<string>("");
   const [initials, setInitials] = useState("U");
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        setUserEmail(user.email || "");
-        const email = user.email || "";
-        setInitials(email.substring(0, 2).toUpperCase());
+      if (!user) {
+        setIsAuthenticated(false);
+        return;
+      }
+      setIsAuthenticated(true);
+      setUserEmail(user.email || "");
+      const email = user.email || "";
+      setInitials(email.substring(0, 2).toUpperCase());
 
-        // Get full_name from profiles
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("full_name")
-          .eq("id", user.id)
-          .maybeSingle();
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", user.id)
+        .maybeSingle();
 
-        if (profile?.full_name) {
-          const parts = profile.full_name.split(" ");
-          setInitials(
-            parts.length > 1
-              ? (parts[0][0] + parts[1][0]).toUpperCase()
-              : parts[0].substring(0, 2).toUpperCase()
-          );
-        }
+      if (profile?.full_name) {
+        const parts = profile.full_name.split(" ");
+        setInitials(
+          parts.length > 1
+            ? (parts[0][0] + parts[1][0]).toUpperCase()
+            : parts[0].substring(0, 2).toUpperCase()
+        );
+      }
 
-        // Get role from user_roles
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .maybeSingle();
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-        if (roleData) {
-          setUserRole(roleData.role);
-        }
+      if (roleData) {
+        setUserRole(roleData.role);
       }
     };
     fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setIsAuthenticated(false);
+      } else {
+        setIsAuthenticated(true);
+        fetchUser();
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = async () => {
@@ -82,6 +95,9 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
   const profilePath = variant === "admin" ? "/admin/users" : "/profile";
   const securityPath = variant === "admin" ? "/admin/security" : "/security";
   const settingsPath = variant === "institution" ? "/fi-portal/settings" : "/profile";
+
+  // Don't render anything if not authenticated
+  if (!isAuthenticated) return null;
 
   return (
     <DropdownMenu>
