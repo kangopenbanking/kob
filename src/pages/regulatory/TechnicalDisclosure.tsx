@@ -1,11 +1,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Server, Shield, Lock, FileCheck, RefreshCw } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 System Architecture", content: ["Cloud-hosted, multi-tenant payment orchestration system.", "Layers: Client Applications → API Gateway → Application Services (Payment, Settlement, Fraud, Compliance) → Data Layer (PostgreSQL, Redis, Object Storage)."] },
+  { heading: "2.0 Encryption & Security", content: ["Transit: TLS 1.3. At rest: AES-256-GCM. Auth: OAuth 2.0 + PKCE. Open Banking: mTLS with X.509 certificates.", "Webhook signing: HMAC-SHA256. Key rotation: every 90 days."] },
+  { heading: "3.0 Audit Trail Immutability", content: ["INSERT-only audit tables. SHA-256 hash chain. Read-only service accounts.", "10-year retention with automated cold storage archival."] },
+  { heading: "4.0 Reconciliation", content: ["Daily three-way: Internal Ledger ↔ Processor ↔ Bank Statement.", "Unmatched >48h escalated. Unresolved >5 days reported to CFO and COBAC."] },
+  { heading: "5.0 Idempotency", content: ["UUID v4 Idempotency-Key on all payment endpoints.", "24h key-response cache. Duplicate returns cached response."] },
+];
 
 export default function TechnicalDisclosure() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-007 — Phase 4: Technical System Disclosure</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-007 — Phase 4: Technical System Disclosure</Badge>
+        <PdfExportButton title="Technical System Architecture Disclosure" documentCode="KOB-REG-007" subtitle="Per COBAC Instruction No. 2006/01 on IT Risk Management" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">Technical System Architecture Disclosure</h1>
       <p className="text-muted-foreground mb-8">Regulator-facing technical description per COBAC Instruction No. 2006/01 on IT Risk Management</p>
 

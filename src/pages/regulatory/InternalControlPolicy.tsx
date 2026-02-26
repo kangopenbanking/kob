@@ -1,11 +1,22 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Eye, FileCheck, AlertTriangle } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 Purpose & Scope", content: ["This Internal Control Policy establishes the framework of controls, procedures, and governance structures that Kang Open Banking S.A. maintains to ensure safety, soundness, and regulatory compliance.", "Regulatory basis: COBAC Regulation R-2001/07, COBAC Instruction No. 2006/01, CEMAC Regulation No. 04/18 Article 23."] },
+  { heading: "2.0 Three Lines of Defence", content: ["1st Line: Business Operations — day-to-day controls, transaction processing validation.", "2nd Line: Risk Management & Compliance — policy development, AML/CFT oversight, regulatory reporting.", "3rd Line: Internal Audit — independent assurance, control effectiveness testing."] },
+  { heading: "3.0 Committee Structures", content: ["Risk Committee: Min 3 members, quarterly meetings, chaired by independent director.", "Compliance Committee: Monthly meetings, chaired by Compliance Officer.", "Audit Committee: Min 2 non-executive directors, quarterly meetings."] },
+  { heading: "4.0 Key Control Processes", content: ["Transaction authorisation, reconciliation, access control, sanctions screening, change management, incident management."] },
+];
 
 export default function InternalControlPolicy() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-002 — Phase 1: Legal Structure</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-002 — Phase 1: Legal Structure</Badge>
+        <PdfExportButton title="Internal Control Policy" documentCode="KOB-REG-002" subtitle="Per COBAC Regulation R-2016/04 and CEMAC Regulation No. 04/18-CEMAC-UMAC-COBAC, Article 23" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">Internal Control Policy</h1>
       <p className="text-muted-foreground mb-8">Per COBAC Regulation R-2016/04 and CEMAC Regulation No. 04/18-CEMAC-UMAC-COBAC, Article 23</p>
 

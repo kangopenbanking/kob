@@ -260,6 +260,8 @@ import DataProtectionPolicy from "./pages/regulatory/DataProtectionPolicy";
 import TechnicalDisclosure from "./pages/regulatory/TechnicalDisclosure";
 import RiskAssessmentPage from "./pages/regulatory/RiskAssessment";
 import ReportingTemplates from "./pages/regulatory/ReportingTemplates";
+import RegulatoryReadiness from "./pages/regulatory/RegulatoryReadiness";
+import KycDueDiligence from "./pages/regulatory/KycDueDiligence";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard";
 import MerchantTransactions from "./pages/merchant/MerchantTransactions";
 import MerchantPaymentLinks from "./pages/merchant/MerchantPaymentLinks";
@@ -553,6 +555,8 @@ function App() {
             <Route path="/roi-calculator" element={<Layout><ROICalculator /></Layout>} />
             <Route path="/payment-facilitation" element={<Layout><PaymentFacilitation /></Layout>} />
             <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
+            <Route path="/regulatory/readiness" element={<Layout><RegulatoryReadiness /></Layout>} />
+            <Route path="/regulatory/kyc-due-diligence" element={<Layout><KycDueDiligence /></Layout>} />
             <Route path="/regulatory/filing-pack" element={<Layout><FilingPackIndex /></Layout>} />
             <Route path="/regulatory/corporate-structure" element={<Layout><CorporateStructure /></Layout>} />
             <Route path="/regulatory/internal-control-policy" element={<Layout><InternalControlPolicy /></Layout>} />

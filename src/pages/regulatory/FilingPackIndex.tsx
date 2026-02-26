@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
-import { FileText, Shield, Building2, Scale, Server, AlertTriangle, BarChart3, CheckCircle, Clock, Landmark } from "lucide-react";
+import { FileText, Shield, Building2, Scale, Server, AlertTriangle, BarChart3, CheckCircle, Clock, Landmark, UserCheck, Activity } from "lucide-react";
 
 const filingDocuments = [
   { code: "KOB-REG-001", title: "Corporate Structure & Governance", route: "/regulatory/corporate-structure", phase: "Phase 1", status: "Ready", icon: Building2 },
@@ -15,6 +15,7 @@ const filingDocuments = [
   { code: "KOB-REG-007", title: "Technical System Disclosure", route: "/regulatory/technical-disclosure", phase: "Phase 4", status: "Ready", icon: Server },
   { code: "KOB-REG-008", title: "Risk Assessment Matrix", route: "/regulatory/risk-assessment", phase: "Phase 5", status: "Ready", icon: AlertTriangle },
   { code: "KOB-REG-009", title: "Regulatory Reporting Templates", route: "/regulatory/reporting-templates", phase: "Phase 6", status: "Ready", icon: BarChart3 },
+  { code: "KOB-REG-010", title: "KYC / Due Diligence Form", route: "/regulatory/kyc-due-diligence", phase: "CDD", status: "Ready", icon: UserCheck },
 ];
 
 const operationalChecklist = [
@@ -55,19 +56,22 @@ export default function FilingPackIndex() {
 
       {/* Readiness Overview */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardDescription>Readiness Score</CardDescription>
-            <CardTitle className="text-3xl">{readinessScore}/100</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Progress value={readinessScore} className="h-2" />
-          </CardContent>
-        </Card>
+        <Link to="/regulatory/readiness">
+          <Card className="hover:border-primary/50 transition-colors cursor-pointer">
+            <CardHeader className="pb-2">
+              <CardDescription>Readiness Score</CardDescription>
+              <CardTitle className="text-3xl">{readinessScore}/100</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Progress value={readinessScore} className="h-2" />
+              <p className="text-xs text-primary mt-1">View Dashboard →</p>
+            </CardContent>
+          </Card>
+        </Link>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Documents</CardDescription>
-            <CardTitle className="text-3xl flex items-center gap-2">9/9 <CheckCircle className="h-5 w-5 text-green-500" /></CardTitle>
+            <CardTitle className="text-3xl flex items-center gap-2">10/10 <CheckCircle className="h-5 w-5 text-green-500" /></CardTitle>
           </CardHeader>
           <CardContent><p className="text-xs text-muted-foreground">All documents drafted</p></CardContent>
         </Card>

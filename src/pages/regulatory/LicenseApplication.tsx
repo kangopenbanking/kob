@@ -1,11 +1,23 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Scale, Server, Landmark, Shield, ArrowRight } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 Application Summary", content: ["Application for PSP authorisation under CEMAC Regulation No. 04/18.", "Category 2 — Payment Initiation and Account Information Services.", "Services: PISP, AISP, Payment Gateway, Mobile Money Aggregation.", "Geographic Scope: Republic of Cameroon (initial); CEMAC zone (expansion)."] },
+  { heading: "2.0 Technical Operations", content: ["Multi-tenant payment orchestration platform.", "Channels: Mobile Money (MTN/Orange via Flutterwave), Card (Visa/MC via Stripe), Bank Transfers, PayPal, USSD."], table: { headers: ["Processor", "Services", "Jurisdiction"], rows: [["Stripe Inc.", "Card acquiring, tokenisation", "US / EU (Ireland)"], ["Flutterwave Inc.", "Mobile money, bank transfers", "US / Nigeria"], ["PayPal Holdings", "PayPal payments, payouts", "US"]] } },
+  { heading: "3.0 Settlement Flow", content: ["Mobile Money: T+1. Card: T+2. Bank Transfers: T+1.", "Daily three-way reconciliation (internal ledger ↔ processor ↔ bank statement)."] },
+  { heading: "4.0 Safeguarding of Funds", content: ["Segregated client funds account at BEAC-approved institution.", "Float segregation: capped at 48h projected settlement volume.", "Escrow for disputed funds. Prohibition on use of safeguarded funds for operations."] },
+  { heading: "5.0 Capital Adequacy", content: ["Minimum Share Capital: 500,000,000 XAF.", "Solvency Ratio Target: ≥ 8% of risk-weighted assets.", "Liquidity: 30-day operational expense reserve."] },
+];
 
 export default function LicenseApplication() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-003 — Phase 2: License Application</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-003 — Phase 2: License Application</Badge>
+        <PdfExportButton title="PSP License Application" documentCode="KOB-REG-003" subtitle="Application under CEMAC Regulation No. 04/18-CEMAC-UMAC-COBAC on Payment Services" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">Payment Service Provider License Application</h1>
       <p className="text-muted-foreground mb-8">Application under CEMAC Regulation No. 04/18-CEMAC-UMAC-COBAC on Payment Services in the CEMAC Zone</p>
 

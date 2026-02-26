@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertTriangle, Shield } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
 
 const risks = [
   { id: "R-001", category: "Processor Dependency", description: "Disruption or termination of Stripe/Flutterwave services impacting payment processing", probability: "Medium", impact: "Critical", inherent: "High", mitigation: "Multi-processor architecture; failover routing; minimum 2 processors per channel; 90-day cash reserve for processor transition", residual: "Medium" },
@@ -20,10 +21,20 @@ const colorMap: Record<string, string> = {
   "Low": "text-green-700 bg-green-500/10",
 };
 
+const riskPdfSections = risks.map(r => ({
+  heading: `${r.id} — ${r.category}`,
+  content: [r.description, `Probability: ${r.probability} | Impact: ${r.impact}`, `Inherent Risk: ${r.inherent} | Residual Risk: ${r.residual}`, `Mitigation: ${r.mitigation}`],
+}));
+
 export default function RiskAssessment() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-6xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-008 — Phase 5: Risk Disclosure</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-008 — Phase 5: Risk Disclosure</Badge>
+        <PdfExportButton title="Risk Assessment Matrix" documentCode="KOB-REG-008" subtitle="Per COBAC Regulation R-2016/04 on Risk Management" sections={riskPdfSections} />
+      </div>
+      <h1 className="text-3xl font-bold mb-2">Risk Assessment Matrix</h1>
+      <p className="text-muted-foreground mb-8">Per COBAC Regulation R-2016/04 on Risk Management and CEMAC Regulation No. 04/18, Article 20</p>
       <h1 className="text-3xl font-bold mb-2">Risk Assessment Matrix</h1>
       <p className="text-muted-foreground mb-8">Per COBAC Regulation R-2016/04 on Risk Management and CEMAC Regulation No. 04/18, Article 20</p>
 

@@ -1,11 +1,23 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Building2, Users, Shield, UserCheck } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 Corporate Overview", content: ["Registered Name: Kang Open Banking S.A.", "Legal Form: Société Anonyme (S.A.) — OHADA Uniform Act", "Jurisdiction: Republic of Cameroon", "Share Capital: 500,000,000 XAF (minimum per COBAC R-2019/01)", "Principal Activities: PSP, Payment Gateway, Mobile Money Aggregation, Open Banking Infrastructure"], table: { headers: ["Field", "Value"], rows: [["Registered Office", "Douala, Littoral Region, Cameroon"], ["Financial Year", "1 January — 31 December"]] } },
+  { heading: "2.0 Shareholding Structure", content: ["All shareholders holding 10% or more of the share capital or voting rights are subject to prior approval by COBAC, as required under Article 12 of CEMAC Regulation No. 04/18."] },
+  { heading: "3.0 Ultimate Beneficial Owner Declaration", content: ["In accordance with FATF Recommendation 24 and CEMAC AML Regulation Article 8, the Company declares all UBOs — natural persons who ultimately own or control 25% or more of the share capital or voting rights.", "The Company undertakes to notify COBAC within 30 days of any change in its UBO structure."] },
+  { heading: "4.0 Board of Directors", content: ["The Board shall comprise 3–12 members, including at least 1 independent non-executive director. Board members are subject to COBAC fit-and-proper assessment.", "Committees: Risk Committee, Audit Committee, Compliance Committee, Technology & Security Committee."] },
+  { heading: "5.0 Key Officer Appointments", content: ["MLRO appointed per Article 28 of CEMAC AML Regulation. Reports directly to Board/Compliance Committee.", "Compliance Officer reports to CEO and Board Compliance Committee."] },
+];
 
 export default function CorporateStructure() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-001 — Phase 1: Legal Structure</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-001 — Phase 1: Legal Structure</Badge>
+        <PdfExportButton title="Corporate Structure & Governance Framework" documentCode="KOB-REG-001" subtitle="Prepared for submission to BEAC and COBAC under CEMAC Regulation No. 04/18-CEMAC-UMAC-COBAC" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">Corporate Structure & Governance Framework</h1>
       <p className="text-muted-foreground mb-8">Prepared for submission to BEAC and COBAC under CEMAC Regulation No. 04/18-CEMAC-UMAC-COBAC</p>
 
