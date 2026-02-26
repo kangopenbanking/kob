@@ -198,6 +198,18 @@ const Index = () => {
               </Link>
             </Card>
           </div>
+
+          {/* Apps Ecosystem Banner */}
+          <div className="mt-10 p-6 rounded-lg border bg-card text-center">
+            <Smartphone className="h-8 w-8 text-primary mx-auto mb-3" />
+            <h3 className="text-xl font-bold mb-2">Multi-Tenancy App Ecosystem</h3>
+            <p className="text-muted-foreground mb-4 max-w-md mx-auto">
+              Explore our white-labeled PWA apps — Banking, Merchant & Customer — each branded per institution.
+            </p>
+            <Link to="/apps">
+              <Button>Explore Apps</Button>
+            </Link>
+          </div>
           </div>
         </div>
       </section>
