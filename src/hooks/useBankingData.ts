@@ -3,22 +3,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
+// Helper to get institutionId from route params
+function useInstitutionId() {
+  const { institutionId } = useParams();
+  return institutionId;
+}
+
 // ─── Accounts & Balances ───
 export function useBankAccounts() {
-  const { institutionId } = useParams();
+  const institutionId = useInstitutionId();
   return useQuery({
     queryKey: ['bank-accounts', institutionId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('accounts')
         .select('*, account_balances(*)')
         .eq('user_id', user.id)
         .eq('is_active', true)
         .order('created_at', { ascending: false });
       
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -47,19 +58,37 @@ export function useTotalBalance() {
 
 // ─── Transactions ───
 export function useBankTransactions(limit = 10) {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['bank-transactions', limit],
+    queryKey: ['bank-transactions', institutionId, limit],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
-      const { data, error } = await supabase
+      // If institutionId is set, first get account IDs for this institution
+      let accountIds: string[] | null = null;
+      if (institutionId) {
+        const { data: accounts } = await supabase
+          .from('accounts')
+          .select('id')
+          .eq('user_id', user.id)
+          .eq('institution_id', institutionId);
+        accountIds = (accounts || []).map(a => a.id);
+        if (accountIds.length === 0) return [];
+      }
+
+      let query = supabase
         .from('transactions')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(limit);
       
+      if (accountIds) {
+        query = query.in('account_id', accountIds);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -68,19 +97,25 @@ export function useBankTransactions(limit = 10) {
 
 // ─── Savings ───
 export function useSavingsAccounts() {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['savings-accounts'],
+    queryKey: ['savings-accounts', institutionId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('savings_accounts')
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'active')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
       
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -89,17 +124,18 @@ export function useSavingsAccounts() {
 
 export function useSavingsDeposit() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ savings_account_id, amount }: { savings_account_id: string; amount: number }) => {
       const { data, error } = await supabase.functions.invoke('savings-deposit', {
-        body: { savings_account_id, amount },
+        body: { savings_account_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savings-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
       toast.success('Deposit successful!');
     },
     onError: (err: any) => toast.error(err.message || 'Deposit failed'),
@@ -108,17 +144,18 @@ export function useSavingsDeposit() {
 
 export function useSavingsWithdraw() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ savings_account_id, amount }: { savings_account_id: string; amount: number }) => {
       const { data, error } = await supabase.functions.invoke('savings-withdraw', {
-        body: { savings_account_id, amount },
+        body: { savings_account_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savings-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
       toast.success('Withdrawal successful!');
     },
     onError: (err: any) => toast.error(err.message || 'Withdrawal failed'),
@@ -127,6 +164,7 @@ export function useSavingsWithdraw() {
 
 export function useCreateSavingsGoal() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: {
       product_id: string;
@@ -135,12 +173,14 @@ export function useCreateSavingsGoal() {
       target_amount?: number;
       target_date?: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke('savings-create', { body });
+      const { data, error } = await supabase.functions.invoke('savings-create', {
+        body: { ...body, institution_id: institutionId },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['savings-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
       toast.success('Savings goal created!');
     },
     onError: (err: any) => toast.error(err.message || 'Failed to create savings goal'),
@@ -149,18 +189,24 @@ export function useCreateSavingsGoal() {
 
 // ─── Loans ───
 export function useLoanApplications() {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['loan-applications'],
+    queryKey: ['loan-applications', institutionId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
-      const { data, error } = await supabase
+      let query = supabase
         .from('loan_applications')
         .select('*, loan_product:loan_products(*)')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }) as any;
       
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -168,15 +214,21 @@ export function useLoanApplications() {
 }
 
 export function useLoanProducts() {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['loan-products'],
+    queryKey: ['loan-products', institutionId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('loan_products')
         .select('*')
         .eq('is_active', true)
         .order('product_name');
       
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -185,6 +237,7 @@ export function useLoanProducts() {
 
 export function useApplyForLoan() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: {
       loan_product_id: string;
@@ -193,12 +246,14 @@ export function useApplyForLoan() {
       purpose: string;
       submit?: boolean;
     }) => {
-      const { data, error } = await supabase.functions.invoke('loan-apply', { body });
+      const { data, error } = await supabase.functions.invoke('loan-apply', {
+        body: { ...body, institution_id: institutionId },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['loan-applications'] });
+      queryClient.invalidateQueries({ queryKey: ['loan-applications', institutionId] });
       toast.success('Loan application submitted!');
     },
     onError: (err: any) => toast.error(err.message || 'Application failed'),
@@ -207,28 +262,32 @@ export function useApplyForLoan() {
 
 // ─── Credit Score ───
 export function useCreditScore() {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['credit-score'],
+    queryKey: ['credit-score', institutionId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
       const { data, error } = await supabase.functions.invoke('credit-score-fetch', {
-        body: { user_id: user.id, include_report: false },
+        body: { user_id: user.id, include_report: false, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
     },
-    staleTime: 5 * 60 * 1000, // 5 min cache
+    staleTime: 5 * 60 * 1000,
   });
 }
 
 // ─── Virtual Cards ───
 export function useVirtualCards() {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['virtual-cards'],
+    queryKey: ['virtual-cards', institutionId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-list');
+      const { data, error } = await supabase.functions.invoke('virtual-card-list', {
+        body: { institution_id: institutionId },
+      });
       if (error) throw error;
       return data?.cards || [];
     },
@@ -237,14 +296,17 @@ export function useVirtualCards() {
 
 export function useCreateVirtualCard() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { card_type?: string; currency?: string; spending_limit?: number }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-create', { body });
+      const { data, error } = await supabase.functions.invoke('virtual-card-create', {
+        body: { ...body, institution_id: institutionId },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['virtual-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
       toast.success('Virtual card created!');
     },
     onError: (err: any) => toast.error(err.message || 'Failed to create card'),
@@ -253,16 +315,17 @@ export function useCreateVirtualCard() {
 
 export function useTopUpCard() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ card_id, amount }: { card_id: string; amount: number }) => {
       const { data, error } = await supabase.functions.invoke('virtual-card-topup', {
-        body: { card_id, amount },
+        body: { card_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['virtual-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
       toast.success('Card topped up!');
     },
     onError: (err: any) => toast.error(err.message || 'Top-up failed'),
@@ -271,16 +334,17 @@ export function useTopUpCard() {
 
 export function useUpdateCardStatus() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ card_id, status }: { card_id: string; status: string }) => {
       const { data, error } = await supabase.functions.invoke('virtual-card-update-status', {
-        body: { card_id, status },
+        body: { card_id, status, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
     },
     onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['virtual-cards'] });
+      queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
       toast.success(data?.message || 'Card status updated!');
     },
     onError: (err: any) => toast.error(err.message || 'Status update failed'),
@@ -290,6 +354,7 @@ export function useUpdateCardStatus() {
 // ─── Transfers ───
 export function useSendTransfer() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: {
       source_account_id: string;
@@ -298,13 +363,15 @@ export function useSendTransfer() {
       currency?: string;
       description?: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke('api-transfers', { body });
+      const { data, error } = await supabase.functions.invoke('api-transfers', {
+        body: { ...body, institution_id: institutionId },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['bank-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-transactions', institutionId] });
       toast.success('Transfer sent successfully!');
     },
     onError: (err: any) => toast.error(err.message || 'Transfer failed'),
@@ -314,6 +381,7 @@ export function useSendTransfer() {
 // ─── Mobile Money ───
 export function useMobileMoneyCharge() {
   const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: {
       phone_number: string;
@@ -321,13 +389,15 @@ export function useMobileMoneyCharge() {
       currency?: string;
       provider?: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke('mobile-money-charge', { body });
+      const { data, error } = await supabase.functions.invoke('mobile-money-charge', {
+        body: { ...body, institution_id: institutionId },
+      });
       if (error) throw error;
       return data;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['bank-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['bank-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-transactions', institutionId] });
       toast.success('Mobile Money transfer initiated!');
     },
     onError: (err: any) => toast.error(err.message || 'Transfer failed'),
@@ -336,13 +406,15 @@ export function useMobileMoneyCharge() {
 
 // ─── Beneficiaries (for Quick Send) ───
 export function useBeneficiaries() {
+  const institutionId = useInstitutionId();
   return useQuery({
-    queryKey: ['beneficiaries'],
+    queryKey: ['beneficiaries', institutionId],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       
-      const { data, error } = await supabase
+      // Beneficiaries are linked via account_id; filter accounts by institution first
+      let query = supabase
         .from('beneficiaries')
         .select('*')
         .eq('user_id', user.id)
@@ -350,6 +422,7 @@ export function useBeneficiaries() {
         .order('created_at', { ascending: false })
         .limit(10);
       
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -358,9 +431,12 @@ export function useBeneficiaries() {
 
 // ─── Export Statement ───
 export function useExportStatement() {
+  const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { format?: string; start_date?: string; end_date?: string }) => {
-      const { data, error } = await supabase.functions.invoke('generate-bank-statement', { body });
+      const { data, error } = await supabase.functions.invoke('generate-bank-statement', {
+        body: { ...body, institution_id: institutionId },
+      });
       if (error) throw error;
       return data;
     },
