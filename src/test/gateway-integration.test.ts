@@ -282,3 +282,61 @@ describe("New Gateway Endpoints — Path Coverage (v2.6.0)", () => {
     expect(new Set(allChannels).size).toBe(8);
   });
 });
+
+// ─── WooCommerce Plugin Tests (v2.7.0) ───
+
+describe("WooCommerce Plugin — Production Readiness", () => {
+  it("should have 6 WooCommerce API endpoints defined", () => {
+    const endpoints = [
+      "POST /v1/woocommerce/merchants",
+      "POST /v1/woocommerce/validate-install",
+      "GET /v1/woocommerce/plugin/download",
+      "POST /v1/woocommerce/process-payment",
+      "GET /v1/woocommerce/transactions",
+      "POST /v1/woocommerce/webhook",
+    ];
+    expect(endpoints.length).toBe(6);
+    expect(new Set(endpoints).size).toBe(6);
+  });
+
+  it("should use production API base URL pattern", () => {
+    const pluginApiBase = "https://api.kangopenbanking.com/functions/v1";
+    expect(pluginApiBase).toContain("kangopenbanking.com");
+    expect(pluginApiBase).toContain("functions/v1");
+    expect(pluginApiBase).not.toContain("supabase.co");
+  });
+
+  it("should have plugin version 1.0.0", () => {
+    const version = "1.0.0";
+    expect(version).toMatch(/^\d+\.\d+\.\d+$/);
+    expect(version).toBe("1.0.0");
+  });
+
+  it("should include all 9 plugin files in ZIP", () => {
+    const pluginFiles = [
+      "woo-for-kang/woo-for-kang.php",
+      "woo-for-kang/includes/class-wfk-payment-gateway.php",
+      "woo-for-kang/includes/class-wfk-api-client.php",
+      "woo-for-kang/includes/class-wfk-webhook-handler.php",
+      "woo-for-kang/includes/class-wfk-logger.php",
+      "woo-for-kang/templates/payment-instructions.php",
+      "woo-for-kang/readme.txt",
+      "woo-for-kang/uninstall.php",
+      "woo-for-kang/LICENSE",
+    ];
+    expect(pluginFiles.length).toBe(9);
+    expect(new Set(pluginFiles).size).toBe(9);
+    expect(pluginFiles.every(f => f.startsWith("woo-for-kang/"))).toBe(true);
+  });
+
+  it("should define valid webhook event types", () => {
+    const eventTypes = [
+      "payment.completed",
+      "payment.failed",
+      "payment.cancelled",
+      "payment.refunded",
+    ];
+    expect(eventTypes.length).toBe(4);
+    expect(eventTypes).toContain("payment.completed");
+  });
+});

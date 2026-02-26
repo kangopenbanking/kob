@@ -541,6 +541,41 @@ const errorResponses = {
   '500': { description: 'Internal server error', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
 };
 
+// WooCommerce Schemas
+schemas.WooCommerceMerchant = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    store_name: { type: 'string' },
+    store_url: { type: 'string', format: 'uri' },
+    admin_email: { type: 'string', format: 'email' },
+    api_key: { type: 'string', description: 'Generated API key for the merchant' },
+    client_secret: { type: 'string', description: 'Generated client secret (shown once)' },
+    webhook_secret: { type: 'string', description: 'Webhook signing secret' },
+    status: { type: 'string', enum: ['active', 'inactive', 'suspended'] },
+    plugin_version: { type: 'string' },
+    created_at: { type: 'string', format: 'date-time' },
+  },
+};
+
+schemas.WooCommerceTransaction = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    transaction_ref: { type: 'string' },
+    woocommerce_order_id: { type: 'integer' },
+    amount: { type: 'number' },
+    currency: { type: 'string' },
+    status: { type: 'string', enum: ['pending', 'completed', 'failed', 'refunded'] },
+    payment_method: { type: 'string' },
+    customer_email: { type: 'string' },
+    fee_amount: { type: 'number' },
+    net_amount: { type: 'number' },
+    created_at: { type: 'string', format: 'date-time' },
+    completed_at: { type: 'string', format: 'date-time' },
+  },
+};
+
 // ─── Path Definitions ──────────────────────────────────────────────────────
 
 // Helper for standard list response
@@ -1298,15 +1333,27 @@ paths['/v1/postiq/codes/{code}'] = {
 
 // WooCommerce
 paths['/v1/woocommerce/merchants'] = {
-  post: { tags: ['WooCommerce'], summary: 'Register WooCommerce merchant', operationId: 'woocommerceRegisterMerchant', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { '201': { description: 'Merchant registered' }, ...errorResponses } },
+  post: { tags: ['WooCommerce'], summary: 'Register WooCommerce merchant', description: 'Register a WooCommerce store for Kang Open Banking payment processing. Returns API credentials.', operationId: 'woocommerceRegisterMerchant', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['store_name', 'store_url', 'admin_email'], properties: { store_name: { type: 'string', example: 'My Cameroon Store' }, store_url: { type: 'string', format: 'uri', example: 'https://mystore.cm' }, admin_email: { type: 'string', format: 'email' }, plugin_version: { type: 'string', example: '1.0.0' }, business_type: { type: 'string', enum: ['individual', 'company'] }, phone: { type: 'string' }, country: { type: 'string', default: 'CM' } } } } } }, responses: { '201': { description: 'Merchant registered', content: { 'application/json': { schema: { $ref: '#/components/schemas/WooCommerceMerchant' } } } }, ...errorResponses } },
 };
 
 paths['/v1/woocommerce/validate-install'] = {
-  post: { tags: ['WooCommerce'], summary: 'Validate WooCommerce installation', operationId: 'woocommerceValidateInstall', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object' } } } }, responses: { '200': { description: 'Validation result' }, ...errorResponses } },
+  post: { tags: ['WooCommerce'], summary: 'Validate WooCommerce plugin installation', description: 'Validates the plugin is correctly installed and API credentials are working.', operationId: 'woocommerceValidateInstall', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['api_key', 'store_url'], properties: { api_key: { type: 'string' }, plugin_version: { type: 'string' }, store_url: { type: 'string', format: 'uri' }, php_version: { type: 'string' }, wp_version: { type: 'string' }, wc_version: { type: 'string' } } } } } }, responses: { '200': { description: 'Validation result', content: { 'application/json': { schema: { type: 'object', properties: { valid: { type: 'boolean' }, merchant_id: { type: 'string' }, store_name: { type: 'string' }, status: { type: 'string', enum: ['active', 'inactive', 'suspended'] }, features: { type: 'array', items: { type: 'string' } } } } } } }, ...errorResponses } },
 };
 
 paths['/v1/woocommerce/plugin/download'] = {
-  get: { tags: ['WooCommerce'], summary: 'Download WooCommerce plugin', operationId: 'woocommerceDownloadPlugin', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Plugin download' }, ...errorResponses } },
+  get: { tags: ['WooCommerce'], summary: 'Download WooCommerce plugin ZIP', description: 'Downloads the complete Woo for Kang WordPress plugin as a ZIP file ready for installation.', operationId: 'woocommerceDownloadPlugin', security: [], responses: { '200': { description: 'Plugin ZIP file', content: { 'application/zip': { schema: { type: 'string', format: 'binary' } } } }, ...errorResponses } },
+};
+
+paths['/v1/woocommerce/process-payment'] = {
+  post: { tags: ['WooCommerce'], summary: 'Process WooCommerce payment', description: 'Initiates a payment for a WooCommerce order. Called by the WordPress plugin during checkout.', operationId: 'woocommerceProcessPayment', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency', 'woocommerce_order_id', 'customer_email'], properties: { amount: { type: 'number', example: 25000 }, currency: { type: 'string', default: 'XAF' }, woocommerce_order_id: { type: 'integer', example: 1234 }, customer_email: { type: 'string', format: 'email' }, customer_name: { type: 'string' }, customer_phone: { type: 'string' }, payment_methods: { type: 'array', items: { type: 'string', enum: ['mobile_money', 'card', 'bank_transfer'] } }, return_url: { type: 'string', format: 'uri' }, cancel_url: { type: 'string', format: 'uri' }, webhook_url: { type: 'string', format: 'uri' }, metadata: { type: 'object' } } } } } }, responses: { '200': { description: 'Payment initiated', content: { 'application/json': { schema: { type: 'object', properties: { transaction_ref: { type: 'string' }, payment_url: { type: 'string', format: 'uri' }, status: { type: 'string', enum: ['pending', 'processing'] }, expires_at: { type: 'string', format: 'date-time' } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/woocommerce/transactions'] = {
+  get: { tags: ['WooCommerce'], summary: 'Sync WooCommerce transactions', description: 'Retrieve transaction history for a WooCommerce merchant. Used by the plugin for transaction synchronization.', operationId: 'woocommerceListTransactions', security: [{ bearerAuth: [] }], parameters: [{ name: 'start_date', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'end_date', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'status', in: 'query', schema: { type: 'string', enum: ['pending', 'completed', 'failed', 'refunded'] } }, { name: 'payment_method', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Transaction list', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/WooCommerceTransaction' } }, total: { type: 'integer' }, limit: { type: 'integer' }, offset: { type: 'integer' } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/woocommerce/webhook'] = {
+  post: { tags: ['WooCommerce'], summary: 'WooCommerce payment webhook', description: 'Receives payment status updates and updates the corresponding WooCommerce order.', operationId: 'woocommercePaymentWebhook', security: [], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['event_type', 'transaction_ref', 'status'], properties: { event_type: { type: 'string', enum: ['payment.completed', 'payment.failed', 'payment.cancelled', 'payment.refunded'] }, transaction_ref: { type: 'string' }, woocommerce_order_id: { type: 'integer' }, status: { type: 'string', enum: ['completed', 'successful', 'failed', 'cancelled', 'refunded'] }, amount: { type: 'number' }, currency: { type: 'string' }, payment_method: { type: 'string' }, timestamp: { type: 'string', format: 'date-time' } } } } } }, responses: { '200': { description: 'Webhook processed' }, ...errorResponses } },
 };
 
 // Sandbox

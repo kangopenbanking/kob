@@ -199,29 +199,34 @@ const WooForKang = () => {
   const handleDownload = async () => {
     setDownloading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('woocommerce-download-plugin');
-      
-      if (error) throw error;
-      
-      if (data.status === 'packaging') {
-        toast({
-          title: "Plugin Being Packaged",
-          description: data.message,
-          duration: 6000
-        });
-      } else if (data.download_url) {
-        window.open(data.download_url, '_blank');
-        toast({
-          title: "Download Started",
-          description: `Woo for Kang v${data.version} is being downloaded`,
-        });
-      }
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/woocommerce-download-plugin`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'woo-for-kang-v1.0.0.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Download Started",
+        description: "Woo for Kang v1.0.0 plugin ZIP is downloading",
+      });
     } catch (error: any) {
       console.error('Download error:', error);
       toast({
-        title: "Plugin Packaging",
-        description: "The WordPress plugin is currently being prepared. Please register your store to receive early access.",
-        variant: "default"
+        title: "Download Failed",
+        description: "Please try again or contact support.",
+        variant: "destructive"
       });
     } finally {
       setDownloading(false);
