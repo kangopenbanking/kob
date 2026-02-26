@@ -300,6 +300,7 @@ import BankSettings from "./pages/banking-app/BankSettings";
 import BankAlerts from "./pages/banking-app/BankAlerts";
 import BankHelp from "./pages/banking-app/BankHelp";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
+import Apps from "./pages/Apps";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -328,6 +329,7 @@ function App() {
             <Route path="/guides/webhooks" element={<Layout><Webhooks /></Layout>} />
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
+            <Route path="/apps" element={<Layout><Apps /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
             {/* Institution Portal Routes - Nested with InstitutionLayout */}
