@@ -210,12 +210,26 @@ const schemas = {
       created_at: { type: 'string', format: 'date-time' },
     },
   },
+  WebhookEventType: {
+    type: 'string',
+    enum: [
+      'charge.created', 'charge.processing', 'charge.successful', 'charge.failed',
+      'charge.cancelled', 'charge.voided', 'charge.captured', 'charge.refunded',
+      'payout.created', 'payout.processing', 'payout.completed', 'payout.failed',
+      'refund.created', 'refund.completed', 'refund.failed',
+      'dispute.created', 'dispute.won', 'dispute.lost',
+      'settlement.paid',
+      'consent.created', 'consent.authorised', 'consent.revoked', 'consent.expired',
+      'account.updated',
+    ],
+    description: 'All 24 supported webhook event types across charge, payout, refund, dispute, settlement, consent, and account domains.',
+  },
   Webhook: {
     type: 'object',
     properties: {
       webhook_id: { type: 'string', format: 'uuid' },
       url: { type: 'string', format: 'uri' },
-      events: { type: 'array', items: { type: 'string' } },
+      events: { type: 'array', items: { $ref: '#/components/schemas/WebhookEventType' } },
       is_active: { type: 'boolean' },
       secret: { type: 'string', description: 'HMAC signing secret (shown only once)' },
     },
@@ -479,7 +493,7 @@ const schemas = {
     properties: {
       id: { type: 'string', format: 'uuid' },
       charge_id: { type: 'string', format: 'uuid' },
-      event_type: { type: 'string', example: 'charge.created' },
+      event_type: { type: 'string', enum: ['charge.created', 'charge.processing', 'charge.successful', 'charge.failed', 'charge.cancelled', 'charge.voided', 'charge.captured', 'charge.refunded'], example: 'charge.created' },
       data: { type: 'object' },
       created_at: { type: 'string', format: 'date-time' },
     },
@@ -526,9 +540,9 @@ const paginationParams = [
 const idempotencyHeader = {
   name: 'Idempotency-Key',
   in: 'header',
-  required: false,
+  required: true,
   schema: { type: 'string', format: 'uuid' },
-  description: 'Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.',
+  description: 'Required on all POST/PUT endpoints. Unique key for idempotent request processing (UUID v4 recommended). Keys expire after 24 hours.',
 };
 
 const errorResponses = {
@@ -537,7 +551,7 @@ const errorResponses = {
   '403': { description: 'Forbidden', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
   '404': { description: 'Not found', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
   '409': { description: 'Conflict (idempotency mismatch)', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
-  '429': { description: 'Rate limit exceeded', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
+  '429': { description: 'Rate limit exceeded', headers: { 'Retry-After': { schema: { type: 'integer' }, description: 'Number of seconds to wait before retrying' } }, content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
   '500': { description: 'Internal server error', content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } } },
 };
 
@@ -679,12 +693,14 @@ paths['/v1/oauth/token'] = {
             type: 'object',
             required: ['grant_type', 'client_id'],
             properties: {
-              grant_type: { type: 'string', enum: ['authorization_code', 'refresh_token'] },
-              code: { type: 'string' },
+              grant_type: { type: 'string', enum: ['authorization_code', 'refresh_token', 'client_credentials'], description: 'OAuth 2.0 grant type' },
+              code: { type: 'string', description: 'Authorization code (required for authorization_code grant)' },
               client_id: { type: 'string' },
+              client_secret: { type: 'string', description: 'Client secret (required for client_credentials and refresh_token grants)' },
               redirect_uri: { type: 'string' },
-              code_verifier: { type: 'string' },
-              refresh_token: { type: 'string' },
+              code_verifier: { type: 'string', description: 'PKCE code verifier (required when code_challenge was used)' },
+              refresh_token: { type: 'string', description: 'Refresh token (required for refresh_token grant)' },
+              scope: { type: 'string', description: 'Space-delimited list of scopes (e.g. "accounts payments")', example: 'accounts payments' },
             },
           },
         },
@@ -843,10 +859,18 @@ paths['/v1/aisp/consents'] = {
   },
 };
 
+const xConsentIdHeader = {
+  name: 'x-consent-id',
+  in: 'header',
+  required: true,
+  schema: { type: 'string' },
+  description: 'Authorised AISP consent ID. Required for all account information endpoints.',
+};
+
 paths['/v1/aisp/accounts'] = {
   get: {
     tags: ['AISP'], summary: 'List accounts', operationId: 'aispAccounts', security: [{ bearerAuth: [] }],
-    parameters: [...paginationParams],
+    parameters: [xConsentIdHeader, ...paginationParams],
     responses: listResponse('Account', 'Accounts list'),
   },
 };
@@ -854,7 +878,7 @@ paths['/v1/aisp/accounts'] = {
 paths['/v1/aisp/accounts/{accountId}'] = {
   get: {
     tags: ['AISP'], summary: 'Get account details', operationId: 'aispAccountDetail', security: [{ bearerAuth: [] }],
-    parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }],
+    parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader],
     responses: { '200': { description: 'Account details', content: { 'application/json': { schema: { $ref: '#/components/schemas/Account' } } } }, ...errorResponses },
   },
 };
@@ -862,7 +886,7 @@ paths['/v1/aisp/accounts/{accountId}'] = {
 paths['/v1/aisp/accounts/{accountId}/balances'] = {
   get: {
     tags: ['AISP'], summary: 'Get account balances', operationId: 'aispBalances', security: [{ bearerAuth: [] }],
-    parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }],
+    parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader],
     responses: { '200': { description: 'Account balances', content: { 'application/json': { schema: { type: 'object', properties: { data: { type: 'array', items: { $ref: '#/components/schemas/Balance' } } } } } } }, ...errorResponses },
   },
 };
@@ -872,6 +896,7 @@ paths['/v1/aisp/accounts/{accountId}/transactions'] = {
     tags: ['AISP'], summary: 'List transactions', operationId: 'aispTransactions', security: [{ bearerAuth: [] }],
     parameters: [
       { name: 'accountId', in: 'path', required: true, schema: { type: 'string' } },
+      xConsentIdHeader,
       { name: 'from_date', in: 'query', schema: { type: 'string', format: 'date' } },
       { name: 'to_date', in: 'query', schema: { type: 'string', format: 'date' } },
       ...paginationParams,
@@ -881,15 +906,15 @@ paths['/v1/aisp/accounts/{accountId}/transactions'] = {
 };
 
 paths['/v1/aisp/accounts/{accountId}/beneficiaries'] = {
-  get: { tags: ['AISP'], summary: 'List beneficiaries', operationId: 'aispBeneficiaries', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Beneficiaries list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List beneficiaries', operationId: 'aispBeneficiaries', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Beneficiaries list' }, ...errorResponses } },
 };
 
 paths['/v1/aisp/accounts/{accountId}/standing-orders'] = {
-  get: { tags: ['AISP'], summary: 'List standing orders', operationId: 'aispStandingOrders', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Standing orders list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List standing orders', operationId: 'aispStandingOrders', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Standing orders list' }, ...errorResponses } },
 };
 
 paths['/v1/aisp/accounts/{accountId}/direct-debits'] = {
-  get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Direct debits list' }, ...errorResponses } },
+  get: { tags: ['AISP'], summary: 'List direct debits', operationId: 'aispDirectDebits', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, xConsentIdHeader], responses: { '200': { description: 'Direct debits list' }, ...errorResponses } },
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1108,7 +1133,7 @@ paths['/v1/ledger/journal'] = {
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/mobile-money/charge'] = {
   post: {
-    tags: ['Mobile Money'], summary: 'Charge mobile money', operationId: 'mobileMoneyCharge', security: [{ bearerAuth: [] }],
+    tags: ['Mobile Money'], summary: 'Charge mobile money', operationId: 'mobileMoneyCharge', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'amount'], properties: { phone_number: { type: 'string', example: '237650000000' }, amount: { type: 'number', example: 5000 }, currency: { type: 'string', example: 'XAF' }, provider: { type: 'string', enum: ['MTN', 'Orange'] } } }, example: { phone_number: '237650000000', amount: 5000, currency: 'XAF', provider: 'MTN' } } } },
     responses: { '200': { description: 'Charge initiated', content: { 'application/json': { schema: { $ref: '#/components/schemas/MobileMoneyCharge' } } } }, ...errorResponses },
@@ -1117,7 +1142,7 @@ paths['/v1/mobile-money/charge'] = {
 
 paths['/v1/mobile-money/transfer'] = {
   post: {
-    tags: ['Mobile Money'], summary: 'Transfer to mobile money', operationId: 'mobileMoneyTransfer', security: [{ bearerAuth: [] }],
+    tags: ['Mobile Money'], summary: 'Transfer to mobile money', operationId: 'mobileMoneyTransfer', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'amount'], properties: { phone_number: { type: 'string' }, amount: { type: 'number', example: 10000 }, currency: { type: 'string', example: 'XAF' } } } } } },
     responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
@@ -1125,12 +1150,12 @@ paths['/v1/mobile-money/transfer'] = {
 };
 
 paths['/v1/mobile-money/verify'] = {
-  post: { tags: ['Mobile Money'], summary: 'Verify mobile money transaction', operationId: 'mobileMoneyVerify', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transaction_ref'], properties: { transaction_ref: { type: 'string' } } } } } }, responses: { '200': { description: 'Transaction status' }, ...errorResponses } },
+  post: { tags: ['Mobile Money'], summary: 'Verify mobile money transaction', operationId: 'mobileMoneyVerify', security: [{ bearerAuth: [] }], deprecated: true, requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transaction_ref'], properties: { transaction_ref: { type: 'string' } } } } } }, responses: { '200': { description: 'Transaction status' }, ...errorResponses } },
 };
 
 paths['/v1/mobile-money/to-bank'] = {
   post: {
-    tags: ['Mobile Money'], summary: 'Mobile money to bank transfer', operationId: 'mobileMoneyToBank', security: [{ bearerAuth: [] }],
+    tags: ['Mobile Money'], summary: 'Mobile money to bank transfer', operationId: 'mobileMoneyToBank', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['phone_number', 'amount', 'bank_account'], properties: { phone_number: { type: 'string' }, amount: { type: 'number' }, bank_account: { type: 'string' }, bank_code: { type: 'string' } } } } } },
     responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
@@ -1142,7 +1167,7 @@ paths['/v1/mobile-money/to-bank'] = {
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/flutterwave/bank-transfer'] = {
   post: {
-    tags: ['Payments'], summary: 'Initiate bank transfer via Flutterwave', operationId: 'flutterwaveBankTransfer', security: [{ bearerAuth: [] }],
+    tags: ['Payments'], summary: 'Initiate bank transfer via Flutterwave', operationId: 'flutterwaveBankTransfer', security: [{ bearerAuth: [] }], deprecated: true,
     parameters: [idempotencyHeader],
     requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'bank_code', 'amount'], properties: { account_number: { type: 'string' }, bank_code: { type: 'string' }, amount: { type: 'number', example: 100000 }, currency: { type: 'string', example: 'XAF' }, narration: { type: 'string' } } } } } },
     responses: { '200': { description: 'Transfer initiated' }, ...errorResponses },
@@ -1150,20 +1175,20 @@ paths['/v1/flutterwave/bank-transfer'] = {
 };
 
 paths['/v1/flutterwave/banks'] = {
-  get: { tags: ['Payments'], summary: 'List supported banks', operationId: 'flutterwaveListBanks', security: [{ bearerAuth: [] }], parameters: [{ name: 'country', in: 'query', schema: { type: 'string', default: 'CM' } }], responses: { '200': { description: 'Banks list' }, ...errorResponses } },
+  get: { tags: ['Payments'], summary: 'List supported banks', operationId: 'flutterwaveListBanks', security: [{ bearerAuth: [] }], deprecated: true, parameters: [{ name: 'country', in: 'query', schema: { type: 'string', default: 'CM' } }], responses: { '200': { description: 'Banks list' }, ...errorResponses } },
 };
 
 paths['/v1/flutterwave/verify-bank'] = {
-  post: { tags: ['Payments'], summary: 'Verify bank account', operationId: 'flutterwaveVerifyBank', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'bank_code'], properties: { account_number: { type: 'string' }, bank_code: { type: 'string' } } } } } }, responses: { '200': { description: 'Account details' }, ...errorResponses } },
+  post: { tags: ['Payments'], summary: 'Verify bank account', operationId: 'flutterwaveVerifyBank', security: [{ bearerAuth: [] }], deprecated: true, requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_number', 'bank_code'], properties: { account_number: { type: 'string' }, bank_code: { type: 'string' } } } } } }, responses: { '200': { description: 'Account details' }, ...errorResponses } },
 };
 
 // Stripe
 paths['/v1/stripe/payment-intent'] = {
-  post: { tags: ['Payments'], summary: 'Create Stripe payment intent', operationId: 'stripePaymentIntent', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'number' }, currency: { type: 'string', example: 'XAF' } } } } } }, responses: { '200': { description: 'Payment intent created' }, ...errorResponses } },
+  post: { tags: ['Payments'], summary: 'Create Stripe payment intent', operationId: 'stripePaymentIntent', security: [{ bearerAuth: [] }], deprecated: true, parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'number' }, currency: { type: 'string', example: 'XAF' } } } } } }, responses: { '200': { description: 'Payment intent created' }, ...errorResponses } },
 };
 
 paths['/v1/stripe/confirm-payment'] = {
-  post: { tags: ['Payments'], summary: 'Confirm Stripe payment', operationId: 'stripeConfirmPayment', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['payment_intent_id'], properties: { payment_intent_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Payment confirmed' }, ...errorResponses } },
+  post: { tags: ['Payments'], summary: 'Confirm Stripe payment', operationId: 'stripeConfirmPayment', security: [{ bearerAuth: [] }], deprecated: true, parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['payment_intent_id'], properties: { payment_intent_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Payment confirmed' }, ...errorResponses } },
 };
 
 // Bulk transfers
@@ -1655,7 +1680,7 @@ paths['/v1/gateway/charges/{chargeId}/events'] = {
 // RECONCILIATION
 // ═══════════════════════════════════════════════════════════════════════════
 paths['/v1/gateway/reconciliation'] = {
-  post: { tags: ['Payment Gateway'], summary: 'Run reconciliation', operationId: 'gatewayRunReconciliation', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'period_start', 'period_end'], properties: { merchant_id: { type: 'string', format: 'uuid' }, period_start: { type: 'string', format: 'date' }, period_end: { type: 'string', format: 'date' } } } } } }, responses: { '200': { description: 'Reconciliation started', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayReconciliationRun' } } } }, ...errorResponses } },
+  post: { tags: ['Payment Gateway'], summary: 'Run reconciliation', operationId: 'gatewayRunReconciliation', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'period_start', 'period_end'], properties: { merchant_id: { type: 'string', format: 'uuid' }, period_start: { type: 'string', format: 'date' }, period_end: { type: 'string', format: 'date' }, provider: { type: 'string', enum: ['flutterwave', 'stripe', 'paypal'], description: 'Payment provider to reconcile against' } } } } } }, responses: { '200': { description: 'Reconciliation started', content: { 'application/json': { schema: { $ref: '#/components/schemas/GatewayReconciliationRun' } } } }, ...errorResponses } },
   get: { tags: ['Payment Gateway'], summary: 'List reconciliation runs', operationId: 'gatewayListReconciliationRuns', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: listResponse('GatewayReconciliationRun', 'Reconciliation runs') },
 };
 
@@ -1715,7 +1740,7 @@ serve(async (req) => {
       openapi: '3.1.0',
       info: {
         title: 'Kang Open Banking API',
-        version: '1.0.0',
+        version: '2.9.0',
         summary: 'Unified Open Banking API for Cameroon',
         description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
         contact: {
