@@ -9,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { StatCard } from "@/components/ui/stat-card";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { AlertTriangle, DollarSign, RefreshCw, TrendingUp, Activity, Download, Search, Flag, Lock, Unlock } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -163,22 +165,10 @@ export default function TransactionMonitoring() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Volume</CardTitle><DollarSign className="h-4 w-4 text-muted-foreground" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{formatAmount(stats.totalVolume, 'XAF')}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Total Transactions</CardTitle><Activity className="h-4 w-4 text-muted-foreground" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{stats.totalCount}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Suspicious Alerts</CardTitle><AlertTriangle className="h-4 w-4 text-destructive" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold text-destructive">{stats.suspiciousCount}</div></CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2"><CardTitle className="text-sm font-medium">Average Amount</CardTitle><TrendingUp className="h-4 w-4 text-muted-foreground" /></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{formatAmount(stats.averageAmount, 'XAF')}</div></CardContent>
-        </Card>
+        <StatCard title="Total Volume" value={formatAmount(stats.totalVolume, 'XAF')} icon={<DollarSign className="h-5 w-5" />} />
+        <StatCard title="Total Transactions" value={stats.totalCount.toLocaleString()} icon={<Activity className="h-5 w-5" />} />
+        <StatCard title="Suspicious Alerts" value={stats.suspiciousCount.toLocaleString()} icon={<AlertTriangle className="h-5 w-5" />} />
+        <StatCard title="Average Amount" value={formatAmount(stats.averageAmount, 'XAF')} icon={<TrendingUp className="h-5 w-5" />} />
       </div>
 
       <Tabs defaultValue="transactions" className="space-y-4">
