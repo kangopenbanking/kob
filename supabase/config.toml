@@ -524,3 +524,10 @@ verify_jwt = false
 # Round 3: Merchant Balance
 [functions.gateway-get-merchant-balance]
 verify_jwt = false
+
+# Account Funding & Withdrawal Functions
+[functions.gateway-fund-account]
+verify_jwt = false
+
+[functions.gateway-withdraw-to-bank]
+verify_jwt = false

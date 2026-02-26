@@ -266,6 +266,9 @@ export function calculateGatewayFee(amount: number, channel: string): { fee: num
   } else if (channel === 'ussd') {
     feeRate = 0.025;
     fixedFee = 25;
+  } else if (channel === 'account_funding') {
+    feeRate = 0.025;
+    fixedFee = 0;
   }
 
   const fee = Math.round(amount * feeRate + fixedFee);

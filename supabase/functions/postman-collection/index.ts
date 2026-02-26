@@ -795,6 +795,22 @@ Deno.serve(async (req) => {
             body: { bvn: '12345678901' },
             desc: 'Resolve BVN to identity details',
           }),
+          // Account Funding & Withdrawal
+          r('Fund Account (Mobile Money)', 'POST', '/v1/gateway/fund-account', {
+            body: { amount: 50000, currency: 'XAF', channel: 'mobile_money', account_id: '{{account_id}}', source_phone: '237677123456' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Add funds to a KOB account via Mobile Money',
+          }),
+          r('Fund Account (Card)', 'POST', '/v1/gateway/fund-account', {
+            body: { amount: 100000, currency: 'XAF', channel: 'card', account_id: '{{account_id}}', source_email: 'john@example.com' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Add funds to a KOB account via Card (Stripe)',
+          }),
+          r('Withdraw to External Bank', 'POST', '/v1/gateway/withdraw-to-bank', {
+            body: { amount: 25000, account_id: '{{account_id}}', bank_code: 'SGCM', account_number: '1234567890', beneficiary_name: 'Jean Dupont', narration: 'Salary withdrawal' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Withdraw from KOB account to external bank',
+          }),
         ],
       },
     ],
