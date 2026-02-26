@@ -38,7 +38,7 @@ const routeNames: Record<string, string> = {
   "system-monitoring": "System Monitoring",
   "fee-management": "Fee Management",
   communications: "Communications",
-  "compliance-dashboard": "Compliance",
+  "compliance-dashboard": "Compliance Dashboard",
   "credit-score": "Credit Score",
   "credit-report": "Credit Report",
   crediq: "CrediQ",
@@ -49,6 +49,42 @@ const routeNames: Record<string, string> = {
   "virtual-cards": "Virtual Cards",
   "banking-ops": "Banking Operations",
   profile: "Profile Settings",
+  // Phase 2 admin routes
+  "institution-verification": "Institution Verification",
+  "kyc-verification": "KYC Verification",
+  "business-kyc": "Business KYC (KYB)",
+  "tpp-registrations": "TPP Registrations",
+  merchants: "Merchant Management",
+  disputes: "Dispute & Chargeback Management",
+  payouts: "Payout Management",
+  reconciliation: "Reconciliation",
+  "security-dashboard": "Security Dashboard",
+  "fraud-detection": "Fraud Detection",
+  "exchange-rates": "Exchange Rates",
+  revenue: "Revenue Analytics",
+  "email-templates": "Email Templates",
+  "woocommerce-plugin": "WooCommerce Plugin",
+  // Banking app routes
+  bank: "Banking App",
+  home: "Home",
+  cards: "Cards",
+  history: "History",
+  more: "More",
+  send: "Send Money",
+  qr: "QR Pay",
+  settings: "Settings",
+  alerts: "Alerts",
+  credit: "Credit Score",
+  apply: "Apply for Account",
+  kyc: "KYC Verification",
+  auth: "Authentication",
+  welcome: "Welcome",
+  // FI Portal routes
+  "fi-portal": "FI Portal",
+  // Developer portal
+  developer: "Developer Portal",
+  // Merchant portal
+  merchant: "Merchant Portal",
 };
 
 export function Breadcrumbs() {
