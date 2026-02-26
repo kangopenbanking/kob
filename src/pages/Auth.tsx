@@ -413,11 +413,10 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      {/* Invisible reCAPTCHA container for Firebase */}
-      <div id="recaptcha-container" />
-
       {/* Left Panel - Auth Form */}
       <div className="flex items-center justify-center p-4 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
+        {/* Invisible reCAPTCHA container for Firebase */}
+        <div id="recaptcha-container" className="absolute" />
         <Card className="w-full max-w-md bg-white border shadow-lg">
           <CardHeader className="space-y-1">
             <div className="flex items-center gap-4 mb-4">
