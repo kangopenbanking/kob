@@ -6,6 +6,20 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.4.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Internal Account Transfer endpoint — POST /v1/banking/internal-transfer for KOB-to-KOB transfers with balance validation" },
+        { type: "feature", description: "Facilitated Bank Transfer endpoint — POST /v1/banking/facilitated-transfer for institution-facilitated Flutterwave payouts with KOB fee calculation" },
+        { type: "feature", description: "Unified Transfers & Fund Movement guide — new developer portal page documenting all 6 transfer channels" },
+        { type: "improvement", description: "BankingReference expanded with Internal Account Transfer and Mobile Money to Bank sections" },
+        { type: "improvement", description: "OpenAPI spec updated with /v1/banking/internal-transfer and /v1/banking/facilitated-transfer endpoints" },
+        { type: "improvement", description: "Postman collection expanded with Internal Account Transfer and Facilitated Bank Transfer requests" },
+        { type: "improvement", description: "E2E test suite expanded with Open Banking consent lifecycle and transfer endpoint coverage" },
+      ]
+    },
+    {
       version: "2.3.0",
       date: "2026-02-26",
       type: "minor",

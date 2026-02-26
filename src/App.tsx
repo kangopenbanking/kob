@@ -26,6 +26,7 @@ import AispReference from "./pages/developer/AispReference";
 import PispReference from "./pages/developer/PispReference";
 import MobileMoneyReference from "./pages/developer/MobileMoneyReference";
 import BankingReference from "./pages/developer/BankingReference";
+import TransfersGuide from "./pages/developer/TransfersGuide";
 import ApiConsole from "./pages/developer/ApiConsole";
 import WebIntegration from "./pages/developer/WebIntegration";
 import MobileIntegration from "./pages/developer/MobileIntegration";
@@ -393,6 +394,7 @@ function App() {
               <Route path="api/pisp" element={<PispReference />} />
               <Route path="api/mobile-money" element={<MobileMoneyReference />} />
               <Route path="api/banking" element={<BankingReference />} />
+              <Route path="api/transfers" element={<TransfersGuide />} />
               <Route path="api/certificates" element={<CertificateReference />} />
               <Route path="api/webhooks" element={<WebhooksGuide />} />
               <Route path="api/refunds" element={<RefundsReference />} />
