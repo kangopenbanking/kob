@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Send, Smartphone, QrCode, FileText, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBeneficiaries } from '@/hooks/useBankingData';
+import { useTenant } from '@/components/pwa/TenantProvider';
+import type { AppFeatures } from '@/components/pwa/TenantProvider';
 
 const quickSendColors = [
   'bg-[hsl(var(--bank-mint))]',
@@ -16,13 +18,16 @@ const BankPayments: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
   const { data: beneficiaries } = useBeneficiaries();
+  const { features } = useTenant();
 
-  const paymentOptions = [
+  const allPaymentOptions: Array<{ icon: any; label: string; description: string; path: string; color: string; featureKey?: keyof AppFeatures }> = [
     { icon: Send, label: 'Send Money', description: 'Transfer to bank or mobile', path: 'send', color: 'bg-[hsl(var(--bank-violet))]' },
-    { icon: Smartphone, label: 'Mobile Money', description: 'MTN MoMo, Orange Money', path: 'mobile-money', color: 'bg-[hsl(var(--bank-amber))]' },
-    { icon: QrCode, label: 'QR Pay', description: 'Scan or generate QR code', path: 'qr', color: 'bg-[hsl(var(--bank-teal))]' },
-    { icon: FileText, label: 'Pay Bills', description: 'Electricity, water, internet', path: 'bills', color: 'bg-[hsl(var(--bank-coral))]' },
+    { icon: Smartphone, label: 'Mobile Money', description: 'MTN MoMo, Orange Money', path: 'mobile-money', color: 'bg-[hsl(var(--bank-amber))]', featureKey: 'mobile_money' },
+    { icon: QrCode, label: 'QR Pay', description: 'Scan or generate QR code', path: 'qr', color: 'bg-[hsl(var(--bank-teal))]', featureKey: 'qr_payments' },
+    { icon: FileText, label: 'Pay Bills', description: 'Electricity, water, internet', path: 'bills', color: 'bg-[hsl(var(--bank-coral))]', featureKey: 'bill_payments' },
   ];
+
+  const paymentOptions = allPaymentOptions.filter(o => !o.featureKey || features[o.featureKey] !== false);
 
   const contacts = (beneficiaries || []).slice(0, 4).map((b, i) => ({
     name: b.beneficiary_name,
