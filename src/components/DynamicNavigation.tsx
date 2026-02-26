@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Shield, BookOpen, Globe, BarChart3, Server, Code, LayoutDashboard, Landmark, Scale, FlaskConical, Activity } from "lucide-react";
+import { Menu, ChevronDown, Shield, BookOpen, Globe, BarChart3, Server, Code, LayoutDashboard, Landmark, Scale, FlaskConical, Activity, Smartphone } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -33,6 +33,7 @@ interface NavItem {
 }
 
 const platformItems: NavItem[] = [
+  { label: "Apps Ecosystem", to: "/apps", icon: Smartphone, desc: "Multi-tenancy PWA showcase" },
   { label: "Architecture Overview", to: "/architecture", icon: Server, desc: "System design & infrastructure" },
   { label: "Fraud Engine", to: "/architecture/fraud-engine", icon: Shield, desc: "Multi-layer fraud prevention" },
   { label: "Ledger System", to: "/architecture/ledger-system", icon: BookOpen, desc: "Double-entry accounting" },

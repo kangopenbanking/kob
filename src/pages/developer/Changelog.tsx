@@ -6,6 +6,20 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.3.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Multi-Tenancy Apps Showcase page at /apps — animated landing page presenting the PWA ecosystem (Banking, Merchant, Customer apps)" },
+        { type: "feature", description: "Banking App (Phase 1) live demo link with feature overview (Wallet, P2P Transfers, Virtual Cards, Transaction History, KYC, QR Payments)" },
+        { type: "feature", description: "Merchant App (Phase 2) and Customer App (Phase 3) placeholder cards with planned feature lists and Coming Soon badges" },
+        { type: "feature", description: "Multi-tenancy branding demo section showing how different institutions (Afriland, Ecobank, UBA) get unique app branding" },
+        { type: "feature", description: "Technical Architecture section explaining TenantProvider context flow and route structure (/bank/:id, /merchant/:id, /app/:id)" },
+        { type: "improvement", description: "Apps Ecosystem link added to main navigation Platform mega-menu" },
+        { type: "improvement", description: "Index page portal section updated with Apps Ecosystem banner linking to /apps" },
+      ]
+    },
+    {
       version: "3.2.0",
       date: "2026-02-26",
       type: "minor",
