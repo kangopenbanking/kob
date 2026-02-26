@@ -17,9 +17,15 @@ export function useFirebasePhoneAuth() {
     setLoading(true);
     setError(null);
     try {
-      // Clean up previous verifier
+      // Fully clean up previous verifier and DOM element
       if (recaptchaRef.current) {
-        recaptchaRef.current.clear();
+        try { recaptchaRef.current.clear(); } catch (_) { /* ignore */ }
+        recaptchaRef.current = null;
+      }
+      // Reset the container DOM so reCAPTCHA doesn't see "already rendered"
+      const container = document.getElementById('recaptcha-container');
+      if (container) {
+        container.innerHTML = '';
       }
       recaptchaRef.current = setupRecaptchaVerifier();
       
@@ -37,6 +43,8 @@ export function useFirebasePhoneAuth() {
         ? 'Too many attempts. Please try again later.'
         : err.code === 'auth/invalid-phone-number'
         ? 'Invalid phone number format.'
+        : err.code === 'auth/billing-not-enabled'
+        ? 'Phone authentication requires Firebase Blaze plan billing to be enabled and Phone sign-in method activated in Firebase Console.'
         : err.message || 'Failed to send verification code';
       setError(msg);
       toast.error(msg);
