@@ -12,13 +12,16 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
-  Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown
+  Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
+  Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor
 } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
 // ─── Types ───
 type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions';
+type LayoutStyle = 'modern' | 'classic' | 'minimal';
 
 interface AppConfig {
   features: {
@@ -37,6 +40,7 @@ interface AppConfig {
     show_recent_transactions: boolean;
   };
   section_order: HomeSectionKey[];
+  layout_style: LayoutStyle;
 }
 
 const defaultSectionOrder: HomeSectionKey[] = [
@@ -47,6 +51,7 @@ const defaultAppConfig: AppConfig = {
   features: { cards: true, savings: true, loans: true, credit_score: true, mobile_money: true, qr_payments: true, bill_payments: true },
   home_layout: { show_balance_card: true, show_account_carousel: true, show_financial_services: true, show_recent_transactions: true },
   section_order: defaultSectionOrder,
+  layout_style: 'modern',
 };
 
 // ─── Hooks ───
@@ -197,101 +202,186 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
     show_recent_transactions: "Recent Transactions",
   };
 
+  const sectionLabels: Record<HomeSectionKey, string> = {
+    balance_card: 'Balance Card',
+    account_carousel: 'Account Carousel',
+    quick_actions: 'Quick Actions',
+    financial_services: 'Financial Services',
+    recent_transactions: 'Recent Transactions',
+  };
+
+  // Preview mockup section renderer
+  const renderPreviewSection = (key: HomeSectionKey) => {
+    const style = config.layout_style || 'modern';
+    switch (key) {
+      case 'balance_card':
+        if (!config.home_layout.show_balance_card) return null;
+        if (style === 'minimal') return <div key={key} className="py-1"><p className="text-[8px] uppercase tracking-wider text-muted-foreground">Total Balance</p><p className="text-sm font-light">XAF 1,250,000</p></div>;
+        if (style === 'classic') return <div key={key} className="rounded border bg-card p-2"><p className="text-[7px] text-muted-foreground">Total Balance</p><p className="text-[10px] font-bold">XAF 1,250,000</p></div>;
+        return <div key={key} className="rounded-lg bg-foreground p-2"><p className="text-[7px] text-background/60">Total Balance</p><p className="text-[10px] font-bold text-background">XAF 1,250,000</p></div>;
+      case 'account_carousel':
+        if (!config.home_layout.show_account_carousel) return null;
+        return <div key={key} className="flex gap-1"><div className="h-8 w-16 rounded-md bg-[hsl(var(--chart-3))] p-1"><p className="text-[6px] text-white">XAF</p><p className="text-[7px] font-bold text-white">1.2M</p></div><div className="h-8 w-16 rounded-md bg-[hsl(var(--chart-4))] p-1"><p className="text-[6px] text-white">EUR</p><p className="text-[7px] font-bold text-white">500</p></div></div>;
+      case 'quick_actions':
+        if (style === 'classic') return <div key={key} className="grid grid-cols-2 gap-1">{['Send','Receive','QR','MoMo'].filter((_,i)=> i < 3 || config.features.mobile_money).map(a=><div key={a} className="flex items-center gap-1 rounded border p-1"><div className="h-3 w-3 rounded bg-primary"/><span className="text-[6px]">{a}</span></div>)}</div>;
+        return <div key={key} className="flex justify-between">{['Send','Recv','QR','MoMo'].filter((_,i)=> i < 3 || config.features.mobile_money).map(a=><div key={a} className="flex flex-col items-center gap-0.5"><div className="h-5 w-5 rounded-md bg-primary"/><span className="text-[5px]">{a}</span></div>)}</div>;
+      case 'financial_services':
+        if (!config.home_layout.show_financial_services) return null;
+        const services = [config.features.savings && 'Savings', config.features.loans && 'Loans', config.features.credit_score && 'Score'].filter(Boolean);
+        if (services.length === 0) return null;
+        return <div key={key}><p className="text-[7px] font-bold mb-0.5">Financial Services</p><div className="flex gap-1">{services.map(s=><div key={s} className="flex-1 rounded-md bg-accent p-1 text-center"><p className="text-[6px] font-bold">0</p><p className="text-[5px]">{s}</p></div>)}</div></div>;
+      case 'recent_transactions':
+        if (!config.home_layout.show_recent_transactions) return null;
+        return <div key={key}><p className="text-[7px] font-bold mb-0.5">Recent Transactions</p>{[1,2].map(i=><div key={i} className="flex items-center justify-between py-0.5"><div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-muted"/><div><p className="text-[6px]">Payment</p><p className="text-[5px] text-muted-foreground">Today</p></div></div><span className="text-[6px] font-bold">-5,000</span></div>)}</div>;
+      default: return null;
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">App Features</CardTitle>
-          <CardDescription>Toggle which features are available in this bank's app</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {Object.entries(featureLabels).map(([key, label]) => (
-            <div key={key} className="flex items-center justify-between">
-              <Label htmlFor={`feat-${key}`} className="text-sm font-medium">{label}</Label>
-              <Switch
-                id={`feat-${key}`}
-                checked={config.features[key as keyof AppConfig["features"]]}
-                onCheckedChange={() => toggleFeature(key as keyof AppConfig["features"])}
-              />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Config Controls */}
+      <div className="xl:col-span-2 space-y-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">App Features</CardTitle>
+            <CardDescription>Toggle which features are available in this bank's app</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Object.entries(featureLabels).map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between">
+                <Label htmlFor={`feat-${key}`} className="text-sm font-medium">{label}</Label>
+                <Switch
+                  id={`feat-${key}`}
+                  checked={config.features[key as keyof AppConfig["features"]]}
+                  onCheckedChange={() => toggleFeature(key as keyof AppConfig["features"])}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Home Screen Layout</CardTitle>
-          <CardDescription>Control which sections appear on the home screen</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {Object.entries(layoutLabels).map(([key, label]) => (
-            <div key={key} className="flex items-center justify-between">
-              <Label htmlFor={`layout-${key}`} className="text-sm font-medium">{label}</Label>
-              <Switch
-                id={`layout-${key}`}
-                checked={config.home_layout[key as keyof AppConfig["home_layout"]]}
-                onCheckedChange={() => toggleLayout(key as keyof AppConfig["home_layout"])}
-              />
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Layout Style</CardTitle>
+            <CardDescription>Choose a visual theme for the banking app</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={config.layout_style || 'modern'}
+              onValueChange={(v) => setConfig(prev => ({ ...prev, layout_style: v as LayoutStyle }))}
+              className="grid grid-cols-3 gap-3"
+            >
+              {([
+                { value: 'modern', label: 'Modern', desc: 'Bold cards, dark hero, animations' },
+                { value: 'classic', label: 'Classic', desc: 'Clean borders, list-based layout' },
+                { value: 'minimal', label: 'Minimal', desc: 'Light, spacious, typography-first' },
+              ] as const).map(style => (
+                <label
+                  key={style.value}
+                  className={`cursor-pointer rounded-xl border-2 p-4 transition-colors ${config.layout_style === style.value ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
+                >
+                  <RadioGroupItem value={style.value} className="sr-only" />
+                  <p className="text-sm font-bold">{style.label}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{style.desc}</p>
+                </label>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
 
-      {/* Section Order */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Home Section Order</CardTitle>
-          <CardDescription>Drag sections up/down to reorder the home screen</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {(config.section_order || defaultSectionOrder).map((key, idx) => {
-            const sectionLabels: Record<HomeSectionKey, string> = {
-              balance_card: 'Balance Card',
-              account_carousel: 'Account Carousel',
-              quick_actions: 'Quick Actions',
-              financial_services: 'Financial Services',
-              recent_transactions: 'Recent Transactions',
-            };
-            return (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Home Screen Layout</CardTitle>
+            <CardDescription>Control which sections appear on the home screen</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {Object.entries(layoutLabels).map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between">
+                <Label htmlFor={`layout-${key}`} className="text-sm font-medium">{label}</Label>
+                <Switch
+                  id={`layout-${key}`}
+                  checked={config.home_layout[key as keyof AppConfig["home_layout"]]}
+                  onCheckedChange={() => toggleLayout(key as keyof AppConfig["home_layout"])}
+                />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Section Order */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Home Section Order</CardTitle>
+            <CardDescription>Reorder the home screen sections</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {(config.section_order || defaultSectionOrder).map((key, idx) => (
               <div key={key} className="flex items-center gap-2 rounded-lg border p-3">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
                 <span className="flex-1 text-sm font-medium">{sectionLabels[key]}</span>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  disabled={idx === 0}
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0}
                   onClick={() => {
                     const order = [...(config.section_order || defaultSectionOrder)];
                     [order[idx - 1], order[idx]] = [order[idx], order[idx - 1]];
                     setConfig(prev => ({ ...prev, section_order: order }));
-                  }}
-                >
-                  <ArrowUp className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7"
-                  disabled={idx === (config.section_order || defaultSectionOrder).length - 1}
+                  }}><ArrowUp className="h-3.5 w-3.5" /></Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === (config.section_order || defaultSectionOrder).length - 1}
                   onClick={() => {
                     const order = [...(config.section_order || defaultSectionOrder)];
                     [order[idx], order[idx + 1]] = [order[idx + 1], order[idx]];
                     setConfig(prev => ({ ...prev, section_order: order }));
-                  }}
-                >
-                  <ArrowDown className="h-3.5 w-3.5" />
-                </Button>
+                  }}><ArrowDown className="h-3.5 w-3.5" /></Button>
               </div>
-            );
-          })}
-        </CardContent>
-      </Card>
+            ))}
+          </CardContent>
+        </Card>
 
-      <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">
-        {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-        Save Configuration
-      </Button>
+        <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">
+          {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Configuration
+        </Button>
+      </div>
+
+      {/* Live Preview */}
+      <div className="xl:col-span-1">
+        <div className="sticky top-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Monitor className="h-4 w-4" /> Live Preview
+              </CardTitle>
+              <CardDescription>Real-time preview of current config</CardDescription>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              {/* Phone Frame */}
+              <div className="w-[180px] rounded-[20px] border-2 border-foreground/20 bg-background p-2 shadow-lg">
+                {/* Status bar */}
+                <div className="mb-1 flex items-center justify-between px-1">
+                  <span className="text-[6px] font-medium text-muted-foreground">9:41</span>
+                  <div className="flex gap-0.5">
+                    <div className="h-1 w-2 rounded-sm bg-muted-foreground/40" />
+                    <div className="h-1 w-2 rounded-sm bg-muted-foreground/40" />
+                  </div>
+                </div>
+                {/* App content */}
+                <div className="flex flex-col gap-1.5 px-1">
+                  <p className="text-[8px] font-medium text-muted-foreground">Good afternoon 👋</p>
+                  {(config.section_order || defaultSectionOrder).map(key => renderPreviewSection(key))}
+                </div>
+                {/* Bottom nav */}
+                <div className="mt-2 flex justify-between border-t pt-1 px-1">
+                  {['Home', 'Pay', config.features.cards && 'Cards', 'History', 'More'].filter(Boolean).map(t => (
+                    <div key={t as string} className="flex flex-col items-center">
+                      <div className="h-2 w-2 rounded-sm bg-muted-foreground/30" />
+                      <span className="text-[5px] text-muted-foreground">{t}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
@@ -319,7 +409,7 @@ export default function BankingAppManagement() {
   );
 
   const selectedAppConfig: AppConfig = selectedInst
-    ? { ...defaultAppConfig, ...(selectedInst.app_config || {}), features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) }, home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) }, section_order: (selectedInst.app_config?.section_order || defaultSectionOrder) }
+    ? { ...defaultAppConfig, ...(selectedInst.app_config || {}), features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) }, home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) }, section_order: (selectedInst.app_config?.section_order || defaultSectionOrder), layout_style: (selectedInst.app_config?.layout_style || 'modern') }
     : defaultAppConfig;
 
   return (
