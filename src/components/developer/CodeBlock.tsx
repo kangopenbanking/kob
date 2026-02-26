@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { JsonSyntax } from "@/components/developer/JsonSyntax";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -41,7 +42,7 @@ export function CodeBlock({ examples, title }: CodeBlockProps) {
             {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           </Button>
           <pre className="p-4 overflow-x-auto">
-            <code className="text-sm font-mono text-gray-100">{examples[0].code}</code>
+            <code className="text-sm font-mono text-gray-100"><JsonSyntax code={examples[0].code} /></code>
           </pre>
         </div>
       </div>
@@ -81,7 +82,7 @@ export function CodeBlock({ examples, title }: CodeBlockProps) {
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
               </Button>
               <pre className="p-4 overflow-x-auto">
-                <code className="text-sm font-mono text-gray-100">{example.code}</code>
+                <code className="text-sm font-mono text-gray-100"><JsonSyntax code={example.code} /></code>
               </pre>
             </div>
           </TabsContent>
