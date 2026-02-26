@@ -1,212 +1,165 @@
 
 
-## Full E2E API Audit — Gap Analysis & Fix Plan
+## WooCommerce Plugin E2E Audit & Production Build Plan
 
-### Audit Methodology
-Cross-referenced 3 sources: (1) 160+ edge functions in `supabase/functions/`, (2) OpenAPI spec in `public-api-spec/index.ts` (1524 lines, ~85 paths), (3) Postman collection in `postman-collection/index.ts` (867 lines, ~140 requests), and (4) Developer portal pages (55 pages).
+### Current State Analysis
 
----
+**What exists:**
+- 6 edge functions: `woocommerce-download-plugin`, `woocommerce-register-merchant`, `woocommerce-process-payment`, `woocommerce-payment-webhook`, `woocommerce-transaction-sync`, `woocommerce-validate-install`
+- 5 frontend pages: `WooForKang.tsx` (landing), `WooCommerceGuide.tsx` (docs), `WooCommerceMerchantRegister.tsx` (registration), `WooCommercePluginCode.tsx` (code viewer), `WooCommerceDashboard.tsx` (admin)
+- OpenAPI spec: 3 endpoints (register, validate, download) — all with `schema: { type: 'object' }` (no detail)
+- Postman: 3 requests matching the spec
+- Plugin code: Exists as inline PHP strings in `WooCommercePluginCode.tsx` — NOT as actual downloadable files
 
 ### Critical Gaps Found
 
-#### GAP 1: 17 Gateway Endpoints Missing from OpenAPI Spec
-
-The Postman collection and edge functions include these endpoints, but the OpenAPI spec (`public-api-spec/index.ts`) does NOT define them:
-
-| # | Endpoint | Edge Function | In Postman | In OpenAPI |
-|---|----------|--------------|------------|------------|
-| 1 | `POST /v1/gateway/payment-links` | gateway-create-payment-link | Yes | **NO** |
-| 2 | `GET /v1/gateway/payment-links` | gateway-get-payment-link | Yes | **NO** |
-| 3 | `PUT /v1/gateway/payment-links/{id}` | gateway-update-payment-link | Yes | **NO** |
-| 4 | `DELETE /v1/gateway/payment-links/{id}` | gateway-delete-payment-link | Yes | **NO** |
-| 5 | `POST /v1/gateway/payment-plans` | gateway-create-payment-plan | Yes | **NO** |
-| 6 | `GET /v1/gateway/payment-plans/{id}` | gateway-get-payment-plan | Yes | **NO** |
-| 7 | `PUT /v1/gateway/payment-plans/{id}` | gateway-update-payment-plan | Yes | **NO** |
-| 8 | `POST /v1/gateway/subscriptions` | gateway-create-subscription | Yes | **NO** |
-| 9 | `GET /v1/gateway/subscriptions/{id}` | gateway-get-subscription | Yes | **NO** |
-| 10 | `POST /v1/gateway/subscriptions/cancel` | gateway-cancel-subscription | Yes | **NO** |
-| 11 | `POST /v1/gateway/subaccounts` | gateway-create-subaccount | Yes | **NO** |
-| 12 | `GET /v1/gateway/subaccounts/{id}` | gateway-get-subaccount | Yes | **NO** |
-| 13 | `PUT /v1/gateway/subaccounts/{id}` | gateway-update-subaccount | Yes | **NO** |
-| 14 | `DELETE /v1/gateway/subaccounts/{id}` | gateway-delete-subaccount | Yes | **NO** |
-| 15 | `POST /v1/gateway/customers` | gateway-create-customer | Yes | **NO** |
-| 16 | `GET /v1/gateway/customers` | gateway-list-customers | Yes | **NO** |
-| 17 | `GET /v1/gateway/customers/{id}` | gateway-get-customer | Yes | **NO** |
-| 18 | `PUT /v1/gateway/customers/{id}` | gateway-update-customer | Yes | **NO** |
-| 19 | `GET /v1/gateway/customers/{id}/tokens` | gateway-list-customer-tokens | Yes | **NO** |
-| 20 | `DELETE /v1/gateway/customers/{id}/tokens/{tokenId}` | gateway-revoke-customer-token | Yes | **NO** |
-| 21 | `POST /v1/gateway/charges/token` | gateway-charge-token | Yes | **NO** |
-| 22 | `GET /v1/gateway/charges/{id}/events` | gateway-get-charge-events | Yes | **NO** |
-| 23 | `POST /v1/gateway/reconciliation` | gateway-reconciliation | Yes | **NO** |
-| 24 | `GET /v1/gateway/reconciliation` | gateway-reconciliation | Yes | **NO** |
-| 25 | `GET /v1/gateway/reports/fees` | gateway-report-fees | Yes | **NO** |
-| 26 | `POST /v1/gateway/payouts/{id}/retry` | gateway-retry-payout | Yes | **NO** |
-
-#### GAP 2: Merchant Onboarding Endpoints Missing from OpenAPI Spec
-
-The Postman collection has a full "Merchants" section with 17 requests. None are in the OpenAPI spec:
-
-| # | Endpoint | Edge Function |
-|---|----------|--------------|
-| 1 | `POST /v1/merchants` (create) | gateway-merchant-lifecycle |
-| 2 | `GET /v1/merchants` (get/list) | gateway-merchant-lifecycle |
-| 3 | `PATCH /v1/merchants` (update) | gateway-merchant-lifecycle |
-| 4 | `POST /v1/merchants` (submit/activate/suspend) | gateway-merchant-lifecycle |
-| 5 | `POST /v1/merchants/kyb` | gateway-merchant-kyb |
-| 6 | `GET /v1/merchants/kyb` | gateway-merchant-kyb |
-| 7 | `POST /v1/merchants/api-keys` | gateway-merchant-keys |
-| 8 | `GET /v1/merchants/api-keys` | gateway-merchant-keys |
-| 9 | `DELETE /v1/merchants/api-keys` | gateway-merchant-keys |
-| 10 | `POST /v1/merchants/settlement-accounts` | gateway-merchant-settlement-accounts |
-| 11 | `GET /v1/merchants/settlement-accounts` | gateway-merchant-settlement-accounts |
-| 12 | `POST /v1/merchants/webhooks` | gateway-merchant-webhooks |
-| 13 | `GET /v1/merchants/webhooks` | gateway-merchant-webhooks |
-
-#### GAP 3: Fee Estimate Channel Enum Out of Date
-
-The OpenAPI spec at line 1237 has `enum: ['mobile_money', 'card', 'bank_transfer']` for the fee-estimate channel parameter, but the actual `calculateGatewayFee()` supports 8 channels: `mobile_money`, `card`, `bank_transfer`, `apple_pay`, `google_pay`, `ussd`, `account_funding`, `paypal`.
-
-#### GAP 4: Charge Channel Enum Incomplete
-
-The `POST /v1/gateway/charges` at line 1220 has `channel: { enum: ['mobile_money', 'card', 'bank_transfer'] }` but the `GatewayCharge` schema (line 249) correctly lists all 7 channels including `apple_pay`, `google_pay`, `ussd`, `paypal`. The endpoint request schema is inconsistent.
-
-#### GAP 5: Missing Payment Facilitation Tag in Tags List
-
-The `Payment Facilitation` tag is used in paths (lines 1377-1389) but is NOT listed in the tags array (lines 1429-1458).
-
-#### GAP 6: Duplicate Settlement Paths
-
-Lines 1141-1147 define `/v1/settlement/calculate` and `/v1/settlement/process` under the `Settlement` tag. Lines 1382-1389 redefine the same paths under the `Payment Facilitation` tag. The second definition overwrites the first. This is technically working but the Settlement tag entries are dead code.
-
-#### GAP 7: Developer Portal "Payment Facilitation" Duplicated in Sidebar
-
-In `DeveloperLayout.tsx`, "Payment Facilitation" appears in both "Open Banking APIs" (line 88) and "Integration Guides" (line 114). This is confusing.
-
----
+| # | Gap | Severity | Description |
+|---|-----|----------|-------------|
+| 1 | **No actual downloadable plugin** | CRITICAL | `woocommerce-download-plugin` returns a JSON status message saying "packaging in progress". No ZIP file is generated. The "Download Plugin v1.0.0" button on multiple pages does nothing useful. |
+| 2 | **Incomplete PHP plugin code** | HIGH | The inline code in `WooCommercePluginCode.tsx` is partial — missing `class-wfk-logger.php`, `readme.txt`, `payment-instructions.php` template, `WFK_PLUGIN_DIR` constant definition, `wfk_add_gateway_class()` function, and `init_form_fields()` method. |
+| 3 | **API Client uses wrong endpoint pattern** | HIGH | `class-wfk-api-client.php` calls `woocommerce-process-payment` as a URL path segment off `WFK_API_BASE_URL` (`https://api.kangopenbanking.com/v1/woocommerce-process-payment`), but the actual edge function URL is `https://api.kangopenbanking.com/functions/v1/woocommerce-process-payment`. |
+| 4 | **OpenAPI spec has no request/response schemas** | MEDIUM | All 3 WooCommerce endpoints use `schema: { type: 'object' }` with no properties defined. Missing: process-payment, transaction-sync, payment-webhook endpoints entirely. |
+| 5 | **Postman collection missing 3 endpoints** | MEDIUM | `process-payment`, `transaction-sync`, `payment-webhook` are not in the Postman collection. |
+| 6 | **Webhook handler has static `handle` method but calls instance `process`** | HIGH | `WFK_Webhook_Handler::init()` registers static `handle` callback, but the code shows a `process()` instance method — these are disconnected. |
+| 7 | **No `WFK_PLUGIN_DIR` defined** | HIGH | Main plugin file uses `WFK_PLUGIN_DIR` in require statements but never defines it. |
 
 ### Implementation Plan
 
-#### Phase 1: Add 39 Missing OpenAPI Paths (~biggest gap)
+---
+
+#### Phase 1: Build the Complete WordPress Plugin & Generate ZIP Download
+
+**1a. Create edge function: `woocommerce-download-plugin/index.ts` (REWRITE)**
+
+Replace the placeholder with a function that dynamically generates a valid `.zip` file containing the complete WordPress plugin. The ZIP will be built in-memory using Deno's built-in compression APIs and returned as a binary download.
+
+The plugin ZIP will contain the complete directory structure:
+
+```text
+woo-for-kang/
+├── woo-for-kang.php              # Main plugin bootstrap
+├── readme.txt                     # WordPress.org standard readme
+├── LICENSE                        # GPL v2
+├── uninstall.php                  # Clean uninstall handler
+├── includes/
+│   ├── class-wfk-payment-gateway.php   # WC_Payment_Gateway extension
+│   ├── class-wfk-api-client.php        # KOB API client
+│   ├── class-wfk-webhook-handler.php   # Webhook receiver
+│   └── class-wfk-logger.php            # WooCommerce logger wrapper
+└── templates/
+    └── payment-instructions.php        # Checkout payment instructions
+```
+
+**Complete PHP files to include in the ZIP:**
+
+1. **woo-for-kang.php** — Fixed: adds `WFK_PLUGIN_DIR` constant, proper `wfk_add_gateway_class()`, activation/deactivation hooks, text domain loading, admin notices
+2. **class-wfk-payment-gateway.php** — Fixed: complete `init_form_fields()` with all settings (API key, client secret, webhook secret, sandbox mode, enabled payment methods, title, description), proper `process_payment()` with error handling, `is_available()` check, admin options display
+3. **class-wfk-api-client.php** — Fixed: correct API base URL using `/functions/v1/` path, proper error handling with `WP_Error`, webhook signature verification using `hash_hmac`, validate-install call, process-payment call, transaction-sync call
+4. **class-wfk-webhook-handler.php** — Fixed: static `handle()` method that directly processes (no instance delegation), proper signature verification, order status mapping, order note logging, idempotency via transaction ref check
+5. **class-wfk-logger.php** — NEW: wrapper around `WC_Logger` with source tagging, debug/info/error levels, conditional debug logging based on gateway setting
+6. **readme.txt** — NEW: WordPress.org standard readme with description, installation, FAQ, changelog, screenshots section
+7. **uninstall.php** — NEW: clean removal of options on uninstall
+8. **templates/payment-instructions.php** — NEW: checkout template showing available payment methods
+
+#### Phase 2: Fix OpenAPI Spec — Expand WooCommerce Section
 
 **File: `supabase/functions/public-api-spec/index.ts`**
 
-Add the following path blocks after the existing Payment Gateway section:
+Expand the 3 existing stub endpoints with full request/response schemas, and add the 3 missing endpoints:
 
-**Payment Links (4 paths):**
-- `POST /v1/gateway/payment-links` — Create payment link
-- `GET /v1/gateway/payment-links` — List/get payment links (by slug or merchant_id)
-- `PUT /v1/gateway/payment-links/{linkId}` — Update payment link
-- `DELETE /v1/gateway/payment-links/{linkId}` — Delete payment link
+| Endpoint | Method | Operation |
+|----------|--------|-----------|
+| `/v1/woocommerce/merchants` | POST | Register merchant (add full schema: store_name, store_url, admin_email, plugin_version) |
+| `/v1/woocommerce/validate-install` | POST | Validate install (add schema: api_key, plugin_version, store_url) |
+| `/v1/woocommerce/plugin/download` | GET | Download plugin ZIP (update response to binary/zip) |
+| `/v1/woocommerce/process-payment` | POST | **NEW** — Process payment (api_key, woocommerce_order_id, payment_method, amount, currency, customer fields) |
+| `/v1/woocommerce/transactions` | GET | **NEW** — Sync transactions (query params: start_date, end_date, status, payment_method, limit, offset, format) |
+| `/v1/woocommerce/webhook` | POST | **NEW** — Payment webhook (event_type, transaction_ref, woocommerce_order_id, status, amount) |
 
-**Payment Plans (4 paths):**
-- `POST /v1/gateway/payment-plans` — Create payment plan
-- `GET /v1/gateway/payment-plans` — List payment plans
-- `GET /v1/gateway/payment-plans/{planId}` — Get payment plan
-- `PUT /v1/gateway/payment-plans/{planId}` — Update payment plan
+Add schemas: `WooCommerceMerchantRegistration`, `WooCommercePaymentRequest`, `WooCommerceWebhookPayload`, `WooCommerceTransactionSync`.
 
-**Subscriptions (4 paths):**
-- `POST /v1/gateway/subscriptions` — Create subscription
-- `GET /v1/gateway/subscriptions` — List subscriptions
-- `GET /v1/gateway/subscriptions/{subscriptionId}` — Get subscription
-- `POST /v1/gateway/subscriptions/cancel` — Cancel subscription
+#### Phase 3: Fix Postman Collection
 
-**Subaccounts / Split Payments (4 paths):**
-- `POST /v1/gateway/subaccounts` — Create subaccount
-- `GET /v1/gateway/subaccounts` — List subaccounts
-- `GET /v1/gateway/subaccounts/{subaccountId}` — Get subaccount
-- `PUT /v1/gateway/subaccounts/{subaccountId}` — Update subaccount
-- `DELETE /v1/gateway/subaccounts/{subaccountId}` — Delete subaccount
+**File: `supabase/functions/postman-collection/index.ts`**
 
-**Customers & Tokenization (7 paths):**
-- `POST /v1/gateway/customers` — Create customer
-- `GET /v1/gateway/customers` — List customers
-- `GET /v1/gateway/customers/{customerId}` — Get customer
-- `PUT /v1/gateway/customers/{customerId}` — Update customer
-- `GET /v1/gateway/customers/{customerId}/tokens` — List customer tokens
-- `DELETE /v1/gateway/customers/{customerId}/tokens/{tokenId}` — Revoke token
-- `POST /v1/gateway/charges/token` — Charge a saved token
+Add the 3 missing WooCommerce requests with full example bodies:
+- Process Payment
+- Transaction Sync
+- Payment Webhook
 
-**Charge Events (1 path):**
-- `GET /v1/gateway/charges/{chargeId}/events` — Get charge event timeline
+#### Phase 4: Update Frontend Plugin Code Page
 
-**Reconciliation (2 paths):**
-- `POST /v1/gateway/reconciliation` — Run reconciliation
-- `GET /v1/gateway/reconciliation` — List runs / get mismatches
+**File: `src/pages/integrations/WooCommercePluginCode.tsx`**
 
-**Reports (1 path):**
-- `GET /v1/gateway/reports/fees` — Fee report
+- Update all inline PHP code snippets to match the corrected plugin code (fixed API URL, complete `init_form_fields`, `WFK_PLUGIN_DIR`, logger)
+- Add the missing files: `class-wfk-logger.php`, `readme.txt`, `uninstall.php`, `payment-instructions.php`
+- Update the file count from 7 to 8
 
-**Retry (1 path):**
-- `POST /v1/gateway/payouts/{payoutId}/retry` — Retry failed payout
+#### Phase 5: Update WooForKang Landing & Guide Pages
 
-**Merchants (6 paths):**
-- `POST /v1/merchants` — Create/manage merchant (lifecycle actions)
-- `GET /v1/merchants` — List/get merchants
-- `PATCH /v1/merchants` — Update merchant
-- `POST /v1/merchants/kyb` — Submit/review KYB
-- `GET /v1/merchants/kyb` — Get KYB status
-- `POST /v1/merchants/api-keys` — Issue/list/revoke API keys
-- `POST /v1/merchants/settlement-accounts` — Add settlement account
-- `GET /v1/merchants/settlement-accounts` — List settlement accounts
-- `POST /v1/merchants/webhooks` — Register/manage merchant webhooks
-- `GET /v1/merchants/webhooks` — List webhooks
+**File: `src/pages/WooForKang.tsx`**
+- Update download handler: the function now returns a ZIP blob, so handle binary response properly
 
-Add new schemas: `GatewayPaymentLink`, `GatewayPaymentPlan`, `GatewaySubscription`, `GatewaySubaccount`, `GatewayCustomer`, `GatewayCustomerToken`, `GatewayChargeEvent`, `GatewayReconciliationRun`, `GatewayMerchant`.
+**File: `src/pages/integrations/WooCommerceGuide.tsx`**
+- Remove "packaging in progress" banner — plugin is now downloadable
+- Update download handler for ZIP response
 
-Add new tags: `Payment Facilitation`, `Merchant Onboarding`.
-
-#### Phase 2: Fix Enum Inconsistencies
-
-**File: `supabase/functions/public-api-spec/index.ts`**
-
-1. Update fee-estimate channel enum (line 1237) to include all 8 channels
-2. Update `POST /v1/gateway/charges` channel enum (line 1220) to match the schema (7 channels)
-3. Remove duplicate Settlement paths (lines 1141-1151) — the Payment Facilitation versions (lines 1382-1389) are more detailed
-
-#### Phase 3: Fix Developer Portal Sidebar Duplicate
-
-**File: `src/components/developer/DeveloperLayout.tsx`**
-
-Remove the duplicate "Payment Facilitation" entry from the "Integration Guides" section (line 114), keeping only the one in "Open Banking APIs" (line 88).
-
-#### Phase 4: Update Changelog
+#### Phase 6: Update Changelog
 
 **File: `src/pages/developer/Changelog.tsx`**
 
-Add v2.6.0 entry:
-- OpenAPI spec expanded with 39 missing endpoint paths (Payment Links, Subscriptions, Split Payments, Tokenization, Charge Events, Reconciliation, Merchant Onboarding)
-- 9 new schemas added (GatewayPaymentLink, GatewayPaymentPlan, GatewaySubscription, etc.)
-- Fee estimate and charge channel enums updated to support all 8 channels
-- Payment Facilitation and Merchant Onboarding tags added to spec
-- Duplicate Settlement path definitions resolved
-- Developer portal sidebar de-duplicated
+Add v2.7.0 entry:
+- Woo for Kang v1.0.0 WordPress plugin — complete production-ready ZIP download
+- 8 PHP files: payment gateway, API client, webhook handler, logger, templates, uninstall, readme
+- Fixed API base URL to use production endpoint pattern
+- OpenAPI spec: 6 WooCommerce endpoints with full schemas (was 3 stubs)
+- Postman collection: 6 WooCommerce requests (was 3)
+- Plugin code viewer updated with complete file set
 
-#### Phase 5: Update Tests
+#### Phase 7: Tests
 
 **File: `src/test/gateway-integration.test.ts`**
 
-Add tests:
-- Verify all 8 fee channels produce correct calculations
-- Verify GatewayCharge schema has 7 channel types
-- Verify transfer channels count remains at 7
-- Add payment links, subscriptions, reconciliation endpoint path validation
+Add WooCommerce-specific tests:
+- WooCommerce endpoint count = 6
+- Plugin version constant = '1.0.0'
+- API base URL uses production domain
 
 ---
 
-### Files to Modify (4)
+### Files to Create (0 new, 1 full rewrite)
 
-| File | Changes |
+| File | Change |
 |---|---|
-| `supabase/functions/public-api-spec/index.ts` | Add 39 endpoint paths, 9 schemas, 2 tags, fix 2 enum inconsistencies, remove duplicate Settlement paths |
-| `src/components/developer/DeveloperLayout.tsx` | Remove duplicate sidebar entry |
-| `src/pages/developer/Changelog.tsx` | Add v2.6.0 release |
-| `src/test/gateway-integration.test.ts` | Expand test coverage |
+| `supabase/functions/woocommerce-download-plugin/index.ts` | Full rewrite — generates ZIP file with complete plugin |
 
-### No Files to Create
+### Files to Modify (7)
 
-All edge functions and developer pages already exist. This is purely an OpenAPI spec alignment and documentation synchronization task.
+| File | Change |
+|---|---|
+| `supabase/functions/public-api-spec/index.ts` | Expand 3 WooCommerce stubs, add 3 new endpoints with schemas |
+| `supabase/functions/postman-collection/index.ts` | Add 3 missing WooCommerce requests |
+| `src/pages/integrations/WooCommercePluginCode.tsx` | Update all PHP snippets, add missing files |
+| `src/pages/WooForKang.tsx` | Update download handler for ZIP binary |
+| `src/pages/integrations/WooCommerceGuide.tsx` | Remove packaging banner, update download handler |
+| `src/pages/developer/Changelog.tsx` | Add v2.7.0 |
+| `src/test/gateway-integration.test.ts` | Add WooCommerce tests |
 
-### Non-Breaking Guarantee
+### Production Readiness Checklist
 
-All changes are additive spec documentation updates. No edge function logic, database schema, or frontend routing changes are needed.
+| Item | Status After Implementation |
+|---|---|
+| Downloadable ZIP file | YES — binary ZIP from edge function |
+| Complete PHP plugin (8 files) | YES — all classes, templates, readme |
+| Correct API endpoints in plugin | YES — `https://api.kangopenbanking.com/functions/v1/` |
+| WooCommerce dependency check | YES — admin notice if WC not active |
+| Webhook signature verification | YES — HMAC-SHA256 |
+| Settings page in WP admin | YES — full `init_form_fields()` |
+| Sandbox/Production mode toggle | YES — in gateway settings |
+| Error logging | YES — `WFK_Logger` via `WC_Logger` |
+| Clean uninstall | YES — `uninstall.php` |
+| GPL v2 license | YES — in ZIP |
+| WordPress.org readme.txt | YES — in ZIP |
+| OpenAPI documented | YES — 6 endpoints with schemas |
+| Postman collection | YES — 6 requests |
 
