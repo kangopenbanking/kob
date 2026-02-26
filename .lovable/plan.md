@@ -1,71 +1,74 @@
 
 
-# Plan: Multi-Tenancy Apps Showcase Page
+## Plan: Add Firebase Phone OTP Authentication
 
-## Overview
+### Overview
+Add Firebase Phone Authentication as an additional login option across the banking app, all PWA apps, and the main authentication page. For Cameroon (+237), Firebase OTP will be the recommended default method.
 
-Create a new standalone page at `/apps` that showcases the Kang Open Banking multi-tenancy PWA ecosystem. This page will be a visually striking, animated landing page explaining how each institution gets its own branded app experience, with live links to the Banking App (Phase 1) and placeholder sections for Merchant and Customer apps (Phases 2 and 3).
+### Technical Details
 
-## Design Approach
+#### 1. Firebase SDK Integration
+- Install `firebase` npm package
+- Create `src/lib/firebase.ts` configuration module that initializes Firebase app with credentials from environment
+- Store Firebase config values (API key, auth domain, project ID, etc.) as backend secrets using the secrets tool
+- Firebase Phone Auth uses its own invisible reCAPTCHA verifier -- this will be integrated into the OTP flow
 
-- Solid color backgrounds with accent sections (no gradients on cards/buttons per design system)
-- `framer-motion` stagger animations for section reveals and card entrances
-- Lucide outline icons throughout, no emojis
-- Animated phone mockup frames showing app screenshots
-- Color-coded sections per app (blue for Banking, green for Merchant, purple for Customer)
-- Institution selector demo showing how branding changes per tenant
+#### 2. Firebase Auth Edge Function: `firebase-phone-verify`
+- New backend function that receives the Firebase ID token after successful phone verification
+- Validates the Firebase token server-side
+- Creates or looks up the user in the existing auth system (linking by phone number via the `profiles` table)
+- Issues a session via `admin.generateLink()` (same pattern as `phone-auth-pin-login`)
+- This bridges Firebase Phone Auth into the existing authentication infrastructure
 
-## Files to Create
+#### 3. Update `MobileAuthForm` Component (Banking App + All PWAs)
+- Add a tab/toggle UI: **"Email"** | **"Phone (Recommended)"**
+- Phone tab shows:
+  - Country code selector (defaulting to +237 Cameroon)
+  - Phone number input
+  - "Send Code" button that triggers Firebase `signInWithPhoneNumber()`
+  - 6-digit OTP input (using existing `InputOTP` component)
+  - "Verify" button that confirms the Firebase OTP, gets the ID token, and calls `firebase-phone-verify` edge function
+- For Cameroon country codes, the phone tab is shown first with a "Recommended" badge
+- Email tab retains the current email/password flow unchanged
 
-### 1. `src/pages/Apps.tsx`
-The main showcase page with these sections:
+#### 4. Update Main Auth Page (`src/pages/Auth.tsx`)
+- Add a new "One Time Code (Recommended)" section/button alongside the existing captcha > phone > PIN/OTP flow
+- This option uses Firebase Phone Auth instead of the Vonage/WhatsApp OTP pipeline
+- For users with Cameroon country code (+237), this is pre-selected and marked as "Recommended for Cameroon"
+- The existing Vonage/WhatsApp OTP flow remains available as an alternative
 
-**Hero Section** -- Full-width solid primary background with animated headline: "One Platform, Every Bank's Own App". Animated phone mockup with floating UI elements. Subtitle explaining multi-tenancy.
+#### 5. Shared Firebase Phone Auth Hook
+- Create `src/hooks/useFirebasePhoneAuth.ts` with reusable logic:
+  - `sendOTP(phoneNumber)` -- sets up reCAPTCHA verifier and calls `signInWithPhoneNumber`
+  - `verifyOTP(code)` -- confirms the verification code, gets Firebase ID token
+  - `linkToSupabaseSession(idToken)` -- calls the edge function to create a backend session
+  - State management: loading, error, step tracking
+- This hook is consumed by both `MobileAuthForm` and `Auth.tsx`, ensuring consistent behavior across all apps
 
-**How It Works** -- 3-step animated flow:
-1. Institution registers on the platform (Building2 icon)
-2. Branding is applied automatically (Palette icon)  
-3. Customers access their bank's dedicated app (Smartphone icon)
+#### 6. Secrets Required
+The following Firebase credentials will need to be stored as backend secrets:
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_SERVICE_ACCOUNT_KEY` (for server-side token verification in the edge function)
 
-Each step animates in with staggered delays using framer-motion.
+The client-side Firebase config (API key, auth domain, project ID) will also be stored as `VITE_`-prefixed env vars or embedded in the firebase config module since they are publishable keys.
 
-**Banking App Card (Phase 1 -- Live)** -- Large featured card with:
-- Solid blue accent strip
-- Key features list (Wallet, Payments, Cards, History, KYC)
-- "Launch Demo" button linking to `/bank/f493095b-037a-40cf-82bc-3a3ab74550dd`
-- Status badge: "Live"
-- Animated feature icons
+#### 7. Files to Create/Modify
 
-**Merchant App Card (Phase 2 -- Coming Soon)** -- Muted card with:
-- Solid green accent strip
-- Planned features list
-- "Coming Soon" badge
-- Disabled button
+**New files:**
+- `src/lib/firebase.ts` -- Firebase app initialization
+- `src/hooks/useFirebasePhoneAuth.ts` -- Shared phone auth hook
+- `supabase/functions/firebase-phone-verify/index.ts` -- Backend token verification + session creation
 
-**Customer App Card (Phase 3 -- Coming Soon)** -- Muted card with:
-- Solid purple accent strip
-- Planned features list
-- "Coming Soon" badge
-- Disabled button
+**Modified files:**
+- `src/components/pwa/MobileAuthForm.tsx` -- Add phone tab with Firebase OTP alongside email
+- `src/pages/Auth.tsx` -- Add "One Time Code (Recommended)" option using Firebase
+- `package.json` -- Add `firebase` dependency
 
-**Multi-Tenancy Demo Section** -- Visual showing how the same app renders with different institution branding (color swatches, logo placeholders, institution name).
-
-**Technical Architecture Section** -- Clean diagram showing the route structure (`/bank/:id`, `/merchant/:id`, `/app/:id`) with TenantProvider context explanation for developers.
-
-**CTA Section** -- "Register Your Institution" button linking to `/register`.
-
-### 2. Route Registration in `src/App.tsx`
-- Add `<Route path="/apps" element={<Layout><Apps /></Layout>} />` 
-
-## Key Implementation Details
-
-- All animations use `framer-motion` `motion.div` with `whileInView` triggers for scroll-based reveals
-- App cards use `motion.div` with `whileTap={{ scale: 0.98 }}` for press feedback
-- The page is designed so that when Phase 2/3 apps are built, only the status badge and button need updating (from "Coming Soon" to "Live" with the correct link)
-- The feature lists for each app are defined as typed arrays, making future updates trivial
-- A link to this page will be added to the main navigation or referenced from the Index page's portal section
-
-## Estimated Changes
-- **New:** `src/pages/Apps.tsx` (~350 lines)
-- **Modified:** `src/App.tsx` (add 1 route + 1 import)
+#### 8. Security Considerations
+- Firebase ID tokens are verified server-side using Firebase Admin SDK (via the service account key)
+- Rate limiting inherited from Firebase's built-in phone auth protection
+- Phone numbers are linked to profiles table for cross-auth-method consistency
+- The edge function uses `verify_jwt = false` in config.toml with manual token validation
 
