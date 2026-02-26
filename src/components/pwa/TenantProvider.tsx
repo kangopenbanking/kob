@@ -50,12 +50,13 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         return;
       }
 
+      const inst = data as any;
       setBranding({
-        id: data.id,
-        name: data.institution_name,
-        logoUrl: data.logo_url ?? null,
-        primaryColor: data.primary_color ?? '217 91% 35%',
-        tagline: data.tagline ?? 'Your trusted banking partner',
+        id: inst.id,
+        name: inst.institution_name,
+        logoUrl: inst.logo_url ?? null,
+        primaryColor: inst.primary_color ?? '217 91% 35%',
+        tagline: inst.tagline ?? 'Your trusted banking partner',
         isLoading: false,
       });
     };

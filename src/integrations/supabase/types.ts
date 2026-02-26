@@ -5727,9 +5727,11 @@ export type Database = {
           kyb_submission_id: string | null
           kyb_verified_at: string | null
           kyb_verified_by: string | null
+          logo_url: string | null
           main_branch_id: string | null
           minimum_settlement_amount: number | null
           phone: string
+          primary_color: string | null
           registration_number: string
           rejection_reason: string | null
           sandbox_access: boolean | null
@@ -5737,6 +5739,7 @@ export type Database = {
           settlement_bank_account: Json | null
           settlement_frequency: string | null
           status: Database["public"]["Enums"]["institution_status"]
+          tagline: string | null
           updated_at: string
           use_kob_flutterwave: boolean | null
           user_id: string
@@ -5756,9 +5759,11 @@ export type Database = {
           kyb_submission_id?: string | null
           kyb_verified_at?: string | null
           kyb_verified_by?: string | null
+          logo_url?: string | null
           main_branch_id?: string | null
           minimum_settlement_amount?: number | null
           phone: string
+          primary_color?: string | null
           registration_number: string
           rejection_reason?: string | null
           sandbox_access?: boolean | null
@@ -5766,6 +5771,7 @@ export type Database = {
           settlement_bank_account?: Json | null
           settlement_frequency?: string | null
           status?: Database["public"]["Enums"]["institution_status"]
+          tagline?: string | null
           updated_at?: string
           use_kob_flutterwave?: boolean | null
           user_id: string
@@ -5785,9 +5791,11 @@ export type Database = {
           kyb_submission_id?: string | null
           kyb_verified_at?: string | null
           kyb_verified_by?: string | null
+          logo_url?: string | null
           main_branch_id?: string | null
           minimum_settlement_amount?: number | null
           phone?: string
+          primary_color?: string | null
           registration_number?: string
           rejection_reason?: string | null
           sandbox_access?: boolean | null
@@ -5795,6 +5803,7 @@ export type Database = {
           settlement_bank_account?: Json | null
           settlement_frequency?: string | null
           status?: Database["public"]["Enums"]["institution_status"]
+          tagline?: string | null
           updated_at?: string
           use_kob_flutterwave?: boolean | null
           user_id?: string
