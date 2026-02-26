@@ -386,14 +386,63 @@ export default function BankingReference() {
         </CardContent>
       </Card>
 
+      {/* Internal Account Transfer */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Internal Account Transfer</h2>
+        <ApiEndpoint
+          method="POST"
+          endpoint="/v1/banking/internal-transfer"
+          description="Transfer funds between two KOB accounts. Source must belong to the authenticated user. Balance checked against InterimAvailable."
+          requestBody={`{
+  "source_account_id": "uuid",
+  "destination_account_id": "uuid",
+  "amount": 25000,
+  "currency": "XAF",
+  "description": "Rent payment"
+}`}
+          response={`{
+  "success": true,
+  "transaction_reference": "TXN1234567890",
+  "transaction_id": "uuid",
+  "status": "Booked",
+  "amount": 25000,
+  "currency": "XAF"
+}`}
+        />
+      </div>
+
+      {/* Mobile Money to Bank */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Mobile Money to Bank Transfer</h2>
+        <ApiEndpoint
+          method="POST"
+          endpoint="/v1/mobile-money/to-bank"
+          description="Transfer funds from a mobile money wallet (MTN/Orange) directly to a bank account."
+          requestBody={`{
+  "phone_number": "237650000000",
+  "bank_code": "SGCM",
+  "account_number": "123456789",
+  "amount": 50000,
+  "currency": "XAF"
+}`}
+          response={`{
+  "status": "success",
+  "transaction_ref": "MM2B-001",
+  "amount": 50000,
+  "fee": 750,
+  "status": "processing"
+}`}
+        />
+      </div>
+
       <DocNavigation
         previousPage={{
           title: "Mobile Money API",
           path: "/developer/api/mobile-money"
         }}
         nextPage={{
-          title: "Webhooks",
-          path: "/developer/api/webhooks"
+          title: "Transfers Guide",
+          path: "/developer/api/transfers"
         }}
       />
     </div>

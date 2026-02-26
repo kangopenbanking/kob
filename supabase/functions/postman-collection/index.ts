@@ -360,6 +360,16 @@ Deno.serve(async (req) => {
           r('Get Exchange Rate', 'GET', '/v1/banking/exchange-rate', {
             query: [{ key: 'from', value: 'XAF' }, { key: 'to', value: 'USD' }],
           }),
+          r('Internal Account Transfer', 'POST', '/v1/banking/internal-transfer', {
+            body: { source_account_id: '{{account_id}}', destination_account_id: 'DEST_ACCOUNT_UUID', amount: 25000, currency: 'XAF', description: 'Internal transfer' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Transfer funds between two KOB accounts. Source must belong to authenticated user.',
+          }),
+          r('Facilitated Bank Transfer', 'POST', '/v1/banking/facilitated-transfer', {
+            body: { account_number: '1234567890', bank_code: 'SGCM', bank_name: 'Société Générale Cameroun', amount: 100000, currency: 'XAF', narration: 'Salary payment', institution_id: '{{institution_id}}', account_name: 'Jean Dupont' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Institution-facilitated bank payout via Flutterwave with KOB fee calculation.',
+          }),
         ],
       },
 
