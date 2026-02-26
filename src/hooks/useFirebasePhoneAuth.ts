@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
 import { signInWithPhoneNumber, ConfirmationResult, RecaptchaVerifier } from 'firebase/auth';
-import { firebaseAuth, setupRecaptchaVerifier } from '@/lib/firebase';
+import { getFirebaseAuth, setupRecaptchaVerifier, isFirebaseConfigured } from '@/lib/firebase';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -24,7 +24,7 @@ export function useFirebasePhoneAuth() {
       recaptchaRef.current = setupRecaptchaVerifier();
       
       const confirmation = await signInWithPhoneNumber(
-        firebaseAuth,
+        getFirebaseAuth(),
         phoneNumber,
         recaptchaRef.current
       );
