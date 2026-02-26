@@ -6,6 +6,21 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.6.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "OpenAPI spec expanded with 39 missing endpoint paths — Payment Links, Payment Plans, Subscriptions, Split Payments, Tokenization, Charge Events, Reconciliation, Fee Reports, Payout Retry" },
+        { type: "feature", description: "Merchant Onboarding API fully documented — lifecycle, KYB verification, API keys, settlement accounts, webhooks (13 endpoints)" },
+        { type: "feature", description: "9 new OpenAPI schemas: GatewayPaymentLink, GatewayPaymentPlan, GatewaySubscription, GatewaySubaccount, GatewayCustomer, GatewayCustomerToken, GatewayChargeEvent, GatewayReconciliationRun, GatewayMerchant" },
+        { type: "improvement", description: "Fee estimate channel enum updated to support all 8 channels (mobile_money, card, bank_transfer, apple_pay, google_pay, ussd, account_funding, paypal)" },
+        { type: "improvement", description: "Charge channel enum synchronized with GatewayCharge schema (7 channels including apple_pay, google_pay, ussd, paypal)" },
+        { type: "improvement", description: "Payment Facilitation and Merchant Onboarding tags added to OpenAPI spec" },
+        { type: "fix", description: "Duplicate Settlement path definitions resolved — Settlement tag dead code removed" },
+        { type: "fix", description: "Developer portal sidebar de-duplicated — Payment Facilitation no longer appears in both Open Banking and Integration Guides" },
+      ]
+    },
+    {
       version: "2.5.0",
       date: "2026-02-26",
       type: "minor",
