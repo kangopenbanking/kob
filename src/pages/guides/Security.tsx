@@ -48,9 +48,9 @@ export default function Security() {
                 </ol>
               </div>
 
-              <div className="bg-muted/50 p-4 rounded-lg overflow-x-auto mt-4">
-                <p className="text-xs text-muted-foreground font-semibold uppercase mb-2">Token Request</p>
-                <pre className="font-mono text-sm">{`POST /oauth/token
+              <div className="bg-[#0d1117] border border-white/10 p-4 rounded-lg overflow-x-auto mt-4">
+                <p className="text-xs text-gray-400 font-semibold uppercase mb-2">Token Request</p>
+                <pre className="font-mono text-sm text-gray-100">{`POST /oauth/token
 Content-Type: application/x-www-form-urlencoded
 
 grant_type=authorization_code
@@ -261,9 +261,9 @@ grant_type=authorization_code
                 </div>
               </div>
 
-              <div className="bg-muted/50 p-4 rounded-lg">
-                <p className="font-semibold mb-2">Rate Limit Headers</p>
-                <pre className="font-mono text-xs">{`X-RateLimit-Limit: 1000
+              <div className="bg-[#0d1117] border border-white/10 p-4 rounded-lg">
+                <p className="font-semibold mb-2 text-gray-400">Rate Limit Headers</p>
+                <pre className="font-mono text-xs text-gray-100">{`X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 847
 X-RateLimit-Reset: 1704067200`}</pre>
               </div>
