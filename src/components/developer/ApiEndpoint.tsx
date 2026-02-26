@@ -1,6 +1,9 @@
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Check, Copy } from "lucide-react";
 
 interface Parameter {
   name: string;
@@ -27,6 +30,41 @@ const methodColors = {
   PATCH: "bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/20",
 };
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <Button
+      size="icon"
+      variant="ghost"
+      className="absolute top-3 right-3 h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
+      onClick={copy}
+    >
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+    </Button>
+  );
+}
+
+function DarkCodeBlock({ label, code }: { label: string; code: string }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-[#0d1117] overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-gray-900">
+        <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{label}</span>
+      </div>
+      <div className="relative">
+        <CopyButton text={code} />
+        <pre className="p-4 overflow-x-auto">
+          <code className="text-sm font-mono text-gray-100">{code}</code>
+        </pre>
+      </div>
+    </div>
+  );
+}
+
 export function ApiEndpoint({
   method,
   endpoint,
@@ -43,7 +81,7 @@ export function ApiEndpoint({
           {method}
         </Badge>
         <div className="flex-1">
-          <code className="text-sm font-mono bg-muted px-3 py-1 rounded">
+          <code className="text-sm font-mono bg-[#0d1117] text-green-400 px-3 py-1 rounded border border-white/10">
             {endpoint}
           </code>
         </div>
@@ -84,9 +122,7 @@ export function ApiEndpoint({
         <>
           <Separator className="my-4" />
           <h4 className="font-semibold mb-3">Request Body</h4>
-          <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <code className="text-sm font-mono">{requestBody}</code>
-          </pre>
+          <DarkCodeBlock label="Request" code={requestBody} />
         </>
       )}
 
@@ -94,9 +130,7 @@ export function ApiEndpoint({
         <>
           <Separator className="my-4" />
           <h4 className="font-semibold mb-3">Response</h4>
-          <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <code className="text-sm font-mono">{response}</code>
-          </pre>
+          <DarkCodeBlock label="Response" code={response} />
         </>
       )}
 
@@ -104,9 +138,7 @@ export function ApiEndpoint({
         <>
           <Separator className="my-4" />
           <h4 className="font-semibold mb-3">Example</h4>
-          <pre className="bg-muted p-4 rounded-lg overflow-x-auto">
-            <code className="text-sm font-mono">{example}</code>
-          </pre>
+          <DarkCodeBlock label="Example" code={example} />
         </>
       )}
     </Card>
