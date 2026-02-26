@@ -1,8 +1,9 @@
-import { ReactNode } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
   SidebarContent,
@@ -139,6 +140,20 @@ interface DeveloperLayoutProps {
 export function DeveloperLayout({ children }: DeveloperLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setIsAuthenticated(!!user);
+    };
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(!!session);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   const isActivePath = (path: string) => location.pathname === path;
 
@@ -197,10 +212,18 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
             </nav>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
-                Dashboard
-              </Button>
-              <UserProfileMenu variant="developer" />
+              {isAuthenticated ? (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
+                    Dashboard
+                  </Button>
+                  <UserProfileMenu variant="developer" />
+                </>
+              ) : (
+                <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90" onClick={() => navigate('/auth')}>
+                  Get Started
+                </Button>
+              )}
             </div>
           </header>
 
