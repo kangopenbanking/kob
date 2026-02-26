@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { DocumentUploader } from "@/components/kyc/DocumentUploader";
 
 interface BusinessKYCFormProps {
   accountId: string | null;
@@ -16,6 +17,7 @@ interface BusinessKYCFormProps {
 export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCFormProps) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     business_name: "",
     registration_number: "",
@@ -33,6 +35,25 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
     annual_turnover: "",
     number_of_employees: "",
   });
+  const [docUrls, setDocUrls] = useState({
+    registration_certificate: "",
+    articles_of_association: "",
+    tax_certificate: "",
+    proof_of_address: "",
+    bank_statement: "",
+  });
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) setUserId(data.user.id);
+    });
+  }, []);
+
+  const getPublicUrl = (path: string) => {
+    if (!path) return null;
+    const { data } = supabase.storage.from("kyc-documents").getPublicUrl(path);
+    return data.publicUrl;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -62,35 +83,24 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
           business_description: formData.business_description,
           annual_turnover: formData.annual_turnover ? parseFloat(formData.annual_turnover) : null,
           number_of_employees: formData.number_of_employees ? parseInt(formData.number_of_employees) : null,
+          registration_certificate_url: getPublicUrl(docUrls.registration_certificate),
+          articles_of_association_url: getPublicUrl(docUrls.articles_of_association),
+          tax_certificate_url: getPublicUrl(docUrls.tax_certificate),
+          proof_of_address_url: getPublicUrl(docUrls.proof_of_address),
+          bank_statement_url: getPublicUrl(docUrls.bank_statement),
         }
       });
 
       if (error) throw error;
-      
-      if (data?.error) {
-        throw new Error(data.error);
-      }
+      if (data?.error) throw new Error(data.error);
 
-      toast({ 
-        title: "Success",
-        description: "Business KYC submitted for verification" 
-      });
+      toast({ title: "Success", description: "Business KYC submitted for verification" });
       onSuccess();
     } catch (error: any) {
       console.error('Business KYC submission error:', error);
-      
-      let errorMessage = "Failed to submit KYC. Please try again.";
-      
-      // Extract specific error messages
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (error.error) {
-        errorMessage = error.error;
-      }
-      
       toast({
         title: "Submission Failed",
-        description: errorMessage,
+        description: error.message || "Failed to submit KYC. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -103,40 +113,23 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
       <div className="grid grid-cols-2 gap-4">
         <div className="col-span-2">
           <Label htmlFor="business_name">Business Name *</Label>
-          <Input
-            id="business_name"
-            value={formData.business_name}
-            onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-            required
-          />
+          <Input id="business_name" value={formData.business_name} onChange={(e) => setFormData({ ...formData, business_name: e.target.value })} required />
         </div>
 
         <div>
           <Label htmlFor="registration_number">Registration Number *</Label>
-          <Input
-            id="registration_number"
-            value={formData.registration_number}
-            onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })}
-            required
-          />
+          <Input id="registration_number" value={formData.registration_number} onChange={(e) => setFormData({ ...formData, registration_number: e.target.value })} required />
         </div>
 
         <div>
           <Label htmlFor="registration_date">Registration Date</Label>
-          <Input
-            id="registration_date"
-            type="date"
-            value={formData.registration_date}
-            onChange={(e) => setFormData({ ...formData, registration_date: e.target.value })}
-          />
+          <Input id="registration_date" type="date" value={formData.registration_date} onChange={(e) => setFormData({ ...formData, registration_date: e.target.value })} />
         </div>
 
         <div>
           <Label htmlFor="business_type">Business Type *</Label>
           <Select value={formData.business_type} onValueChange={(value) => setFormData({ ...formData, business_type: value })}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
+            <SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger>
             <SelectContent>
               <SelectItem value="sole_proprietorship">Sole Proprietorship</SelectItem>
               <SelectItem value="partnership">Partnership</SelectItem>
@@ -149,113 +142,116 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
 
         <div>
           <Label htmlFor="industry">Industry *</Label>
-          <Input
-            id="industry"
-            value={formData.industry}
-            onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-            placeholder="e.g., Technology, Retail"
-            required
-          />
+          <Input id="industry" value={formData.industry} onChange={(e) => setFormData({ ...formData, industry: e.target.value })} placeholder="e.g., Technology, Retail" required />
         </div>
 
         <div>
           <Label htmlFor="vat_number">VAT Number</Label>
-          <Input
-            id="vat_number"
-            value={formData.vat_number}
-            onChange={(e) => setFormData({ ...formData, vat_number: e.target.value })}
-          />
+          <Input id="vat_number" value={formData.vat_number} onChange={(e) => setFormData({ ...formData, vat_number: e.target.value })} />
         </div>
 
         <div>
           <Label htmlFor="tax_id">Tax ID</Label>
-          <Input
-            id="tax_id"
-            value={formData.tax_id}
-            onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })}
-          />
+          <Input id="tax_id" value={formData.tax_id} onChange={(e) => setFormData({ ...formData, tax_id: e.target.value })} />
         </div>
 
         <div className="col-span-2">
           <Label htmlFor="street">Business Address *</Label>
-          <Input
-            id="street"
-            value={formData.street}
-            onChange={(e) => setFormData({ ...formData, street: e.target.value })}
-            placeholder="Street address"
-            required
-          />
+          <Input id="street" value={formData.street} onChange={(e) => setFormData({ ...formData, street: e.target.value })} placeholder="Street address" required />
         </div>
 
         <div>
           <Label htmlFor="city">City *</Label>
-          <Input
-            id="city"
-            value={formData.city}
-            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-            required
-          />
+          <Input id="city" value={formData.city} onChange={(e) => setFormData({ ...formData, city: e.target.value })} required />
         </div>
 
         <div>
           <Label htmlFor="state">State/Region</Label>
-          <Input
-            id="state"
-            value={formData.state}
-            onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-          />
+          <Input id="state" value={formData.state} onChange={(e) => setFormData({ ...formData, state: e.target.value })} />
         </div>
 
         <div>
           <Label htmlFor="postal_code">Postal Code</Label>
-          <Input
-            id="postal_code"
-            value={formData.postal_code}
-            onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
-          />
+          <Input id="postal_code" value={formData.postal_code} onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })} />
         </div>
 
         <div>
           <Label htmlFor="country">Country</Label>
-          <Input
-            id="country"
-            value={formData.country}
-            onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-            readOnly
-          />
+          <Input id="country" value={formData.country} onChange={(e) => setFormData({ ...formData, country: e.target.value })} readOnly />
         </div>
 
         <div>
           <Label htmlFor="annual_turnover">Annual Turnover (XAF)</Label>
-          <Input
-            id="annual_turnover"
-            type="number"
-            value={formData.annual_turnover}
-            onChange={(e) => setFormData({ ...formData, annual_turnover: e.target.value })}
-          />
+          <Input id="annual_turnover" type="number" value={formData.annual_turnover} onChange={(e) => setFormData({ ...formData, annual_turnover: e.target.value })} />
         </div>
 
         <div>
           <Label htmlFor="number_of_employees">Number of Employees</Label>
-          <Input
-            id="number_of_employees"
-            type="number"
-            value={formData.number_of_employees}
-            onChange={(e) => setFormData({ ...formData, number_of_employees: e.target.value })}
-          />
+          <Input id="number_of_employees" type="number" value={formData.number_of_employees} onChange={(e) => setFormData({ ...formData, number_of_employees: e.target.value })} />
         </div>
 
         <div className="col-span-2">
           <Label htmlFor="business_description">Business Description</Label>
-          <Textarea
-            id="business_description"
-            value={formData.business_description}
-            onChange={(e) => setFormData({ ...formData, business_description: e.target.value })}
-            placeholder="Describe your business activities"
-            rows={4}
-          />
+          <Textarea id="business_description" value={formData.business_description} onChange={(e) => setFormData({ ...formData, business_description: e.target.value })} placeholder="Describe your business activities" rows={4} />
         </div>
       </div>
+
+      {/* Document Uploads */}
+      {userId && (
+        <div className="space-y-4 border-t pt-4">
+          <h3 className="text-sm font-semibold">Business Documents</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <DocumentUploader
+              label="Registration Certificate (RCCM)"
+              documentType="registration_certificate"
+              userId={userId}
+              folder="kyb"
+              required
+              description="Official business registration document"
+              onUploadComplete={(path) => setDocUrls(d => ({ ...d, registration_certificate: path }))}
+              onRemove={() => setDocUrls(d => ({ ...d, registration_certificate: "" }))}
+            />
+            <DocumentUploader
+              label="Articles of Association"
+              documentType="articles_of_association"
+              userId={userId}
+              folder="kyb"
+              required
+              description="Company bylaws or statutes"
+              onUploadComplete={(path) => setDocUrls(d => ({ ...d, articles_of_association: path }))}
+              onRemove={() => setDocUrls(d => ({ ...d, articles_of_association: "" }))}
+            />
+            <DocumentUploader
+              label="Tax Certificate / Patente"
+              documentType="tax_certificate"
+              userId={userId}
+              folder="kyb"
+              description="Current tax registration (optional)"
+              onUploadComplete={(path) => setDocUrls(d => ({ ...d, tax_certificate: path }))}
+              onRemove={() => setDocUrls(d => ({ ...d, tax_certificate: "" }))}
+            />
+            <DocumentUploader
+              label="Proof of Business Address"
+              documentType="proof_of_address"
+              userId={userId}
+              folder="kyb"
+              required
+              description="Utility bill or lease agreement"
+              onUploadComplete={(path) => setDocUrls(d => ({ ...d, proof_of_address: path }))}
+              onRemove={() => setDocUrls(d => ({ ...d, proof_of_address: "" }))}
+            />
+            <DocumentUploader
+              label="Bank Statement"
+              documentType="bank_statement"
+              userId={userId}
+              folder="kyb"
+              description="Latest 3 months (optional)"
+              onUploadComplete={(path) => setDocUrls(d => ({ ...d, bank_statement: path }))}
+              onRemove={() => setDocUrls(d => ({ ...d, bank_statement: "" }))}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-3">
         <Button type="submit" disabled={loading}>

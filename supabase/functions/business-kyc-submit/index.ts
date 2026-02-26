@@ -17,7 +17,6 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    // Verify user authentication
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
@@ -43,6 +42,12 @@ serve(async (req) => {
       business_description,
       annual_turnover,
       number_of_employees,
+      // Document URLs
+      registration_certificate_url,
+      articles_of_association_url,
+      tax_certificate_url,
+      proof_of_address_url,
+      bank_statement_url,
     } = await req.json();
 
     console.log('Submitting Business KYC for user:', user.id);
@@ -82,6 +87,12 @@ serve(async (req) => {
         annual_turnover: annual_turnover || null,
         number_of_employees: number_of_employees || null,
         verification_status: 'pending',
+        // Document URLs
+        registration_certificate_url: registration_certificate_url || null,
+        articles_of_association_url: articles_of_association_url || null,
+        tax_certificate_url: tax_certificate_url || null,
+        proof_of_address_url: proof_of_address_url || null,
+        bank_statement_url: bank_statement_url || null,
       }])
       .select()
       .single();
@@ -101,7 +112,6 @@ serve(async (req) => {
       .single();
 
     if (institution) {
-      // Update institution verification step to kyb_submitted
       await supabaseAdmin
         .from('institutions')
         .update({ 
@@ -111,7 +121,6 @@ serve(async (req) => {
         })
         .eq('id', institution.id);
 
-      // Update verification step record
       await supabaseAdmin
         .from('institution_verification_steps')
         .update({ 
@@ -122,7 +131,6 @@ serve(async (req) => {
         .eq('institution_id', institution.id)
         .eq('step_type', 'kyb_submission');
 
-      // Set kyb_verification step to in_progress
       await supabaseAdmin
         .from('institution_verification_steps')
         .update({ status: 'in_progress' })
@@ -143,7 +151,8 @@ serve(async (req) => {
           business_type,
           industry,
           institution_id: institution?.id || null,
-          status: 'pending'
+          status: 'pending',
+          has_documents: !!(registration_certificate_url || articles_of_association_url),
         }
       }]);
 
