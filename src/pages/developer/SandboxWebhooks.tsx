@@ -9,12 +9,14 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2, Plus, Trash2, Webhook, Clock, CheckCircle2, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 export default function SandboxWebhooks() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [account, setAccount] = useState<any>(null);
   const [webhooks, setWebhooks] = useState<any[]>([]);
@@ -36,9 +38,10 @@ export default function SandboxWebhooks() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/auth');
+        setLoading(false);
         return;
       }
+      setIsAuthenticated(true);
 
       // Fetch sandbox account
       const { data: accountData } = await supabase
@@ -135,6 +138,16 @@ export default function SandboxWebhooks() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Webhook Management</h1>
+        <p className="text-muted-foreground mb-4">Receive real-time notifications when you approach rate limits</p>
+        <AuthRequiredAlert feature="webhook management" />
       </div>
     );
   }

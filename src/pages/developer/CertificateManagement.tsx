@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Shield, Upload, Trash2, CheckCircle, XCircle, Clock, AlertTriangle, Copy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AuthRequiredAlert } from '@/components/developer/AuthRequiredAlert';
 
 interface Certificate {
   id: string;
@@ -193,13 +194,7 @@ export default function CertificateManagement() {
       </div>
 
       {!isAuthenticated && !loading && (
-        <Alert className="mb-8">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertTitle>Authentication Required</AlertTitle>
-          <AlertDescription>
-            You need to sign in to manage certificates. <a href="/auth" className="underline font-medium text-primary">Sign in here</a>.
-          </AlertDescription>
-        </Alert>
+        <AuthRequiredAlert feature="certificate management" />
       )}
 
       {isAuthenticated && (

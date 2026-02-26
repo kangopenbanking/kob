@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { Loader2, Key, Plus, Copy, Eye, EyeOff, Trash2, Database } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AuthRequiredAlert } from "@/components/developer/AuthRequiredAlert";
 
 
 import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
@@ -17,6 +18,7 @@ import { RateLimitDashboard } from "@/components/developer/RateLimitDashboard";
 export default function Sandbox() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [account, setAccount] = useState<any>(null);
   const [apiKeys, setApiKeys] = useState<any[]>([]);
@@ -38,9 +40,10 @@ export default function Sandbox() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        navigate('/auth');
+        setLoading(false);
         return;
       }
+      setIsAuthenticated(true);
 
       // Fetch sandbox account
       const { data: accountData } = await supabase
@@ -79,8 +82,7 @@ export default function Sandbox() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast.error('Please log in to create a sandbox account');
-        navigate('/auth');
+        toast.error('Please sign in to create a sandbox account');
         return;
       }
 
@@ -108,8 +110,7 @@ export default function Sandbox() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        toast.error('Please log in to create an API key');
-        navigate('/auth');
+        toast.error('Please sign in to create an API key');
         return;
       }
 
@@ -160,6 +161,16 @@ export default function Sandbox() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-2xl mx-auto">
+        <h1 className="text-3xl font-bold mb-2">Developer Sandbox</h1>
+        <p className="text-muted-foreground mb-4">Create a sandbox environment to test our APIs</p>
+        <AuthRequiredAlert feature="the developer sandbox" />
       </div>
     );
   }

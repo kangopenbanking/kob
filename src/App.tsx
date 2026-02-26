@@ -434,7 +434,7 @@ function App() {
               <Route path="guides/sdks" element={<SDKsPage />} />
               <Route path="api-explorer" element={<ApiExplorer />} />
               <Route path="certificates" element={<CertificateManagement />} />
-              <Route path="api-keys" element={<ProtectedRoute><ApiKeys /></ProtectedRoute>} />
+              <Route path="api-keys" element={<ApiKeys />} />
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
