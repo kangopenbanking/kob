@@ -1,11 +1,24 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, FileText } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 Daily Transaction Volume Report", content: ["Submitted daily by 10:00 WAT. Channels: Mobile Money, Card, Bank Transfer, PayPal, USSD.", "Fields: Tx Count, Volume (XAF), Success Rate, Avg Value, Fees Collected."] },
+  { heading: "2.0 Settlement Report", content: ["Daily. Metrics: total settled, pending, failures, avg time, fees, net payout, safeguarded balance, float balance, reconciliation match rate."] },
+  { heading: "3.0 Fraud Report", content: ["Weekly (internal), Monthly to COBAC. Metrics: flagged, blocked, manual review, confirmed fraud, loss amount, fraud rate, ATO attempts, identity fraud."] },
+  { heading: "4.0 Chargeback Report", content: ["Monthly. Metrics: total chargebacks, amount, rate, won/lost, avg resolution time, top reason codes."] },
+  { heading: "5.0 STR Summary", content: ["Monthly to Compliance Committee. Metrics: internal SARs, escalated to MLRO, STRs filed, accounts frozen, cases closed, law enforcement referrals."] },
+  { heading: "6.0 Monthly Compliance Declaration", content: ["Due by 15th of following month. Signed by Compliance Officer confirming KYC, SAR, sanctions, training, and reporting compliance."] },
+];
 
 export default function ReportingTemplates() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-009 — Phase 6: Reporting Framework</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-009 — Phase 6: Reporting Framework</Badge>
+        <PdfExportButton title="Regulatory Reporting Templates" documentCode="KOB-REG-009" subtitle="Structured templates for BEAC/COBAC periodic reporting" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">Regulatory Reporting Templates</h1>
       <p className="text-muted-foreground mb-8">Structured templates for BEAC/COBAC periodic reporting obligations</p>
 

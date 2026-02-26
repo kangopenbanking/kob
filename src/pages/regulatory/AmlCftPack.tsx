@@ -1,11 +1,23 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Shield, AlertTriangle, Search, FileText, Users, Clock } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 AML/CFT Policy Statement", content: ["Committed to prevention, detection, and reporting of ML/TF/PF.", "Aligned with CEMAC AML Regulation No. 01/03 and FATF 40 Recommendations.", "Supervisory authorities: ANIF, COBAC, GABAC."] },
+  { heading: "2.0 KYC Onboarding Framework", content: ["Tier 1 Basic: ≤100K XAF/day, phone verification.", "Tier 2 Standard: ≤1M XAF/day, national ID + proof of address.", "Tier 3 Enhanced: ≤10M XAF/day, source of funds + manual review.", "Business KYB: RCCM, articles, UBO declaration, financial statements."] },
+  { heading: "3.0 STR Escalation", content: ["Staff detection → Internal SAR (24h) → MLRO assessment (48h) → ANIF filing (24h of decision).", "Tipping-off prohibition per Article 34 of CEMAC AML Regulation."] },
+  { heading: "4.0 Sanctions & PEP", content: ["Real-time screening: UN, EU, US OFAC, CEMAC/COBAC lists.", "Fuzzy matching ≥85% triggers manual review.", "PEP EDD: source of wealth, senior management approval, annual re-screening."] },
+  { heading: "5.0 Record Retention", content: ["KYC records: 7 years. Transactions: 10 years. STR/SAR: 10 years. Sanctions results: 7 years."] },
+];
 
 export default function AmlCftPack() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-005 — Phase 3: AML/CFT Compliance</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-005 — Phase 3: AML/CFT Compliance</Badge>
+        <PdfExportButton title="AML/CFT Compliance Pack" documentCode="KOB-REG-005" subtitle="Per CEMAC Regulation No. 01/03-CEMAC-UMAC-COBAC, GABAC, and FATF Recommendations" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">AML/CFT Compliance Pack</h1>
       <p className="text-muted-foreground mb-8">Per CEMAC Regulation No. 01/03-CEMAC-UMAC-COBAC, GABAC Mutual Evaluation Standards, and FATF Recommendations</p>
 

@@ -1,11 +1,22 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Server, Shield, Clock, AlertTriangle } from "lucide-react";
+import { PdfExportButton } from "@/components/regulatory/PdfExportButton";
+
+const pdfSections = [
+  { heading: "1.0 Policy Statement", content: ["Comprehensive BCP and DRP to ensure continued availability of critical payment services.", "Tested semi-annually, reviewed annually by Board Risk Committee."] },
+  { heading: "2.0 Recovery Objectives", content: ["Tier 1 Critical (payments): RTO ≤ 4h, RPO ≤ 1h.", "Tier 2 Essential (API/auth): RTO ≤ 8h, RPO ≤ 4h.", "Tier 3 Important (reporting): RTO ≤ 24h, RPO ≤ 12h.", "Tier 4 Standard (docs): RTO ≤ 72h, RPO ≤ 24h."] },
+  { heading: "3.0 Infrastructure Resilience", content: ["Synchronous replication to standby database.", "Asynchronous replication to DR site.", "PITR with 30-day WAL retention. Daily snapshots for 90 days.", "DNS failover < 5 minutes."] },
+  { heading: "4.0 Incident Escalation", content: ["P1 Critical: CEO + Board within 1h, BEAC/COBAC within 4h.", "P2 Major: CTO + COO within 2h, COBAC within 24h.", "P3 Moderate: Engineering lead within 4h, monthly report.", "P4 Low: Standard ticket queue, quarterly summary."] },
+];
 
 export default function BusinessContinuity() {
   return (
     <div className="container mx-auto px-4 py-12 max-w-5xl">
-      <Badge variant="outline" className="mb-4">KOB-REG-004 — Phase 2: License Application</Badge>
+      <div className="flex items-start justify-between mb-4">
+        <Badge variant="outline">KOB-REG-004 — Phase 2: License Application</Badge>
+        <PdfExportButton title="Business Continuity & Disaster Recovery Plan" documentCode="KOB-REG-004" subtitle="Per COBAC Instruction No. 2006/01 and CEMAC Regulation No. 04/18, Article 22" sections={pdfSections} />
+      </div>
       <h1 className="text-3xl font-bold mb-2">Business Continuity & Disaster Recovery Plan</h1>
       <p className="text-muted-foreground mb-8">Per COBAC Instruction No. 2006/01 on IT Risk Management and CEMAC Regulation No. 04/18, Article 22</p>
 
