@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -10,19 +10,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
-  Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor
+  Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor,
+  Plus, Trash2, Image, Video, BookOpen, Palette
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
+import type { SectionStyle, SectionStyles, CardSize, WalkthroughConfig, HomeSectionKey, LayoutStyle } from "@/components/pwa/TenantProvider";
 
 // ─── Types ───
-type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions';
-type LayoutStyle = 'modern' | 'classic' | 'minimal';
-
 interface AppConfig {
   features: {
     cards: boolean;
@@ -41,6 +43,9 @@ interface AppConfig {
   };
   section_order: HomeSectionKey[];
   layout_style: LayoutStyle;
+  section_styles: SectionStyles;
+  media_sections: MediaSection[];
+  walkthrough_config: WalkthroughConfig;
 }
 
 const defaultSectionOrder: HomeSectionKey[] = [
@@ -52,6 +57,9 @@ const defaultAppConfig: AppConfig = {
   home_layout: { show_balance_card: true, show_account_carousel: true, show_financial_services: true, show_recent_transactions: true },
   section_order: defaultSectionOrder,
   layout_style: 'modern',
+  section_styles: {},
+  media_sections: [],
+  walkthrough_config: { skip_enabled: true },
 };
 
 // ─── Hooks ───
@@ -90,18 +98,10 @@ function useInstitutionTransactions(institutionId: string | null) {
     queryKey: ["admin-inst-transactions", institutionId],
     enabled: !!institutionId,
     queryFn: async () => {
-      const { data: accounts } = await supabase
-        .from("accounts")
-        .select("id")
-        .eq("institution_id", institutionId!);
+      const { data: accounts } = await supabase.from("accounts").select("id").eq("institution_id", institutionId!);
       const accountIds = (accounts || []).map((a) => a.id);
       if (accountIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from("transactions")
-        .select("*")
-        .in("account_id", accountIds)
-        .order("created_at", { ascending: false })
-        .limit(100) as any;
+      const { data, error } = await supabase.from("transactions").select("*").in("account_id", accountIds).order("created_at", { ascending: false }).limit(100) as any;
       if (error) throw error;
       return data || [];
     },
@@ -113,11 +113,7 @@ function useInstitutionSavings(institutionId: string | null) {
     queryKey: ["admin-inst-savings", institutionId],
     enabled: !!institutionId,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("savings_accounts")
-        .select("*")
-        .eq("institution_id", institutionId!)
-        .order("created_at", { ascending: false });
+      const { data, error } = await (supabase as any).from("savings_accounts").select("*").eq("institution_id", institutionId!).order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
@@ -129,11 +125,23 @@ function useInstitutionLoans(institutionId: string | null) {
     queryKey: ["admin-inst-loans", institutionId],
     enabled: !!institutionId,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from("loan_applications")
-        .select("*, loan_product:loan_products(*)")
+      const { data, error } = await (supabase as any).from("loan_applications").select("*, loan_product:loan_products(*)").eq("institution_id", institutionId!).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useWalkthroughSlides(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-walkthrough-slides", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("institution_walkthroughs")
+        .select("*")
         .eq("institution_id", institutionId!)
-        .order("created_at", { ascending: false });
+        .order("slide_order");
       if (error) throw error;
       return data || [];
     },
@@ -157,6 +165,374 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
   );
 }
 
+// ─── Section Style Editor ───
+function SectionStyleEditor({ sectionKey, style, onChange }: { sectionKey: string; style: SectionStyle; onChange: (s: SectionStyle) => void }) {
+  return (
+    <div className="space-y-3 rounded-lg border p-3">
+      <p className="text-sm font-semibold capitalize">{sectionKey.replace(/_/g, ' ')}</p>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-xs">Card Size</Label>
+          <Select value={style.card_size || 'medium'} onValueChange={(v) => onChange({ ...style, card_size: v as CardSize })}>
+            <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="small">Small</SelectItem>
+              <SelectItem value="medium">Medium</SelectItem>
+              <SelectItem value="large">Large</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {(sectionKey === 'quick_actions' || sectionKey === 'financial_services') && (
+          <div>
+            <Label className="text-xs">Columns</Label>
+            <Select value={String(style.columns || 'auto')} onValueChange={(v) => onChange({ ...style, columns: v === 'auto' ? undefined : Number(v) })}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="auto">Auto</SelectItem>
+                <SelectItem value="2">2</SelectItem>
+                <SelectItem value="3">3</SelectItem>
+                <SelectItem value="4">4</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+        {sectionKey === 'quick_actions' && (
+          <div>
+            <Label className="text-xs">Icon Style</Label>
+            <Select value={style.icon_style || 'rounded'} onValueChange={(v) => onChange({ ...style, icon_style: v as any })}>
+              <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="rounded">Rounded</SelectItem>
+                <SelectItem value="circle">Circle</SelectItem>
+                <SelectItem value="square">Square</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <Label className="text-xs">Background Color</Label>
+          <div className="flex items-center gap-2">
+            <input type="color" value={style.bg_color || '#ffffff'} onChange={(e) => onChange({ ...style, bg_color: e.target.value })} className="h-8 w-8 cursor-pointer rounded border" />
+            {style.bg_color && <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => onChange({ ...style, bg_color: undefined })}>Clear</Button>}
+          </div>
+        </div>
+        <div>
+          <Label className="text-xs">Text Color</Label>
+          <div className="flex items-center gap-2">
+            <input type="color" value={style.text_color || '#000000'} onChange={(e) => onChange({ ...style, text_color: e.target.value })} className="h-8 w-8 cursor-pointer rounded border" />
+            {style.text_color && <Button variant="ghost" size="sm" className="h-6 text-[10px]" onClick={() => onChange({ ...style, text_color: undefined })}>Clear</Button>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Media Section Manager ───
+function MediaSectionManager({ mediaSections, onChange }: { mediaSections: MediaSection[]; onChange: (s: MediaSection[]) => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  const addMedia = (type: 'image' | 'video') => {
+    const newItem: MediaSection = {
+      id: crypto.randomUUID(),
+      type,
+      url: '',
+      provider: type === 'video' ? 'youtube' : undefined,
+      video_id: '',
+      title: '',
+      position: mediaSections.length,
+    };
+    onChange([...mediaSections, newItem]);
+  };
+
+  const updateItem = (id: string, updates: Partial<MediaSection>) => {
+    onChange(mediaSections.map(m => m.id === id ? { ...m, ...updates } : m));
+  };
+
+  const removeItem = (id: string) => onChange(mediaSections.filter(m => m.id !== id));
+
+  const handleVideoUrl = (id: string, url: string) => {
+    const { provider, video_id } = detectProvider(url);
+    updateItem(id, { url, provider, video_id });
+  };
+
+  const handleImageUpload = async (id: string, file: File) => {
+    setUploading(true);
+    const path = `media/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+    if (error) { toast.error('Upload failed'); setUploading(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
+    updateItem(id, { url: publicUrl });
+    setUploading(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> Media Banners</CardTitle>
+        <CardDescription>Add image slides or embedded videos to the home screen</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {mediaSections.map((item, idx) => (
+          <div key={item.id} className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeItem(item.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            </div>
+            <Input placeholder="Title (optional)" value={item.title || ''} onChange={(e) => updateItem(item.id, { title: e.target.value })} className="h-8 text-xs" />
+            {item.type === 'image' ? (
+              <div className="space-y-2">
+                <Input placeholder="Image URL" value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image'}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(item.id, e.target.files[0])} />
+                </label>
+                {item.url && <img src={item.url} alt="" className="h-20 w-full rounded object-cover" />}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Input placeholder="Video URL (YouTube, Vimeo, Facebook, X, Instagram, LinkedIn)" value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
+                {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider}</Badge>}
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Video className="h-3.5 w-3.5" /> Upload custom video
+                  <input type="file" accept="video/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploading(true);
+                    const path = `video/${Date.now()}_${file.name}`;
+                    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+                    if (error) { toast.error('Upload failed'); setUploading(false); return; }
+                    const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
+                    updateItem(item.id, { url: publicUrl, provider: 'custom' });
+                    setUploading(false);
+                  }} />
+                </label>
+              </div>
+            )}
+          </div>
+        ))}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => addMedia('image')} className="gap-1"><Image className="h-3.5 w-3.5" /> Add Image</Button>
+          <Button variant="outline" size="sm" onClick={() => addMedia('video')} className="gap-1"><Video className="h-3.5 w-3.5" /> Add Video</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Walkthrough Manager ───
+function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }: {
+  institutionId: string;
+  walkthroughConfig: WalkthroughConfig;
+  onConfigChange: (c: WalkthroughConfig) => void;
+}) {
+  const queryClient = useQueryClient();
+  const { data: slides = [], isLoading } = useWalkthroughSlides(institutionId);
+  const [editSlide, setEditSlide] = useState<any>(null);
+
+  const saveSlideMutation = useMutation({
+    mutationFn: async (slide: any) => {
+      if (slide.id && !slide.isNew) {
+        const { error } = await supabase.from('institution_walkthroughs').update({
+          title: slide.title,
+          description: slide.description,
+          media_type: slide.media_type,
+          media_url: slide.media_url,
+          icon_name: slide.icon_name,
+          bg_color: slide.bg_color,
+          text_color: slide.text_color,
+          slide_order: slide.slide_order,
+        }).eq('id', slide.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('institution_walkthroughs').insert({
+          institution_id: institutionId,
+          title: slide.title,
+          description: slide.description,
+          media_type: slide.media_type || 'icon',
+          media_url: slide.media_url,
+          icon_name: slide.icon_name || 'Shield',
+          bg_color: slide.bg_color,
+          text_color: slide.text_color,
+          slide_order: slide.slide_order || slides.length,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-walkthrough-slides", institutionId] });
+      setEditSlide(null);
+      toast.success("Slide saved");
+    },
+    onError: () => toast.error("Failed to save slide"),
+  });
+
+  const deleteSlideMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('institution_walkthroughs').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-walkthrough-slides", institutionId] });
+      toast.success("Slide deleted");
+    },
+  });
+
+  const [uploading, setUploading] = useState(false);
+
+  return (
+    <div className="space-y-6">
+      {/* Global Walkthrough Settings */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> Walkthrough Theme</CardTitle>
+          <CardDescription>Customize colors and branding for the walkthrough screens</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label className="text-xs">Background Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={walkthroughConfig.bg_color || '#ffffff'} onChange={(e) => onConfigChange({ ...walkthroughConfig, bg_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                <span className="text-xs text-muted-foreground">{walkthroughConfig.bg_color || 'Default'}</span>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Text Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={walkthroughConfig.text_color || '#000000'} onChange={(e) => onConfigChange({ ...walkthroughConfig, text_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                <span className="text-xs text-muted-foreground">{walkthroughConfig.text_color || 'Default'}</span>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Accent Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={walkthroughConfig.accent_color || '#3b82f6'} onChange={(e) => onConfigChange({ ...walkthroughConfig, accent_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                <span className="text-xs text-muted-foreground">{walkthroughConfig.accent_color || 'Default'}</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label className="text-xs">Logo Override URL</Label>
+              <Input value={walkthroughConfig.logo_url || ''} onChange={(e) => onConfigChange({ ...walkthroughConfig, logo_url: e.target.value || null })} placeholder="https://..." className="h-8 text-xs mt-1" />
+            </div>
+            <div className="flex items-center gap-2 pt-4">
+              <Switch checked={walkthroughConfig.skip_enabled !== false} onCheckedChange={(v) => onConfigChange({ ...walkthroughConfig, skip_enabled: v })} />
+              <Label className="text-xs">Allow Skip</Label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Slides */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><BookOpen className="h-4 w-4" /> Walkthrough Slides</CardTitle>
+          <CardDescription>Manage onboarding slides for this institution</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {isLoading ? (
+            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
+          ) : slides.length === 0 && !editSlide ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No custom slides — default walkthrough will be shown</p>
+          ) : (
+            slides.map((slide: any, idx: number) => (
+              <div key={slide.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{slide.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{slide.description}</p>
+                  <div className="flex gap-1 mt-1">
+                    <Badge variant="outline" className="text-[10px]">{slide.media_type}</Badge>
+                    {slide.icon_name && <Badge variant="secondary" className="text-[10px]">{slide.icon_name}</Badge>}
+                  </div>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setEditSlide(slide)}>Edit</Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteSlideMutation.mutate(slide.id)}>
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </div>
+            ))
+          )}
+
+          {editSlide ? (
+            <div className="rounded-lg border-2 border-primary/20 p-4 space-y-3">
+              <p className="text-sm font-bold">{editSlide.isNew ? 'New Slide' : 'Edit Slide'}</p>
+              <Input placeholder="Title" value={editSlide.title || ''} onChange={(e) => setEditSlide({ ...editSlide, title: e.target.value })} />
+              <Textarea placeholder="Description" value={editSlide.description || ''} onChange={(e) => setEditSlide({ ...editSlide, description: e.target.value })} rows={2} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Media Type</Label>
+                  <Select value={editSlide.media_type || 'icon'} onValueChange={(v) => setEditSlide({ ...editSlide, media_type: v })}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="icon">Icon</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editSlide.media_type === 'icon' && (
+                  <div>
+                    <Label className="text-xs">Icon Name (Lucide)</Label>
+                    <Input value={editSlide.icon_name || 'Shield'} onChange={(e) => setEditSlide({ ...editSlide, icon_name: e.target.value })} className="h-8 text-xs" placeholder="Shield, CreditCard, etc." />
+                  </div>
+                )}
+                {(editSlide.media_type === 'image' || editSlide.media_type === 'video') && (
+                  <div>
+                    <Label className="text-xs">Media URL</Label>
+                    <Input value={editSlide.media_url || ''} onChange={(e) => setEditSlide({ ...editSlide, media_url: e.target.value })} className="h-8 text-xs" />
+                  </div>
+                )}
+              </div>
+              {(editSlide.media_type === 'image') && (
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Upload image'}
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploading(true);
+                    const path = `walkthrough/${Date.now()}_${file.name}`;
+                    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+                    if (error) { toast.error('Upload failed'); setUploading(false); return; }
+                    const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
+                    setEditSlide((prev: any) => ({ ...prev, media_url: publicUrl }));
+                    setUploading(false);
+                  }} />
+                </label>
+              )}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Slide BG Color</Label>
+                  <input type="color" value={editSlide.bg_color || '#ffffff'} onChange={(e) => setEditSlide({ ...editSlide, bg_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                </div>
+                <div>
+                  <Label className="text-xs">Slide Text Color</Label>
+                  <input type="color" value={editSlide.text_color || '#000000'} onChange={(e) => setEditSlide({ ...editSlide, text_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => saveSlideMutation.mutate(editSlide)} disabled={saveSlideMutation.isPending}>
+                  {saveSlideMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}
+                  Save
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setEditSlide(null)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditSlide({ isNew: true, title: '', description: '', media_type: 'icon', icon_name: 'Shield', slide_order: slides.length })}>
+              <Plus className="h-3.5 w-3.5" /> Add Slide
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Feature Config Panel ───
 function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: string; appConfig: AppConfig }) {
   const queryClient = useQueryClient();
@@ -164,10 +540,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
   const mutation = useMutation({
     mutationFn: async (newConfig: AppConfig) => {
-      const { error } = await (supabase as any)
-        .from("institutions")
-        .update({ app_config: newConfig })
-        .eq("id", institutionId);
+      const { error } = await (supabase as any).from("institutions").update({ app_config: newConfig }).eq("id", institutionId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -186,31 +559,25 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   };
 
   const featureLabels: Record<string, string> = {
-    cards: "Virtual Cards",
-    savings: "Savings Goals",
-    loans: "Loan Applications",
-    credit_score: "Credit Score (CrediQ)",
-    mobile_money: "Mobile Money (MoMo)",
-    qr_payments: "QR Payments",
-    bill_payments: "Bill Payments",
+    cards: "Virtual Cards", savings: "Savings Goals", loans: "Loan Applications",
+    credit_score: "Credit Score (CrediQ)", mobile_money: "Mobile Money (MoMo)",
+    qr_payments: "QR Payments", bill_payments: "Bill Payments",
   };
 
   const layoutLabels: Record<string, string> = {
-    show_balance_card: "Balance Card",
-    show_account_carousel: "Account Carousel",
-    show_financial_services: "Financial Services Grid",
-    show_recent_transactions: "Recent Transactions",
+    show_balance_card: "Balance Card", show_account_carousel: "Account Carousel",
+    show_financial_services: "Financial Services Grid", show_recent_transactions: "Recent Transactions",
   };
 
   const sectionLabels: Record<HomeSectionKey, string> = {
-    balance_card: 'Balance Card',
-    account_carousel: 'Account Carousel',
-    quick_actions: 'Quick Actions',
-    financial_services: 'Financial Services',
-    recent_transactions: 'Recent Transactions',
+    balance_card: 'Balance Card', account_carousel: 'Account Carousel', quick_actions: 'Quick Actions',
+    financial_services: 'Financial Services', recent_transactions: 'Recent Transactions', media_banner: 'Media Banner',
   };
 
-  // Preview mockup section renderer
+  const sectionOrder = config.section_order || defaultSectionOrder;
+  const hasMediaBanner = sectionOrder.includes('media_banner');
+
+  // Preview mockup
   const renderPreviewSection = (key: HomeSectionKey) => {
     const style = config.layout_style || 'modern';
     switch (key) {
@@ -218,12 +585,13 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         if (!config.home_layout.show_balance_card) return null;
         if (style === 'minimal') return <div key={key} className="py-1"><p className="text-[8px] uppercase tracking-wider text-muted-foreground">Total Balance</p><p className="text-sm font-light">XAF 1,250,000</p></div>;
         if (style === 'classic') return <div key={key} className="rounded border bg-card p-2"><p className="text-[7px] text-muted-foreground">Total Balance</p><p className="text-[10px] font-bold">XAF 1,250,000</p></div>;
+        if (style === 'bold') return <div key={key} className="rounded-xl bg-primary p-2"><p className="text-[7px] text-primary-foreground/70">Total Balance</p><p className="text-[10px] font-black text-primary-foreground">XAF 1,250,000</p></div>;
+        if (style === 'gradient') return <div key={key} className="rounded-xl bg-gradient-to-br from-primary to-accent p-2"><p className="text-[7px] text-primary-foreground/70">Total Balance</p><p className="text-[10px] font-bold text-primary-foreground">XAF 1,250,000</p></div>;
         return <div key={key} className="rounded-lg bg-foreground p-2"><p className="text-[7px] text-background/60">Total Balance</p><p className="text-[10px] font-bold text-background">XAF 1,250,000</p></div>;
       case 'account_carousel':
         if (!config.home_layout.show_account_carousel) return null;
         return <div key={key} className="flex gap-1"><div className="h-8 w-16 rounded-md bg-[hsl(var(--chart-3))] p-1"><p className="text-[6px] text-white">XAF</p><p className="text-[7px] font-bold text-white">1.2M</p></div><div className="h-8 w-16 rounded-md bg-[hsl(var(--chart-4))] p-1"><p className="text-[6px] text-white">EUR</p><p className="text-[7px] font-bold text-white">500</p></div></div>;
       case 'quick_actions':
-        if (style === 'classic') return <div key={key} className="grid grid-cols-2 gap-1">{['Send','Receive','QR','MoMo'].filter((_,i)=> i < 3 || config.features.mobile_money).map(a=><div key={a} className="flex items-center gap-1 rounded border p-1"><div className="h-3 w-3 rounded bg-primary"/><span className="text-[6px]">{a}</span></div>)}</div>;
         return <div key={key} className="flex justify-between">{['Send','Recv','QR','MoMo'].filter((_,i)=> i < 3 || config.features.mobile_money).map(a=><div key={a} className="flex flex-col items-center gap-0.5"><div className="h-5 w-5 rounded-md bg-primary"/><span className="text-[5px]">{a}</span></div>)}</div>;
       case 'financial_services':
         if (!config.home_layout.show_financial_services) return null;
@@ -233,76 +601,58 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
       case 'recent_transactions':
         if (!config.home_layout.show_recent_transactions) return null;
         return <div key={key}><p className="text-[7px] font-bold mb-0.5">Recent Transactions</p>{[1,2].map(i=><div key={i} className="flex items-center justify-between py-0.5"><div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-muted"/><div><p className="text-[6px]">Payment</p><p className="text-[5px] text-muted-foreground">Today</p></div></div><span className="text-[6px] font-bold">-5,000</span></div>)}</div>;
+      case 'media_banner':
+        return <div key={key} className="h-8 rounded-md bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center"><p className="text-[6px] text-muted-foreground">📸 Media Banner</p></div>;
       default: return null;
     }
   };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-      {/* Config Controls */}
       <div className="xl:col-span-2 space-y-6">
+        {/* Features */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">App Features</CardTitle>
-            <CardDescription>Toggle which features are available in this bank's app</CardDescription>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">App Features</CardTitle><CardDescription>Toggle which features are available</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(featureLabels).map(([key, label]) => (
               <div key={key} className="flex items-center justify-between">
                 <Label htmlFor={`feat-${key}`} className="text-sm font-medium">{label}</Label>
-                <Switch
-                  id={`feat-${key}`}
-                  checked={config.features[key as keyof AppConfig["features"]]}
-                  onCheckedChange={() => toggleFeature(key as keyof AppConfig["features"])}
-                />
+                <Switch id={`feat-${key}`} checked={config.features[key as keyof AppConfig["features"]]} onCheckedChange={() => toggleFeature(key as keyof AppConfig["features"])} />
               </div>
             ))}
           </CardContent>
         </Card>
 
+        {/* Layout Style */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Layout Style</CardTitle>
-            <CardDescription>Choose a visual theme for the banking app</CardDescription>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Layout Style</CardTitle><CardDescription>Choose a visual theme</CardDescription></CardHeader>
           <CardContent>
-            <RadioGroup
-              value={config.layout_style || 'modern'}
-              onValueChange={(v) => setConfig(prev => ({ ...prev, layout_style: v as LayoutStyle }))}
-              className="grid grid-cols-3 gap-3"
-            >
+            <RadioGroup value={config.layout_style || 'modern'} onValueChange={(v) => setConfig(prev => ({ ...prev, layout_style: v as LayoutStyle }))} className="grid grid-cols-5 gap-2">
               {([
-                { value: 'modern', label: 'Modern', desc: 'Bold cards, dark hero, animations' },
-                { value: 'classic', label: 'Classic', desc: 'Clean borders, list-based layout' },
-                { value: 'minimal', label: 'Minimal', desc: 'Light, spacious, typography-first' },
+                { value: 'modern', label: 'Modern', desc: 'Bold dark hero' },
+                { value: 'classic', label: 'Classic', desc: 'Clean borders' },
+                { value: 'minimal', label: 'Minimal', desc: 'Typography-first' },
+                { value: 'bold', label: 'Bold', desc: 'Large colorful' },
+                { value: 'gradient', label: 'Gradient', desc: 'Gradient cards' },
               ] as const).map(style => (
-                <label
-                  key={style.value}
-                  className={`cursor-pointer rounded-xl border-2 p-4 transition-colors ${config.layout_style === style.value ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}
-                >
+                <label key={style.value} className={`cursor-pointer rounded-xl border-2 p-3 transition-colors ${config.layout_style === style.value ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
                   <RadioGroupItem value={style.value} className="sr-only" />
-                  <p className="text-sm font-bold">{style.label}</p>
-                  <p className="text-xs text-muted-foreground mt-1">{style.desc}</p>
+                  <p className="text-xs font-bold">{style.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{style.desc}</p>
                 </label>
               ))}
             </RadioGroup>
           </CardContent>
         </Card>
 
+        {/* Home Layout */}
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Home Screen Layout</CardTitle>
-            <CardDescription>Control which sections appear on the home screen</CardDescription>
-          </CardHeader>
+          <CardHeader><CardTitle className="text-base">Home Screen Layout</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             {Object.entries(layoutLabels).map(([key, label]) => (
               <div key={key} className="flex items-center justify-between">
-                <Label htmlFor={`layout-${key}`} className="text-sm font-medium">{label}</Label>
-                <Switch
-                  id={`layout-${key}`}
-                  checked={config.home_layout[key as keyof AppConfig["home_layout"]]}
-                  onCheckedChange={() => toggleLayout(key as keyof AppConfig["home_layout"])}
-                />
+                <Label className="text-sm font-medium">{label}</Label>
+                <Switch checked={config.home_layout[key as keyof AppConfig["home_layout"]]} onCheckedChange={() => toggleLayout(key as keyof AppConfig["home_layout"])} />
               </div>
             ))}
           </CardContent>
@@ -312,22 +662,31 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Home Section Order</CardTitle>
-            <CardDescription>Reorder the home screen sections</CardDescription>
+            {!hasMediaBanner && (
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setConfig(prev => ({ ...prev, section_order: [...(prev.section_order || defaultSectionOrder), 'media_banner'] }))}>
+                <Plus className="h-3.5 w-3.5" /> Add Media Banner
+              </Button>
+            )}
           </CardHeader>
           <CardContent className="space-y-2">
-            {(config.section_order || defaultSectionOrder).map((key, idx) => (
+            {sectionOrder.map((key, idx) => (
               <div key={key} className="flex items-center gap-2 rounded-lg border p-3">
                 <GripVertical className="h-4 w-4 text-muted-foreground" />
-                <span className="flex-1 text-sm font-medium">{sectionLabels[key]}</span>
+                <span className="flex-1 text-sm font-medium">{sectionLabels[key] || key}</span>
+                {key === 'media_banner' && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfig(prev => ({ ...prev, section_order: prev.section_order.filter(k => k !== 'media_banner') }))}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                )}
                 <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0}
                   onClick={() => {
-                    const order = [...(config.section_order || defaultSectionOrder)];
+                    const order = [...sectionOrder];
                     [order[idx - 1], order[idx]] = [order[idx], order[idx - 1]];
                     setConfig(prev => ({ ...prev, section_order: order }));
                   }}><ArrowUp className="h-3.5 w-3.5" /></Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === (config.section_order || defaultSectionOrder).length - 1}
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === sectionOrder.length - 1}
                   onClick={() => {
-                    const order = [...(config.section_order || defaultSectionOrder)];
+                    const order = [...sectionOrder];
                     [order[idx], order[idx + 1]] = [order[idx + 1], order[idx]];
                     setConfig(prev => ({ ...prev, section_order: order }));
                   }}><ArrowDown className="h-3.5 w-3.5" /></Button>
@@ -335,6 +694,27 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
             ))}
           </CardContent>
         </Card>
+
+        {/* Per-Section Styles */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Section Styles</CardTitle><CardDescription>Customize card sizes, colors, and columns per section</CardDescription></CardHeader>
+          <CardContent className="space-y-3">
+            {['balance_card', 'account_carousel', 'quick_actions', 'financial_services', 'media_banner'].filter(k => sectionOrder.includes(k as HomeSectionKey)).map(key => (
+              <SectionStyleEditor
+                key={key}
+                sectionKey={key}
+                style={(config.section_styles || {})[key as HomeSectionKey] || {}}
+                onChange={(s) => setConfig(prev => ({ ...prev, section_styles: { ...(prev.section_styles || {}), [key]: s } }))}
+              />
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Media Sections */}
+        <MediaSectionManager
+          mediaSections={config.media_sections || []}
+          onChange={(s) => setConfig(prev => ({ ...prev, media_sections: s }))}
+        />
 
         <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">
           {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -347,34 +727,21 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         <div className="sticky top-6">
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Monitor className="h-4 w-4" /> Live Preview
-              </CardTitle>
-              <CardDescription>Real-time preview of current config</CardDescription>
+              <CardTitle className="text-base flex items-center gap-2"><Monitor className="h-4 w-4" /> Live Preview</CardTitle>
             </CardHeader>
             <CardContent className="flex justify-center">
-              {/* Phone Frame */}
               <div className="w-[180px] rounded-[20px] border-2 border-foreground/20 bg-background p-2 shadow-lg">
-                {/* Status bar */}
                 <div className="mb-1 flex items-center justify-between px-1">
                   <span className="text-[6px] font-medium text-muted-foreground">9:41</span>
-                  <div className="flex gap-0.5">
-                    <div className="h-1 w-2 rounded-sm bg-muted-foreground/40" />
-                    <div className="h-1 w-2 rounded-sm bg-muted-foreground/40" />
-                  </div>
+                  <div className="flex gap-0.5"><div className="h-1 w-2 rounded-sm bg-muted-foreground/40" /><div className="h-1 w-2 rounded-sm bg-muted-foreground/40" /></div>
                 </div>
-                {/* App content */}
                 <div className="flex flex-col gap-1.5 px-1">
                   <p className="text-[8px] font-medium text-muted-foreground">Good afternoon 👋</p>
-                  {(config.section_order || defaultSectionOrder).map(key => renderPreviewSection(key))}
+                  {sectionOrder.map(key => renderPreviewSection(key))}
                 </div>
-                {/* Bottom nav */}
                 <div className="mt-2 flex justify-between border-t pt-1 px-1">
                   {['Home', 'Pay', config.features.cards && 'Cards', 'History', 'More'].filter(Boolean).map(t => (
-                    <div key={t as string} className="flex flex-col items-center">
-                      <div className="h-2 w-2 rounded-sm bg-muted-foreground/30" />
-                      <span className="text-[5px] text-muted-foreground">{t}</span>
-                    </div>
+                    <div key={t as string} className="flex flex-col items-center"><div className="h-2 w-2 rounded-sm bg-muted-foreground/30" /><span className="text-[5px] text-muted-foreground">{t}</span></div>
                   ))}
                 </div>
               </div>
@@ -409,61 +776,72 @@ export default function BankingAppManagement() {
   );
 
   const selectedAppConfig: AppConfig = selectedInst
-    ? { ...defaultAppConfig, ...(selectedInst.app_config || {}), features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) }, home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) }, section_order: (selectedInst.app_config?.section_order || defaultSectionOrder), layout_style: (selectedInst.app_config?.layout_style || 'modern') }
+    ? {
+        ...defaultAppConfig,
+        ...(selectedInst.app_config || {}),
+        features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) },
+        home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) },
+        section_order: selectedInst.app_config?.section_order || defaultSectionOrder,
+        layout_style: selectedInst.app_config?.layout_style || 'modern',
+        section_styles: selectedInst.app_config?.section_styles || {},
+        media_sections: selectedInst.app_config?.media_sections || [],
+        walkthrough_config: selectedInst.app_config?.walkthrough_config || { skip_enabled: true },
+      }
     : defaultAppConfig;
+
+  // Walkthrough config state for the walkthrough tab
+  const [walkthroughConfig, setWalkthroughConfig] = useState<WalkthroughConfig>(selectedAppConfig.walkthrough_config);
+  useEffect(() => {
+    setWalkthroughConfig(selectedAppConfig.walkthrough_config);
+  }, [selectedInstitution]);
+
+  const queryClient = useQueryClient();
+  const saveWalkthroughConfig = useMutation({
+    mutationFn: async () => {
+      const currentConfig = selectedInst?.app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentConfig, walkthrough_config: walkthroughConfig }
+      }).eq("id", selectedInstitution);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-banking"] });
+      toast.success("Walkthrough config saved");
+    },
+    onError: () => toast.error("Failed to save"),
+  });
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
-          <Smartphone className="h-6 w-6 text-primary" />
-          Banking App Management
-        </h1>
-        <p className="text-muted-foreground">
-          Manage individual banking app instances, view per-institution user accounts, transactions, and settings
-        </p>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Banking App Management</h1>
+        <p className="text-muted-foreground">Manage individual banking app instances, view per-institution user accounts, transactions, and settings</p>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Institution List Sidebar */}
+        {/* Institution List */}
         <Card className="lg:col-span-1">
           <CardHeader className="pb-3">
             <CardTitle className="text-base">Institutions</CardTitle>
             <div className="relative">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="pl-8 h-9"
-              />
+              <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-9" />
             </div>
           </CardHeader>
           <CardContent className="p-0">
             <ScrollArea className="h-[500px]">
               {loadingInstitutions ? (
-                <div className="flex justify-center p-6">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
+                <div className="flex justify-center p-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
               ) : filteredInstitutions.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center p-6">No institutions found</p>
               ) : (
                 filteredInstitutions.map((inst) => (
-                  <button
-                    key={inst.id}
-                    onClick={() => setSelectedInstitution(inst.id)}
-                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent/50 transition-colors border-b last:border-b-0 ${
-                      selectedInstitution === inst.id ? "bg-primary/10 border-l-2 border-l-primary" : ""
-                    }`}
-                  >
+                  <button key={inst.id} onClick={() => setSelectedInstitution(inst.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent/50 transition-colors border-b last:border-b-0 ${selectedInstitution === inst.id ? "bg-primary/10 border-l-2 border-l-primary" : ""}`}>
                     {inst.logo_url ? (
                       <img src={inst.logo_url} alt="" className="h-8 w-8 rounded-md object-cover" />
                     ) : (
-                      <div
-                        className="h-8 w-8 rounded-md flex items-center justify-center text-white text-xs font-bold"
-                        style={{ backgroundColor: inst.primary_color || "hsl(var(--primary))" }}
-                      >
+                      <div className="h-8 w-8 rounded-md flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: inst.primary_color || "hsl(var(--primary))" }}>
                         {inst.institution_name.charAt(0)}
                       </div>
                     )}
@@ -471,12 +849,7 @@ export default function BankingAppManagement() {
                       <p className="text-sm font-medium truncate">{inst.institution_name}</p>
                       <p className="text-xs text-muted-foreground capitalize">{inst.institution_type}</p>
                     </div>
-                    <Badge
-                      variant={inst.status === "approved" ? "default" : "secondary"}
-                      className="text-[10px] shrink-0"
-                    >
-                      {inst.status}
-                    </Badge>
+                    <Badge variant={inst.status === "approved" ? "default" : "secondary"} className="text-[10px] shrink-0">{inst.status}</Badge>
                   </button>
                 ))
               )}
@@ -491,9 +864,7 @@ export default function BankingAppManagement() {
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <Building2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
                 <h3 className="text-lg font-medium">Select an Institution</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Choose a banking institution from the left to view its app data
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Choose a banking institution from the left to view its app data</p>
               </CardContent>
             </Card>
           ) : (
@@ -504,22 +875,15 @@ export default function BankingAppManagement() {
                   {selectedInst?.logo_url ? (
                     <img src={selectedInst.logo_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
                   ) : (
-                    <div
-                      className="h-12 w-12 rounded-lg flex items-center justify-center text-white text-lg font-bold"
-                      style={{ backgroundColor: selectedInst?.primary_color || "hsl(var(--primary))" }}
-                    >
+                    <div className="h-12 w-12 rounded-lg flex items-center justify-center text-white text-lg font-bold" style={{ backgroundColor: selectedInst?.primary_color || "hsl(var(--primary))" }}>
                       {selectedInst?.institution_name?.charAt(0)}
                     </div>
                   )}
                   <div className="flex-1">
                     <h2 className="text-lg font-bold">{selectedInst?.institution_name}</h2>
-                    <p className="text-sm text-muted-foreground capitalize">
-                      {selectedInst?.institution_type} · Created {selectedInst?.created_at ? format(new Date(selectedInst.created_at), "MMM d, yyyy") : "—"}
-                    </p>
+                    <p className="text-sm text-muted-foreground capitalize">{selectedInst?.institution_type} · Created {selectedInst?.created_at ? format(new Date(selectedInst.created_at), "MMM d, yyyy") : "—"}</p>
                   </div>
-                  <Badge variant={selectedInst?.status === "approved" ? "default" : "secondary"}>
-                    {selectedInst?.status}
-                  </Badge>
+                  <Badge variant={selectedInst?.status === "approved" ? "default" : "secondary"}>{selectedInst?.status}</Badge>
                 </CardContent>
               </Card>
 
@@ -533,22 +897,13 @@ export default function BankingAppManagement() {
 
               {/* Tabs */}
               <Tabs defaultValue="accounts">
-                <TabsList className="w-full justify-start">
-                  <TabsTrigger value="accounts" className="gap-1.5">
-                    <CreditCard className="h-3.5 w-3.5" /> Accounts
-                  </TabsTrigger>
-                  <TabsTrigger value="transactions" className="gap-1.5">
-                    <ArrowRightLeft className="h-3.5 w-3.5" /> Transactions
-                  </TabsTrigger>
-                  <TabsTrigger value="savings" className="gap-1.5">
-                    <PiggyBank className="h-3.5 w-3.5" /> Savings
-                  </TabsTrigger>
-                  <TabsTrigger value="loans" className="gap-1.5">
-                    <Landmark className="h-3.5 w-3.5" /> Loans
-                  </TabsTrigger>
-                  <TabsTrigger value="features" className="gap-1.5">
-                    <Settings2 className="h-3.5 w-3.5" /> Features
-                  </TabsTrigger>
+                <TabsList className="w-full justify-start flex-wrap">
+                  <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Accounts</TabsTrigger>
+                  <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Transactions</TabsTrigger>
+                  <TabsTrigger value="savings" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> Savings</TabsTrigger>
+                  <TabsTrigger value="loans" className="gap-1.5"><Landmark className="h-3.5 w-3.5" /> Loans</TabsTrigger>
+                  <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
+                  <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
                 </TabsList>
 
                 {/* Accounts Tab */}
@@ -561,35 +916,18 @@ export default function BankingAppManagement() {
                         <p className="text-sm text-muted-foreground text-center p-8">No accounts found</p>
                       ) : (
                         <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Account Holder</TableHead>
-                              <TableHead>Account ID</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead>Currency</TableHead>
-                              <TableHead className="text-right">Balance</TableHead>
-                              <TableHead>Status</TableHead>
-                            </TableRow>
-                          </TableHeader>
+                          <TableHeader><TableRow>
+                            <TableHead>Account Holder</TableHead><TableHead>Account ID</TableHead><TableHead>Type</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Balance</TableHead><TableHead>Status</TableHead>
+                          </TableRow></TableHeader>
                           <TableBody>
                             {accounts.map((acc) => (
                               <TableRow key={acc.id}>
                                 <TableCell className="font-medium">{acc.account_holder_name}</TableCell>
                                 <TableCell className="font-mono text-xs">{acc.account_id}</TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="capitalize text-xs">
-                                    {acc.account_subtype}
-                                  </Badge>
-                                </TableCell>
+                                <TableCell><Badge variant="outline" className="capitalize text-xs">{acc.account_subtype}</Badge></TableCell>
                                 <TableCell>{acc.currency}</TableCell>
-                                <TableCell className="text-right font-medium">
-                                  {(acc.account_balances?.[0]?.amount || 0).toLocaleString()}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant={acc.is_active ? "default" : "secondary"} className="text-xs">
-                                    {acc.is_active ? "Active" : "Inactive"}
-                                  </Badge>
-                                </TableCell>
+                                <TableCell className="text-right font-medium">{(acc.account_balances?.[0]?.amount || 0).toLocaleString()}</TableCell>
+                                <TableCell><Badge variant={acc.is_active ? "default" : "secondary"} className="text-xs">{acc.is_active ? "Active" : "Inactive"}</Badge></TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -609,41 +947,20 @@ export default function BankingAppManagement() {
                         <p className="text-sm text-muted-foreground text-center p-8">No transactions found</p>
                       ) : (
                         <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Date</TableHead>
-                              <TableHead>Reference</TableHead>
-                              <TableHead>Description</TableHead>
-                              <TableHead>Type</TableHead>
-                              <TableHead className="text-right">Amount</TableHead>
-                              <TableHead>Status</TableHead>
-                            </TableRow>
-                          </TableHeader>
+                          <TableHeader><TableRow>
+                            <TableHead>Date</TableHead><TableHead>Reference</TableHead><TableHead>Description</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead>
+                          </TableRow></TableHeader>
                           <TableBody>
                             {transactions.map((txn) => (
                               <TableRow key={txn.id}>
-                                <TableCell className="text-sm">
-                                  {txn.booking_date ? format(new Date(txn.booking_date), "MMM d, yyyy") : "—"}
-                                </TableCell>
+                                <TableCell className="text-sm">{txn.booking_date ? format(new Date(txn.booking_date), "MMM d, yyyy") : "—"}</TableCell>
                                 <TableCell className="font-mono text-xs">{txn.transaction_id?.slice(0, 12)}...</TableCell>
-                                <TableCell className="max-w-[200px] truncate text-sm">
-                                  {txn.transaction_information || "—"}
-                                </TableCell>
-                                <TableCell>
-                                  <Badge
-                                    variant={txn.credit_debit_indicator === "Credit" ? "default" : "secondary"}
-                                    className="text-xs"
-                                  >
-                                    {txn.credit_debit_indicator}
-                                  </Badge>
-                                </TableCell>
+                                <TableCell className="max-w-[200px] truncate text-sm">{txn.transaction_information || "—"}</TableCell>
+                                <TableCell><Badge variant={txn.credit_debit_indicator === "Credit" ? "default" : "secondary"} className="text-xs">{txn.credit_debit_indicator}</Badge></TableCell>
                                 <TableCell className={`text-right font-medium ${txn.credit_debit_indicator === "Credit" ? "text-emerald-600" : "text-red-500"}`}>
-                                  {txn.credit_debit_indicator === "Credit" ? "+" : "-"}
-                                  {Number(txn.amount).toLocaleString()} {txn.currency}
+                                  {txn.credit_debit_indicator === "Credit" ? "+" : "-"}{Number(txn.amount).toLocaleString()} {txn.currency}
                                 </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="text-xs capitalize">{txn.status}</Badge>
-                                </TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{txn.status}</Badge></TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -663,29 +980,17 @@ export default function BankingAppManagement() {
                         <p className="text-sm text-muted-foreground text-center p-8">No savings accounts found</p>
                       ) : (
                         <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Name</TableHead>
-                              <TableHead>Target</TableHead>
-                              <TableHead className="text-right">Balance</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Created</TableHead>
-                            </TableRow>
-                          </TableHeader>
+                          <TableHeader><TableRow>
+                            <TableHead>Name</TableHead><TableHead>Target</TableHead><TableHead className="text-right">Balance</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
                           <TableBody>
                             {savings.map((s: any) => (
                               <TableRow key={s.id}>
                                 <TableCell className="font-medium">{s.account_name || "Savings"}</TableCell>
                                 <TableCell>{s.target_amount ? `${Number(s.target_amount).toLocaleString()} XAF` : "—"}</TableCell>
-                                <TableCell className="text-right font-medium">
-                                  {Number(s.current_balance || 0).toLocaleString()} XAF
-                                </TableCell>
-                                <TableCell>
-                                  <Badge variant="outline" className="text-xs capitalize">{s.status}</Badge>
-                                </TableCell>
-                                <TableCell className="text-sm">
-                                  {s.created_at ? format(new Date(s.created_at), "MMM d, yyyy") : "—"}
-                                </TableCell>
+                                <TableCell className="text-right font-medium">{Number(s.current_balance || 0).toLocaleString()} XAF</TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{s.status}</Badge></TableCell>
+                                <TableCell className="text-sm">{s.created_at ? format(new Date(s.created_at), "MMM d, yyyy") : "—"}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -705,38 +1010,18 @@ export default function BankingAppManagement() {
                         <p className="text-sm text-muted-foreground text-center p-8">No loan applications found</p>
                       ) : (
                         <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>Product</TableHead>
-                              <TableHead className="text-right">Amount</TableHead>
-                              <TableHead>Tenure</TableHead>
-                              <TableHead>Purpose</TableHead>
-                              <TableHead>Status</TableHead>
-                              <TableHead>Applied</TableHead>
-                            </TableRow>
-                          </TableHeader>
+                          <TableHeader><TableRow>
+                            <TableHead>Product</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Tenure</TableHead><TableHead>Purpose</TableHead><TableHead>Status</TableHead><TableHead>Applied</TableHead>
+                          </TableRow></TableHeader>
                           <TableBody>
                             {loans.map((loan: any) => (
                               <TableRow key={loan.id}>
-                                <TableCell className="font-medium">
-                                  {loan.loan_product?.product_name || "—"}
-                                </TableCell>
-                                <TableCell className="text-right font-medium">
-                                  {Number(loan.requested_amount).toLocaleString()} XAF
-                                </TableCell>
+                                <TableCell className="font-medium">{loan.loan_product?.product_name || "—"}</TableCell>
+                                <TableCell className="text-right font-medium">{Number(loan.requested_amount).toLocaleString()} XAF</TableCell>
                                 <TableCell>{loan.tenure_months} months</TableCell>
                                 <TableCell className="max-w-[150px] truncate text-sm">{loan.purpose || "—"}</TableCell>
-                                <TableCell>
-                                  <Badge
-                                    variant={loan.status === "approved" ? "default" : loan.status === "rejected" ? "destructive" : "secondary"}
-                                    className="text-xs capitalize"
-                                  >
-                                    {loan.status}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className="text-sm">
-                                  {loan.created_at ? format(new Date(loan.created_at), "MMM d, yyyy") : "—"}
-                                </TableCell>
+                                <TableCell><Badge variant={loan.status === "approved" ? "default" : loan.status === "rejected" ? "destructive" : "secondary"} className="text-xs capitalize">{loan.status}</Badge></TableCell>
+                                <TableCell className="text-sm">{loan.created_at ? format(new Date(loan.created_at), "MMM d, yyyy") : "—"}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
@@ -748,11 +1033,21 @@ export default function BankingAppManagement() {
 
                 {/* Features Tab */}
                 <TabsContent value="features">
-                  <FeatureConfigPanel
+                  <FeatureConfigPanel key={selectedInstitution} institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+                {/* Walkthrough Tab */}
+                <TabsContent value="walkthrough">
+                  <WalkthroughManager
                     key={selectedInstitution}
                     institutionId={selectedInstitution!}
-                    appConfig={selectedAppConfig}
+                    walkthroughConfig={walkthroughConfig}
+                    onConfigChange={setWalkthroughConfig}
                   />
+                  <Button onClick={() => saveWalkthroughConfig.mutate()} disabled={saveWalkthroughConfig.isPending} className="w-full mt-4">
+                    {saveWalkthroughConfig.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Save Walkthrough Config
+                  </Button>
                 </TabsContent>
               </Tabs>
             </>

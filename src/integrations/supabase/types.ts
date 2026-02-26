@@ -5746,6 +5746,59 @@ export type Database = {
           },
         ]
       }
+      institution_walkthroughs: {
+        Row: {
+          bg_color: string | null
+          created_at: string | null
+          description: string
+          icon_name: string | null
+          id: string
+          institution_id: string
+          media_type: string
+          media_url: string | null
+          slide_order: number
+          text_color: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          bg_color?: string | null
+          created_at?: string | null
+          description: string
+          icon_name?: string | null
+          id?: string
+          institution_id: string
+          media_type?: string
+          media_url?: string | null
+          slide_order?: number
+          text_color?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          bg_color?: string | null
+          created_at?: string | null
+          description?: string
+          icon_name?: string | null
+          id?: string
+          institution_id?: string
+          media_type?: string
+          media_url?: string | null
+          slide_order?: number
+          text_color?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_walkthroughs_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institutions: {
         Row: {
           address: string

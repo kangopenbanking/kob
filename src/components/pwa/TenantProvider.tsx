@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import type { MediaSection } from './MediaBanner';
 
 export interface AppFeatures {
   cards: boolean;
@@ -12,9 +13,9 @@ export interface AppFeatures {
   bill_payments: boolean;
 }
 
-export type LayoutStyle = 'modern' | 'classic' | 'minimal';
+export type LayoutStyle = 'modern' | 'classic' | 'minimal' | 'bold' | 'gradient';
 
-export type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions';
+export type HomeSectionKey = 'balance_card' | 'account_carousel' | 'quick_actions' | 'financial_services' | 'recent_transactions' | 'media_banner';
 
 export const defaultSectionOrder: HomeSectionKey[] = [
   'balance_card',
@@ -31,6 +32,26 @@ export interface HomeLayout {
   show_recent_transactions: boolean;
 }
 
+export type CardSize = 'small' | 'medium' | 'large';
+
+export interface SectionStyle {
+  card_size?: CardSize;
+  bg_color?: string;
+  text_color?: string;
+  columns?: number;
+  icon_style?: 'rounded' | 'square' | 'circle';
+}
+
+export type SectionStyles = Partial<Record<HomeSectionKey, SectionStyle>>;
+
+export interface WalkthroughConfig {
+  bg_color?: string;
+  text_color?: string;
+  accent_color?: string;
+  logo_url?: string | null;
+  skip_enabled?: boolean;
+}
+
 interface TenantBranding {
   id: string;
   name: string;
@@ -42,6 +63,9 @@ interface TenantBranding {
   homeLayout: HomeLayout;
   sectionOrder: HomeSectionKey[];
   layoutStyle: LayoutStyle;
+  sectionStyles: SectionStyles;
+  mediaSections: MediaSection[];
+  walkthroughConfig: WalkthroughConfig;
 }
 
 const defaultFeatures: AppFeatures = {
@@ -72,6 +96,9 @@ const defaultBranding: TenantBranding = {
   homeLayout: defaultHomeLayout,
   sectionOrder: defaultSectionOrder,
   layoutStyle: 'modern',
+  sectionStyles: {},
+  mediaSections: [],
+  walkthroughConfig: { skip_enabled: true },
 };
 
 const TenantContext = createContext<TenantBranding>(defaultBranding);
@@ -96,11 +123,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .single();
 
       if (error || !data) {
-        setBranding({
-          ...defaultBranding,
-          id: institutionId,
-          isLoading: false,
-        });
+        setBranding({ ...defaultBranding, id: institutionId, isLoading: false });
         return;
       }
 
@@ -109,7 +132,10 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const features = { ...defaultFeatures, ...(appConfig.features || {}) };
       const homeLayout = { ...defaultHomeLayout, ...(appConfig.home_layout || {}) };
       const sectionOrder: HomeSectionKey[] = Array.isArray(appConfig.section_order) ? appConfig.section_order : defaultSectionOrder;
-      const layoutStyle: LayoutStyle = (['modern', 'classic', 'minimal'] as const).includes(appConfig.layout_style) ? appConfig.layout_style : 'modern';
+      const layoutStyle: LayoutStyle = (['modern', 'classic', 'minimal', 'bold', 'gradient'] as const).includes(appConfig.layout_style) ? appConfig.layout_style : 'modern';
+      const sectionStyles: SectionStyles = appConfig.section_styles || {};
+      const mediaSections: MediaSection[] = Array.isArray(appConfig.media_sections) ? appConfig.media_sections : [];
+      const walkthroughConfig: WalkthroughConfig = appConfig.walkthrough_config || { skip_enabled: true };
 
       setBranding({
         id: inst.id,
@@ -122,13 +148,15 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         homeLayout,
         sectionOrder,
         layoutStyle,
+        sectionStyles,
+        mediaSections,
+        walkthroughConfig,
       });
     };
 
     fetchInstitution();
   }, [institutionId]);
 
-  // Apply tenant primary color as CSS variable
   useEffect(() => {
     if (!branding.isLoading && branding.primaryColor) {
       document.documentElement.style.setProperty('--pwa-primary', branding.primaryColor);
