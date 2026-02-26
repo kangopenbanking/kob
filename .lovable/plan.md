@@ -1,193 +1,190 @@
 
 
-# KANG OPEN BANKING — FULL REGULATORY, INFRASTRUCTURE & MULTI-COUNTRY UPGRADE PLAN
+# MULTI-USER DASHBOARD ENHANCEMENT PLAN
 
-## SCOPE ASSESSMENT
+## CURRENT STATE ANALYSIS
 
-This is a 10-phase upgrade affecting the public site navigation, footer, ~30 new content pages, developer portal sidebar, and changelog. The codebase already has strong foundations (AML tables, KYC/CDD functions, fraud detection, reconciliation framework, double-entry ledger). This upgrade creates the **public-facing documentation and architecture pages** that expose these capabilities to regulators, investors, and enterprise clients.
+After auditing all four portal dashboards, navigation configs, and 100+ pages, here is the gap analysis:
 
-No backend changes required — all existing edge functions, database tables, and security infrastructure remain intact. This is a **documentation, navigation, and content architecture upgrade**.
+### Portal Dashboard Inventory
 
----
+| Portal | Pages | Nav Sections | Dashboard Sophistication |
+|--------|-------|-------------|------------------------|
+| **Customer** (DashboardLayout) | 14 pages (credit, savings, loans, payments, etc.) | 4 sections | Moderate — widget system exists, but basic cards |
+| **Merchant** | 17 pages | 6 sections | Basic — flat tables, minimal charts (only 2 chart types in Analytics) |
+| **FI Portal** | 34 pages | 10 sections | Moderate — metrics cards, tabs, but plain tables |
+| **Admin** | 37 pages | 7 sections | Moderate — stat cards, pending lists, audit logs |
+| **Developer** | 54 pages | N/A (sidebar in DeveloperLayout) | Documentation-focused, adequate |
 
-## FILES TO CREATE (~30 new pages)
+### UX/UI Gap Analysis (vs PayPal/Revolut/Cash App)
 
-### Phase 1 — Cameroon Regulatory (4 pages)
-| File | Route |
-|------|-------|
-| `src/pages/regulatory/CameroonCompliance.tsx` | `/regulatory/cameroon-compliance` |
-| `src/pages/compliance/AmlPolicy.tsx` | `/compliance/aml-policy` |
-| `src/pages/compliance/KycFramework.tsx` | `/compliance/kyc-framework` |
-| `src/pages/compliance/RiskMonitoring.tsx` | `/compliance/risk-monitoring` |
+**Common gaps across all portals:**
+1. **No unified stat card component** — each page reinvents metric display with raw Card+CardHeader+CardContent
+2. **No transaction detail drawers** — clicking a row does nothing (no drill-down)
+3. **No date range pickers** — analytics pages lack time range selectors
+4. **No empty state illustrations** — just plain text "No data" messages
+5. **No skeleton loading consistency** — some pages use Loader2 spinner, others use Skeleton components
+6. **No pagination** — most tables load all data with `.limit(200)`, no page controls
+7. **Minimal chart diversity** — only BarChart and PieChart used; no area charts, sparklines, or trend indicators
+8. **No notification badges on sidebar items** — no unread counts for disputes, alerts
 
-Each page documents the existing system capabilities (sanctions_screening table, customer_due_diligence table, KYC functions, PEP screening, STR workflows) in formal regulatory language suitable for BEAC/COBAC auditors.
+### Per-Portal Specific Gaps
 
-### Phase 2 — Architecture Pages (5 pages)
-| File | Route |
-|------|-------|
-| `src/pages/architecture/FraudEngine.tsx` | `/architecture/fraud-engine` |
-| `src/pages/architecture/RiskScoringModel.tsx` | `/architecture/risk-scoring-model` |
-| `src/pages/architecture/LedgerSystem.tsx` | `/architecture/ledger-system` |
-| `src/pages/architecture/ReconciliationFramework.tsx` | `/architecture/reconciliation-framework` |
-| `src/pages/architecture/SettlementEngine.tsx` | `/architecture/settlement-engine` |
+**Merchant Portal:**
+- MerchantPayouts: 52 lines, bare table, no filters, no export
+- MerchantSettlements: 53 lines, bare table, no detail view
+- MerchantAnalytics: Only 2 charts (daily revenue bar, channel pie), no KPIs, no date range
+- Missing: Wallet balance overview on dashboard, webhook delivery status, real-time charge notifications
+- Missing: Transaction detail sheet/drawer when clicking a row
 
-These document existing capabilities: velocity checks, risk scoring functions, journal-post double-entry engine, reconciliation_runs/mismatches tables, automated-settlement-cron, and atomic wallet functions.
+**FI Portal:**
+- Dashboard has metrics but no charts or trend indicators
+- No gateway transaction overview on main dashboard
+- Missing: Reconciliation dashboard (exists in admin but not FI)
+- Missing: Fraud alerts view (exists in admin only)
 
-### Phase 3 — Multi-Country Expansion (6 pages)
-| File | Route |
-|------|-------|
-| `src/pages/expansion/Cameroon.tsx` | `/expansion/cameroon` |
-| `src/pages/expansion/Nigeria.tsx` | `/expansion/nigeria` |
-| `src/pages/expansion/Ghana.tsx` | `/expansion/ghana` |
-| `src/pages/expansion/Kenya.tsx` | `/expansion/kenya` |
-| `src/pages/expansion/SouthAfrica.tsx` | `/expansion/south-africa` |
-| `src/pages/expansion/Europe.tsx` | `/expansion/europe` |
+**Customer Dashboard:**
+- Widget system is good but widgets render only if DB records exist
+- No onboarding flow for new customers with zero data
+- Missing: Quick transfer/pay shortcut widget
+- Missing: Spending insights / category breakdown
 
-Each includes: regulatory requirements, licensing category, currency support, settlement flow, FX considerations, mobile money coverage, card scheme coverage, data protection laws.
-
-### Phase 4 — Infrastructure & Security (3 pages)
-| File | Route |
-|------|-------|
-| `src/pages/architecture/Infrastructure.tsx` | `/architecture/infrastructure` |
-| `src/pages/architecture/DisasterRecovery.tsx` | `/architecture/disaster-recovery` |
-| `src/pages/security/IncidentResponse.tsx` | `/security/incident-response` |
-
-### Phase 5 — API Documentation Pages (7 pages)
-| File | Route |
-|------|-------|
-| `src/pages/api/Versioning.tsx` | `/api/versioning` |
-| `src/pages/api/ErrorCodes.tsx` | `/api/error-codes` |
-| `src/pages/api/WebhooksReference.tsx` | `/api/webhooks` |
-| `src/pages/api/Idempotency.tsx` | `/api/idempotency` |
-| `src/pages/api/RateLimits.tsx` | `/api/rate-limits` |
-| `src/pages/api/SandboxTesting.tsx` | `/api/sandbox-testing` |
-| `src/pages/api/SecurityReference.tsx` | `/api/security` |
-
-### Phase 7 — Investor Pages (4 pages)
-| File | Route |
-|------|-------|
-| `src/pages/investors/TechnicalOverview.tsx` | `/investors/technical-overview` |
-| `src/pages/investors/RiskDisclosure.tsx` | `/investors/risk-disclosure` |
-| `src/pages/investors/ComplianceStatus.tsx` | `/investors/compliance-status` |
-| `src/pages/investors/InfrastructureMaturity.tsx` | `/investors/infrastructure-maturity` |
-
-### Phase 8 — Certification (1 page)
-| File | Route |
-|------|-------|
-| `src/pages/certification/AGradeStatus.tsx` | `/certification/a-grade-status` |
-
-### Phase 9 — Sandbox Simulation (1 page)
-| File | Route |
-|------|-------|
-| `src/pages/sandbox/SimulationTools.tsx` | `/sandbox/simulation-tools` |
+**Admin Dashboard:**
+- Main dashboard (Admin.tsx) is 622 lines of monolithic code
+- Missing: Real-time metrics refresh
+- Missing: Platform health sparklines on main dashboard
 
 ---
 
-## FILES TO MODIFY (4 existing files)
+## IMPLEMENTATION PLAN
 
-### 1. `src/components/DynamicNavigation.tsx` — Header Restructure
-Replace current mega-menu categories (Credit Score, Solutions, Resources, Company) with:
+Given the scale (~35 pages need enhancement), I'll focus on the highest-impact improvements that modernize the experience without breaking existing functionality. The work is organized into 3 batches.
 
-**New desktop nav structure:**
-- **API Docs** (link to `/documentation`)
-- **Platform** (mega-menu): Architecture, Fraud Engine, Ledger System, Settlement Engine, Infrastructure
-- **Compliance** (mega-menu): Cameroon Compliance, AML Policy, KYC Framework, Risk Monitoring, Data Protection
-- **Expansion** (mega-menu): Cameroon, Nigeria, Ghana, Kenya, South Africa, Europe
-- **Developers** (mega-menu): Developer Portal, API Explorer, Sandbox, SDKs, Webhooks, Changelog
-- **Resources** (mega-menu): Pricing, Integration Workflow, Status, FAQ, Contact
-- **Company** (link to `/about`)
+### Batch 1: Shared UI Components + Merchant Portal (Highest Impact)
 
-Mobile nav updated with matching sections.
+**New shared components (5 files):**
 
-### 2. `src/components/Footer.tsx` — Complete Restructure
-Replace current 8-column grid with 7 sections matching the spec:
-- **Company**: About, Governance (`/compliance`), Regulatory (`/regulatory/cameroon-compliance`), Investor Relations (`/investors/technical-overview`)
-- **Developers**: API Reference (`/documentation`), SDKs (`/developer/guides/sdks`), Postman Collection, OpenAPI Download, Webhooks (`/api/webhooks`), Sandbox (`/developer/sandbox`)
-- **Compliance**: AML Policy, Data Protection, Risk Monitoring, PCI Scope (`/security-policy`), Open Banking Standards (`/compliance`)
-- **Infrastructure**: Architecture, Ledger System, Fraud Engine, Disaster Recovery
-- **Expansion**: Cameroon, Nigeria, Ghana, Kenya, South Africa, Europe
-- **Legal**: Terms, Privacy, AUP, Refund Policy (new section in Terms), Dispute Policy (`/developer/gateway/disputes`)
+| File | Purpose |
+|------|---------|
+| `src/components/ui/stat-card.tsx` | Reusable metric card with icon, trend indicator (up/down arrow + percentage), and sparkline support. Replaces the repeated Card+CardHeader pattern across all portals. |
+| `src/components/ui/data-table-pagination.tsx` | Pagination controls (Previous/Next, page numbers, items-per-page selector) for all table views. |
+| `src/components/ui/empty-state.tsx` | Illustrated empty state with icon, title, description, and optional CTA button. Replaces plain "No data" text. |
+| `src/components/ui/date-range-picker.tsx` | Date range selector with presets (Today, 7d, 30d, 90d, Custom) for analytics pages. |
+| `src/components/ui/transaction-detail-sheet.tsx` | Slide-out sheet showing full transaction details, timeline, and related events when clicking a row. |
 
-### 3. `src/App.tsx` — Add ~31 new routes
-Add route definitions for all new pages, wrapped in `<Layout>` component. Group by domain:
-```
-/regulatory/*
-/compliance/*
-/architecture/*
-/expansion/*
-/api/*
-/investors/*
-/certification/*
-/sandbox/*
-/security/*
+**Merchant Portal enhancements (6 files modified):**
+
+1. **MerchantDashboard.tsx** — Add wallet balance card (query `gateway_merchant_wallets`), add sparkline to revenue stat, add recent disputes count badge, add "Quick Actions" row (Create Payment Link, Send Invoice, View API Keys)
+2. **MerchantAnalytics.tsx** — Add date range picker, add KPI stat cards row (Total Volume, Avg Transaction, Refund Rate, Chargeback Rate), add Area chart for revenue trend, add success/failure rate donut
+3. **MerchantPayouts.tsx** — Add search + status filter, add summary stats row, add CSV export, use empty-state component
+4. **MerchantSettlements.tsx** — Add summary stats (total settled, pending, fees deducted), add detail expansion on row click
+5. **MerchantTransactions.tsx** — Add pagination, add transaction detail sheet on row click, add date range filter
+6. **MerchantRefunds.tsx** — Enhance with filters and stats summary
+
+### Batch 2: Customer Dashboard + FI Portal
+
+**Customer Dashboard (3 files):**
+
+1. **Dashboard.tsx** — Add onboarding empty state for new users (when no accounts exist), add spending category breakdown widget, improve widget grid responsiveness
+2. **New: `src/components/dashboard/widgets/SpendingInsightsWidget.tsx`** — Donut chart showing spending by category from transactions
+3. **BalanceWidget.tsx** — Add trend sparkline, add currency breakdown for multi-currency accounts
+
+**FI Portal (4 files):**
+
+1. **FIPortal.tsx** — Add mini charts (sparklines) to metric cards, add quick action buttons, add recent gateway activity feed
+2. **InstitutionAnalytics.tsx** — Add date range picker, add comparison period (vs previous), add chart type toggles
+3. **InstitutionTransactions.tsx** — Add pagination, add transaction detail sheet
+4. **InstitutionSettlement.tsx** — Add settlement summary cards with trend indicators
+
+### Batch 3: Admin Portal + Polish
+
+**Admin Portal (3 files):**
+
+1. **Admin.tsx** — Refactor: extract stat cards into StatCard component usage, add platform health sparklines, add real-time refresh button
+2. **TransactionMonitoring.tsx** — Add pagination, add date range, add export
+3. **ReconciliationDashboard.tsx** — Add match rate donut, add mismatch severity indicators
+
+---
+
+## TECHNICAL APPROACH
+
+### Shared StatCard Component Design
+```text
+┌──────────────────────────┐
+│ ┌──┐  Total Revenue      │
+│ │$$│  ────────────────    │
+│ └──┘  1,234,567 XAF      │
+│       ▲ 12.5% vs last 7d │
+│       ▁▂▃▄▅▆▇ (sparkline) │
+└──────────────────────────┘
 ```
 
-### 4. `src/pages/developer/Changelog.tsx` — Add v3.0.0 release
-Document all new pages, navigation restructure, and multi-country framework.
+### Transaction Detail Sheet
+```text
+┌─ Sheet (slides from right) ──────┐
+│ Charge #chg_abc123               │
+│ ─────────────────────────        │
+│ Amount:    50,000 XAF            │
+│ Status:    ● Successful          │
+│ Channel:   Mobile Money          │
+│ Customer:  john@example.com      │
+│ Created:   Feb 26, 2026 14:30    │
+│                                  │
+│ Timeline                         │
+│ ● Created     14:30:00           │
+│ ● Processing  14:30:02           │
+│ ● Successful  14:30:15           │
+│                                  │
+│ Provider Details                 │
+│ { raw provider JSON }            │
+└──────────────────────────────────┘
+```
 
-### 5. `src/components/developer/DeveloperLayout.tsx` — Add sidebar links
-Add new API reference pages to the developer portal sidebar under appropriate sections.
+### Pagination Pattern
+All table pages will use offset-based pagination with configurable page size (10/25/50). The pattern queries Supabase with `.range(offset, offset + limit - 1)` and uses `{ count: 'exact' }` for total count.
 
----
-
-## PAGE CONTENT APPROACH
-
-Each page follows the existing pattern (Card-based layouts, Badge components, Separator, professional prose). Content sources:
-
-- **Regulatory pages**: Document existing database tables (sanctions_screening, customer_due_diligence, kyc_verifications) and functions (calculate_kyc_risk_score, check_suspicious_login, log_security_event) in BEAC/COBAC compliance language
-- **Architecture pages**: Document existing systems (journal-post, atomic wallet functions, reconciliation_runs, gateway-reconcile-stuck cron, velocity checks in gateway-create-charge)
-- **Expansion pages**: Country-specific regulatory requirements, Stripe/Flutterwave coverage, currency codes, data protection laws
-- **Investor pages**: Aggregate architecture diagrams, risk metrics, scalability projections from existing infrastructure
-- **API pages**: Document existing patterns (idempotency_keys table, rate_limits table, error models, webhook event types)
-
----
-
-## IMPLEMENTATION SEQUENCE
-
-Due to the scale (~35 files), implementation will proceed in 3 batches:
-
-**Batch 1** (Navigation + Core Infrastructure — 7 files):
-1. Footer.tsx restructure
-2. DynamicNavigation.tsx restructure
-3. Architecture pages (5 pages: fraud-engine, risk-scoring, ledger, reconciliation, settlement)
-
-**Batch 2** (Regulatory + Expansion — 13 files):
-4. Regulatory pages (4 pages)
-5. Expansion pages (6 pages)
-6. Infrastructure pages (3 pages)
-
-**Batch 3** (API + Investor + Routes — 15 files):
-7. API documentation pages (7 pages)
-8. Investor pages (4 pages)
-9. Certification + Sandbox pages (2 pages)
-10. App.tsx route additions
-11. Changelog update
-12. Developer sidebar update
+### Date Range Picker Presets
+- Today, Last 7 days, Last 30 days, Last 90 days, This month, Last month, Custom range
+- Stored in URL search params for shareability
 
 ---
 
-## TECHNICAL CONSTRAINTS
+## FILES SUMMARY
 
-- All pages are **public** (no auth required) — wrapped in `<Layout>`
-- No database migrations needed — documenting existing capabilities
-- No edge function changes — API structure preserved
-- Version remains v1 — no breaking changes
-- All new routes use existing `Layout` component with `DynamicNavigation` + `Footer`
-- SEO component used on all new pages for meta tags
-- Consistent with existing design system (Card, Badge, Separator, lucide icons)
+### New Files (7)
+| File | Description |
+|------|-------------|
+| `src/components/ui/stat-card.tsx` | Reusable metric card with trend + sparkline |
+| `src/components/ui/data-table-pagination.tsx` | Pagination controls |
+| `src/components/ui/empty-state.tsx` | Illustrated empty state |
+| `src/components/ui/date-range-picker.tsx` | Date range selector with presets |
+| `src/components/ui/transaction-detail-sheet.tsx` | Transaction detail slide-out |
+| `src/components/dashboard/widgets/SpendingInsightsWidget.tsx` | Spending category donut |
+| `src/components/dashboard/widgets/WalletWidget.tsx` | Merchant wallet balance widget |
 
----
+### Modified Files (~15)
+| File | Changes |
+|------|---------|
+| `src/pages/merchant/MerchantDashboard.tsx` | Wallet card, sparklines, quick actions |
+| `src/pages/merchant/MerchantAnalytics.tsx` | Date range, KPIs, area chart, donut |
+| `src/pages/merchant/MerchantPayouts.tsx` | Filters, stats, export, empty state |
+| `src/pages/merchant/MerchantSettlements.tsx` | Stats row, detail expansion |
+| `src/pages/merchant/MerchantTransactions.tsx` | Pagination, detail sheet, date range |
+| `src/pages/merchant/MerchantRefunds.tsx` | Filters, stats summary |
+| `src/pages/Dashboard.tsx` | Onboarding state, spending widget |
+| `src/pages/FIPortal.tsx` | Sparklines, quick actions, activity feed |
+| `src/pages/institution/InstitutionTransactions.tsx` | Pagination, detail sheet |
+| `src/pages/institution/InstitutionAnalytics.tsx` | Date range, comparison |
+| `src/pages/Admin.tsx` | StatCard usage, sparklines |
+| `src/pages/admin/TransactionMonitoring.tsx` | Pagination, date range |
+| `src/pages/developer/Changelog.tsx` | v3.1.0 entry |
 
-## A-GRADE CERTIFICATION CRITERIA MET
+### No Database Changes Required
+All enhancements use existing tables and queries. No new migrations needed.
 
-| Criterion | Status |
-|-----------|--------|
-| Central bank auditable documentation | New regulatory + compliance pages |
-| Enterprise integration ready | API docs + architecture pages |
-| Investor due diligence ready | Dedicated investor section |
-| Multi-country scalable | 6 expansion country pages |
-| Fraud resilient documentation | Fraud engine + risk scoring pages |
-| Production hardened documentation | Infrastructure + DR pages |
-| Navigation restructured | Header + Footer updated |
-| No breaking changes | All existing routes preserved |
+### No Breaking Changes
+- All existing routes preserved
+- All existing functionality maintained
+- Enhancements are additive only (new UI components, filters, charts)
+- Navigation configs unchanged
 
