@@ -577,34 +577,189 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   const sectionOrder = config.section_order || defaultSectionOrder;
   const hasMediaBanner = sectionOrder.includes('media_banner');
 
-  // Preview mockup
+  // Preview mockup helpers
+  const getPreviewSectionStyle = (key: HomeSectionKey): React.CSSProperties => {
+    const s = (config.section_styles || {})[key] || {};
+    const styles: React.CSSProperties = {};
+    if (s.bg_color) styles.backgroundColor = s.bg_color;
+    if (s.text_color) styles.color = s.text_color;
+    return styles;
+  };
+
+  const getPreviewSizeClass = (key: HomeSectionKey) => {
+    const s = (config.section_styles || {})[key] || {};
+    const size = s.card_size || 'medium';
+    return { small: 'p-1', medium: 'p-2', large: 'p-3' }[size];
+  };
+
+  const getPreviewIconShape = () => {
+    const s = (config.section_styles || {})['quick_actions'] || {};
+    const shape = s.icon_style || 'rounded';
+    return { rounded: 'rounded-md', circle: 'rounded-full', square: 'rounded-sm' }[shape];
+  };
+
+  const getPreviewCols = (key: HomeSectionKey, fallback: number) => {
+    const s = (config.section_styles || {})[key] || {};
+    return s.columns || fallback;
+  };
+
   const renderPreviewSection = (key: HomeSectionKey) => {
     const style = config.layout_style || 'modern';
+    const sectionStyle = getPreviewSectionStyle(key);
+    const padClass = getPreviewSizeClass(key);
+
     switch (key) {
-      case 'balance_card':
+      case 'balance_card': {
         if (!config.home_layout.show_balance_card) return null;
-        if (style === 'minimal') return <div key={key} className="py-1"><p className="text-[8px] uppercase tracking-wider text-muted-foreground">Total Balance</p><p className="text-sm font-light">XAF 1,250,000</p></div>;
-        if (style === 'classic') return <div key={key} className="rounded border bg-card p-2"><p className="text-[7px] text-muted-foreground">Total Balance</p><p className="text-[10px] font-bold">XAF 1,250,000</p></div>;
-        if (style === 'bold') return <div key={key} className="rounded-xl bg-primary p-2"><p className="text-[7px] text-primary-foreground/70">Total Balance</p><p className="text-[10px] font-black text-primary-foreground">XAF 1,250,000</p></div>;
-        if (style === 'gradient') return <div key={key} className="rounded-xl bg-gradient-to-br from-primary to-accent p-2"><p className="text-[7px] text-primary-foreground/70">Total Balance</p><p className="text-[10px] font-bold text-primary-foreground">XAF 1,250,000</p></div>;
-        return <div key={key} className="rounded-lg bg-foreground p-2"><p className="text-[7px] text-background/60">Total Balance</p><p className="text-[10px] font-bold text-background">XAF 1,250,000</p></div>;
-      case 'account_carousel':
+        const balanceText = <><p className="text-[7px]" style={{ opacity: 0.7 }}>Total Balance</p><p className="text-[10px] font-bold">XAF 1,250,000</p></>;
+        if (style === 'minimal') return <div key={key} className={`py-1 ${padClass}`} style={sectionStyle}><p className="text-[8px] uppercase tracking-wider text-muted-foreground">Total Balance</p><p className="text-sm font-light">XAF 1,250,000</p></div>;
+        if (style === 'classic') return <div key={key} className={`rounded border bg-card ${padClass}`} style={sectionStyle}>{balanceText}</div>;
+        if (style === 'bold') return <div key={key} className={`rounded-xl bg-primary ${padClass} shadow-md`} style={sectionStyle}><p className="text-[7px] font-semibold text-primary-foreground/70">Total Balance</p><p className="text-[10px] font-black text-primary-foreground">XAF 1,250,000</p></div>;
+        if (style === 'gradient') return <div key={key} className={`rounded-xl bg-gradient-to-br from-primary via-primary/80 to-accent ${padClass}`} style={sectionStyle}><p className="text-[7px] text-primary-foreground/70">Total Balance</p><p className="text-[10px] font-bold text-primary-foreground">XAF 1,250,000</p></div>;
+        return <div key={key} className={`rounded-lg bg-foreground ${padClass}`} style={sectionStyle}><p className="text-[7px] text-background/60">Total Balance</p><p className="text-[10px] font-bold text-background">XAF 1,250,000</p></div>;
+      }
+      case 'account_carousel': {
         if (!config.home_layout.show_account_carousel) return null;
-        return <div key={key} className="flex gap-1"><div className="h-8 w-16 rounded-md bg-[hsl(var(--chart-3))] p-1"><p className="text-[6px] text-white">XAF</p><p className="text-[7px] font-bold text-white">1.2M</p></div><div className="h-8 w-16 rounded-md bg-[hsl(var(--chart-4))] p-1"><p className="text-[6px] text-white">EUR</p><p className="text-[7px] font-bold text-white">500</p></div></div>;
-      case 'quick_actions':
-        return <div key={key} className="flex justify-between">{['Send','Recv','QR','MoMo'].filter((_,i)=> i < 3 || config.features.mobile_money).map(a=><div key={a} className="flex flex-col items-center gap-0.5"><div className="h-5 w-5 rounded-md bg-primary"/><span className="text-[5px]">{a}</span></div>)}</div>;
-      case 'financial_services':
+        const cardSize = (config.section_styles?.account_carousel?.card_size) || 'medium';
+        const cardW = { small: 'w-14', medium: 'w-16', large: 'w-20' }[cardSize];
+        const cardH = { small: 'h-6', medium: 'h-8', large: 'h-10' }[cardSize];
+        return (
+          <div key={key} className="flex gap-1" style={sectionStyle}>
+            <div className={`${cardH} ${cardW} rounded-md bg-[hsl(var(--chart-3))] p-1`}><p className="text-[6px] text-white">XAF</p><p className="text-[7px] font-bold text-white">1.2M</p></div>
+            <div className={`${cardH} ${cardW} rounded-md bg-[hsl(var(--chart-4))] p-1`}><p className="text-[6px] text-white">EUR</p><p className="text-[7px] font-bold text-white">500</p></div>
+          </div>
+        );
+      }
+      case 'quick_actions': {
+        const qaLabels = ['Send', 'Recv', 'QR', config.features.mobile_money && 'MoMo'].filter(Boolean) as string[];
+        const cols = getPreviewCols('quick_actions', qaLabels.length);
+        const iconShape = getPreviewIconShape();
+
+        if (style === 'classic' || cols <= 3) {
+          return (
+            <div key={key} className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${Math.min(cols, 4)}, 1fr)`, ...sectionStyle }}>
+              {qaLabels.map(a => (
+                <div key={a} className="flex items-center gap-1 rounded border bg-card p-1">
+                  <div className={`h-4 w-4 ${iconShape} bg-primary`} />
+                  <span className="text-[5px] font-semibold">{a}</span>
+                </div>
+              ))}
+            </div>
+          );
+        }
+        return (
+          <div key={key} className="flex justify-between" style={sectionStyle}>
+            {qaLabels.map(a => (
+              <div key={a} className="flex flex-col items-center gap-0.5">
+                <div className={`h-5 w-5 ${iconShape} bg-primary`} />
+                <span className="text-[5px]">{a}</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'financial_services': {
         if (!config.home_layout.show_financial_services) return null;
         const services = [config.features.savings && 'Savings', config.features.loans && 'Loans', config.features.credit_score && 'Score'].filter(Boolean);
         if (services.length === 0) return null;
-        return <div key={key}><p className="text-[7px] font-bold mb-0.5">Financial Services</p><div className="flex gap-1">{services.map(s=><div key={s} className="flex-1 rounded-md bg-accent p-1 text-center"><p className="text-[6px] font-bold">0</p><p className="text-[5px]">{s}</p></div>)}</div></div>;
-      case 'recent_transactions':
+        const cols = getPreviewCols('financial_services', services.length);
+        const fsPad = getPreviewSizeClass('financial_services');
+        return (
+          <div key={key} style={sectionStyle}>
+            <p className="text-[7px] font-bold mb-0.5">Financial Services</p>
+            <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)` }}>
+              {services.map(s => (
+                <div key={s} className={`rounded-md bg-accent ${fsPad} text-center`}>
+                  <p className="text-[6px] font-bold">0</p>
+                  <p className="text-[5px]">{s}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      }
+      case 'recent_transactions': {
         if (!config.home_layout.show_recent_transactions) return null;
-        return <div key={key}><p className="text-[7px] font-bold mb-0.5">Recent Transactions</p>{[1,2].map(i=><div key={i} className="flex items-center justify-between py-0.5"><div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-muted"/><div><p className="text-[6px]">Payment</p><p className="text-[5px] text-muted-foreground">Today</p></div></div><span className="text-[6px] font-bold">-5,000</span></div>)}</div>;
-      case 'media_banner':
-        return <div key={key} className="h-8 rounded-md bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center"><p className="text-[6px] text-muted-foreground">📸 Media Banner</p></div>;
+        return (
+          <div key={key} style={sectionStyle}>
+            <p className="text-[7px] font-bold mb-0.5">Recent Transactions</p>
+            {[1, 2].map(i => (
+              <div key={i} className="flex items-center justify-between py-0.5">
+                <div className="flex items-center gap-1">
+                  <div className="h-3 w-3 rounded bg-muted" />
+                  <div><p className="text-[6px]">Payment</p><p className="text-[5px] text-muted-foreground">Today</p></div>
+                </div>
+                <span className="text-[6px] font-bold">-5,000</span>
+              </div>
+            ))}
+          </div>
+        );
+      }
+      case 'media_banner': {
+        const media = config.media_sections || [];
+        if (media.length === 0) {
+          return (
+            <div key={key} className="h-8 rounded-md bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center border border-dashed border-primary/30">
+              <p className="text-[6px] text-muted-foreground">📸 Media Banner</p>
+            </div>
+          );
+        }
+        const firstMedia = media[0];
+        const bannerSize = (config.section_styles?.media_banner?.card_size) || 'medium';
+        const bannerH = { small: 'h-6', medium: 'h-10', large: 'h-14' }[bannerSize];
+        return (
+          <div key={key} className={`${bannerH} rounded-md overflow-hidden relative`}>
+            {firstMedia.type === 'image' && firstMedia.url ? (
+              <img src={firstMedia.url} alt={firstMedia.title || ''} className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full bg-gradient-to-r from-primary/30 to-accent/30 flex items-center justify-center">
+                <div className="flex flex-col items-center">
+                  <div className="h-3 w-3 rounded-full bg-primary/40 flex items-center justify-center">
+                    <div className="h-0 w-0 border-l-[3px] border-l-white border-y-[2px] border-y-transparent ml-0.5" />
+                  </div>
+                  <p className="text-[5px] text-muted-foreground mt-0.5">{firstMedia.provider || 'Video'}</p>
+                </div>
+              </div>
+            )}
+            {firstMedia.title && (
+              <div className="absolute bottom-0 left-0 right-0 bg-black/40 px-1 py-0.5">
+                <p className="text-[5px] text-white truncate">{firstMedia.title}</p>
+              </div>
+            )}
+            {media.length > 1 && (
+              <div className="absolute top-0.5 right-1 bg-black/50 rounded px-0.5">
+                <p className="text-[5px] text-white">{media.length}</p>
+              </div>
+            )}
+          </div>
+        );
+      }
       default: return null;
     }
+  };
+
+  // Walkthrough preview
+  const renderWalkthroughPreview = () => {
+    const wc = config.walkthrough_config || {};
+    return (
+      <div className="mt-2">
+        <p className="text-[7px] font-bold mb-1 text-muted-foreground">Walkthrough Preview</p>
+        <div className="rounded-lg border p-2 space-y-1" style={{ backgroundColor: wc.bg_color || undefined }}>
+          {wc.logo_url && <img src={wc.logo_url} alt="" className="h-5 w-5 rounded mx-auto" />}
+          <div className="h-6 w-6 mx-auto rounded-lg flex items-center justify-center" style={{ backgroundColor: wc.accent_color || 'hsl(var(--primary))' }}>
+            <div className="h-3 w-3 rounded bg-white/20" />
+          </div>
+          <p className="text-[7px] font-bold text-center" style={{ color: wc.text_color || undefined }}>Welcome</p>
+          <p className="text-[5px] text-center" style={{ color: wc.text_color || undefined, opacity: 0.6 }}>Onboarding slide</p>
+          <div className="flex justify-center gap-0.5 pt-0.5">
+            {[0, 1, 2].map(i => (
+              <div key={i} className={`h-1 rounded-full ${i === 0 ? 'w-2' : 'w-1'}`} style={{ backgroundColor: wc.accent_color || 'hsl(var(--primary))', opacity: i === 0 ? 1 : 0.3 }} />
+            ))}
+          </div>
+          {wc.skip_enabled !== false && <p className="text-[5px] text-center text-muted-foreground">Skip →</p>}
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -724,26 +879,79 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
       {/* Live Preview */}
       <div className="xl:col-span-1">
-        <div className="sticky top-6">
+        <div className="sticky top-6 space-y-4">
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center gap-2"><Monitor className="h-4 w-4" /> Live Preview</CardTitle>
+              <p className="text-[10px] text-muted-foreground">
+                Style: <Badge variant="outline" className="text-[9px] ml-1 capitalize">{config.layout_style || 'modern'}</Badge>
+              </p>
             </CardHeader>
             <CardContent className="flex justify-center">
-              <div className="w-[180px] rounded-[20px] border-2 border-foreground/20 bg-background p-2 shadow-lg">
-                <div className="mb-1 flex items-center justify-between px-1">
-                  <span className="text-[6px] font-medium text-muted-foreground">9:41</span>
-                  <div className="flex gap-0.5"><div className="h-1 w-2 rounded-sm bg-muted-foreground/40" /><div className="h-1 w-2 rounded-sm bg-muted-foreground/40" /></div>
+              <div className="w-[200px] rounded-[24px] border-2 border-foreground/20 bg-background p-2.5 shadow-xl">
+                {/* Status bar */}
+                <div className="mb-1.5 flex items-center justify-between px-1">
+                  <span className="text-[6px] font-semibold text-muted-foreground">9:41</span>
+                  <div className="h-3 w-12 rounded-full bg-foreground/80 mx-auto" />
+                  <div className="flex gap-0.5">
+                    <div className="h-1.5 w-2.5 rounded-sm bg-muted-foreground/40" />
+                    <div className="h-1.5 w-2.5 rounded-sm bg-muted-foreground/40" />
+                  </div>
                 </div>
-                <div className="flex flex-col gap-1.5 px-1">
+                {/* Content */}
+                <div className="flex flex-col gap-2 px-1 min-h-[260px]">
                   <p className="text-[8px] font-medium text-muted-foreground">Good afternoon 👋</p>
                   {sectionOrder.map(key => renderPreviewSection(key))}
                 </div>
-                <div className="mt-2 flex justify-between border-t pt-1 px-1">
-                  {['Home', 'Pay', config.features.cards && 'Cards', 'History', 'More'].filter(Boolean).map(t => (
-                    <div key={t as string} className="flex flex-col items-center"><div className="h-2 w-2 rounded-sm bg-muted-foreground/30" /><span className="text-[5px] text-muted-foreground">{t}</span></div>
+                {/* Bottom nav */}
+                <div className="mt-2 flex justify-between border-t pt-1.5 px-2">
+                  {['Home', 'Pay', config.features.cards && 'Cards', 'History', 'More'].filter(Boolean).map((t, i) => (
+                    <div key={t as string} className="flex flex-col items-center gap-0.5">
+                      <div className={`h-2.5 w-2.5 rounded-sm ${i === 0 ? 'bg-primary' : 'bg-muted-foreground/30'}`} />
+                      <span className={`text-[5px] ${i === 0 ? 'text-primary font-bold' : 'text-muted-foreground'}`}>{t}</span>
+                    </div>
                   ))}
                 </div>
+                {/* Home indicator */}
+                <div className="mt-1 mx-auto h-0.5 w-8 rounded-full bg-foreground/20" />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Walkthrough Preview */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2"><BookOpen className="h-3.5 w-3.5" /> Walkthrough Preview</CardTitle>
+            </CardHeader>
+            <CardContent className="flex justify-center">
+              <div className="w-[200px] rounded-[24px] border-2 border-foreground/20 shadow-xl overflow-hidden">
+                {(() => {
+                  const wc = config.walkthrough_config || {};
+                  return (
+                    <div className="p-4 flex flex-col items-center gap-2 min-h-[160px] justify-center" style={{ backgroundColor: wc.bg_color || undefined }}>
+                      {(wc.logo_url) ? (
+                        <img src={wc.logo_url} alt="" className="h-8 w-8 rounded-lg object-contain" />
+                      ) : (
+                        <div className="h-8 w-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: wc.accent_color || 'hsl(var(--primary))' }}>
+                          <Building2 className="h-4 w-4 text-white" />
+                        </div>
+                      )}
+                      <div className="h-10 w-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: wc.accent_color ? `${wc.accent_color}22` : 'hsl(var(--primary) / 0.1)' }}>
+                        <div className="h-5 w-5 rounded-lg" style={{ backgroundColor: wc.accent_color || 'hsl(var(--primary))' }} />
+                      </div>
+                      <p className="text-[9px] font-bold text-center" style={{ color: wc.text_color || undefined }}>Welcome to Banking</p>
+                      <p className="text-[7px] text-center opacity-60" style={{ color: wc.text_color || undefined }}>Manage your finances securely</p>
+                      <div className="flex gap-1 mt-1">
+                        {[0, 1, 2].map(i => (
+                          <div key={i} className={`h-1 rounded-full ${i === 0 ? 'w-3' : 'w-1'}`} style={{ backgroundColor: wc.accent_color || 'hsl(var(--primary))', opacity: i === 0 ? 1 : 0.3 }} />
+                        ))}
+                      </div>
+                      {wc.skip_enabled !== false && (
+                        <p className="text-[6px] mt-1" style={{ color: wc.accent_color || 'hsl(var(--primary))' }}>Skip →</p>
+                      )}
+                    </div>
+                  );
+                })()}
               </div>
             </CardContent>
           </Card>
