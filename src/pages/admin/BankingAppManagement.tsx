@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,16 +7,39 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
-  Search, RefreshCw, Eye, Settings2, TrendingUp, Loader2, Building2,
-  Wallet, ChevronRight, BarChart3
+  Search, Loader2, Building2, Wallet, Settings2
 } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+
+// ─── Types ───
+interface AppConfig {
+  features: {
+    cards: boolean;
+    savings: boolean;
+    loans: boolean;
+    credit_score: boolean;
+    mobile_money: boolean;
+    qr_payments: boolean;
+    bill_payments: boolean;
+  };
+  home_layout: {
+    show_balance_card: boolean;
+    show_account_carousel: boolean;
+    show_financial_services: boolean;
+    show_recent_transactions: boolean;
+  };
+}
+
+const defaultAppConfig: AppConfig = {
+  features: { cards: true, savings: true, loans: true, credit_score: true, mobile_money: true, qr_payments: true, bill_payments: true },
+  home_layout: { show_balance_card: true, show_account_carousel: true, show_financial_services: true, show_recent_transactions: true },
+};
 
 // ─── Hooks ───
 function useInstitutions() {
@@ -25,7 +48,7 @@ function useInstitutions() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("institutions")
-        .select("id, institution_name, institution_type, status, logo_url, primary_color, created_at")
+        .select("id, institution_name, institution_type, status, logo_url, primary_color, created_at, app_config")
         .order("institution_name");
       if (error) throw error;
       return data || [];
@@ -54,14 +77,12 @@ function useInstitutionTransactions(institutionId: string | null) {
     queryKey: ["admin-inst-transactions", institutionId],
     enabled: !!institutionId,
     queryFn: async () => {
-      // Get account IDs for this institution first
       const { data: accounts } = await supabase
         .from("accounts")
         .select("id")
         .eq("institution_id", institutionId!);
       const accountIds = (accounts || []).map((a) => a.id);
       if (accountIds.length === 0) return [];
-
       const { data, error } = await supabase
         .from("transactions")
         .select("*")
@@ -123,6 +144,99 @@ function StatCard({ icon: Icon, label, value, color }: { icon: any; label: strin
   );
 }
 
+// ─── Feature Config Panel ───
+function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: string; appConfig: AppConfig }) {
+  const queryClient = useQueryClient();
+  const [config, setConfig] = useState<AppConfig>(appConfig);
+
+  const mutation = useMutation({
+    mutationFn: async (newConfig: AppConfig) => {
+      const { error } = await (supabase as any)
+        .from("institutions")
+        .update({ app_config: newConfig })
+        .eq("id", institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-banking"] });
+      toast.success("Feature configuration saved");
+    },
+    onError: () => toast.error("Failed to save configuration"),
+  });
+
+  const toggleFeature = (key: keyof AppConfig["features"]) => {
+    setConfig(prev => ({ ...prev, features: { ...prev.features, [key]: !prev.features[key] } }));
+  };
+
+  const toggleLayout = (key: keyof AppConfig["home_layout"]) => {
+    setConfig(prev => ({ ...prev, home_layout: { ...prev.home_layout, [key]: !prev.home_layout[key] } }));
+  };
+
+  const featureLabels: Record<string, string> = {
+    cards: "Virtual Cards",
+    savings: "Savings Goals",
+    loans: "Loan Applications",
+    credit_score: "Credit Score (CrediQ)",
+    mobile_money: "Mobile Money (MoMo)",
+    qr_payments: "QR Payments",
+    bill_payments: "Bill Payments",
+  };
+
+  const layoutLabels: Record<string, string> = {
+    show_balance_card: "Balance Card",
+    show_account_carousel: "Account Carousel",
+    show_financial_services: "Financial Services Grid",
+    show_recent_transactions: "Recent Transactions",
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">App Features</CardTitle>
+          <CardDescription>Toggle which features are available in this bank's app</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Object.entries(featureLabels).map(([key, label]) => (
+            <div key={key} className="flex items-center justify-between">
+              <Label htmlFor={`feat-${key}`} className="text-sm font-medium">{label}</Label>
+              <Switch
+                id={`feat-${key}`}
+                checked={config.features[key as keyof AppConfig["features"]]}
+                onCheckedChange={() => toggleFeature(key as keyof AppConfig["features"])}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Home Screen Layout</CardTitle>
+          <CardDescription>Control which sections appear on the home screen</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {Object.entries(layoutLabels).map(([key, label]) => (
+            <div key={key} className="flex items-center justify-between">
+              <Label htmlFor={`layout-${key}`} className="text-sm font-medium">{label}</Label>
+              <Switch
+                id={`layout-${key}`}
+                checked={config.home_layout[key as keyof AppConfig["home_layout"]]}
+                onCheckedChange={() => toggleLayout(key as keyof AppConfig["home_layout"])}
+              />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+
+      <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">
+        {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        Save Configuration
+      </Button>
+    </div>
+  );
+}
+
 // ─── Main Component ───
 export default function BankingAppManagement() {
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
@@ -134,7 +248,7 @@ export default function BankingAppManagement() {
   const { data: savings = [], isLoading: loadingSavings } = useInstitutionSavings(selectedInstitution);
   const { data: loans = [], isLoading: loadingLoans } = useInstitutionLoans(selectedInstitution);
 
-  const selectedInst = institutions.find((i) => i.id === selectedInstitution);
+  const selectedInst = institutions.find((i) => i.id === selectedInstitution) as any;
 
   const totalBalance = accounts.reduce((sum, acc) => {
     const bal = acc.account_balances?.[0]?.amount || 0;
@@ -144,6 +258,10 @@ export default function BankingAppManagement() {
   const filteredInstitutions = institutions.filter((i) =>
     i.institution_name.toLowerCase().includes(search.toLowerCase())
   );
+
+  const selectedAppConfig: AppConfig = selectedInst
+    ? { ...defaultAppConfig, ...(selectedInst.app_config || {}), features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) }, home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) } }
+    : defaultAppConfig;
 
   return (
     <div className="space-y-6">
@@ -278,6 +396,9 @@ export default function BankingAppManagement() {
                   </TabsTrigger>
                   <TabsTrigger value="loans" className="gap-1.5">
                     <Landmark className="h-3.5 w-3.5" /> Loans
+                  </TabsTrigger>
+                  <TabsTrigger value="features" className="gap-1.5">
+                    <Settings2 className="h-3.5 w-3.5" /> Features
                   </TabsTrigger>
                 </TabsList>
 
@@ -474,6 +595,15 @@ export default function BankingAppManagement() {
                       )}
                     </CardContent>
                   </Card>
+                </TabsContent>
+
+                {/* Features Tab */}
+                <TabsContent value="features">
+                  <FeatureConfigPanel
+                    key={selectedInstitution}
+                    institutionId={selectedInstitution!}
+                    appConfig={selectedAppConfig}
+                  />
                 </TabsContent>
               </Tabs>
             </>

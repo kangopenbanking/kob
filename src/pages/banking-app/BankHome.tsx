@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBankAccounts, useBankTransactions, useSavingsAccounts, useLoanApplications, useCreditScore } from '@/hooks/useBankingData';
+import { useTenant } from '@/components/pwa/TenantProvider';
 
 const currencyColors: Record<string, { color: string; textColor: string }> = {
   XAF: { color: 'bg-[hsl(var(--bank-mint))]', textColor: 'text-[hsl(var(--bank-mint-fg))]' },
@@ -16,6 +17,8 @@ const currencyColors: Record<string, { color: string; textColor: string }> = {
 const BankHome: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
+  const tenant = useTenant();
+  const { features, homeLayout } = tenant;
   const [showBalance, setShowBalance] = useState(true);
   const [userName, setUserName] = useState('');
 
@@ -35,7 +38,6 @@ const BankHome: React.FC = () => {
     fetchUser();
   }, []);
 
-  // Compute totals from real data
   const totalBalance = (accounts || []).reduce((sum, acc) => {
     const bal = acc.account_balances?.[0]?.amount || 0;
     return sum + (acc.currency === 'XAF' ? bal : 0);
@@ -57,12 +59,14 @@ const BankHome: React.FC = () => {
   const activeLoans = (loanApps || []).filter(l => ['approved', 'disbursed', 'active'].includes(l.status)).length;
   const creditScore = creditData?.score || null;
 
-  const quickActions = [
+  const allQuickActions = [
     { icon: Send, label: 'Send', path: `payments/send`, color: 'bg-[hsl(var(--bank-violet))]' },
     { icon: ArrowDownLeft, label: 'Receive', path: 'payments/receive', color: 'bg-[hsl(var(--bank-teal))]' },
-    { icon: Smartphone, label: 'MoMo', path: 'payments/mobile-money', color: 'bg-[hsl(var(--bank-amber))]' },
-    { icon: QrCode, label: 'QR Pay', path: 'payments/qr', color: 'bg-[hsl(var(--bank-sky))]' },
+    { icon: Smartphone, label: 'MoMo', path: 'payments/mobile-money', color: 'bg-[hsl(var(--bank-amber))]', featureKey: 'mobile_money' as const },
+    { icon: QrCode, label: 'QR Pay', path: 'payments/qr', color: 'bg-[hsl(var(--bank-sky))]', featureKey: 'qr_payments' as const },
   ];
+
+  const quickActions = allQuickActions.filter(a => !a.featureKey || features[a.featureKey] !== false);
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -74,38 +78,71 @@ const BankHome: React.FC = () => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   };
 
+  // Build financial services items based on features
+  const financialServiceItems = [
+    features.savings && {
+      key: 'savings',
+      onClick: () => navigate(`/bank/${institutionId}/more/savings`),
+      className: 'bg-[hsl(var(--bank-mint))]',
+      icon: <PiggyBank className="h-7 w-7 text-[hsl(var(--bank-mint-fg))]" strokeWidth={1.5} />,
+      value: totalSavings > 0 ? `${(totalSavings / 1000).toFixed(0)}K` : '0',
+      label: 'Savings',
+      textClass: 'text-[hsl(var(--bank-mint-fg))]',
+    },
+    features.loans && {
+      key: 'loans',
+      onClick: () => navigate(`/bank/${institutionId}/more/loans`),
+      className: 'bg-[hsl(var(--bank-coral))]',
+      icon: <Landmark className="h-7 w-7 text-[hsl(var(--bank-coral-fg))]" strokeWidth={1.5} />,
+      value: activeLoans,
+      label: 'Loans',
+      textClass: 'text-[hsl(var(--bank-coral-fg))]',
+    },
+    features.credit_score && {
+      key: 'credit',
+      onClick: () => navigate(`/bank/${institutionId}/more/credit`),
+      className: 'bg-[hsl(var(--bank-violet))]',
+      icon: <BarChart3 className="h-7 w-7 text-[hsl(var(--bank-violet-fg))]" strokeWidth={1.5} />,
+      value: creditScore ?? '—',
+      label: 'Score',
+      textClass: 'text-[hsl(var(--bank-violet-fg))]',
+    },
+  ].filter(Boolean) as Array<{ key: string; onClick: () => void; className: string; icon: React.ReactNode; value: string | number; label: string; textClass: string }>;
+
   return (
     <div className="flex flex-col">
       <PWATopBar userName={userName} />
 
       <div className="flex flex-col gap-5 px-4 py-5">
         {/* Total Balance Card */}
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="rounded-2xl bg-foreground p-6"
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium text-background/60">Total Balance</span>
-            <button onClick={() => setShowBalance(!showBalance)}>
-              {showBalance ? (
-                <Eye className="h-5 w-5 text-background/60" strokeWidth={1.5} />
-              ) : (
-                <EyeOff className="h-5 w-5 text-background/60" strokeWidth={1.5} />
-              )}
-            </button>
-          </div>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-background">
-            {accountsLoading ? (
-              <Loader2 className="h-6 w-6 animate-spin text-background/40" />
-            ) : showBalance ? (
-              `XAF ${totalBalance.toLocaleString()}`
-            ) : '••••••••'}
-          </p>
-        </motion.div>
+        {homeLayout.show_balance_card && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="rounded-2xl bg-foreground p-6"
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-background/60">Total Balance</span>
+              <button onClick={() => setShowBalance(!showBalance)}>
+                {showBalance ? (
+                  <Eye className="h-5 w-5 text-background/60" strokeWidth={1.5} />
+                ) : (
+                  <EyeOff className="h-5 w-5 text-background/60" strokeWidth={1.5} />
+                )}
+              </button>
+            </div>
+            <p className="mt-2 text-3xl font-bold tracking-tight text-background">
+              {accountsLoading ? (
+                <Loader2 className="h-6 w-6 animate-spin text-background/40" />
+              ) : showBalance ? (
+                `XAF ${totalBalance.toLocaleString()}`
+              ) : '••••••••'}
+            </p>
+          </motion.div>
+        )}
 
         {/* Account Cards - Horizontal Scroll */}
-        {accountCards.length > 0 && (
+        {homeLayout.show_account_carousel && accountCards.length > 0 && (
           <div className="-mx-4 px-4">
             <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
               {accountCards.map((account) => (
@@ -148,110 +185,89 @@ const BankHome: React.FC = () => {
         </div>
 
         {/* Financial Services Row */}
-        <div>
-          <h3 className="mb-3 text-base font-bold tracking-tight text-foreground">Financial Services</h3>
-          <div className="grid grid-cols-3 gap-3">
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(`/bank/${institutionId}/more/savings`)}
-              className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-mint))] p-4"
-            >
-              <PiggyBank className="h-7 w-7 text-[hsl(var(--bank-mint-fg))]" strokeWidth={1.5} />
-              <div className="text-center">
-                <p className="text-lg font-bold text-[hsl(var(--bank-mint-fg))]">
-                  {totalSavings > 0 ? `${(totalSavings / 1000).toFixed(0)}K` : '0'}
-                </p>
-                <p className="text-[10px] font-semibold text-[hsl(var(--bank-mint-fg))] opacity-70">Savings</p>
-              </div>
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(`/bank/${institutionId}/more/loans`)}
-              className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-coral))] p-4"
-            >
-              <Landmark className="h-7 w-7 text-[hsl(var(--bank-coral-fg))]" strokeWidth={1.5} />
-              <div className="text-center">
-                <p className="text-lg font-bold text-[hsl(var(--bank-coral-fg))]">{activeLoans}</p>
-                <p className="text-[10px] font-semibold text-[hsl(var(--bank-coral-fg))] opacity-70">Loans</p>
-              </div>
-            </motion.button>
-
-            <motion.button
-              whileTap={{ scale: 0.96 }}
-              onClick={() => navigate(`/bank/${institutionId}/more/credit`)}
-              className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-violet))] p-4"
-            >
-              <BarChart3 className="h-7 w-7 text-[hsl(var(--bank-violet-fg))]" strokeWidth={1.5} />
-              <div className="text-center">
-                <p className="text-lg font-bold text-[hsl(var(--bank-violet-fg))]">
-                  {creditScore ?? '—'}
-                </p>
-                <p className="text-[10px] font-semibold text-[hsl(var(--bank-violet-fg))] opacity-70">Score</p>
-              </div>
-            </motion.button>
+        {homeLayout.show_financial_services && financialServiceItems.length > 0 && (
+          <div>
+            <h3 className="mb-3 text-base font-bold tracking-tight text-foreground">Financial Services</h3>
+            <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${financialServiceItems.length}, minmax(0, 1fr))` }}>
+              {financialServiceItems.map((item) => (
+                <motion.button
+                  key={item.key}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={item.onClick}
+                  className={`flex flex-col items-center gap-2 rounded-2xl ${item.className} p-4`}
+                >
+                  {item.icon}
+                  <div className="text-center">
+                    <p className={`text-lg font-bold ${item.textClass}`}>{item.value}</p>
+                    <p className={`text-[10px] font-semibold ${item.textClass} opacity-70`}>{item.label}</p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Recent Transactions */}
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <h3 className="text-base font-bold tracking-tight text-foreground">Recent Transactions</h3>
-            <button
-              onClick={() => navigate(`/bank/${institutionId}/history`)}
-              className="flex items-center gap-1 text-sm font-semibold text-primary"
-            >
-              See all
-              <ChevronRight className="h-4 w-4" strokeWidth={2} />
-            </button>
-          </div>
+        {homeLayout.show_recent_transactions && (
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-base font-bold tracking-tight text-foreground">Recent Transactions</h3>
+              <button
+                onClick={() => navigate(`/bank/${institutionId}/history`)}
+                className="flex items-center gap-1 text-sm font-semibold text-primary"
+              >
+                See all
+                <ChevronRight className="h-4 w-4" strokeWidth={2} />
+              </button>
+            </div>
 
-          {txLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-            </div>
-          ) : (transactions || []).length === 0 ? (
-            <p className="py-8 text-center text-sm text-muted-foreground">No transactions yet</p>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {(transactions || []).map((tx) => {
-                const isCredit = tx.credit_debit_indicator === 'Credit';
-                return (
-                  <motion.div
-                    key={tx.id}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-between rounded-2xl px-3 py-3.5 transition-colors hover:bg-muted/50"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-                        isCredit ? 'bg-[hsl(var(--bank-mint))]/15' : 'bg-[hsl(var(--bank-coral))]/15'
+            {txLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (transactions || []).length === 0 ? (
+              <p className="py-8 text-center text-sm text-muted-foreground">No transactions yet</p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {(transactions || []).map((tx) => {
+                  const isCredit = tx.credit_debit_indicator === 'Credit';
+                  return (
+                    <motion.div
+                      key={tx.id}
+                      whileTap={{ scale: 0.98 }}
+                      className="flex items-center justify-between rounded-2xl px-3 py-3.5 transition-colors hover:bg-muted/50"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                          isCredit ? 'bg-[hsl(var(--bank-mint))]/15' : 'bg-[hsl(var(--bank-coral))]/15'
+                        }`}>
+                          {isCredit ? (
+                            <ArrowDownLeft className="h-5 w-5 text-[hsl(var(--bank-teal))]" strokeWidth={1.5} />
+                          ) : (
+                            <Send className="h-5 w-5 text-[hsl(var(--bank-coral))]" strokeWidth={1.5} />
+                          )}
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">
+                            {tx.transaction_information || tx.transaction_type}
+                          </p>
+                          <p className="text-xs font-medium text-muted-foreground">
+                            {formatDate(tx.created_at)}
+                          </p>
+                        </div>
+                      </div>
+                      <span className={`text-base font-bold ${
+                        isCredit ? 'text-[hsl(var(--bank-teal))]' : 'text-foreground'
                       }`}>
-                        {isCredit ? (
-                          <ArrowDownLeft className="h-5 w-5 text-[hsl(var(--bank-teal))]" strokeWidth={1.5} />
-                        ) : (
-                          <Send className="h-5 w-5 text-[hsl(var(--bank-coral))]" strokeWidth={1.5} />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold text-foreground">
-                          {tx.transaction_information || tx.transaction_type}
-                        </p>
-                        <p className="text-xs font-medium text-muted-foreground">
-                          {formatDate(tx.created_at)}
-                        </p>
-                      </div>
-                    </div>
-                    <span className={`text-base font-bold ${
-                      isCredit ? 'text-[hsl(var(--bank-teal))]' : 'text-foreground'
-                    }`}>
-                      {isCredit ? '+' : '-'}{Math.abs(tx.amount || 0).toLocaleString()} {tx.currency}
-                    </span>
-                  </motion.div>
-                );
-              })}
-            </div>
-          )}
-        </div>
+                        {isCredit ? '+' : '-'}{Math.abs(tx.amount || 0).toLocaleString()} {tx.currency}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -5749,6 +5749,7 @@ export type Database = {
       institutions: {
         Row: {
           address: string
+          app_config: Json | null
           approved_at: string | null
           approved_by: string | null
           country: string
@@ -5781,6 +5782,7 @@ export type Database = {
         }
         Insert: {
           address: string
+          app_config?: Json | null
           approved_at?: string | null
           approved_by?: string | null
           country?: string
@@ -5813,6 +5815,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          app_config?: Json | null
           approved_at?: string | null
           approved_by?: string | null
           country?: string
