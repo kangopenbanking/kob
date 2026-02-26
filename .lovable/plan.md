@@ -1,141 +1,146 @@
-# Merchant Dashboard Portal
-
-## Problem
-
-Currently, merchants exist only as data rows managed by FI Portal admins and the Admin panel. A merchant who registers, completes KYB, and gets verified has **no self-service portal** to manage their own business -- they'd have to contact the institution for everything. This is a critical gap compared to platforms like Flutterwave, Paystack, or Stripe, where the merchant dashboard is the primary interface.
-
-## Solution
-
-Create a dedicated **Merchant Portal** at `/merchant` with its own layout, sidebar navigation, and role-based access. This gives merchants a self-service dashboard to monitor transactions, manage API keys, configure webhooks, view settlements, and more.
-
-## Architecture
-
-### 1. New App Role: `merchant`
-
-- Add `merchant` to the `app_role` enum in the database
-- When a merchant is created via the gateway API, automatically assign the `merchant` role to the user
-- Update `RoleGuard` to recognize the `merchant` role
-
-### 2. Merchant Layout (`src/components/merchant/MerchantLayout.tsx`)
-
-- Sidebar-based layout following the same pattern as `InstitutionLayout` and `DeveloperLayout`
-- Branded header with merchant business name
-- Navigation sections for all merchant functions
-
-### 3. Merchant Navigation Config (`src/components/merchant/merchant-navigation-config.ts`)
-
-Sidebar sections:
-
-- **Overview**: Dashboard, Analytics
-- **Payments**: Transactions, Payment Links, Subscriptions, Customers
-- **Money Out**: Payouts, Settlements, Refunds
-- **Configuration**: API Keys, Webhooks, Settlement Accounts, Subaccounts
-- **Compliance**: KYB Status, Disputes
-- **Settings**: Business Profile, Team
-
-### 4. Merchant Pages (under `src/pages/merchant/`)
 
 
-| Page                | File                             | Description                                                                               |
-| ------------------- | -------------------------------- | ----------------------------------------------------------------------------------------- |
-| Dashboard           | `MerchantDashboard.tsx`          | Revenue summary, transaction volume chart, recent transactions, KYB/account status banner |
-| Transactions        | `MerchantTransactions.tsx`       | Filterable list of all charges with status, amount, channel, date; CSV export             |
-| Payment Links       | `MerchantPaymentLinks.tsx`       | Create/manage payment links with amount, description, expiry                              |
-| Customers           | `MerchantCustomers.tsx`          | View tokenized customers and their payment history                                        |
-| Subscriptions       | `MerchantSubscriptions.tsx`      | Manage subscription plans and active subscribers                                          |
-| Payouts             | `MerchantPayouts.tsx`            | View payout history and request manual payouts                                            |
-| Settlements         | `MerchantSettlements.tsx`        | Settlement batches with breakdown per period                                              |
-| Refunds             | `MerchantRefunds.tsx`            | Issue and track refunds                                                                   |
-| API Keys            | `MerchantApiKeys.tsx`            | Generate, rotate, and revoke sandbox/production keys                                      |
-| Webhooks            | `MerchantWebhooks.tsx`           | Configure webhook URL, view delivery logs, retry failed deliveries                        |
-| Settlement Accounts | `MerchantSettlementAccounts.tsx` | Add/manage bank accounts and mobile money for payouts                                     |
-| Subaccounts         | `MerchantSubaccounts.tsx`        | Create split-payment subaccounts                                                          |
-| KYB Status          | `MerchantKYB.tsx`                | View KYB submission status, upload additional documents                                   |
-| Disputes            | `MerchantDisputes.tsx`           | Respond to chargebacks and disputes                                                       |
-| Business Profile    | `MerchantProfile.tsx`            | Edit business name, email, phone, logo                                                    |
-| Analytics           | `MerchantAnalytics.tsx`          | Revenue trends, payment method breakdown, success rates                                   |
+## End-to-End Gateway Integration Audit, Enhancement & Documentation Plan
 
+This plan covers a comprehensive audit of the existing Flutterwave and Stripe gateway middleware, identifies missing "add funds" and bank transfer features, creates new edge functions, writes E2E tests at each stage, and synchronizes all documentation.
 
-### 5. Routing Updates (`App.tsx`)
+---
 
+### Current State Summary
+
+**What exists:**
+- **Flutterwave Mobile Money**: `gateway-create-charge` (channel=mobile_money → Flutterwave), `facilitated-mobile-money-charge`, `mobile-money-to-bank`, webhooks via `gateway-webhook-flutterwave` and `flutterwave-transfer-webhook`
+- **Stripe Card Payments**: `gateway-create-charge` (channel=card → Stripe), `stripe-payment-intent`, `stripe-confirm-payment`, webhooks via `gateway-webhook-stripe`
+- **Bank Transfers**: `flutterwave-bank-transfer` (outbound), `facilitated-bank-transfer`, `api-transfers` (internal account-to-account)
+- **Shared Adapters**: `_shared/gateway-adapters.ts` with `createFlutterwaveCharge`, `createStripeCharge`, `createFlutterwavePayout`, `createStripeRefund`, fee calculation
+- **Missing**: No dedicated "add funds to account" endpoint that uses Flutterwave/Stripe to credit a user's KOB account. No "payout to external bank from user account" via gateway. No bank-to-bank transfer via Flutterwave for arbitrary users.
+
+**What's missing / needs implementation:**
+1. `gateway-fund-account` — Allow users to add funds to their KOB account via Flutterwave (MoMo/bank) or Stripe (card)
+2. `gateway-withdraw-to-bank` — Allow users to withdraw from their KOB account to an external bank account via Flutterwave transfers
+3. `gateway-account-to-bank` — Transfer from KOB user account to external bank (Flutterwave payout)
+4. Tests for all existing and new gateway functions
+5. Documentation updates across OpenAPI spec, Postman collection, static openapi.json, and all developer pages
+
+---
+
+### Implementation Stages (with tests at each stage)
+
+#### Stage 1: E2E Test Suite for Existing Gateway Functions
+Create `src/test/gateway-integration.test.ts` covering:
+- Gateway adapter unit tests (fee calculation, status mapping for both providers)
+- API config validation (existing endpoints reachable)
+- Component rendering tests for all Gateway developer pages
+
+#### Stage 2: New Edge Function — `gateway-fund-account`
+Create `supabase/functions/gateway-fund-account/index.ts`:
+- Accepts `{ amount, currency, channel, source_phone?, source_email?, account_id }`
+- Routes to Flutterwave (mobile_money/bank_transfer) or Stripe (card) based on channel
+- On webhook completion, credits the user's KOB `account_balances` (InterimAvailable)
+- Records transaction in `transactions` table with `credit_debit_indicator: 'Credit'`
+- Integrates with ledger (DR Payment Gateway Receivable, CR Customer Account)
+- Audit trail via `audit_logs`
+
+**Test**: Edge function test validating request/response schema and error handling
+
+#### Stage 3: New Edge Function — `gateway-withdraw-to-bank`
+Create `supabase/functions/gateway-withdraw-to-bank/index.ts`:
+- Accepts `{ amount, account_id, bank_code, account_number, beneficiary_name, narration }`
+- Validates sufficient balance in user's KOB account
+- Debits user's `account_balances`
+- Initiates Flutterwave transfer via `createFlutterwavePayout`
+- Records debit transaction
+- Webhook updates status on completion/failure; reverses debit if failed
+
+**Test**: Validate balance check, debit logic, and Flutterwave payout call structure
+
+#### Stage 4: Update Webhook Handlers
+- **`gateway-webhook-flutterwave`**: Add handler for `fund-account` charge completions — detect `metadata.fund_account: true` and auto-credit the target account
+- **`flutterwave-transfer-webhook`**: Add handler for `withdraw-to-bank` transfer completions — update withdrawal status, reverse debit if failed
+
+**Test**: Webhook payload processing for new transaction types
+
+#### Stage 5: Update Gateway Adapters
+- Add `createFlutterwaveBankCharge` to `_shared/gateway-adapters.ts` for direct bank debit charges (Flutterwave's `?type=debit_cm_account`)
+- Add fee tier for `account_funding` channel type
+
+**Test**: Adapter unit tests for new charge type and fee calculation
+
+#### Stage 6: Update OpenAPI Specification
+Add to `supabase/functions/public-api-spec/index.ts`:
 ```text
-/merchant                    -> MerchantLayout (wrapper)
-  /merchant                  -> MerchantDashboard
-  /merchant/transactions     -> MerchantTransactions
-  /merchant/payment-links    -> MerchantPaymentLinks
-  /merchant/customers        -> MerchantCustomers
-  /merchant/subscriptions    -> MerchantSubscriptions
-  /merchant/payouts          -> MerchantPayouts
-  /merchant/settlements      -> MerchantSettlements
-  /merchant/refunds          -> MerchantRefunds
-  /merchant/api-keys         -> MerchantApiKeys
-  /merchant/webhooks         -> MerchantWebhooks
-  /merchant/settlement-accounts -> MerchantSettlementAccounts
-  /merchant/subaccounts      -> MerchantSubaccounts
-  /merchant/kyb              -> MerchantKYB
-  /merchant/disputes         -> MerchantDisputes
-  /merchant/profile          -> MerchantProfile
-  /merchant/analytics        -> MerchantAnalytics
+/v1/gateway/fund-account        POST  — Fund a KOB account via MoMo/Card/Bank
+/v1/gateway/withdraw-to-bank    POST  — Withdraw from KOB account to external bank
 ```
 
-All routes wrapped with `ProtectedRoute` and `RoleGuard allowedRoles={['merchant']}`.
+Update `public/openapi.json` with matching static entries.
 
-### 6. Dashboard Router Update
+**Test**: API config test validates new endpoints exist in spec
 
-Update the dashboard routing logic so users with the `merchant` role are automatically redirected to `/merchant` after login.
+#### Stage 7: Update Postman Collection
+Add new requests to `supabase/functions/postman-collection/index.ts`:
+- "Fund Account via Mobile Money"
+- "Fund Account via Card"
+- "Withdraw to External Bank"
 
-### 7. Database Migration
+#### Stage 8: Update Developer Portal Pages
+1. **New page**: `src/pages/developer/GatewayFundingGuide.tsx` — Add Funds & Withdrawals documentation with code samples (cURL, Node.js, Python)
+2. **Update `BankingReference.tsx`**: Add "Fund Account" and "Withdraw to Bank" sections with API endpoint references
+3. **Update `GatewayChargesGuide.tsx`**: Add note about account funding channel
+4. **Update `GatewayPayoutsGuide.tsx`**: Add note about user withdrawal flow
+5. **Update `DeveloperHome.tsx` landing page**: Add "Account Funding" use case card
+6. **Update `CodeSnippetSection.tsx`**: Add funding example snippet
+7. **Add route** in `DeveloperLayout.tsx` sidebar navigation and `App.tsx` routing
 
-- `ALTER TYPE app_role ADD VALUE 'merchant';`
-- Trigger or edge function update: when a row is inserted into `gateway_merchants`, automatically insert into `user_roles` with `role = 'merchant'`
+#### Stage 9: Update Changelog
+Add entries to `src/pages/developer/Changelog.tsx`:
+- `gateway-fund-account` endpoint added
+- `gateway-withdraw-to-bank` endpoint added
+- Banking API enhanced with funding and withdrawal flows
+- Documentation synchronized
 
-## Technical Details
+#### Stage 10: Final E2E Test Suite
+Create comprehensive `src/test/gateway-e2e.test.ts`:
+- All gateway developer pages render without errors
+- OpenAPI spec includes all new endpoints
+- Fee calculations are correct for all channels including new `account_funding`
+- Navigation links in developer portal resolve correctly
+- Adapter status mapping covers all provider states
 
-### Data Access
+---
 
-All merchant pages query existing `gateway_*` tables filtered by the merchant's `user_id` via RLS. No new tables are needed -- the data layer is already complete.
+### Technical Details
 
-### Existing Tables Used
+**Database**: No new tables required. Uses existing `transactions`, `account_balances`, `audit_logs`, and `gateway_charges` tables. The `gateway-fund-account` function will create entries in `gateway_charges` with `metadata.fund_account: true` for webhook correlation.
 
-- `gateway_merchants` -- profile, limits, KYB status
-- `gateway_charges` -- transactions
-- `gateway_payouts` -- outbound transfers
-- `gateway_settlements` -- settlement batches
-- `gateway_refunds` -- refund records
-- `gateway_disputes` -- chargebacks
-- `gateway_payment_links` -- payment links
-- `gateway_subscriptions` / `gateway_subscription_plans` -- recurring billing
-- `gateway_merchant_api_keys` -- API credentials
-- `gateway_merchant_webhooks` -- webhook config and logs
-- `gateway_merchant_settlement_accounts` -- payout destinations
-- `gateway_subaccounts` -- split payments
-- `gateway_customers` -- tokenized customers
+**Edge Functions** (2 new):
+- `gateway-fund-account/index.ts` — ~120 lines
+- `gateway-withdraw-to-bank/index.ts` — ~100 lines
 
-### Files to Create (19 files)
+**Config**: Add to `supabase/config.toml`:
+```toml
+[functions.gateway-fund-account]
+verify_jwt = false
 
-1. `src/components/merchant/MerchantLayout.tsx`
-2. `src/components/merchant/merchant-navigation-config.ts`
-3. `src/pages/merchant/MerchantDashboard.tsx`
-4. `src/pages/merchant/MerchantTransactions.tsx`
-5. `src/pages/merchant/MerchantPaymentLinks.tsx`
-6. `src/pages/merchant/MerchantCustomers.tsx`
-7. `src/pages/merchant/MerchantSubscriptions.tsx`
-8. `src/pages/merchant/MerchantPayouts.tsx`
-9. `src/pages/merchant/MerchantSettlements.tsx`
-10. `src/pages/merchant/MerchantRefunds.tsx`
-11. `src/pages/merchant/MerchantApiKeys.tsx`
-12. `src/pages/merchant/MerchantWebhooks.tsx`
-13. `src/pages/merchant/MerchantSettlementAccounts.tsx`
-14. `src/pages/merchant/MerchantSubaccounts.tsx`
-15. `src/pages/merchant/MerchantKYB.tsx`
-16. `src/pages/merchant/MerchantDisputes.tsx`
-17. `src/pages/merchant/MerchantProfile.tsx`
-18. `src/pages/merchant/MerchantAnalytics.tsx`
-19. DB migration for `merchant` role enum value + auto-assign trigger
+[functions.gateway-withdraw-to-bank]
+verify_jwt = false
+```
 
-### Files to Modify (2 files)
+**Frontend Files** (1 new, ~8 updated):
+- New: `GatewayFundingGuide.tsx`
+- Updated: `BankingReference.tsx`, `GatewayChargesGuide.tsx`, `GatewayPayoutsGuide.tsx`, `DeveloperHome.tsx`, `CodeSnippetSection.tsx`, `DeveloperLayout.tsx`, `App.tsx`, `Changelog.tsx`
 
-1. `src/App.tsx` -- Add `/merchant/*` routes
-2. `src/components/RoleGuard.tsx` -- Add `'merchant'` to the `allowedRoles` type
+**Spec Files** (3 updated):
+- `public-api-spec/index.ts`
+- `public/openapi.json`
+- `postman-collection/index.ts`
 
-Update all the API Documents in detail and create all recommended frontend pages for merchant information and a dedicated section on the frontend with professional information for merchants.  All recommended email templates should also be created on the admin that would be used to manage the accounts 
+**Test Files** (2 new):
+- `src/test/gateway-integration.test.ts`
+- `src/test/gateway-e2e.test.ts`
+
+---
+
+### Non-Breaking Guarantee
+All changes are additive. No existing endpoints, routes, or data structures are modified. New edge functions use the same shared adapter pattern. Existing webhook handlers gain additional `if` branches for new transaction types without altering current behavior.
+
