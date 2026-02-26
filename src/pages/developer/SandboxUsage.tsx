@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, Clock, AlertTriangle, Activity } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+
 import {
   LineChart,
   Line,
@@ -131,17 +131,14 @@ export default function SandboxUsage() {
 
   if (loading) {
     return (
-      <DeveloperLayout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </DeveloperLayout>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
   return (
-    <DeveloperLayout>
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="max-w-7xl mx-auto space-y-6">
         <div>
           <h1 className="text-3xl font-bold mb-2">API Usage & Analytics</h1>
           <p className="text-muted-foreground">
@@ -295,6 +292,5 @@ export default function SandboxUsage() {
           </CardContent>
         </Card>
       </div>
-    </DeveloperLayout>
   );
 }
