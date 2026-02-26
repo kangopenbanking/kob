@@ -296,6 +296,7 @@ import BankMobileMoney from "./pages/banking-app/BankMobileMoney";
 import BankBills from "./pages/banking-app/BankBills";
 import BankReceive from "./pages/banking-app/BankReceive";
 import BankSavings from "./pages/banking-app/BankSavings";
+import BankNewSavings from "./pages/banking-app/BankNewSavings";
 import BankLoans from "./pages/banking-app/BankLoans";
 import BankCreditScore from "./pages/banking-app/BankCreditScore";
 import BankSettings from "./pages/banking-app/BankSettings";
@@ -640,6 +641,7 @@ function App() {
               <Route path="history" element={<BankHistory />} />
               <Route path="more" element={<BankMore />} />
               <Route path="more/savings" element={<BankSavings />} />
+              <Route path="more/savings/new" element={<BankNewSavings />} />
               <Route path="more/loans" element={<BankLoans />} />
               <Route path="more/credit" element={<BankCreditScore />} />
               <Route path="more/settings" element={<BankSettings />} />
