@@ -1,107 +1,141 @@
 
 
-# CAMEROON REGULATORY FILING PACK — IMPLEMENTATION PLAN
+# KYC/KYB Document Upload & Persistent Storage — Implementation Plan
 
-## CURRENT STATE
+## Current State
 
-The codebase already has foundational pages:
-- `/regulatory/cameroon-compliance` — BEAC/COBAC overview (153 lines)
-- `/compliance/aml-policy` — AML framework (83 lines)
-- `/compliance/kyc-framework` — KYC tiers (68 lines)
-- `/compliance/risk-monitoring` — Transaction surveillance (102 lines)
-- `/investors/risk-disclosure` — Risk categories (40 lines)
-- `/architecture/fraud-engine` — 5-layer fraud model (194 lines)
-- `/architecture/ledger-system` — Double-entry system (143 lines)
-- `/architecture/disaster-recovery` — BCP/DR
-- `/security/incident-response` — Incident response
+**What exists:**
+- `business_kyc` table already has document URL columns: `registration_certificate_url`, `articles_of_association_url`, `tax_certificate_url`, `proof_of_address_url`, `bank_statement_url`
+- `kyc_verifications` table has: `document_front_url`, `document_back_url`, `selfie_url`
+- Admin review pages (`BusinessKYCReview.tsx`, `KYCVerificationReview.tsx`) already have buttons to view documents via URL — but the URLs are never populated
+- Forms have placeholder "Upload Files" buttons that do nothing
+- **No storage bucket exists** — no files can actually be uploaded or stored
 
-These pages are informational overviews. The filing pack requires **formal, submission-ready regulatory documents** with structured sections, reference numbers, legal language, and downloadable PDF capability.
+**What is missing:**
+1. No storage bucket for KYC/KYB documents
+2. No file upload UI components in either form
+3. The `business-kyc-submit` edge function does not accept document URLs
+4. The `KycDueDiligence.tsx` page only shows a toast on submit — no actual database persistence
+5. No selfie capture or document image upload capability
 
 ---
 
-## WHAT NEEDS TO BE BUILT
+## Implementation Plan
 
-### New Pages (11 files to create)
+### Step 1 — Database: Create Storage Bucket + RLS Policies (Migration)
 
-**Filing Pack Hub:**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/FilingPackIndex.tsx` | `/regulatory/filing-pack` | Master index of all filing documents with readiness scores and download links |
+Create a `kyc-documents` storage bucket with RLS policies:
+- Authenticated users can upload to their own folder (`{user_id}/kyc/*` and `{user_id}/kyb/*`)
+- Authenticated users can read their own files
+- Admin role users can read all files (for review)
+- Public read disabled (sensitive documents)
 
-**Phase 1 — Legal Structure Pack (2 pages):**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/CorporateStructure.tsx` | `/regulatory/corporate-structure` | Corporate overview, shareholding, UBO declaration, board governance, committee structures, MLRO/CO appointments, org chart |
-| `src/pages/regulatory/InternalControlPolicy.tsx` | `/regulatory/internal-control-policy` | Internal control framework, risk committee, compliance committee, audit committee structures |
+```sql
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES ('kyc-documents', 'kyc-documents', false, 10485760, 
+  ARRAY['image/jpeg','image/png','image/webp','application/pdf']);
 
-**Phase 2 — License Application Pack (2 pages):**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/LicenseApplication.tsx` | `/regulatory/license-application` | PSP license application structure, technical operations, settlement flow, processor disclosure, safeguarding model, float segregation, escrow |
-| `src/pages/regulatory/BusinessContinuity.tsx` | `/regulatory/business-continuity` | BCP and DR in regulatory filing format (formal version of existing DR page) |
+-- Users upload to their own folder
+CREATE POLICY "Users upload own KYC docs"
+ON storage.objects FOR INSERT TO authenticated
+WITH CHECK (bucket_id = 'kyc-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
 
-**Phase 3 — AML/CFT Regulatory Pack (2 pages):**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/AmlCftPack.tsx` | `/regulatory/aml-cft-pack` | Full AML policy in regulatory filing format, STR escalation, sanctions methodology, PEP framework, record retention, SAR form template |
-| `src/pages/regulatory/DataProtection.tsx` | `/regulatory/data-protection` | Data protection policy for CEMAC submission, retention schedules, cross-border data transfer rules |
+-- Users read own docs
+CREATE POLICY "Users read own KYC docs"
+ON storage.objects FOR SELECT TO authenticated
+USING (bucket_id = 'kyc-documents' AND (storage.foldername(name))[1] = auth.uid()::text);
 
-**Phase 4 — Technical System Disclosure (1 page):**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/TechnicalDisclosure.tsx` | `/regulatory/technical-disclosure` | Regulator-friendly system architecture, data flows, encryption, mTLS, audit immutability, reconciliation, idempotency — non-developer language |
+-- Admins read all docs
+CREATE POLICY "Admins read all KYC docs"
+ON storage.objects FOR SELECT TO authenticated
+USING (bucket_id = 'kyc-documents' AND public.has_role(auth.uid(), 'admin'));
+```
 
-**Phase 5 — Risk Disclosure (1 page):**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/RiskAssessment.tsx` | `/regulatory/risk-assessment` | Formal risk scoring matrix with probability/impact grid, processor dependency, cyber, settlement, fraud, liquidity, regulatory risks |
+### Step 2 — Reusable Document Upload Component
 
-**Phase 6 — Reporting Framework (1 page):**
-| File | Route | Purpose |
-|------|-------|---------|
-| `src/pages/regulatory/ReportingTemplates.tsx` | `/regulatory/reporting-templates` | Structured templates for daily volume, settlement, fraud, chargeback, STR, and monthly compliance reports |
+Create `src/components/kyc/DocumentUploader.tsx`:
+- Accepts `documentType` (e.g., "id_front", "registration_certificate"), `userId`, `folder` ("kyc" or "kyb")
+- Drag-and-drop or click-to-upload interface
+- Shows file preview (image thumbnail or PDF icon)
+- Accepts JPEG, PNG, WebP, PDF — max 10MB
+- Uploads to `kyc-documents/{userId}/{folder}/{documentType}_{timestamp}.{ext}`
+- Returns the storage path on successful upload
+- Shows upload progress and error states
 
-### Files to Modify (3)
+### Step 3 — Enhance KycDueDiligence.tsx (Individual KYC Form)
 
+Add actual file upload fields replacing the placeholder "Upload Files" button:
+
+**Individual KYC documents (Tier 2):**
+- ID Document Front (required) — passport, national ID, or driver's license
+- ID Document Back (optional — required for national ID cards)
+- Selfie / Liveness Photo (required)
+- Proof of Address (required) — utility bill, bank statement < 3 months
+
+**On submit:**
+- Upload all files to storage bucket
+- Call `kyc-submit` edge function with the storage URLs
+- Show progress indicator during multi-file upload
+- Persist to `kyc_verifications` table with status `pending`
+
+### Step 4 — Enhance BusinessKYCForm.tsx (Business KYB Form)
+
+Add document upload fields:
+
+**Business KYB documents:**
+- Registration Certificate / RCCM (required)
+- Articles of Association / Statutes (required)
+- Tax Certificate / Patente (optional)
+- Proof of Business Address (required) — utility bill or lease
+- Bank Statement (optional) — latest 3 months
+- Board Resolution (optional) — for companies with boards
+- UBO Declaration Document (optional)
+
+**On submit:**
+- Upload all files to storage bucket
+- Update the `business-kyc-submit` edge function to accept and store document URLs
+- Persist URLs to corresponding `business_kyc` columns
+
+### Step 5 — Update Edge Function: business-kyc-submit
+
+Add document URL fields to the request body parsing and database insert:
+- `registration_certificate_url`
+- `articles_of_association_url`
+- `tax_certificate_url`
+- `proof_of_address_url`
+- `bank_statement_url`
+
+### Step 6 — Enhance Admin Review Pages
+
+Update both `BusinessKYCReview.tsx` and `KYCVerificationReview.tsx`:
+- Show document thumbnails inline (not just external link buttons)
+- Use signed URLs from storage for secure document viewing
+- Add image preview dialog/lightbox for viewing uploaded documents
+- Disable "View" buttons when URL is null (currently they open `null` in a new tab)
+
+---
+
+## Files Summary
+
+### New Files (1)
+| File | Purpose |
+|------|---------|
+| `src/components/kyc/DocumentUploader.tsx` | Reusable drag-and-drop file upload component with preview, progress, and storage integration |
+
+### Modified Files (5)
 | File | Changes |
 |------|---------|
-| `src/App.tsx` | Add 11 new routes under `/regulatory/*` |
-| `src/components/DynamicNavigation.tsx` | Add "Filing Pack" link under Compliance mega-menu |
-| `src/pages/developer/Changelog.tsx` | Add v3.2.0 entry for regulatory filing pack |
+| `src/pages/regulatory/KycDueDiligence.tsx` | Replace placeholder upload buttons with real DocumentUploader fields for ID front/back, selfie, proof of address. Wire submit to actual `kyc-submit` edge function with file URLs. |
+| `src/components/business/BusinessKYCForm.tsx` | Add DocumentUploader fields for registration certificate, articles, tax cert, proof of address, bank statement. Pass URLs to edge function on submit. |
+| `supabase/functions/business-kyc-submit/index.ts` | Accept and persist document URL fields in request body. |
+| `src/pages/admin/BusinessKYCReview.tsx` | Add null-checks on document buttons, add inline image previews using signed URLs. |
+| `src/pages/admin/KYCVerificationReview.tsx` | Add null-checks on document buttons, add inline image previews using signed URLs. |
 
----
+### Database Migration (1)
+- Create `kyc-documents` storage bucket with RLS policies for user-scoped uploads and admin read access.
 
-## CONTENT APPROACH
-
-Each filing pack page will use:
-- **Formal regulatory document structure**: numbered sections (1.0, 1.1, 1.2), reference codes (KOB-REG-001)
-- **Badge** with document reference number at top
-- **Card-based sections** matching existing design system
-- **Tables** for matrices, schedules, and requirements
-- **ASCII diagrams** for architecture/flow where needed
-- **Formal language** suitable for BEAC/COBAC submission (not developer documentation)
-- All existing data from the compliance implementation guide (`docs/compliance-implementation-guide.md`) referenced for accuracy
-
-### Filing Pack Index Page
-The hub page (`/regulatory/filing-pack`) will display:
-- A table of all filing documents with document codes, titles, status (Ready/Draft), and in-page anchor links
-- Readiness score (0-100) computed from document completeness
-- Regulatory gap assessment summary
-- Timeline to approval estimate
-- Capital requirement estimate (500M XAF per COBAC R-2019/01)
-- Operational readiness checklist with checkboxes
-
----
-
-## IMPLEMENTATION SEQUENCE
-
-All 14 files will be created/modified in a single batch since there are no interdependencies between the new pages.
-
-**Batch 1 (all files):**
-1. Create 11 new page files
-2. Update App.tsx with 11 routes
-3. Update DynamicNavigation.tsx
-4. Update Changelog.tsx
-
-No database changes required. No breaking changes. All existing routes preserved.
+### No Breaking Changes
+- All existing form fields preserved
+- Document uploads are additive
+- Admin review pages gain null-safety (improvement over current behavior of opening `null` URLs)
 
