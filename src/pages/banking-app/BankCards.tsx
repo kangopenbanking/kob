@@ -1,22 +1,23 @@
 import React, { useState } from 'react';
-import { CreditCard, Plus, Snowflake, ArrowUpCircle } from 'lucide-react';
+import { CreditCard, Plus, Snowflake, ArrowUpCircle, Eye, EyeOff, Copy, Settings } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 
 const BankCards: React.FC = () => {
   const [cards] = useState([
-    { id: '1', last4: '4829', brand: 'Visa', balance: 125000, currency: 'XAF', status: 'active' },
+    { id: '1', last4: '4829', brand: 'Visa', balance: 125000, currency: 'XAF', status: 'active', color: 'bg-foreground' },
   ]);
+  const [showDetails, setShowDetails] = useState(false);
 
   return (
     <div className="flex flex-col px-4 py-6">
       <div className="mb-6 flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">Cards</h1>
-          <p className="text-sm text-muted-foreground">Manage your virtual cards</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Cards</h1>
+          <p className="text-sm font-medium text-muted-foreground">Manage your virtual cards</p>
         </div>
-        <Button size="sm" className="gap-1.5">
-          <Plus className="h-4 w-4" strokeWidth={1.5} />
+        <Button size="sm" className="gap-1.5 rounded-xl bg-[hsl(var(--bank-violet))] text-white hover:bg-[hsl(var(--bank-violet))]/90">
+          <Plus className="h-4 w-4" strokeWidth={2} />
           New Card
         </Button>
       </div>
@@ -27,46 +28,68 @@ const BankCards: React.FC = () => {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: i * 0.1 }}
-          className="mb-4"
+          className="mb-5"
         >
           {/* Card Display */}
-          <div className="rounded-2xl bg-foreground p-5 text-background">
+          <div className={`rounded-3xl ${card.color} p-6 text-background`}>
             <div className="flex items-center justify-between">
-              <CreditCard className="h-6 w-6" strokeWidth={1.5} />
-              <span className="text-xs font-medium opacity-70">{card.brand}</span>
+              <CreditCard className="h-7 w-7" strokeWidth={1.5} />
+              <span className="text-sm font-bold opacity-80">{card.brand}</span>
             </div>
-            <p className="mt-6 text-lg font-mono tracking-widest">
-              •••• •••• •••• {card.last4}
+            <p className="mt-8 text-xl font-mono tracking-[0.2em]">
+              {showDetails ? '4829 5612 3478 4829' : '•••• •••• •••• ' + card.last4}
             </p>
-            <div className="mt-4 flex items-center justify-between">
-              <span className="text-sm opacity-70">Balance</span>
-              <span className="text-sm font-semibold">
-                {card.currency} {card.balance.toLocaleString()}
-              </span>
+            <div className="mt-5 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-medium opacity-60">Balance</span>
+                <p className="text-xl font-bold">
+                  {card.currency} {card.balance.toLocaleString()}
+                </p>
+              </div>
+              <button onClick={() => setShowDetails(!showDetails)}>
+                {showDetails ? (
+                  <EyeOff className="h-5 w-5 opacity-70" strokeWidth={1.5} />
+                ) : (
+                  <Eye className="h-5 w-5 opacity-70" strokeWidth={1.5} />
+                )}
+              </button>
             </div>
           </div>
 
           {/* Card Actions */}
-          <div className="mt-3 flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5">
-              <ArrowUpCircle className="h-4 w-4" strokeWidth={1.5} />
-              Top Up
-            </Button>
-            <Button variant="outline" size="sm" className="flex-1 gap-1.5">
-              <Snowflake className="h-4 w-4" strokeWidth={1.5} />
-              Freeze
-            </Button>
+          <div className="mt-4 grid grid-cols-3 gap-3">
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-mint))] p-4"
+            >
+              <ArrowUpCircle className="h-6 w-6 text-[hsl(var(--bank-mint-fg))]" strokeWidth={1.5} />
+              <span className="text-xs font-bold text-[hsl(var(--bank-mint-fg))]">Top Up</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-sky))] p-4"
+            >
+              <Snowflake className="h-6 w-6 text-white" strokeWidth={1.5} />
+              <span className="text-xs font-bold text-white">Freeze</span>
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-amber))] p-4"
+            >
+              <Settings className="h-6 w-6 text-[hsl(var(--bank-amber-fg))]" strokeWidth={1.5} />
+              <span className="text-xs font-bold text-[hsl(var(--bank-amber-fg))]">Manage</span>
+            </motion.button>
           </div>
         </motion.div>
       ))}
 
       {cards.length === 0 && (
         <div className="flex flex-col items-center py-16 text-center">
-          <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
-            <CreditCard className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
+          <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl bg-[hsl(var(--bank-violet))]/10">
+            <CreditCard className="h-10 w-10 text-[hsl(var(--bank-violet))]" strokeWidth={1.5} />
           </div>
-          <p className="text-sm font-medium text-foreground">No virtual cards yet</p>
-          <p className="text-xs text-muted-foreground">Create your first virtual card</p>
+          <p className="text-lg font-bold text-foreground">No virtual cards yet</p>
+          <p className="text-sm text-muted-foreground">Create your first virtual card</p>
         </div>
       )}
     </div>
