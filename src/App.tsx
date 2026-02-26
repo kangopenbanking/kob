@@ -250,6 +250,16 @@ import ComplianceStatusPage from "./pages/investors/ComplianceStatus";
 import InfrastructureMaturityPage from "./pages/investors/InfrastructureMaturity";
 import AGradeStatusPage from "./pages/certification/AGradeStatus";
 import SimulationToolsPage from "./pages/sandbox/SimulationTools";
+import FilingPackIndex from "./pages/regulatory/FilingPackIndex";
+import CorporateStructure from "./pages/regulatory/CorporateStructure";
+import InternalControlPolicy from "./pages/regulatory/InternalControlPolicy";
+import LicenseApplicationPage from "./pages/regulatory/LicenseApplication";
+import BusinessContinuityPage from "./pages/regulatory/BusinessContinuity";
+import AmlCftPack from "./pages/regulatory/AmlCftPack";
+import DataProtectionPolicy from "./pages/regulatory/DataProtectionPolicy";
+import TechnicalDisclosure from "./pages/regulatory/TechnicalDisclosure";
+import RiskAssessmentPage from "./pages/regulatory/RiskAssessment";
+import ReportingTemplates from "./pages/regulatory/ReportingTemplates";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard";
 import MerchantTransactions from "./pages/merchant/MerchantTransactions";
 import MerchantPaymentLinks from "./pages/merchant/MerchantPaymentLinks";
@@ -543,6 +553,16 @@ function App() {
             <Route path="/roi-calculator" element={<Layout><ROICalculator /></Layout>} />
             <Route path="/payment-facilitation" element={<Layout><PaymentFacilitation /></Layout>} />
             <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
+            <Route path="/regulatory/filing-pack" element={<Layout><FilingPackIndex /></Layout>} />
+            <Route path="/regulatory/corporate-structure" element={<Layout><CorporateStructure /></Layout>} />
+            <Route path="/regulatory/internal-control-policy" element={<Layout><InternalControlPolicy /></Layout>} />
+            <Route path="/regulatory/license-application" element={<Layout><LicenseApplicationPage /></Layout>} />
+            <Route path="/regulatory/business-continuity" element={<Layout><BusinessContinuityPage /></Layout>} />
+            <Route path="/regulatory/aml-cft-pack" element={<Layout><AmlCftPack /></Layout>} />
+            <Route path="/regulatory/data-protection-policy" element={<Layout><DataProtectionPolicy /></Layout>} />
+            <Route path="/regulatory/technical-disclosure" element={<Layout><TechnicalDisclosure /></Layout>} />
+            <Route path="/regulatory/risk-assessment" element={<Layout><RiskAssessmentPage /></Layout>} />
+            <Route path="/regulatory/reporting-templates" element={<Layout><ReportingTemplates /></Layout>} />
             <Route path="/regulatory/cameroon-compliance" element={<Layout><CameroonCompliancePage /></Layout>} />
             <Route path="/compliance/aml-policy" element={<Layout><AmlPolicyPage /></Layout>} />
             <Route path="/compliance/kyc-framework" element={<Layout><KycFrameworkPage /></Layout>} />

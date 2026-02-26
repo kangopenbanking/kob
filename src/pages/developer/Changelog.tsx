@@ -6,6 +6,25 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.2.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Cameroon Regulatory Filing Pack — 10 submission-ready documents for BEAC/COBAC PSP license application" },
+        { type: "feature", description: "Filing Pack Index hub page with readiness score (78/100), document index, gap assessment, and operational checklist" },
+        { type: "feature", description: "Corporate Structure & Governance — shareholding, UBO declaration, board composition, MLRO/CO appointments, org chart" },
+        { type: "feature", description: "Internal Control Policy — three lines of defence, risk/compliance/audit committee structures, control matrix" },
+        { type: "feature", description: "PSP License Application — CEMAC Regulation No. 04/18 application, settlement flows, processor disclosure, safeguarding model, capital adequacy" },
+        { type: "feature", description: "Business Continuity & Disaster Recovery — RTO/RPO targets, failover architecture, incident escalation matrix, testing schedule" },
+        { type: "feature", description: "AML/CFT Compliance Pack — tiered KYC, STR escalation process, sanctions screening, PEP framework, record retention, internal SAR form template" },
+        { type: "feature", description: "Data Protection Policy — CEMAC data protection framework, retention schedules, cross-border transfer safeguards" },
+        { type: "feature", description: "Technical System Disclosure — regulator-friendly architecture, encryption model, mTLS, audit immutability, reconciliation, idempotency" },
+        { type: "feature", description: "Risk Assessment Matrix — probability/impact grid, 8-risk register with inherent/residual scoring and mitigation strategies" },
+        { type: "feature", description: "Regulatory Reporting Templates — daily volume, settlement, fraud, chargeback, STR summary, monthly compliance declaration" },
+        { type: "improvement", description: "Navigation updated with Filing Pack link under Compliance mega-menu" },
+      ]
+    },
+    {
       version: "3.1.0",
       date: "2026-02-26",
       type: "minor",
