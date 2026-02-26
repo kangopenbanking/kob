@@ -24,7 +24,7 @@ const navSections = [
     items: [
       { title: "Overview", path: "/developer" },
       { title: "Quickstart", path: "/developer/getting-started" },
-      { title: "Integration Workflow", path: "/integration-workflow" },
+      { title: "Integration Workflow", path: "/developer/integration-workflow" },
       { title: "SDKs & Libraries", path: "/developer/guides/sdks" },
       { title: "Changelog", path: "/developer/changelog" },
     ],
