@@ -46,11 +46,22 @@ export default function CertificateManagement() {
   const [selectedTpp, setSelectedTpp] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [certFile, setCertFile] = useState<File | null>(null);
 
   useEffect(() => {
-    loadTppRegistrations();
-    loadCertificates();
+    const init = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setLoading(false);
+        setIsAuthenticated(false);
+        return;
+      }
+      setIsAuthenticated(true);
+      loadTppRegistrations();
+      loadCertificates();
+    };
+    init();
   }, []);
 
   const loadTppRegistrations = async () => {
@@ -180,6 +191,19 @@ export default function CertificateManagement() {
           Manage client certificates for mutual TLS authentication and FAPI 1.0 Advanced compliance
         </p>
       </div>
+
+      {!isAuthenticated && !loading && (
+        <Alert className="mb-8">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Authentication Required</AlertTitle>
+          <AlertDescription>
+            You need to sign in to manage certificates. <a href="/auth" className="underline font-medium text-primary">Sign in here</a>.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {isAuthenticated && (
+        <>
 
       <Alert className="mb-8">
         <Shield className="h-4 w-4" />
@@ -402,6 +426,8 @@ export default function CertificateManagement() {
           )}
         </CardContent>
       </Card>
+      </>
+      )}
     </div>
   );
 }
