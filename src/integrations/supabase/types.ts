@@ -10916,6 +10916,37 @@ export type Database = {
       }
     }
     Functions: {
+      atomic_charge_wallet_credit: {
+        Args: {
+          _charge_id: string
+          _credit_amount?: number
+          _currency?: string
+          _merchant_id?: string
+          _new_status: string
+          _provider_raw?: Json
+        }
+        Returns: Json
+      }
+      atomic_dispute_wallet_adjust: {
+        Args: {
+          _amount: number
+          _currency: string
+          _direction?: string
+          _merchant_id: string
+        }
+        Returns: Json
+      }
+      atomic_refund_wallet_debit: {
+        Args: {
+          _currency?: string
+          _debit_amount?: number
+          _merchant_id?: string
+          _new_status: string
+          _provider_raw?: Json
+          _refund_id: string
+        }
+        Returns: Json
+      }
       calculate_kyc_risk_score: { Args: { _user_id: string }; Returns: number }
       calculate_settlement_balance: {
         Args: {
@@ -10961,6 +10992,14 @@ export type Database = {
       check_suspicious_login: {
         Args: { _ip_address: unknown; _user_agent: string; _user_id: string }
         Returns: Json
+      }
+      check_webhook_rate_limit: {
+        Args: {
+          _max_requests?: number
+          _provider: string
+          _window_minutes?: number
+        }
+        Returns: boolean
       }
       cleanup_expired_auth_codes: { Args: never; Returns: undefined }
       cleanup_expired_auth_records: { Args: never; Returns: undefined }

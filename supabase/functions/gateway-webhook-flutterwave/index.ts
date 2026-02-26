@@ -13,6 +13,12 @@ serve(async (req) => {
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
+    // ─── Webhook Rate Limiting: 100 req/min for Flutterwave ───
+    const { data: allowed } = await supabase.rpc('check_webhook_rate_limit', { _provider: 'flutterwave', _max_requests: 100, _window_minutes: 1 });
+    if (allowed === false) {
+      return new Response(JSON.stringify({ error: 'rate_limit_exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Verify Flutterwave hash
     const verifHash = req.headers.get('verif-hash');
     const FLW_HASH = Deno.env.get('FLUTTERWAVE_ENCRYPTION_KEY');
@@ -68,13 +74,15 @@ serve(async (req) => {
           }).then(() => {}).catch(() => {});
         }
 
-        // ─── G4 FIX: Credit merchant wallet on successful charge ───
+        // ─── ATOMIC: Credit merchant wallet on successful charge ───
         if (newStatus === 'successful' && charge.merchant_id) {
-          await supabase.rpc('update_merchant_wallet', {
+          await supabase.rpc('atomic_charge_wallet_credit', {
+            _charge_id: charge.id,
+            _new_status: newStatus,
+            _provider_raw: payload,
             _merchant_id: charge.merchant_id,
             _currency: charge.currency,
-            _pending_delta: charge.net_amount || charge.amount,
-            _ledger_delta: charge.net_amount || charge.amount,
+            _credit_amount: charge.net_amount || charge.amount,
           });
         }
 
