@@ -1,15 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { PWATopBar } from '@/components/pwa/PWATopBar';
-import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, TrendingUp } from 'lucide-react';
+import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
+import { useBankAccounts, useBankTransactions, useSavingsAccounts, useLoanApplications, useCreditScore } from '@/hooks/useBankingData';
+
+const currencyColors: Record<string, { color: string; textColor: string }> = {
+  XAF: { color: 'bg-[hsl(var(--bank-mint))]', textColor: 'text-[hsl(var(--bank-mint-fg))]' },
+  EUR: { color: 'bg-[hsl(var(--bank-amber))]', textColor: 'text-[hsl(var(--bank-amber-fg))]' },
+  USD: { color: 'bg-[hsl(var(--bank-sky))]', textColor: 'text-white' },
+  GBP: { color: 'bg-[hsl(var(--bank-violet))]', textColor: 'text-white' },
+};
 
 const BankHome: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
   const [showBalance, setShowBalance] = useState(true);
   const [userName, setUserName] = useState('');
+
+  const { data: accounts, isLoading: accountsLoading } = useBankAccounts();
+  const { data: transactions, isLoading: txLoading } = useBankTransactions(4);
+  const { data: savingsAccounts } = useSavingsAccounts();
+  const { data: loanApps } = useLoanApplications();
+  const { data: creditData } = useCreditScore();
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -21,6 +35,28 @@ const BankHome: React.FC = () => {
     fetchUser();
   }, []);
 
+  // Compute totals from real data
+  const totalBalance = (accounts || []).reduce((sum, acc) => {
+    const bal = acc.account_balances?.[0]?.amount || 0;
+    return sum + (acc.currency === 'XAF' ? bal : 0);
+  }, 0);
+
+  const accountCards = (accounts || []).reduce<Array<{ currency: string; balance: number; label: string; color: string; textColor: string }>>((arr, acc) => {
+    const bal = acc.account_balances?.[0]?.amount || 0;
+    const existing = arr.find(a => a.currency === acc.currency);
+    if (existing) {
+      existing.balance += bal;
+    } else {
+      const colors = currencyColors[acc.currency] || { color: 'bg-muted', textColor: 'text-foreground' };
+      arr.push({ currency: acc.currency, balance: bal, label: acc.nickname || `${acc.currency} Account`, ...colors });
+    }
+    return arr;
+  }, []);
+
+  const totalSavings = (savingsAccounts || []).reduce((s, a) => s + (a.current_balance || 0), 0);
+  const activeLoans = (loanApps || []).filter(l => ['approved', 'disbursed', 'active'].includes(l.status)).length;
+  const creditScore = creditData?.score || null;
+
   const quickActions = [
     { icon: Send, label: 'Send', path: `payments/send`, color: 'bg-[hsl(var(--bank-violet))]' },
     { icon: ArrowDownLeft, label: 'Receive', path: 'payments/receive', color: 'bg-[hsl(var(--bank-teal))]' },
@@ -28,18 +64,15 @@ const BankHome: React.FC = () => {
     { icon: QrCode, label: 'QR Pay', path: 'payments/qr', color: 'bg-[hsl(var(--bank-sky))]' },
   ];
 
-  const mockTransactions = [
-    { id: '1', name: 'MTN MoMo Transfer', amount: -15000, date: 'Today', type: 'debit' },
-    { id: '2', name: 'Salary Deposit', amount: 450000, date: 'Yesterday', type: 'credit' },
-    { id: '3', name: 'Electricity Bill', amount: -8500, date: 'Feb 24', type: 'debit' },
-    { id: '4', name: 'Orange Money', amount: -5000, date: 'Feb 23', type: 'debit' },
-  ];
-
-  const mockAccounts = [
-    { currency: 'XAF', balance: 2450000, label: 'Main Account', color: 'bg-[hsl(var(--bank-mint))]', textColor: 'text-[hsl(var(--bank-mint-fg))]' },
-    { currency: 'EUR', balance: 1200, label: 'Euro Account', color: 'bg-[hsl(var(--bank-amber))]', textColor: 'text-[hsl(var(--bank-amber-fg))]' },
-    { currency: 'USD', balance: 800, label: 'Dollar Account', color: 'bg-[hsl(var(--bank-sky))]', textColor: 'text-[hsl(var(--bank-sky-fg))]' },
-  ];
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const now = new Date();
+    if (d.toDateString() === now.toDateString()) return 'Today';
+    const yesterday = new Date(now);
+    yesterday.setDate(now.getDate() - 1);
+    if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
     <div className="flex flex-col">
@@ -63,32 +96,37 @@ const BankHome: React.FC = () => {
             </button>
           </div>
           <p className="mt-2 text-3xl font-bold tracking-tight text-background">
-            {showBalance ? 'XAF 2,450,000' : '••••••••'}
+            {accountsLoading ? (
+              <Loader2 className="h-6 w-6 animate-spin text-background/40" />
+            ) : showBalance ? (
+              `XAF ${totalBalance.toLocaleString()}`
+            ) : '••••••••'}
           </p>
-          <p className="mt-1 text-sm font-medium text-[hsl(var(--bank-mint))]">+XAF 42,500</p>
         </motion.div>
 
         {/* Account Cards - Horizontal Scroll */}
-        <div className="-mx-4 px-4">
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-            {mockAccounts.map((account) => (
-              <motion.div
-                key={account.currency}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileTap={{ scale: 0.97 }}
-                className={`min-w-[160px] rounded-2xl ${account.color} p-4`}
-              >
-                <span className={`text-xs font-medium ${account.textColor} opacity-80`}>{account.label}</span>
-                <p className={`mt-2 text-lg font-bold ${account.textColor}`}>
-                  {showBalance
-                    ? `${account.currency} ${account.balance.toLocaleString()}`
-                    : '••••'}
-                </p>
-              </motion.div>
-            ))}
+        {accountCards.length > 0 && (
+          <div className="-mx-4 px-4">
+            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+              {accountCards.map((account) => (
+                <motion.div
+                  key={account.currency}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileTap={{ scale: 0.97 }}
+                  className={`min-w-[160px] rounded-2xl ${account.color} p-4`}
+                >
+                  <span className={`text-xs font-medium ${account.textColor} opacity-80`}>{account.label}</span>
+                  <p className={`mt-2 text-lg font-bold ${account.textColor}`}>
+                    {showBalance
+                      ? `${account.currency} ${account.balance.toLocaleString()}`
+                      : '••••'}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Quick Actions */}
         <div className="flex justify-between px-2">
@@ -120,7 +158,9 @@ const BankHome: React.FC = () => {
             >
               <PiggyBank className="h-7 w-7 text-[hsl(var(--bank-mint-fg))]" strokeWidth={1.5} />
               <div className="text-center">
-                <p className="text-lg font-bold text-[hsl(var(--bank-mint-fg))]">410K</p>
+                <p className="text-lg font-bold text-[hsl(var(--bank-mint-fg))]">
+                  {totalSavings > 0 ? `${(totalSavings / 1000).toFixed(0)}K` : '0'}
+                </p>
                 <p className="text-[10px] font-semibold text-[hsl(var(--bank-mint-fg))] opacity-70">Savings</p>
               </div>
             </motion.button>
@@ -132,7 +172,7 @@ const BankHome: React.FC = () => {
             >
               <Landmark className="h-7 w-7 text-[hsl(var(--bank-coral-fg))]" strokeWidth={1.5} />
               <div className="text-center">
-                <p className="text-lg font-bold text-[hsl(var(--bank-coral-fg))]">0</p>
+                <p className="text-lg font-bold text-[hsl(var(--bank-coral-fg))]">{activeLoans}</p>
                 <p className="text-[10px] font-semibold text-[hsl(var(--bank-coral-fg))] opacity-70">Loans</p>
               </div>
             </motion.button>
@@ -144,7 +184,9 @@ const BankHome: React.FC = () => {
             >
               <BarChart3 className="h-7 w-7 text-[hsl(var(--bank-violet-fg))]" strokeWidth={1.5} />
               <div className="text-center">
-                <p className="text-lg font-bold text-[hsl(var(--bank-violet-fg))]">720</p>
+                <p className="text-lg font-bold text-[hsl(var(--bank-violet-fg))]">
+                  {creditScore ?? '—'}
+                </p>
                 <p className="text-[10px] font-semibold text-[hsl(var(--bank-violet-fg))] opacity-70">Score</p>
               </div>
             </motion.button>
@@ -164,36 +206,51 @@ const BankHome: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex flex-col gap-1">
-            {mockTransactions.map((tx) => (
-              <motion.div
-                key={tx.id}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-between rounded-2xl px-3 py-3.5 transition-colors hover:bg-muted/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
-                    tx.type === 'credit' ? 'bg-[hsl(var(--bank-mint))]/15' : 'bg-[hsl(var(--bank-coral))]/15'
-                  }`}>
-                    {tx.type === 'credit' ? (
-                      <ArrowDownLeft className="h-5 w-5 text-[hsl(var(--bank-teal))]" strokeWidth={1.5} />
-                    ) : (
-                      <Send className="h-5 w-5 text-[hsl(var(--bank-coral))]" strokeWidth={1.5} />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{tx.name}</p>
-                    <p className="text-xs font-medium text-muted-foreground">{tx.date}</p>
-                  </div>
-                </div>
-                <span className={`text-base font-bold ${
-                  tx.type === 'credit' ? 'text-[hsl(var(--bank-teal))]' : 'text-foreground'
-                }`}>
-                  {tx.type === 'credit' ? '+' : ''}{tx.amount.toLocaleString()} XAF
-                </span>
-              </motion.div>
-            ))}
-          </div>
+          {txLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : (transactions || []).length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No transactions yet</p>
+          ) : (
+            <div className="flex flex-col gap-1">
+              {(transactions || []).map((tx) => {
+                const isCredit = tx.credit_debit_indicator === 'Credit';
+                return (
+                  <motion.div
+                    key={tx.id}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-between rounded-2xl px-3 py-3.5 transition-colors hover:bg-muted/50"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${
+                        isCredit ? 'bg-[hsl(var(--bank-mint))]/15' : 'bg-[hsl(var(--bank-coral))]/15'
+                      }`}>
+                        {isCredit ? (
+                          <ArrowDownLeft className="h-5 w-5 text-[hsl(var(--bank-teal))]" strokeWidth={1.5} />
+                        ) : (
+                          <Send className="h-5 w-5 text-[hsl(var(--bank-coral))]" strokeWidth={1.5} />
+                        )}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {tx.transaction_information || tx.transaction_type}
+                        </p>
+                        <p className="text-xs font-medium text-muted-foreground">
+                          {formatDate(tx.created_at)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-base font-bold ${
+                      isCredit ? 'text-[hsl(var(--bank-teal))]' : 'text-foreground'
+                    }`}>
+                      {isCredit ? '+' : '-'}{Math.abs(tx.amount || 0).toLocaleString()} {tx.currency}
+                    </span>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

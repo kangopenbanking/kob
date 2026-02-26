@@ -2,10 +2,20 @@ import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Send, Smartphone, QrCode, FileText, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useBeneficiaries } from '@/hooks/useBankingData';
+
+const quickSendColors = [
+  'bg-[hsl(var(--bank-mint))]',
+  'bg-[hsl(var(--bank-sky))]',
+  'bg-[hsl(var(--bank-rose))]',
+  'bg-[hsl(var(--bank-violet))]',
+  'bg-[hsl(var(--bank-amber))]',
+];
 
 const BankPayments: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
+  const { data: beneficiaries } = useBeneficiaries();
 
   const paymentOptions = [
     { icon: Send, label: 'Send Money', description: 'Transfer to bank or mobile', path: 'send', color: 'bg-[hsl(var(--bank-violet))]' },
@@ -14,11 +24,18 @@ const BankPayments: React.FC = () => {
     { icon: FileText, label: 'Pay Bills', description: 'Electricity, water, internet', path: 'bills', color: 'bg-[hsl(var(--bank-coral))]' },
   ];
 
-  const recentContacts = [
-    { name: 'Jean M.', initials: 'JM', color: 'bg-[hsl(var(--bank-mint))]' },
-    { name: 'Marie K.', initials: 'MK', color: 'bg-[hsl(var(--bank-sky))]' },
-    { name: 'Paul A.', initials: 'PA', color: 'bg-[hsl(var(--bank-rose))]' },
-    { name: 'Aisha B.', initials: 'AB', color: 'bg-[hsl(var(--bank-violet))]' },
+  const contacts = (beneficiaries || []).slice(0, 4).map((b, i) => ({
+    name: b.beneficiary_name,
+    initials: b.beneficiary_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
+    color: quickSendColors[i % quickSendColors.length],
+  }));
+
+  // Fallback if no beneficiaries
+  const displayContacts = contacts.length > 0 ? contacts : [
+    { name: 'Jean M.', initials: 'JM', color: quickSendColors[0] },
+    { name: 'Marie K.', initials: 'MK', color: quickSendColors[1] },
+    { name: 'Paul A.', initials: 'PA', color: quickSendColors[2] },
+    { name: 'Aisha B.', initials: 'AB', color: quickSendColors[3] },
   ];
 
   return (
@@ -30,7 +47,7 @@ const BankPayments: React.FC = () => {
       <div className="mb-6">
         <h3 className="mb-3 text-base font-bold text-foreground">Quick Send</h3>
         <div className="flex gap-4">
-          {recentContacts.map((contact) => (
+          {displayContacts.map((contact) => (
             <button key={contact.name} className="flex flex-col items-center gap-1.5">
               <div className={`flex h-14 w-14 items-center justify-center rounded-full ${contact.color}`}>
                 <span className="text-sm font-bold text-white">{contact.initials}</span>
