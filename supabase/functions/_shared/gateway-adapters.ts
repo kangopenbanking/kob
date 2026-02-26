@@ -135,12 +135,24 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   };
 }
 
+// Zero-decimal currencies (Stripe expects amount in smallest unit; these have no cents)
+const ZERO_DECIMAL_CURRENCIES = ['xaf','xof','bif','clp','djf','gnf','jpy','kmf','krw','mga','pyg','rwf','ugx','vnd','vuv'];
+
+export { ZERO_DECIMAL_CURRENCIES };
+
+export function toStripeAmount(amount: number, currency: string): number {
+  return ZERO_DECIMAL_CURRENCIES.includes(currency.toLowerCase())
+    ? Math.round(amount)
+    : Math.round(amount * 100);
+}
+
 export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResult> {
   const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
   if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
+  const stripeAmount = toStripeAmount(req.amount, req.currency);
   const params = new URLSearchParams();
-  params.append('amount', Math.round(req.amount).toString());
+  params.append('amount', stripeAmount.toString());
   params.append('currency', req.currency.toLowerCase());
   params.append('payment_method_types[]', 'card');
   if (req.customer_email) params.append('receipt_email', req.customer_email);
@@ -212,7 +224,7 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
 
   const params = new URLSearchParams();
   params.append('payment_intent', req.provider_ref);
-  params.append('amount', Math.round(req.amount).toString());
+  params.append('amount', toStripeAmount(req.amount, req.reason?.includes('currency:') ? req.reason.split('currency:')[1].trim() : 'xaf').toString());
   if (req.reason) params.append('reason', req.reason);
 
   const res = await fetch('https://api.stripe.com/v1/refunds', {

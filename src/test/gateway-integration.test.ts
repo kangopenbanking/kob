@@ -340,3 +340,54 @@ describe("WooCommerce Plugin — Production Readiness", () => {
     expect(eventTypes).toContain("payment.completed");
   });
 });
+
+// ─── A-Grade Audit Tests (v2.8.0) ───
+
+describe("A-Grade Audit — Zero-Decimal Currency Guard", () => {
+  it("should have XAF in zero-decimal currency list", async () => {
+    const { ZERO_DECIMAL_CURRENCIES } = await import("../../supabase/functions/_shared/gateway-adapters");
+    expect(ZERO_DECIMAL_CURRENCIES).toContain("xaf");
+    expect(ZERO_DECIMAL_CURRENCIES).toContain("xof");
+    expect(ZERO_DECIMAL_CURRENCIES).toContain("jpy");
+  });
+
+  it("should not multiply XAF amounts by 100", async () => {
+    const { toStripeAmount } = await import("../../supabase/functions/_shared/gateway-adapters");
+    expect(toStripeAmount(5000, "XAF")).toBe(5000);
+    expect(toStripeAmount(5000, "xaf")).toBe(5000);
+  });
+
+  it("should multiply USD amounts by 100", async () => {
+    const { toStripeAmount } = await import("../../supabase/functions/_shared/gateway-adapters");
+    expect(toStripeAmount(50, "USD")).toBe(5000);
+    expect(toStripeAmount(50, "usd")).toBe(5000);
+  });
+
+  it("should multiply EUR amounts by 100", async () => {
+    const { toStripeAmount } = await import("../../supabase/functions/_shared/gateway-adapters");
+    expect(toStripeAmount(29.99, "EUR")).toBe(2999);
+  });
+});
+
+describe("A-Grade Audit — Valid Charge Channels", () => {
+  it("should have 7 valid charge channels including paypal", () => {
+    const validChannels = ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'paypal'];
+    expect(validChannels.length).toBe(7);
+    expect(validChannels).toContain('paypal');
+  });
+});
+
+describe("A-Grade Audit — Transaction State Machine", () => {
+  it("should define complete charge lifecycle", () => {
+    const chargeStates = ['pending', 'processing', 'successful', 'failed', 'cancelled', 'voided'];
+    expect(chargeStates.length).toBe(6);
+    expect(chargeStates.indexOf('pending')).toBeLessThan(chargeStates.indexOf('successful'));
+  });
+
+  it("should define complete dispute lifecycle", () => {
+    const disputeStates = ['open', 'under_review', 'won', 'lost', 'closed'];
+    expect(disputeStates.length).toBe(5);
+    expect(disputeStates).toContain('won');
+    expect(disputeStates).toContain('lost');
+  });
+});

@@ -16,10 +16,9 @@ serve(async (req) => {
     const rawBody = await req.text();
     const signature = req.headers.get('stripe-signature');
 
-    // Basic Stripe signature verification
+    // Stripe signature verification — ENFORCED
     const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBSECRET_KEY');
     if (STRIPE_WEBHOOK_SECRET && signature) {
-      // Parse signature components
       const sigParts = signature.split(',').reduce((acc: Record<string, string>, part: string) => {
         const [key, val] = part.split('=');
         acc[key] = val;
@@ -34,7 +33,8 @@ serve(async (req) => {
       const expectedSig = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
 
       if (sigParts['v1'] !== expectedSig) {
-        console.warn('Stripe signature mismatch — processing anyway in dev mode');
+        console.error('Stripe webhook signature verification FAILED — rejecting');
+        return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
     }
 
@@ -58,6 +58,16 @@ serve(async (req) => {
         const newStatus = mapStripeStatus(obj.status);
         await supabase.from('gateway_charges').update({ status: newStatus, provider_raw: obj }).eq('id', charge.id);
 
+        // ─── G4 FIX: Credit merchant wallet on successful charge ───
+        if (newStatus === 'successful' && charge.merchant_id) {
+          await supabase.rpc('update_merchant_wallet', {
+            _merchant_id: charge.merchant_id,
+            _currency: charge.currency,
+            _pending_delta: charge.net_amount || charge.amount,
+            _ledger_delta: charge.net_amount || charge.amount,
+          });
+        }
+
         if (newStatus === 'successful' || newStatus === 'failed') {
           await supabase.from('gateway_webhook_events').insert({
             merchant_id: charge.merchant_id,
@@ -75,28 +85,63 @@ serve(async (req) => {
       if (chargeId) {
         const { data: charge } = await supabase.from('gateway_charges').select('*').eq('provider_ref', chargeId).maybeSingle();
         if (charge) {
-          const disputeRef = 'DSP-' + crypto.randomUUID().slice(0, 8).toUpperCase();
-          const { data: newDispute } = await supabase.from('gateway_disputes').insert({
-            charge_id: charge.id, merchant_id: charge.merchant_id,
-            amount: (obj.amount || 0) / 100, currency: (obj.currency || 'xaf').toUpperCase(),
-            status: mapStripeDisputeStatus(obj.status), reason: obj.reason,
-            dispute_ref: disputeRef,
-            evidence_due_by: obj.evidence_details?.due_by ? new Date(obj.evidence_details.due_by * 1000).toISOString() : null,
-            provider: 'stripe', provider_ref: obj.id, provider_raw: obj,
-          }).select().single();
+          // ─── Dispute closed (won/lost) ───
+          if (event.type === 'charge.dispute.closed') {
+            const closedStatus = mapStripeDisputeStatus(obj.status);
+            await supabase.from('gateway_disputes').update({ status: closedStatus }).eq('provider_ref', obj.id);
 
-          await supabase.from('gateway_webhook_events').insert({
-            merchant_id: charge.merchant_id,
-            event_type: 'dispute.created',
-            payload: { dispute_id: obj.id, charge_id: charge.id, amount: (obj.amount || 0) / 100, reason: obj.reason },
-            status: 'pending', next_retry_at: new Date().toISOString(),
-          });
+            // G10 FIX: Re-credit wallet if dispute won
+            if (closedStatus === 'won') {
+              const disputeAmount = (obj.amount || 0) / 100;
+              await supabase.rpc('update_merchant_wallet', {
+                _merchant_id: charge.merchant_id,
+                _currency: charge.currency,
+                _available_delta: disputeAmount,
+                _ledger_delta: disputeAmount,
+              });
+            }
 
-          // Send dispute notifications
-          if (newDispute) {
-            await supabase.functions.invoke('gateway-dispute-notify', {
-              body: { dispute_id: newDispute.id, event_type: 'dispute.created' },
+            await supabase.from('gateway_webhook_events').insert({
+              merchant_id: charge.merchant_id,
+              event_type: closedStatus === 'won' ? 'dispute.won' : 'dispute.lost',
+              payload: { dispute_ref: obj.id, charge_id: charge.id, status: closedStatus, amount: (obj.amount || 0) / 100 },
+              status: 'pending', next_retry_at: new Date().toISOString(),
             });
+          } else {
+            // New dispute created
+            const disputeRef = 'DSP-' + crypto.randomUUID().slice(0, 8).toUpperCase();
+            const disputeAmount = (obj.amount || 0) / 100;
+
+            const { data: newDispute } = await supabase.from('gateway_disputes').insert({
+              charge_id: charge.id, merchant_id: charge.merchant_id,
+              amount: disputeAmount, currency: (obj.currency || 'xaf').toUpperCase(),
+              status: mapStripeDisputeStatus(obj.status), reason: obj.reason,
+              dispute_ref: disputeRef,
+              evidence_due_by: obj.evidence_details?.due_by ? new Date(obj.evidence_details.due_by * 1000).toISOString() : null,
+              provider: 'stripe', provider_ref: obj.id, provider_raw: obj,
+            }).select().single();
+
+            // ─── G9 FIX: Debit merchant wallet on dispute creation ───
+            await supabase.rpc('update_merchant_wallet', {
+              _merchant_id: charge.merchant_id,
+              _currency: charge.currency,
+              _available_delta: -disputeAmount,
+              _ledger_delta: -disputeAmount,
+            });
+
+            await supabase.from('gateway_webhook_events').insert({
+              merchant_id: charge.merchant_id,
+              event_type: 'dispute.created',
+              payload: { dispute_id: obj.id, charge_id: charge.id, amount: disputeAmount, reason: obj.reason },
+              status: 'pending', next_retry_at: new Date().toISOString(),
+            });
+
+            // Send dispute notifications
+            if (newDispute) {
+              await supabase.functions.invoke('gateway-dispute-notify', {
+                body: { dispute_id: newDispute.id, event_type: 'dispute.created' },
+              });
+            }
           }
         }
       }

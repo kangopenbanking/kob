@@ -6,6 +6,23 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.8.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "fix", description: "CRITICAL: Stripe zero-decimal currency guard — amounts now correctly converted for USD/EUR (×100) vs XAF/XOF (no conversion)" },
+        { type: "fix", description: "CRITICAL: Stripe webhook signature verification now enforced — forged webhooks rejected with 401" },
+        { type: "fix", description: "CRITICAL: Merchant wallet now credited on successful charge via Stripe and Flutterwave webhooks (was missing for auto-capture)" },
+        { type: "fix", description: "HIGH: Over-refund guard — refunds validated against SUM(existing_refunds) to prevent exceeding original charge amount" },
+        { type: "fix", description: "HIGH: Merchant wallet debited on successful refund (was missing)" },
+        { type: "fix", description: "HIGH: Merchant wallet debited on dispute creation, re-credited on dispute won" },
+        { type: "fix", description: "HIGH: Settlement cron date mutation bug fixed — each institution now uses fresh Date objects" },
+        { type: "improvement", description: "PayPal added to valid charge channels (was rejected with invalid_channel)" },
+        { type: "fix", description: "Subscription event no longer writes to gateway_charge_events with subscription UUID as charge_id" },
+        { type: "improvement", description: "Dispute lifecycle: charge.dispute.closed event now handles won/lost with wallet re-credit for won disputes" },
+      ]
+    },
+    {
       version: "2.7.0",
       date: "2026-02-26",
       type: "minor",

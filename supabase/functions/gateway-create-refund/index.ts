@@ -30,6 +30,18 @@ serve(async (req) => {
     if (charge.status !== 'successful') return new Response(JSON.stringify({ error: 'charge_not_refundable', message: 'Only successful charges can be refunded' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
     const refundAmount = amount || charge.amount;
+
+    // ─── G3/G10 FIX: Over-refund guard ───
+    const { data: existingRefunds } = await supabase.from('gateway_refunds')
+      .select('amount').eq('charge_id', charge_id).in('status', ['pending', 'processing', 'successful']);
+    const totalRefunded = (existingRefunds || []).reduce((sum: number, r: any) => sum + (r.amount || 0), 0);
+    if (totalRefunded + refundAmount > charge.amount) {
+      return new Response(JSON.stringify({
+        error: 'over_refund',
+        message: `Cannot refund ${refundAmount}. Already refunded: ${totalRefunded}. Max remaining: ${charge.amount - totalRefunded}`,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
 
     if (idempotencyKey) {
@@ -48,7 +60,7 @@ serve(async (req) => {
     try {
       let result;
       if (charge.provider === 'stripe') {
-        result = await createStripeRefund({ provider_ref: charge.provider_ref, amount: refundAmount, reason });
+        result = await createStripeRefund({ provider_ref: charge.provider_ref, amount: refundAmount, reason: `${reason || ''} currency:${charge.currency}` });
       } else {
         // MoMo: compensation payout
         result = await createFlutterwavePayout({
@@ -61,6 +73,16 @@ serve(async (req) => {
       await supabase.from('gateway_refunds').update({ status: result.status, provider_ref: result.provider_ref, provider_raw: result.provider_raw }).eq('id', refund.id);
       refund.status = result.status;
       refund.provider_ref = result.provider_ref;
+
+      // ─── G8 FIX: Debit merchant wallet on successful refund ───
+      if (result.status === 'successful' && charge.merchant_id) {
+        await supabase.rpc('update_merchant_wallet', {
+          _merchant_id: charge.merchant_id,
+          _currency: charge.currency,
+          _available_delta: -refundAmount,
+          _ledger_delta: -refundAmount,
+        });
+      }
 
       // Emit refund webhook event
       const eventType = result.status === 'successful' ? 'refund.completed' : 'refund.failed';
