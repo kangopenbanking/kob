@@ -22,6 +22,49 @@ export default function RiskAuditReference() {
         </AlertDescription>
       </Alert>
 
+      {/* Transaction Risk Scoring */}
+      <div>
+        <h2 className="text-2xl font-bold mb-4">Transaction Risk Scoring</h2>
+        <p className="text-muted-foreground mb-4">
+          Score proposed transactions against velocity checks, amount thresholds, and pattern anomaly detection before processing.
+        </p>
+
+        <ApiEndpoint
+          method="POST"
+          endpoint="/v1/gateway/risk/score"
+          description="Run real-time risk assessment on a proposed transaction. Returns a 0–100 risk score, flags, and a recommended action."
+          parameters={[
+            { name: "merchant_id", type: "uuid", required: true, description: "Merchant initiating the transaction" },
+            { name: "amount", type: "number", required: true, description: "Transaction amount" },
+            { name: "currency", type: "string", required: false, description: "ISO 4217 code (default: XAF)" },
+            { name: "channel", type: "string", required: true, description: "mobile_money | card | bank_transfer | ussd" },
+            { name: "customer_email", type: "string", required: false, description: "Customer email for pattern analysis" },
+            { name: "customer_phone", type: "string", required: false, description: "Customer phone number" },
+            { name: "customer_ip", type: "string", required: false, description: "Client IP for geo-based checks" },
+          ]}
+          requestBody={`{
+  "merchant_id": "mch_uuid",
+  "amount": 500000,
+  "currency": "XAF",
+  "channel": "mobile_money",
+  "customer_phone": "237677123456",
+  "customer_ip": "197.239.5.1"
+}`}
+          response={`{
+  "risk_score": 35,
+  "risk_level": "medium",
+  "flags": ["high_amount"],
+  "recommended_action": "flag_for_review",
+  "checks": {
+    "velocity": { "passed": true, "tx_count_1h": 3, "limit": 10 },
+    "amount_threshold": { "passed": false, "threshold": 500000 },
+    "pattern_anomaly": { "passed": true, "anomaly_type": null }
+  },
+  "evaluated_at": "2026-02-26T12:00:00Z"
+}`}
+        />
+      </div>
+
       {/* Transaction Limits */}
       <div>
         <h2 className="text-2xl font-bold mb-4">Transaction Limits</h2>

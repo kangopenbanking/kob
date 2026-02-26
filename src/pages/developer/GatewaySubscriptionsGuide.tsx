@@ -50,6 +50,20 @@ const GatewaySubscriptionsGuide = () => (
         { name: "reason", type: "string", required: false, description: "Cancellation reason" },
       ]}
     />
+
+    <h2 className="text-2xl font-semibold mt-8">Invoice Generation</h2>
+    <p className="text-muted-foreground">Invoices are automatically generated for each billing cycle. When a subscription charge is processed, the system creates a PDF invoice with line items, fees, and tax breakdowns. Invoices can be retrieved via the Settlement API.</p>
+
+    <ApiEndpoint method="POST" endpoint="/v1/invoices/generate" description="Generate an invoice for a billing period. Typically called by the subscription cron job, but can be triggered manually by admins."
+      requestBody={JSON.stringify({ institution_id: "inst_uuid", billing_cycle: "monthly", period_start: "2026-02-01", period_end: "2026-02-28" }, null, 2)}
+      response={JSON.stringify({ invoice_id: "inv_uuid", invoice_number: "INV-2026-02-000001", total_amount: 45000, currency: "XAF", status: "pending", due_date: "2026-03-30", created_at: "2026-02-28T23:59:59Z" }, null, 2)}
+      parameters={[
+        { name: "institution_id", type: "uuid", required: true, description: "Institution or merchant to invoice" },
+        { name: "billing_cycle", type: "string", required: true, description: "monthly | quarterly | yearly" },
+        { name: "period_start", type: "date", required: true, description: "Billing period start date" },
+        { name: "period_end", type: "date", required: true, description: "Billing period end date" },
+      ]}
+    />
   </div>
 );
 

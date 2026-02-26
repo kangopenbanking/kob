@@ -6,6 +6,20 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.3.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Transaction Risk Scoring API — POST /v1/gateway/risk/score with velocity, amount-threshold, and pattern-anomaly checks" },
+        { type: "feature", description: "Gateway Exchange Rate API — GET /v1/gateway/exchange-rate for real-time multi-currency FX lookups under the Payment Gateway tag" },
+        { type: "feature", description: "Invoice generation documented in Subscriptions guide with POST /v1/invoices/generate endpoint" },
+        { type: "improvement", description: "Fee estimate expanded to support account_funding, ussd, apple_pay, and google_pay channels" },
+        { type: "improvement", description: "OpenAPI spec updated with /v1/gateway/risk/score and /v1/gateway/exchange-rate endpoints" },
+        { type: "improvement", description: "Postman collection expanded with Score Transaction Risk and Gateway Exchange Rate requests" },
+        { type: "improvement", description: "RiskAuditReference developer page updated with transaction risk scoring documentation" },
+      ]
+    },
+    {
       version: "2.2.0",
       date: "2026-02-26",
       type: "minor",

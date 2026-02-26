@@ -28,8 +28,8 @@ serve(async (req) => {
       fee_amount: fee,
       net_amount: net,
       fee_breakdown: {
-        rate: channel === 'mobile_money' ? '3%' : channel === 'card' ? '3.5%' : '2%',
-        fixed: channel === 'mobile_money' ? 50 : channel === 'card' ? 100 : 75,
+        rate: channel === 'mobile_money' ? '3%' : channel === 'card' ? '3.5%' : channel === 'bank_transfer' ? '2%' : channel === 'account_funding' ? '2.5%' : channel === 'ussd' ? '2.5%' : channel === 'apple_pay' || channel === 'google_pay' ? '3.5%' : '3.5%',
+        fixed: channel === 'mobile_money' ? 50 : channel === 'card' ? 100 : channel === 'bank_transfer' ? 75 : channel === 'account_funding' ? 0 : channel === 'ussd' ? 25 : channel === 'apple_pay' || channel === 'google_pay' ? 100 : 0,
         currency,
       },
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

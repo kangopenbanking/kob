@@ -809,7 +809,17 @@ Deno.serve(async (req) => {
           r('Withdraw to External Bank', 'POST', '/v1/gateway/withdraw-to-bank', {
             body: { amount: 25000, account_id: '{{account_id}}', bank_code: 'SGCM', account_number: '1234567890', beneficiary_name: 'Jean Dupont', narration: 'Salary withdrawal' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
-            desc: 'Withdraw from KOB account to external bank',
+           desc: 'Withdraw from KOB account to external bank',
+          }),
+          // Risk Scoring
+          r('Score Transaction Risk', 'POST', '/v1/gateway/risk/score', {
+            body: { merchant_id: '{{merchant_id}}', amount: 500000, currency: 'XAF', channel: 'mobile_money', customer_phone: '237677123456', customer_ip: '197.239.5.1' },
+            desc: 'Run velocity, amount, and pattern anomaly risk checks on a proposed transaction',
+          }),
+          // Gateway Exchange Rate
+          r('Get Gateway Exchange Rate', 'GET', '/v1/gateway/exchange-rate', {
+            query: [{ key: 'from', value: 'XAF' }, { key: 'to', value: 'USD' }, { key: 'amount', value: '100000' }],
+            desc: 'Real-time FX rate lookup for multi-currency charges and settlements',
           }),
         ],
       },
