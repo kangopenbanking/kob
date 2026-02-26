@@ -62,12 +62,14 @@ const Documentation = () => {
   );
 
   const CodeBlock = ({ code, id, label }: { code: string; id: string; label?: string }) => (
-    <div className="rounded-xl border bg-muted/30 overflow-hidden">
-      <div className="flex items-center justify-between px-4 py-2 border-b bg-muted/50">
-        <span className="text-xs font-mono text-muted-foreground uppercase tracking-wider">{label || 'Example'}</span>
-        <CopyButton text={code} id={id} />
+    <div className="rounded-xl border border-white/10 bg-[#0d1117] text-gray-100 overflow-hidden">
+      <div className="flex items-center justify-between px-4 py-2 border-b border-white/10 bg-gray-900">
+        <span className="text-xs font-mono text-gray-400 uppercase tracking-wider">{label || 'Example'}</span>
+        <Button variant="ghost" size="sm" onClick={() => copyToClipboard(code, id)} className="h-7 px-2 text-gray-400 hover:text-white hover:bg-white/10">
+          {copiedId === id ? <CheckCircle2 className="h-3.5 w-3.5 text-green-400" /> : <Copy className="h-3.5 w-3.5" />}
+        </Button>
       </div>
-      <pre className="p-4 font-mono text-sm overflow-x-auto whitespace-pre-wrap leading-relaxed">{code}</pre>
+      <pre className="p-4 font-mono text-sm overflow-x-auto whitespace-pre-wrap leading-relaxed text-gray-100">{code}</pre>
     </div>
   );
 
