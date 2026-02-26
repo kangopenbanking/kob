@@ -85,7 +85,7 @@ const navSections = [
       { title: "AISP (Accounts)", path: "/developer/api/aisp" },
       { title: "Banking Operations", path: "/developer/api/banking" },
       { title: "Transfers & Fund Movement", path: "/developer/api/transfers" },
-      { title: "Credit Scoring", path: "/developer/payment-facilitation" },
+      { title: "Payment Facilitation", path: "/developer/payment-facilitation" },
       { title: "Certificates (mTLS)", path: "/developer/certificates" },
     ],
   },

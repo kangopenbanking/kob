@@ -370,6 +370,11 @@ Deno.serve(async (req) => {
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
             desc: 'Institution-facilitated bank payout via Flutterwave with KOB fee calculation.',
           }),
+          r('Facilitated Mobile Money Charge', 'POST', '/v1/banking/facilitated-mobile-money-charge', {
+            body: { phone_number: '237677123456', amount: 5000, currency: 'XAF', email: 'customer@example.com', redirect_url: 'https://yoursite.com/callback', metadata: { order_id: 'ORD-12345' } },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Facilitated mobile money collection via KOB Flutterwave rail with automatic fee calculation.',
+          }),
         ],
       },
 
