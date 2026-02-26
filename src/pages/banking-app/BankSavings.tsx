@@ -1,16 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, PiggyBank, Target, Plus } from 'lucide-react';
+import { ArrowLeft, PiggyBank, Target, Plus, Loader2, ArrowUpCircle, ArrowDownCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { useSavingsAccounts, useSavingsDeposit, useSavingsWithdraw } from '@/hooks/useBankingData';
+
+const savingsColors = [
+  { color: 'bg-[hsl(var(--bank-mint))]', fg: 'text-[hsl(var(--bank-mint-fg))]' },
+  { color: 'bg-[hsl(var(--bank-amber))]', fg: 'text-[hsl(var(--bank-amber-fg))]' },
+  { color: 'bg-[hsl(var(--bank-sky))]', fg: 'text-white' },
+  { color: 'bg-[hsl(var(--bank-violet))]', fg: 'text-white' },
+];
 
 const BankSavings: React.FC = () => {
   const navigate = useNavigate();
+  const { data: savingsAccounts, isLoading } = useSavingsAccounts();
+  const deposit = useSavingsDeposit();
+  const withdraw = useSavingsWithdraw();
+  const [actionAccountId, setActionAccountId] = useState<string | null>(null);
+  const [actionType, setActionType] = useState<'deposit' | 'withdraw'>('deposit');
+  const [amount, setAmount] = useState('');
 
-  const savingsGoals = [
-    { name: 'Emergency Fund', target: 500000, current: 320000, currency: 'XAF', color: 'bg-[hsl(var(--bank-mint))]', fg: 'text-[hsl(var(--bank-mint-fg))]' },
-    { name: 'New Phone', target: 150000, current: 90000, currency: 'XAF', color: 'bg-[hsl(var(--bank-amber))]', fg: 'text-[hsl(var(--bank-amber-fg))]' },
-  ];
+  const totalSavings = (savingsAccounts || []).reduce((s, a) => s + (a.current_balance || 0), 0);
+
+  const handleAction = () => {
+    if (!actionAccountId || !amount) return;
+    const mutation = actionType === 'deposit' ? deposit : withdraw;
+    mutation.mutate({ savings_account_id: actionAccountId, amount: Number(amount) }, {
+      onSuccess: () => { setActionAccountId(null); setAmount(''); },
+    });
+  };
 
   return (
     <div className="flex min-h-screen flex-col px-4 py-6">
@@ -24,7 +45,11 @@ const BankSavings: React.FC = () => {
           <h1 className="text-2xl font-bold tracking-tight text-foreground">Savings</h1>
           <p className="text-sm font-medium text-muted-foreground">Goals & deposits</p>
         </div>
-        <Button size="sm" className="gap-1.5 rounded-xl bg-[hsl(var(--bank-mint))] text-[hsl(var(--bank-mint-fg))] hover:bg-[hsl(var(--bank-mint))]/90">
+        <Button
+          size="sm"
+          className="gap-1.5 rounded-xl bg-[hsl(var(--bank-mint))] text-[hsl(var(--bank-mint-fg))] hover:bg-[hsl(var(--bank-mint))]/90"
+          onClick={() => navigate('new')}
+        >
           <Plus className="h-4 w-4" strokeWidth={2} />
           New Goal
         </Button>
@@ -37,40 +62,104 @@ const BankSavings: React.FC = () => {
       >
         <span className="text-sm font-medium text-background/60">Total Savings</span>
         <p className="mt-2 text-3xl font-bold tracking-tight text-background">
-          XAF {(410000).toLocaleString()}
+          {isLoading ? (
+            <Loader2 className="h-6 w-6 animate-spin text-background/40" />
+          ) : (
+            `XAF ${totalSavings.toLocaleString()}`
+          )}
         </p>
-        <p className="mt-1 text-sm font-medium text-[hsl(var(--bank-mint))]">+XAF 12,500 this month</p>
       </motion.div>
 
-      <div className="flex flex-col gap-4">
-        {savingsGoals.map((goal, i) => {
-          const progress = (goal.current / goal.target) * 100;
-          return (
-            <motion.div
-              key={goal.name}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`rounded-2xl ${goal.color} p-5`}
-            >
-              <div className="mb-3 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className={`h-5 w-5 ${goal.fg}`} strokeWidth={1.5} />
-                  <p className={`text-base font-bold ${goal.fg}`}>{goal.name}</p>
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : (savingsAccounts || []).length === 0 ? (
+        <div className="flex flex-col items-center py-12 text-center">
+          <PiggyBank className="mb-3 h-12 w-12 text-muted-foreground" strokeWidth={1.5} />
+          <p className="text-lg font-bold text-foreground">No savings goals yet</p>
+          <p className="text-sm text-muted-foreground">Create your first savings goal to get started</p>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {(savingsAccounts || []).map((goal, i) => {
+            const progress = goal.target_amount ? (goal.current_balance / goal.target_amount) * 100 : 0;
+            const colors = savingsColors[i % savingsColors.length];
+            return (
+              <motion.div
+                key={goal.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className={`rounded-2xl ${colors.color} p-5`}
+              >
+                <div className="mb-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className={`h-5 w-5 ${colors.fg}`} strokeWidth={1.5} />
+                    <p className={`text-base font-bold ${colors.fg}`}>{goal.account_name || 'Savings'}</p>
+                  </div>
+                  {goal.target_amount && (
+                    <span className={`text-sm font-bold ${colors.fg}`}>{Math.round(progress)}%</span>
+                  )}
                 </div>
-                <span className={`text-sm font-bold ${goal.fg}`}>{Math.round(progress)}%</span>
-              </div>
-              <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-white/30">
-                <div className="h-full rounded-full bg-white/80" style={{ width: `${progress}%` }} />
-              </div>
-              <div className="flex justify-between text-sm font-semibold">
-                <span className={`${goal.fg} opacity-80`}>{goal.currency} {goal.current.toLocaleString()}</span>
-                <span className={`${goal.fg} opacity-80`}>{goal.currency} {goal.target.toLocaleString()}</span>
-              </div>
-            </motion.div>
-          );
-        })}
-      </div>
+                {goal.target_amount && (
+                  <div className="mb-3 h-3 w-full overflow-hidden rounded-full bg-white/30">
+                    <div className="h-full rounded-full bg-white/80" style={{ width: `${Math.min(progress, 100)}%` }} />
+                  </div>
+                )}
+                <div className="mb-3 flex justify-between text-sm font-semibold">
+                  <span className={`${colors.fg} opacity-80`}>XAF {goal.current_balance.toLocaleString()}</span>
+                  {goal.target_amount && (
+                    <span className={`${colors.fg} opacity-80`}>XAF {goal.target_amount.toLocaleString()}</span>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Dialog open={actionAccountId === goal.id && actionType === 'deposit'} onOpenChange={(o) => !o && setActionAccountId(null)}>
+                    <DialogTrigger asChild>
+                      <button
+                        onClick={() => { setActionAccountId(goal.id); setActionType('deposit'); }}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-white/30 py-2 text-xs font-bold"
+                      >
+                        <ArrowUpCircle className={`h-4 w-4 ${colors.fg}`} strokeWidth={1.5} />
+                        <span className={colors.fg}>Deposit</span>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Deposit to {goal.account_name}</DialogTitle></DialogHeader>
+                      <div className="flex flex-col gap-4 pt-2">
+                        <Input type="number" placeholder="Amount (XAF)" value={amount} onChange={e => setAmount(e.target.value)} className="text-center text-xl font-bold h-14" />
+                        <Button onClick={handleAction} disabled={deposit.isPending || !amount}>
+                          {deposit.isPending ? 'Processing...' : 'Deposit'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={actionAccountId === goal.id && actionType === 'withdraw'} onOpenChange={(o) => !o && setActionAccountId(null)}>
+                    <DialogTrigger asChild>
+                      <button
+                        onClick={() => { setActionAccountId(goal.id); setActionType('withdraw'); }}
+                        className="flex flex-1 items-center justify-center gap-1 rounded-xl bg-white/30 py-2 text-xs font-bold"
+                      >
+                        <ArrowDownCircle className={`h-4 w-4 ${colors.fg}`} strokeWidth={1.5} />
+                        <span className={colors.fg}>Withdraw</span>
+                      </button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Withdraw from {goal.account_name}</DialogTitle></DialogHeader>
+                      <div className="flex flex-col gap-4 pt-2">
+                        <Input type="number" placeholder="Amount (XAF)" value={amount} onChange={e => setAmount(e.target.value)} className="text-center text-xl font-bold h-14" />
+                        <Button onClick={handleAction} disabled={withdraw.isPending || !amount}>
+                          {withdraw.isPending ? 'Processing...' : 'Withdraw'}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, User, Send, ArrowRight } from 'lucide-react';
+import { ArrowLeft, User, Send, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { useSendTransfer, useBankAccounts } from '@/hooks/useBankingData';
 
 const BankSendMoney: React.FC = () => {
   const { institutionId } = useParams();
@@ -13,14 +13,22 @@ const BankSendMoney: React.FC = () => {
   const [step, setStep] = useState<'recipient' | 'amount' | 'confirm'>('recipient');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
+  const { data: accounts } = useBankAccounts();
+  const sendTransfer = useSendTransfer();
 
-  const handleSend = async () => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    toast.success('Transfer sent successfully!');
-    setLoading(false);
-    navigate(`/bank/${institutionId}/home`);
+  const sourceAccount = accounts?.[0]; // Use primary account
+
+  const handleSend = () => {
+    if (!sourceAccount) return;
+    sendTransfer.mutate({
+      source_account_id: sourceAccount.id,
+      destination_account_id: recipient, // The recipient field serves as account ID or identifier
+      amount: Number(amount),
+      currency: 'XAF',
+      description: `Transfer to ${recipient}`,
+    }, {
+      onSuccess: () => navigate(`/bank/${institutionId}/home`),
+    });
   };
 
   return (
@@ -46,7 +54,7 @@ const BankSendMoney: React.FC = () => {
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
                 <Input
-                  placeholder="Phone number or email"
+                  placeholder="Account ID or phone number"
                   value={recipient}
                   onChange={(e) => setRecipient(e.target.value)}
                   className="pl-10"
@@ -93,9 +101,12 @@ const BankSendMoney: React.FC = () => {
                 <span className="text-sm font-medium">XAF 0</span>
               </div>
             </div>
-            <Button onClick={handleSend} disabled={loading} className="mt-4 gap-2" size="lg">
-              {loading ? 'Sending...' : 'Confirm & Send'}
-              <Send className="h-4 w-4" strokeWidth={1.5} />
+            <Button onClick={handleSend} disabled={sendTransfer.isPending} className="mt-4 gap-2" size="lg">
+              {sendTransfer.isPending ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Sending...</>
+              ) : (
+                <>Confirm & Send <Send className="h-4 w-4" strokeWidth={1.5} /></>
+              )}
             </Button>
           </>
         )}

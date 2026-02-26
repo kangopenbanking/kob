@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Smartphone, ArrowRight } from 'lucide-react';
+import { ArrowLeft, Smartphone, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
-import { toast } from 'sonner';
+import { useMobileMoneyCharge } from '@/hooks/useBankingData';
 
 const providers = [
   { id: 'mtn', name: 'MTN MoMo', color: 'bg-yellow-500' },
@@ -17,14 +17,17 @@ const BankMobileMoney: React.FC = () => {
   const [selectedProvider, setSelectedProvider] = useState('');
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
-  const [loading, setLoading] = useState(false);
+  const momoCharge = useMobileMoneyCharge();
 
-  const handleSend = async () => {
-    setLoading(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    toast.success('Mobile Money transfer initiated!');
-    setLoading(false);
-    navigate(-1);
+  const handleSend = () => {
+    momoCharge.mutate({
+      phone_number: phone,
+      amount: Number(amount),
+      currency: 'XAF',
+      provider: selectedProvider,
+    }, {
+      onSuccess: () => navigate(-1),
+    });
   };
 
   return (
@@ -84,12 +87,15 @@ const BankMobileMoney: React.FC = () => {
 
         <Button
           onClick={handleSend}
-          disabled={!selectedProvider || !phone || !amount || loading}
+          disabled={!selectedProvider || !phone || !amount || momoCharge.isPending}
           className="mt-4 gap-2"
           size="lg"
         >
-          {loading ? 'Processing...' : 'Send'}
-          <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
+          {momoCharge.isPending ? (
+            <><Loader2 className="h-4 w-4 animate-spin" /> Processing...</>
+          ) : (
+            <>Send <ArrowRight className="h-4 w-4" strokeWidth={1.5} /></>
+          )}
         </Button>
       </div>
     </div>
