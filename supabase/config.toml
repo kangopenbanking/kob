@@ -541,3 +541,7 @@ verify_jwt = false
 
 [functions.gateway-withdraw-to-paypal]
 verify_jwt = false
+
+# Firebase Phone Authentication
+[functions.firebase-phone-verify]
+verify_jwt = false
