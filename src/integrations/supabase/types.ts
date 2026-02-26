@@ -11208,6 +11208,7 @@ export type Database = {
         | "personal"
         | "staff"
         | "merchant"
+        | "tpp"
       card_funding_status:
         | "pending"
         | "processing"
@@ -11433,6 +11434,7 @@ export const Constants = {
         "personal",
         "staff",
         "merchant",
+        "tpp",
       ],
       card_funding_status: [
         "pending",
