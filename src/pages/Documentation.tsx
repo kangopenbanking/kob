@@ -103,7 +103,7 @@ const Documentation = () => {
     { label: "Risk & Audit", icon: Shield, path: "/developer/api/risk-audit", color: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20" },
     { label: "Certificates", icon: Shield, path: "/guides/certificates", color: "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-500/20" },
     { label: "Webhooks", icon: Terminal, path: "/developer/api/webhooks", color: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/20" },
-    { label: "Credit Scoring", icon: TrendingUp, path: "/developer/payment-facilitation", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20" },
+    { label: "Payment Facilitation", icon: TrendingUp, path: "/developer/payment-facilitation", color: "bg-violet-500/10 text-violet-700 dark:text-violet-400 border-violet-500/20" },
   ];
 
   const coreEndpoints = [
