@@ -45,6 +45,8 @@ export function useFirebasePhoneAuth() {
         ? 'Invalid phone number format.'
         : err.code === 'auth/billing-not-enabled'
         ? 'Phone authentication requires Firebase Blaze plan billing to be enabled and Phone sign-in method activated in Firebase Console.'
+        : err.code === 'auth/captcha-check-failed'
+        ? 'Domain not authorized in Firebase. Please add this domain to Firebase Console → Authentication → Authorized domains.'
         : err.message || 'Failed to send verification code';
       setError(msg);
       toast.error(msg);
