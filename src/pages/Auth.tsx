@@ -12,6 +12,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, ArrowLeft, Smartphone, Shield } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
+import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
 
 type AuthStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete';
 type OTPType = 'login' | 'signup';
@@ -38,6 +39,7 @@ const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits');
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { config: authConfig } = useAuthPageConfig();
   
   const [authStep, setAuthStep] = useState<AuthStep>('captcha');
   const [authMethod, setAuthMethod] = useState<AuthMethod>('firebase');
@@ -419,17 +421,17 @@ export default function Auth() {
         <Card className="w-full max-w-md bg-white border shadow-lg">
           <CardHeader className="space-y-1">
             <div className="flex items-center gap-4 mb-4">
-              <img src="/kob-logo.png" alt="Kang Open Banking Logo" className="h-12 w-12" />
+              <img src={authConfig.logo_url} alt="Kang Open Banking Logo" className="h-12 w-12" />
               <div>
                 <CardTitle className="text-2xl font-bold">
-                  {showForgotPassword ? 'Reset Password' : isLogin ? 'Welcome Back' : 'Create Account'}
+                  {showForgotPassword ? 'Reset Password' : isLogin ? authConfig.login_title : authConfig.signup_title}
                 </CardTitle>
                 <CardDescription>
                   {showForgotPassword 
                     ? 'Verify your phone and PIN to reset password'
                     : isLogin 
-                      ? 'Sign in to your account using your phone number' 
-                      : 'Sign up with phone only - add email later from Profile Settings'
+                      ? authConfig.login_subtitle 
+                      : authConfig.signup_subtitle
                   }
                 </CardDescription>
               </div>
@@ -820,17 +822,28 @@ export default function Auth() {
         </Card>
       </div>
       
-      {/* Right Panel - Animated Gradient (Desktop Only) */}
-      <div className="hidden lg:block animated-gradient-banner relative overflow-hidden">
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center space-y-4 px-8">
-            <h2 className="text-5xl font-bold text-white drop-shadow-lg">
-              Welcome to KOB
-            </h2>
-            <p className="text-xl text-white/90 drop-shadow">
-              Secure Open Banking Platform
-            </p>
-          </div>
+      {/* Right Panel - Admin-Managed Hero (Desktop Only) */}
+      <div
+        className="hidden lg:flex relative overflow-hidden items-center justify-center"
+        style={{
+          backgroundImage: authConfig.hero_image_url
+            ? `url(${authConfig.hero_image_url})`
+            : undefined,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundColor: authConfig.hero_image_url ? undefined : 'hsl(var(--primary))',
+        }}
+      >
+        {authConfig.hero_image_url && (
+          <div className="absolute inset-0 bg-black/40" />
+        )}
+        <div className="relative text-center space-y-4 px-8 z-10">
+          <h2 className="text-5xl font-bold text-white drop-shadow-lg">
+            {authConfig.hero_title}
+          </h2>
+          <p className="text-xl text-white/90 drop-shadow">
+            {authConfig.hero_subtitle}
+          </p>
         </div>
       </div>
     </div>

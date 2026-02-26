@@ -855,6 +855,36 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_page_config: {
+        Row: {
+          config_key: string
+          config_type: string
+          config_value: string
+          description: string | null
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          config_key: string
+          config_type?: string
+          config_value?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          config_key?: string
+          config_type?: string
+          config_value?: string
+          description?: string | null
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       authorization_codes: {
         Row: {
           client_id: string
