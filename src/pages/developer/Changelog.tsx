@@ -6,6 +6,27 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.9.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "fix", description: "CRITICAL: OpenAPI grant_type enum now includes client_credentials — server-to-server integrations no longer fail strict OpenAPI validators" },
+        { type: "fix", description: "CRITICAL: OAuth token request schema adds client_secret and scope properties to match implementation" },
+        { type: "fix", description: "HIGH: Idempotency-Key header marked required: true (was false) per architecture mandate" },
+        { type: "fix", description: "HIGH: Retry-After header documented in 429 rate-limit response" },
+        { type: "fix", description: "HIGH: x-consent-id header added to all AISP endpoints (accounts, balances, transactions, beneficiaries, standing orders, direct debits)" },
+        { type: "feature", description: "24 webhook event types enumerated in WebhookEventType schema (charge, payout, refund, dispute, settlement, consent, account domains)" },
+        { type: "improvement", description: "Charge event types enumerated with 8 lifecycle events (created, processing, successful, failed, cancelled, voided, captured, refunded)" },
+        { type: "improvement", description: "Reconciliation request schema adds provider field (flutterwave, stripe, paypal)" },
+        { type: "improvement", description: "Legacy endpoints (/v1/mobile-money/*, /v1/stripe/*, /v1/flutterwave/*) marked deprecated in favor of Gateway API" },
+        { type: "improvement", description: "OpenAPI spec version updated to 2.9.0" },
+        { type: "improvement", description: "Postman: client_credentials token request added to OAuth folder" },
+        { type: "fix", description: "Postman: Legacy payment paths aligned with OpenAPI spec (/v1/stripe/payment-intent, /v1/flutterwave/bank-transfer)" },
+        { type: "fix", description: "Postman: Virtual card paths aligned with spec (/v1/cards/* not /v1/virtual-cards/*)" },
+        { type: "feature", description: "Postman: Reconciliation mismatch retrieval and resolution requests added" },
+      ]
+    },
+    {
       version: "2.8.0",
       date: "2026-02-26",
       type: "minor",

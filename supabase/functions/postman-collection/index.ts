@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
       {
         name: 'OAuth',
         item: [
-          r('Get Access Token', 'POST', '/v1/oauth/token', {
+          r('Get Access Token (Authorization Code)', 'POST', '/v1/oauth/token', {
             bodyMode: 'urlencoded',
             urlencoded: [
               { key: 'grant_type', value: 'authorization_code' },
@@ -107,6 +107,16 @@ Deno.serve(async (req) => {
               { key: 'client_secret', value: 'YOUR_CLIENT_SECRET' },
               { key: 'code', value: 'AUTH_CODE' },
             ],
+          }),
+          r('Get Token (Client Credentials)', 'POST', '/v1/oauth/token', {
+            bodyMode: 'urlencoded',
+            urlencoded: [
+              { key: 'grant_type', value: 'client_credentials' },
+              { key: 'client_id', value: 'YOUR_CLIENT_ID' },
+              { key: 'client_secret', value: 'YOUR_CLIENT_SECRET' },
+              { key: 'scope', value: 'accounts payments' },
+            ],
+            desc: 'Server-to-server flow — no user context required.',
           }),
           r('Introspect Token', 'POST', '/v1/oauth/introspect', {
             bodyMode: 'urlencoded',
@@ -335,17 +345,17 @@ Deno.serve(async (req) => {
       {
         name: 'Payments',
         item: [
-          r('Create Payment Intent (Stripe)', 'POST', '/v1/payments/stripe/intent', {
+          r('Create Payment Intent (Stripe)', 'POST', '/v1/stripe/payment-intent', {
             body: { amount: 10000, currency: 'xaf' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
-          r('Confirm Payment (Stripe)', 'POST', '/v1/payments/stripe/confirm', { body: { payment_intent_id: 'pi_xxx' } }),
-          r('Bank Transfer (Flutterwave)', 'POST', '/v1/payments/flutterwave/bank-transfer', {
+          r('Confirm Payment (Stripe)', 'POST', '/v1/stripe/confirm-payment', { body: { payment_intent_id: 'pi_xxx' } }),
+          r('Bank Transfer (Flutterwave)', 'POST', '/v1/flutterwave/bank-transfer', {
             body: { account_number: '1234567890', bank_code: 'SGCM', amount: 50000 },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
-          r('List Banks', 'GET', '/v1/payments/flutterwave/banks', { query: [{ key: 'country', value: 'CM' }] }),
-          r('Verify Bank Account', 'POST', '/v1/payments/flutterwave/verify-bank', { body: { account_number: '1234567890', bank_code: 'SGCM' } }),
+          r('List Banks', 'GET', '/v1/flutterwave/banks', { query: [{ key: 'country', value: 'CM' }] }),
+          r('Verify Bank Account', 'POST', '/v1/flutterwave/verify-bank', { body: { account_number: '1234567890', bank_code: 'SGCM' } }),
         ],
       },
 
@@ -382,17 +392,17 @@ Deno.serve(async (req) => {
       {
         name: 'Virtual Cards',
         item: [
-          r('Create Virtual Card', 'POST', '/v1/virtual-cards', {
+          r('Create Virtual Card', 'POST', '/v1/cards', {
             body: { currency: 'USD', initial_amount: 100 },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
-          r('List Virtual Cards', 'GET', '/v1/virtual-cards'),
-          r('Update Card Status', 'PUT', '/v1/virtual-cards/{{card_id}}/status', { body: { status: 'frozen' } }),
-          r('Top Up Card', 'POST', '/v1/virtual-cards/{{card_id}}/topup', {
+          r('List Virtual Cards', 'GET', '/v1/cards'),
+          r('Update Card Status', 'PUT', '/v1/cards/{{card_id}}/status', { body: { status: 'frozen' } }),
+          r('Top Up Card', 'POST', '/v1/cards/{{card_id}}/topup', {
             body: { amount: 50, source_currency: 'XAF' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
-          r('Card Transactions', 'GET', '/v1/virtual-cards/{{card_id}}/transactions'),
+          r('Card Transactions', 'GET', '/v1/cards/{{card_id}}/transactions'),
         ],
       },
 
@@ -663,10 +673,14 @@ Deno.serve(async (req) => {
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
           }),
           r('List Reconciliation Runs', 'GET', '/v1/gateway/reconciliation'),
-          r('Get Run Mismatches', 'GET', '/v1/gateway/reconciliation', { query: [{ key: 'run_id', value: 'RUN_UUID' }, { key: 'action', value: 'mismatches' }] }),
-          r('Resolve Mismatch', 'POST', '/v1/gateway/reconciliation', {
-            query: [{ key: 'mismatch_id', value: 'MM_UUID' }, { key: 'action', value: 'resolve' }],
-            body: { resolution_notes: 'Verified with provider' },
+          r('Get Run Mismatches', 'GET', '/v1/gateway/reconciliation/{{reconciliation_run_id}}/mismatches', {
+            query: [{ key: 'limit', value: '50' }],
+            desc: 'Retrieve mismatches for a completed reconciliation run.',
+          }),
+          r('Resolve Mismatch', 'POST', '/v1/gateway/reconciliation/{{reconciliation_run_id}}/mismatches/{{mismatch_id}}/resolve', {
+            body: { resolution: 'accepted', resolution_notes: 'Verified with provider statement' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Mark a reconciliation mismatch as resolved.',
           }),
           r('Fee Report', 'GET', '/v1/gateway/reports/fees', {
             query: [{ key: 'merchant_id', value: '{{merchant_id}}' }, { key: 'from', value: '2026-02-01' }, { key: 'to', value: '2026-02-28' }],
