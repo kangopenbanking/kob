@@ -31,6 +31,27 @@ describe("Gateway Adapters — Fee Calculation", () => {
     expect(net).toBe(50000 - fee);
   });
 
+  it("should calculate ussd fees correctly", async () => {
+    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFee(10000, "ussd");
+    expect(fee).toBe(Math.round(10000 * 0.025 + 25)); // 275
+    expect(net).toBe(10000 - fee);
+  });
+
+  it("should calculate apple_pay fees correctly", async () => {
+    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFee(10000, "apple_pay");
+    expect(fee).toBe(Math.round(10000 * 0.035 + 100)); // 450
+    expect(net).toBe(10000 - fee);
+  });
+
+  it("should calculate google_pay fees correctly", async () => {
+    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFee(10000, "google_pay");
+    expect(fee).toBe(Math.round(10000 * 0.035 + 100)); // 450
+    expect(net).toBe(10000 - fee);
+  });
+
   it("should default to 3.5% for unknown channels", async () => {
     const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
     const { fee } = calculateGatewayFee(10000, "unknown_channel");
