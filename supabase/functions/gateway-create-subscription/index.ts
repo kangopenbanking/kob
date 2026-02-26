@@ -50,12 +50,15 @@ serve(async (req) => {
 
     if (insertErr) throw insertErr;
 
-    // Webhook event: subscription.created
-    await supabase.from('gateway_charge_events').insert({
-      charge_id: subscription.id,
-      event_type: 'subscription.created',
-      details: { subscription_id: subscription.id, plan_id, customer_email },
-    }).then(() => {}).catch(() => {});
+    // Webhook event: subscription.created (using gateway_webhook_events for merchant notification)
+    if (subscription.merchant_id) {
+      await supabase.from('gateway_webhook_events').insert({
+        merchant_id: subscription.merchant_id,
+        event_type: 'subscription.created',
+        payload: { subscription_id: subscription.id, plan_id, customer_email },
+        status: 'pending', next_retry_at: new Date().toISOString(),
+      }).then(() => {}).catch(() => {});
+    }
 
     // Audit
     await supabase.from('audit_logs').insert({

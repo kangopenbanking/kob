@@ -31,7 +31,7 @@ serve(async (req) => {
     } = body;
 
     // Validate channel
-    const validChannels = ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd'];
+    const validChannels = ['mobile_money', 'card', 'bank_transfer', 'apple_pay', 'google_pay', 'ussd', 'paypal'];
     if (channel && !validChannels.includes(channel)) {
       return new Response(JSON.stringify({ error: 'invalid_channel', message: `Channel must be one of: ${validChannels.join(', ')}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }

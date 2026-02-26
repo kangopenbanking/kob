@@ -23,34 +23,36 @@ serve(async (req) => {
     console.log(`Found ${institutions?.length || 0} institutions to process`);
 
     const results = [];
-    const today = new Date();
-    const dayOfWeek = today.getDay();
-    const dayOfMonth = today.getDate();
+    const now = new Date();
+    const dayOfWeek = now.getDay();
+    const dayOfMonth = now.getDate();
 
     for (const institution of institutions || []) {
       try {
         let shouldSettle = false;
         let periodStart: Date = new Date();
-        let periodEnd: Date = new Date();
+        let periodEnd: Date = new Date(now);
 
-        // Determine if settlement should run based on frequency
+        // ─── G5 FIX: Use fresh Date objects instead of mutating shared variable ───
         switch (institution.settlement_frequency) {
           case 'daily':
             shouldSettle = true;
-            periodStart = new Date(today.setDate(today.getDate() - 1));
+            periodStart = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            periodEnd = new Date(now);
             break;
           
           case 'weekly':
             // Settle on Mondays (day 1)
             shouldSettle = dayOfWeek === 1;
-            periodStart = new Date(today.setDate(today.getDate() - 7));
+            periodStart = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            periodEnd = new Date(now);
             break;
           
           case 'monthly':
             // Settle on the 1st of each month
             shouldSettle = dayOfMonth === 1;
-            periodStart = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-            periodEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+            periodStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            periodEnd = new Date(now.getFullYear(), now.getMonth(), 0);
             break;
           
           default:

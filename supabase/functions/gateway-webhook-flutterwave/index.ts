@@ -68,6 +68,16 @@ serve(async (req) => {
           }).then(() => {}).catch(() => {});
         }
 
+        // ─── G4 FIX: Credit merchant wallet on successful charge ───
+        if (newStatus === 'successful' && charge.merchant_id) {
+          await supabase.rpc('update_merchant_wallet', {
+            _merchant_id: charge.merchant_id,
+            _currency: charge.currency,
+            _pending_delta: charge.net_amount || charge.amount,
+            _ledger_delta: charge.net_amount || charge.amount,
+          });
+        }
+
         // Trigger outbound merchant webhook (only for merchant charges)
         if ((newStatus === 'successful' || newStatus === 'failed') && charge.merchant_id) {
           await supabase.from('gateway_webhook_events').insert({
