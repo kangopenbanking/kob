@@ -222,6 +222,34 @@ import Architecture from "./pages/Architecture";
 import KeyFunctionsSummary from "./pages/KeyFunctionsSummary";
 import ROICalculator from "./pages/ROICalculator";
 import PaymentCheckout from "./pages/PaymentCheckout";
+
+// Phase 3 — New pages
+import CameroonCompliancePage from "./pages/regulatory/CameroonCompliance";
+import AmlPolicyPage from "./pages/compliance/AmlPolicy";
+import KycFrameworkPage from "./pages/compliance/KycFramework";
+import RiskMonitoringPage from "./pages/compliance/RiskMonitoring";
+import FraudEnginePage from "./pages/architecture/FraudEngine";
+import RiskScoringModelPage from "./pages/architecture/RiskScoringModel";
+import LedgerSystemPage from "./pages/architecture/LedgerSystem";
+import ReconciliationFrameworkPage from "./pages/architecture/ReconciliationFramework";
+import SettlementEnginePage from "./pages/architecture/SettlementEngine";
+import InfrastructurePage from "./pages/architecture/Infrastructure";
+import DisasterRecoveryPage from "./pages/architecture/DisasterRecovery";
+import ExpansionCountryPage from "./pages/expansion/ExpansionCountry";
+import IncidentResponsePage from "./pages/security/IncidentResponse";
+import VersioningPage from "./pages/api/Versioning";
+import ErrorCodesPage from "./pages/api/ErrorCodes";
+import WebhooksReferencePage from "./pages/api/WebhooksReference";
+import IdempotencyPage from "./pages/api/Idempotency";
+import RateLimitsPage from "./pages/api/RateLimits";
+import SandboxTestingPage from "./pages/api/SandboxTesting";
+import SecurityReferencePage from "./pages/api/SecurityReference";
+import TechnicalOverviewPage from "./pages/investors/TechnicalOverview";
+import RiskDisclosurePage from "./pages/investors/RiskDisclosure";
+import ComplianceStatusPage from "./pages/investors/ComplianceStatus";
+import InfrastructureMaturityPage from "./pages/investors/InfrastructureMaturity";
+import AGradeStatusPage from "./pages/certification/AGradeStatus";
+import SimulationToolsPage from "./pages/sandbox/SimulationTools";
 import MerchantDashboard from "./pages/merchant/MerchantDashboard";
 import MerchantTransactions from "./pages/merchant/MerchantTransactions";
 import MerchantPaymentLinks from "./pages/merchant/MerchantPaymentLinks";
@@ -515,6 +543,32 @@ function App() {
             <Route path="/roi-calculator" element={<Layout><ROICalculator /></Layout>} />
             <Route path="/payment-facilitation" element={<Layout><PaymentFacilitation /></Layout>} />
             <Route path="/pricing" element={<Layout><Pricing /></Layout>} />
+            <Route path="/regulatory/cameroon-compliance" element={<Layout><CameroonCompliancePage /></Layout>} />
+            <Route path="/compliance/aml-policy" element={<Layout><AmlPolicyPage /></Layout>} />
+            <Route path="/compliance/kyc-framework" element={<Layout><KycFrameworkPage /></Layout>} />
+            <Route path="/compliance/risk-monitoring" element={<Layout><RiskMonitoringPage /></Layout>} />
+            <Route path="/architecture/fraud-engine" element={<Layout><FraudEnginePage /></Layout>} />
+            <Route path="/architecture/risk-scoring-model" element={<Layout><RiskScoringModelPage /></Layout>} />
+            <Route path="/architecture/ledger-system" element={<Layout><LedgerSystemPage /></Layout>} />
+            <Route path="/architecture/reconciliation-framework" element={<Layout><ReconciliationFrameworkPage /></Layout>} />
+            <Route path="/architecture/settlement-engine" element={<Layout><SettlementEnginePage /></Layout>} />
+            <Route path="/architecture/infrastructure" element={<Layout><InfrastructurePage /></Layout>} />
+            <Route path="/architecture/disaster-recovery" element={<Layout><DisasterRecoveryPage /></Layout>} />
+            <Route path="/expansion/:country" element={<Layout><ExpansionCountryPage /></Layout>} />
+            <Route path="/security/incident-response" element={<Layout><IncidentResponsePage /></Layout>} />
+            <Route path="/api/versioning" element={<Layout><VersioningPage /></Layout>} />
+            <Route path="/api/error-codes" element={<Layout><ErrorCodesPage /></Layout>} />
+            <Route path="/api/webhooks" element={<Layout><WebhooksReferencePage /></Layout>} />
+            <Route path="/api/idempotency" element={<Layout><IdempotencyPage /></Layout>} />
+            <Route path="/api/rate-limits" element={<Layout><RateLimitsPage /></Layout>} />
+            <Route path="/api/sandbox-testing" element={<Layout><SandboxTestingPage /></Layout>} />
+            <Route path="/api/security" element={<Layout><SecurityReferencePage /></Layout>} />
+            <Route path="/investors/technical-overview" element={<Layout><TechnicalOverviewPage /></Layout>} />
+            <Route path="/investors/risk-disclosure" element={<Layout><RiskDisclosurePage /></Layout>} />
+            <Route path="/investors/compliance-status" element={<Layout><ComplianceStatusPage /></Layout>} />
+            <Route path="/investors/infrastructure-maturity" element={<Layout><InfrastructureMaturityPage /></Layout>} />
+            <Route path="/certification/a-grade-status" element={<Layout><AGradeStatusPage /></Layout>} />
+            <Route path="/sandbox/simulation-tools" element={<Layout><SimulationToolsPage /></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
