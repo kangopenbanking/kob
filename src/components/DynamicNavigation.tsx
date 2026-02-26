@@ -42,6 +42,7 @@ const platformItems: NavItem[] = [
 ];
 
 const complianceItems: NavItem[] = [
+  { label: "Filing Pack", to: "/regulatory/filing-pack", icon: Scale, desc: "BEAC/COBAC regulatory filing documents" },
   { label: "Cameroon Compliance", to: "/regulatory/cameroon-compliance", icon: Scale, desc: "BEAC/COBAC regulatory framework" },
   { label: "AML Policy", to: "/compliance/aml-policy", icon: Shield, desc: "Anti-money laundering controls" },
   { label: "KYC Framework", to: "/compliance/kyc-framework", icon: Shield, desc: "Customer due diligence tiers" },
