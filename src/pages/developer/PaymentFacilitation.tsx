@@ -1,4 +1,3 @@
-import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,7 +8,6 @@ import { CheckCircle2, Wallet, Shield, Zap } from "lucide-react";
 
 const PaymentFacilitation = () => {
   return (
-    <DeveloperLayout>
       <div className="space-y-8">
         {/* Hero Section */}
         <div>
@@ -386,7 +384,6 @@ async function checkSettlementBalance() {
           </CardContent>
         </Card>
       </div>
-    </DeveloperLayout>
   );
 };
 
