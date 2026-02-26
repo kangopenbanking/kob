@@ -59,12 +59,13 @@ const BankSettings: React.FC = () => {
     setPhone(user.user_metadata?.phone || '');
 
     // Load preferences
-    const { data: prefs } = await supabase
+    const { data: prefsRaw } = await supabase
       .from('user_preferences')
       .select('*')
       .eq('user_id', user.id)
       .maybeSingle();
 
+    const prefs = prefsRaw as any;
     if (prefs) {
       setLanguage(prefs.language || 'en');
       setCurrency(prefs.default_currency || 'XAF');
@@ -157,7 +158,7 @@ const BankSettings: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase.from('user_preferences').upsert({
+      const { error } = await (supabase.from('user_preferences') as any).upsert({
         user_id: user.id,
         push_notifications: pushEnabled,
         email_notifications: emailNotifs,
@@ -182,7 +183,7 @@ const BankSettings: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase.from('user_preferences').upsert({
+      const { error } = await (supabase.from('user_preferences') as any).upsert({
         user_id: user.id,
         language,
         default_currency: currency,
