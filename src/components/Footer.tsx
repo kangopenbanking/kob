@@ -1,13 +1,83 @@
 import { Link } from "react-router-dom";
-import { Building2, MapPin, Package } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { BrandName } from "./BrandName";
+
+const footerSections = [
+  {
+    title: "Company",
+    links: [
+      { label: "About Kang", to: "/about" },
+      { label: "Governance", to: "/compliance" },
+      { label: "Regulatory", to: "/regulatory/cameroon-compliance" },
+      { label: "Investor Relations", to: "/investors/technical-overview" },
+      { label: "Contact", to: "/contact" },
+      { label: "FAQ", to: "/faq" },
+    ],
+  },
+  {
+    title: "Developers",
+    links: [
+      { label: "API Reference", to: "/documentation" },
+      { label: "Developer Portal", to: "/developer" },
+      { label: "SDKs & Libraries", to: "/developer/guides/sdks" },
+      { label: "Webhooks", to: "/developer/api/webhooks" },
+      { label: "Sandbox", to: "/developer/sandbox" },
+      { label: "Changelog", to: "/developer/changelog" },
+      { label: "API Explorer", to: "/developer/api-explorer" },
+    ],
+  },
+  {
+    title: "Compliance",
+    links: [
+      { label: "AML Policy", to: "/compliance/aml-policy" },
+      { label: "KYC Framework", to: "/compliance/kyc-framework" },
+      { label: "Data Protection", to: "/data-protection" },
+      { label: "Risk Monitoring", to: "/compliance/risk-monitoring" },
+      { label: "PCI Scope", to: "/security-policy" },
+      { label: "Open Banking Standards", to: "/compliance" },
+    ],
+  },
+  {
+    title: "Infrastructure",
+    links: [
+      { label: "Architecture", to: "/architecture" },
+      { label: "Ledger System", to: "/architecture/ledger-system" },
+      { label: "Fraud Engine", to: "/architecture/fraud-engine" },
+      { label: "Settlement Engine", to: "/architecture/settlement-engine" },
+      { label: "Reconciliation", to: "/architecture/reconciliation-framework" },
+      { label: "Disaster Recovery", to: "/architecture/disaster-recovery" },
+    ],
+  },
+  {
+    title: "Expansion",
+    links: [
+      { label: "Cameroon", to: "/expansion/cameroon" },
+      { label: "Nigeria", to: "/expansion/nigeria" },
+      { label: "Ghana", to: "/expansion/ghana" },
+      { label: "Kenya", to: "/expansion/kenya" },
+      { label: "South Africa", to: "/expansion/south-africa" },
+      { label: "Europe", to: "/expansion/europe" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Terms of Service", to: "/terms" },
+      { label: "Privacy Policy", to: "/privacy" },
+      { label: "Acceptable Use", to: "/aup" },
+      { label: "Security", to: "/security-policy" },
+      { label: "SLA", to: "/sla" },
+      { label: "Dispute Policy", to: "/developer/gateway/disputes" },
+    ],
+  },
+];
 
 export const Footer = () => {
   return (
     <footer className="border-t py-12 bg-card">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-8 gap-8">
-          <div className="col-span-2">
+        <div className="grid grid-cols-2 md:grid-cols-7 gap-8">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-primary" />
               <BrandName className="text-lg" />
@@ -19,97 +89,23 @@ export const Footer = () => {
               COBAC & BEAC Compliant | PCI-DSS Certified
             </p>
           </div>
-          
-          <div>
-            <h3 className="font-semibold mb-4">Product</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/demo" className="hover:text-primary transition-colors">Live API Demo</Link></li>
-              <li><Link to="/architecture" className="hover:text-primary transition-colors">Platform Architecture</Link></li>
-              <li><Link to="/key-functions" className="hover:text-primary transition-colors">Key Functions Summary</Link></li>
-              <li><Link to="/roi-calculator" className="hover:text-primary transition-colors">ROI Calculator</Link></li>
-              <li><Link to="/integration-workflow" className="hover:text-primary transition-colors">Integration Guide</Link></li>
-              <li><Link to="/pricing" className="hover:text-primary transition-colors">Pricing & Fees</Link></li>
-              <li><Link to="/documentation" className="hover:text-primary transition-colors">Documentation</Link></li>
-              <li><Link to="/guides/aisp" className="hover:text-primary transition-colors">AISP Guide</Link></li>
-              <li><Link to="/guides/pisp" className="hover:text-primary transition-colors">PISP Guide</Link></li>
-              <li><Link to="/status" className="hover:text-primary transition-colors">Status</Link></li>
-              <li><Link to="/status-widget" className="hover:text-primary transition-colors">Status Widget</Link></li>
-              <li><Link to="/embed-status-widget" className="hover:text-primary transition-colors">Embed Widget</Link></li>
-            </ul>
-          </div>
 
-          <div>
-            <h3 className="font-semibold mb-4">Services</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/crediq" className="hover:text-primary transition-colors">CrediQ Credit Score</Link></li>
-              <li>
-                <Link to="/credit-score" className="hover:text-primary transition-colors flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-postiq-blue" />
-                  PostiQ Code
-                </Link>
-              </li>
-              <li><Link to="/loans" className="hover:text-primary transition-colors">Loans</Link></li>
-              <li><Link to="/savings" className="hover:text-primary transition-colors">Savings</Link></li>
-              <li><Link to="/credit-score" className="hover:text-primary transition-colors">Credit Reports</Link></li>
-              <li><Link to="/virtual-cards" className="hover:text-primary transition-colors">Virtual Cards</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Developers</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/developer" className="hover:text-primary transition-colors">Developer Portal</Link></li>
-              <li><Link to="/developer/getting-started" className="hover:text-primary transition-colors">Get Started</Link></li>
-              <li><Link to="/developer/api/aisp" className="hover:text-primary transition-colors">AISP APIs</Link></li>
-              <li><Link to="/developer/api/pisp" className="hover:text-primary transition-colors">PISP APIs</Link></li>
-              <li><Link to="/developer/api/mobile-money" className="hover:text-primary transition-colors">Mobile Money</Link></li>
-              <li><Link to="/developer/console" className="hover:text-primary transition-colors">API Console</Link></li>
-              <li><Link to="/integrations" className="hover:text-primary transition-colors">No-Code Integrations</Link></li>
-              <li><Link to="/integrations/zapier" className="hover:text-primary transition-colors">Zapier Integration</Link></li>
-              <li><Link to="/integrations/make" className="hover:text-primary transition-colors">Make Integration</Link></li>
-              <li><Link to="/integrations/bubble" className="hover:text-primary transition-colors">Bubble Integration</Link></li>
-              <li><Link to="/integrations/retool" className="hover:text-primary transition-colors">Retool Integration</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Integrations</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>
-                <Link to="/woo-for-kang" className="hover:text-primary transition-colors flex items-center gap-1">
-                  <Package className="h-3 w-3 text-[#96588a]" />
-                  WooCommerce Plugin
-                </Link>
-              </li>
-              <li><Link to="/integrations/zapier" className="hover:text-primary transition-colors">Zapier</Link></li>
-              <li><Link to="/integrations/make" className="hover:text-primary transition-colors">Make</Link></li>
-              <li><Link to="/integrations/bubble" className="hover:text-primary transition-colors">Bubble</Link></li>
-              <li><Link to="/integrations/retool" className="hover:text-primary transition-colors">Retool</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Company</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/about" className="hover:text-primary transition-colors">About Us</Link></li>
-              <li><Link to="/contact" className="hover:text-primary transition-colors">Contact</Link></li>
-              <li><Link to="/faq" className="hover:text-primary transition-colors">FAQ</Link></li>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-semibold mb-4">Legal</h3>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="hover:text-primary transition-colors">Terms of Service</Link></li>
-              <li><Link to="/security-policy" className="hover:text-primary transition-colors">Security</Link></li>
-              <li><Link to="/compliance" className="hover:text-primary transition-colors">Compliance</Link></li>
-              <li><Link to="/sla" className="hover:text-primary transition-colors">SLA</Link></li>
-              <li><Link to="/data-protection" className="hover:text-primary transition-colors">Data Protection</Link></li>
-            </ul>
-          </div>
+          {footerSections.map((section) => (
+            <div key={section.title}>
+              <h3 className="font-semibold mb-4">{section.title}</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                {section.links.map((link) => (
+                  <li key={link.to}>
+                    <Link to={link.to} className="hover:text-primary transition-colors">
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
-        
+
         <div className="border-t mt-8 pt-8 space-y-4 text-sm text-muted-foreground">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p>© 2026 Kang <span style={{ color: '#9fe870' }}>Open</span> Banking. All rights reserved.</p>
@@ -117,9 +113,10 @@ export const Footer = () => {
               <Link to="/status" className="hover:text-primary transition-colors">Status</Link>
               <Link to="/security-policy" className="hover:text-primary transition-colors">Security</Link>
               <Link to="/compliance" className="hover:text-primary transition-colors">Compliance</Link>
+              <Link to="/certification/a-grade-status" className="hover:text-primary transition-colors">A-Grade Certification</Link>
             </div>
           </div>
-          
+
           <div className="border-t pt-4 text-xs text-muted-foreground/80 leading-relaxed">
             <p className="mb-2">
               Kang Open Banking (KOB) is a product of <span className="font-medium">Kang Consultancy Co Ltd</span>, registered under the Canada Business Corporations Act (CBCA) (s. 19 and 106) (Reg. No. 1381210-3) with offices in Port Dover, ON, Canada.

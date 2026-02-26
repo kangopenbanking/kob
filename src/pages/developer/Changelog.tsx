@@ -6,6 +6,29 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.0.0",
+      date: "2026-02-26",
+      type: "major",
+      changes: [
+        { type: "feature", description: "30+ new institutional pages: Regulatory, Compliance, Architecture, Expansion, Investor, API Reference, Certification" },
+        { type: "feature", description: "Header navigation restructured: Platform, Compliance, Expansion, Developers, Resources mega-menus" },
+        { type: "feature", description: "Footer restructured: Company, Developers, Compliance, Infrastructure, Expansion, Legal sections" },
+        { type: "feature", description: "Cameroon Regulatory Compliance page — BEAC/COBAC framework, PSP licensing, AML/CFT, reporting obligations" },
+        { type: "feature", description: "AML Policy, KYC Framework, Risk Monitoring compliance documentation" },
+        { type: "feature", description: "Fraud Engine architecture — 5-layer defence model with processor signal integration" },
+        { type: "feature", description: "Double-Entry Ledger System documentation — journal-post, atomic wallets, integrity guarantees" },
+        { type: "feature", description: "Reconciliation Framework — three-way reconciliation, stuck transaction recovery" },
+        { type: "feature", description: "Settlement Engine — lifecycle, calculation, payout channels, safety mechanisms" },
+        { type: "feature", description: "6 Multi-Country Expansion pages: Cameroon, Nigeria, Ghana, Kenya, South Africa, Europe" },
+        { type: "feature", description: "Infrastructure & Disaster Recovery documentation — RTO/RPO targets, backup strategy" },
+        { type: "feature", description: "Incident Response framework — severity classification, response lifecycle, regulatory notifications" },
+        { type: "feature", description: "7 API Reference pages: Versioning, Error Codes, Webhooks (24 events), Idempotency, Rate Limits, Sandbox Testing, Security" },
+        { type: "feature", description: "4 Investor pages: Technical Overview, Risk Disclosure, Compliance Status, Infrastructure Maturity (90/100)" },
+        { type: "feature", description: "A-Grade Certification Status page with 6-domain scoring system" },
+        { type: "feature", description: "Sandbox Simulation Tools — fraud, dispute, refund, webhook replay, latency injection, settlement simulation" },
+      ]
+    },
+    {
       version: "2.9.0",
       date: "2026-02-26",
       type: "minor",
