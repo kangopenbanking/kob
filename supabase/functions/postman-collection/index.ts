@@ -550,11 +550,30 @@ Deno.serve(async (req) => {
         name: 'WooCommerce',
         item: [
           r('Register Merchant', 'POST', '/v1/woocommerce/merchants', {
-            body: { store_url: 'https://mystore.com', store_name: 'My Store' },
+            body: { store_name: 'My Cameroon Store', store_url: 'https://mystore.cm', admin_email: 'admin@mystore.cm', plugin_version: '1.0.0', business_type: 'company', phone: '+237677123456', country: 'CM' },
             headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Register a WooCommerce store for Kang Open Banking payment processing',
           }),
-          r('Validate Installation', 'POST', '/v1/woocommerce/validate-install', { body: { store_url: 'https://mystore.com' } }),
-          r('Download Plugin', 'GET', '/v1/woocommerce/plugin/download'),
+          r('Validate Installation', 'POST', '/v1/woocommerce/validate-install', {
+            body: { api_key: '{{woo_api_key}}', plugin_version: '1.0.0', store_url: 'https://mystore.cm', php_version: '8.1', wp_version: '6.4', wc_version: '8.5' },
+            desc: 'Validate plugin installation and API credentials',
+          }),
+          r('Download Plugin', 'GET', '/v1/woocommerce/plugin/download', {
+            desc: 'Download the complete Woo for Kang WordPress plugin as a ZIP file',
+          }),
+          r('Process Payment', 'POST', '/v1/woocommerce/process-payment', {
+            body: { amount: 25000, currency: 'XAF', woocommerce_order_id: 1234, customer_email: 'customer@example.com', customer_name: 'Jean Dupont', customer_phone: '237677123456', payment_methods: ['mobile_money', 'card', 'bank_transfer'], return_url: 'https://mystore.cm/checkout/order-received/1234', webhook_url: 'https://mystore.cm/wc-api/wfk_webhook' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }, { key: 'X-API-Key', value: '{{woo_api_key}}' }],
+            desc: 'Initiate a payment for a WooCommerce order',
+          }),
+          r('List Transactions', 'GET', '/v1/woocommerce/transactions', {
+            query: [{ key: 'start_date', value: '2026-01-01' }, { key: 'end_date', value: '2026-02-26' }, { key: 'status', value: 'completed' }, { key: 'limit', value: '50' }],
+            desc: 'Retrieve WooCommerce transaction history for synchronization',
+          }),
+          r('Payment Webhook', 'POST', '/v1/woocommerce/webhook', {
+            body: { event_type: 'payment.completed', transaction_ref: 'wfk_txn_abc123', woocommerce_order_id: 1234, status: 'completed', amount: 25000, currency: 'XAF', payment_method: 'mobile_money', timestamp: '2026-02-26T12:00:00Z' },
+            desc: 'Webhook endpoint for payment status notifications',
+          }),
         ],
       },
 

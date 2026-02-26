@@ -22,21 +22,27 @@ const WooCommercePluginCode = () => {
   const handleDownloadDocs = async () => {
     setDownloading(true);
     try {
-      const response = await fetch('/docs/woocommerce-plugin-complete-code.md');
-      const text = await response.text();
-      const blob = new Blob([text], { type: 'text/markdown' });
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const response = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/woocommerce-download-plugin`,
+        { headers: { 'Content-Type': 'application/json' } }
+      );
+
+      if (!response.ok) throw new Error('Download failed');
+
+      const blob = await response.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'woo-for-kang-complete-plugin-code.md';
+      a.download = 'woo-for-kang-v1.0.0.zip';
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-      
+
       toast({
-        title: "Download started",
-        description: "Complete plugin documentation downloaded",
+        title: "Download Started",
+        description: "Woo for Kang v1.0.0 plugin ZIP is downloading",
       });
     } catch (error) {
       toast({
@@ -65,7 +71,9 @@ if (!defined('ABSPATH')) exit;
 
 define('WFK_VERSION', '1.0.0');
 define('WFK_PLUGIN_FILE', __FILE__);
-define('WFK_API_BASE_URL', 'https://api.kangopenbanking.com/v1');
+define('WFK_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('WFK_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('WFK_API_BASE_URL', 'https://api.kangopenbanking.com/functions/v1');
 
 // Check WooCommerce dependency
 if (!in_array('woocommerce/woocommerce.php', apply_filters('active_plugins', get_option('active_plugins')))) {
@@ -86,6 +94,11 @@ function wfk_init() {
     
     add_filter('woocommerce_payment_gateways', 'wfk_add_gateway_class');
     WFK_Webhook_Handler::init();
+}
+
+function wfk_add_gateway_class($gateways) {
+    $gateways[] = 'WFK_Payment_Gateway';
+    return $gateways;
 }`,
     },
     {
@@ -154,7 +167,7 @@ class WFK_API_Client {
     public function __construct($api_key, $logger) {
         $this->api_key = $api_key;
         $this->logger = $logger;
-        $this->base_url = WFK_API_BASE_URL;
+        $this->base_url = WFK_API_BASE_URL; // https://api.kangopenbanking.com/functions/v1
     }
 
     public function process_payment($payment_data) {
@@ -263,7 +276,7 @@ class WFK_Webhook_Handler {
             <div className="flex flex-wrap gap-4">
               <Button size="lg" onClick={handleDownloadDocs} disabled={downloading}>
                 <Download className="mr-2 h-5 w-5" />
-                {downloading ? "Downloading..." : "Download Complete Documentation"}
+                {downloading ? "Downloading..." : "Download Plugin ZIP"}
               </Button>
               
               <Button size="lg" variant="outline" asChild>
@@ -282,8 +295,8 @@ class WFK_Webhook_Handler {
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             <div>
-              <div className="text-3xl font-bold text-primary">7</div>
-              <div className="text-sm text-muted-foreground">PHP Files</div>
+              <div className="text-3xl font-bold text-primary">9</div>
+              <div className="text-sm text-muted-foreground">Plugin Files</div>
             </div>
             <div>
               <div className="text-3xl font-bold text-primary">1.0.0</div>

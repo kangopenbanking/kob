@@ -6,6 +6,23 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "2.7.0",
+      date: "2026-02-26",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Woo for Kang v1.0.0 — complete production-ready WordPress plugin ZIP download (9 files)" },
+        { type: "feature", description: "Plugin ZIP edge function generates in-memory ZIP with gateway, API client, webhooks, logger, templates, readme, license, and uninstall handler" },
+        { type: "feature", description: "OpenAPI spec: 6 WooCommerce endpoints with full request/response schemas (was 3 stubs)" },
+        { type: "feature", description: "Postman collection: 6 WooCommerce requests with complete example bodies (was 3)" },
+        { type: "improvement", description: "API base URL fixed to production pattern (https://api.kangopenbanking.com/functions/v1)" },
+        { type: "improvement", description: "WFK_PLUGIN_DIR constant added — fixes require path errors in plugin" },
+        { type: "improvement", description: "Webhook handler rewritten with proper static dispatch, HMAC-SHA256 verification, and idempotency" },
+        { type: "improvement", description: "Plugin code viewer updated with complete file set and corrected code" },
+        { type: "fix", description: "Download buttons now generate actual ZIP file instead of showing 'packaging in progress'" },
+        { type: "fix", description: "WooCommerce Guide page updated — removed early access banner, replaced with download-ready state" },
+      ]
+    },
+    {
       version: "2.6.0",
       date: "2026-02-26",
       type: "minor",
