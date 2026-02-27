@@ -36,9 +36,9 @@ const GatewayFundingGuide = () => (
       </div>
       <p className="text-muted-foreground">Add funds to a user's KOB account by creating a charge via Flutterwave (Mobile Money/Bank) or Stripe (Card).</p>
 
-      <ApiEndpoint method="POST" endpoint="/v1/gateway/fund-account" description="Initiate funding of a KOB account. Routes to Flutterwave or Stripe based on channel."
+      <ApiEndpoint method="POST" endpoint="/v1/gateway/fund-account" description="Initiate funding of a KOB account. Routes to Flutterwave or Stripe based on channel. Card payments return a next_action with client_secret for Stripe Elements confirmation."
         requestBody={JSON.stringify({ amount: 50000, currency: "XAF", channel: "mobile_money", account_id: "acc_uuid", source_phone: "237677123456" }, null, 2)}
-        response={JSON.stringify({ id: "chg_uuid", account_id: "acc_uuid", amount: 50000, currency: "XAF", channel: "mobile_money", provider: "flutterwave", status: "processing", fee_amount: 1250, net_amount: 48750, tx_ref: "fund_acc12345_1709001234567", redirect_url: "https://checkout.flutterwave.com/...", created_at: "2026-02-26T10:00:00Z" }, null, 2)}
+        response={JSON.stringify({ id: "chg_uuid", account_id: "acc_uuid", amount: 50000, currency: "XAF", channel: "mobile_money", provider: "flutterwave", status: "processing", fee_amount: 1250, net_amount: 48750, tx_ref: "fund_acc12345_1709001234567", redirect_url: "https://checkout.flutterwave.com/...", next_action: null, created_at: "2026-02-26T10:00:00Z" }, null, 2)}
         parameters={[
           { name: "amount", type: "number", required: true, description: "Amount to fund" },
           { name: "currency", type: "string", required: false, description: "ISO 4217 code, default XAF" },
@@ -54,9 +54,9 @@ const GatewayFundingGuide = () => (
     <Card>
       <CardHeader>
         <CardTitle>Card Funding Example</CardTitle>
-        <CardDescription>Fund via Stripe card payment</CardDescription>
+        <CardDescription>Fund via Stripe card payment — response includes <code>next_action.client_secret</code> for Stripe Elements confirmation</CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="space-y-4">
         <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm">
 {`curl -X POST "https://api.kangopenbanking.com/functions/v1/gateway-fund-account" \\
   -H "Authorization: Bearer YOUR_TOKEN" \\
@@ -70,6 +70,9 @@ const GatewayFundingGuide = () => (
     "source_email": "john@example.com"
   }'`}
         </pre>
+        <p className="text-sm text-muted-foreground">
+          <strong>Card response:</strong> The <code>next_action</code> field will contain <code>{`{ "type": "stripe_confirm", "client_secret": "pi_xxx_secret_xxx" }`}</code>. Use this with Stripe.js <code>confirmCardPayment()</code> on the frontend.
+        </p>
       </CardContent>
     </Card>
 

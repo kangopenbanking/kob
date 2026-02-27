@@ -120,6 +120,14 @@ serve(async (req) => {
       performed_by: user.id, details: { amount, channel, tx_ref: txRef, status: providerResult.status, provider },
     }).then(() => {}).catch(() => {});
 
+    // Build next_action for the client
+    let next_action: Record<string, unknown> | null = null;
+    if (provider === 'stripe' && providerResult.provider_raw?.client_secret) {
+      next_action = { type: 'stripe_confirm', client_secret: providerResult.provider_raw.client_secret };
+    } else if (providerResult.redirect_url) {
+      next_action = { type: 'redirect', redirect_url: providerResult.redirect_url };
+    }
+
     const response = {
       id: charge?.id,
       account_id,
@@ -132,6 +140,7 @@ serve(async (req) => {
       net_amount: net,
       tx_ref: txRef,
       redirect_url: providerResult.redirect_url,
+      next_action,
       created_at: charge?.created_at,
     };
 

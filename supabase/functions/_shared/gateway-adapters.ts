@@ -112,6 +112,7 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   };
 
   if (req.channel === 'mobile_money') {
+    if (!req.customer_phone) throw new Error('customer_phone is required for mobile_money charges');
     body.type = 'mobile_money_franco';
     body.phone_number = req.customer_phone;
   }

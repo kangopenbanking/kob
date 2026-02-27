@@ -60,10 +60,11 @@ serve(async (req) => {
     const piId = obj?.id || obj?.payment_intent;
 
     if (event.type?.startsWith('payment_intent.') && piId) {
+      // Resolve status at the top level so it's available for both charge and funding intent blocks
+      const newStatus = mapStripeStatus(obj.status);
+
       const { data: charge } = await supabase.from('gateway_charges').select('*').eq('provider_ref', piId).maybeSingle();
       if (charge) {
-        const newStatus = mapStripeStatus(obj.status);
-
         // ─── ATOMIC: Charge status update + wallet credit in single transaction ───
         await supabase.rpc('atomic_charge_wallet_credit', {
           _charge_id: charge.id,
