@@ -403,7 +403,7 @@ function CardColorEditor({ cardColors, onChange }: { cardColors: CardColors; onC
 }
 
 // ─── Media Section Manager ───
-function MediaSectionManager({ mediaSections, onChange }: { mediaSections: MediaSection[]; onChange: (s: MediaSection[]) => void }) {
+function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { mediaSections: MediaSection[]; onChange: (s: MediaSection[]) => void; onAutoAddToOrder?: () => void }) {
   const [uploading, setUploading] = useState(false);
 
   const addMedia = (type: 'image' | 'video') => {
@@ -415,8 +415,10 @@ function MediaSectionManager({ mediaSections, onChange }: { mediaSections: Media
       video_id: '',
       title: '',
       position: mediaSections.length,
+      aspect: 'landscape',
     };
     onChange([...mediaSections, newItem]);
+    onAutoAddToOrder?.();
   };
 
   const updateItem = (id: string, updates: Partial<MediaSection>) => {
@@ -444,16 +446,45 @@ function MediaSectionManager({ mediaSections, onChange }: { mediaSections: Media
     <Card>
       <CardHeader>
         <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> Media Banners</CardTitle>
-        <CardDescription>Add image slides or embedded videos to the home screen</CardDescription>
+        <CardDescription>Add image slides or embedded videos to the home screen. Supports multiple banners in a slide carousel.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
         {mediaSections.map((item, idx) => (
           <div key={item.id} className="rounded-lg border p-3 space-y-2">
             <div className="flex items-center justify-between">
-              <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
+                <span className="text-[10px] text-muted-foreground">#{idx + 1}</span>
+              </div>
               <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeItem(item.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
             </div>
             <Input placeholder="Title (optional)" value={item.title || ''} onChange={(e) => updateItem(item.id, { title: e.target.value })} className="h-8 text-xs" />
+            
+            {/* Aspect Ratio Selector */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Dimension:</span>
+              <div className="flex gap-1">
+                <Button
+                  type="button"
+                  variant={(!item.aspect || item.aspect === 'landscape') ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs gap-1 px-2"
+                  onClick={() => updateItem(item.id, { aspect: 'landscape' })}
+                >
+                  <span className="inline-block w-4 h-2.5 border rounded-sm border-current" /> Landscape
+                </Button>
+                <Button
+                  type="button"
+                  variant={item.aspect === 'portrait' ? 'default' : 'outline'}
+                  size="sm"
+                  className="h-7 text-xs gap-1 px-2"
+                  onClick={() => updateItem(item.id, { aspect: 'portrait' })}
+                >
+                  <span className="inline-block w-2.5 h-4 border rounded-sm border-current" /> Portrait
+                </Button>
+              </div>
+            </div>
+
             {item.type === 'image' ? (
               <div className="space-y-2">
                 <Input placeholder="Image URL" value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
@@ -461,7 +492,7 @@ function MediaSectionManager({ mediaSections, onChange }: { mediaSections: Media
                   <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image'}
                   <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(item.id, e.target.files[0])} />
                 </label>
-                {item.url && <img src={item.url} alt="" className="h-20 w-full rounded object-cover" />}
+                {item.url && <img src={item.url} alt="" className={`w-full rounded object-cover ${item.aspect === 'portrait' ? 'h-40' : 'h-20'}`} />}
               </div>
             ) : (
               <div className="space-y-2">
@@ -485,6 +516,11 @@ function MediaSectionManager({ mediaSections, onChange }: { mediaSections: Media
             )}
           </div>
         ))}
+        {mediaSections.length > 0 && (
+          <p className="text-[10px] text-muted-foreground">
+            {mediaSections.length} banner{mediaSections.length > 1 ? 's' : ''} configured — users can swipe between them on the home screen.
+          </p>
+        )}
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => addMedia('image')} className="gap-1"><Image className="h-3.5 w-3.5" /> Add Image</Button>
           <Button variant="outline" size="sm" onClick={() => addMedia('video')} className="gap-1"><Video className="h-3.5 w-3.5" /> Add Video</Button>
@@ -1075,6 +1111,16 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         <MediaSectionManager
           mediaSections={config.media_sections || []}
           onChange={(s) => setConfig(prev => ({ ...prev, media_sections: s }))}
+          onAutoAddToOrder={() => {
+            setConfig(prev => {
+              const order = prev.section_order || defaultSectionOrder;
+              if (order.includes('media_banner')) return prev;
+              const txIdx = order.indexOf('recent_transactions');
+              const newOrder = [...order];
+              newOrder.splice(txIdx >= 0 ? txIdx : newOrder.length, 0, 'media_banner');
+              return { ...prev, section_order: newOrder };
+            });
+          }}
         />
 
         <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">

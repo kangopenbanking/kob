@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 
+export type BannerAspect = 'landscape' | 'portrait';
+
 export interface MediaSection {
   id: string;
   type: 'image' | 'video';
@@ -10,6 +12,7 @@ export interface MediaSection {
   video_id?: string;
   title?: string;
   position: number;
+  aspect?: BannerAspect;
 }
 
 function getEmbedUrl(item: MediaSection): string {
@@ -67,16 +70,25 @@ export { detectProvider };
 interface MediaBannerProps {
   items: MediaSection[];
   cardSize?: 'small' | 'medium' | 'large';
+  aspect?: BannerAspect;
 }
 
-export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'medium' }) => {
+export const MediaBanner: React.FC<MediaBannerProps> = ({ items, cardSize = 'medium', aspect }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   if (!items || items.length === 0) return null;
 
   const sorted = [...items].sort((a, b) => a.position - b.position);
   const current = sorted[currentIndex];
-  const heightClass = cardSize === 'small' ? 'h-32' : cardSize === 'large' ? 'h-56' : 'h-44';
+  const effectiveAspect = current.aspect || aspect || 'landscape';
+  
+  const getHeightClass = () => {
+    if (effectiveAspect === 'portrait') {
+      return cardSize === 'small' ? 'h-64' : cardSize === 'large' ? 'h-[480px]' : 'h-96';
+    }
+    return cardSize === 'small' ? 'h-32' : cardSize === 'large' ? 'h-56' : 'h-44';
+  };
+  const heightClass = getHeightClass();
 
   const goNext = () => setCurrentIndex((i) => (i + 1) % sorted.length);
   const goPrev = () => setCurrentIndex((i) => (i - 1 + sorted.length) % sorted.length);
