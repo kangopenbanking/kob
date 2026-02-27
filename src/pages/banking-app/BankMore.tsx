@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight } from 'lucide-react';
+import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/components/pwa/TenantProvider';
@@ -11,6 +11,7 @@ const BankMore: React.FC = () => {
   const { features } = useTenant();
 
   const allFinancialItems = [
+    { icon: Wallet, label: 'Fund Account', description: 'Add money to account', path: 'fund', color: 'bg-[hsl(var(--bank-sky))]', iconColor: 'text-white', featureKey: undefined as any },
     { icon: PiggyBank, label: 'Savings', description: 'Goals & deposits', path: 'more/savings', color: 'bg-[hsl(var(--bank-mint))]', iconColor: 'text-[hsl(var(--bank-mint-fg))]', featureKey: 'savings' as const },
     { icon: Landmark, label: 'Loans', description: 'Apply & manage', path: 'more/loans', color: 'bg-[hsl(var(--bank-coral))]', iconColor: 'text-white', featureKey: 'loans' as const },
     { icon: BarChart3, label: 'Credit Score', description: 'CrediQ rating', path: 'more/credit', color: 'bg-[hsl(var(--bank-violet))]', iconColor: 'text-white', featureKey: 'credit_score' as const },

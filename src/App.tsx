@@ -294,6 +294,7 @@ import BankCards from "./pages/banking-app/BankCards";
 import BankHistory from "./pages/banking-app/BankHistory";
 import BankMore from "./pages/banking-app/BankMore";
 import BankSendMoney from "./pages/banking-app/BankSendMoney";
+import BankFundAccount from "./pages/banking-app/BankFundAccount";
 import BankQRPay from "./pages/banking-app/BankQRPay";
 import BankMobileMoney from "./pages/banking-app/BankMobileMoney";
 import BankBills from "./pages/banking-app/BankBills";
@@ -650,6 +651,7 @@ function App() {
               <Route path="payments/receive" element={<BankReceive />} />
               <Route path="cards" element={<FeatureGate featureKey="cards"><BankCards /></FeatureGate>} />
               <Route path="history" element={<BankHistory />} />
+              <Route path="fund" element={<BankFundAccount />} />
               <Route path="more" element={<BankMore />} />
               <Route path="more/savings" element={<FeatureGate featureKey="savings"><BankSavings /></FeatureGate>} />
               <Route path="more/savings/new" element={<FeatureGate featureKey="savings"><BankNewSavings /></FeatureGate>} />
