@@ -298,6 +298,52 @@ Deno.serve(async (req) => {
       );
     }
 
+    } else if (grant_type === 'client_credentials') {
+      // ─── Client Credentials Grant (M2M / External API funding) ───
+      const requestedScope = (formData.get('scope') as string) || 'funding:write';
+
+      const grantTypes = Array.isArray(client.grant_types) ? client.grant_types : [];
+      if (!grantTypes.includes('client_credentials')) {
+        return new Response(
+          JSON.stringify({ error: 'unauthorized_client', error_description: 'client_credentials grant not enabled' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const clientScopes = Array.isArray(client.scopes) ? client.scopes : [];
+      const requestedScopes = requestedScope.split(' ');
+      const invalidScopes = requestedScopes.filter((s: string) => !clientScopes.includes(s));
+      if (invalidScopes.length > 0) {
+        return new Response(
+          JSON.stringify({ error: 'invalid_scope', error_description: `Scopes not allowed: ${invalidScopes.join(', ')}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const access_token = generateSecureToken();
+      const expires_in = 3600;
+
+      await supabase.from('access_tokens').insert({
+        token_hash: access_token,
+        user_id: null,
+        client_id: client_id,
+        scope: requestedScope,
+        expires_at: new Date(Date.now() + expires_in * 1000).toISOString(),
+        cnf_thumbprint: cnfThumbprint,
+        certificate_id: certificateId,
+      });
+
+      const ccResponse: any = {
+        access_token, token_type: 'Bearer', expires_in, scope: requestedScope,
+      };
+      if (cnfThumbprint) ccResponse.cnf = { 'x5t#S256': cnfThumbprint };
+
+      return new Response(JSON.stringify(ccResponse), {
+        status: 200,
+        headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json' }, 100, rateLimit.remaining, rateLimit.reset),
+      });
+    }
+
     return new Response(
       JSON.stringify({ error: 'unsupported_grant_type' }),
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
