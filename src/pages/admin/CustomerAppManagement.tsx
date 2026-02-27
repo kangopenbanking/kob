@@ -16,7 +16,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
-  Eye, Send, QrCode, ScanLine, ChevronRight, BarChart3, Monitor,
+  Eye, Send, QrCode, ScanLine, ChevronRight, BarChart3, Monitor, ExternalLink,
   Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
   Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock
 } from "lucide-react";
@@ -828,8 +828,8 @@ export default function CustomerAppManagement() {
             </Card>
           ) : (
             <>
-              {/* Institution Header */}
-              <Card>
+               {/* Institution Header */}
+              <Card className="border-primary/20 bg-primary/5">
                 <CardContent className="flex items-center gap-4 p-4">
                   {selectedInst?.logo_url ? (
                     <img src={selectedInst.logo_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
@@ -840,33 +840,37 @@ export default function CustomerAppManagement() {
                   )}
                   <div className="flex-1">
                     <h2 className="text-lg font-bold">{selectedInst?.institution_name}</h2>
+                    <p className="text-xs font-medium text-primary">Customer Mobile App Configuration</p>
                     <p className="text-sm text-muted-foreground capitalize">{selectedInst?.institution_type} · Created {selectedInst?.created_at ? format(new Date(selectedInst.created_at), "MMM d, yyyy") : "—"}</p>
                   </div>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`/app/${selectedInstitution}/home`, '_blank')}>
+                    <ExternalLink className="h-3.5 w-3.5" /> Open Customer App
+                  </Button>
                   <Badge variant={selectedInst?.status === "approved" ? "default" : "secondary"}>{selectedInst?.status}</Badge>
                 </CardContent>
               </Card>
 
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard icon={Users} label="Linked Accounts" value={linkedAccounts.length} color="bg-blue-500" />
-                <StatCard icon={Wallet} label="Total Balance" value={`${totalBalance.toLocaleString()} XAF`} color="bg-emerald-500" />
-                <StatCard icon={ArrowRightLeft} label="Transactions" value={transactions.length} color="bg-amber-500" />
+                <StatCard icon={Users} label="Active Customers" value={linkedAccounts.filter((a: any) => a.account_type !== 'none').length} color="bg-blue-500" />
+                <StatCard icon={Phone} label="MoMo Orange Users" value={linkedAccounts.filter((a: any) => a.account_type === 'momo_orange').length} color="bg-orange-500" />
+                <StatCard icon={Phone} label="MoMo MTN Users" value={linkedAccounts.filter((a: any) => a.account_type === 'momo_mtn').length} color="bg-amber-500" />
+                <StatCard icon={Landmark} label="Bank-Linked Users" value={linkedAccounts.filter((a: any) => a.account_type === 'bank').length} color="bg-emerald-500" />
+                <StatCard icon={Lock} label="View-Only Users" value={linkedAccounts.filter((a: any) => a.account_type === 'none').length} color="bg-slate-500" />
                 <StatCard icon={Home} label="Piggy Plans" value={piggyPlans.length} color="bg-emerald-600" />
                 <StatCard icon={Users} label="Njangi Groups" value={njangiGroups.length} color="bg-violet-600" />
-                <StatCard icon={CreditCard} label="Virtual Cards" value={virtualCards.length} color="bg-pink-500" />
-                <StatCard icon={BarChart3} label="Avg Credit Score" value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-orange-500" />
-                <StatCard icon={Lock} label="View-Only Users" value={linkedAccounts.filter((a: any) => a.account_type === 'none').length} color="bg-slate-500" />
+                <StatCard icon={BarChart3} label="Avg Credit Score" value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-pink-500" />
               </div>
 
               {/* Tabs */}
               <Tabs defaultValue="linked">
                 <TabsList className="w-full justify-start flex-wrap h-auto">
                   <TabsTrigger value="linked" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Linked Accounts</TabsTrigger>
-                  <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Accounts</TabsTrigger>
-                  <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Transactions</TabsTrigger>
+                  <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Customer Accounts</TabsTrigger>
+                  <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Customer Transactions</TabsTrigger>
                   <TabsTrigger value="piggybank" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> Piggy Bank</TabsTrigger>
                   <TabsTrigger value="njangi" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Njangi</TabsTrigger>
-                  <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Cards</TabsTrigger>
+                  <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Customer Cards</TabsTrigger>
                   <TabsTrigger value="credit" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
@@ -879,7 +883,12 @@ export default function CustomerAppManagement() {
                       {loadingLinked ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : linkedAccounts.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No linked accounts found</p>
+                        <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+                          <UserCheck className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                          <p className="text-sm font-medium">No customers have linked accounts yet</p>
+                          <p className="text-xs text-muted-foreground mt-1 max-w-sm">Share your customer app link to get started:</p>
+                          <code className="mt-2 rounded bg-muted px-3 py-1.5 text-xs font-mono text-primary select-all">/app/{selectedInstitution}/home</code>
+                        </div>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
@@ -914,7 +923,11 @@ export default function CustomerAppManagement() {
                       {loadingAccounts ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : accounts.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No accounts found</p>
+                        <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+                          <CreditCard className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                          <p className="text-sm font-medium">No customer accounts found</p>
+                          <p className="text-xs text-muted-foreground mt-1">Customer accounts will appear here once users link their accounts via the customer app.</p>
+                        </div>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
@@ -945,7 +958,11 @@ export default function CustomerAppManagement() {
                       {loadingTxns ? (
                         <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
                       ) : transactions.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No transactions found</p>
+                        <div className="flex flex-col items-center justify-center py-10 text-center px-4">
+                          <ArrowRightLeft className="h-10 w-10 text-muted-foreground/40 mb-3" />
+                          <p className="text-sm font-medium">No customer transactions found</p>
+                          <p className="text-xs text-muted-foreground mt-1">Transactions from customer app users will appear here.</p>
+                        </div>
                       ) : (
                         <Table>
                           <TableHeader><TableRow>
