@@ -158,6 +158,10 @@ serve(async (req) => {
       if (result.redirect_url) {
         nextAction = { type: 'redirect', redirect_url: result.redirect_url };
         status = 'pending_customer_action';
+      } else {
+        // Mobile money USSD/STK-push flow — no redirect, user confirms on phone
+        nextAction = { type: 'mobile_money_confirm', message: 'Confirm the payment on your phone', provider_ref: result.provider_ref };
+        status = 'pending_customer_action';
       }
     } else if (resolvedProvider === 'stripe') {
       const result = await createStripeCharge({
