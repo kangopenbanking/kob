@@ -1,31 +1,48 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Gift, Star, ShoppingBag, Smartphone, Coffee, Ticket } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Gift, Star, ShoppingBag, Smartphone, Coffee, Ticket, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { toast } from 'sonner';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useCustomerTransactions } from '@/hooks/useCustomerData';
 
-const rewards = [
+// Rewards catalog (static config - these would typically come from an institution-specific config)
+const rewardsCatalog = [
   { name: '10% Off Airtime', points: 500, icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
   { name: 'Free Coffee', points: 300, icon: Coffee, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]' },
   { name: 'Shopping Voucher', points: 1000, icon: ShoppingBag, color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]' },
   { name: 'Movie Ticket', points: 750, icon: Ticket, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
 ];
 
+const earnActions = [
+  { action: 'Make a transfer', pts: '+50' },
+  { action: 'Pay a bill', pts: '+30' },
+  { action: 'Refer a friend', pts: '+200' },
+  { action: 'Save to Piggy Bank', pts: '+25' },
+];
+
 const CustomerRewards: React.FC = () => {
+  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
   const [tab, setTab] = useState<'earn' | 'redeem'>('redeem');
-  const [points, setPoints] = useState(2450);
   const [redeeming, setRedeeming] = useState<number | null>(null);
 
+  // Calculate points from transaction history (reward-type transactions)
+  const { data: txns = [], isLoading } = useCustomerTransactions(user?.id, institutionId, 100);
+  const rewardTxns = txns.filter((tx: any) => tx.transaction_type === 'reward' || tx.transaction_type === 'cashback');
+  const earnedPoints = rewardTxns.reduce((sum: number, tx: any) => sum + Math.abs(tx.amount || 0), 0);
+  // Simple point conversion: 1 XAF = 0.1 points
+  const points = Math.round(earnedPoints * 0.1);
+
   const handleRedeem = (i: number) => {
-    const r = rewards[i];
+    const r = rewardsCatalog[i];
     if (points < r.points) {
       toast.error(`Not enough points. You need ${r.points - points} more.`);
       return;
     }
     setRedeeming(i);
     setTimeout(() => {
-      setPoints(points - r.points);
       setRedeeming(null);
       toast.success(`${r.name} redeemed! Check your email for the voucher.`);
     }, 1200);
@@ -46,7 +63,11 @@ const CustomerRewards: React.FC = () => {
         </div>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Points Balance</p>
-          <p className="text-2xl font-bold text-foreground">{points.toLocaleString()}</p>
+          {isLoading ? (
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
+          ) : (
+            <p className="text-2xl font-bold text-foreground">{points.toLocaleString()}</p>
+          )}
         </div>
       </motion.div>
 
@@ -62,7 +83,7 @@ const CustomerRewards: React.FC = () => {
 
       {tab === 'redeem' ? (
         <div className="grid grid-cols-2 gap-3">
-          {rewards.map((r, i) => (
+          {rewardsCatalog.map((r, i) => (
             <motion.button key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05 }} onClick={() => handleRedeem(i)}
               disabled={redeeming === i}
@@ -79,12 +100,7 @@ const CustomerRewards: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-2">
-          {[
-            { action: 'Make a transfer', pts: '+50' },
-            { action: 'Pay a bill', pts: '+30' },
-            { action: 'Refer a friend', pts: '+200' },
-            { action: 'Save to Piggy Bank', pts: '+25' },
-          ].map((e, i) => (
+          {earnActions.map((e, i) => (
             <div key={i} className="flex items-center justify-between rounded-2xl bg-card p-3.5">
               <p className="text-sm font-semibold text-foreground">{e.action}</p>
               <span className="text-xs font-bold text-[hsl(150,60%,40%)]">{e.pts}</span>

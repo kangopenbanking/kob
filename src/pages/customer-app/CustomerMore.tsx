@@ -1,17 +1,17 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Send, Download, Receipt, FileText, Building2, Users,
-  Link2, Banknote, RefreshCw, Gift, PiggyBank, CircleDollarSign,
-  Settings, HelpCircle, Bell, ScanLine, QrCode, Wallet, Plus,
-  Lock, ChevronRight, Zap, Wifi, Tv
+  Send, Download, Receipt, Building2, Users,
+  Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
+  Lock, ChevronRight, Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useRecentBillPayments } from '@/hooks/useCustomerData';
 import { MediaBanner } from '@/components/pwa/MediaBanner';
+import { format } from 'date-fns';
 
-/* ─── Quick Actions ─── */
 const allQuickActions = [
   { key: 'transfer', label: 'Transfer', icon: Send, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'transfer' },
   { key: 'request', label: 'Request', icon: Download, color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', featureKey: 'request' },
@@ -19,14 +19,6 @@ const allQuickActions = [
   { key: 'bills', label: 'Bills', icon: Receipt, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', featureKey: 'bills' },
   { key: 'cash_out', label: 'Cash Out', icon: Wallet, color: 'bg-[hsl(340,50%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'cash_out' },
   { key: 'bank', label: 'Add', icon: Plus, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]' },
-];
-
-/* ─── Mock Upcoming Bills ─── */
-const upcomingBills = [
-  { name: 'Electricity', amount: 15000, due: 'Mar 1', icon: Zap, bg: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
-  { name: 'Internet', amount: 25000, due: 'Mar 3', icon: Wifi, bg: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
-  { name: 'Cable TV', amount: 8500, due: 'Mar 5', icon: Tv, bg: 'bg-[hsl(340,50%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]' },
-  { name: 'Water Bill', amount: 6000, due: 'Mar 8', icon: Receipt, bg: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]' },
 ];
 
 const utilityItems = [
@@ -44,16 +36,17 @@ const CustomerMore: React.FC = () => {
   const { user } = useCustomerAuth();
   const isViewOnly = user?.isViewOnly ?? false;
 
+  const { data: recentBills = [], isLoading: billsLoading } = useRecentBillPayments(user?.id, institutionId);
+
   const go = (path: string) => navigate(`/app/${institutionId}/${path}`);
   const isFeatureVisible = (featureKey?: string) => !featureKey || tenant.features[featureKey as keyof typeof tenant.features] !== false;
-
   const enabledActions = allQuickActions.filter((a) => isFeatureVisible(a.featureKey));
 
   return (
     <div className="flex flex-col gap-6 p-5 pb-8">
       <h1 className="text-xl font-bold text-foreground">More</h1>
 
-      {/* ─── Quick Actions ─── */}
+      {/* Quick Actions */}
       <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Actions</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
@@ -73,38 +66,43 @@ const CustomerMore: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* ─── Media Banner ─── */}
+      {/* Media Banner */}
       {tenant.mediaSections && tenant.mediaSections.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.03 }}>
           <MediaBanner items={tenant.mediaSections} cardSize="medium" />
         </motion.div>
       )}
 
-      {/* ─── Upcoming Bills ─── */}
+      {/* Recent Bill Payments (Live) */}
       {!isViewOnly && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Upcoming Bills</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Bill Payments</p>
             <button onClick={() => go('bills')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
               View All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
             </button>
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-            {upcomingBills.map((bill, i) => (
-              <div key={i} className={`flex min-w-[130px] flex-col items-center gap-2 rounded-3xl ${bill.bg} p-4`}>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background/50">
-                  <bill.icon className={`h-5 w-5 ${bill.iconColor}`} strokeWidth={1.5} />
+          {billsLoading ? (
+            <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+          ) : recentBills.length === 0 ? (
+            <p className="py-4 text-center text-xs text-muted-foreground">No recent bill payments</p>
+          ) : (
+            <div className="space-y-2">
+              {recentBills.slice(0, 4).map((bill: any) => (
+                <div key={bill.id} className="flex items-center justify-between rounded-2xl bg-card p-3">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-sm font-medium text-foreground">{bill.transaction_information || 'Bill Payment'}</span>
+                    <span className="text-xs text-muted-foreground">{bill.booking_datetime ? format(new Date(bill.booking_datetime), 'MMM d, yyyy') : ''}</span>
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">{Math.abs(bill.amount || 0).toLocaleString()} {bill.currency}</span>
                 </div>
-                <p className="text-xs font-bold text-foreground">{bill.name}</p>
-                <p className="text-sm font-bold text-foreground">{bill.amount.toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">XAF</span></p>
-                <p className="text-[10px] font-medium text-muted-foreground">Due {bill.due}</p>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </motion.div>
       )}
 
-      {/* ─── Account ─── */}
+      {/* Account */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account</p>
         <div className="space-y-2">

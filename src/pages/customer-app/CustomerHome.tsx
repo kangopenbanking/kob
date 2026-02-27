@@ -5,30 +5,16 @@ import {
   ShoppingBag, Lock, Smartphone, Gift, Wallet,
   TrendingUp, TrendingDown, Send, Download, Banknote, Link2,
   Receipt, FileText, Users, RefreshCw, PiggyBank, CircleDollarSign,
-  BarChart3, Home, Building2, ChevronRight
+  BarChart3, Home, Building2, ChevronRight, Loader2
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSpendingSummary } from '@/hooks/useCustomerData';
+import { formatDistanceToNow } from 'date-fns';
 
-/* ─── Mock Account Cards ─── */
-const accountCards = [
-  { name: 'Main Wallet', balance: 485000, currency: 'XAF', color: 'bg-[hsl(225,50%,22%)]', textColor: 'text-[hsl(0,0%,100%)]' },
-  { name: 'Savings', balance: 120000, currency: 'XAF', color: 'bg-[hsl(150,35%,30%)]', textColor: 'text-[hsl(0,0%,100%)]' },
-  { name: 'Mobile Money', balance: 35000, currency: 'XAF', color: 'bg-[hsl(25,60%,35%)]', textColor: 'text-[hsl(0,0%,100%)]' },
-];
-
-/* ─── Mock Recent Activities ─── */
-const recentActivities = [
-  { name: 'Grocery Store', type: 'Shopping', amount: -12500, icon: ShoppingBag, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', time: '2h ago' },
-  { name: 'Salary Deposit', type: 'Income', amount: 350000, icon: ArrowDownLeft, color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', time: '5h ago' },
-  { name: 'Transfer to John', type: 'Transfer', amount: -25000, icon: ArrowUpRight, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', time: 'Yesterday' },
-  { name: 'Mobile Top-up', type: 'Airtime', amount: -5000, icon: Smartphone, color: 'bg-[hsl(255,50%,92%)]', iconColor: 'text-[hsl(255,50%,45%)]', time: 'Yesterday' },
-  { name: 'Reward Cashback', type: 'Rewards', amount: 1500, icon: Gift, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', time: '2 days ago' },
-];
-
-/* ─── Service Section Data ─── */
+/* ─── Service Section Data (static config — NOT mock data) ─── */
 interface FeatureItem {
   label: string;
   description?: string;
@@ -68,6 +54,18 @@ const financialHealth: FeatureItem[] = [
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
 
+const txIconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
+  transfer: { icon: ArrowUpRight, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
+  payment: { icon: ShoppingBag, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
+  deposit: { icon: ArrowDownLeft, color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]' },
+  bill_payment: { icon: Receipt, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
+  airtime: { icon: Smartphone, color: 'bg-[hsl(255,50%,92%)]', iconColor: 'text-[hsl(255,50%,45%)]' },
+  reward: { icon: Gift, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]' },
+};
+
+const acctIcons = [Wallet, PiggyBank, Smartphone];
+const acctColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(25,60%,35%)]'];
+
 const CustomerHome: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
@@ -78,7 +76,27 @@ const CustomerHome: React.FC = () => {
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
 
   const isViewOnly = user?.isViewOnly ?? false;
-  const totalBalance = accountCards.reduce((s, a) => s + a.balance, 0);
+
+  // ─── Live Data ───
+  const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id, institutionId);
+  const accountIds = accounts.map((a: any) => a.id);
+  const { data: balances = [] } = useAccountBalances(accountIds);
+  const { data: recentTxns = [], isLoading: txnLoading } = useCustomerTransactions(user?.id, institutionId, 5);
+  const { data: summary } = useSpendingSummary(user?.id, institutionId, period);
+
+  // Build account cards from live data
+  const accountCards = accounts.map((acct: any, i: number) => {
+    const bal = balances.find((b: any) => b.account_id === acct.id);
+    return {
+      name: acct.nickname || acct.account_holder_name || `Account ${i + 1}`,
+      balance: bal?.amount ?? 0,
+      currency: acct.currency || 'XAF',
+    };
+  });
+
+  const totalBalance = accountCards.reduce((s: number, a: any) => s + a.balance, 0);
+  const earnings = summary?.earnings ?? 0;
+  const spending = summary?.spending ?? 0;
 
   const go = (path: string) => navigate(`/app/${institutionId}/${path}`);
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
@@ -88,19 +106,15 @@ const CustomerHome: React.FC = () => {
   const visibleSavings = savingsGoals.filter(isVisible);
   const visibleHealth = financialHealth.filter(isVisible);
 
-  const earnings = 351500;
-  const spending = 68000;
-
   return (
     <div className="flex flex-col gap-5 pb-6">
-      {/* ─── Balance Hero Section (flush to edges) ─── */}
+      {/* ─── Balance Hero Section ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.35 }}>
         <div className="bg-primary px-5 pt-5 pb-5 relative overflow-hidden">
-          {/* Decorative circles */}
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[hsl(0,0%,100%)]/5" />
           <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-[hsl(0,0%,100%)]/5" />
 
-          {/* Top Bar inside hero */}
+          {/* Top Bar */}
           <div className="relative flex items-center justify-between mb-5">
             <div className="flex items-center gap-3">
               {tenant.logoUrl && (
@@ -140,14 +154,15 @@ const CustomerHome: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Total Balance - BIG and centered */}
+          {/* Total Balance */}
           <div className="relative text-center my-4">
             <p className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/50 mb-1">Total Balance</p>
-            <p className="text-4xl font-extrabold text-primary-foreground">
-              {isViewOnly ? '• • • • •' : balanceVisible ? `XAF ${totalBalance.toLocaleString()}` : '• • • • •'}
-            </p>
-            {!isViewOnly && balanceVisible && (
-              <p className="mt-1 text-xs font-medium text-[hsl(150,60%,65%)]">+ 12,500 today</p>
+            {acctLoading ? (
+              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
+            ) : (
+              <p className="text-4xl font-extrabold text-primary-foreground">
+                {isViewOnly ? '• • • • •' : balanceVisible ? `XAF ${totalBalance.toLocaleString()}` : '• • • • •'}
+              </p>
             )}
           </div>
 
@@ -163,22 +178,29 @@ const CustomerHome: React.FC = () => {
             </div>
           </div>
 
-          {/* Account Cards - compact like Financial Health */}
-          {!isViewOnly && (
+          {/* Account Cards from live data */}
+          {!isViewOnly && accountCards.length > 0 && (
             <div className="relative grid grid-cols-3 gap-2">
-              {accountCards.map((acct, i) => (
-                <div key={i} className="flex flex-col items-center gap-1.5 rounded-2xl bg-[hsl(0,0%,100%)]/12 p-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${acct.color}`}>
-                    {i === 0 && <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />}
-                    {i === 1 && <PiggyBank className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />}
-                    {i === 2 && <Smartphone className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />}
+              {accountCards.slice(0, 3).map((acct: any, i: number) => {
+                const Icon = acctIcons[i % acctIcons.length];
+                return (
+                  <div key={i} className="flex flex-col items-center gap-1.5 rounded-2xl bg-[hsl(0,0%,100%)]/12 p-3">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${acctColors[i % acctColors.length]}`}>
+                      <Icon className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
+                    </div>
+                    <p className="text-[10px] font-bold text-primary-foreground/80 truncate max-w-full">{acct.name}</p>
+                    <p className="text-xs font-bold text-primary-foreground">
+                      {balanceVisible ? acct.balance.toLocaleString() : '•••'}
+                    </p>
                   </div>
-                  <p className="text-[10px] font-bold text-primary-foreground/80">{acct.name}</p>
-                  <p className="text-xs font-bold text-primary-foreground">
-                    {balanceVisible ? acct.balance.toLocaleString() : '•••'}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
+            </div>
+          )}
+
+          {!isViewOnly && accountCards.length === 0 && !acctLoading && (
+            <div className="relative text-center py-4">
+              <p className="text-xs text-primary-foreground/50">No accounts linked yet</p>
             </div>
           )}
         </div>
@@ -293,7 +315,7 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ─── Spending Stats ─── */}
+      {/* ─── Spending Stats (Live) ─── */}
       {!isViewOnly && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.15 }}>
           <div className="grid grid-cols-2 gap-3">
@@ -317,7 +339,7 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ─── Recent Activities ─── */}
+      {/* ─── Recent Activities (Live) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.18 }}>
         <div className="mb-3 flex items-center justify-between">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Activities</p>
@@ -331,22 +353,36 @@ const CustomerHome: React.FC = () => {
             <p className="text-sm font-semibold text-muted-foreground">No transactions yet</p>
             <p className="text-xs text-muted-foreground">Link an account to see activity</p>
           </div>
+        ) : txnLoading ? (
+          <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : recentTxns.length === 0 ? (
+          <div className="flex flex-col items-center gap-2 rounded-3xl border border-border bg-muted/30 p-10">
+            <p className="text-sm font-semibold text-muted-foreground">No transactions yet</p>
+          </div>
         ) : (
           <div className="space-y-2">
-            {recentActivities.map((item, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl bg-card p-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${item.color}`}>
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
+            {recentTxns.map((tx: any) => {
+              const isCredit = tx.credit_debit_indicator === 'Credit';
+              const amount = tx.amount || 0;
+              const txType = tx.transaction_type?.toLowerCase() || 'payment';
+              const iconInfo = txIconMap[txType] || txIconMap.payment;
+              const TxIcon = iconInfo.icon;
+              const timeAgo = tx.booking_datetime ? formatDistanceToNow(new Date(tx.booking_datetime), { addSuffix: true }) : '';
+              return (
+                <div key={tx.id} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${iconInfo.color}`}>
+                    <TxIcon className={`h-5 w-5 ${iconInfo.iconColor}`} strokeWidth={1.5} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">{tx.transaction_information || tx.transaction_type}</p>
+                    <p className="text-[11px] text-muted-foreground">{tx.transaction_type} · {timeAgo}</p>
+                  </div>
+                  <p className={`text-sm font-bold tabular-nums ${isCredit ? 'text-[hsl(150,60%,40%)]' : 'text-foreground'}`}>
+                    {isCredit ? '+' : '-'}{Math.abs(amount).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{tx.currency}</span>
+                  </p>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-foreground truncate">{item.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{item.type} · {item.time}</p>
-                </div>
-                <p className={`text-sm font-bold tabular-nums ${item.amount > 0 ? 'text-[hsl(150,60%,40%)]' : 'text-foreground'}`}>
-                  {item.amount > 0 ? '+' : ''}{item.amount.toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">XAF</span>
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </motion.div>
