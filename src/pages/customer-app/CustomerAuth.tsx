@@ -4,18 +4,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { ArrowLeft, Phone, Shield, Loader2, AlertCircle, Building2 } from 'lucide-react';
+import { ArrowLeft, Phone, Shield, Loader2, AlertCircle, Building2, UserPlus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { toast } from 'sonner';
 
-type AuthMode = 'phone' | 'otp' | 'pin' | 'verifying';
+type AuthMode = 'welcome' | 'phone' | 'otp' | 'pin' | 'verifying';
 
 const CustomerAuth: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
 
-  const [mode, setMode] = useState<AuthMode>('phone');
+  const [mode, setMode] = useState<AuthMode>('welcome');
+  const [isNewUser, setIsNewUser] = useState(false);
   const [phone, setPhone] = useState('+237');
   const [pin, setPin] = useState('');
   const [pinLoading, setPinLoading] = useState(false);
@@ -24,7 +25,6 @@ const CustomerAuth: React.FC = () => {
 
   const { step: otpStep, loading: otpLoading, error: otpError, sendOTP, verifyOTP, reset: resetOTP } = useFirebasePhoneAuth();
 
-  // Load branding
   useEffect(() => {
     if (!institutionId) return;
     supabase
@@ -39,7 +39,6 @@ const CustomerAuth: React.FC = () => {
       });
   }, [institutionId]);
 
-  // Sync OTP step with local mode
   useEffect(() => {
     if (otpStep === 'otp' && mode === 'phone') setMode('otp');
     if (otpStep === 'verifying') setMode('verifying');
@@ -57,17 +56,20 @@ const CustomerAuth: React.FC = () => {
     if (code.length !== 6) return;
     const success = await verifyOTP(code);
     if (success) {
-      // Check if user has a PIN set — try PIN login path
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('linked_account_type')
-        .eq('phone_number', phone)
-        .maybeSingle();
-
-      if (profile && (profile as any).linked_account_type) {
-        navigate(`/app/${institutionId}/home`, { replace: true });
+      if (isNewUser) {
+        // New registration — go to the onboarding questionnaire
+        navigate(`/app/${institutionId}/register`, { replace: true });
       } else {
-        navigate(`/app/${institutionId}/onboarding`, { replace: true });
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('linked_account_type')
+          .eq('phone_number', phone)
+          .maybeSingle();
+        if (profile && (profile as any).linked_account_type) {
+          navigate(`/app/${institutionId}/home`, { replace: true });
+        } else {
+          navigate(`/app/${institutionId}/register`, { replace: true });
+        }
       }
     }
   };
@@ -82,24 +84,17 @@ const CustomerAuth: React.FC = () => {
       });
       if (error) throw error;
       if (!data?.success) throw new Error(data?.error || 'Login failed');
-
-      // Create session from magic link
       if (data.magic_link) {
         const url = new URL(data.magic_link);
         const token = url.searchParams.get('token');
         const type = url.searchParams.get('type');
         if (token && type) {
-          const { error: verifyErr } = await supabase.auth.verifyOtp({
-            token_hash: token,
-            type: type as any,
-          });
+          const { error: verifyErr } = await supabase.auth.verifyOtp({ token_hash: token, type: type as any });
           if (verifyErr) throw verifyErr;
         }
       }
       await supabase.auth.refreshSession();
       toast.success('Welcome back!');
-
-      // Route based on onboarding status
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         const { data: profile } = await supabase
@@ -110,7 +105,7 @@ const CustomerAuth: React.FC = () => {
         if (profile && (profile as any).linked_account_type) {
           navigate(`/app/${institutionId}/home`, { replace: true });
         } else {
-          navigate(`/app/${institutionId}/onboarding`, { replace: true });
+          navigate(`/app/${institutionId}/register`, { replace: true });
         }
       }
     } catch (err: any) {
@@ -124,39 +119,32 @@ const CustomerAuth: React.FC = () => {
   };
 
   const handleBack = () => {
-    if (mode === 'otp') {
-      resetOTP();
-      setMode('phone');
-    } else if (mode === 'pin') {
-      setMode('phone');
-      setPin('');
-      setPinError(null);
-    } else {
-      navigate(`/app/${institutionId}`);
-    }
+    if (mode === 'otp') { resetOTP(); setMode('phone'); }
+    else if (mode === 'pin') { setMode('phone'); setPin(''); setPinError(null); }
+    else if (mode === 'phone') { setMode('welcome'); }
+    else { navigate(`/app/${institutionId}`); }
   };
 
-  // Check if PIN login is available for this phone
   const handlePhoneContinue = useCallback(async () => {
     if (phone.length < 10) {
       toast.error('Please enter a valid phone number');
       return;
     }
-    // Check if this phone has a profile with a PIN
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('phone_number', phone)
-      .maybeSingle();
-
-    if (profile) {
-      // Existing user — offer PIN login
-      setMode('pin');
-    } else {
-      // New user — send OTP
+    if (isNewUser) {
       await sendOTP(phone);
+    } else {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', phone)
+        .maybeSingle();
+      if (profile) {
+        setMode('pin');
+      } else {
+        await sendOTP(phone);
+      }
     }
-  }, [phone, sendOTP]);
+  }, [phone, sendOTP, isNewUser]);
 
   const slideVariants = {
     enter: { x: 40, opacity: 0 },
@@ -167,14 +155,16 @@ const CustomerAuth: React.FC = () => {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <div className="flex items-center gap-3 p-5">
-        <button onClick={handleBack} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-          <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
-        </button>
-      </div>
+      {mode !== 'welcome' && (
+        <div className="flex items-center gap-3 p-5">
+          <button onClick={handleBack} className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
+            <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
+          </button>
+        </div>
+      )}
 
       {/* Branding */}
-      <div className="flex flex-col items-center gap-3 px-5 pb-8">
+      <div className="flex flex-col items-center gap-3 px-5 pb-8 pt-6">
         {branding.logoUrl ? (
           <img src={branding.logoUrl} alt={branding.name} className="h-16 w-16 rounded-2xl object-contain" />
         ) : (
@@ -182,14 +172,42 @@ const CustomerAuth: React.FC = () => {
             <Building2 className="h-8 w-8 text-foreground" strokeWidth={1.5} />
           </div>
         )}
-        <h1 className="text-xl font-bold text-foreground">{branding.name || 'Sign In'}</h1>
+        <h1 className="text-xl font-bold text-foreground">{branding.name || 'Kang'}</h1>
       </div>
 
       {/* Content */}
       <div className="flex-1 px-5">
         <AnimatePresence mode="wait">
+          {mode === 'welcome' && (
+            <motion.div key="welcome" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.25 }} className="flex flex-col gap-4">
+              <div className="text-center mb-4">
+                <p className="text-sm text-muted-foreground">Your money, simplified.</p>
+              </div>
+              <Button
+                onClick={() => { setIsNewUser(false); setMode('phone'); }}
+                className="h-14 rounded-2xl text-base font-semibold"
+                size="lg"
+              >
+                Sign In
+              </Button>
+              <Button
+                onClick={() => { setIsNewUser(true); setMode('phone'); }}
+                variant="outline"
+                className="h-14 rounded-2xl text-base font-semibold gap-2 border-foreground"
+                size="lg"
+              >
+                <UserPlus className="h-5 w-5" strokeWidth={1.5} />
+                Create Account
+              </Button>
+            </motion.div>
+          )}
+
           {mode === 'phone' && (
             <motion.div key="phone" variants={slideVariants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.2 }} className="flex flex-col gap-5">
+              <div className="text-center mb-2">
+                <p className="text-sm font-semibold text-foreground">{isNewUser ? 'Register with your phone' : 'Welcome back'}</p>
+                <p className="text-xs text-muted-foreground mt-1">{isNewUser ? 'We\'ll send a code to verify your number' : 'Enter your phone number to sign in'}</p>
+              </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Phone Number</p>
                 <div className="relative">
