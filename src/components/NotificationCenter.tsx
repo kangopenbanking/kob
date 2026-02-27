@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Bell, Check, X, AlertTriangle, Info } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Bell, Check, AlertTriangle, Info, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useOneSignal } from "@/hooks/useOneSignal";
 
 interface Notification {
   id: string;
@@ -19,7 +20,7 @@ interface Notification {
   type: "info" | "warning" | "error" | "success";
   read: boolean;
   created_at: string;
-  action_url?: string;
+  source: "system" | "app";
 }
 
 export function NotificationCenter() {
@@ -27,93 +28,125 @@ export function NotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-    subscribeToNotifications();
-  }, []);
+  // Register OneSignal for the current user (no institution scope on desktop dashboards)
+  useOneSignal();
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      // Load from system_alerts table
-      const { data: alerts } = await supabase
-        .from("system_alerts")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(20);
+      // Load from both system_alerts and app_notifications
+      const [systemResult, appResult] = await Promise.all([
+        supabase
+          .from("system_alerts")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(15),
+        supabase
+          .from("app_notifications")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(15),
+      ]);
 
-      if (alerts) {
-        const mappedNotifications: Notification[] = alerts.map((alert) => ({
-          id: alert.id,
-          title: alert.alert_type.replace(/_/g, " ").toUpperCase(),
-          message: alert.message || "",
-          type: alert.severity === "critical" || alert.severity === "high" 
-            ? "error" 
-            : alert.severity === "medium" 
-            ? "warning" 
-            : "info",
-          read: alert.acknowledged_at !== null,
-          created_at: alert.created_at,
-        }));
+      const mapped: Notification[] = [];
 
-        setNotifications(mappedNotifications);
-        setUnreadCount(mappedNotifications.filter((n) => !n.read).length);
+      if (systemResult.data) {
+        for (const alert of systemResult.data) {
+          mapped.push({
+            id: alert.id,
+            title: alert.alert_type.replace(/_/g, " ").toUpperCase(),
+            message: alert.message || "",
+            type: alert.severity === "critical" || alert.severity === "high"
+              ? "error"
+              : alert.severity === "medium"
+              ? "warning"
+              : "info",
+            read: alert.acknowledged_at !== null,
+            created_at: alert.created_at,
+            source: "system",
+          });
+        }
       }
+
+      if (appResult.data) {
+        for (const n of appResult.data) {
+          mapped.push({
+            id: n.id,
+            title: n.title,
+            message: n.message,
+            type: (n.type as Notification["type"]) || "info",
+            read: n.is_read,
+            created_at: n.created_at,
+            source: "app",
+          });
+        }
+      }
+
+      // Sort by created_at desc
+      mapped.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      setNotifications(mapped.slice(0, 25));
+      setUnreadCount(mapped.filter((n) => !n.read).length);
     } catch (error) {
       console.error("Error loading notifications:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const subscribeToNotifications = () => {
-    const channel = supabase
+  useEffect(() => {
+    loadNotifications();
+
+    // Subscribe to both tables
+    const systemChannel = supabase
       .channel("system_alerts_changes")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "system_alerts",
-        },
-        (payload) => {
-          console.log("Alert notification:", payload);
-          loadNotifications();
-          
-          // Show toast for new alerts
-          if (payload.eventType === "INSERT") {
-            const newAlert = payload.new as any;
-            toast.info(newAlert.message, {
-              description: newAlert.alert_type,
-            });
-          }
+      .on("postgres_changes", { event: "*", schema: "public", table: "system_alerts" }, (payload) => {
+        loadNotifications();
+        if (payload.eventType === "INSERT") {
+          const newAlert = payload.new as any;
+          toast.info(newAlert.message, { description: newAlert.alert_type });
         }
-      )
+      })
+      .subscribe();
+
+    const appChannel = supabase
+      .channel("app_notifications_center")
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "app_notifications" }, (payload) => {
+        loadNotifications();
+        const n = payload.new as any;
+        toast(n.title, { description: n.message });
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(systemChannel);
+      supabase.removeChannel(appChannel);
     };
-  };
+  }, [loadNotifications]);
 
-  const markAsRead = async (notificationId: string) => {
+  const markAsRead = async (notification: Notification) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      await supabase
-        .from("system_alerts")
-        .update({ 
-          acknowledged_at: new Date().toISOString(),
-          acknowledged_by: user.id 
-        })
-        .eq("id", notificationId);
+      if (notification.source === "system") {
+        await supabase
+          .from("system_alerts")
+          .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: user.id })
+          .eq("id", notification.id);
+      } else {
+        await supabase
+          .from("app_notifications")
+          .update({ is_read: true } as any)
+          .eq("id", notification.id);
+      }
 
       setNotifications((prev) =>
-        prev.map((n) => (n.id === notificationId ? { ...n, read: true } : n))
+        prev.map((n) => (n.id === notification.id ? { ...n, read: true } : n))
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
     } catch (error) {
@@ -126,17 +159,24 @@ export function NotificationCenter() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
-      
-      if (unreadIds.length === 0) return;
+      const unread = notifications.filter((n) => !n.read);
+      if (unread.length === 0) return;
 
-      await supabase
-        .from("system_alerts")
-        .update({ 
-          acknowledged_at: new Date().toISOString(),
-          acknowledged_by: user.id 
-        })
-        .in("id", unreadIds);
+      const systemIds = unread.filter((n) => n.source === "system").map((n) => n.id);
+      const appIds = unread.filter((n) => n.source === "app").map((n) => n.id);
+
+      if (systemIds.length > 0) {
+        await supabase
+          .from("system_alerts")
+          .update({ acknowledged_at: new Date().toISOString(), acknowledged_by: user.id })
+          .in("id", systemIds);
+      }
+      if (appIds.length > 0) {
+        await supabase
+          .from("app_notifications")
+          .update({ is_read: true } as any)
+          .in("id", appIds);
+      }
 
       setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
       setUnreadCount(0);
@@ -150,13 +190,13 @@ export function NotificationCenter() {
   const getIcon = (type: string) => {
     switch (type) {
       case "error":
-        return <AlertTriangle className="h-4 w-4 text-red-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive" />;
       case "warning":
-        return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+        return <AlertTriangle className="h-4 w-4 text-destructive/70" />;
       case "success":
-        return <Check className="h-4 w-4 text-green-500" />;
+        return <Check className="h-4 w-4 text-primary" />;
       default:
-        return <Info className="h-4 w-4 text-blue-500" />;
+        return <Info className="h-4 w-4 text-muted-foreground" />;
     }
   };
 
@@ -192,12 +232,8 @@ export function NotificationCenter() {
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-semibold">Notifications</h3>
           {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={markAllAsRead}
-              className="text-xs"
-            >
+            <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs gap-1">
+              <CheckCheck className="h-3.5 w-3.5" />
               Mark all read
             </Button>
           )}
@@ -227,7 +263,7 @@ export function NotificationCenter() {
                             variant="ghost"
                             size="sm"
                             className="h-6 w-6 p-0"
-                            onClick={() => markAsRead(notification.id)}
+                            onClick={() => markAsRead(notification)}
                           >
                             <Check className="h-4 w-4" />
                           </Button>

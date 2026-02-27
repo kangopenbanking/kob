@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { merchantNavigation } from "./merchant-navigation-config";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 export function MerchantLayout() {
   const navigate = useNavigate();
@@ -81,7 +82,10 @@ export function MerchantLayout() {
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <div className="flex-1" />
-            <UserProfileMenu />
+            <div className="flex items-center gap-2">
+              <NotificationCenter />
+              <UserProfileMenu />
+            </div>
           </header>
 
           <main className="flex-1 p-6">
