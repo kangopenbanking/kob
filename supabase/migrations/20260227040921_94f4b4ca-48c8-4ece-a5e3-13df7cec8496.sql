@@ -1,0 +1,1 @@
+ALTER TABLE public.funding_intents ALTER COLUMN account_id DROP NOT NULL;
