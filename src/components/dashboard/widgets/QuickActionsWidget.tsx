@@ -27,7 +27,7 @@ export function QuickActionsWidget({
     {
       icon: ArrowDownToLine,
       label: "Fund",
-      onClick: () => navigate("/mobile-money"),
+      onClick: () => navigate("/fund-account"),
       bg: "bg-green-50 dark:bg-green-950",
       color: "text-green-600 dark:text-green-400",
     },

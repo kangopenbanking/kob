@@ -36,6 +36,7 @@ export const institutionNavigation = [
   {
     title: "Financial Management",
     items: [
+      { title: "Fund Account", path: "/fi-portal/fund-account", icon: Wallet, sectionKey: "accounts" },
       { title: "Beneficiaries", path: "/fi-portal/beneficiaries", icon: Users, sectionKey: "beneficiaries" },
       { title: "Ledger", path: "/fi-portal/ledger", icon: BookOpen, sectionKey: "ledger" },
       { title: "Billing", path: "/fi-portal/billing", icon: Receipt, sectionKey: "billing" },
