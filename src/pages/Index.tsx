@@ -16,8 +16,10 @@ import {
   FileText,
   FlaskConical,
   Globe,
+  Home,
   Lock,
   PieChart,
+  PiggyBank,
   Rocket,
   Shield,
   Smartphone,
@@ -667,6 +669,83 @@ const Index = () => {
             <p className="text-sm text-white/70 mt-8">
               ✓ Takes 3 minutes  ✓ No impact on your score  ✓ Trusted by thousands
             </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Piggy Bank, Njangi & Rent Reporting Section */}
+      <section className="py-24 bg-muted/30">
+        <div className="container mx-auto px-4">
+          <div className="max-w-5xl mx-auto">
+            <div className="text-center mb-16">
+              <Badge variant="outline" className="mb-4 px-4 py-2">
+                <PiggyBank className="h-4 w-4 mr-2 inline" />
+                Build Credit Your Way
+              </Badge>
+              <h2 className="text-4xl md:text-5xl font-bold mb-6">
+                Savings, Groups & Rent — All Build Your Credit
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+                Three powerful tools that turn everyday financial habits into credit-building opportunities. 
+                Every on-time payment is reported to your CrediQ score.
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="p-8 hover:shadow-xl transition-all hover:-translate-y-1 border-primary/20">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                  <PiggyBank className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">Piggy Bank</h3>
+                <p className="text-muted-foreground mb-4">
+                  Set a savings goal, choose your schedule, and build credit with every on-time payment. +3 to +5 points per payment.
+                </p>
+                <ul className="space-y-2 text-sm mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /> Daily, weekly, or monthly</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /> Goal tracking</li>
+                  <li className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Credit score building</li>
+                </ul>
+                <Link to="/piggybank">
+                  <Button className="w-full">Learn More <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                </Link>
+              </Card>
+
+              <Card className="p-8 hover:shadow-xl transition-all hover:-translate-y-1 border-accent/20">
+                <div className="h-14 w-14 rounded-2xl bg-accent/10 flex items-center justify-center mb-6">
+                  <Users className="h-7 w-7 text-accent" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">Njangi</h3>
+                <p className="text-muted-foreground mb-4">
+                  The traditional money pot — digitized. Pool funds with friends, take turns receiving, and build credit together.
+                </p>
+                <ul className="space-y-2 text-sm mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-accent" /> Random or manual rotation</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-accent" /> Configurable late interest</li>
+                  <li className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-accent" /> +3 to +5 points per contribution</li>
+                </ul>
+                <Link to="/njangi">
+                  <Button variant="outline" className="w-full">Learn More <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                </Link>
+              </Card>
+
+              <Card className="p-8 hover:shadow-xl transition-all hover:-translate-y-1 border-primary/20 bg-gradient-to-br from-background to-muted/20">
+                <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+                  <Home className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-2xl font-bold mb-3">Rent Reporting</h3>
+                <p className="text-muted-foreground mb-4">
+                  Turn rent payments into credit history with your unique KRENTS reference. +5 to +10 points per payment.
+                </p>
+                <ul className="space-y-2 text-sm mb-6">
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /> Unique KRENTS**** ID</li>
+                  <li className="flex items-center gap-2"><CheckCircle className="h-4 w-4 text-primary" /> Direct landlord payments</li>
+                  <li className="flex items-center gap-2"><TrendingUp className="h-4 w-4 text-primary" /> Highest credit impact</li>
+                </ul>
+                <Link to="/rent-reporting">
+                  <Button className="w-full">Learn More <ArrowRight className="ml-2 h-4 w-4" /></Button>
+                </Link>
+              </Card>
+            </div>
           </div>
         </div>
       </section>
