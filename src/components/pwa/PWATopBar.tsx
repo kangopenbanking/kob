@@ -1,6 +1,8 @@
 import React from 'react';
 import { Bell, Building2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useTenant } from './TenantProvider';
+import { useNotifications } from '@/hooks/useNotifications';
 
 interface PWATopBarProps {
   userName?: string;
@@ -8,6 +10,9 @@ interface PWATopBarProps {
 
 export const PWATopBar: React.FC<PWATopBarProps> = ({ userName }) => {
   const tenant = useTenant();
+  const navigate = useNavigate();
+  const { institutionId } = useParams();
+  const { unreadCount } = useNotifications(institutionId);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -34,9 +39,16 @@ export const PWATopBar: React.FC<PWATopBarProps> = ({ userName }) => {
         </div>
       </div>
 
-      <button className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-muted">
+      <button
+        onClick={() => navigate(`/bank/${institutionId}/more/alerts`)}
+        className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-muted"
+      >
         <Bell className="h-5 w-5 text-foreground" strokeWidth={1.5} />
-        <span className="absolute -right-0.5 -top-0.5 h-3 w-3 rounded-full border-2 border-background bg-[hsl(var(--bank-coral))]" />
+        {unreadCount > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+            {unreadCount > 99 ? '99+' : unreadCount}
+          </span>
+        )}
       </button>
     </header>
   );
