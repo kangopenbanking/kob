@@ -3,6 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
+// Re-export toast for components that import from here
+
 // Helper to get institutionId from route params
 function useInstitutionId() {
   const { institutionId } = useParams();
@@ -442,5 +444,60 @@ export function useExportStatement() {
     },
     onSuccess: () => toast.success('Statement generated!'),
     onError: (err: any) => toast.error(err.message || 'Export failed'),
+  });
+}
+
+// ─── Loan Repayment (Banking App) ───
+export function useLoanRepayment() {
+  const queryClient = useQueryClient();
+  const institutionId = useInstitutionId();
+  return useMutation({
+    mutationFn: async ({ loan_account_id, amount, payment_method, notes }: { 
+      loan_account_id: string; amount: number; payment_method?: string; notes?: string 
+    }) => {
+      const idempotencyKey = `loan-repay-${loan_account_id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
+      const { data, error } = await supabase.functions.invoke('loan-repay', {
+        headers: { 'Idempotency-Key': idempotencyKey },
+        body: { loan_account_id, amount, payment_method: payment_method || 'bank_transfer', notes },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['loan-applications', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['credit-score', institutionId] });
+      queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
+    },
+    onError: (err: any) => toast.error(err.message || 'Payment failed'),
+  });
+}
+
+// ─── Credit Profile (Event-Sourced) ───
+export function useCreditProfile() {
+  const institutionId = useInstitutionId();
+  return useQuery({
+    queryKey: ['credit-profile', institutionId],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('credit-profile-get', {});
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+// ─── Credit Events ───
+export function useCreditEvents(limit = 20) {
+  return useQuery({
+    queryKey: ['credit-events', limit],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('credit-events-list', {
+        body: { limit, offset: 0 },
+      });
+      if (error) throw error;
+      return data?.events || [];
+    },
+    staleTime: 5 * 60 * 1000,
   });
 }

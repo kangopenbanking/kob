@@ -20,78 +20,156 @@ Deno.serve(async (req) => {
 
     console.log('Fetching credit score for user:', user_id);
 
-    // Check for existing valid score
-    const { data: existingScore } = await supabase
-      .from('credit_scores')
+    // ── Try event-sourced system first (preferred) ──
+    const { data: eventProfile } = await supabase
+      .from('credit_profiles')
       .select('*')
       .eq('user_id', user_id)
-      .eq('status', 'active')
-      .gte('expires_at', new Date().toISOString())
-      .order('calculated_at', { ascending: false })
+      .maybeSingle();
+
+    const { data: latestSnapshot } = await supabase
+      .from('credit_score_snapshots')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('computed_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    let scoreData = existingScore;
+    // ── Fetch recent credit events for timeline ──
+    const { data: recentEvents } = await supabase
+      .from('credit_events')
+      .select('id, event_type, event_time, value_numeric, metadata, source')
+      .eq('user_id', user_id)
+      .order('event_time', { ascending: false })
+      .limit(20);
 
-    // Calculate new score if needed
-    if (!existingScore || force_refresh) {
-      console.log('Calculating new credit score...');
-      
-      const { data: calculatedScore, error: calcError } = await supabase.functions.invoke(
-        'credit-score-calculate',
-        {
-          body: { user_id, include_external: false }
+    // Use event-sourced score if available and recent (within 24h), or force recompute
+    let useEventSourced = false;
+    let scoreData: any = null;
+
+    if (eventProfile?.current_score && eventProfile.last_computed_at) {
+      const lastComputed = new Date(eventProfile.last_computed_at);
+      const hoursSinceCompute = (Date.now() - lastComputed.getTime()) / (1000 * 60 * 60);
+      useEventSourced = hoursSinceCompute < 24 || !force_refresh;
+    }
+
+    if (useEventSourced && eventProfile) {
+      // Use event-sourced score
+      scoreData = {
+        score: eventProfile.current_score,
+        score_range: getScoreRange(eventProfile.current_score),
+        score_band: eventProfile.score_band,
+        calculated_at: eventProfile.last_computed_at,
+        expires_at: null,
+        score_factors: latestSnapshot?.factors_json || null,
+        source: 'event_sourced',
+      };
+    } else if (force_refresh || !eventProfile) {
+      // Try to recompute via credit-score-engine if events exist
+      const { count } = await supabase
+        .from('credit_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user_id);
+
+      if (count && count > 0) {
+        try {
+          const scoreRes = await fetch(`${supabaseUrl}/functions/v1/credit-score-engine`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+            body: JSON.stringify({ user_id }),
+          });
+          const engineResult = await scoreRes.json();
+          if (engineResult?.score) {
+            scoreData = {
+              score: engineResult.score,
+              score_range: getScoreRange(engineResult.score),
+              score_band: engineResult.band,
+              calculated_at: new Date().toISOString(),
+              expires_at: null,
+              score_factors: engineResult.factors || null,
+              source: 'event_sourced',
+            };
+          }
+        } catch (engineErr) {
+          console.error('Credit score engine call failed:', engineErr);
         }
-      );
-
-      if (calcError) {
-        throw new Error(`Failed to calculate score: ${calcError.message}`);
       }
 
-      // Fetch the newly created score
-      const { data: newScore } = await supabase
-        .from('credit_scores')
-        .select('*')
-        .eq('user_id', user_id)
-        .eq('status', 'active')
-        .order('calculated_at', { ascending: false })
-        .limit(1)
-        .single();
+      // Fall back to legacy system if no event-sourced score
+      if (!scoreData) {
+        const { data: existingScore } = await supabase
+          .from('credit_scores')
+          .select('*')
+          .eq('user_id', user_id)
+          .eq('status', 'active')
+          .gte('expires_at', new Date().toISOString())
+          .order('calculated_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      scoreData = newScore;
+        if (existingScore && !force_refresh) {
+          scoreData = {
+            ...existingScore,
+            score_range: getScoreRange(existingScore.score),
+            source: 'legacy',
+          };
+        } else {
+          // Calculate via legacy system
+          try {
+            await supabase.functions.invoke('credit-score-calculate', {
+              body: { user_id, include_external: false },
+            });
+            const { data: newScore } = await supabase
+              .from('credit_scores')
+              .select('*')
+              .eq('user_id', user_id)
+              .eq('status', 'active')
+              .order('calculated_at', { ascending: false })
+              .limit(1)
+              .maybeSingle();
+            scoreData = newScore ? { ...newScore, score_range: getScoreRange(newScore.score), source: 'legacy' } : null;
+          } catch (legacyErr) {
+            console.error('Legacy score calculation failed:', legacyErr);
+          }
+        }
+      }
     }
 
     // Log as soft inquiry
-    await supabase.from('credit_inquiries').insert({
-      user_id,
-      inquiry_type: 'soft',
-      inquirer_type: 'self',
-      inquirer_name: 'Self Check',
-      purpose: 'score_check',
-      user_consent_given: true,
-      score_provided: scoreData?.score,
-    });
+    if (scoreData?.score) {
+      await supabase.from('credit_inquiries').insert({
+        user_id,
+        inquiry_type: 'soft',
+        inquirer_type: 'self',
+        inquirer_name: 'Self Check',
+        purpose: 'score_check',
+        user_consent_given: true,
+        score_provided: scoreData.score,
+      }).catch(() => {}); // Non-blocking
+    }
 
     let reportData = null;
-    if (include_report && scoreData) {
+    if (include_report && scoreData?.id) {
       const { data: report } = await supabase
         .from('credit_reports')
         .select('*')
         .eq('credit_score_id', scoreData.id)
-        .single();
-
+        .maybeSingle();
       reportData = report;
     }
 
     return new Response(
       JSON.stringify({
         success: true,
-        score: scoreData?.score,
-        score_range: getScoreRange(scoreData?.score),
+        score: scoreData?.score || 0,
+        score_range: scoreData?.score_range || 'Unknown',
+        score_band: scoreData?.score_band || null,
         calculated_at: scoreData?.calculated_at,
         expires_at: scoreData?.expires_at,
         score_factors: scoreData?.score_factors,
+        source: scoreData?.source || 'none',
         report: reportData,
+        recent_events: recentEvents || [],
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

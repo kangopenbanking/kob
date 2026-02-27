@@ -32,10 +32,15 @@ export default function InstitutionLoans() {
       if (productIds.length > 0) {
         const { data: apps } = await supabase.from("loan_applications").select("*").in("loan_product_id", productIds).order("created_at", { ascending: false });
         setApplications(apps || []);
+        // Fetch loan_accounts linked to these applications, then repayments
         const appIds = (apps || []).map(a => a.id);
         if (appIds.length > 0) {
-          const { data: reps } = await supabase.from("loan_repayments").select("*").in("loan_id", appIds).order("created_at", { ascending: false }).limit(100);
-          setRepayments(reps || []);
+          const { data: loanAccounts } = await supabase.from("loan_accounts").select("id").in("application_id", appIds);
+          const loanAccountIds = (loanAccounts || []).map(la => la.id);
+          if (loanAccountIds.length > 0) {
+            const { data: reps } = await supabase.from("loan_repayments").select("*").in("loan_id", loanAccountIds).order("created_at", { ascending: false }).limit(100);
+            setRepayments(reps || []);
+          }
         }
       }
     } catch (error) { console.error("Error loading loans:", error); }

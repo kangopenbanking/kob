@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Landmark, ArrowRight, Loader2 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, Landmark, ArrowRight, Loader2, CreditCard } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useLoanApplications, useLoanProducts, useApplyForLoan } from '@/hooks/useBankingData';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLoanApplications, useLoanProducts, useApplyForLoan, useLoanRepayment } from '@/hooks/useBankingData';
+import { toast } from 'sonner';
 
 const loanColorMap: Record<string, { color: string; fg: string }> = {
   personal_loan: { color: 'bg-[hsl(var(--bank-coral))]', fg: 'text-white' },
@@ -19,6 +21,7 @@ const BankLoans: React.FC = () => {
   const { data: loanApps, isLoading: appsLoading } = useLoanApplications();
   const { data: loanProducts, isLoading: productsLoading } = useLoanProducts();
   const applyLoan = useApplyForLoan();
+  const repayLoan = useLoanRepayment();
   
   const [showApply, setShowApply] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -26,7 +29,13 @@ const BankLoans: React.FC = () => {
   const [applyTenure, setApplyTenure] = useState('12');
   const [applyPurpose, setApplyPurpose] = useState('');
 
-  const activeLoans = (loanApps || []).filter(l => ['approved', 'disbursed', 'active'].includes(l.status));
+  // Repayment state
+  const [showRepay, setShowRepay] = useState(false);
+  const [repayLoanId, setRepayLoanId] = useState<string | null>(null);
+  const [repayAmount, setRepayAmount] = useState('');
+  const [repayMethod, setRepayMethod] = useState('bank_transfer');
+
+  const activeLoans = (loanApps || []).filter((l: any) => ['approved', 'disbursed', 'active'].includes(l.status));
 
   const handleApply = () => {
     if (!selectedProduct || !applyAmount || !applyPurpose) return;
@@ -41,6 +50,26 @@ const BankLoans: React.FC = () => {
         setShowApply(false);
         setApplyAmount('');
         setApplyPurpose('');
+      },
+    });
+  };
+
+  const handleRepay = () => {
+    if (!repayLoanId || !repayAmount) return;
+    repayLoan.mutate({
+      loan_account_id: repayLoanId,
+      amount: Number(repayAmount),
+      payment_method: repayMethod,
+    }, {
+      onSuccess: (data: any) => {
+        const creditDelta = data?.data?.credit_score?.delta;
+        const creditMsg = creditDelta ? ` Credit score ${creditDelta > 0 ? '+' : ''}${creditDelta}` : '';
+        toast.success(`Payment successful!${creditMsg}`);
+        setShowRepay(false);
+        setRepayAmount('');
+      },
+      onError: (err: any) => {
+        toast.error(err.message || 'Payment failed');
       },
     });
   };
@@ -74,7 +103,7 @@ const BankLoans: React.FC = () => {
         </motion.div>
       ) : (
         <div className="mb-6 flex flex-col gap-3">
-          {activeLoans.map((loan) => (
+          {activeLoans.map((loan: any) => (
             <div key={loan.id} className="rounded-2xl bg-foreground p-5 text-background">
               <div className="flex justify-between">
                 <div>
@@ -87,9 +116,20 @@ const BankLoans: React.FC = () => {
                   : 'bg-white/10 text-white/70'
                 }`}>{loan.status}</span>
               </div>
-              <div className="mt-2 flex gap-4 text-xs opacity-70">
-                <span>{loan.tenure_months} months</span>
-                <span>{loan.repayment_frequency}</span>
+              <div className="mt-2 flex items-center justify-between">
+                <div className="flex gap-4 text-xs opacity-70">
+                  <span>{loan.tenure_months} months</span>
+                  <span>{loan.repayment_frequency}</span>
+                </div>
+                {['disbursed', 'active'].includes(loan.status) && (
+                  <button
+                    onClick={() => { setRepayLoanId(loan.id); setShowRepay(true); }}
+                    className="flex items-center gap-1 rounded-lg bg-white/20 px-3 py-1.5 text-xs font-bold text-white"
+                  >
+                    <CreditCard className="h-3.5 w-3.5" strokeWidth={2} />
+                    Pay
+                  </button>
+                )}
               </div>
             </div>
           ))}
@@ -100,7 +140,7 @@ const BankLoans: React.FC = () => {
       {(loanApps || []).length > 0 && (
         <div className="mb-6">
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">All Applications</h3>
-          {(loanApps || []).map((app) => (
+          {(loanApps || []).map((app: any) => (
             <div key={app.id} className="flex items-center justify-between rounded-xl px-1 py-2.5">
               <div>
                 <p className="text-sm font-semibold text-foreground">{app.application_number}</p>
@@ -125,7 +165,7 @@ const BankLoans: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col gap-3">
-            {(loanProducts || []).map((loan, i) => {
+            {(loanProducts || []).map((loan: any, i: number) => {
               const colors = loanColorMap[loan.loan_type] || { color: 'bg-[hsl(var(--bank-coral))]', fg: 'text-white' };
               return (
                 <motion.button
@@ -171,6 +211,37 @@ const BankLoans: React.FC = () => {
             </div>
             <Button onClick={handleApply} disabled={applyLoan.isPending || !applyAmount || !applyPurpose}>
               {applyLoan.isPending ? 'Submitting...' : 'Submit Application'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Repayment Dialog */}
+      <Dialog open={showRepay} onOpenChange={setShowRepay}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Make Loan Payment</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-4 pt-2">
+            <div>
+              <Label className="text-sm">Amount (XAF)</Label>
+              <Input type="number" placeholder="Enter amount" value={repayAmount} onChange={e => setRepayAmount(e.target.value)} className="mt-1 text-center text-xl font-bold h-14" />
+            </div>
+            <div>
+              <Label className="text-sm">Payment Method</Label>
+              <Select value={repayMethod} onValueChange={setRepayMethod}>
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
+                  <SelectItem value="card">Card Payment</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleRepay} disabled={repayLoan.isPending || !repayAmount}>
+              {repayLoan.isPending ? 'Processing...' : 'Make Payment'}
             </Button>
           </div>
         </DialogContent>

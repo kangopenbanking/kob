@@ -37,7 +37,11 @@ export default function LoanRepaymentForm({ loan, onBack }: LoanRepaymentFormPro
 
   const repayMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
+      const idempotencyKey = `loan-repay-${loan.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
       const { data, error } = await supabase.functions.invoke('loan-repay', {
+        headers: {
+          'Idempotency-Key': idempotencyKey,
+        },
         body: {
           loan_account_id: loan.id,
           amount: parseFloat(values.amount),
@@ -54,11 +58,14 @@ export default function LoanRepaymentForm({ loan, onBack }: LoanRepaymentFormPro
       
       return data;
     },
-    onSuccess: () => {
-      toast.success("Payment processed successfully");
+    onSuccess: (data: any) => {
+      const creditDelta = data?.data?.credit_score?.delta;
+      const creditMsg = creditDelta ? ` Credit score ${creditDelta > 0 ? '+' : ''}${creditDelta}` : '';
+      toast.success(`Payment processed successfully!${creditMsg}`);
       queryClient.invalidateQueries({ queryKey: ['loan-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['loan-schedules', loan.id] });
       queryClient.invalidateQueries({ queryKey: ['loan-payments', loan.id] });
+      queryClient.invalidateQueries({ queryKey: ['credit-score'] });
       onBack();
     },
     onError: (error: any) => {

@@ -27,7 +27,7 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { product_id, account_name, opening_deposit, target_amount, target_date, auto_save_settings } = await req.json();
+    const { product_id, account_name, opening_deposit, target_amount, target_date, auto_save_settings, institution_id } = await req.json();
 
     console.log('Creating savings account for user:', user.id);
 
@@ -99,6 +99,7 @@ serve(async (req) => {
         product_id: product.id,
         savings_type: product.savings_type,
         account_name: account_name,
+        institution_id: institution_id || null,
         target_amount: target_amount,
         target_date: target_date,
         auto_save_enabled: auto_save_settings?.enabled || false,

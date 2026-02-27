@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { useSavingsAccounts, useSavingsDeposit, useSavingsWithdraw } from '@/hooks/useBankingData';
+import { toast } from 'sonner';
 
 const savingsColors = [
   { color: 'bg-[hsl(var(--bank-mint))]', fg: 'text-[hsl(var(--bank-mint-fg))]' },
@@ -29,7 +30,14 @@ const BankSavings: React.FC = () => {
     if (!actionAccountId || !amount) return;
     const mutation = actionType === 'deposit' ? deposit : withdraw;
     mutation.mutate({ savings_account_id: actionAccountId, amount: Number(amount) }, {
-      onSuccess: () => { setActionAccountId(null); setAmount(''); },
+      onSuccess: (data: any) => {
+        const creditDelta = data?.credit_score?.delta;
+        if (creditDelta && creditDelta > 0) {
+          toast.success(`Credit score +${creditDelta}`, { description: 'Your savings behavior improved your score!' });
+        }
+        setActionAccountId(null);
+        setAmount('');
+      },
     });
   };
 
