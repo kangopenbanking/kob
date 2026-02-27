@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Sidebar,
@@ -215,6 +216,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
             </nav>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
+              <NotificationCenter />
               {isAuthenticated ? (
                 <>
                   <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>

@@ -12,6 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Loader2 } from "lucide-react";
 import { institutionNavigation } from "./navigation-config";
 import { useStaffPermissions } from "@/hooks/useStaffPermissions";
+import { NotificationCenter } from "@/components/NotificationCenter";
 
 interface InstitutionLayoutProps {
   children?: ReactNode;
@@ -116,7 +117,10 @@ export function InstitutionLayout({ children }: InstitutionLayoutProps) {
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-5" />
             <div className="flex-1" />
-            <UserProfileMenu variant="institution" />
+            <div className="flex items-center gap-2">
+              <NotificationCenter />
+              <UserProfileMenu variant="institution" />
+            </div>
           </header>
 
           <main className="flex-1 p-6">
