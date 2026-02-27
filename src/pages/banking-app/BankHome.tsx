@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PWATopBar } from '@/components/pwa/PWATopBar';
-import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2, Wallet } from 'lucide-react';
+import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2, Wallet, Users, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -97,6 +97,24 @@ const BankHome: React.FC = () => {
       label: 'Savings',
       textClass: 'text-[hsl(var(--bank-mint-fg))]',
     },
+    {
+      key: 'piggybank',
+      onClick: () => navigate(`/bank/${institutionId}/more/piggybank`),
+      className: 'bg-[hsl(var(--bank-teal))]',
+      icon: <Home className="h-7 w-7 text-white" strokeWidth={1.5} />,
+      value: '🐷',
+      label: 'Piggy',
+      textClass: 'text-white',
+    },
+    {
+      key: 'njangi',
+      onClick: () => navigate(`/bank/${institutionId}/more/njangi`),
+      className: 'bg-[hsl(var(--bank-violet))]',
+      icon: <Users className="h-7 w-7 text-white" strokeWidth={1.5} />,
+      value: '🤝',
+      label: 'Njangi',
+      textClass: 'text-white',
+    },
     features.loans && {
       key: 'loans',
       onClick: () => navigate(`/bank/${institutionId}/more/loans`),
@@ -109,11 +127,11 @@ const BankHome: React.FC = () => {
     features.credit_score && {
       key: 'credit',
       onClick: () => navigate(`/bank/${institutionId}/more/credit`),
-      className: 'bg-[hsl(var(--bank-violet))]',
-      icon: <BarChart3 className="h-7 w-7 text-[hsl(var(--bank-violet-fg))]" strokeWidth={1.5} />,
+      className: 'bg-[hsl(var(--bank-amber))]',
+      icon: <BarChart3 className="h-7 w-7 text-[hsl(var(--bank-amber-fg))]" strokeWidth={1.5} />,
       value: creditScore ?? '—',
       label: 'Score',
-      textClass: 'text-[hsl(var(--bank-violet-fg))]',
+      textClass: 'text-[hsl(var(--bank-amber-fg))]',
     },
   ].filter(Boolean) as Array<{ key: string; onClick: () => void; className: string; icon: React.ReactNode; value: string | number; label: string; textClass: string }>;
 
