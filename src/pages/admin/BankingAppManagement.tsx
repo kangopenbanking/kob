@@ -16,7 +16,7 @@ import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor,
-  Plus, Trash2, Image, Video, BookOpen, Palette
+  Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
@@ -146,6 +146,59 @@ function useInstitutionFunding(institutionId: string | null) {
         .eq("institution_id", institutionId!)
         .order("created_at", { ascending: false })
         .limit(100);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionCustomers(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-inst-customers", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data: accounts } = await supabase.from("accounts").select("user_id").eq("institution_id", institutionId!);
+      const userIds = [...new Set((accounts || []).map(a => a.user_id))];
+      if (userIds.length === 0) return [];
+      const { data: profiles } = await supabase.from("profiles").select("id, email, full_name, created_at").in("id", userIds);
+      const { data: kycs } = await supabase.from("kyc_verifications").select("user_id, status, verification_type, created_at").in("user_id", userIds).order("created_at", { ascending: false });
+      const kycMap: Record<string, any> = {};
+      (kycs || []).forEach(k => { if (!kycMap[k.user_id]) kycMap[k.user_id] = k; });
+      const accountCounts: Record<string, number> = {};
+      (accounts || []).forEach(a => { accountCounts[a.user_id] = (accountCounts[a.user_id] || 0) + 1; });
+      return (profiles || []).map(p => ({
+        ...p,
+        kyc_status: kycMap[p.id]?.status || 'none',
+        account_count: accountCounts[p.id] || 0,
+      }));
+    },
+  });
+}
+
+function useInstitutionCards(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-inst-cards", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data: accounts } = await supabase.from("accounts").select("user_id").eq("institution_id", institutionId!);
+      const userIds = [...new Set((accounts || []).map(a => a.user_id))];
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase.from("virtual_cards").select("*").in("user_id", userIds).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionCreditScores(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-inst-credit-scores", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data: accounts } = await supabase.from("accounts").select("user_id").eq("institution_id", institutionId!);
+      const userIds = [...new Set((accounts || []).map(a => a.user_id))];
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase.from("credit_scores").select("*").in("user_id", userIds).order("calculated_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
@@ -1068,6 +1121,9 @@ export default function BankingAppManagement() {
   const { data: savings = [], isLoading: loadingSavings } = useInstitutionSavings(selectedInstitution);
   const { data: loans = [], isLoading: loadingLoans } = useInstitutionLoans(selectedInstitution);
   const { data: fundingIntents = [], isLoading: loadingFunding } = useInstitutionFunding(selectedInstitution);
+  const { data: customers = [], isLoading: loadingCustomers } = useInstitutionCustomers(selectedInstitution);
+  const { data: virtualCards = [], isLoading: loadingCards } = useInstitutionCards(selectedInstitution);
+  const { data: creditScores = [], isLoading: loadingScores } = useInstitutionCreditScores(selectedInstitution);
 
   const selectedInst = institutions.find((i) => i.id === selectedInstitution) as any;
 
@@ -1194,22 +1250,28 @@ export default function BankingAppManagement() {
               </Card>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <StatCard icon={Users} label="Accounts" value={accounts.length} color="bg-blue-500" />
                 <StatCard icon={Wallet} label="Total Balance" value={`${totalBalance.toLocaleString()} XAF`} color="bg-emerald-500" />
                 <StatCard icon={ArrowRightLeft} label="Transactions" value={transactions.length} color="bg-amber-500" />
                 <StatCard icon={PiggyBank} label="Savings Goals" value={savings.length} color="bg-purple-500" />
                 <StatCard icon={ArrowDownLeft} label="Funding Intents" value={fundingIntents.length} color="bg-teal-500" />
+                <StatCard icon={UserCheck} label="Customers" value={customers.length} color="bg-indigo-500" />
+                <StatCard icon={CreditCard} label="Virtual Cards" value={virtualCards.length} color="bg-pink-500" />
+                <StatCard icon={BarChart3} label="Avg Credit Score" value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-orange-500" />
               </div>
 
               {/* Tabs */}
               <Tabs defaultValue="accounts">
-                <TabsList className="w-full justify-start flex-wrap">
+                <TabsList className="w-full justify-start flex-wrap h-auto">
                   <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Accounts</TabsTrigger>
                   <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Transactions</TabsTrigger>
                   <TabsTrigger value="savings" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> Savings</TabsTrigger>
                   <TabsTrigger value="loans" className="gap-1.5"><Landmark className="h-3.5 w-3.5" /> Loans</TabsTrigger>
                   <TabsTrigger value="funding" className="gap-1.5"><ArrowDownLeft className="h-3.5 w-3.5" /> Funding</TabsTrigger>
+                  <TabsTrigger value="customers" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Customers</TabsTrigger>
+                  <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Cards</TabsTrigger>
+                  <TabsTrigger value="credit-scores" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
                 </TabsList>
@@ -1369,6 +1431,108 @@ export default function BankingAppManagement() {
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="font-mono text-xs">{fi.provider_ref || fi.id?.slice(0, 12)}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Customers Tab */}
+                <TabsContent value="customers">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingCustomers ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : customers.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No customers found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Name</TableHead><TableHead>Email</TableHead><TableHead>KYC Status</TableHead><TableHead>Accounts</TableHead><TableHead>Joined</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {customers.map((c: any) => (
+                              <TableRow key={c.id}>
+                                <TableCell className="font-medium">{c.full_name || '—'}</TableCell>
+                                <TableCell className="text-sm">{c.email || '—'}</TableCell>
+                                <TableCell>
+                                  <Badge variant={c.kyc_status === 'approved' || c.kyc_status === 'verified' ? 'default' : c.kyc_status === 'rejected' ? 'destructive' : 'secondary'} className="text-xs capitalize">
+                                    {c.kyc_status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell>{c.account_count}</TableCell>
+                                <TableCell className="text-sm">{c.created_at ? format(new Date(c.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Virtual Cards Tab */}
+                <TabsContent value="cards">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingCards ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : virtualCards.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No virtual cards found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Card Name</TableHead><TableHead>Last 4</TableHead><TableHead>Brand</TableHead><TableHead className="text-right">Balance (USD)</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {virtualCards.map((card: any) => (
+                              <TableRow key={card.id}>
+                                <TableCell className="font-medium">{card.card_name}</TableCell>
+                                <TableCell className="font-mono">•••• {card.last4}</TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{card.brand}</Badge></TableCell>
+                                <TableCell className="text-right font-medium">${Number(card.balance_usd || 0).toFixed(2)}</TableCell>
+                                <TableCell>
+                                  <Badge variant={card.status === 'active' ? 'default' : 'secondary'} className="text-xs capitalize">{card.status}</Badge>
+                                </TableCell>
+                                <TableCell className="text-sm">{card.created_at ? format(new Date(card.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Credit Scores Tab */}
+                <TabsContent value="credit-scores">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingScores ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : creditScores.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No credit scores found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>User ID</TableHead><TableHead>Score</TableHead><TableHead>Model</TableHead><TableHead>Confidence</TableHead><TableHead>Status</TableHead><TableHead>Calculated</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {creditScores.map((cs: any) => (
+                              <TableRow key={cs.id}>
+                                <TableCell className="font-mono text-xs">{cs.user_id?.slice(0, 8)}...</TableCell>
+                                <TableCell>
+                                  <span className={`text-lg font-bold ${cs.score >= 700 ? 'text-emerald-600' : cs.score >= 500 ? 'text-amber-600' : 'text-red-500'}`}>
+                                    {cs.score}
+                                  </span>
+                                </TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs">{cs.scoring_model}</Badge></TableCell>
+                                <TableCell>{cs.confidence_level ? `${cs.confidence_level}%` : '—'}</TableCell>
+                                <TableCell><Badge variant={cs.status === 'active' ? 'default' : 'secondary'} className="text-xs capitalize">{cs.status || 'active'}</Badge></TableCell>
+                                <TableCell className="text-sm">{cs.calculated_at ? format(new Date(cs.calculated_at), "MMM d, yyyy") : "—"}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>

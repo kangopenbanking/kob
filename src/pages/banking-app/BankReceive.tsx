@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Copy, Share2, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
@@ -8,24 +8,26 @@ import { supabase } from '@/integrations/supabase/client';
 
 const BankReceive: React.FC = () => {
   const navigate = useNavigate();
+  const { institutionId } = useParams();
   const [copied, setCopied] = useState(false);
   const [accountId, setAccountId] = useState('CMR-0012-4829-7765');
 
   useEffect(() => {
     const fetchAccount = async () => {
       const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
+      if (user && institutionId) {
         const { data } = await supabase
           .from('accounts')
           .select('account_id')
           .eq('user_id', user.id)
+          .eq('institution_id', institutionId)
           .limit(1)
           .maybeSingle();
         if (data) setAccountId(data.account_id);
       }
     };
     fetchAccount();
-  }, []);
+  }, [institutionId]);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(accountId);
