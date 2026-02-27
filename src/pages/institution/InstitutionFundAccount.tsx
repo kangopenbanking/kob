@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelector";
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
+import { FundingHistory } from "@/components/funding/FundingHistory";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -151,6 +152,8 @@ const InstitutionFundAccount = () => {
       ) : (
         <FundingResult result={result} fmt={fmt} />
       )}
+
+      <FundingHistory scope="institution" accountId={selectedAccountId} fmt={fmt} />
     </div>
   );
 };

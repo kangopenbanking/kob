@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelector";
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
+import { FundingHistory } from "@/components/funding/FundingHistory";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -142,6 +143,8 @@ const CustomerFundAccount = () => {
       ) : (
         <FundingResult result={result} fmt={fmt} />
       )}
+
+      <FundingHistory scope="end_user" accountId={selectedAccountId} fmt={fmt} />
     </div>
   );
 };
