@@ -21,6 +21,15 @@ function eventTypeLabel(type: string): string {
     SAVINGS_DEPOSIT: 'Savings Deposit',
     SAVINGS_WITHDRAWAL: 'Savings Withdrawal',
     LOAN_DEFAULTED: 'Loan Default',
+    PIGGYBANK_PAYMENT_ON_TIME: 'Piggy Bank On-time',
+    PIGGYBANK_PAYMENT_LATE: 'Piggy Bank Late',
+    PIGGYBANK_PAYMENT_MISSED: 'Piggy Bank Missed',
+    NJANGI_CONTRIBUTION_ON_TIME: 'Njangi On-time',
+    NJANGI_CONTRIBUTION_LATE: 'Njangi Late',
+    NJANGI_CONTRIBUTION_MISSED: 'Njangi Missed',
+    RENT_PAYMENT_ON_TIME: 'Rent On-time',
+    RENT_PAYMENT_LATE: 'Rent Late',
+    RENT_PAYMENT_MISSED: 'Rent Missed',
   };
   return map[type] || type.replace(/_/g, ' ');
 }

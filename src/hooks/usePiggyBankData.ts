@@ -1,0 +1,85 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useParams } from 'react-router-dom';
+import { toast } from 'sonner';
+
+function useInstitutionId() {
+  const { institutionId } = useParams();
+  return institutionId;
+}
+
+// ─── Piggy Bank Plans ───
+export function usePiggyBankPlans() {
+  const institutionId = useInstitutionId();
+  return useQuery({
+    queryKey: ['piggybank-plans', institutionId],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      let query = supabase
+        .from('piggybank_plans')
+        .select('*, piggybank_payments(*)')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (institutionId) query = query.eq('institution_id', institutionId);
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Piggy Bank Payments ───
+export function usePiggyBankPayments(planId: string) {
+  return useQuery({
+    queryKey: ['piggybank-payments', planId],
+    enabled: !!planId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('piggybank_payments')
+        .select('*')
+        .eq('plan_id', planId)
+        .order('due_date', { ascending: true });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Create Plan ───
+export function useCreatePiggyBankPlan() {
+  const qc = useQueryClient();
+  const institutionId = useInstitutionId();
+  return useMutation({
+    mutationFn: async (body: any) => {
+      const { data, error } = await supabase.functions.invoke('piggybank-create', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] }),
+    onError: (err: any) => toast.error(err.message),
+  });
+}
+
+// ─── Pay ───
+export function usePiggyBankPay() {
+  const qc = useQueryClient();
+  const institutionId = useInstitutionId();
+  return useMutation({
+    mutationFn: async (body: { payment_id: string }) => {
+      const { data, error } = await supabase.functions.invoke('piggybank-pay', { body });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
+      qc.invalidateQueries({ queryKey: ['credit-score'] });
+    },
+    onError: (err: any) => toast.error(err.message),
+  });
+}

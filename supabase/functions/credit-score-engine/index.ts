@@ -15,6 +15,18 @@ const SCORING_RULES: Record<string, { min: number; max: number }> = {
   SAVINGS_DEPOSIT: { min: 1, max: 3 },
   SAVINGS_WITHDRAWAL: { min: 0, max: 0 },
   SAVINGS_BALANCE_STABLE: { min: 2, max: 2 },
+  // Piggy Bank
+  PIGGYBANK_PAYMENT_ON_TIME: { min: 3, max: 5 },
+  PIGGYBANK_PAYMENT_LATE: { min: -15, max: -5 },
+  PIGGYBANK_PAYMENT_MISSED: { min: -20, max: -20 },
+  // Njangi
+  NJANGI_CONTRIBUTION_ON_TIME: { min: 3, max: 5 },
+  NJANGI_CONTRIBUTION_LATE: { min: -15, max: -5 },
+  NJANGI_CONTRIBUTION_MISSED: { min: -25, max: -25 },
+  // Rent
+  RENT_PAYMENT_ON_TIME: { min: 5, max: 10 },
+  RENT_PAYMENT_LATE: { min: -25, max: -10 },
+  RENT_PAYMENT_MISSED: { min: -30, max: -30 },
 };
 
 const BASELINE = 500;
@@ -105,6 +117,42 @@ Deno.serve(async (req) => {
           break;
         case 'SAVINGS_BALANCE_STABLE':
           points = 2;
+          break;
+        // Piggy Bank events
+        case 'PIGGYBANK_PAYMENT_ON_TIME':
+          points = rule.max; // +5
+          break;
+        case 'PIGGYBANK_PAYMENT_LATE': {
+          const pbDaysLate = Math.abs(event.value_numeric || 1);
+          points = Math.max(rule.min, Math.min(rule.max, -5 - Math.floor(pbDaysLate / 7) * 2));
+          break;
+        }
+        case 'PIGGYBANK_PAYMENT_MISSED':
+          points = rule.min; // -20
+          break;
+        // Njangi events
+        case 'NJANGI_CONTRIBUTION_ON_TIME':
+          points = rule.max; // +5
+          break;
+        case 'NJANGI_CONTRIBUTION_LATE': {
+          const njDaysLate = Math.abs(event.value_numeric || 1);
+          points = Math.max(rule.min, Math.min(rule.max, -5 - Math.floor(njDaysLate / 7) * 2));
+          break;
+        }
+        case 'NJANGI_CONTRIBUTION_MISSED':
+          points = rule.min; // -25
+          break;
+        // Rent events
+        case 'RENT_PAYMENT_ON_TIME':
+          points = rule.max; // +10
+          break;
+        case 'RENT_PAYMENT_LATE': {
+          const rentDaysLate = Math.abs(event.value_numeric || 1);
+          points = Math.max(rule.min, Math.min(rule.max, -10 - Math.floor(rentDaysLate / 7) * 3));
+          break;
+        }
+        case 'RENT_PAYMENT_MISSED':
+          points = rule.min; // -30
           break;
       }
 
