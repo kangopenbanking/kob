@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.4.0] - 2026-02-27 — Piggy Bank, Njangi & Rent Credit Integration
+
+### Added
+- **Piggy Bank Module**: Solo savings and rent plans with automated payment schedules (daily/weekly/monthly).
+- **Njangi Module**: Group savings pot with contribution amounts, late interest, random/manual payout rotation.
+- **Rent Reporting**: Unique `KRENTS****` reference for rent plans. Payments reported to CrediQ.
+- **9 New Credit Event Types**: Piggybank, Njangi, and Rent payment events integrated into scoring engine.
+- **Credit Disclaimer**: Warning dialog before creating plans explaining credit impact.
+- **Monthly Credit Report**: Automated summary via push notification and in-app alert.
+- **8 New Edge Functions**: piggybank-create/pay/overdue-detect, njangi-create/join/contribute/payout/overdue-detect, credit-monthly-report.
+- **2 Frontend Pages**: BankPiggyBank.tsx and BankNjangi.tsx with full CRUD and schedule views.
+
 ## [2.3.0] - 2026-02-27 — Production Audit: Loans, Savings & Credit Score
 
 ### Fixed

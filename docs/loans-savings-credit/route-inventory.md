@@ -29,3 +29,20 @@
 | Method | Endpoint | Function | Schedule |
 |--------|----------|----------|----------|
 | POST | /v1/loan-overdue-detect | loan-overdue-detect | Daily cron |
+| POST | /v1/piggybank-overdue-detect | piggybank-overdue-detect | Daily cron |
+| POST | /v1/njangi-overdue-detect | njangi-overdue-detect | Daily cron |
+| POST | /v1/credit-monthly-report | credit-monthly-report | Monthly (1st) |
+
+## Piggy Bank Endpoints (NEW)
+| Method | Endpoint | Function | Description |
+|--------|----------|----------|-------------|
+| POST | /v1/piggybank-create | piggybank-create | Create savings or rent plan |
+| POST | /v1/piggybank-pay | piggybank-pay | Record payment against schedule |
+
+## Njangi Endpoints (NEW)
+| Method | Endpoint | Function | Description |
+|--------|----------|----------|-------------|
+| POST | /v1/njangi-create | njangi-create | Create group with contribution settings |
+| POST | /v1/njangi-join | njangi-join | Join existing group |
+| POST | /v1/njangi-contribute | njangi-contribute | Record contribution for current cycle |
+| POST | /v1/njangi-payout | njangi-payout | Trigger payout to selected recipient |

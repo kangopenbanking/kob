@@ -7788,6 +7788,205 @@ export type Database = {
           },
         ]
       }
+      njangi_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          credit_event_id: string | null
+          cycle_number: number
+          due_date: string
+          group_id: string
+          id: string
+          late_interest_amount: number
+          member_id: string
+          paid_at: string | null
+          status: Database["public"]["Enums"]["njangi_contribution_status"]
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          credit_event_id?: string | null
+          cycle_number?: number
+          due_date: string
+          group_id: string
+          id?: string
+          late_interest_amount?: number
+          member_id: string
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["njangi_contribution_status"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credit_event_id?: string | null
+          cycle_number?: number
+          due_date?: string
+          group_id?: string
+          id?: string
+          late_interest_amount?: number
+          member_id?: string
+          paid_at?: string | null
+          status?: Database["public"]["Enums"]["njangi_contribution_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "njangi_contributions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "njangi_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "njangi_contributions_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "njangi_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      njangi_groups: {
+        Row: {
+          contribution_amount: number
+          created_at: string
+          creator_id: string
+          current_cycle: number
+          frequency: Database["public"]["Enums"]["njangi_frequency"]
+          id: string
+          institution_id: string | null
+          late_interest_rate: number
+          max_members: number
+          name: string
+          payout_method: Database["public"]["Enums"]["njangi_payout_method"]
+          status: Database["public"]["Enums"]["njangi_group_status"]
+          updated_at: string
+        }
+        Insert: {
+          contribution_amount?: number
+          created_at?: string
+          creator_id: string
+          current_cycle?: number
+          frequency?: Database["public"]["Enums"]["njangi_frequency"]
+          id?: string
+          institution_id?: string | null
+          late_interest_rate?: number
+          max_members?: number
+          name: string
+          payout_method?: Database["public"]["Enums"]["njangi_payout_method"]
+          status?: Database["public"]["Enums"]["njangi_group_status"]
+          updated_at?: string
+        }
+        Update: {
+          contribution_amount?: number
+          created_at?: string
+          creator_id?: string
+          current_cycle?: number
+          frequency?: Database["public"]["Enums"]["njangi_frequency"]
+          id?: string
+          institution_id?: string | null
+          late_interest_rate?: number
+          max_members?: number
+          name?: string
+          payout_method?: Database["public"]["Enums"]["njangi_payout_method"]
+          status?: Database["public"]["Enums"]["njangi_group_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "njangi_groups_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      njangi_members: {
+        Row: {
+          group_id: string
+          has_received_payout: boolean
+          id: string
+          joined_at: string
+          status: Database["public"]["Enums"]["njangi_member_status"]
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          has_received_payout?: boolean
+          id?: string
+          joined_at?: string
+          status?: Database["public"]["Enums"]["njangi_member_status"]
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          has_received_payout?: boolean
+          id?: string
+          joined_at?: string
+          status?: Database["public"]["Enums"]["njangi_member_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "njangi_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "njangi_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      njangi_payouts: {
+        Row: {
+          amount: number
+          created_at: string
+          cycle_number: number
+          group_id: string
+          id: string
+          paid_at: string
+          recipient_member_id: string
+          selection_method: Database["public"]["Enums"]["njangi_selection_method"]
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          cycle_number?: number
+          group_id: string
+          id?: string
+          paid_at?: string
+          recipient_member_id: string
+          selection_method?: Database["public"]["Enums"]["njangi_selection_method"]
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          cycle_number?: number
+          group_id?: string
+          id?: string
+          paid_at?: string
+          recipient_member_id?: string
+          selection_method?: Database["public"]["Enums"]["njangi_selection_method"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "njangi_payouts_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "njangi_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "njangi_payouts_recipient_member_id_fkey"
+            columns: ["recipient_member_id"]
+            isOneToOne: false
+            referencedRelation: "njangi_members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_preferences: {
         Row: {
           created_at: string | null
@@ -8207,6 +8406,115 @@ export type Database = {
           whatsapp_sent_at?: string | null
         }
         Relationships: []
+      }
+      piggybank_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          credit_event_id: string | null
+          due_date: string
+          id: string
+          paid_at: string | null
+          plan_id: string
+          status: Database["public"]["Enums"]["piggybank_payment_status"]
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          credit_event_id?: string | null
+          due_date: string
+          id?: string
+          paid_at?: string | null
+          plan_id: string
+          status?: Database["public"]["Enums"]["piggybank_payment_status"]
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          credit_event_id?: string | null
+          due_date?: string
+          id?: string
+          paid_at?: string | null
+          plan_id?: string
+          status?: Database["public"]["Enums"]["piggybank_payment_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piggybank_payments_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "piggybank_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      piggybank_plans: {
+        Row: {
+          created_at: string
+          end_date: string | null
+          id: string
+          installment_amount: number
+          institution_id: string | null
+          landlord_user_id: string | null
+          payment_method: string | null
+          plan_name: string
+          plan_type: Database["public"]["Enums"]["piggybank_plan_type"]
+          rent_reference: string | null
+          schedule_frequency: Database["public"]["Enums"]["piggybank_frequency"]
+          start_date: string
+          status: Database["public"]["Enums"]["piggybank_plan_status"]
+          target_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          installment_amount?: number
+          institution_id?: string | null
+          landlord_user_id?: string | null
+          payment_method?: string | null
+          plan_name: string
+          plan_type?: Database["public"]["Enums"]["piggybank_plan_type"]
+          rent_reference?: string | null
+          schedule_frequency?: Database["public"]["Enums"]["piggybank_frequency"]
+          start_date: string
+          status?: Database["public"]["Enums"]["piggybank_plan_status"]
+          target_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          installment_amount?: number
+          institution_id?: string | null
+          landlord_user_id?: string | null
+          payment_method?: string | null
+          plan_name?: string
+          plan_type?: Database["public"]["Enums"]["piggybank_plan_type"]
+          rent_reference?: string | null
+          schedule_frequency?: Database["public"]["Enums"]["piggybank_frequency"]
+          start_date?: string
+          status?: Database["public"]["Enums"]["piggybank_plan_status"]
+          target_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "piggybank_plans_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       pisp_consents: {
         Row: {
@@ -11739,6 +12047,12 @@ export type Database = {
         | "emergency"
         | "salary_advance"
         | "asset_finance"
+      njangi_contribution_status: "pending" | "paid" | "missed" | "late"
+      njangi_frequency: "weekly" | "monthly"
+      njangi_group_status: "forming" | "active" | "completed" | "dissolved"
+      njangi_member_status: "active" | "removed"
+      njangi_payout_method: "random" | "manual"
+      njangi_selection_method: "random" | "manual"
       payment_type:
         | "domestic"
         | "international"
@@ -11764,6 +12078,10 @@ export type Database = {
         | "fees"
         | "webhooks"
         | "audit_logs"
+      piggybank_frequency: "daily" | "weekly" | "monthly"
+      piggybank_payment_status: "pending" | "paid" | "missed" | "late"
+      piggybank_plan_status: "active" | "paused" | "completed" | "cancelled"
+      piggybank_plan_type: "savings" | "rent"
       repayment_frequency:
         | "daily"
         | "weekly"
@@ -11981,6 +12299,12 @@ export const Constants = {
         "salary_advance",
         "asset_finance",
       ],
+      njangi_contribution_status: ["pending", "paid", "missed", "late"],
+      njangi_frequency: ["weekly", "monthly"],
+      njangi_group_status: ["forming", "active", "completed", "dissolved"],
+      njangi_member_status: ["active", "removed"],
+      njangi_payout_method: ["random", "manual"],
+      njangi_selection_method: ["random", "manual"],
       payment_type: [
         "domestic",
         "international",
@@ -12009,6 +12333,10 @@ export const Constants = {
         "webhooks",
         "audit_logs",
       ],
+      piggybank_frequency: ["daily", "weekly", "monthly"],
+      piggybank_payment_status: ["pending", "paid", "missed", "late"],
+      piggybank_plan_status: ["active", "paused", "completed", "cancelled"],
+      piggybank_plan_type: ["savings", "rent"],
       repayment_frequency: [
         "daily",
         "weekly",
