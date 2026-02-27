@@ -1,16 +1,18 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
-import { Wallet, ArrowRight, CheckCircle2, Loader2, Info, Building2 } from "lucide-react";
-import { StripeCardConfirm } from "@/components/funding/StripeCardConfirm";
+import { Building2, Loader2, Shield } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelector";
+import { AmountInput } from "@/components/funding/AmountInput";
+import { FundingResult } from "@/components/funding/FundingResult";
+
+const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
 const InstitutionFundAccount = () => {
   const [amount, setAmount] = useState("");
@@ -22,13 +24,11 @@ const InstitutionFundAccount = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  // Get institution accounts
   const { data: accounts } = useQuery({
     queryKey: ["institution-accounts-for-funding"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
-      // Get institution via ownership or staff
       const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
       let institutionId = inst?.id;
       if (!institutionId) {
@@ -70,135 +70,86 @@ const InstitutionFundAccount = () => {
     setLoading(false);
   };
 
-  const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2"><Building2 className="h-8 w-8 text-primary" /> Fund Institution Account</h1>
-        <p className="text-muted-foreground mt-1">Add funds to institution accounts (float, clearing, or customer accounts) via Mobile Money, Card, PayPal, or Bank Transfer</p>
+      {/* Header */}
+      <div className="flex items-center gap-3">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
+          <Building2 className="h-6 w-6 text-primary" />
+        </div>
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Fund Institution Account</h1>
+          <p className="text-muted-foreground text-sm">Add funds to float, clearing, or customer accounts</p>
+        </div>
       </div>
 
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Institution funding uses a reduced fee tier of <strong>1.5%</strong> (vs 2.5–3.5% for end-users). Funds are credited directly to the selected account balance.
-        </AlertDescription>
-      </Alert>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>New Account Funding</CardTitle>
-          <CardDescription>Select a target account and payment method</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label>Target Account</Label>
-            <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-              <SelectTrigger><SelectValue placeholder="Select account to fund" /></SelectTrigger>
-              <SelectContent>
-                {accounts?.map((a: any) => (
-                  <SelectItem key={a.id} value={a.id}>
-                    {a.nickname || a.account_holder_name} — {a.account_id}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Amount (XAF)</Label>
-              <Input type="number" placeholder="e.g. 500000" value={amount} onChange={e => setAmount(e.target.value)} min={1} />
-              {amount && Number(amount) > 0 && (
-                <p className="text-xs text-muted-foreground">Fee: {fmt(Math.round(Number(amount) * 0.015))} · Net: {fmt(Number(amount) - Math.round(Number(amount) * 0.015))}</p>
-              )}
+      {!result ? (
+        <Card className="overflow-hidden border-border/60 shadow-sm">
+          <div className="h-1 bg-gradient-to-r from-primary to-secondary" />
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg">New Account Funding</CardTitle>
+                <CardDescription>Select a target account and payment method</CardDescription>
+              </div>
+              <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">1.5% fee</span>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Account Selection */}
             <div className="space-y-2">
-              <Label>Payment Method</Label>
-              <Select value={method} onValueChange={setMethod}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
+              <Label className="text-sm font-semibold">Target Account</Label>
+              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select account to fund" />
+                </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                  <SelectItem value="card">Card (Stripe)</SelectItem>
-                  <SelectItem value="paypal">PayPal</SelectItem>
-                  <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  {accounts?.map((a: any) => (
+                    <SelectItem key={a.id} value={a.id}>
+                      {a.nickname || a.account_holder_name} — {a.account_id}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Description (optional)</Label>
-            <Input placeholder="e.g. Float account top-up Q1 2026" value={description} onChange={e => setDescription(e.target.value)} />
-          </div>
+            <AmountInput value={amount} onChange={setAmount} feePercent={0.015} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
 
-          {method === "mobile_money" && (
             <div className="space-y-2">
-              <Label>Phone Number</Label>
-              <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} />
+              <Label className="text-sm font-semibold">Payment Method</Label>
+              <PaymentMethodSelector value={method} onChange={setMethod} />
             </div>
-          )}
 
-          {(method === "card" || method === "paypal") && (
             <div className="space-y-2">
-              <Label>Email</Label>
-              <Input type="email" placeholder="finance@institution.com" value={email} onChange={e => setEmail(e.target.value)} />
-            </div>
-          )}
-
-          <Button onClick={handleFund} disabled={loading} className="w-full md:w-auto">
-            {loading ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <ArrowRight className="h-4 w-4 mr-1" />}
-            Fund Account
-          </Button>
-        </CardContent>
-      </Card>
-
-      {result && (
-        <Card className="border-primary/30">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-              Funding Intent Created
-              <Badge>{result.status?.replace(/_/g, " ")}</Badge>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="grid grid-cols-2 gap-2">
-              <div><span className="text-muted-foreground">Amount:</span> {fmt(result.amount)}</div>
-              <div><span className="text-muted-foreground">Fee:</span> {fmt(result.fee_amount)}</div>
-              <div><span className="text-muted-foreground">Reference:</span> <span className="font-mono text-xs">{result.reference}</span></div>
-              <div><span className="text-muted-foreground">Provider:</span> {result.provider}</div>
+              <Label className="text-sm font-semibold">Description (optional)</Label>
+              <Input placeholder="e.g. Float account top-up Q1 2026" value={description} onChange={e => setDescription(e.target.value)} className="h-11" />
             </div>
 
-            {result.next_action?.redirect_url && (
-              <Button asChild variant="outline">
-                <a href={result.next_action.redirect_url} target="_blank" rel="noopener noreferrer">
-                  Complete Payment <ArrowRight className="h-4 w-4 ml-1" />
-                </a>
-              </Button>
-            )}
-            {result.next_action?.approval_url && (
-              <Button asChild variant="outline">
-                <a href={result.next_action.approval_url} target="_blank" rel="noopener noreferrer">
-                  Approve on PayPal <ArrowRight className="h-4 w-4 ml-1" />
-                </a>
-              </Button>
-            )}
-            {result.next_action?.type === "stripe_confirm" && result.next_action?.client_secret && (
-              <StripeCardConfirm clientSecret={result.next_action.client_secret} fundingIntentId={result.id} amount={result.amount} currency={result.currency} />
-            )}
-            {result.next_action?.type === "bank_transfer_instructions" && (
-              <div className="bg-muted p-4 rounded-lg space-y-1 text-sm">
-                <p><strong>Bank:</strong> {result.next_action.bank_name}</p>
-                <p><strong>Account:</strong> {result.next_action.account_number}</p>
-                <p><strong>Name:</strong> {result.next_action.account_name}</p>
-                <p><strong>Reference:</strong> <span className="font-mono font-bold">{result.next_action.reference}</span></p>
-                <p className="text-muted-foreground mt-2">{result.next_action.instructions}</p>
+            {method === "mobile_money" && (
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Phone Number</Label>
+                <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11" />
               </div>
             )}
+            {(method === "card" || method === "paypal") && (
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Email</Label>
+                <Input type="email" placeholder="finance@institution.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11" />
+              </div>
+            )}
+
+            <Button onClick={handleFund} disabled={loading} className="w-full h-12 text-base font-semibold" size="lg">
+              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+              {loading ? "Processing..." : `Fund ${amount && Number(amount) > 0 ? fmt(Number(amount)) : "Account"}`}
+            </Button>
+
+            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="h-3.5 w-3.5" /> Secured with end-to-end encryption
+            </p>
           </CardContent>
         </Card>
+      ) : (
+        <FundingResult result={result} fmt={fmt} />
       )}
     </div>
   );
