@@ -66,6 +66,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
       { title: "Dispute Management", path: "/admin/disputes", icon: Scale },
       { title: "Payout Management", path: "/admin/payouts", icon: Banknote },
+      { title: "Funding Management", path: "/admin/funding", icon: Banknote },
       { title: "Reconciliation", path: "/admin/reconciliation", icon: RefreshCw },
     ],
   },
