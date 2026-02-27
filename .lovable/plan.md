@@ -1,90 +1,126 @@
 
 
-## Audit Results & Implementation Plan: Banking App More Section
+## Plan: Loans & Savings ↔ Credit Score Linkage (Non-Breaking Enhancement)
 
-### Gaps Identified
+### Current State Audit
 
-After a thorough audit of every page linked from the Banking App's More section and the full PWA, here are the gaps found:
+**What EXISTS:**
+- Full loan lifecycle: `loan-apply`, `loan-approve`, `loan-disburse`, `loan-repay` edge functions with ledger integration
+- Full savings lifecycle: `savings-create`, `savings-deposit`, `savings-withdraw`, `savings-accrue-interest` with ledger integration
+- Credit scoring engine: `credit-score-calculate` (component-based, writes to `credit_scores` + `credit_score_history` + `credit_monitoring_alerts`)
+- CrediQ ecosystem: baseline score generation, action plans, health metrics, email notifications
+- DB tables: `loan_products`, `loan_applications`, `loan_accounts`, `loan_schedule`, `loan_repayments`, `loan_events`, `savings_products`, `savings_accounts`, `savings_transactions`, `interest_accruals`, `credit_scores`, `credit_score_history`
+- Institutions, user_roles, ledger with journal entries
 
-| Page | Status | Issue |
-|------|--------|-------|
-| BankAlerts | Incomplete | Uses hardcoded mock data. No real notifications fetched from database |
-| BankHelp | Incomplete | Static menu items with no onClick handlers. FAQs don't expand, Call/Email don't trigger actions |
-| BankQRPay | Placeholder | Static QR icon placeholder. No actual QR code generation or scanning |
-| BankReceive | Minor gap | Missing `institution_id` filter on account query -- can leak cross-tenant data |
-| Admin Management | Missing tabs | No KYC/Customers, Virtual Cards, Credit Scores, or App Users/Analytics tabs |
-
-All other pages (BankHome, BankPayments, BankSendMoney, BankMobileMoney, BankBills, BankCards, BankHistory, BankFundAccount, BankSavings, BankNewSavings, BankLoans, BankCreditScore, BankSettings, BankSplash, BankAuth, BankApply, BankKYC) are fully functional.
+**What is MISSING:**
+1. **Immutable `credit_events` table** -- no event-sourced credit trail exists; scoring is computed from raw data each time
+2. **Automatic credit event emission** from loan-repay, savings-deposit, savings-withdraw
+3. **On-time vs late detection** in loan-repay (no comparison of `paid_at` vs `due_date`)
+4. **Overdue detection cron job** -- no scheduled job marks overdue installments or creates missed-payment events
+5. **Credit profile API endpoints** (GET profile, GET events, GET explain, POST recompute)
+6. **`credit_score_snapshots`** with explainability factors
+7. **Deterministic scoring from events** -- current engine reads raw tables, not events
+8. **Changelog files** (`docs/changelog.md`, `docs/changelog.json`)
+9. **Audit/gap documentation** under `docs/loans-savings-credit/`
 
 ---
 
 ### Implementation Steps
 
-#### Step 1: Fix BankAlerts -- Real Notifications
-File: `src/pages/banking-app/BankAlerts.tsx`
+#### Step 1: Database Migration -- Credit Events & Profiles Tables
+Create migration adding:
+- `credit_events` (immutable): `id`, `user_id`, `institution_id`, `event_type` (enum: `LOAN_REPAYMENT_ON_TIME`, `LOAN_REPAYMENT_LATE`, `LOAN_INSTALLMENT_MISSED`, `LOAN_DEFAULTED`, `LOAN_CLOSED`, `SAVINGS_DEPOSIT`, `SAVINGS_WITHDRAWAL`, `SAVINGS_BALANCE_STABLE`), `event_time`, `value_numeric`, `metadata`, `source`, `created_at`
+- `credit_profiles`: `id`, `user_id` (unique), `institution_id`, `current_score`, `score_band`, `last_computed_at`, `created_at`, `updated_at`
+- `credit_score_snapshots`: `id`, `user_id`, `institution_id`, `score`, `score_band`, `factors_json`, `computed_at`
+- `credit_scoring_rules`: `id`, `institution_id`, `rule_key`, `weight`, `enabled`, `created_at`, `updated_at`
+- Add `missed_event_created` boolean to `loan_schedule` for dedupe
+- RLS: users read own data, service_role writes
+- Enable realtime on `credit_events`
 
-- Fetch real data from `funding_events`, `transactions`, and `kyc_verifications` tables scoped by `user_id`
-- Display recent activity as notifications (funding created, transfer completed, KYC status changes)
-- Keep the existing UI design (motion cards, icon/color mapping) but populate with real data
-- Add empty state when no notifications exist
-- Add pull-to-refresh via query invalidation
+#### Step 2: Credit Scoring Engine Edge Function
+Create `credit-score-engine/index.ts`:
+- Accepts `user_id`, reads `credit_events` for that user
+- Applies deterministic rules: on-time repayment +5-15, late -10-40 (scaled by days), missed -50, defaulted -150-250, loan closed +15, deposit +1-3 (capped monthly), withdrawal 0, stable balance +2
+- Baseline: 500, range: 300-850
+- Writes to `credit_profiles`, creates `credit_score_snapshots` with `factors_json` (top 3 drivers)
+- Returns `{ score, band, delta, factors }`
 
-#### Step 2: Fix BankHelp -- Interactive Help Page
-File: `src/pages/banking-app/BankHelp.tsx`
+#### Step 3: Hook loan-repay to Emit Credit Events
+Update `loan-repay/index.ts`:
+- After allocating payment, compare `paid_at` vs schedule item `due_date` (+ 3-day grace)
+- Insert `credit_events` row: `LOAN_REPAYMENT_ON_TIME` or `LOAN_REPAYMENT_LATE` with `days_late` in `value_numeric`
+- If loan completed, insert `LOAN_CLOSED` event
+- Invoke `credit-score-engine` to recompute
+- Add optional `credit_score: { previous, current, delta }` to response
 
-- Add expandable FAQ accordion section with common banking questions (using Radix Accordion)
-- Wire "Call Us" to `tel:` link and "Email Support" to `mailto:` link
-- Wire "Live Chat" to open a simple in-app support form that submits to a `support_tickets` concept (toast confirmation)
-- Use `useTenant()` to pull institution-specific support contact info if available
+#### Step 4: Hook savings-deposit and savings-withdraw
+Update `savings-deposit/index.ts`:
+- After recording transaction, insert `SAVINGS_DEPOSIT` credit event with amount
+- Invoke score recompute
 
-#### Step 3: Fix BankQRPay -- Functional QR Code
-File: `src/pages/banking-app/BankQRPay.tsx`
+Update `savings-withdraw/index.ts`:
+- Insert `SAVINGS_WITHDRAWAL` event (small or zero weight)
 
-- Generate a real QR code containing the user's account ID using a simple SVG-based QR renderer (inline implementation, no new dependency)
-- Add amount input field for payment-request QR codes
-- "Scan QR Code" button opens device camera via `navigator.mediaDevices` (or shows toast that scanning requires native app)
-- Include share functionality for the generated QR image
+#### Step 5: Overdue Detection Cron Job
+Create `loan-overdue-detect/index.ts`:
+- Query `loan_schedule` where `due_date < today - 3 days` AND `status IN ('pending','partial')` AND `missed_event_created = false`
+- For each: insert `LOAN_INSTALLMENT_MISSED` credit event, set `missed_event_created = true`, update status to `overdue`
+- Recompute affected users' scores
+- Register as pg_cron daily job
 
-#### Step 4: Fix BankReceive -- Add Institution Scoping
-File: `src/pages/banking-app/BankReceive.tsx`
+#### Step 6: Credit Profile API Endpoints
+Create 4 edge functions:
+- `credit-profile-get`: GET own `credit_profiles` + latest snapshot
+- `credit-events-list`: GET own `credit_events` with pagination/filters (from, to, type)
+- `credit-explain`: GET latest `credit_score_snapshots.factors_json` with summary
+- `credit-recompute`: POST trigger recompute (admin or self in sandbox)
 
-- Add `useParams()` to get `institutionId`
-- Filter account query by both `user_id` AND `institution_id` to prevent cross-tenant data leakage
+#### Step 7: Documentation & Changelog
+Create:
+- `docs/loans-savings-credit/audit.md` -- current state summary
+- `docs/loans-savings-credit/gap-report.md` -- what was missing
+- `docs/loans-savings-credit/route-inventory.md` -- all loan/savings/credit routes
+- `docs/changelog.md` + `docs/changelog.json` with entries for each feature
+- Update `docs/loans-guide.md` with "How repayments impact credit score" section
+- Update `docs/savings-guide.md` with "How savings behavior contributes" section
 
-#### Step 5: Enhance Admin BankingAppManagement -- Add Missing Tabs
-File: `src/pages/admin/BankingAppManagement.tsx`
+#### Step 8: E2E Tests
+Create `src/test/credit-scoring-e2e.test.ts`:
+- Flow A: On-time repayment increases score from baseline
+- Flow B: Late repayment decreases score
+- Flow C: Savings deposit modestly increases score
+- Flow D: Overdue job dedupe correctness
 
-Add 4 new data hooks and corresponding tabs:
+### Technical Details
 
-**5a. KYC/Customers Tab**
-- New hook `useInstitutionCustomers` -- queries `profiles` joined through `accounts` for the institution
-- Displays customer name, email, KYC status, account count, join date
-- Links to KYC verification status from `kyc_verifications` table
+```text
+┌─────────────┐     ┌──────────────────┐     ┌───────────────────┐
+│ loan-repay   │────▶│ credit_events    │────▶│ credit-score-     │
+│ savings-dep  │     │ (immutable)      │     │ engine            │
+│ savings-wth  │     └──────────────────┘     │ (deterministic)   │
+│ overdue-job  │                              └───────┬───────────┘
+└─────────────┘                                       │
+                                              ┌───────▼───────────┐
+                                              │ credit_profiles   │
+                                              │ credit_snapshots  │
+                                              └───────────────────┘
+```
 
-**5b. Virtual Cards Tab**
-- New hook `useInstitutionCards` -- queries `virtual_cards` through institution-scoped accounts
-- Displays card number (masked), type, balance, status, creation date
-- Shows total active cards in stats grid
+**Scoring Rules (MVP defaults):**
+| Event | Points | Cap |
+|---|---|---|
+| `LOAN_REPAYMENT_ON_TIME` | +5 to +15 | per installment |
+| `LOAN_REPAYMENT_LATE` | -10 to -40 | scaled by days_late |
+| `LOAN_INSTALLMENT_MISSED` | -50 | per missed |
+| `LOAN_DEFAULTED` | -150 to -250 | once |
+| `LOAN_CLOSED` | +15 | once per loan |
+| `SAVINGS_DEPOSIT` | +1 to +3 | max 10/month |
+| `SAVINGS_WITHDRAWAL` | 0 | no impact |
+| `SAVINGS_BALANCE_STABLE` | +2 | once/month |
 
-**5c. Credit Scores Tab**
-- New hook `useInstitutionCreditScores` -- queries `crediq_scores` through institution-scoped users
-- Displays user, score, score range, last calculated date
-- Shows average score in stats grid
+**New Edge Functions:** `credit-score-engine`, `loan-overdue-detect`, `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute`
 
-**5d. App Users Tab**
-- New hook `useInstitutionUsers` -- queries unique users from `accounts` table with profile info
-- Displays total registered users, active accounts per user, last activity
-- Add stat card for total users to the overview grid
+**Modified Edge Functions:** `loan-repay`, `savings-deposit`, `savings-withdraw`
 
-**Stats Grid Update**: Expand from 5 to 8 stat cards:
-- Add: Virtual Cards count, Average Credit Score, Total Customers
-
-**Tab Bar Update**: Add 4 new tab triggers: Customers, Cards, Credit Scores, Users
-
-### Technical Notes
-- All new queries are scoped by `institution_id` to maintain multi-tenancy isolation
-- No database changes required -- all data exists in current tables
-- No new dependencies needed
-- Existing code structure, route definitions, and component patterns are preserved
-- Admin tabs follow the exact same Card > Table pattern used by existing tabs
+**Zero breaking changes:** All new tables, new endpoints, and optional response fields only.
 
