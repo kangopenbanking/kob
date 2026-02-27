@@ -151,6 +151,35 @@ serve(async (req) => {
       console.error('Ledger posting failed (non-blocking):', ledgerErr);
     }
 
+    // ── Credit event emission ──
+    let creditScoreResult: any = null;
+    try {
+      await serviceSupabase.from('credit_events').insert({
+        user_id: user.id,
+        institution_id: savingsAccount.institution_id || null,
+        event_type: 'SAVINGS_DEPOSIT',
+        event_time: new Date().toISOString(),
+        value_numeric: amount,
+        metadata: {
+          savings_account_id,
+          balance_after: newBalance,
+          transaction_ref: txRef,
+        },
+        source: 'savings_service',
+      });
+
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const scoreRes = await fetch(`${supabaseUrl}/functions/v1/credit-score-engine`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+        body: JSON.stringify({ user_id: user.id }),
+      });
+      creditScoreResult = await scoreRes.json();
+    } catch (creditErr) {
+      console.error('Credit event emission failed (non-blocking):', creditErr);
+    }
+
     // Check if goal reached
     let goalReached = false;
     if (savingsAccount.target_amount && newBalance >= parseFloat(savingsAccount.target_amount)) {
@@ -165,6 +194,13 @@ serve(async (req) => {
         new_balance: newBalance,
         goal_reached: goalReached,
         transaction_ref: txRef,
+        ...(creditScoreResult ? {
+          credit_score: {
+            previous: creditScoreResult.previous_score,
+            current: creditScoreResult.score,
+            delta: creditScoreResult.delta,
+          }
+        } : {}),
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

@@ -1,0 +1,174 @@
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+// Scoring rules (MVP defaults)
+const SCORING_RULES: Record<string, { min: number; max: number }> = {
+  LOAN_REPAYMENT_ON_TIME: { min: 5, max: 15 },
+  LOAN_REPAYMENT_LATE: { min: -40, max: -10 },
+  LOAN_INSTALLMENT_MISSED: { min: -50, max: -50 },
+  LOAN_DEFAULTED: { min: -250, max: -150 },
+  LOAN_CLOSED: { min: 15, max: 15 },
+  SAVINGS_DEPOSIT: { min: 1, max: 3 },
+  SAVINGS_WITHDRAWAL: { min: 0, max: 0 },
+  SAVINGS_BALANCE_STABLE: { min: 2, max: 2 },
+};
+
+const BASELINE = 500;
+const MIN_SCORE = 300;
+const MAX_SCORE = 850;
+const MAX_SAVINGS_DEPOSITS_PER_MONTH = 10;
+
+function getBand(score: number): string {
+  if (score >= 750) return 'A';
+  if (score >= 650) return 'B';
+  if (score >= 550) return 'C';
+  if (score >= 400) return 'D';
+  return 'F';
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
+
+    const { user_id } = await req.json();
+    if (!user_id) throw new Error('user_id required');
+
+    // Get previous score
+    const { data: existingProfile } = await supabase
+      .from('credit_profiles')
+      .select('current_score')
+      .eq('user_id', user_id)
+      .maybeSingle();
+
+    const previousScore = existingProfile?.current_score ?? BASELINE;
+
+    // Fetch all credit events for user
+    const { data: events, error: eventsErr } = await supabase
+      .from('credit_events')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('event_time', { ascending: true });
+
+    if (eventsErr) throw eventsErr;
+
+    let score = BASELINE;
+    const factorMap: Record<string, { count: number; total: number }> = {};
+    const monthlyDepositCounts: Record<string, number> = {};
+
+    for (const event of (events || [])) {
+      const rule = SCORING_RULES[event.event_type];
+      if (!rule) continue;
+
+      let points = 0;
+
+      switch (event.event_type) {
+        case 'LOAN_REPAYMENT_ON_TIME':
+          points = rule.max; // +15
+          break;
+        case 'LOAN_REPAYMENT_LATE': {
+          const daysLate = Math.abs(event.value_numeric || 1);
+          // Scale: 1 day = -10, 30+ days = -40
+          points = Math.max(rule.min, Math.min(rule.max, -10 - Math.floor(daysLate / 3) * 3));
+          break;
+        }
+        case 'LOAN_INSTALLMENT_MISSED':
+          points = rule.min; // -50
+          break;
+        case 'LOAN_DEFAULTED':
+          points = rule.min; // -250
+          break;
+        case 'LOAN_CLOSED':
+          points = rule.max; // +15
+          break;
+        case 'SAVINGS_DEPOSIT': {
+          const monthKey = event.event_time.substring(0, 7);
+          monthlyDepositCounts[monthKey] = (monthlyDepositCounts[monthKey] || 0) + 1;
+          if (monthlyDepositCounts[monthKey] <= MAX_SAVINGS_DEPOSITS_PER_MONTH) {
+            const amount = Number(event.value_numeric || 0);
+            points = amount >= 50000 ? 3 : amount >= 10000 ? 2 : 1;
+          }
+          break;
+        }
+        case 'SAVINGS_WITHDRAWAL':
+          points = 0;
+          break;
+        case 'SAVINGS_BALANCE_STABLE':
+          points = 2;
+          break;
+      }
+
+      score += points;
+
+      if (points !== 0) {
+        if (!factorMap[event.event_type]) {
+          factorMap[event.event_type] = { count: 0, total: 0 };
+        }
+        factorMap[event.event_type].count++;
+        factorMap[event.event_type].total += points;
+      }
+    }
+
+    // Clamp
+    score = Math.max(MIN_SCORE, Math.min(MAX_SCORE, score));
+    const band = getBand(score);
+
+    // Build top 3 factors
+    const factors = Object.entries(factorMap)
+      .map(([type, { count, total }]) => ({
+        event_type: type,
+        count,
+        total_impact: total,
+        description: `${count} ${type.replace(/_/g, ' ').toLowerCase()} events: ${total > 0 ? '+' : ''}${total} points`,
+      }))
+      .sort((a, b) => Math.abs(b.total_impact) - Math.abs(a.total_impact))
+      .slice(0, 5);
+
+    // Upsert credit_profiles
+    await supabase.from('credit_profiles').upsert({
+      user_id,
+      current_score: score,
+      score_band: band,
+      last_computed_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'user_id' });
+
+    // Insert snapshot
+    await supabase.from('credit_score_snapshots').insert({
+      user_id,
+      score,
+      score_band: band,
+      factors_json: factors,
+      computed_at: new Date().toISOString(),
+    });
+
+    const delta = score - previousScore;
+
+    console.log(`Credit score computed for ${user_id}: ${score} (${band}), delta: ${delta}`);
+
+    return new Response(JSON.stringify({
+      score,
+      band,
+      delta,
+      previous_score: previousScore,
+      factors,
+      events_processed: (events || []).length,
+    }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  } catch (err: any) {
+    console.error('credit-score-engine error:', err);
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 400,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
