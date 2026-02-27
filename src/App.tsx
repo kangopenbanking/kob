@@ -308,6 +308,8 @@ import BankHelp from "./pages/banking-app/BankHelp";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 import { FeatureGate } from "./components/pwa/FeatureGate";
 import Apps from "./pages/Apps";
+import CustomerFundAccount from "./pages/CustomerFundAccount";
+import InstitutionFundAccount from "./pages/institution/InstitutionFundAccount";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -339,6 +341,7 @@ function App() {
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/fund-account" element={<Layout><ProtectedRoute><CustomerFundAccount /></ProtectedRoute></Layout>} />
             {/* Institution Portal Routes - Nested with InstitutionLayout */}
             <Route path="/fi-portal" element={<ProtectedRoute><RoleGuard allowedRoles={['institution', 'staff']} redirectTo="/dashboard"><InstitutionLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<FIPortal />} />
@@ -376,6 +379,7 @@ function App() {
               <Route path="gateway-subaccounts" element={<GatewaySubaccounts />} />
               <Route path="gateway-customers" element={<GatewayCustomers />} />
               <Route path="gateway-merchants" element={<GatewayMerchants />} />
+              <Route path="fund-account" element={<InstitutionFundAccount />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
