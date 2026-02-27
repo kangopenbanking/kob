@@ -1,0 +1,90 @@
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+}
+
+Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders })
+  }
+
+  try {
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')!
+
+    // Verify the user with their token
+    const userClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    })
+
+    const token = authHeader.replace('Bearer ', '')
+    const { data: claimsData, error: claimsError } = await userClient.auth.getUser(token)
+    if (claimsError || !claimsData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    const userId = claimsData.user.id
+    const { session_id, device_info } = await req.json()
+
+    if (!session_id) {
+      return new Response(JSON.stringify({ error: 'session_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    // Use service role client for admin operations
+    const adminClient = createClient(supabaseUrl, serviceRoleKey)
+
+    // 1. Get all existing sessions for this user
+    const { data: existingSessions } = await adminClient
+      .from('user_active_sessions')
+      .select('id, session_id')
+      .eq('user_id', userId)
+
+    // 2. Delete old sessions from the table
+    if (existingSessions && existingSessions.length > 0) {
+      const oldSessionIds = existingSessions.map(s => s.id)
+      await adminClient
+        .from('user_active_sessions')
+        .delete()
+        .in('id', oldSessionIds)
+
+      // 3. Try to sign out old sessions via admin API
+      for (const oldSession of existingSessions) {
+        if (oldSession.session_id !== session_id) {
+          try {
+            await adminClient.auth.admin.signOut(oldSession.session_id, 'local')
+          } catch {
+            // Session may already be expired, ignore
+          }
+        }
+      }
+    }
+
+    // 4. Insert the new session record
+    const { error: insertError } = await adminClient
+      .from('user_active_sessions')
+      .upsert({
+        user_id: userId,
+        session_id,
+        device_info: device_info || null,
+        last_active_at: new Date().toISOString(),
+      }, { onConflict: 'session_id' })
+
+    if (insertError) {
+      console.error('Failed to insert session:', insertError)
+      return new Response(JSON.stringify({ error: 'Failed to register session' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  } catch (err) {
+    console.error('enforce-single-session error:', err)
+    return new Response(JSON.stringify({ error: 'Internal server error' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+  }
+})

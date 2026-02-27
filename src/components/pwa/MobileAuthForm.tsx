@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTenant } from './TenantProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
+import { enforceSingleSession } from '@/hooks/useSingleSession';
 import { toast } from 'sonner';
 
 const COUNTRY_CODES = [
@@ -61,11 +62,15 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         if (error) throw error;
         toast.success('Account created! Please check your email to verify.');
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email: form.email,
           password: form.password,
         });
         if (error) throw error;
+        // Enforce single session
+        if (data.session) {
+          await enforceSingleSession(data.session.access_token);
+        }
         onAuthSuccess();
       }
     } catch (err: any) {
@@ -91,6 +96,11 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     }
     const success = await firebasePhone.verifyOTP(otpCode);
     if (success) {
+      // Enforce single session after OTP verification
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await enforceSingleSession(session.access_token);
+      }
       onAuthSuccess();
     }
   };

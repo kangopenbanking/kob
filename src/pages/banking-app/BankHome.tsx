@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBankAccounts, useBankTransactions, useSavingsAccounts, useLoanApplications, useCreditScore } from '@/hooks/useBankingData';
-import { useTenant, HomeSectionKey, type SectionStyle } from '@/components/pwa/TenantProvider';
+import { useTenant, HomeSectionKey, type SectionStyle, type CardColors } from '@/components/pwa/TenantProvider';
 import { MediaBanner } from '@/components/pwa/MediaBanner';
 
 const currencyColors: Record<string, { color: string; textColor: string }> = {
@@ -26,7 +26,7 @@ const BankHome: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
   const tenant = useTenant();
-  const { features, homeLayout, sectionOrder, layoutStyle, sectionStyles, mediaSections } = tenant;
+  const { features, homeLayout, sectionOrder, layoutStyle, sectionStyles, mediaSections, cardColors } = tenant;
   const [showBalance, setShowBalance] = useState(true);
   const [userName, setUserName] = useState('');
 
@@ -253,21 +253,30 @@ const BankHome: React.FC = () => {
     return (
       <div key="account_carousel" className="-mx-4 px-4">
         <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
-          {accountCards.map((account) => (
-            <motion.div
-              key={account.currency}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileTap={{ scale: 0.97 }}
-              className={`${minW} rounded-2xl ${account.color} p-4`}
-              style={getStyleOverrides('account_carousel')}
-            >
-              <span className={`text-xs font-medium ${account.textColor} opacity-80`}>{account.label}</span>
-              <p className={`mt-2 text-lg font-bold ${account.textColor}`}>
-                {showBalance ? `${account.currency} ${account.balance.toLocaleString()}` : '••••'}
-              </p>
-            </motion.div>
-          ))}
+          {accountCards.map((account) => {
+            const cardKey = `account_${account.currency}`;
+            const colorOverride = cardColors[cardKey];
+            const cardStyle: React.CSSProperties = {
+              ...getStyleOverrides('account_carousel'),
+              ...(colorOverride?.bg_color ? { backgroundColor: colorOverride.bg_color } : {}),
+              ...(colorOverride?.text_color ? { color: colorOverride.text_color } : {}),
+            };
+            return (
+              <motion.div
+                key={account.currency}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileTap={{ scale: 0.97 }}
+                className={`${minW} rounded-2xl ${colorOverride?.bg_color ? '' : account.color} p-4`}
+                style={cardStyle}
+              >
+                <span className={`text-xs font-medium ${colorOverride?.text_color ? '' : account.textColor} opacity-80`}>{account.label}</span>
+                <p className={`mt-2 text-lg font-bold ${colorOverride?.text_color ? '' : account.textColor}`}>
+                  {showBalance ? `${account.currency} ${account.balance.toLocaleString()}` : '••••'}
+                </p>
+              </motion.div>
+            );
+          })}
         </div>
       </div>
     );
@@ -284,14 +293,19 @@ const BankHome: React.FC = () => {
         <div key="quick_actions" className="grid gap-3" style={{ gridTemplateColumns: `repeat(${Math.min(cols, 4)}, minmax(0, 1fr))` }}>
           {quickActions.map((action) => {
             const Icon = action.icon;
+            const cardKey = `quick_action_${action.label.toLowerCase()}`;
+            const colorOverride = cardColors[cardKey];
             return (
               <button
                 key={action.label}
                 onClick={() => action.path && navigate(`/bank/${institutionId}/${action.path}`)}
                 className="flex items-center gap-3 rounded-xl border bg-card p-3 text-left"
               >
-                <div className={`flex h-10 w-10 items-center justify-center ${iconRound} ${action.color}`}>
-                  <Icon className="h-5 w-5 text-white" strokeWidth={1.5} />
+                <div
+                  className={`flex h-10 w-10 items-center justify-center ${iconRound} ${colorOverride?.bg_color ? '' : action.color}`}
+                  style={colorOverride?.bg_color ? { backgroundColor: colorOverride.bg_color } : {}}
+                >
+                  <Icon className="h-5 w-5 text-white" strokeWidth={1.5} style={colorOverride?.text_color ? { color: colorOverride.text_color } : {}} />
                 </div>
                 <span className="text-sm font-semibold text-foreground">{action.label}</span>
               </button>
@@ -305,14 +319,19 @@ const BankHome: React.FC = () => {
       <div key="quick_actions" className="flex justify-between px-2">
         {quickActions.map((action) => {
           const Icon = action.icon;
+          const cardKey = `quick_action_${action.label.toLowerCase()}`;
+          const colorOverride = cardColors[cardKey];
           return (
             <button
               key={action.label}
               onClick={() => action.path && navigate(`/bank/${institutionId}/${action.path}`)}
               className="flex flex-col items-center gap-2"
             >
-              <div className={`flex h-14 w-14 items-center justify-center ${iconRound} ${action.color}`}>
-                <Icon className="h-6 w-6 text-white" strokeWidth={1.5} />
+              <div
+                className={`flex h-14 w-14 items-center justify-center ${iconRound} ${colorOverride?.bg_color ? '' : action.color}`}
+                style={colorOverride?.bg_color ? { backgroundColor: colorOverride.bg_color } : {}}
+              >
+                <Icon className="h-6 w-6 text-white" strokeWidth={1.5} style={colorOverride?.text_color ? { color: colorOverride.text_color } : {}} />
               </div>
               <span className="text-xs font-semibold text-foreground">{action.label}</span>
             </button>
@@ -331,20 +350,25 @@ const BankHome: React.FC = () => {
       <div key="financial_services" style={getStyleOverrides('financial_services')}>
         <h3 className="mb-3 text-base font-bold tracking-tight text-foreground">Financial Services</h3>
         <div className="grid gap-3" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-          {financialServiceItems.map((item) => (
-            <motion.button
-              key={item.key}
-              whileTap={{ scale: 0.96 }}
-              onClick={item.onClick}
-              className={`flex flex-col items-center gap-2 rounded-2xl ${item.className} p-4`}
-            >
-              {item.icon}
-              <div className="text-center">
-                <p className={`text-lg font-bold ${item.textClass}`}>{item.value}</p>
-                <p className={`text-[10px] font-semibold ${item.textClass} opacity-70`}>{item.label}</p>
-              </div>
-            </motion.button>
-          ))}
+          {financialServiceItems.map((item) => {
+            const cardKey = `financial_${item.key}`;
+            const colorOverride = cardColors[cardKey];
+            return (
+              <motion.button
+                key={item.key}
+                whileTap={{ scale: 0.96 }}
+                onClick={item.onClick}
+                className={`flex flex-col items-center gap-2 rounded-2xl ${colorOverride?.bg_color ? '' : item.className} p-4`}
+                style={colorOverride?.bg_color ? { backgroundColor: colorOverride.bg_color } : {}}
+              >
+                {item.icon}
+                <div className="text-center">
+                  <p className={`text-lg font-bold ${colorOverride?.text_color ? '' : item.textClass}`} style={colorOverride?.text_color ? { color: colorOverride.text_color } : {}}>{item.value}</p>
+                  <p className={`text-[10px] font-semibold ${colorOverride?.text_color ? '' : item.textClass} opacity-70`} style={colorOverride?.text_color ? { color: colorOverride.text_color } : {}}>{item.label}</p>
+                </div>
+              </motion.button>
+            );
+          })}
         </div>
       </div>
     );
