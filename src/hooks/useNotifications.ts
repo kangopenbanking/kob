@@ -1,0 +1,153 @@
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import Pusher from 'pusher-js';
+
+interface AppNotification {
+  id: string;
+  user_id: string;
+  institution_id: string | null;
+  type: string;
+  title: string;
+  message: string;
+  icon: string;
+  is_read: boolean;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+// Cache Pusher config so we only fetch once
+let cachedPusherKey = '';
+let cachedPusherCluster = 'eu';
+let configFetched = false;
+
+async function fetchPusherConfig() {
+  if (configFetched) return;
+  try {
+    const { data, error } = await supabase.functions.invoke('pusher-config');
+    if (!error && data) {
+      cachedPusherKey = data.pusher_key || '';
+      cachedPusherCluster = data.pusher_cluster || 'eu';
+    }
+  } catch {
+    // Silent fail - Supabase realtime fallback will work
+  }
+  configFetched = true;
+}
+
+export function useNotifications(institutionId?: string) {
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const pusherRef = useRef<Pusher | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, []);
+
+  // Fetch notifications from DB
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['app-notifications', userId, institutionId],
+    enabled: !!userId,
+    queryFn: async (): Promise<AppNotification[]> => {
+      let query = supabase
+        .from('app_notifications')
+        .select('*')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return (data || []) as unknown as AppNotification[];
+    },
+  });
+
+  const unreadCount = notifications.filter(n => !n.is_read).length;
+
+  // Subscribe to Pusher + Supabase realtime for real-time push
+  useEffect(() => {
+    if (!userId) return;
+
+    const invalidate = () => {
+      queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId] });
+    };
+
+    // Setup Pusher
+    const setupPusher = async () => {
+      await fetchPusherConfig();
+      if (!cachedPusherKey || pusherRef.current) return;
+
+      const pusher = new Pusher(cachedPusherKey, {
+        cluster: cachedPusherCluster,
+      });
+      pusherRef.current = pusher;
+
+      const userChannel = pusher.subscribe(`user-${userId}`);
+      userChannel.bind('notification', invalidate);
+
+      if (institutionId) {
+        const instChannel = pusher.subscribe(`institution-${institutionId}`);
+        instChannel.bind('notification', invalidate);
+      }
+    };
+
+    setupPusher();
+
+    // Supabase realtime fallback (always active)
+    const realtimeChannel = supabase
+      .channel(`app-notifications-${userId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'app_notifications',
+        filter: `user_id=eq.${userId}`,
+      }, invalidate)
+      .subscribe();
+
+    return () => {
+      if (pusherRef.current) {
+        pusherRef.current.disconnect();
+        pusherRef.current = null;
+      }
+      supabase.removeChannel(realtimeChannel);
+    };
+  }, [userId, institutionId, queryClient]);
+
+  // Mark as read
+  const markAsRead = useCallback(async (notificationId: string) => {
+    await supabase
+      .from('app_notifications')
+      .update({ is_read: true } as any)
+      .eq('id', notificationId);
+    queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId] });
+  }, [userId, institutionId, queryClient]);
+
+  const markAllAsRead = useCallback(async () => {
+    if (!userId) return;
+    let query = supabase
+      .from('app_notifications')
+      .update({ is_read: true } as any)
+      .eq('user_id', userId)
+      .eq('is_read', false);
+    if (institutionId) {
+      query = query.eq('institution_id', institutionId);
+    }
+    await query;
+    queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId] });
+  }, [userId, institutionId, queryClient]);
+
+  return {
+    notifications,
+    unreadCount,
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+  };
+}
