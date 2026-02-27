@@ -140,9 +140,19 @@ const CustomerHome: React.FC = () => {
             </motion.div>
           )}
 
-          {/* Balances Label */}
-          <div className="relative flex items-center justify-between mb-3">
-            <p className="text-xs font-semibold text-primary-foreground/80">Balances</p>
+          {/* Total Balance - BIG and centered */}
+          <div className="relative text-center my-4">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/50 mb-1">Total Balance</p>
+            <p className="text-4xl font-extrabold text-primary-foreground">
+              {isViewOnly ? '• • • • •' : balanceVisible ? `XAF ${totalBalance.toLocaleString()}` : '• • • • •'}
+            </p>
+            {!isViewOnly && balanceVisible && (
+              <p className="mt-1 text-xs font-medium text-[hsl(150,60%,65%)]">+ 12,500 today</p>
+            )}
+          </div>
+
+          {/* Period Toggle */}
+          <div className="relative flex items-center justify-center mb-4">
             <div className="flex rounded-xl bg-[hsl(0,0%,100%)]/10 p-0.5">
               {(['W', 'M', 'Y'] as const).map((p) => (
                 <button key={p} onClick={() => setPeriod(p)}
@@ -153,36 +163,22 @@ const CustomerHome: React.FC = () => {
             </div>
           </div>
 
-          {/* Account Cards Carousel */}
+          {/* Account Cards - compact like Financial Health */}
           {!isViewOnly && (
-            <div className="relative flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+            <div className="relative grid grid-cols-3 gap-2">
               {accountCards.map((acct, i) => (
-                <div key={i} className="flex min-w-[145px] flex-1 flex-col rounded-2xl bg-[hsl(0,0%,100%)]/15 backdrop-blur-sm p-4 border border-[hsl(0,0%,100%)]/10">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${acct.color}`}>
-                      {i === 0 && <Wallet className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
-                      {i === 1 && <PiggyBank className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
-                      {i === 2 && <Smartphone className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
-                    </div>
-                    <p className="text-[10px] font-semibold text-primary-foreground/80">{acct.name}</p>
+                <div key={i} className="flex flex-col items-center gap-1.5 rounded-2xl bg-[hsl(0,0%,100%)]/12 p-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${acct.color}`}>
+                    {i === 0 && <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />}
+                    {i === 1 && <PiggyBank className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />}
+                    {i === 2 && <Smartphone className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />}
                   </div>
-                  <p className="text-lg font-bold text-primary-foreground">
-                    {balanceVisible ? `${acct.currency} ${acct.balance.toLocaleString()}` : '•••'}
+                  <p className="text-[10px] font-bold text-primary-foreground/80">{acct.name}</p>
+                  <p className="text-xs font-bold text-primary-foreground">
+                    {balanceVisible ? acct.balance.toLocaleString() : '•••'}
                   </p>
                 </div>
               ))}
-            </div>
-          )}
-
-          {isViewOnly && (
-            <p className="relative text-3xl font-bold text-primary-foreground text-center py-4">• • • • •</p>
-          )}
-
-          {/* Total */}
-          {!isViewOnly && balanceVisible && (
-            <div className="relative mt-4 flex items-center justify-between border-t border-[hsl(0,0%,100%)]/10 pt-3">
-              <p className="text-xs font-medium text-primary-foreground/60">Total Balance</p>
-              <p className="text-base font-bold text-primary-foreground">XAF {totalBalance.toLocaleString()}</p>
             </div>
           )}
         </div>
