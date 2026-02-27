@@ -35,33 +35,34 @@ interface FeatureItem {
   path: string;
   color: string;
   iconColor: string;
+  borderColor: string;
   featureKey?: string;
 }
 
 const moneyMovement: FeatureItem[] = [
-  { label: 'Transfer', description: 'Send money to anyone instantly', icon: Send, path: 'transfer', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'transfer' },
-  { label: 'Request', description: 'Ask someone to pay you', icon: Download, path: 'request', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', featureKey: 'request' },
-  { label: 'Cash Out', description: 'Withdraw at agents', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', featureKey: 'cash_out' },
-  { label: 'Pay Links', description: 'Share a payment link', icon: Link2, path: 'pay-links', color: 'bg-[hsl(180,50%,90%)]', iconColor: 'text-[hsl(180,40%,35%)]', featureKey: 'pay_links' },
+  { label: 'Transfer', description: 'Send money to anyone instantly', icon: Send, path: 'transfer', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,45%)]', featureKey: 'transfer' },
+  { label: 'Request', description: 'Ask someone to pay you', icon: Download, path: 'request', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,35%)]', featureKey: 'request' },
+  { label: 'Cash Out', description: 'Withdraw at agents', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-[hsl(45,60%,55%)]', featureKey: 'cash_out' },
+  { label: 'Pay Links', description: 'Share a payment link', icon: Link2, path: 'pay-links', color: 'bg-[hsl(180,50%,90%)]', iconColor: 'text-[hsl(180,40%,35%)]', borderColor: 'border-[hsl(180,40%,55%)]', featureKey: 'pay_links' },
 ];
 
 const paymentsBills: FeatureItem[] = [
-  { label: 'Bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', featureKey: 'bills' },
-  { label: 'Invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', featureKey: 'invoices' },
-  { label: 'Split Bills', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'split_bills' },
-  { label: 'Recurring', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'recurring' },
+  { label: 'Bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', borderColor: 'border-[hsl(25,60%,60%)]', featureKey: 'bills' },
+  { label: 'Invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', borderColor: 'border-[hsl(50,60%,55%)]', featureKey: 'invoices' },
+  { label: 'Split Bills', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,60%)]', featureKey: 'split_bills' },
+  { label: 'Recurring', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'recurring' },
 ];
 
 const savingsGoals: FeatureItem[] = [
-  { label: 'Piggy Bank', description: 'Save towards your goals', icon: PiggyBank, path: 'piggybank', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'piggy_bank' },
-  { label: 'Njangi', description: 'Group savings circles', icon: CircleDollarSign, path: 'njangi', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]', featureKey: 'njangi' },
-  { label: 'Rewards', description: 'Earn & redeem points', icon: Gift, path: 'rewards', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', featureKey: 'rewards' },
+  { label: 'Piggy Bank', description: 'Save towards your goals', icon: PiggyBank, path: 'piggybank', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-foreground', featureKey: 'piggy_bank' },
+  { label: 'Njangi', description: 'Group savings circles', icon: CircleDollarSign, path: 'njangi', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]', borderColor: 'border-foreground', featureKey: 'njangi' },
+  { label: 'Rewards', description: 'Earn & redeem points', icon: Gift, path: 'rewards', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-foreground', featureKey: 'rewards' },
 ];
 
 const financialHealth: FeatureItem[] = [
-  { label: 'Credit Score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', featureKey: 'credit_score' },
-  { label: 'Rent Report', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'rent_reporting' },
-  { label: 'Bank', icon: Building2, path: 'bank', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', featureKey: 'bank' },
+  { label: 'Credit Score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
+  { label: 'Rent Report', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
+  { label: 'Bank', icon: Building2, path: 'bank', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', borderColor: 'border-[hsl(225,40%,60%)]', featureKey: 'bank' },
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
@@ -168,7 +169,7 @@ const CustomerHome: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             {visibleMoney.slice(0, 2).map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left min-h-[140px] border-2 border-foreground`}>
+                className={`flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left min-h-[140px] border-2 ${item.borderColor}`}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                   <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
@@ -180,7 +181,7 @@ const CustomerHome: React.FC = () => {
             ))}
             {visibleMoney.slice(2).map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex items-center gap-3 rounded-2xl ${item.color} p-4`}>
+                className={`flex items-center gap-3 rounded-2xl ${item.color} p-4 border-2 ${item.borderColor}`}>
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/50">
                   <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
@@ -201,7 +202,7 @@ const CustomerHome: React.FC = () => {
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
             {visiblePayments.map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex min-w-[110px] flex-col items-center gap-2.5 rounded-3xl ${item.color} p-4`}>
+                className={`flex min-w-[110px] flex-col items-center gap-2.5 rounded-3xl ${item.color} p-4 border-2 ${item.borderColor}`}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                   <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
@@ -221,7 +222,7 @@ const CustomerHome: React.FC = () => {
               const FirstIcon = visibleSavings[0].icon;
               return (
                 <button onClick={() => go(visibleSavings[0].path)}
-                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full`}>
+                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full border-2 ${visibleSavings[0].borderColor}`}>
                   <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-background/50">
                     <FirstIcon className={`h-7 w-7 ${visibleSavings[0].iconColor}`} strokeWidth={1.5} />
                   </div>
@@ -236,7 +237,7 @@ const CustomerHome: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               {visibleSavings.slice(1).map((item) => (
                 <button key={item.path} onClick={() => go(item.path)}
-                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5`}>
+                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5 border-2 ${item.borderColor}`}>
                   <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                     <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                   </div>
@@ -256,7 +257,7 @@ const CustomerHome: React.FC = () => {
           <div className="grid grid-cols-3 gap-3">
             {visibleHealth.map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col items-center gap-2 rounded-3xl ${item.color} p-4`}>
+                className={`flex flex-col items-center gap-2 rounded-3xl ${item.color} p-4 border-2 ${item.borderColor}`}>
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background/50">
                   <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
