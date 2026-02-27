@@ -38,7 +38,8 @@ Deno.serve(async (req) => {
       guarantors,
       collateral_details,
       supporting_documents,
-      submit = false
+      submit = false,
+      institution_id,
     } = body;
 
     console.log('Creating loan application for user:', user.id);
@@ -134,6 +135,7 @@ Deno.serve(async (req) => {
       credit_score: creditScore,
       auto_decision: autoDecision,
       recommended_amount: recommendedAmount,
+      institution_id: institution_id || null,
     };
 
     const { data: application, error: applicationError } = await supabase

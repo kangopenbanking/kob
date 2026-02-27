@@ -21,9 +21,9 @@ export default function LoanAccountCard({ loan }: LoanAccountCardProps) {
     queryKey: ['loan-schedules', loan.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('loan_repayment_schedules')
+        .from('loan_schedule')
         .select('*')
-        .eq('loan_account_id', loan.id)
+        .eq('loan_id', loan.id)
         .order('installment_number');
       
       if (error) throw error;
@@ -35,9 +35,9 @@ export default function LoanAccountCard({ loan }: LoanAccountCardProps) {
     queryKey: ['loan-payments', loan.id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('loan_payments')
+        .from('loan_repayments')
         .select('*')
-        .eq('loan_account_id', loan.id)
+        .eq('loan_id', loan.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
@@ -46,7 +46,7 @@ export default function LoanAccountCard({ loan }: LoanAccountCardProps) {
   });
 
   const repaymentProgress = ((Number(loan.amount_repaid) / Number(loan.total_payable)) * 100);
-  const nextPayment = schedules?.find(s => s.status === 'pending');
+  const nextPayment = schedules?.find((s: any) => s.status === 'pending');
 
   if (showRepaymentForm) {
     return (
@@ -114,7 +114,7 @@ export default function LoanAccountCard({ loan }: LoanAccountCardProps) {
             <div className="flex justify-between items-center">
               <div>
                 <p className="text-2xl font-bold">
-                  {Number(nextPayment.total_due).toLocaleString()} XAF
+                  {Number(nextPayment.total_amount || 0).toLocaleString()} XAF
                 </p>
                 <p className="text-sm text-muted-foreground">
                   Due: {new Date(nextPayment.due_date).toLocaleDateString()}
@@ -141,16 +141,16 @@ export default function LoanAccountCard({ loan }: LoanAccountCardProps) {
           <TabsContent value="history">
             <div className="space-y-2">
               {payments && payments.length > 0 ? (
-                payments.map((payment) => (
+              payments.map((payment: any) => (
                   <div key={payment.id} className="flex justify-between items-center p-3 border rounded-lg">
                     <div>
                       <p className="font-medium">{Number(payment.amount).toLocaleString()} XAF</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(payment.payment_date).toLocaleDateString()} • {payment.payment_method}
+                        {new Date(payment.created_at).toLocaleDateString()} • {payment.payment_method}
                       </p>
                     </div>
-                    <Badge variant={payment.status === 'completed' ? 'default' : 'secondary'}>
-                      {payment.status}
+                    <Badge variant="default">
+                      Completed
                     </Badge>
                   </div>
                 ))
