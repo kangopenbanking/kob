@@ -1,26 +1,19 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, PiggyBank, Plus, X } from 'lucide-react';
+import { ArrowLeft, PiggyBank, Plus, X, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useCustomerSavings } from '@/hooks/useCustomerData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
-interface Goal {
-  name: string;
-  target: number;
-  saved: number;
-  color: string;
-  barColor: string;
-}
-
-const initialGoals: Goal[] = [
-  { name: 'New Laptop', target: 450000, saved: 280000, color: 'bg-[hsl(210,80%,93%)]', barColor: 'bg-[hsl(210,60%,45%)]' },
-  { name: 'Emergency Fund', target: 500000, saved: 375000, color: 'bg-[hsl(150,40%,90%)]', barColor: 'bg-[hsl(150,40%,35%)]' },
-  { name: 'Holiday Trip', target: 300000, saved: 45000, color: 'bg-[hsl(340,60%,92%)]', barColor: 'bg-[hsl(340,50%,40%)]' },
-];
-
-const colors = [
+const goalColors = [
+  { color: 'bg-[hsl(210,80%,93%)]', barColor: 'bg-[hsl(210,60%,45%)]' },
+  { color: 'bg-[hsl(150,40%,90%)]', barColor: 'bg-[hsl(150,40%,35%)]' },
+  { color: 'bg-[hsl(340,60%,92%)]', barColor: 'bg-[hsl(340,50%,40%)]' },
   { color: 'bg-[hsl(45,70%,90%)]', barColor: 'bg-[hsl(45,60%,35%)]' },
   { color: 'bg-[hsl(270,60%,92%)]', barColor: 'bg-[hsl(270,50%,45%)]' },
   { color: 'bg-[hsl(25,80%,92%)]', barColor: 'bg-[hsl(25,60%,40%)]' },
@@ -28,37 +21,42 @@ const colors = [
 
 const CustomerPiggyBank: React.FC = () => {
   const navigate = useNavigate();
-  const [goals, setGoals] = useState(initialGoals);
+  const { user } = useCustomerAuth();
+  const { data: goals = [], isLoading } = useCustomerSavings(user?.id);
+  const queryClient = useQueryClient();
+
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newTarget, setNewTarget] = useState('');
   const [creating, setCreating] = useState(false);
-  const [addingTo, setAddingTo] = useState<number | null>(null);
-  const [addAmount, setAddAmount] = useState('');
 
-  const totalSaved = goals.reduce((s, g) => s + g.saved, 0);
+  const totalSaved = goals.reduce((s: number, g: any) => s + (g.current_balance || 0), 0);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newName.trim() || !newTarget) { toast.error('Fill in all fields'); return; }
     setCreating(true);
-    setTimeout(() => {
-      const c = colors[goals.length % colors.length];
-      setGoals([...goals, { name: newName.trim(), target: Number(newTarget), saved: 0, ...c }]);
+    try {
+      // This would need a proper API - for now show feedback
+      toast.info('Savings goal creation coming soon. Contact your bank to set up a savings account.');
+    } finally {
+      setCreating(false);
       setShowCreate(false);
       setNewName('');
       setNewTarget('');
-      setCreating(false);
-      toast.success('Goal created!');
-    }, 800);
+    }
   };
 
-  const handleAddSavings = (i: number) => {
-    if (!addAmount || Number(addAmount) <= 0) { toast.error('Enter an amount'); return; }
-    setGoals(goals.map((g, idx) => idx === i ? { ...g, saved: Math.min(g.saved + Number(addAmount), g.target) } : g));
-    toast.success(`XAF ${Number(addAmount).toLocaleString()} added to ${goals[i].name}`);
-    setAddingTo(null);
-    setAddAmount('');
-  };
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-5 p-5">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
+          <h1 className="text-xl font-bold text-foreground">Piggy Bank</h1>
+        </div>
+        <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -99,37 +97,41 @@ const CustomerPiggyBank: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Goals */}
-      <div className="space-y-3">
-        {goals.map((goal, i) => {
-          const pct = Math.round((goal.saved / goal.target) * 100);
-          return (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }} className={`rounded-3xl ${goal.color} p-4`}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-bold text-foreground">{goal.name}</p>
-                <span className="text-xs font-bold text-muted-foreground">{pct}%</span>
-              </div>
-              <div className="h-2 rounded-full bg-background/50 overflow-hidden">
-                <div className={`h-full rounded-full ${goal.barColor} transition-all`} style={{ width: `${pct}%` }} />
-              </div>
-              <div className="mt-2 flex justify-between">
-                <p className="text-[10px] text-muted-foreground">{goal.saved.toLocaleString()} saved</p>
-                <p className="text-[10px] text-muted-foreground">of {goal.target.toLocaleString()}</p>
-              </div>
-              {addingTo === i ? (
-                <div className="mt-3 flex gap-2">
-                  <Input type="number" value={addAmount} onChange={e => setAddAmount(e.target.value)} placeholder="Amount" className="rounded-xl flex-1 h-9 text-sm" />
-                  <Button size="sm" onClick={() => handleAddSavings(i)} className="rounded-xl h-9">Save</Button>
-                  <Button size="sm" variant="outline" onClick={() => setAddingTo(null)} className="rounded-xl h-9">Cancel</Button>
+      {/* Goals from DB */}
+      {goals.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-12">
+          <PiggyBank className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
+          <p className="text-sm font-semibold text-muted-foreground">No savings goals yet</p>
+          <p className="text-xs text-muted-foreground text-center">Create a savings goal to start saving</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {goals.map((goal: any, i: number) => {
+            const target = goal.target_amount || 0;
+            const saved = goal.current_balance || 0;
+            const pct = target > 0 ? Math.round((saved / target) * 100) : 0;
+            const c = goalColors[i % goalColors.length];
+            return (
+              <motion.div key={goal.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }} className={`rounded-3xl ${c.color} p-4`}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-bold text-foreground">{goal.account_name || `Goal ${i + 1}`}</p>
+                  {target > 0 && <span className="text-xs font-bold text-muted-foreground">{pct}%</span>}
                 </div>
-              ) : (
-                <button onClick={() => setAddingTo(i)} className="mt-2 text-[11px] font-semibold text-primary">+ Add Savings</button>
-              )}
-            </motion.div>
-          );
-        })}
-      </div>
+                {target > 0 && (
+                  <div className="h-2 rounded-full bg-background/50 overflow-hidden">
+                    <div className={`h-full rounded-full ${c.barColor} transition-all`} style={{ width: `${Math.min(pct, 100)}%` }} />
+                  </div>
+                )}
+                <div className="mt-2 flex justify-between">
+                  <p className="text-[10px] text-muted-foreground">{saved.toLocaleString()} saved</p>
+                  {target > 0 && <p className="text-[10px] text-muted-foreground">of {target.toLocaleString()}</p>}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       <Button variant="outline" className="w-full rounded-2xl h-12" onClick={() => setShowCreate(true)}>
         <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Create New Goal

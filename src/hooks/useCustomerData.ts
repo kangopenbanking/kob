@@ -1,0 +1,235 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+// ─── Accounts & Balances ───
+export function useCustomerAccounts(userId?: string, institutionId?: string) {
+  return useQuery({
+    queryKey: ['customer-accounts', userId, institutionId],
+    enabled: !!userId && !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, account_id, account_type, account_subtype, currency, nickname, is_active, institution_id')
+        .eq('user_id', userId!)
+        .eq('institution_id', institutionId!)
+        .eq('is_active', true);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+export function useAccountBalances(accountIds: string[]) {
+  return useQuery({
+    queryKey: ['account-balances', accountIds],
+    enabled: accountIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('account_balances')
+        .select('account_id, amount, currency, balance_type, credit_debit_indicator')
+        .in('account_id', accountIds)
+        .eq('balance_type', 'ClosingAvailable');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Transactions ───
+export function useCustomerTransactions(userId?: string, institutionId?: string, limit = 20) {
+  return useQuery({
+    queryKey: ['customer-transactions', userId, institutionId, limit],
+    enabled: !!userId && !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, amount, currency, credit_debit_indicator, transaction_type, transaction_information, booking_datetime, status, merchant_details, metadata')
+        .eq('user_id', userId!)
+        .eq('institution_id', institutionId!)
+        .order('booking_datetime', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Virtual Cards ───
+export function useCustomerCards(userId?: string) {
+  return useQuery({
+    queryKey: ['customer-cards', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('virtual_cards')
+        .select('id, card_name, last4, brand, exp_month, exp_year, status, balance_usd, spending_controls')
+        .eq('user_id', userId!);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+export function useCardTransactions(userId?: string, limit = 10) {
+  return useQuery({
+    queryKey: ['card-transactions', userId, limit],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('card_payment_transactions')
+        .select('id, amount, currency, description, status, card_last4, created_at, transaction_type')
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Savings / Piggy Bank ───
+export function useCustomerSavings(userId?: string) {
+  return useQuery({
+    queryKey: ['customer-savings', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('savings_accounts')
+        .select('id, account_name, current_balance, target_amount, savings_type, status, target_date')
+        .eq('user_id', userId!)
+        .eq('status', 'active');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Njangi Groups ───
+export function useCustomerNjangi(userId?: string, institutionId?: string) {
+  return useQuery({
+    queryKey: ['customer-njangi', userId, institutionId],
+    enabled: !!userId,
+    queryFn: async () => {
+      // Get member records for this user
+      const { data: memberships, error: memberErr } = await supabase
+        .from('njangi_members')
+        .select('id, group_id, status')
+        .eq('user_id', userId!)
+        .eq('status', 'active');
+      if (memberErr) throw memberErr;
+      if (!memberships || memberships.length === 0) return [];
+
+      const groupIds = memberships.map(m => m.group_id);
+      const { data: groups, error: groupErr } = await supabase
+        .from('njangi_groups')
+        .select('id, name, contribution_amount, frequency, max_members, current_cycle, status, created_at')
+        .in('id', groupIds);
+      if (groupErr) throw groupErr;
+
+      // Get member counts per group
+      const results = await Promise.all((groups || []).map(async (g) => {
+        const { count } = await supabase
+          .from('njangi_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', g.id)
+          .eq('status', 'active');
+        return { ...g, member_count: count || 0 };
+      }));
+      return results;
+    },
+  });
+}
+
+// ─── Credit Score ───
+export function useCustomerCreditScore(userId?: string) {
+  return useQuery({
+    queryKey: ['customer-credit-score', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('credit_scores')
+        .select('score, payment_history_score, amounts_owed_score, credit_history_length_score, new_credit_score, credit_mix_score, score_factors, updated_at')
+        .eq('user_id', userId!)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// ─── Profile for QR / Receive ───
+export function useCustomerProfile(userId?: string) {
+  return useQuery({
+    queryKey: ['customer-profile', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number, email, linked_account_number, linked_account_name, linked_account_type')
+        .eq('id', userId!)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+// ─── Bill Payments (from transactions) ───
+export function useRecentBillPayments(userId?: string, institutionId?: string) {
+  return useQuery({
+    queryKey: ['customer-bill-payments', userId, institutionId],
+    enabled: !!userId && !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, amount, currency, transaction_information, booking_datetime, status, metadata')
+        .eq('user_id', userId!)
+        .eq('institution_id', institutionId!)
+        .eq('transaction_type', 'bill_payment')
+        .order('booking_datetime', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Spending Summary ───
+export function useSpendingSummary(userId?: string, institutionId?: string, period: 'W' | 'M' | 'Y' = 'M') {
+  return useQuery({
+    queryKey: ['spending-summary', userId, institutionId, period],
+    enabled: !!userId && !!institutionId,
+    queryFn: async () => {
+      const now = new Date();
+      let from: Date;
+      if (period === 'W') {
+        from = new Date(now);
+        from.setDate(from.getDate() - 7);
+      } else if (period === 'M') {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+      } else {
+        from = new Date(now.getFullYear(), 0, 1);
+      }
+
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('amount, credit_debit_indicator')
+        .eq('user_id', userId!)
+        .eq('institution_id', institutionId!)
+        .gte('booking_datetime', from.toISOString())
+        .eq('status', 'Booked');
+      if (error) throw error;
+
+      let earnings = 0;
+      let spending = 0;
+      (data || []).forEach((tx: any) => {
+        const amt = Math.abs(tx.amount || 0);
+        if (tx.credit_debit_indicator === 'Credit') earnings += amt;
+        else spending += amt;
+      });
+      return { earnings, spending };
+    },
+  });
+}
