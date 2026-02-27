@@ -7,6 +7,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
 };
 
+// Scope-aware fee calculation
+function calculateScopedFee(amount: number, method: string, scope: string) {
+  if (scope === 'merchant') {
+    // Merchant tier: flat 2%
+    const fee = Math.round(amount * 0.02);
+    return { fee, net: amount - fee };
+  }
+  if (scope === 'institution' || scope === 'external_api') {
+    // Institution tier: 1.5%
+    const fee = Math.round(amount * 0.015);
+    return { fee, net: amount - fee };
+  }
+  // End-user: standard fee schedule
+  const feeChannel = method === 'paypal' ? 'paypal' : method === 'card' ? 'card' : method === 'bank_transfer' ? 'bank_transfer' : 'account_funding';
+  return calculateGatewayFee(amount, feeChannel);
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
@@ -18,42 +35,112 @@ serve(async (req) => {
 
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const token = authHeader.replace('Bearer ', '');
-    const { data: claims, error: authError } = await supabase.auth.getUser(token);
-    if (authError || !claims?.user) {
-      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-    const userId = claims.user.id;
 
     const body = await req.json();
     const { amount, currency = 'XAF', method, provider, account_id, return_url, metadata = {} } = body;
+    const fundingScope = body.funding_scope || 'end_user';
+    const merchantId = body.merchant_id || null;
+    const targetDescription = body.target_description || null;
     const customerPhone = body.customer?.phone;
     const customerEmail = body.customer?.email;
     const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
 
-    // Validate
+    // Validate basics
     if (!amount || amount <= 0) return new Response(JSON.stringify({ error: 'invalid_amount' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!method || !['mobile_money', 'card', 'paypal', 'bank_transfer'].includes(method)) {
       return new Response(JSON.stringify({ error: 'invalid_method', message: 'Must be mobile_money, card, paypal, or bank_transfer' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
-    if (!account_id) return new Response(JSON.stringify({ error: 'missing_account_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!['end_user', 'merchant', 'institution', 'external_api'].includes(fundingScope)) {
+      return new Response(JSON.stringify({ error: 'invalid_funding_scope' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-    // Verify account ownership
-    const { data: account } = await supabase.from('accounts').select('id, user_id, institution_id').eq('id', account_id).eq('user_id', userId).single();
-    if (!account) return new Response(JSON.stringify({ error: 'account_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    let userId: string | null = null;
+    let institutionId: string | null = null;
+    let apiClientId: string | null = null;
+    let accountId = account_id;
+
+    // ─── Auth & Validation per scope ───
+    if (fundingScope === 'external_api') {
+      // OAuth access_token path: look up token in access_tokens table
+      const { data: accessToken } = await supabase
+        .from('access_tokens')
+        .select('client_id, scope, expires_at, is_revoked')
+        .eq('token_hash', token)
+        .single();
+
+      if (!accessToken || accessToken.is_revoked || new Date(accessToken.expires_at) < new Date()) {
+        return new Response(JSON.stringify({ error: 'unauthorized', message: 'Invalid or expired access token' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (!accessToken.scope?.includes('funding:write')) {
+        return new Response(JSON.stringify({ error: 'insufficient_scope', message: 'Token requires funding:write scope' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      apiClientId = accessToken.client_id;
+
+      // Resolve client_id → institution
+      const { data: apiClient } = await supabase.from('api_clients').select('institution_id').eq('client_id', apiClientId).single();
+      if (!apiClient?.institution_id) {
+        return new Response(JSON.stringify({ error: 'no_institution_mapping' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      institutionId = apiClient.institution_id;
+
+      // Validate account belongs to this institution
+      if (!accountId) return new Response(JSON.stringify({ error: 'missing_account_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const { data: account } = await supabase.from('accounts').select('id, user_id, institution_id').eq('id', accountId).eq('institution_id', institutionId).single();
+      if (!account) return new Response(JSON.stringify({ error: 'account_not_found', message: 'Account not found in your institution' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      userId = account.user_id;
+
+    } else {
+      // JWT-based auth for end_user, merchant, institution
+      const { data: claims, error: authError } = await supabase.auth.getUser(token);
+      if (authError || !claims?.user) {
+        return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      userId = claims.user.id;
+
+      if (fundingScope === 'merchant') {
+        if (!merchantId) return new Response(JSON.stringify({ error: 'missing_merchant_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        // Validate merchant ownership
+        const { data: merchant } = await supabase.from('gateway_merchants').select('id, user_id').eq('id', merchantId).eq('user_id', userId).single();
+        if (!merchant) return new Response(JSON.stringify({ error: 'merchant_not_found', message: 'Merchant not found or not owned by you' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        // Merchant funding doesn't require account_id — wallet is credited directly
+        accountId = accountId || null;
+
+      } else if (fundingScope === 'institution') {
+        if (!accountId) return new Response(JSON.stringify({ error: 'missing_account_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        // Validate institution ownership or staff assignment
+        const { data: account } = await supabase.from('accounts').select('id, user_id, institution_id').eq('id', accountId).single();
+        if (!account?.institution_id) return new Response(JSON.stringify({ error: 'account_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        institutionId = account.institution_id;
+        const isOwner = await supabase.from('institutions').select('id').eq('id', institutionId).eq('user_id', userId).maybeSingle();
+        const isStaff = await supabase.from('staff_assignments').select('id').eq('institution_id', institutionId).eq('user_id', userId).eq('is_active', true).maybeSingle();
+        if (!isOwner.data && !isStaff.data) {
+          return new Response(JSON.stringify({ error: 'unauthorized', message: 'Not authorized for this institution' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+      } else {
+        // end_user scope
+        if (!accountId) return new Response(JSON.stringify({ error: 'missing_account_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const { data: account } = await supabase.from('accounts').select('id, user_id, institution_id').eq('id', accountId).eq('user_id', userId).single();
+        if (!account) return new Response(JSON.stringify({ error: 'account_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        institutionId = account.institution_id;
+      }
+    }
 
     // Idempotency check
     if (idempotencyKey) {
-      const { data: existing } = await supabase.from('funding_intents').select('*').eq('account_id', account_id).eq('idempotency_key', idempotencyKey).maybeSingle();
+      let idemQuery = supabase.from('funding_intents').select('*').eq('idempotency_key', idempotencyKey).eq('funding_scope', fundingScope);
+      if (accountId) idemQuery = idemQuery.eq('account_id', accountId);
+      if (merchantId) idemQuery = idemQuery.eq('merchant_id', merchantId);
+      const { data: existing } = await idemQuery.maybeSingle();
       if (existing) {
         return new Response(JSON.stringify(existing), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
     }
 
-    // Fee calculation
-    const feeChannel = method === 'paypal' ? 'paypal' : method === 'card' ? 'card' : method === 'bank_transfer' ? 'bank_transfer' : 'account_funding';
-    const { fee, net } = calculateGatewayFee(amount, feeChannel);
+    // Fee calculation per scope
+    const { fee, net } = calculateScopedFee(amount, method, fundingScope);
 
-    const txRef = `fi_${account_id.slice(0, 8)}_${Date.now()}`;
+    const txRef = `fi_${(accountId || merchantId || 'api').toString().slice(0, 8)}_${Date.now()}`;
     let providerRef = '';
     let nextAction: Record<string, unknown> | null = null;
     let status = 'pending_provider';
@@ -65,7 +152,7 @@ serve(async (req) => {
       const result = await createFlutterwaveCharge({
         amount, currency, channel: method, customer_phone: customerPhone,
         customer_email: customerEmail || 'customer@kob.cm', tx_ref: txRef,
-        metadata: { ...metadata, funding_intent: true, account_id, user_id: userId, redirect_url: return_url },
+        metadata: { ...metadata, funding_intent: true, account_id: accountId, user_id: userId, funding_scope: fundingScope, merchant_id: merchantId, redirect_url: return_url },
       });
       providerRef = result.provider_ref;
       if (result.redirect_url) {
@@ -75,7 +162,7 @@ serve(async (req) => {
     } else if (resolvedProvider === 'stripe') {
       const result = await createStripeCharge({
         amount, currency, channel: 'card', customer_email: customerEmail, tx_ref: txRef,
-        metadata: { ...metadata, funding_intent: 'true', account_id, user_id: userId },
+        metadata: { ...metadata, funding_intent: 'true', account_id: accountId || '', user_id: userId || '', funding_scope: fundingScope, merchant_id: merchantId || '' },
       });
       providerRef = result.provider_ref;
       nextAction = { type: 'stripe_confirm', client_secret: result.provider_raw?.client_secret };
@@ -90,7 +177,7 @@ serve(async (req) => {
           purchase_units: [{
             reference_id: txRef,
             amount: { currency_code: currency === 'XAF' ? 'EUR' : currency, value: (amount / 655.957).toFixed(2) },
-            description: `Fund KOB account ${account_id.slice(0, 8)}`,
+            description: fundingScope === 'merchant' ? `Fund merchant wallet` : `Fund KOB account ${(accountId || '').slice(0, 8)}`,
           }],
           application_context: {
             return_url: return_url || 'https://kangopenbanking.com/gateway/callback',
@@ -118,15 +205,28 @@ serve(async (req) => {
       status = 'pending_verification';
     }
 
+    // Build target description
+    const autoDescription = targetDescription || (
+      fundingScope === 'merchant' ? 'Merchant wallet top-up' :
+      fundingScope === 'institution' ? 'Institution account funding' :
+      fundingScope === 'external_api' ? 'External API account credit' :
+      'End-user account funding'
+    );
+
     // Insert intent
-    const intentData = {
-      account_id, user_id: userId, institution_id: account.institution_id,
+    const intentData: Record<string, unknown> = {
+      user_id: userId, institution_id: institutionId,
       amount, currency, method, provider: resolvedProvider, status,
       reference: txRef, idempotency_key: idempotencyKey || null,
       provider_reference: providerRef, fee_amount: fee, net_amount: net,
       next_action: nextAction, return_url, metadata,
       expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
+      funding_scope: fundingScope,
+      merchant_id: merchantId,
+      api_client_id: apiClientId,
+      target_description: autoDescription,
     };
+    if (accountId) intentData.account_id = accountId;
 
     const { data: intent, error: insertErr } = await supabase.from('funding_intents').insert(intentData).select().single();
     if (insertErr) throw insertErr;
@@ -134,7 +234,7 @@ serve(async (req) => {
     // Record event
     await supabase.from('funding_events').insert({
       funding_intent_id: intent.id, event_type: 'created',
-      payload: { method, provider: resolvedProvider, amount, currency },
+      payload: { method, provider: resolvedProvider, amount, currency, funding_scope: fundingScope },
     });
 
     return new Response(JSON.stringify(intent), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

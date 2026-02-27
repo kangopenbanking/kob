@@ -4,7 +4,6 @@ import { describe, it, expect, vi } from 'vitest';
 
 describe('Funding Intents', () => {
   describe('Fee Calculation', () => {
-    // Import the fee calculator from gateway-adapters (simulated for frontend tests)
     const calculateGatewayFee = (amount: number, channel: string) => {
       let feeRate = 0.035;
       let fixedFee = 0;
@@ -38,6 +37,77 @@ describe('Funding Intents', () => {
       const { fee, net } = calculateGatewayFee(50000, 'paypal');
       expect(fee).toBe(1900);
       expect(net).toBe(48100);
+    });
+  });
+
+  describe('Scoped Fee Calculation', () => {
+    const calculateScopedFee = (amount: number, method: string, scope: string) => {
+      if (scope === 'merchant') {
+        const fee = Math.round(amount * 0.02);
+        return { fee, net: amount - fee };
+      }
+      if (scope === 'institution' || scope === 'external_api') {
+        const fee = Math.round(amount * 0.015);
+        return { fee, net: amount - fee };
+      }
+      // end_user: simulate standard fee
+      let feeRate = 0.035;
+      let fixedFee = 0;
+      if (method === 'mobile_money') { feeRate = 0.025; fixedFee = 0; }
+      else if (method === 'card') { feeRate = 0.035; fixedFee = 100; }
+      else if (method === 'bank_transfer') { feeRate = 0.02; fixedFee = 75; }
+      else if (method === 'paypal') { feeRate = 0.035; fixedFee = 150; }
+      const fee = Math.round(amount * feeRate + fixedFee);
+      return { fee, net: amount - fee };
+    };
+
+    it('merchant scope: flat 2%', () => {
+      const { fee, net } = calculateScopedFee(100000, 'card', 'merchant');
+      expect(fee).toBe(2000);
+      expect(net).toBe(98000);
+    });
+
+    it('institution scope: flat 1.5%', () => {
+      const { fee, net } = calculateScopedFee(100000, 'bank_transfer', 'institution');
+      expect(fee).toBe(1500);
+      expect(net).toBe(98500);
+    });
+
+    it('external_api scope: same as institution (1.5%)', () => {
+      const { fee, net } = calculateScopedFee(200000, 'mobile_money', 'external_api');
+      expect(fee).toBe(3000);
+      expect(net).toBe(197000);
+    });
+
+    it('end_user scope: uses standard fee schedule', () => {
+      const { fee, net } = calculateScopedFee(50000, 'mobile_money', 'end_user');
+      expect(fee).toBe(1250);
+      expect(net).toBe(48750);
+    });
+
+    it('merchant scope ignores method-specific fees', () => {
+      const momo = calculateScopedFee(100000, 'mobile_money', 'merchant');
+      const card = calculateScopedFee(100000, 'card', 'merchant');
+      const paypal = calculateScopedFee(100000, 'paypal', 'merchant');
+      expect(momo.fee).toBe(card.fee);
+      expect(card.fee).toBe(paypal.fee);
+      expect(momo.fee).toBe(2000);
+    });
+  });
+
+  describe('Funding Scope Validation', () => {
+    const VALID_SCOPES = ['end_user', 'merchant', 'institution', 'external_api'];
+
+    it('accepts all valid scopes', () => {
+      VALID_SCOPES.forEach(scope => {
+        expect(VALID_SCOPES.includes(scope)).toBe(true);
+      });
+    });
+
+    it('rejects invalid scopes', () => {
+      expect(VALID_SCOPES.includes('admin')).toBe(false);
+      expect(VALID_SCOPES.includes('')).toBe(false);
+      expect(VALID_SCOPES.includes('partner')).toBe(false);
     });
   });
 
@@ -115,11 +185,9 @@ describe('Funding Intents', () => {
       const accountId = 'acc-1';
       const cacheKey = `${accountId}:${key}`;
 
-      // First call
       const intent1 = { id: 'fi-1', amount: 50000 };
       intentCache.set(cacheKey, intent1);
 
-      // Second call with same key
       const cached = intentCache.get(cacheKey);
       expect(cached).toEqual(intent1);
     });
@@ -129,10 +197,6 @@ describe('Funding Intents', () => {
     it('generates unique reference', () => {
       const txRef1 = `fi_acc12345_${Date.now()}`;
       const ref1 = `KOBFUND-${txRef1.slice(-8).toUpperCase()}`;
-      
-      // Small delay to ensure different timestamp
-      const txRef2 = `fi_acc12345_${Date.now() + 1}`;
-      const ref2 = `KOBFUND-${txRef2.slice(-8).toUpperCase()}`;
       
       expect(ref1).toMatch(/^KOBFUND-/);
       expect(ref1.length).toBeGreaterThan(8);
@@ -158,7 +222,7 @@ describe('Funding Intents', () => {
 
   describe('PayPal XAF Conversion', () => {
     it('converts XAF to EUR for PayPal', () => {
-      const amount = 50000; // XAF
+      const amount = 50000;
       const eurAmount = (amount / 655.957).toFixed(2);
       expect(parseFloat(eurAmount)).toBeCloseTo(76.22, 0);
     });
@@ -176,6 +240,26 @@ describe('Funding Intents', () => {
       const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
       const oldIntent = { created_at: twentyFourHoursAgo.toISOString() };
       expect(new Date(oldIntent.created_at).getTime()).toBeLessThan(Date.now() - 23 * 60 * 60 * 1000);
+    });
+  });
+
+  describe('Scope-Aware Crediting', () => {
+    const getCreditTarget = (scope: string) => scope === 'merchant' ? 'gateway_merchant_wallets' : 'account_balances';
+
+    it('merchant scope credits wallet, not account_balances', () => {
+      expect(getCreditTarget('merchant')).toBe('gateway_merchant_wallets');
+    });
+
+    it('end_user scope credits account_balances', () => {
+      expect(getCreditTarget('end_user')).toBe('account_balances');
+    });
+
+    it('institution scope credits account_balances', () => {
+      expect(getCreditTarget('institution')).toBe('account_balances');
+    });
+
+    it('external_api scope credits account_balances', () => {
+      expect(getCreditTarget('external_api')).toBe('account_balances');
     });
   });
 });

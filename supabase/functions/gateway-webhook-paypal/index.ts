@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { verifyPayPalWebhookSignature, mapPayPalStatus } from "../_shared/gateway-adapters.ts";
+import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -155,23 +156,8 @@ serve(async (req) => {
               payload: { provider: 'paypal', order_id: orderId },
             });
 
-            // Credit account
-            await supabase.from('account_balances').insert({
-              account_id: fundingIntent.account_id, balance_type: 'InterimAvailable',
-              amount: fundingIntent.net_amount || fundingIntent.amount, currency: fundingIntent.currency,
-              credit_debit_indicator: 'Credit', balance_datetime: new Date().toISOString(),
-            });
-            await supabase.from('transactions').insert({
-              account_id: fundingIntent.account_id, amount: fundingIntent.net_amount || fundingIntent.amount,
-              currency: fundingIntent.currency, credit_debit_indicator: 'Credit', status: 'Booked',
-              booking_date_time: new Date().toISOString(), value_date_time: new Date().toISOString(),
-              transaction_information: `Account funding via PayPal - ${fundingIntent.reference}`,
-              transaction_reference: fundingIntent.reference, user_id: fundingIntent.user_id,
-            });
-            await supabase.from('audit_logs').insert({
-              action_type: 'funding_intent_succeeded', entity_type: 'funding_intent', entity_id: fundingIntent.id,
-              performed_by: fundingIntent.user_id, details: { amount: fundingIntent.amount, method: 'paypal' },
-            });
+            // Credit via scope-aware creditor
+            await creditFundingIntent(supabase, fundingIntent);
           } else if (eventType === 'CHECKOUT.ORDER.APPROVED') {
             // Auto-capture the order
             try {

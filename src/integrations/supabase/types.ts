@@ -4082,15 +4082,18 @@ export type Database = {
         Row: {
           account_id: string
           amount: number
+          api_client_id: string | null
           created_at: string | null
           currency: string
           expires_at: string | null
           failure_code: string | null
           failure_message: string | null
           fee_amount: number | null
+          funding_scope: string
           id: string
           idempotency_key: string | null
           institution_id: string | null
+          merchant_id: string | null
           metadata: Json | null
           method: string
           net_amount: number | null
@@ -4101,21 +4104,25 @@ export type Database = {
           reference: string | null
           return_url: string | null
           status: string
+          target_description: string | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
           account_id: string
           amount: number
+          api_client_id?: string | null
           created_at?: string | null
           currency?: string
           expires_at?: string | null
           failure_code?: string | null
           failure_message?: string | null
           fee_amount?: number | null
+          funding_scope?: string
           id?: string
           idempotency_key?: string | null
           institution_id?: string | null
+          merchant_id?: string | null
           metadata?: Json | null
           method: string
           net_amount?: number | null
@@ -4126,21 +4133,25 @@ export type Database = {
           reference?: string | null
           return_url?: string | null
           status?: string
+          target_description?: string | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
           account_id?: string
           amount?: number
+          api_client_id?: string | null
           created_at?: string | null
           currency?: string
           expires_at?: string | null
           failure_code?: string | null
           failure_message?: string | null
           fee_amount?: number | null
+          funding_scope?: string
           id?: string
           idempotency_key?: string | null
           institution_id?: string | null
+          merchant_id?: string | null
           metadata?: Json | null
           method?: string
           net_amount?: number | null
@@ -4151,6 +4162,7 @@ export type Database = {
           reference?: string | null
           return_url?: string | null
           status?: string
+          target_description?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -4167,6 +4179,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_intents_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]

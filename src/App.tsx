@@ -272,6 +272,7 @@ import MerchantPaymentLinks from "./pages/merchant/MerchantPaymentLinks";
 import MerchantCustomers from "./pages/merchant/MerchantCustomers";
 import MerchantSubscriptions from "./pages/merchant/MerchantSubscriptions";
 import MerchantPayouts from "./pages/merchant/MerchantPayouts";
+import MerchantFundWallet from "./pages/merchant/MerchantFundWallet";
 import MerchantSettlements from "./pages/merchant/MerchantSettlements";
 import MerchantRefunds from "./pages/merchant/MerchantRefunds";
 import MerchantApiKeys from "./pages/merchant/MerchantApiKeys";
@@ -383,6 +384,7 @@ function App() {
               <Route path="payment-links" element={<MerchantPaymentLinks />} />
               <Route path="customers" element={<MerchantCustomers />} />
               <Route path="subscriptions" element={<MerchantSubscriptions />} />
+              <Route path="fund-wallet" element={<MerchantFundWallet />} />
               <Route path="payouts" element={<MerchantPayouts />} />
               <Route path="settlements" element={<MerchantSettlements />} />
               <Route path="refunds" element={<MerchantRefunds />} />

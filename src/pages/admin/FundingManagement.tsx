@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { RefreshCw, Search, Eye, XCircle, Download, Wallet, TrendingUp, Clock, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { RefreshCw, Search, Eye, XCircle, Download, Wallet, TrendingUp, Clock, AlertTriangle, CheckCircle2, Building2, Store, Globe } from "lucide-react";
 import { format } from "date-fns";
 
 interface FundingIntent {
@@ -29,6 +29,10 @@ interface FundingIntent {
   expires_at: string;
   next_action: any;
   metadata: any;
+  funding_scope: string;
+  merchant_id: string | null;
+  api_client_id: string | null;
+  target_description: string | null;
 }
 
 interface FundingEvent {
@@ -57,12 +61,27 @@ const methodLabels: Record<string, string> = {
   bank_transfer: "Bank Transfer",
 };
 
+const scopeLabels: Record<string, string> = {
+  end_user: "End User",
+  merchant: "Merchant",
+  institution: "Institution",
+  external_api: "External API",
+};
+
+const scopeIcons: Record<string, React.ReactNode> = {
+  end_user: <Wallet className="h-3 w-3" />,
+  merchant: <Store className="h-3 w-3" />,
+  institution: <Building2 className="h-3 w-3" />,
+  external_api: <Globe className="h-3 w-3" />,
+};
+
 const FundingManagement = () => {
   const [intents, setIntents] = useState<FundingIntent[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [methodFilter, setMethodFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState("all");
   const [selectedIntent, setSelectedIntent] = useState<FundingIntent | null>(null);
   const [events, setEvents] = useState<FundingEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -74,15 +93,15 @@ const FundingManagement = () => {
     let query = supabase.from("funding_intents").select("*").order("created_at", { ascending: false }).limit(200);
     if (statusFilter !== "all") query = query.eq("status", statusFilter);
     if (methodFilter !== "all") query = query.eq("method", methodFilter);
+    if (scopeFilter !== "all") query = query.eq("funding_scope", scopeFilter);
     const { data, error } = await query;
     if (error) { toast.error("Failed to load funding intents"); console.error(error); }
     else {
       const filtered = searchTerm
-        ? (data || []).filter(i => i.reference?.includes(searchTerm) || i.id.includes(searchTerm) || i.provider_reference?.includes(searchTerm))
+        ? (data || []).filter((i: any) => i.reference?.includes(searchTerm) || i.id.includes(searchTerm) || i.provider_reference?.includes(searchTerm) || i.merchant_id?.includes(searchTerm) || i.api_client_id?.includes(searchTerm))
         : data || [];
-      setIntents(filtered);
-      // Compute stats from all data
-      const all = data || [];
+      setIntents(filtered as FundingIntent[]);
+      const all = (data || []) as FundingIntent[];
       setStats({
         total: all.length,
         succeeded: all.filter(i => i.status === "succeeded").length,
@@ -94,13 +113,13 @@ const FundingManagement = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchIntents(); }, [statusFilter, methodFilter]);
+  useEffect(() => { fetchIntents(); }, [statusFilter, methodFilter, scopeFilter]);
 
   const openDetail = async (intent: FundingIntent) => {
     setSelectedIntent(intent);
     setEventsLoading(true);
     const { data } = await supabase.from("funding_events").select("*").eq("funding_intent_id", intent.id).order("created_at", { ascending: true });
-    setEvents(data || []);
+    setEvents((data || []) as FundingEvent[]);
     setEventsLoading(false);
   };
 
@@ -122,8 +141,8 @@ const FundingManagement = () => {
   };
 
   const exportCSV = () => {
-    const headers = ["ID", "Reference", "Amount", "Currency", "Method", "Provider", "Status", "Fee", "Net", "Created"];
-    const rows = intents.map(i => [i.id, i.reference, i.amount, i.currency, i.method, i.provider, i.status, i.fee_amount, i.net_amount, i.created_at]);
+    const headers = ["ID", "Reference", "Scope", "Amount", "Currency", "Method", "Provider", "Status", "Fee", "Net", "Merchant ID", "API Client", "Created"];
+    const rows = intents.map(i => [i.id, i.reference, i.funding_scope, i.amount, i.currency, i.method, i.provider, i.status, i.fee_amount, i.net_amount, i.merchant_id || "", i.api_client_id || "", i.created_at]);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -137,7 +156,7 @@ const FundingManagement = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Funding Management</h1>
-          <p className="text-muted-foreground">Monitor and manage all account funding intents across providers</p>
+          <p className="text-muted-foreground">Monitor and manage funding intents across all consumer types</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-1" />Export</Button>
@@ -160,8 +179,18 @@ const FundingManagement = () => {
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by ID, reference, or provider ref..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === "Enter" && fetchIntents()} />
+          <Input placeholder="Search by ID, reference, merchant, or API client..." className="pl-9" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} onKeyDown={e => e.key === "Enter" && fetchIntents()} />
         </div>
+        <Select value={scopeFilter} onValueChange={setScopeFilter}>
+          <SelectTrigger className="w-[160px]"><SelectValue placeholder="Scope" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Scopes</SelectItem>
+            <SelectItem value="end_user">End User</SelectItem>
+            <SelectItem value="merchant">Merchant</SelectItem>
+            <SelectItem value="institution">Institution</SelectItem>
+            <SelectItem value="external_api">External API</SelectItem>
+          </SelectContent>
+        </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[180px]"><SelectValue placeholder="Status" /></SelectTrigger>
           <SelectContent>
@@ -196,6 +225,7 @@ const FundingManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Reference</TableHead>
+                <TableHead>Scope</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead>Method</TableHead>
                 <TableHead>Provider</TableHead>
@@ -207,12 +237,18 @@ const FundingManagement = () => {
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">Loading...</TableCell></TableRow>
               ) : intents.length === 0 ? (
-                <TableRow><TableCell colSpan={8} className="text-center py-8 text-muted-foreground">No funding intents found</TableCell></TableRow>
+                <TableRow><TableCell colSpan={9} className="text-center py-8 text-muted-foreground">No funding intents found</TableCell></TableRow>
               ) : intents.map(intent => (
                 <TableRow key={intent.id} className="cursor-pointer hover:bg-muted/50" onClick={() => openDetail(intent)}>
                   <TableCell className="font-mono text-xs">{intent.reference || intent.id.slice(0, 8)}</TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-xs gap-1">
+                      {scopeIcons[intent.funding_scope || 'end_user']}
+                      {scopeLabels[intent.funding_scope || 'end_user']}
+                    </Badge>
+                  </TableCell>
                   <TableCell className="font-medium">{fmt(intent.amount)}</TableCell>
                   <TableCell><Badge variant="outline" className="text-xs">{methodLabels[intent.method] || intent.method}</Badge></TableCell>
                   <TableCell className="capitalize text-sm">{intent.provider}</TableCell>
@@ -238,6 +274,10 @@ const FundingManagement = () => {
                 <DialogTitle className="flex items-center gap-2">
                   Funding Intent
                   <Badge className={statusColors[selectedIntent.status]}>{selectedIntent.status.replace(/_/g, " ")}</Badge>
+                  <Badge variant="outline" className="gap-1">
+                    {scopeIcons[selectedIntent.funding_scope || 'end_user']}
+                    {scopeLabels[selectedIntent.funding_scope || 'end_user']}
+                  </Badge>
                 </DialogTitle>
                 <DialogDescription className="font-mono text-xs">{selectedIntent.id}</DialogDescription>
               </DialogHeader>
@@ -253,6 +293,7 @@ const FundingManagement = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div><span className="text-muted-foreground">Amount</span><p className="font-bold text-lg">{fmt(selectedIntent.amount)}</p></div>
                     <div><span className="text-muted-foreground">Net (after fees)</span><p className="font-bold text-lg">{fmt(selectedIntent.net_amount || 0)}</p></div>
+                    <div><span className="text-muted-foreground">Funding Scope</span><p className="flex items-center gap-1">{scopeIcons[selectedIntent.funding_scope || 'end_user']} {scopeLabels[selectedIntent.funding_scope || 'end_user']}</p></div>
                     <div><span className="text-muted-foreground">Method</span><p>{methodLabels[selectedIntent.method]}</p></div>
                     <div><span className="text-muted-foreground">Provider</span><p className="capitalize">{selectedIntent.provider}</p></div>
                     <div><span className="text-muted-foreground">Fee</span><p>{fmt(selectedIntent.fee_amount || 0)}</p></div>
@@ -260,7 +301,10 @@ const FundingManagement = () => {
                     <div><span className="text-muted-foreground">Provider Ref</span><p className="font-mono text-xs">{selectedIntent.provider_reference || "—"}</p></div>
                     <div><span className="text-muted-foreground">Created</span><p>{format(new Date(selectedIntent.created_at), "PPpp")}</p></div>
                     <div><span className="text-muted-foreground">Expires</span><p>{selectedIntent.expires_at ? format(new Date(selectedIntent.expires_at), "PPpp") : "—"}</p></div>
-                    <div><span className="text-muted-foreground">Account</span><p className="font-mono text-xs">{selectedIntent.account_id}</p></div>
+                    {selectedIntent.account_id && <div><span className="text-muted-foreground">Account</span><p className="font-mono text-xs">{selectedIntent.account_id}</p></div>}
+                    {selectedIntent.merchant_id && <div><span className="text-muted-foreground">Merchant ID</span><p className="font-mono text-xs">{selectedIntent.merchant_id}</p></div>}
+                    {selectedIntent.api_client_id && <div><span className="text-muted-foreground">API Client</span><p className="font-mono text-xs">{selectedIntent.api_client_id}</p></div>}
+                    {selectedIntent.target_description && <div className="col-span-2"><span className="text-muted-foreground">Description</span><p>{selectedIntent.target_description}</p></div>}
                   </div>
 
                   {selectedIntent.next_action && (

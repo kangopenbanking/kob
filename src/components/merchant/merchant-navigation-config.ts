@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, Activity, ArrowUpDown, Link2, RefreshCw, Users,
   Wallet, DollarSign, Undo2, Key, Webhook, Building2, GitBranch,
-  ShieldCheck, AlertTriangle, Store, BarChart3,
+  ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -24,6 +24,7 @@ export const merchantNavigation = [
   {
     title: "Money Out",
     items: [
+      { title: "Fund Wallet", path: "/merchant/fund-wallet", icon: PlusCircle },
       { title: "Payouts", path: "/merchant/payouts", icon: Wallet },
       { title: "Settlements", path: "/merchant/settlements", icon: DollarSign },
       { title: "Refunds", path: "/merchant/refunds", icon: Undo2 },
