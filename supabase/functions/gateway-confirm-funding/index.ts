@@ -73,8 +73,19 @@ serve(async (req) => {
         headers: { Authorization: `Bearer ${FLW_SECRET}` },
       });
       providerData = await res.json();
-      providerStatus = mapFlutterwaveStatus(providerData.data?.status || 'pending');
-      console.log('[ConfirmFunding] Flutterwave status:', providerData.data?.status, '→', providerStatus);
+      const rawStatus = providerData.data?.status || providerData.status || 'pending';
+      providerStatus = mapFlutterwaveStatus(rawStatus);
+
+      // For mobile money, Flutterwave verify returns "failed" when user hasn't approved yet.
+      // Treat as pending if the intent is less than 2 minutes old.
+      const intentAgeMs = Date.now() - new Date(intent.created_at).getTime();
+      const TWO_MINUTES = 2 * 60 * 1000;
+      if (providerStatus === 'failed' && intent.method === 'mobile_money' && intentAgeMs < TWO_MINUTES) {
+        console.log('[ConfirmFunding] Flutterwave MoMo returned "failed" but intent is only', Math.round(intentAgeMs / 1000), 's old — treating as pending');
+        providerStatus = 'processing';
+      }
+
+      console.log('[ConfirmFunding] Flutterwave status:', rawStatus, '→', providerStatus);
     }
 
     // Finalize if terminal
