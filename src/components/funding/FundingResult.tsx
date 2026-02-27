@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, ArrowRight, Copy, Clock } from "lucide-react";
 import { StripeCardConfirm } from "./StripeCardConfirm";
+import { MobileMoneyConfirm } from "./MobileMoneyConfirm";
 import { toast } from "sonner";
 
 interface FundingResultProps {
@@ -76,6 +77,13 @@ export const FundingResult = ({ result, fmt, onSuccess }: FundingResultProps) =>
             fundingIntentId={result.id}
             amount={result.amount}
             currency={result.currency}
+            onSuccess={onSuccess}
+          />
+        )}
+        {result.next_action?.type === "mobile_money_confirm" && (
+          <MobileMoneyConfirm
+            fundingIntentId={result.id}
+            message={result.next_action?.message}
             onSuccess={onSuccess}
           />
         )}

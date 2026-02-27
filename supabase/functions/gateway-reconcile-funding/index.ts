@@ -104,20 +104,23 @@ serve(async (req) => {
 });
 
 async function finalizeIntent(supabase: any, intent: any, finalStatus: string, providerData: any) {
+  // Normalize status: provider returns 'successful' but our domain uses 'succeeded'
+  const normalizedStatus = finalStatus === 'successful' ? 'succeeded' : finalStatus;
+
   await supabase.from('funding_intents').update({
-    status: finalStatus,
+    status: normalizedStatus,
     provider_payload: providerData,
-    failure_message: finalStatus === 'failed' ? 'Reconciled as failed by provider' : null,
+    failure_message: normalizedStatus === 'failed' ? 'Reconciled as failed by provider' : null,
   }).eq('id', intent.id);
 
   await supabase.from('funding_events').insert({
     funding_intent_id: intent.id,
-    event_type: `reconciled_${finalStatus}`,
+    event_type: `reconciled_${normalizedStatus}`,
     payload: { provider: intent.provider, provider_data: providerData },
   });
 
   // Credit using scope-aware creditor on success
-  if (finalStatus === 'successful') {
+  if (normalizedStatus === 'succeeded') {
     await creditFundingIntent(supabase, intent);
   }
 }

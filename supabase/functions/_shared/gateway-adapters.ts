@@ -118,16 +118,42 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   }
 
   const chargeType = req.channel === 'mobile_money' ? 'mobile_money_franco' : req.channel === 'card' ? 'card' : 'mobile_money_franco';
-  const res = await fetch(`https://api.flutterwave.com/v3/charges?type=${chargeType}`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${FLW_SECRET}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  });
 
-  const data = await res.json();
+  let res: Response;
+  try {
+    res = await fetch(`https://api.flutterwave.com/v3/charges?type=${chargeType}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${FLW_SECRET}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(60000),
+    });
+  } catch (err: any) {
+    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
+      throw new Error('Flutterwave API request timed out after 60s');
+    }
+    throw err;
+  }
+
+  // Defensive response parsing
+  const contentType = res.headers.get('content-type') || '';
+  if (!contentType.includes('application/json')) {
+    const text = await res.text();
+    console.error('[Flutterwave] Non-JSON response:', res.status, text.slice(0, 500));
+    throw new Error(`Flutterwave returned non-JSON response (${res.status}): ${text.slice(0, 200)}`);
+  }
+
+  let data: any;
+  try {
+    data = await res.json();
+  } catch (parseErr) {
+    console.error('[Flutterwave] JSON parse failed:', parseErr);
+    throw new Error('Failed to parse Flutterwave response as JSON');
+  }
+
+  console.log('[Flutterwave] Charge response:', JSON.stringify({ status: data.status, data_status: data.data?.status, has_redirect: !!data.meta?.authorization?.redirect }));
 
   return {
     provider_ref: data.data?.flw_ref || data.data?.id?.toString() || '',
