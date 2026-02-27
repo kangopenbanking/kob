@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Wallet, Loader2, Shield, Sparkles, TrendingUp, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Wallet, Loader2, Shield, Smartphone, CreditCard, Globe, Building2, ChevronDown, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useBankAccounts } from '@/hooks/useBankingData';
-import { PaymentMethodSelector } from '@/components/funding/PaymentMethodSelector';
 import { AmountInput } from '@/components/funding/AmountInput';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { FundingHistory } from '@/components/funding/FundingHistory';
@@ -16,10 +15,46 @@ import { toast } from 'sonner';
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
 
+const paymentMethods = [
+  {
+    value: 'mobile_money',
+    label: 'Mobile Money',
+    subtitle: 'MTN · Orange',
+    icon: Smartphone,
+    bg: 'bg-amber-500',
+    shadow: 'shadow-amber-500/25',
+  },
+  {
+    value: 'card',
+    label: 'Card',
+    subtitle: 'Visa · Mastercard',
+    icon: CreditCard,
+    bg: 'bg-emerald-500',
+    shadow: 'shadow-emerald-500/25',
+  },
+  {
+    value: 'paypal',
+    label: 'PayPal',
+    subtitle: 'PayPal Account',
+    icon: Globe,
+    bg: 'bg-sky-500',
+    shadow: 'shadow-sky-500/25',
+  },
+  {
+    value: 'bank_transfer',
+    label: 'Transfer',
+    subtitle: 'Wire Transfer',
+    icon: Building2,
+    bg: 'bg-violet-500',
+    shadow: 'shadow-violet-500/25',
+  },
+] as const;
+
 const BankFundAccount: React.FC = () => {
   const { institutionId } = useParams();
   const navigate = useNavigate();
-  const { data: accounts, isLoading: accountsLoading } = useBankAccounts();
+  const { data: accounts } = useBankAccounts();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const [selectedAccountId, setSelectedAccountId] = useState('');
   const [method, setMethod] = useState('mobile_money');
@@ -28,6 +63,7 @@ const BankFundAccount: React.FC = () => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [accountOpen, setAccountOpen] = useState(false);
 
   React.useEffect(() => {
     if (accounts?.length && !selectedAccountId) {
@@ -36,8 +72,8 @@ const BankFundAccount: React.FC = () => {
   }, [accounts, selectedAccountId]);
 
   const feePercent = method === 'mobile_money' ? 0.035 : method === 'card' ? 0.03 : method === 'paypal' ? 0.035 : 0.015;
-
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
+  const selectedMethod = paymentMethods.find(m => m.value === method)!;
 
   const handleFund = async () => {
     if (!selectedAccountId) { toast.error('Select an account to fund'); return; }
@@ -76,128 +112,150 @@ const BankFundAccount: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen bg-background">
-      {/* Hero Header */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-5 pb-8 pt-6"
-      >
-        {/* Decorative circles */}
-        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
-        <div className="absolute -left-4 bottom-0 h-20 w-20 rounded-full bg-white/5" />
-        <div className="absolute right-12 bottom-4 h-12 w-12 rounded-full bg-white/10" />
-
-        <div className="relative z-10">
-          <div className="flex items-center justify-between mb-6">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm transition-colors hover:bg-white/20"
-            >
-              <ArrowLeft className="h-5 w-5 text-primary-foreground" />
-            </button>
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
-              <Sparkles className="h-5 w-5 text-primary-foreground" />
-            </div>
-          </div>
-
-          <h1 className="text-2xl font-bold tracking-tight text-primary-foreground">Fund Account</h1>
-          <p className="mt-1 text-sm text-primary-foreground/70">Add money via MoMo, Card, PayPal or Transfer</p>
-
-          {/* Selected account mini-card */}
-          {selectedAccount && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.15 }}
-              className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-sm p-3.5"
-            >
-              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
-                <Wallet className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-primary-foreground truncate">
-                  {selectedAccount.nickname || selectedAccount.account_holder_name}
-                </p>
-                <p className="text-xs text-primary-foreground/60 font-mono">{selectedAccount.account_id}</p>
-              </div>
-              <div className="flex items-center gap-1 text-primary-foreground/50">
-                <TrendingUp className="h-3.5 w-3.5" />
-              </div>
-            </motion.div>
-          )}
+      {/* Header */}
+      <div className="flex items-center gap-3 px-4 pt-5 pb-3">
+        <button
+          onClick={() => navigate(-1)}
+          className="flex h-10 w-10 items-center justify-center rounded-2xl bg-muted transition-colors hover:bg-muted/80"
+        >
+          <ArrowLeft className="h-5 w-5 text-foreground" />
+        </button>
+        <div className="flex-1">
+          <h1 className="text-xl font-extrabold tracking-tight text-foreground">Fund Account</h1>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Main Content - pulled up with negative margin for overlap effect */}
-      <div className="flex-1 px-4 -mt-3">
-        <AnimatePresence mode="wait">
-          {result ? (
-            <motion.div
-              key="result"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              className="space-y-6 pt-1"
+      <AnimatePresence mode="wait">
+        {result ? (
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            className="px-4 space-y-6 pt-2 pb-28"
+          >
+            <FundingResult result={result} fmt={fmt} onSuccess={handleSuccess} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="form"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="flex-1 pb-28"
+          >
+            {/* Payment Method Slider */}
+            <div className="px-4 mb-1">
+              <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                Payment Method
+              </Label>
+            </div>
+            <div
+              ref={scrollRef}
+              className="flex gap-3 overflow-x-auto px-4 py-3 scrollbar-none snap-x snap-mandatory"
+              style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}
             >
-              <FundingResult result={result} fmt={fmt} onSuccess={handleSuccess} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="form"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              className="space-y-4 pt-1"
-            >
-              {/* Account Selector Card */}
-              {accounts && accounts.length > 1 && (
-                <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
-                    Select Account
+              {paymentMethods.map((m) => {
+                const Icon = m.icon;
+                const active = method === m.value;
+                return (
+                  <motion.button
+                    key={m.value}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => setMethod(m.value)}
+                    className={`snap-start shrink-0 flex flex-col items-start gap-3 rounded-2xl p-4 w-[140px] transition-all duration-200 ${
+                      active
+                        ? `${m.bg} text-white shadow-lg ${m.shadow}`
+                        : 'bg-card border border-border/60 text-foreground hover:border-primary/30'
+                    }`}
+                  >
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
+                      active ? 'bg-white/20' : 'bg-muted'
+                    }`}>
+                      <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-muted-foreground'}`} />
+                    </div>
+                    <div className="text-left">
+                      <p className={`text-sm font-bold leading-tight ${active ? 'text-white' : 'text-foreground'}`}>
+                        {m.label}
+                      </p>
+                      <p className={`text-[10px] mt-0.5 leading-tight ${active ? 'text-white/70' : 'text-muted-foreground'}`}>
+                        {m.subtitle}
+                      </p>
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            <div className="px-4 space-y-4 mt-2">
+              {/* Account Dropdown */}
+              {accounts && accounts.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+                    Account
                   </Label>
-                  <div className="flex flex-col gap-2">
-                    {accounts.map((acc) => (
-                      <button
-                        key={acc.id}
-                        onClick={() => setSelectedAccountId(acc.id)}
-                        className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 ${
-                          selectedAccountId === acc.id
-                            ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
-                            : 'border-border/40 bg-background hover:border-primary/30 hover:bg-muted/30'
-                        }`}
-                      >
-                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
-                          selectedAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
-                        }`}>
-                          <Wallet className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{acc.nickname || acc.account_holder_name}</p>
-                          <p className="text-[11px] text-muted-foreground font-mono">{acc.account_id}</p>
-                        </div>
-                        {selectedAccountId === acc.id && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-                        )}
-                      </button>
-                    ))}
+                  <div className="relative">
+                    <button
+                      onClick={() => setAccountOpen(!accountOpen)}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-border/60 bg-card p-3.5 text-left transition-all hover:border-primary/40"
+                    >
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${selectedMethod.bg}`}>
+                        <Wallet className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate">
+                          {selectedAccount?.nickname || selectedAccount?.account_holder_name || 'Select account'}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground font-mono">
+                          {selectedAccount?.account_id || '—'}
+                        </p>
+                      </div>
+                      <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${accountOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    <AnimatePresence>
+                      {accountOpen && accounts.length > 1 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4, height: 0 }}
+                          animate={{ opacity: 1, y: 0, height: 'auto' }}
+                          exit={{ opacity: 0, y: -4, height: 0 }}
+                          className="absolute z-20 mt-1.5 w-full overflow-hidden rounded-2xl border border-border/60 bg-card shadow-xl"
+                        >
+                          {accounts.map((acc) => (
+                            <button
+                              key={acc.id}
+                              onClick={() => { setSelectedAccountId(acc.id); setAccountOpen(false); }}
+                              className={`flex w-full items-center gap-3 px-4 py-3 text-left transition-colors ${
+                                selectedAccountId === acc.id
+                                  ? 'bg-primary/5'
+                                  : 'hover:bg-muted/50'
+                              }`}
+                            >
+                              <Wallet className="h-4 w-4 text-muted-foreground shrink-0" />
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold text-foreground truncate">
+                                  {acc.nickname || acc.account_holder_name}
+                                </p>
+                                <p className="text-[10px] text-muted-foreground font-mono">{acc.account_id}</p>
+                              </div>
+                              {selectedAccountId === acc.id && (
+                                <div className="h-2 w-2 rounded-full bg-primary" />
+                              )}
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               )}
 
-              {/* Payment Method Card */}
-              <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
-                  Payment Method
-                </Label>
-                <PaymentMethodSelector value={method} onChange={setMethod} />
-              </div>
-
-              {/* Amount Card */}
-              <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+              {/* Amount */}
+              <div className="rounded-2xl border border-border/60 bg-card p-4">
                 <AmountInput value={amount} onChange={setAmount} feePercent={feePercent} fmt={fmt} />
               </div>
 
-              {/* Conditional Inputs Card */}
+              {/* Conditional Fields */}
               <AnimatePresence mode="wait">
                 {method === 'mobile_money' && (
                   <motion.div
@@ -207,8 +265,8 @@ const BankFundAccount: React.FC = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                         Phone Number
                       </Label>
                       <Input
@@ -216,12 +274,11 @@ const BankFundAccount: React.FC = () => {
                         placeholder="e.g. 237670000000"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
-                        className="h-12 rounded-xl border-border/60 bg-background text-base font-medium"
+                        className="h-13 rounded-2xl border-border/60 bg-card text-base font-bold placeholder:font-normal"
                       />
                     </div>
                   </motion.div>
                 )}
-
                 {(method === 'card' || method === 'paypal') && (
                   <motion.div
                     key="email"
@@ -230,8 +287,8 @@ const BankFundAccount: React.FC = () => {
                     exit={{ opacity: 0, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
-                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                         Email Address
                       </Label>
                       <Input
@@ -239,51 +296,45 @@ const BankFundAccount: React.FC = () => {
                         placeholder="you@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="h-12 rounded-xl border-border/60 bg-background text-base font-medium"
+                        className="h-13 rounded-2xl border-border/60 bg-card text-base font-bold placeholder:font-normal"
                       />
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
 
-              {/* Submit Button */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
+              {/* Submit */}
+              <Button
+                onClick={handleFund}
+                disabled={loading || !selectedAccountId || !amount || Number(amount) <= 0}
+                className="w-full h-14 text-base font-extrabold rounded-2xl shadow-lg shadow-primary/20"
+                size="lg"
               >
-                <Button
-                  onClick={handleFund}
-                  disabled={loading || !selectedAccountId || !amount || Number(amount) <= 0}
-                  className="w-full h-14 text-base font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30"
-                  size="lg"
-                >
-                  {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                  ) : (
-                    <Wallet className="h-5 w-5 mr-2" />
-                  )}
-                  {loading ? 'Processing…' : 'Fund Account'}
-                  {!loading && <ChevronRight className="h-4 w-4 ml-auto opacity-60" />}
-                </Button>
-              </motion.div>
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                ) : (
+                  <Wallet className="h-5 w-5 mr-2" />
+                )}
+                {loading ? 'Processing…' : `Fund ${amount ? fmt(Number(amount)) : 'Account'}`}
+                {!loading && <ChevronRight className="h-4 w-4 ml-auto opacity-60" />}
+              </Button>
 
-              {/* Security Badge */}
-              <div className="flex items-center justify-center gap-2 py-2">
-                <div className="flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5">
+              {/* Security */}
+              <div className="flex justify-center py-1">
+                <div className="flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1">
                   <Shield className="h-3 w-3 text-muted-foreground" />
-                  <span className="text-[11px] font-medium text-muted-foreground">Secured by Kang Open Banking</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">Secured by Kang Open Banking</span>
                 </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
 
-        {/* Funding History */}
-        <div className="mt-6 pb-8">
-          <FundingHistory scope="end_user" accountId={selectedAccountId} fmt={fmt} />
-        </div>
-      </div>
+            {/* History */}
+            <div className="px-4 mt-6">
+              <FundingHistory scope="end_user" accountId={selectedAccountId} fmt={fmt} />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
