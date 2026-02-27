@@ -168,6 +168,7 @@ import DisputeManagement from "./pages/admin/DisputeManagement";
 import ReconciliationDashboard from "./pages/admin/ReconciliationDashboard";
 import PayoutManagement from "./pages/admin/PayoutManagement";
 import FraudDetection from "./pages/admin/FraudDetection";
+import FundingManagement from "./pages/admin/FundingManagement";
 import ExchangeRateManagement from "./pages/admin/ExchangeRateManagement";
 import RevenueAnalytics from "./pages/admin/RevenueAnalytics";
 import EmailTemplates from "./pages/admin/EmailTemplates";
@@ -438,6 +439,7 @@ function App() {
               <Route path="disputes" element={<DisputeManagement />} />
               <Route path="reconciliation" element={<ReconciliationDashboard />} />
               <Route path="payouts" element={<PayoutManagement />} />
+              <Route path="funding" element={<FundingManagement />} />
               <Route path="fraud-detection" element={<FraudDetection />} />
               <Route path="exchange-rates" element={<ExchangeRateManagement />} />
               <Route path="revenue" element={<RevenueAnalytics />} />
