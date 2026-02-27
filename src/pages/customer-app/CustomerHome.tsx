@@ -95,7 +95,7 @@ const CustomerHome: React.FC = () => {
     <div className="flex flex-col gap-5 pb-6">
       {/* ─── Balance Hero Section (flush to edges) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.35 }}>
-        <div className="bg-primary px-5 pt-5 pb-5 relative overflow-hidden rounded-b-3xl">
+        <div className="bg-primary px-5 pt-5 pb-5 relative overflow-hidden">
           {/* Decorative circles */}
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[hsl(0,0%,100%)]/5" />
           <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-[hsl(0,0%,100%)]/5" />
