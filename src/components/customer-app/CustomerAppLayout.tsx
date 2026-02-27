@@ -2,10 +2,14 @@ import React from 'react';
 import { Outlet, useParams } from 'react-router-dom';
 import { CustomerTenantProvider } from './CustomerTenantProvider';
 import { CustomerBottomNav } from './CustomerBottomNav';
+import { useOneSignal } from '@/hooks/useOneSignal';
 
 export const CustomerAppLayout: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const basePath = `/app/${institutionId}`;
+
+  // Register user with OneSignal for push notifications scoped to this institution
+  useOneSignal(institutionId);
 
   return (
     <CustomerTenantProvider>

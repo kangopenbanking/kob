@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, User, Lock, Fingerprint, ShieldCheck, Bell, Globe, DollarSign, Info, FileText, LogOut, ChevronRight, Mail } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -6,25 +6,69 @@ import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 const CustomerSettings: React.FC = () => {
   const navigate = useNavigate();
-  const [name, setName] = useState('Jean Dupont');
-  const [email, setEmail] = useState('jean.dupont@email.com');
-  const [phone, setPhone] = useState('+237 6XX XXX XXX');
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [editingProfile, setEditingProfile] = useState(false);
   const [biometric, setBiometric] = useState(true);
   const [twoFA, setTwoFA] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [language, setLanguage] = useState('English');
+  const [loading, setLoading] = useState(true);
 
-  const handleSaveProfile = () => {
-    setEditingProfile(false);
-    toast.success('Profile updated');
+  // Load profile from backend
+  useEffect(() => {
+    const loadProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+
+      setEmail(user.email || '');
+
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (profile) {
+        const p = profile as any;
+        setName(p.full_name || user.user_metadata?.full_name || '');
+        setPhone(p.phone_number || '');
+      } else {
+        setName(user.user_metadata?.full_name || '');
+      }
+      setLoading(false);
+    };
+    loadProfile();
+  }, []);
+
+  const handleSaveProfile = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ full_name: name, phone_number: phone } as any)
+      .eq('id', user.id);
+
+    if (error) {
+      toast.error('Failed to update profile');
+    } else {
+      setEditingProfile(false);
+      toast.success('Profile updated');
+    }
   };
 
   const handleChangePin = () => toast.info('PIN change flow would open here');
-  const handleLogout = () => { toast.success('Logged out'); navigate('/'); };
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    toast.success('Logged out');
+    navigate('/');
+  };
 
   const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-1">
@@ -43,6 +87,14 @@ const CustomerSettings: React.FC = () => {
     </button>
   );
 
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
@@ -54,7 +106,7 @@ const CustomerSettings: React.FC = () => {
         {editingProfile ? (
           <div className="flex flex-col gap-3 p-4">
             <Input value={name} onChange={e => setName(e.target.value)} placeholder="Full Name" className="rounded-xl border-border" />
-            <Input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email" className="rounded-xl border-border" />
+            <Input value={email} disabled placeholder="Email" className="rounded-xl border-border opacity-60" />
             <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="rounded-xl border-border" />
             <div className="flex gap-2">
               <Button onClick={handleSaveProfile} className="flex-1 rounded-xl">Save</Button>
@@ -63,9 +115,9 @@ const CustomerSettings: React.FC = () => {
           </div>
         ) : (
           <>
-            <Row icon={<User className="h-5 w-5" strokeWidth={1.5} />} label={name} onClick={() => setEditingProfile(true)} />
-            <Row icon={<Mail className="h-5 w-5" strokeWidth={1.5} />} label={email} onClick={() => setEditingProfile(true)} />
-            <Row icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label={phone} onClick={() => setEditingProfile(true)} />
+            <Row icon={<User className="h-5 w-5" strokeWidth={1.5} />} label={name || 'Set your name'} onClick={() => setEditingProfile(true)} />
+            <Row icon={<Mail className="h-5 w-5" strokeWidth={1.5} />} label={email || 'No email'} onClick={() => setEditingProfile(true)} />
+            <Row icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label={phone || 'Add phone number'} onClick={() => setEditingProfile(true)} />
           </>
         )}
       </Section>

@@ -1,30 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Bell, ArrowUpRight, ShieldAlert, Gift, Info, CheckCheck, Circle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
+import { useNotifications } from '@/hooks/useNotifications';
+import { formatDistanceToNow } from 'date-fns';
 
 type AlertType = 'transaction' | 'security' | 'promotion' | 'system';
-
-interface Alert {
-  id: string;
-  type: AlertType;
-  title: string;
-  message: string;
-  time: string;
-  read: boolean;
-}
-
-const initialAlerts: Alert[] = [
-  { id: '1', type: 'transaction', title: 'Money Received', message: 'You received 50,000 XAF from Marie Ngo', time: '2 min ago', read: false },
-  { id: '2', type: 'security', title: 'New Login Detected', message: 'A new device logged into your account from Douala', time: '1 hour ago', read: false },
-  { id: '3', type: 'promotion', title: 'Cashback Offer', message: 'Get 5% cashback on all bill payments this week', time: '3 hours ago', read: false },
-  { id: '4', type: 'transaction', title: 'Transfer Successful', message: 'Your transfer of 25,000 XAF to Paul Biya was completed', time: '5 hours ago', read: true },
-  { id: '5', type: 'system', title: 'Scheduled Maintenance', message: 'The app will be briefly unavailable on Mar 1 from 2-4 AM', time: 'Yesterday', read: true },
-  { id: '6', type: 'promotion', title: 'Refer & Earn', message: 'Invite friends and earn 2,000 XAF per referral', time: 'Yesterday', read: true },
-  { id: '7', type: 'security', title: 'Password Changed', message: 'Your account password was changed successfully', time: '2 days ago', read: true },
-  { id: '8', type: 'transaction', title: 'Bill Payment', message: 'ENEO electricity bill of 15,000 XAF paid', time: '3 days ago', read: true },
-];
 
 const filters: { label: string; value: AlertType | 'all' }[] = [
   { label: 'All', value: 'all' },
@@ -33,8 +15,17 @@ const filters: { label: string; value: AlertType | 'all' }[] = [
   { label: 'Promotions', value: 'promotion' },
 ];
 
+const typeMap: Record<string, AlertType> = {
+  success: 'transaction',
+  info: 'transaction',
+  warning: 'security',
+  security: 'security',
+  promotion: 'promotion',
+  system: 'system',
+};
+
 const alertIcon: Record<AlertType, React.ReactNode> = {
-  transaction: <ArrowUpRight className="h-5 w-5" strokeWidth={1.5} />, 
+  transaction: <ArrowUpRight className="h-5 w-5" strokeWidth={1.5} />,
   security: <ShieldAlert className="h-5 w-5" strokeWidth={1.5} />,
   promotion: <Gift className="h-5 w-5" strokeWidth={1.5} />,
   system: <Info className="h-5 w-5" strokeWidth={1.5} />,
@@ -49,14 +40,21 @@ const alertColor: Record<AlertType, string> = {
 
 const CustomerAlerts: React.FC = () => {
   const navigate = useNavigate();
-  const [alerts, setAlerts] = useState<Alert[]>(initialAlerts);
+  const { institutionId } = useParams<{ institutionId: string }>();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications(institutionId);
   const [filter, setFilter] = useState<AlertType | 'all'>('all');
 
-  const filtered = filter === 'all' ? alerts : alerts.filter(a => a.type === filter);
-  const unreadCount = alerts.filter(a => !a.read).length;
+  const mapped = notifications.map(n => ({
+    ...n,
+    alertType: typeMap[n.type] || ('system' as AlertType),
+  }));
 
-  const markRead = (id: string) => setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
-  const markAllRead = () => { setAlerts(prev => prev.map(a => ({ ...a, read: true }))); toast.success('All marked as read'); };
+  const filtered = filter === 'all' ? mapped : mapped.filter(a => a.alertType === filter);
+
+  const handleMarkAllRead = async () => {
+    await markAllAsRead();
+    toast.success('All marked as read');
+  };
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -69,7 +67,7 @@ const CustomerAlerts: React.FC = () => {
           )}
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="flex items-center gap-1 text-xs font-medium text-primary">
+          <button onClick={handleMarkAllRead} className="flex items-center gap-1 text-xs font-medium text-primary">
             <CheckCheck className="h-4 w-4" strokeWidth={1.5} /> Mark all read
           </button>
         )}
@@ -86,38 +84,49 @@ const CustomerAlerts: React.FC = () => {
         ))}
       </div>
 
-      <AnimatePresence mode="popLayout">
-        {filtered.length === 0 ? (
-          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3 py-16">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
-              <Bell className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
-            </div>
-            <p className="text-sm text-muted-foreground">No alerts in this category</p>
-          </motion.div>
-        ) : (
-          <div className="flex flex-col gap-2">
-            {filtered.map(alert => (
-              <motion.button key={alert.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                onClick={() => markRead(alert.id)}
-                className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-colors ${
-                  alert.read ? 'border-border bg-card' : 'border-primary/30 bg-primary/5'
-                }`}>
-                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: alertColor[alert.type] }}>
-                  {alertIcon[alert.type]}
-                </div>
-                <div className="flex flex-1 flex-col gap-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">{alert.title}</span>
-                    {!alert.read && <Circle className="h-2 w-2 fill-primary text-primary" />}
+      {isLoading ? (
+        <div className="flex flex-col items-center gap-3 py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+          <p className="text-sm text-muted-foreground">Loading alerts...</p>
+        </div>
+      ) : (
+        <AnimatePresence mode="popLayout">
+          {filtered.length === 0 ? (
+            <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3 py-16">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                <Bell className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {filter === 'all' ? 'No alerts yet' : 'No alerts in this category'}
+              </p>
+            </motion.div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {filtered.map(alert => (
+                <motion.button key={alert.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                  onClick={() => markAsRead(alert.id)}
+                  className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-colors ${
+                    alert.is_read ? 'border-border bg-card' : 'border-primary/30 bg-primary/5'
+                  }`}>
+                  <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: alertColor[alert.alertType] }}>
+                    {alertIcon[alert.alertType]}
                   </div>
-                  <p className="text-xs text-muted-foreground">{alert.message}</p>
-                  <span className="mt-1 text-[11px] text-muted-foreground/60">{alert.time}</span>
-                </div>
-              </motion.button>
-            ))}
-          </div>
-        )}
-      </AnimatePresence>
+                  <div className="flex flex-1 flex-col gap-0.5">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">{alert.title}</span>
+                      {!alert.is_read && <Circle className="h-2 w-2 fill-primary text-primary" />}
+                    </div>
+                    <p className="text-xs text-muted-foreground">{alert.message}</p>
+                    <span className="mt-1 text-[11px] text-muted-foreground/60">
+                      {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+                    </span>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          )}
+        </AnimatePresence>
+      )}
     </div>
   );
 };

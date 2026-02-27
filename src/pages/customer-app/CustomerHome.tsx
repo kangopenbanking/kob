@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useNotifications } from '@/hooks/useNotifications';
 
 /* ─── Mock Account Cards ─── */
 const accountCards = [
@@ -72,6 +73,7 @@ const CustomerHome: React.FC = () => {
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
+  const { unreadCount } = useNotifications(institutionId);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
 
@@ -102,9 +104,11 @@ const CustomerHome: React.FC = () => {
             <h1 className="text-base font-bold text-foreground">{tenant.name}</h1>
           </div>
         </div>
-        <button onClick={() => go('notifications')} className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
+        <button onClick={() => go('alerts')} className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
           <Bell className="h-5 w-5 text-foreground" strokeWidth={1.5} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
+          {unreadCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">{unreadCount > 9 ? '9+' : unreadCount}</span>
+          )}
         </button>
       </div>
 
