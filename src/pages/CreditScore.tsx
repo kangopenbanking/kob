@@ -360,6 +360,52 @@ export default function CreditScore() {
               </CardContent>
             </Card>
 
+            {/* Credit-Building Services */}
+            <Card className="overflow-hidden">
+              <div className="h-1 bg-gradient-to-r from-emerald-500 via-violet-500 to-orange-500" />
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Build Credit with These Services
+                </CardTitle>
+                <CardDescription>Active participation in these services directly impacts your CrediQ score</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3">
+                  <Link to="/piggybank" className="flex items-center gap-4 rounded-xl border p-4 hover:bg-accent/50 transition-colors">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600">
+                      <Target className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">Piggy Bank</p>
+                      <p className="text-xs text-muted-foreground">Savings & rent plans · Up to +10 pts per on-time payment</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">+3 to +10</Badge>
+                  </Link>
+                  <Link to="/njangi" className="flex items-center gap-4 rounded-xl border p-4 hover:bg-accent/50 transition-colors">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-purple-600">
+                      <Target className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">Njangi Groups</p>
+                      <p className="text-xs text-muted-foreground">Group savings rotation · Up to +5 pts per contribution</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">+3 to +5</Badge>
+                  </Link>
+                  <Link to="/rent-reporting" className="flex items-center gap-4 rounded-xl border p-4 hover:bg-accent/50 transition-colors">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-rose-500 to-orange-600">
+                      <Target className="h-5 w-5 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-semibold text-sm">Rent Reporting</p>
+                      <p className="text-xs text-muted-foreground">Report rent payments via KRENTS · Up to +10 pts monthly</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">+5 to +10</Badge>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Educational Content */}
             <ScoreEducation />
 

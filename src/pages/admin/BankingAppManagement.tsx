@@ -16,7 +16,8 @@ import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor,
-  Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone
+  Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
+  Home, Calendar
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
@@ -203,6 +204,30 @@ function useInstitutionCreditScores(institutionId: string | null) {
       const userIds = [...new Set((accounts || []).map(a => a.user_id))];
       if (userIds.length === 0) return [];
       const { data, error } = await supabase.from("credit_scores").select("*").in("user_id", userIds).order("calculated_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionPiggyBankPlans(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-inst-piggybank", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("piggybank_plans").select("*, piggybank_payments(*)").eq("institution_id", institutionId!).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionNjangiGroups(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-inst-njangi", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("njangi_groups").select("*, njangi_members(*), njangi_contributions(*)").eq("institution_id", institutionId!).order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
@@ -1156,6 +1181,8 @@ export default function BankingAppManagement() {
   const { data: customers = [], isLoading: loadingCustomers } = useInstitutionCustomers(selectedInstitution);
   const { data: virtualCards = [], isLoading: loadingCards } = useInstitutionCards(selectedInstitution);
   const { data: creditScores = [], isLoading: loadingScores } = useInstitutionCreditScores(selectedInstitution);
+  const { data: piggyPlans = [], isLoading: loadingPiggy } = useInstitutionPiggyBankPlans(selectedInstitution);
+  const { data: njangiGroups = [], isLoading: loadingNjangi } = useInstitutionNjangiGroups(selectedInstitution);
 
   const selectedInst = institutions.find((i) => i.id === selectedInstitution) as any;
 
@@ -1288,6 +1315,8 @@ export default function BankingAppManagement() {
                 <StatCard icon={ArrowRightLeft} label="Transactions" value={transactions.length} color="bg-amber-500" />
                 <StatCard icon={PiggyBank} label="Savings Goals" value={savings.length} color="bg-purple-500" />
                 <StatCard icon={ArrowDownLeft} label="Funding Intents" value={fundingIntents.length} color="bg-teal-500" />
+                <StatCard icon={Home} label="Piggy Plans" value={piggyPlans.length} color="bg-emerald-600" />
+                <StatCard icon={Users} label="Njangi Groups" value={njangiGroups.length} color="bg-violet-600" />
                 <StatCard icon={UserCheck} label="Customers" value={customers.length} color="bg-indigo-500" />
                 <StatCard icon={CreditCard} label="Virtual Cards" value={virtualCards.length} color="bg-pink-500" />
                 <StatCard icon={BarChart3} label="Avg Credit Score" value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-orange-500" />
@@ -1304,6 +1333,8 @@ export default function BankingAppManagement() {
                   <TabsTrigger value="customers" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Customers</TabsTrigger>
                   <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Cards</TabsTrigger>
                   <TabsTrigger value="credit-scores" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
+                  <TabsTrigger value="piggybank" className="gap-1.5"><Home className="h-3.5 w-3.5" /> Piggy Bank</TabsTrigger>
+                  <TabsTrigger value="njangi" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Njangi</TabsTrigger>
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
                 </TabsList>
@@ -1567,6 +1598,90 @@ export default function BankingAppManagement() {
                                 <TableCell className="text-sm">{cs.calculated_at ? format(new Date(cs.calculated_at), "MMM d, yyyy") : "—"}</TableCell>
                               </TableRow>
                             ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Piggy Bank Tab */}
+                <TabsContent value="piggybank">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2"><Home className="h-4 w-4" /> Piggy Bank Plans</CardTitle>
+                      <CardDescription>View all savings and rent plans for this institution</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {loadingPiggy ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : piggyPlans.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No piggy bank plans found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Plan Name</TableHead><TableHead>Type</TableHead><TableHead>Frequency</TableHead><TableHead className="text-right">Target</TableHead><TableHead className="text-right">Installment</TableHead><TableHead>Payments</TableHead><TableHead>Rent Ref</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {piggyPlans.map((plan: any) => {
+                              const paidCount = plan.piggybank_payments?.filter((p: any) => p.status === 'paid').length || 0;
+                              const totalPayments = plan.piggybank_payments?.length || 0;
+                              return (
+                                <TableRow key={plan.id}>
+                                  <TableCell className="font-medium">{plan.plan_name}</TableCell>
+                                  <TableCell><Badge variant={plan.plan_type === 'rent' ? 'default' : 'secondary'} className="text-xs capitalize">{plan.plan_type}</Badge></TableCell>
+                                  <TableCell className="capitalize text-sm">{plan.schedule_frequency}</TableCell>
+                                  <TableCell className="text-right font-medium">{Number(plan.target_amount).toLocaleString()} XAF</TableCell>
+                                  <TableCell className="text-right">{Number(plan.installment_amount).toLocaleString()} XAF</TableCell>
+                                  <TableCell><Badge variant="outline" className="text-xs">{paidCount}/{totalPayments}</Badge></TableCell>
+                                  <TableCell className="font-mono text-xs">{plan.rent_reference || '—'}</TableCell>
+                                  <TableCell><Badge variant={plan.status === 'active' ? 'default' : plan.status === 'completed' ? 'default' : 'secondary'} className="text-xs capitalize">{plan.status}</Badge></TableCell>
+                                  <TableCell className="text-sm">{plan.created_at ? format(new Date(plan.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                                </TableRow>
+                              );
+                            })}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Njangi Tab */}
+                <TabsContent value="njangi">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2"><Users className="h-4 w-4" /> Njangi Groups</CardTitle>
+                      <CardDescription>View all Njangi groups, members, and contributions for this institution</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {loadingNjangi ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : njangiGroups.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No Njangi groups found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Group Name</TableHead><TableHead>Members</TableHead><TableHead className="text-right">Contribution</TableHead><TableHead>Frequency</TableHead><TableHead>Payout</TableHead><TableHead>Cycle</TableHead><TableHead>Late %</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {njangiGroups.map((group: any) => {
+                              const memberCount = group.njangi_members?.length || 0;
+                              const contribCount = group.njangi_contributions?.length || 0;
+                              return (
+                                <TableRow key={group.id}>
+                                  <TableCell className="font-medium">{group.name}</TableCell>
+                                  <TableCell><Badge variant="outline" className="text-xs">{memberCount}/{group.max_members}</Badge></TableCell>
+                                  <TableCell className="text-right font-medium">{Number(group.contribution_amount).toLocaleString()} XAF</TableCell>
+                                  <TableCell className="capitalize text-sm">{group.frequency}</TableCell>
+                                  <TableCell className="capitalize text-sm">{group.payout_method}</TableCell>
+                                  <TableCell className="text-center">{group.current_cycle}</TableCell>
+                                  <TableCell>{group.late_interest_rate > 0 ? `${group.late_interest_rate}%` : '—'}</TableCell>
+                                  <TableCell><Badge variant={group.status === 'active' ? 'default' : 'secondary'} className="text-xs capitalize">{group.status}</Badge></TableCell>
+                                  <TableCell className="text-sm">{group.created_at ? format(new Date(group.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                                </TableRow>
+                              );
+                            })}
                           </TableBody>
                         </Table>
                       )}
