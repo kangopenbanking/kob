@@ -7,16 +7,24 @@ import { buttonVariants } from "@/components/ui/button";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
-function Calendar({ className, classNames, showOutsideDays = true, ...props }: CalendarProps) {
+function Calendar({ className, classNames, showOutsideDays = true, captionLayout = "dropdown-buttons", fromYear = 1920, toYear = new Date().getFullYear() + 5, ...props }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      captionLayout={captionLayout}
+      fromYear={fromYear}
+      toYear={toYear}
       className={cn("p-3", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
         month: "space-y-4",
         caption: "flex justify-center pt-1 relative items-center",
         caption_label: "text-sm font-medium",
+        caption_dropdowns: "flex gap-1 items-center",
+        vhidden: "sr-only",
+        dropdown: "appearance-none bg-transparent border border-border rounded-md px-1 py-0.5 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring cursor-pointer",
+        dropdown_month: "",
+        dropdown_year: "",
         nav: "space-x-1 flex items-center",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
