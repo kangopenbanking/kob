@@ -1,16 +1,60 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, CircleDollarSign, Users, Calendar, Plus, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, CircleDollarSign, Users, Calendar, Plus, ChevronRight, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
-const circles = [
+interface Circle {
+  name: string;
+  members: number;
+  contribution: number;
+  nextPayout: string;
+  position: number;
+  color: string;
+  iconColor: string;
+}
+
+const initialCircles: Circle[] = [
   { name: 'Family Njangi', members: 8, contribution: 25000, nextPayout: 'Mar 15', position: 3, color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
   { name: 'Office Savings', members: 12, contribution: 10000, nextPayout: 'Mar 1', position: 7, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
 ];
 
 const CustomerNjangi: React.FC = () => {
   const navigate = useNavigate();
+  const [circles, setCircles] = useState(initialCircles);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newName, setNewName] = useState('');
+  const [newContribution, setNewContribution] = useState('');
+  const [newMembers, setNewMembers] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  const handleCreate = () => {
+    if (!newName.trim() || !newContribution || !newMembers) { toast.error('Fill in all fields'); return; }
+    setCreating(true);
+    setTimeout(() => {
+      setCircles([...circles, {
+        name: newName.trim(),
+        members: Number(newMembers),
+        contribution: Number(newContribution),
+        nextPayout: 'Apr 1',
+        position: 1,
+        color: 'bg-[hsl(150,40%,90%)]',
+        iconColor: 'text-[hsl(150,40%,35%)]',
+      }]);
+      setShowCreate(false);
+      setNewName('');
+      setNewContribution('');
+      setNewMembers('');
+      setCreating(false);
+      toast.success('Circle created! Invite members to join.');
+    }, 1000);
+  };
+
+  const handleContribute = (i: number) => {
+    toast.success(`Contribution of ${circles[i].contribution.toLocaleString()} XAF sent to ${circles[i].name}`);
+  };
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -30,6 +74,27 @@ const CustomerNjangi: React.FC = () => {
           <p className="text-2xl font-bold text-foreground">{circles.length}</p>
         </div>
       </motion.div>
+
+      {/* Create Form */}
+      <AnimatePresence>
+        {showCreate && (
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="flex flex-col gap-3 p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-sm font-bold text-foreground">Create New Circle</p>
+                <button onClick={() => setShowCreate(false)}><X className="h-5 w-5 text-muted-foreground" /></button>
+              </div>
+              <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Circle name" className="rounded-xl" />
+              <Input type="number" value={newContribution} onChange={e => setNewContribution(e.target.value)} placeholder="Contribution per round (XAF)" className="rounded-xl" />
+              <Input type="number" value={newMembers} onChange={e => setNewMembers(e.target.value)} placeholder="Number of members" className="rounded-xl" />
+              <Button onClick={handleCreate} disabled={creating} className="rounded-xl h-10">
+                {creating ? 'Creating...' : 'Create Circle'}
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Circles */}
       {circles.map((c, i) => (
@@ -59,10 +124,12 @@ const CustomerNjangi: React.FC = () => {
             </div>
             <span className="text-[10px] font-bold text-muted-foreground">#{c.position}</span>
           </div>
+          <button onClick={() => handleContribute(i)}
+            className="mt-3 text-[11px] font-semibold text-primary">Contribute Now →</button>
         </motion.div>
       ))}
 
-      <Button variant="outline" className="w-full rounded-2xl h-12">
+      <Button variant="outline" className="w-full rounded-2xl h-12" onClick={() => setShowCreate(true)}>
         <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Join or Create Circle
       </Button>
     </div>

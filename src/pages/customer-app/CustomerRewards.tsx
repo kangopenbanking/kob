@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Gift, Star, ShoppingBag, Smartphone, Coffee, Ticket } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 
 const rewards = [
   { name: '10% Off Airtime', points: 500, icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
@@ -13,6 +14,22 @@ const rewards = [
 const CustomerRewards: React.FC = () => {
   const navigate = useNavigate();
   const [tab, setTab] = useState<'earn' | 'redeem'>('redeem');
+  const [points, setPoints] = useState(2450);
+  const [redeeming, setRedeeming] = useState<number | null>(null);
+
+  const handleRedeem = (i: number) => {
+    const r = rewards[i];
+    if (points < r.points) {
+      toast.error(`Not enough points. You need ${r.points - points} more.`);
+      return;
+    }
+    setRedeeming(i);
+    setTimeout(() => {
+      setPoints(points - r.points);
+      setRedeeming(null);
+      toast.success(`${r.name} redeemed! Check your email for the voucher.`);
+    }, 1200);
+  };
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -29,7 +46,7 @@ const CustomerRewards: React.FC = () => {
         </div>
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Points Balance</p>
-          <p className="text-2xl font-bold text-foreground">2,450</p>
+          <p className="text-2xl font-bold text-foreground">{points.toLocaleString()}</p>
         </div>
       </motion.div>
 
@@ -47,18 +64,27 @@ const CustomerRewards: React.FC = () => {
         <div className="grid grid-cols-2 gap-3">
           {rewards.map((r, i) => (
             <motion.button key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }} className={`flex flex-col items-center gap-2.5 rounded-3xl ${r.color} p-5`}>
+              transition={{ delay: i * 0.05 }} onClick={() => handleRedeem(i)}
+              disabled={redeeming === i}
+              className={`flex flex-col items-center gap-2.5 rounded-3xl ${r.color} p-5 ${redeeming === i ? 'opacity-60' : ''}`}>
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                 <r.icon className={`h-5 w-5 ${r.iconColor}`} strokeWidth={1.5} />
               </div>
               <p className="text-xs font-bold text-foreground text-center">{r.name}</p>
-              <p className="text-[10px] font-semibold text-muted-foreground">{r.points} pts</p>
+              <p className="text-[10px] font-semibold text-muted-foreground">
+                {redeeming === i ? 'Redeeming...' : `${r.points} pts`}
+              </p>
             </motion.button>
           ))}
         </div>
       ) : (
         <div className="space-y-2">
-          {[{ action: 'Make a transfer', pts: '+50' }, { action: 'Pay a bill', pts: '+30' }, { action: 'Refer a friend', pts: '+200' }, { action: 'Save to Piggy Bank', pts: '+25' }].map((e, i) => (
+          {[
+            { action: 'Make a transfer', pts: '+50' },
+            { action: 'Pay a bill', pts: '+30' },
+            { action: 'Refer a friend', pts: '+200' },
+            { action: 'Save to Piggy Bank', pts: '+25' },
+          ].map((e, i) => (
             <div key={i} className="flex items-center justify-between rounded-2xl bg-card p-3.5">
               <p className="text-sm font-semibold text-foreground">{e.action}</p>
               <span className="text-xs font-bold text-[hsl(150,60%,40%)]">{e.pts}</span>

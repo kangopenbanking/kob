@@ -58,7 +58,7 @@ const CustomerMore: React.FC = () => {
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Actions</p>
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {enabledActions.slice(0, 6).map((action) => (
-            <button key={action.key} onClick={() => go(action.key === 'qr_scan' ? 'scan' : action.key === 'cash_out' ? 'cash-out' : action.key)} className="flex flex-col items-center gap-2">
+            <button key={action.key} onClick={() => go(action.key === 'qr_scan' ? 'scan' : action.key === 'cash_out' ? 'cash-out' : action.key === 'bank' ? 'bank' : action.key)} className="flex flex-col items-center gap-2">
               <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
                 <action.icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
                 {isViewOnly && action.key !== 'bank' && (
