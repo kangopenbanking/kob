@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 serve(async (req) => {
@@ -64,60 +64,20 @@ serve(async (req) => {
       );
     }
 
-    // Trigger Pusher event if configured
+    // Trigger Pusher events if configured
     if (PUSHER_APP_ID && PUSHER_KEY && PUSHER_SECRET) {
-      try {
-        // Pusher HTTP API trigger
-        const timestamp = Math.floor(Date.now() / 1000);
-        const channels = [`user-${user_id}`];
-        if (institution_id) {
-          channels.push(`institution-${institution_id}`);
-        }
-
-        for (const channel of channels) {
-          const eventData = JSON.stringify({
-            id: notification.id,
-            type: type || "info",
-            title,
-            message,
-          });
-
-          const bodyStr = JSON.stringify({
-            name: "notification",
-            channel,
-            data: eventData,
-          });
-
-          // Generate Pusher auth signature
-          const path = `/apps/${PUSHER_APP_ID}/events`;
-          const queryParams = new URLSearchParams({
-            auth_key: PUSHER_KEY,
-            auth_timestamp: String(timestamp),
-            auth_version: "1.0",
-            body_md5: await md5(bodyStr),
-          });
-
-          const stringToSign = `POST\n${path}\n${queryParams.toString()}`;
-          const signature = await hmacSha256(PUSHER_SECRET, stringToSign);
-          queryParams.set("auth_signature", signature);
-
-          const pusherUrl = `https://api-${PUSHER_CLUSTER}.pusher.com${path}?${queryParams.toString()}`;
-
-          const pusherResponse = await fetch(pusherUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: bodyStr,
-          });
-
-          if (!pusherResponse.ok) {
-            const errBody = await pusherResponse.text();
-            console.error(`Pusher trigger failed for ${channel}:`, errBody);
-          }
-        }
-      } catch (pusherErr) {
-        // Non-fatal: notification is already saved in DB
-        console.error("Pusher trigger error:", pusherErr);
+      const channels = [`user-${user_id}`];
+      if (institution_id) {
+        channels.push(`institution-${institution_id}`);
       }
+
+      await triggerPusherBatch(PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER, channels, "notification", {
+        id: notification.id,
+        type: type || "info",
+        title,
+        message,
+        icon: icon || "default",
+      });
     }
 
     return new Response(
@@ -132,6 +92,50 @@ serve(async (req) => {
     );
   }
 });
+
+// Batch trigger Pusher events across multiple channels
+async function triggerPusherBatch(
+  appId: string, key: string, secret: string, cluster: string,
+  channels: string[], eventName: string, data: Record<string, unknown>
+) {
+  const batchEvents = channels.map(channel => ({
+    channel,
+    name: eventName,
+    data: JSON.stringify(data),
+  }));
+
+  const bodyStr = JSON.stringify({ batch: batchEvents });
+  const timestamp = Math.floor(Date.now() / 1000);
+  const path = `/apps/${appId}/batch_events`;
+
+  const queryParams = new URLSearchParams({
+    auth_key: key,
+    auth_timestamp: String(timestamp),
+    auth_version: "1.0",
+    body_md5: await md5(bodyStr),
+  });
+
+  const stringToSign = `POST\n${path}\n${queryParams.toString()}`;
+  const signature = await hmacSha256(secret, stringToSign);
+  queryParams.set("auth_signature", signature);
+
+  const pusherUrl = `https://api-${cluster}.pusher.com${path}?${queryParams.toString()}`;
+
+  try {
+    const response = await fetch(pusherUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: bodyStr,
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("Pusher batch trigger failed:", errBody);
+    }
+  } catch (err) {
+    console.error("Pusher trigger error:", err);
+  }
+}
 
 // Utility: MD5 hash
 async function md5(message: string): Promise<string> {
