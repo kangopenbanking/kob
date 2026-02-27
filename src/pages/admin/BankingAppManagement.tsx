@@ -34,6 +34,7 @@ interface AppConfig {
     mobile_money: boolean;
     qr_payments: boolean;
     bill_payments: boolean;
+    account_funding: boolean;
   };
   home_layout: {
     show_balance_card: boolean;
@@ -54,7 +55,7 @@ const defaultSectionOrder: HomeSectionKey[] = [
 ];
 
 const defaultAppConfig: AppConfig = {
-  features: { cards: true, savings: true, loans: true, credit_score: true, mobile_money: true, qr_payments: true, bill_payments: true },
+  features: { cards: true, savings: true, loans: true, credit_score: true, mobile_money: true, qr_payments: true, bill_payments: true, account_funding: true },
   home_layout: { show_balance_card: true, show_account_carousel: true, show_financial_services: true, show_recent_transactions: true },
   section_order: defaultSectionOrder,
   layout_style: 'modern',
@@ -128,6 +129,23 @@ function useInstitutionLoans(institutionId: string | null) {
     enabled: !!institutionId,
     queryFn: async () => {
       const { data, error } = await (supabase as any).from("loan_applications").select("*, loan_product:loan_products(*)").eq("institution_id", institutionId!).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionFunding(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-inst-funding", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("funding_intents")
+        .select("*")
+        .eq("institution_id", institutionId!)
+        .order("created_at", { ascending: false })
+        .limit(100);
       if (error) throw error;
       return data || [];
     },
@@ -633,7 +651,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   const featureLabels: Record<string, string> = {
     cards: "Virtual Cards", savings: "Savings Goals", loans: "Loan Applications",
     credit_score: "Credit Score (CrediQ)", mobile_money: "Mobile Money (MoMo)",
-    qr_payments: "QR Payments", bill_payments: "Bill Payments",
+    qr_payments: "QR Payments", bill_payments: "Bill Payments", account_funding: "Account Funding",
   };
 
   const layoutLabels: Record<string, string> = {
@@ -1049,6 +1067,7 @@ export default function BankingAppManagement() {
   const { data: transactions = [], isLoading: loadingTxns } = useInstitutionTransactions(selectedInstitution);
   const { data: savings = [], isLoading: loadingSavings } = useInstitutionSavings(selectedInstitution);
   const { data: loans = [], isLoading: loadingLoans } = useInstitutionLoans(selectedInstitution);
+  const { data: fundingIntents = [], isLoading: loadingFunding } = useInstitutionFunding(selectedInstitution);
 
   const selectedInst = institutions.find((i) => i.id === selectedInstitution) as any;
 
@@ -1175,11 +1194,12 @@ export default function BankingAppManagement() {
               </Card>
 
               {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                 <StatCard icon={Users} label="Accounts" value={accounts.length} color="bg-blue-500" />
                 <StatCard icon={Wallet} label="Total Balance" value={`${totalBalance.toLocaleString()} XAF`} color="bg-emerald-500" />
                 <StatCard icon={ArrowRightLeft} label="Transactions" value={transactions.length} color="bg-amber-500" />
                 <StatCard icon={PiggyBank} label="Savings Goals" value={savings.length} color="bg-purple-500" />
+                <StatCard icon={ArrowDownLeft} label="Funding Intents" value={fundingIntents.length} color="bg-teal-500" />
               </div>
 
               {/* Tabs */}
@@ -1189,6 +1209,7 @@ export default function BankingAppManagement() {
                   <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Transactions</TabsTrigger>
                   <TabsTrigger value="savings" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> Savings</TabsTrigger>
                   <TabsTrigger value="loans" className="gap-1.5"><Landmark className="h-3.5 w-3.5" /> Loans</TabsTrigger>
+                  <TabsTrigger value="funding" className="gap-1.5"><ArrowDownLeft className="h-3.5 w-3.5" /> Funding</TabsTrigger>
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
                 </TabsList>
@@ -1309,6 +1330,45 @@ export default function BankingAppManagement() {
                                 <TableCell className="max-w-[150px] truncate text-sm">{loan.purpose || "—"}</TableCell>
                                 <TableCell><Badge variant={loan.status === "approved" ? "default" : loan.status === "rejected" ? "destructive" : "secondary"} className="text-xs capitalize">{loan.status}</Badge></TableCell>
                                 <TableCell className="text-sm">{loan.created_at ? format(new Date(loan.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Funding Tab */}
+                <TabsContent value="funding">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-base flex items-center gap-2"><ArrowDownLeft className="h-4 w-4" /> Account Funding History</CardTitle>
+                      <CardDescription>View all funding intents for this institution's accounts (MoMo, Card, PayPal, Bank Transfer)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      {loadingFunding ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : fundingIntents.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No funding intents found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Date</TableHead><TableHead>Method</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Currency</TableHead><TableHead>Status</TableHead><TableHead>Reference</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {fundingIntents.map((fi: any) => (
+                              <TableRow key={fi.id}>
+                                <TableCell className="text-sm">{fi.created_at ? format(new Date(fi.created_at), "MMM d, yyyy HH:mm") : "—"}</TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{(fi.method || '').replace(/_/g, ' ')}</Badge></TableCell>
+                                <TableCell className="text-right font-medium">{Number(fi.amount || 0).toLocaleString()}</TableCell>
+                                <TableCell>{fi.currency || 'XAF'}</TableCell>
+                                <TableCell>
+                                  <Badge variant={fi.status === 'successful' ? 'default' : fi.status === 'failed' ? 'destructive' : 'secondary'} className="text-xs capitalize">
+                                    {fi.status}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-mono text-xs">{fi.provider_ref || fi.id?.slice(0, 12)}</TableCell>
                               </TableRow>
                             ))}
                           </TableBody>
