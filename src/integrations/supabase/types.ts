@@ -4080,7 +4080,7 @@ export type Database = {
       }
       funding_intents: {
         Row: {
-          account_id: string
+          account_id: string | null
           amount: number
           api_client_id: string | null
           created_at: string | null
@@ -4109,7 +4109,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          account_id: string
+          account_id?: string | null
           amount: number
           api_client_id?: string | null
           created_at?: string | null
@@ -4138,7 +4138,7 @@ export type Database = {
           user_id: string
         }
         Update: {
-          account_id?: string
+          account_id?: string | null
           amount?: number
           api_client_id?: string | null
           created_at?: string | null
