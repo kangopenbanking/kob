@@ -565,3 +565,6 @@ verify_jwt = false
 
 [functions.gateway-reconcile-funding]
 verify_jwt = false
+
+[functions.gateway-confirm-funding]
+verify_jwt = false
