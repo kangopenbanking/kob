@@ -63,6 +63,7 @@ import GatewayTokenizationGuide from "./pages/developer/GatewayTokenizationGuide
 import GatewayChargeEventsGuide from "./pages/developer/GatewayChargeEventsGuide";
 import GatewayVirtualAccountsGuide from "./pages/developer/GatewayVirtualAccountsGuide";
 import GatewayFundingGuide from "./pages/developer/GatewayFundingGuide";
+import FundingIntentsGuide from "./pages/developer/FundingIntentsGuide";
 import PayPalIntegrationGuide from "./pages/developer/PayPalIntegrationGuide";
 import GatewayMerchantWalletGuide from "./pages/developer/GatewayMerchantWalletGuide";
 import GatewayVerificationGuide from "./pages/developer/GatewayVerificationGuide";
@@ -489,6 +490,7 @@ function App() {
               <Route path="gateway/merchant-wallet" element={<GatewayMerchantWalletGuide />} />
               <Route path="gateway/verification" element={<GatewayVerificationGuide />} />
               <Route path="gateway/funding" element={<GatewayFundingGuide />} />
+              <Route path="gateway/funding-intents" element={<FundingIntentsGuide />} />
               <Route path="gateway/paypal" element={<PayPalIntegrationGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />
