@@ -159,6 +159,17 @@ export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResu
   params.append('metadata[tx_ref]', req.tx_ref);
   params.append('metadata[channel]', 'card');
 
+  // Pass additional metadata from request
+  if (req.metadata) {
+    for (const [key, value] of Object.entries(req.metadata)) {
+      if (value !== null && value !== undefined && key !== 'tx_ref' && key !== 'channel') {
+        params.append(`metadata[${key}]`, String(value));
+      }
+    }
+  }
+
+  console.log('[Stripe] Creating PaymentIntent:', { amount: stripeAmount, currency: req.currency.toLowerCase(), tx_ref: req.tx_ref });
+
   const res = await fetch('https://api.stripe.com/v1/payment_intents', {
     method: 'POST',
     headers: {
@@ -169,6 +180,13 @@ export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResu
   });
 
   const data = await res.json();
+
+  if (data.error) {
+    console.error('[Stripe] PaymentIntent error:', JSON.stringify(data.error));
+    throw new Error(`Stripe error: ${data.error.message || data.error.type}`);
+  }
+
+  console.log('[Stripe] PaymentIntent created:', { id: data.id, status: data.status, has_client_secret: !!data.client_secret });
 
   return {
     provider_ref: data.id || '',
