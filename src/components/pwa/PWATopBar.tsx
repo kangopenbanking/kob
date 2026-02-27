@@ -3,6 +3,7 @@ import { Bell, Building2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useTenant } from './TenantProvider';
 import { useNotifications } from '@/hooks/useNotifications';
+import { useOneSignal } from '@/hooks/useOneSignal';
 
 interface PWATopBarProps {
   userName?: string;
@@ -13,6 +14,9 @@ export const PWATopBar: React.FC<PWATopBarProps> = ({ userName }) => {
   const navigate = useNavigate();
   const { institutionId } = useParams();
   const { unreadCount } = useNotifications(institutionId);
+
+  // Register user with OneSignal for this institution
+  useOneSignal(institutionId);
 
   const getGreeting = () => {
     const hour = new Date().getHours();

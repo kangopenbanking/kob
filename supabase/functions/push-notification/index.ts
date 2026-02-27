@@ -19,6 +19,8 @@ serve(async (req) => {
     const PUSHER_KEY = Deno.env.get("PUSHER_KEY");
     const PUSHER_SECRET = Deno.env.get("PUSHER_SECRET");
     const PUSHER_CLUSTER = Deno.env.get("PUSHER_CLUSTER") || "eu";
+    const ONESIGNAL_APP_ID = Deno.env.get("ONESIGNAL_APP_ID");
+    const ONESIGNAL_REST_API_KEY = Deno.env.get("ONESIGNAL_REST_API_KEY");
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
@@ -64,7 +66,19 @@ serve(async (req) => {
       );
     }
 
-    // Trigger Pusher events if configured
+    // --- OneSignal Push Notification ---
+    if (ONESIGNAL_APP_ID && ONESIGNAL_REST_API_KEY) {
+      await sendOneSignalPush(ONESIGNAL_APP_ID, ONESIGNAL_REST_API_KEY, {
+        user_id,
+        institution_id,
+        title,
+        message,
+        type: type || "info",
+        notificationId: notification.id,
+      });
+    }
+
+    // --- Pusher realtime ---
     if (PUSHER_APP_ID && PUSHER_KEY && PUSHER_SECRET) {
       const channels = [`user-${user_id}`];
       if (institution_id) {
@@ -93,7 +107,66 @@ serve(async (req) => {
   }
 });
 
-// Batch trigger Pusher events across multiple channels
+// ── OneSignal Push ──────────────────────────────────────────────
+async function sendOneSignalPush(
+  appId: string,
+  restApiKey: string,
+  params: {
+    user_id: string;
+    institution_id?: string;
+    title: string;
+    message: string;
+    type: string;
+    notificationId: string;
+  }
+) {
+  const filters: Record<string, string>[] = [
+    { field: "tag", key: "user_id", relation: "=", value: params.user_id },
+  ];
+
+  // If institution-scoped, add an AND filter for the institution tag
+  if (params.institution_id) {
+    filters.push(
+      { field: "tag", key: "institution_id", relation: "=", value: params.institution_id }
+    );
+  }
+
+  const payload: Record<string, unknown> = {
+    app_id: appId,
+    filters,
+    headings: { en: params.title },
+    contents: { en: params.message },
+    data: {
+      notification_id: params.notificationId,
+      type: params.type,
+      institution_id: params.institution_id || null,
+    },
+    // Chrome/Firefox web push icon
+    chrome_web_icon: "https://kangopenbanking.com/favicon.png",
+  };
+
+  try {
+    const response = await fetch("https://onesignal.com/api/v1/notifications", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Basic ${restApiKey}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errBody = await response.text();
+      console.error("OneSignal push failed:", errBody);
+    } else {
+      console.log("OneSignal push sent for user:", params.user_id);
+    }
+  } catch (err) {
+    console.error("OneSignal push error:", err);
+  }
+}
+
+// ── Pusher Batch ────────────────────────────────────────────────
 async function triggerPusherBatch(
   appId: string, key: string, secret: string, cluster: string,
   channels: string[], eventName: string, data: Record<string, unknown>
@@ -137,7 +210,7 @@ async function triggerPusherBatch(
   }
 }
 
-// Utility: MD5 hash
+// ── Utilities ───────────────────────────────────────────────────
 async function md5(message: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(message);
@@ -146,7 +219,6 @@ async function md5(message: string): Promise<string> {
   return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Utility: HMAC-SHA256
 async function hmacSha256(secret: string, message: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
