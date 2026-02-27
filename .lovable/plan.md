@@ -1,126 +1,106 @@
 
 
-## Plan: Loans & Savings ↔ Credit Score Linkage (Non-Breaking Enhancement)
+## Full Production Audit: Loans, Savings & Credit Score System
 
-### Current State Audit
+### Critical Gaps Found
 
-**What EXISTS:**
-- Full loan lifecycle: `loan-apply`, `loan-approve`, `loan-disburse`, `loan-repay` edge functions with ledger integration
-- Full savings lifecycle: `savings-create`, `savings-deposit`, `savings-withdraw`, `savings-accrue-interest` with ledger integration
-- Credit scoring engine: `credit-score-calculate` (component-based, writes to `credit_scores` + `credit_score_history` + `credit_monitoring_alerts`)
-- CrediQ ecosystem: baseline score generation, action plans, health metrics, email notifications
-- DB tables: `loan_products`, `loan_applications`, `loan_accounts`, `loan_schedule`, `loan_repayments`, `loan_events`, `savings_products`, `savings_accounts`, `savings_transactions`, `interest_accruals`, `credit_scores`, `credit_score_history`
-- Institutions, user_roles, ledger with journal entries
+#### GAP 1: Two Disconnected Credit Score Systems
+The codebase has **two completely separate credit scoring systems** that do NOT talk to each other:
+- **System A (Legacy CrediQ)**: `credit-score-calculate` + `credit-score-fetch` -- writes to `credit_scores`, `credit_score_history`, `credit_inquiries`, `credit_reports`. Used by ALL frontend pages (`CreditScore.tsx`, `BankCreditScore.tsx`, `loan-apply`).
+- **System B (New Event-Sourced)**: `credit-score-engine` -- writes to `credit_events`, `credit_profiles`, `credit_score_snapshots`. Called by `loan-repay`, `savings-deposit`, `savings-withdraw`, `loan-overdue-detect`. **Not consumed by ANY frontend page**.
 
-**What is MISSING:**
-1. **Immutable `credit_events` table** -- no event-sourced credit trail exists; scoring is computed from raw data each time
-2. **Automatic credit event emission** from loan-repay, savings-deposit, savings-withdraw
-3. **On-time vs late detection** in loan-repay (no comparison of `paid_at` vs `due_date`)
-4. **Overdue detection cron job** -- no scheduled job marks overdue installments or creates missed-payment events
-5. **Credit profile API endpoints** (GET profile, GET events, GET explain, POST recompute)
-6. **`credit_score_snapshots`** with explainability factors
-7. **Deterministic scoring from events** -- current engine reads raw tables, not events
-8. **Changelog files** (`docs/changelog.md`, `docs/changelog.json`)
-9. **Audit/gap documentation** under `docs/loans-savings-credit/`
+**Result**: Users never see the impact of their repayments/deposits on their credit score. The scores are computed and stored but invisible.
+
+#### GAP 2: `loan-repay` Missing Idempotency-Key Header from Frontend
+`LoanRepaymentForm.tsx` calls `supabase.functions.invoke('loan-repay')` but does NOT send the required `Idempotency-Key` header. The edge function returns 400 "missing_idempotency_key" every time.
+
+#### GAP 3: `LoanAccountCard.tsx` Queries Wrong Tables
+It queries `loan_repayment_schedules` and `loan_payments`, but the actual tables are `loan_schedule` and `loan_repayments`. These queries silently fail and return empty results.
+
+#### GAP 4: `savings-create` Does Not Set `institution_id`
+The `savings-create` edge function never sets `institution_id` on the `savings_accounts` row. This breaks multi-tenant scoping -- savings accounts created in `/bank/:institutionId` have no institution linkage. The `useSavingsAccounts` hook filters by `institution_id`, so accounts appear missing.
+
+#### GAP 5: `loan-apply` Does Not Set `institution_id`
+Same issue -- `loan-apply` doesn't persist `institution_id` on `loan_applications`. The `useLoanApplications` hook filters by `institution_id`, so applications vanish in the banking app.
+
+#### GAP 6: New Credit API Endpoints Not in API Catalog or Docs
+`credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute` edge functions exist but are absent from:
+- `ApiDocumentation.tsx`
+- `ApiTesting.tsx`
+- `ApiCatalog.tsx`
+- Any frontend page
+
+#### GAP 7: `BankCreditScore.tsx` Shows Old CrediQ Factors, Not Event-Sourced Data
+It calls `credit-score-fetch` which returns legacy `score_factors` (payment_history, credit_utilization, account_age, inquiries). It does NOT show the new event-sourced factors from `credit_score_snapshots.factors_json`.
+
+#### GAP 8: No Repayment UI in Banking App
+`BankLoans.tsx` shows applications and products but has NO repayment button or form. Users in the multi-tenant banking app cannot make loan repayments.
+
+#### GAP 9: `config.toml` Missing New Edge Functions
+The new functions (`credit-score-engine`, `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute`, `loan-overdue-detect`) are not registered in `supabase/config.toml` with `verify_jwt = false` settings, which means they may reject valid service-role calls.
+
+#### GAP 10: `savings-deposit`/`savings-withdraw` Use Legacy `serve()` Import
+These use `import { serve } from "https://deno.land/std@0.168.0/http/server.ts"` while the newer functions use `Deno.serve()`. This is not a blocker but inconsistent.
+
+#### GAP 11: No Credit Score Feedback After Deposit/Withdraw in Banking App
+After a successful deposit or withdrawal, `BankSavings.tsx` shows a toast but does NOT display the credit score delta returned by the backend.
+
+#### GAP 12: InstitutionLoans Fetches Repayments with Wrong Key
+`InstitutionLoans.tsx` line 37 queries `loan_repayments` with `.in("loan_id", appIds)` where `appIds` are application IDs, not loan account IDs. This returns zero results.
 
 ---
 
-### Implementation Steps
+### Implementation Plan (Step-by-Step Fixes)
 
-#### Step 1: Database Migration -- Credit Events & Profiles Tables
-Create migration adding:
-- `credit_events` (immutable): `id`, `user_id`, `institution_id`, `event_type` (enum: `LOAN_REPAYMENT_ON_TIME`, `LOAN_REPAYMENT_LATE`, `LOAN_INSTALLMENT_MISSED`, `LOAN_DEFAULTED`, `LOAN_CLOSED`, `SAVINGS_DEPOSIT`, `SAVINGS_WITHDRAWAL`, `SAVINGS_BALANCE_STABLE`), `event_time`, `value_numeric`, `metadata`, `source`, `created_at`
-- `credit_profiles`: `id`, `user_id` (unique), `institution_id`, `current_score`, `score_band`, `last_computed_at`, `created_at`, `updated_at`
-- `credit_score_snapshots`: `id`, `user_id`, `institution_id`, `score`, `score_band`, `factors_json`, `computed_at`
-- `credit_scoring_rules`: `id`, `institution_id`, `rule_key`, `weight`, `enabled`, `created_at`, `updated_at`
-- Add `missed_event_created` boolean to `loan_schedule` for dedupe
-- RLS: users read own data, service_role writes
-- Enable realtime on `credit_events`
+#### Step 1: Unify Credit Score Systems
+- Update `credit-score-fetch` to ALSO read from `credit_profiles` and merge the new event-sourced score when available (prefer event-sourced if `last_computed_at` is recent)
+- Add `factors_json` from latest `credit_score_snapshots` to the response
+- This ensures all existing UI gets the event-sourced score without changing any frontend routes
 
-#### Step 2: Credit Scoring Engine Edge Function
-Create `credit-score-engine/index.ts`:
-- Accepts `user_id`, reads `credit_events` for that user
-- Applies deterministic rules: on-time repayment +5-15, late -10-40 (scaled by days), missed -50, defaulted -150-250, loan closed +15, deposit +1-3 (capped monthly), withdrawal 0, stable balance +2
-- Baseline: 500, range: 300-850
-- Writes to `credit_profiles`, creates `credit_score_snapshots` with `factors_json` (top 3 drivers)
-- Returns `{ score, band, delta, factors }`
+#### Step 2: Fix `loan-repay` Idempotency-Key
+- Update `LoanRepaymentForm.tsx` to generate and send an `Idempotency-Key` header via custom fetch or by passing headers to `supabase.functions.invoke`
 
-#### Step 3: Hook loan-repay to Emit Credit Events
-Update `loan-repay/index.ts`:
-- After allocating payment, compare `paid_at` vs schedule item `due_date` (+ 3-day grace)
-- Insert `credit_events` row: `LOAN_REPAYMENT_ON_TIME` or `LOAN_REPAYMENT_LATE` with `days_late` in `value_numeric`
-- If loan completed, insert `LOAN_CLOSED` event
-- Invoke `credit-score-engine` to recompute
-- Add optional `credit_score: { previous, current, delta }` to response
+#### Step 3: Fix `LoanAccountCard.tsx` Table Names
+- Change `loan_repayment_schedules` to `loan_schedule`
+- Change `loan_payments` to `loan_repayments`
+- Fix column references accordingly
 
-#### Step 4: Hook savings-deposit and savings-withdraw
-Update `savings-deposit/index.ts`:
-- After recording transaction, insert `SAVINGS_DEPOSIT` credit event with amount
-- Invoke score recompute
+#### Step 4: Fix `savings-create` Institution ID
+- Accept `institution_id` from request body and persist it to `savings_accounts`
 
-Update `savings-withdraw/index.ts`:
-- Insert `SAVINGS_WITHDRAWAL` event (small or zero weight)
+#### Step 5: Fix `loan-apply` Institution ID
+- Accept `institution_id` from request body and persist it to `loan_applications`
 
-#### Step 5: Overdue Detection Cron Job
-Create `loan-overdue-detect/index.ts`:
-- Query `loan_schedule` where `due_date < today - 3 days` AND `status IN ('pending','partial')` AND `missed_event_created = false`
-- For each: insert `LOAN_INSTALLMENT_MISSED` credit event, set `missed_event_created = true`, update status to `overdue`
-- Recompute affected users' scores
-- Register as pg_cron daily job
+#### Step 6: Add Repayment UI to BankLoans
+- Add a "Make Payment" button on active loan cards in `BankLoans.tsx` that opens a repayment dialog using `supabase.functions.invoke('loan-repay')`
+- Display credit score delta in success feedback
 
-#### Step 6: Credit Profile API Endpoints
-Create 4 edge functions:
-- `credit-profile-get`: GET own `credit_profiles` + latest snapshot
-- `credit-events-list`: GET own `credit_events` with pagination/filters (from, to, type)
-- `credit-explain`: GET latest `credit_score_snapshots.factors_json` with summary
-- `credit-recompute`: POST trigger recompute (admin or self in sandbox)
+#### Step 7: Update BankCreditScore to Show Event-Sourced Data
+- Update `BankCreditScore.tsx` to display `factors_json` from the unified response
+- Add credit events timeline section showing recent `credit_events`
 
-#### Step 7: Documentation & Changelog
-Create:
-- `docs/loans-savings-credit/audit.md` -- current state summary
-- `docs/loans-savings-credit/gap-report.md` -- what was missing
-- `docs/loans-savings-credit/route-inventory.md` -- all loan/savings/credit routes
-- `docs/changelog.md` + `docs/changelog.json` with entries for each feature
-- Update `docs/loans-guide.md` with "How repayments impact credit score" section
-- Update `docs/savings-guide.md` with "How savings behavior contributes" section
+#### Step 8: Add Credit Score Feedback to BankSavings
+- After deposit/withdraw success, show credit score delta from the response in the toast
 
-#### Step 8: E2E Tests
-Create `src/test/credit-scoring-e2e.test.ts`:
-- Flow A: On-time repayment increases score from baseline
-- Flow B: Late repayment decreases score
-- Flow C: Savings deposit modestly increases score
-- Flow D: Overdue job dedupe correctness
+#### Step 9: Fix InstitutionLoans Repayments Query
+- First fetch `loan_accounts` by application IDs, then query `loan_repayments` by loan account IDs
 
-### Technical Details
+#### Step 10: Register New Endpoints in API Docs
+- Add `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute` to `ApiDocumentation.tsx`, `ApiTesting.tsx`, and `ApiCatalog.tsx`
 
-```text
-┌─────────────┐     ┌──────────────────┐     ┌───────────────────┐
-│ loan-repay   │────▶│ credit_events    │────▶│ credit-score-     │
-│ savings-dep  │     │ (immutable)      │     │ engine            │
-│ savings-wth  │     └──────────────────┘     │ (deterministic)   │
-│ overdue-job  │                              └───────┬───────────┘
-└─────────────┘                                       │
-                                              ┌───────▼───────────┐
-                                              │ credit_profiles   │
-                                              │ credit_snapshots  │
-                                              └───────────────────┘
-```
+#### Step 11: Update config.toml
+- Add `verify_jwt = false` entries for all new edge functions that validate auth internally
 
-**Scoring Rules (MVP defaults):**
-| Event | Points | Cap |
-|---|---|---|
-| `LOAN_REPAYMENT_ON_TIME` | +5 to +15 | per installment |
-| `LOAN_REPAYMENT_LATE` | -10 to -40 | scaled by days_late |
-| `LOAN_INSTALLMENT_MISSED` | -50 | per missed |
-| `LOAN_DEFAULTED` | -150 to -250 | once |
-| `LOAN_CLOSED` | +15 | once per loan |
-| `SAVINGS_DEPOSIT` | +1 to +3 | max 10/month |
-| `SAVINGS_WITHDRAWAL` | 0 | no impact |
-| `SAVINGS_BALANCE_STABLE` | +2 | once/month |
+#### Step 12: Add useCreditProfile Hook
+- Create hook in `useBankingData.ts` that calls `credit-profile-get` for the new event-sourced profile
+- Create `useCreditEvents` hook calling `credit-events-list`
 
-**New Edge Functions:** `credit-score-engine`, `loan-overdue-detect`, `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute`
+#### Step 13: Update Changelog and Documentation
+- Update `docs/changelog.md` and `docs/changelog.json` with all fixes
+- Update `docs/loans-savings-credit/gap-report.md` with newly discovered gaps
 
-**Modified Edge Functions:** `loan-repay`, `savings-deposit`, `savings-withdraw`
-
-**Zero breaking changes:** All new tables, new endpoints, and optional response fields only.
+#### Step 14: E2E Integration Testing
+- Create comprehensive test file covering the full flow: deposit -> check credit event created -> verify score change visible in UI
+- Test loan apply -> approve -> disburse -> repay -> verify credit score updated
+- Test multi-tenancy: verify institution_id scoping works for savings and loans
 
