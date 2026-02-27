@@ -1,106 +1,183 @@
 
 
-## Full Production Audit: Loans, Savings & Credit Score System
+## Plan: Piggy Bank, Njangi (Money Pot) & Rents — Credit Score Integration
 
-### Critical Gaps Found
+### New Features Summary
 
-#### GAP 1: Two Disconnected Credit Score Systems
-The codebase has **two completely separate credit scoring systems** that do NOT talk to each other:
-- **System A (Legacy CrediQ)**: `credit-score-calculate` + `credit-score-fetch` -- writes to `credit_scores`, `credit_score_history`, `credit_inquiries`, `credit_reports`. Used by ALL frontend pages (`CreditScore.tsx`, `BankCreditScore.tsx`, `loan-apply`).
-- **System B (New Event-Sourced)**: `credit-score-engine` -- writes to `credit_events`, `credit_profiles`, `credit_score_snapshots`. Called by `loan-repay`, `savings-deposit`, `savings-withdraw`, `loan-overdue-detect`. **Not consumed by ANY frontend page**.
-
-**Result**: Users never see the impact of their repayments/deposits on their credit score. The scores are computed and stored but invisible.
-
-#### GAP 2: `loan-repay` Missing Idempotency-Key Header from Frontend
-`LoanRepaymentForm.tsx` calls `supabase.functions.invoke('loan-repay')` but does NOT send the required `Idempotency-Key` header. The edge function returns 400 "missing_idempotency_key" every time.
-
-#### GAP 3: `LoanAccountCard.tsx` Queries Wrong Tables
-It queries `loan_repayment_schedules` and `loan_payments`, but the actual tables are `loan_schedule` and `loan_repayments`. These queries silently fail and return empty results.
-
-#### GAP 4: `savings-create` Does Not Set `institution_id`
-The `savings-create` edge function never sets `institution_id` on the `savings_accounts` row. This breaks multi-tenant scoping -- savings accounts created in `/bank/:institutionId` have no institution linkage. The `useSavingsAccounts` hook filters by `institution_id`, so accounts appear missing.
-
-#### GAP 5: `loan-apply` Does Not Set `institution_id`
-Same issue -- `loan-apply` doesn't persist `institution_id` on `loan_applications`. The `useLoanApplications` hook filters by `institution_id`, so applications vanish in the banking app.
-
-#### GAP 6: New Credit API Endpoints Not in API Catalog or Docs
-`credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute` edge functions exist but are absent from:
-- `ApiDocumentation.tsx`
-- `ApiTesting.tsx`
-- `ApiCatalog.tsx`
-- Any frontend page
-
-#### GAP 7: `BankCreditScore.tsx` Shows Old CrediQ Factors, Not Event-Sourced Data
-It calls `credit-score-fetch` which returns legacy `score_factors` (payment_history, credit_utilization, account_age, inquiries). It does NOT show the new event-sourced factors from `credit_score_snapshots.factors_json`.
-
-#### GAP 8: No Repayment UI in Banking App
-`BankLoans.tsx` shows applications and products but has NO repayment button or form. Users in the multi-tenant banking app cannot make loan repayments.
-
-#### GAP 9: `config.toml` Missing New Edge Functions
-The new functions (`credit-score-engine`, `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute`, `loan-overdue-detect`) are not registered in `supabase/config.toml` with `verify_jwt = false` settings, which means they may reject valid service-role calls.
-
-#### GAP 10: `savings-deposit`/`savings-withdraw` Use Legacy `serve()` Import
-These use `import { serve } from "https://deno.land/std@0.168.0/http/server.ts"` while the newer functions use `Deno.serve()`. This is not a blocker but inconsistent.
-
-#### GAP 11: No Credit Score Feedback After Deposit/Withdraw in Banking App
-After a successful deposit or withdrawal, `BankSavings.tsx` shows a toast but does NOT display the credit score delta returned by the backend.
-
-#### GAP 12: InstitutionLoans Fetches Repayments with Wrong Key
-`InstitutionLoans.tsx` line 37 queries `loan_repayments` with `.in("loan_id", appIds)` where `appIds` are application IDs, not loan account IDs. This returns zero results.
+Three new modules in the multi-tenant banking app (`/bank/:institutionId/`), each feeding credit events into the existing event-sourced scoring engine.
 
 ---
 
-### Implementation Plan (Step-by-Step Fixes)
+### Step 1: Database Migration
 
-#### Step 1: Unify Credit Score Systems
-- Update `credit-score-fetch` to ALSO read from `credit_profiles` and merge the new event-sourced score when available (prefer event-sourced if `last_computed_at` is recent)
-- Add `factors_json` from latest `credit_score_snapshots` to the response
-- This ensures all existing UI gets the event-sourced score without changing any frontend routes
+**New tables:**
 
-#### Step 2: Fix `loan-repay` Idempotency-Key
-- Update `LoanRepaymentForm.tsx` to generate and send an `Idempotency-Key` header via custom fetch or by passing headers to `supabase.functions.invoke`
+- **`piggybank_plans`**: `id`, `user_id`, `institution_id`, `plan_name`, `plan_type` (enum: `savings`, `rent`), `target_amount`, `schedule_frequency` (enum: `daily`, `weekly`, `monthly`), `installment_amount`, `payment_method` (text), `start_date`, `end_date`, `status` (enum: `active`, `paused`, `completed`, `cancelled`), `rent_reference` (varchar, unique, nullable — format `KRENTS` + 4 random digits), `landlord_user_id` (uuid, nullable), `created_at`, `updated_at`
 
-#### Step 3: Fix `LoanAccountCard.tsx` Table Names
-- Change `loan_repayment_schedules` to `loan_schedule`
-- Change `loan_payments` to `loan_repayments`
-- Fix column references accordingly
+- **`piggybank_payments`**: `id`, `plan_id` (FK → piggybank_plans), `user_id`, `amount`, `due_date`, `paid_at` (nullable), `status` (enum: `pending`, `paid`, `missed`, `late`), `credit_event_id` (uuid, nullable), `created_at`
 
-#### Step 4: Fix `savings-create` Institution ID
-- Accept `institution_id` from request body and persist it to `savings_accounts`
+- **`njangi_groups`**: `id`, `name`, `institution_id`, `creator_id`, `contribution_amount`, `frequency` (enum: `weekly`, `monthly`), `payout_method` (enum: `random`, `manual`), `late_interest_rate` (numeric, default 0), `max_members`, `status` (enum: `forming`, `active`, `completed`, `dissolved`), `current_cycle`, `created_at`, `updated_at`
 
-#### Step 5: Fix `loan-apply` Institution ID
-- Accept `institution_id` from request body and persist it to `loan_applications`
+- **`njangi_members`**: `id`, `group_id` (FK), `user_id`, `joined_at`, `status` (enum: `active`, `removed`), `has_received_payout` (boolean, default false)
 
-#### Step 6: Add Repayment UI to BankLoans
-- Add a "Make Payment" button on active loan cards in `BankLoans.tsx` that opens a repayment dialog using `supabase.functions.invoke('loan-repay')`
-- Display credit score delta in success feedback
+- **`njangi_contributions`**: `id`, `group_id` (FK), `member_id` (FK → njangi_members), `user_id`, `cycle_number`, `amount`, `due_date`, `paid_at` (nullable), `status` (enum: `pending`, `paid`, `missed`, `late`), `late_interest_amount` (numeric, default 0), `credit_event_id` (uuid, nullable), `created_at`
 
-#### Step 7: Update BankCreditScore to Show Event-Sourced Data
-- Update `BankCreditScore.tsx` to display `factors_json` from the unified response
-- Add credit events timeline section showing recent `credit_events`
+- **`njangi_payouts`**: `id`, `group_id` (FK), `recipient_member_id` (FK), `cycle_number`, `amount`, `paid_at`, `selection_method` (enum: `random`, `manual`), `created_at`
 
-#### Step 8: Add Credit Score Feedback to BankSavings
-- After deposit/withdraw success, show credit score delta from the response in the toast
+**Extend `credit_event_type` enum** with: `PIGGYBANK_PAYMENT_ON_TIME`, `PIGGYBANK_PAYMENT_MISSED`, `PIGGYBANK_PAYMENT_LATE`, `NJANGI_CONTRIBUTION_ON_TIME`, `NJANGI_CONTRIBUTION_MISSED`, `NJANGI_CONTRIBUTION_LATE`, `RENT_PAYMENT_ON_TIME`, `RENT_PAYMENT_MISSED`, `RENT_PAYMENT_LATE`
 
-#### Step 9: Fix InstitutionLoans Repayments Query
-- First fetch `loan_accounts` by application IDs, then query `loan_repayments` by loan account IDs
+**RLS**: Users read/write own plans, own memberships, own contributions. Service role writes credit events.
 
-#### Step 10: Register New Endpoints in API Docs
-- Add `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute` to `ApiDocumentation.tsx`, `ApiTesting.tsx`, and `ApiCatalog.tsx`
+---
 
-#### Step 11: Update config.toml
-- Add `verify_jwt = false` entries for all new edge functions that validate auth internally
+### Step 2: Edge Functions — Piggy Bank
 
-#### Step 12: Add useCreditProfile Hook
-- Create hook in `useBankingData.ts` that calls `credit-profile-get` for the new event-sourced profile
-- Create `useCreditEvents` hook calling `credit-events-list`
+- **`piggybank-create`**: Create a plan (savings or rent type). For rent type: auto-generate unique `KRENTS` + 4 random digits reference. Show credit impact disclaimer before creation. Set `institution_id`.
 
-#### Step 13: Update Changelog and Documentation
-- Update `docs/changelog.md` and `docs/changelog.json` with all fixes
-- Update `docs/loans-savings-credit/gap-report.md` with newly discovered gaps
+- **`piggybank-pay`**: Record a payment against a due installment. Compare `paid_at` vs `due_date` → emit `PIGGYBANK_PAYMENT_ON_TIME` or `PIGGYBANK_PAYMENT_LATE` credit event. Invoke `credit-score-engine` to recompute.
 
-#### Step 14: E2E Integration Testing
-- Create comprehensive test file covering the full flow: deposit -> check credit event created -> verify score change visible in UI
-- Test loan apply -> approve -> disburse -> repay -> verify credit score updated
-- Test multi-tenancy: verify institution_id scoping works for savings and loans
+- **`piggybank-overdue-detect`**: Cron job (daily). Find `piggybank_payments` where `due_date < today` and `status = pending` → mark as `missed`, emit `PIGGYBANK_PAYMENT_MISSED` credit event. For rent plans, same logic with `RENT_PAYMENT_*` event types.
+
+- **`piggybank-generate-schedule`**: Called after plan creation. Generates all `piggybank_payments` rows based on frequency and date range.
+
+---
+
+### Step 3: Edge Functions — Njangi
+
+- **`njangi-create`**: Create group with contribution amount, frequency, late interest rate, payout method. Creator becomes first member.
+
+- **`njangi-join`**: Join an existing group (up to `max_members`).
+
+- **`njangi-contribute`**: Record contribution for current cycle. Compare timing → emit `NJANGI_CONTRIBUTION_ON_TIME` or `NJANGI_CONTRIBUTION_LATE` credit event. Apply late interest if applicable. Invoke score engine.
+
+- **`njangi-payout`**: When all contributions for a cycle are collected, select recipient (random from those who haven't received, or manual). Record payout. Advance cycle.
+
+- **`njangi-overdue-detect`**: Cron job (daily). Find missed contributions → emit `NJANGI_CONTRIBUTION_MISSED` credit events.
+
+---
+
+### Step 4: Edge Functions — Rent
+
+Rent is handled as a `plan_type = 'rent'` within Piggy Bank. Additional logic:
+- `piggybank-create` with `plan_type: 'rent'` auto-assigns `KRENTS****` reference
+- `piggybank-pay` for rent type transfers funds to `landlord_user_id`'s account
+- Only `status = 'paid'` (successful) payments are reported to credit score
+- Uses `RENT_PAYMENT_ON_TIME` / `RENT_PAYMENT_MISSED` / `RENT_PAYMENT_LATE` event types
+
+---
+
+### Step 5: Credit Score Engine Updates
+
+Add scoring rules to `credit-score-engine/index.ts`:
+
+| Event | Points |
+|---|---|
+| `PIGGYBANK_PAYMENT_ON_TIME` | +3 to +5 |
+| `PIGGYBANK_PAYMENT_LATE` | -5 to -15 |
+| `PIGGYBANK_PAYMENT_MISSED` | -20 |
+| `NJANGI_CONTRIBUTION_ON_TIME` | +3 to +5 |
+| `NJANGI_CONTRIBUTION_LATE` | -5 to -15 |
+| `NJANGI_CONTRIBUTION_MISSED` | -25 |
+| `RENT_PAYMENT_ON_TIME` | +5 to +10 |
+| `RENT_PAYMENT_LATE` | -10 to -25 |
+| `RENT_PAYMENT_MISSED` | -30 |
+
+Update `BankCreditScore.tsx` `eventTypeLabel` and `eventTypeColor` maps for new event types.
+
+---
+
+### Step 6: Monthly Credit Report Notification
+
+- **`credit-monthly-report`**: Cron job (1st of each month). For each user with piggybank/njangi/rent activity: compute summary (on-time %, missed count, score delta for month), send push notification via existing `push-notification` function, send email via existing notification infrastructure. Include advice: "You made 4/4 payments on time. Your score improved by +18 this month."
+
+---
+
+### Step 7: Frontend — Banking App Pages
+
+**`BankPiggyBank.tsx`** (`/bank/:institutionId/more/piggybank`):
+- List active savings & rent plans with progress bars
+- "New Plan" button → creation form with plan type selector (Savings / Rent)
+- For Rent: show `KRENTS****` reference, landlord setup, credit impact disclaimer
+- Payment schedule view with status indicators (paid/due/missed)
+- Deposit button for manual payments
+
+**`BankNjangi.tsx`** (`/bank/:institutionId/more/njangi`):
+- List groups user belongs to
+- "Create Group" → form with contribution amount, frequency, late interest rate, payout method (random/manual), max members
+- Group detail view: members list, current cycle, contribution status per member
+- "Contribute" button for current cycle
+- Payout history & next recipient indicator
+- Share/invite link for joining
+
+**`BankRentSetup.tsx`** — integrated into PiggyBank creation flow as a plan type, with:
+- Credit impact warning dialog shown before setup
+- Landlord selection (user ID or account)
+- Auto-generated KRENTS reference display
+
+---
+
+### Step 8: Hooks & Data Layer
+
+Add to `src/hooks/useBankingData.ts`:
+- `usePiggyBankPlans()` — fetch user's plans
+- `usePiggyBankPayments(planId)` — fetch schedule for a plan
+- `useCreatePiggyBankPlan()` — mutation
+- `usePiggyBankPay()` — mutation
+- `useNjangiGroups()` — fetch user's groups
+- `useNjangiGroupDetail(groupId)` — members, contributions, payouts
+- `useCreateNjangiGroup()` — mutation
+- `useJoinNjangiGroup()` — mutation
+- `useNjangiContribute()` — mutation
+
+---
+
+### Step 9: Navigation & Routing
+
+- Add routes in `App.tsx`:
+  - `more/piggybank` → `BankPiggyBank`
+  - `more/piggybank/new` → create form
+  - `more/njangi` → `BankNjangi`
+  - `more/njangi/new` → create group form
+  - `more/njangi/:groupId` → group detail
+
+- Add menu items in `BankMore.tsx`:
+  - Piggy Bank (icon: PiggyBank) under Financial Services
+  - Njangi (icon: Users) under Financial Services
+
+---
+
+### Step 10: Documentation & Changelog
+
+- Update `docs/changelog.md` with Piggy Bank, Njangi, and Rent features
+- Update `docs/loans-savings-credit/route-inventory.md` with new endpoints
+- Add credit impact disclaimer text as a constant for reuse
+
+---
+
+### Technical Details
+
+```text
+┌───────────────────┐     ┌──────────────────┐     ┌──────────────────┐
+│ piggybank-pay     │────▶│ credit_events    │────▶│ credit-score-    │
+│ njangi-contribute │     │ (immutable)      │     │ engine           │
+│ *-overdue-detect  │     └──────────────────┘     └────────┬─────────┘
+└───────────────────┘                                       │
+                                                    ┌───────▼─────────┐
+                                                    │ credit_profiles │
+                                                    │ snapshots       │
+                                                    └─────────────────┘
+                                                            │
+                                              ┌─────────────▼─────────┐
+                                              │ credit-monthly-report │
+                                              │ (push + email)        │
+                                              └───────────────────────┘
+```
+
+**New edge functions (8):** `piggybank-create`, `piggybank-pay`, `piggybank-generate-schedule`, `piggybank-overdue-detect`, `njangi-create`, `njangi-join`, `njangi-contribute`, `njangi-payout`, `njangi-overdue-detect`, `credit-monthly-report`
+
+**Modified:** `credit-score-engine` (9 new event types), `BankCreditScore.tsx` (labels), `BankMore.tsx` (nav items), `App.tsx` (routes)
+
+**New frontend pages (2):** `BankPiggyBank.tsx`, `BankNjangi.tsx`
+
+**Zero breaking changes.** All additive.
 
