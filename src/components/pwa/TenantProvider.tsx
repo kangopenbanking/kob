@@ -74,6 +74,8 @@ interface TenantBranding {
   mediaSections: MediaSection[];
   walkthroughConfig: WalkthroughConfig;
   cardColors: CardColors;
+  supportPhone: string;
+  supportEmail: string;
 }
 
 const defaultFeatures: AppFeatures = {
@@ -108,6 +110,8 @@ const defaultBranding: TenantBranding = {
   mediaSections: [],
   walkthroughConfig: { skip_enabled: true },
   cardColors: {},
+  supportPhone: '',
+  supportEmail: '',
 };
 
 const TenantContext = createContext<TenantBranding>(defaultBranding);
@@ -146,6 +150,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const mediaSections: MediaSection[] = Array.isArray(appConfig.media_sections) ? appConfig.media_sections : [];
       const walkthroughConfig: WalkthroughConfig = appConfig.walkthrough_config || { skip_enabled: true };
       const cardColors: CardColors = appConfig.card_colors || {};
+      const supportPhone: string = appConfig.support_phone || '';
+      const supportEmail: string = appConfig.support_email || '';
 
       setBranding({
         id: inst.id,
@@ -162,6 +168,8 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         mediaSections,
         walkthroughConfig,
         cardColors,
+        supportPhone,
+        supportEmail,
       });
     };
 

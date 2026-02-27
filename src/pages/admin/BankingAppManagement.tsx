@@ -16,7 +16,7 @@ import {
   Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor,
-  Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck
+  Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
@@ -48,6 +48,8 @@ interface AppConfig {
   media_sections: MediaSection[];
   walkthrough_config: WalkthroughConfig;
   card_colors: CardColors;
+  support_phone: string;
+  support_email: string;
 }
 
 const defaultSectionOrder: HomeSectionKey[] = [
@@ -63,6 +65,8 @@ const defaultAppConfig: AppConfig = {
   media_sections: [],
   walkthrough_config: { skip_enabled: true },
   card_colors: {},
+  support_phone: '',
+  support_email: '',
 };
 
 // ─── Hooks ───
@@ -1005,6 +1009,34 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
                 onChange={(s) => setConfig(prev => ({ ...prev, section_styles: { ...(prev.section_styles || {}), [key]: s } }))}
               />
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Support Contact Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2"><Phone className="h-4 w-4" /> Support Contact</CardTitle>
+            <CardDescription>Phone number and email shown on the Help & Support page</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label className="text-xs">Support Phone Number</Label>
+              <Input
+                placeholder="+237 233 000 000"
+                value={config.support_phone || ''}
+                onChange={(e) => setConfig(prev => ({ ...prev, support_phone: e.target.value }))}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label className="text-xs">Support Email</Label>
+              <Input
+                placeholder="support@yourbank.com"
+                value={config.support_email || ''}
+                onChange={(e) => setConfig(prev => ({ ...prev, support_email: e.target.value }))}
+                className="mt-1"
+              />
+            </div>
           </CardContent>
         </Card>
 

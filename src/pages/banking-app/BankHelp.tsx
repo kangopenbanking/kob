@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Phone, Mail, FileText, ChevronRight, Send, X } from 'lucide-react';
+import { ArrowLeft, MessageCircle, Phone, Mail, FileText, ChevronRight, Send, X, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
@@ -21,13 +21,43 @@ const faqs = [
 
 const BankHelp: React.FC = () => {
   const navigate = useNavigate();
-  const { name: institutionName } = useTenant();
+  const { name: institutionName, supportPhone, supportEmail } = useTenant();
   const [showChat, setShowChat] = useState(false);
   const [chatMessage, setChatMessage] = useState('');
   const [chatSubject, setChatSubject] = useState('');
+  const [copiedPhone, setCopiedPhone] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
 
-  const phoneNumber = '+237 233 000 000';
-  const emailAddress = 'support@kangbank.com';
+  const phoneNumber = supportPhone || '+237 233 000 000';
+  const emailAddress = supportEmail || 'support@kangbank.com';
+
+  const handleCopyPhone = async () => {
+    try {
+      await navigator.clipboard.writeText(phoneNumber.replace(/\s/g, ''));
+      setCopiedPhone(true);
+      toast.success('Phone number copied! Opening dialer...');
+      setTimeout(() => setCopiedPhone(false), 2000);
+      // Also open the dialer
+      window.location.href = `tel:${phoneNumber.replace(/\s/g, '')}`;
+    } catch {
+      // Fallback: just open dialer
+      window.location.href = `tel:${phoneNumber.replace(/\s/g, '')}`;
+    }
+  };
+
+  const handleCopyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText(emailAddress);
+      setCopiedEmail(true);
+      toast.success('Email copied! Opening email app...');
+      setTimeout(() => setCopiedEmail(false), 2000);
+      // Also open default email client
+      window.location.href = `mailto:${emailAddress}?subject=Support Request — ${institutionName}`;
+    } catch {
+      // Fallback: just open email client
+      window.location.href = `mailto:${emailAddress}?subject=Support Request — ${institutionName}`;
+    }
+  };
 
   const handleSendChat = () => {
     if (!chatSubject.trim() || !chatMessage.trim()) {
@@ -48,24 +78,32 @@ const BankHelp: React.FC = () => {
       onClick: () => {
         document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
       },
+      trailing: <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />,
     },
     {
       icon: MessageCircle,
       label: 'Live Chat',
       description: 'Chat with support',
       onClick: () => setShowChat(true),
+      trailing: <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />,
     },
     {
       icon: Phone,
       label: 'Call Us',
       description: phoneNumber,
-      onClick: () => { window.location.href = `tel:${phoneNumber.replace(/\s/g, '')}`; },
+      onClick: handleCopyPhone,
+      trailing: copiedPhone
+        ? <Check className="h-4 w-4 text-green-500" strokeWidth={1.5} />
+        : <Copy className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />,
     },
     {
       icon: Mail,
       label: 'Email Support',
       description: emailAddress,
-      onClick: () => { window.location.href = `mailto:${emailAddress}?subject=Support Request — ${institutionName}`; },
+      onClick: handleCopyEmail,
+      trailing: copiedEmail
+        ? <Check className="h-4 w-4 text-green-500" strokeWidth={1.5} />
+        : <Copy className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />,
     },
   ];
 
@@ -102,7 +140,7 @@ const BankHelp: React.FC = () => {
                   <p className="text-xs text-muted-foreground">{item.description}</p>
                 </div>
               </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+              {item.trailing}
             </motion.button>
           );
         })}
