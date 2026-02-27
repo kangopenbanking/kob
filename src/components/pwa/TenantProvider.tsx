@@ -22,6 +22,7 @@ export const defaultSectionOrder: HomeSectionKey[] = [
   'account_carousel',
   'quick_actions',
   'financial_services',
+  'media_banner',
   'recent_transactions',
 ];
 

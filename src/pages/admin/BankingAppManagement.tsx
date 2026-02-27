@@ -54,7 +54,7 @@ interface AppConfig {
 }
 
 const defaultSectionOrder: HomeSectionKey[] = [
-  'balance_card', 'account_carousel', 'quick_actions', 'financial_services', 'recent_transactions',
+  'balance_card', 'account_carousel', 'quick_actions', 'financial_services', 'media_banner', 'recent_transactions',
 ];
 
 const defaultAppConfig: AppConfig = {
