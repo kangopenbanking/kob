@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PWATopBar } from '@/components/pwa/PWATopBar';
-import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2 } from 'lucide-react';
+import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -69,6 +69,7 @@ const BankHome: React.FC = () => {
 
   const allQuickActions = [
     { icon: Send, label: 'Send', path: `payments/send`, color: 'bg-[hsl(var(--bank-violet))]' },
+    { icon: Wallet, label: 'Fund', path: 'fund', color: 'bg-[hsl(var(--bank-mint))]' },
     { icon: ArrowDownLeft, label: 'Receive', path: 'payments/receive', color: 'bg-[hsl(var(--bank-teal))]' },
     { icon: Smartphone, label: 'MoMo', path: 'payments/mobile-money', color: 'bg-[hsl(var(--bank-amber))]', featureKey: 'mobile_money' as const },
     { icon: QrCode, label: 'QR Pay', path: 'payments/qr', color: 'bg-[hsl(var(--bank-sky))]', featureKey: 'qr_payments' as const },

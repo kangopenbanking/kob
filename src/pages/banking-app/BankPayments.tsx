@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Send, Smartphone, QrCode, FileText, ArrowRight } from 'lucide-react';
+import { Send, Smartphone, QrCode, FileText, ArrowRight, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useBeneficiaries } from '@/hooks/useBankingData';
 import { useTenant } from '@/components/pwa/TenantProvider';
@@ -21,6 +21,7 @@ const BankPayments: React.FC = () => {
   const { features } = useTenant();
 
   const allPaymentOptions: Array<{ icon: any; label: string; description: string; path: string; color: string; featureKey?: keyof AppFeatures }> = [
+    { icon: Wallet, label: 'Fund Account', description: 'Add money via MoMo, Card, PayPal', path: '../fund', color: 'bg-[hsl(var(--bank-mint))]' },
     { icon: Send, label: 'Send Money', description: 'Transfer to bank or mobile', path: 'send', color: 'bg-[hsl(var(--bank-violet))]' },
     { icon: Smartphone, label: 'Mobile Money', description: 'MTN MoMo, Orange Money', path: 'mobile-money', color: 'bg-[hsl(var(--bank-amber))]', featureKey: 'mobile_money' },
     { icon: QrCode, label: 'QR Pay', description: 'Scan or generate QR code', path: 'qr', color: 'bg-[hsl(var(--bank-teal))]', featureKey: 'qr_payments' },
