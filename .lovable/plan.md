@@ -1,45 +1,67 @@
 
 
-## Analysis: Customer App Management Page
+## Gap Analysis
 
-After reviewing the full 1122-line `CustomerAppManagement.tsx` file, the page **is correctly implemented** for customer app management. Here's the evidence:
+### Current State
+- **CustomerHome**: Balance card + quick actions + transactions list. Functional but basic.
+- **CustomerMore**: All 15 features in a flat 4-column grid of identical small icons. No grouping, no visual hierarchy.
+- **12 feature pages**: All are identical "coming soon" placeholders (Transfer, Request, Bills, Invoices, Bank, SplitBills, PayLinks, CashOut, Recurring, Rewards, PiggyBank, Njangi, RentReporting, CreditScore).
+- **CustomerActivity**: Basic flat transaction list, no filters or date grouping.
+- **CustomerCards**: Minimal single card preview.
 
-### What's Already Correct
-1. **Title**: "Customer App Management" with Smartphone icon
-2. **Config source**: Reads from `customer_app_config` key inside `app_config` JSONB (line 738)
-3. **Customer-specific tabs**: Linked Accounts, Piggy Bank, Njangi (not present in banking)
-4. **Customer-specific features**: 16 toggles (QR Scan, Transfer, Request, Bills, Split Bills, Pay Links, Njangi, Piggy Bank, Rent Reporting, etc.)
-5. **Saves to correct key**: `customer_app_config` (line 497)
-6. **Customer-specific preview**: Shows the 5-tab bottom nav with raised QR Scan button
+### Plan (6 tasks)
 
-### The Likely Confusion
-The page shares some data tabs (Accounts, Transactions, Cards, Credit Scores) with the banking app, which is **intentional** — customer app users interact with the same underlying accounts/transactions. The "No linked accounts found" message the user saw is correct since no customers have linked accounts yet.
+#### 1. Redesign CustomerHome with reference-inspired UI
+Enhance the home screen drawing from the uploaded reference designs:
+- **Upcoming Bills row**: Horizontal scroll of pastel pill cards (like the Evernote/Apple bill cards in image 1) showing due bills with amounts and brand icons
+- **Spending Stats card**: A salmon/mint colored card showing "Monthly Stats" with earnings vs spending summary (inspired by image 1 right panel)
+- **Enhanced balance card**: Add a period toggle (W/M/Y) like image 3, keep the navy hero card
+- Add these as new section keys in `CustomerSectionKey` and `sectionOrder`
 
-### Improvements to Make for Clarity
+#### 2. Redesign CustomerMore with grouped service sections and varied card styles
+Replace the flat grid with categorized sections using mixed card sizes:
+- **Money Movement** (Transfer, Request, Cash Out, Pay Links): 2 large feature cards (half-width, tall, with description text) + 2 small icon cards
+- **Payments & Bills** (Bills, Invoices, Split Bills, Recurring): Horizontal scroll of medium pastel cards
+- **Savings & Goals** (Piggy Bank, Njangi, Rewards): 1 wide banner card + 2 square cards side by side
+- **Financial Health** (Credit Score, Rent Reporting, Bank): 3 equal cards in a row with progress indicators
+- **Account** section stays as list items (Settings, Alerts, Help)
+- Each section uses different card dimensions, colors, and layouts for visual variety
 
-1. **Add distinguishing header banner** — Add a colored banner or description that clearly says "Configure the customer-facing mobile app experience" with a direct link to preview the customer app (`/app/:institutionId/home`)
-2. **Add "Open Customer App" button** in the institution header card — links directly to `/app/{institutionId}/home` so admins can preview the live customer app
-3. **Rename ambiguous tabs** — Change "Accounts" → "Customer Accounts", "Transactions" → "Customer Transactions" to differentiate from the banking app view
-4. **Add customer-specific stats** — Replace generic stat cards: add "Active Customers" (profiles with linked accounts), "MoMo Users", "Bank-Linked Users" counts instead of just reusing banking stats
-5. **Add empty state guidance** — When no linked accounts exist, show a helpful message like "No customers have linked accounts yet. Share your customer app link to get started: `/app/{institutionId}`"
+#### 3. Build functional feature pages (batch 1: core money features)
+Replace "coming soon" with real mock UIs:
+- **CustomerTransfer**: Amount input, recipient selector (recent contacts row), account picker, confirm button
+- **CustomerRequest**: Amount input, generate QR/link, share options
+- **CustomerBills**: Bill categories grid (Electricity, Water, Internet, TV), biller search, payment form
+- **CustomerCashOut**: Agent locator, amount input, withdrawal method selector
 
-### Files to Modify
-- `src/pages/admin/CustomerAppManagement.tsx` — All changes in this single file
+#### 4. Build functional feature pages (batch 2: financial services)
+- **CustomerPiggyBank**: Savings goals with progress bars, create goal form, deposit/withdraw actions
+- **CustomerNjangi**: Group savings circles, member list, contribution tracker, payout schedule
+- **CustomerRewards**: Points balance card, earn/redeem tabs, reward catalog grid
+- **CustomerCreditScore**: Score gauge visualization, score factors breakdown, tips list
 
-### Implementation Details
+#### 5. Build functional feature pages (batch 3: utilities)
+- **CustomerInvoices**: Invoice list with status badges, create invoice form
+- **CustomerSplitBills**: Split calculator, participant list, share breakdown
+- **CustomerRecurring**: Scheduled payments list with toggle switches, add recurring form
+- **CustomerRentReporting**: Rent payment history, landlord info, credit impact indicator
+- **CustomerPayLinks**: Generate payment link, link history, share options
 
-**Institution header card** (around line 832):
-- Add an "Open Customer App" button that opens `/app/{selectedInstitution}/home` in a new tab
-- Add a subtitle: "Customer Mobile App Configuration"
+#### 6. Enhance CustomerActivity and CustomerCards
+- **CustomerActivity**: Date-grouped sections (Today, Yesterday, This Week), filter chips (All, Income, Expenses, Transfers), search bar
+- **CustomerCards**: Multiple card carousel, card controls (freeze, PIN, limits), recent card transactions
 
-**Stat cards** (around line 850):
-- Replace or augment with: MoMo Orange users, MoMo MTN users, Bank-linked users, View-only users (already exists)
+### Files Modified
+- `src/components/customer-app/CustomerTenantProvider.tsx` (add new section keys)
+- `src/pages/customer-app/CustomerHome.tsx`
+- `src/pages/customer-app/CustomerMore.tsx`
+- `src/pages/customer-app/CustomerActivity.tsx`
+- `src/pages/customer-app/CustomerCards.tsx`
+- All 12 feature page files (Transfer, Request, Bills, CashOut, PiggyBank, Njangi, Rewards, CreditScore, Invoices, SplitBills, Recurring, RentReporting, PayLinks)
 
-**Tab labels** (around line 862):
-- "Accounts" → "Customer Accounts"
-- "Transactions" → "Customer Transactions"  
-- "Cards" → "Customer Cards"
-
-**Empty states** (various tab contents):
-- Add contextual help text and the shareable customer app URL
+### Technical Notes
+- All pages use mock data (no database changes needed)
+- Design follows the established palette: Navy `hsl(225,50%,22%)`, Salmon `hsl(0,60%,85%)`, Mint `hsl(150,40%,90%)`, Sky `hsl(210,80%,93%)`, Amber `hsl(45,70%,90%)`
+- Cards use `rounded-3xl`, Lucide icons with `strokeWidth={1.5}`, framer-motion entrance animations
+- Feature visibility respects `tenant.features` toggles throughout
 
