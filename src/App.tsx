@@ -226,6 +226,9 @@ import Architecture from "./pages/Architecture";
 import KeyFunctionsSummary from "./pages/KeyFunctionsSummary";
 import ROICalculator from "./pages/ROICalculator";
 import PaymentCheckout from "./pages/PaymentCheckout";
+import PiggyBankInfo from "./pages/PiggyBankInfo";
+import NjangiInfo from "./pages/NjangiInfo";
+import RentReportingInfo from "./pages/RentReportingInfo";
 
 // Phase 3 — New pages
 import CameroonCompliancePage from "./pages/regulatory/CameroonCompliance";
@@ -637,6 +640,9 @@ function App() {
             <Route path="/sandbox/simulation-tools" element={<Layout><SimulationToolsPage /></Layout>} />
             <Route path="/iso20022" element={<Layout><ProtectedRoute requiredRole="admin"><ISO20022Dashboard /></ProtectedRoute></Layout>} />
             <Route path="/swift" element={<Layout><ProtectedRoute requiredRole="admin"><SWIFTDashboard /></ProtectedRoute></Layout>} />
+            <Route path="/piggybank" element={<Layout><PiggyBankInfo /></Layout>} />
+            <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
+            <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             {/* Banking App PWA Routes */}
             <Route path="/bank/:institutionId" element={<BankSplash />} />

@@ -70,7 +70,7 @@ const Admin = () => {
 
       const { data: pending } = await supabase
         .from('institutions')
-        .select('*, profiles(full_name, email)')
+        .select('*')
         .eq('status', 'pending')
         .order('created_at', { ascending: false })
         .limit(5);

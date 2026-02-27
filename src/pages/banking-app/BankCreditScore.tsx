@@ -224,7 +224,13 @@ const BankCreditScore: React.FC = () => {
                       </p>
                     </div>
                     <span className="text-xs font-medium text-muted-foreground">
-                      {event.source === 'loans_service' ? 'Loan' : event.source === 'savings_service' ? 'Savings' : 'System'}
+                      {event.event_type?.startsWith('LOAN_') ? 'Loan' :
+                       event.event_type?.startsWith('SAVINGS_') ? 'Savings' :
+                       event.event_type?.startsWith('PIGGYBANK_') ? 'Piggy Bank' :
+                       event.event_type?.startsWith('NJANGI_') ? 'Njangi' :
+                       event.event_type?.startsWith('RENT_') ? 'Rent' :
+                       event.source === 'loans_service' ? 'Loan' :
+                       event.source === 'savings_service' ? 'Savings' : 'System'}
                     </span>
                   </motion.div>
                 ))}

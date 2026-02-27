@@ -15,6 +15,16 @@ const footerSections = [
     ],
   },
   {
+    title: "Products",
+    links: [
+      { label: "Piggy Bank", to: "/piggybank" },
+      { label: "Njangi (Money Pot)", to: "/njangi" },
+      { label: "Rent Reporting", to: "/rent-reporting" },
+      { label: "CrediQ Credit Score", to: "/crediq" },
+      { label: "Credit Scores Info", to: "/credit-scores-info" },
+    ],
+  },
+  {
     title: "Developers",
     links: [
       { label: "API Reference", to: "/documentation" },
@@ -76,7 +86,7 @@ export const Footer = () => {
   return (
     <footer className="border-t py-12 bg-card">
       <div className="container mx-auto px-4">
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-8">
+        <div className="grid grid-cols-2 md:grid-cols-8 gap-8">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-4">
               <Building2 className="h-6 w-6 text-primary" />
