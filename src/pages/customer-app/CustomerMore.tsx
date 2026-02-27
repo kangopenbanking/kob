@@ -3,52 +3,33 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Send, Download, Receipt, FileText, Building2, Users,
   Link2, Banknote, RefreshCw, Gift, PiggyBank, CircleDollarSign,
-  Home, BarChart3, Settings, HelpCircle, Bell, ScanLine, ChevronRight
+  Settings, HelpCircle, Bell, ScanLine, QrCode, Wallet, Plus,
+  Lock, ChevronRight, Zap, Wifi, Tv
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { MediaBanner } from '@/components/pwa/MediaBanner';
 
-interface FeatureItem {
-  label: string;
-  description?: string;
-  icon: React.ElementType;
-  path: string;
-  color: string;
-  iconColor: string;
-  featureKey?: string;
-}
-
-/* ─── Money Movement ─── */
-const moneyMovement: FeatureItem[] = [
-  { label: 'Transfer', description: 'Send money to anyone instantly', icon: Send, path: 'transfer', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'transfer' },
-  { label: 'Request', description: 'Ask someone to pay you', icon: Download, path: 'request', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', featureKey: 'request' },
-  { label: 'Cash Out', description: 'Withdraw at agents', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', featureKey: 'cash_out' },
-  { label: 'Pay Links', description: 'Share a payment link', icon: Link2, path: 'pay-links', color: 'bg-[hsl(180,50%,90%)]', iconColor: 'text-[hsl(180,40%,35%)]', featureKey: 'pay_links' },
+/* ─── Quick Actions ─── */
+const allQuickActions = [
+  { key: 'transfer', label: 'Transfer', icon: Send, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'transfer' },
+  { key: 'request', label: 'Request', icon: Download, color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', featureKey: 'request' },
+  { key: 'qr_scan', label: 'Scan', icon: QrCode, color: 'bg-[hsl(255,50%,92%)]', iconColor: 'text-[hsl(255,50%,45%)]', featureKey: 'qr_scan' },
+  { key: 'bills', label: 'Bills', icon: Receipt, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', featureKey: 'bills' },
+  { key: 'cash_out', label: 'Cash Out', icon: Wallet, color: 'bg-[hsl(340,50%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'cash_out' },
+  { key: 'bank', label: 'Add', icon: Plus, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]' },
 ];
 
-/* ─── Payments & Bills ─── */
-const paymentsBills: FeatureItem[] = [
-  { label: 'Bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', featureKey: 'bills' },
-  { label: 'Invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', featureKey: 'invoices' },
-  { label: 'Split Bills', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'split_bills' },
-  { label: 'Recurring', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'recurring' },
+/* ─── Mock Upcoming Bills ─── */
+const upcomingBills = [
+  { name: 'Electricity', amount: 15000, due: 'Mar 1', icon: Zap, bg: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
+  { name: 'Internet', amount: 25000, due: 'Mar 3', icon: Wifi, bg: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
+  { name: 'Cable TV', amount: 8500, due: 'Mar 5', icon: Tv, bg: 'bg-[hsl(340,50%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]' },
+  { name: 'Water Bill', amount: 6000, due: 'Mar 8', icon: Receipt, bg: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]' },
 ];
 
-/* ─── Savings & Goals ─── */
-const savingsGoals: FeatureItem[] = [
-  { label: 'Piggy Bank', description: 'Save towards your goals with automated deposits', icon: PiggyBank, path: 'piggybank', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', featureKey: 'piggy_bank' },
-  { label: 'Njangi', description: 'Group savings circles', icon: CircleDollarSign, path: 'njangi', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]', featureKey: 'njangi' },
-  { label: 'Rewards', description: 'Earn & redeem points', icon: Gift, path: 'rewards', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', featureKey: 'rewards' },
-];
-
-/* ─── Financial Health ─── */
-const financialHealth: FeatureItem[] = [
-  { label: 'Credit Score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', featureKey: 'credit_score' },
-  { label: 'Rent Report', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', featureKey: 'rent_reporting' },
-  { label: 'Bank', icon: Building2, path: 'bank', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', featureKey: 'bank' },
-];
-
-const utilityItems: FeatureItem[] = [
+const utilityItems = [
   { label: 'Settings', icon: Settings, path: 'settings', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Alerts', icon: Bell, path: 'alerts', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Help', icon: HelpCircle, path: 'help', color: 'bg-muted', iconColor: 'text-foreground' },
@@ -60,127 +41,71 @@ const CustomerMore: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
+  const { user } = useCustomerAuth();
+  const isViewOnly = user?.isViewOnly ?? false;
 
-  const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
   const go = (path: string) => navigate(`/app/${institutionId}/${path}`);
+  const isFeatureVisible = (featureKey?: string) => !featureKey || tenant.features[featureKey as keyof typeof tenant.features] !== false;
 
-  const visibleMoney = moneyMovement.filter(isVisible);
-  const visiblePayments = paymentsBills.filter(isVisible);
-  const visibleSavings = savingsGoals.filter(isVisible);
-  const visibleHealth = financialHealth.filter(isVisible);
+  const enabledActions = allQuickActions.filter((a) => isFeatureVisible(a.featureKey));
 
   return (
     <div className="flex flex-col gap-6 p-5 pb-8">
-      <h1 className="text-xl font-bold text-foreground">Services</h1>
+      <h1 className="text-xl font-bold text-foreground">More</h1>
 
-      {/* ─── Money Movement: 2 tall + 2 small ─── */}
-      {visibleMoney.length > 0 && (
-        <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Money Movement</p>
-          <div className="grid grid-cols-2 gap-3">
-            {visibleMoney.slice(0, 2).map((item) => (
-              <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left min-h-[140px]`}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
-                  <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{item.label}</p>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{item.description}</p>
-                </div>
-              </button>
-            ))}
-            {visibleMoney.slice(2).map((item) => (
-              <button key={item.path} onClick={() => go(item.path)}
-                className={`flex items-center gap-3 rounded-2xl ${item.color} p-4`}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/50">
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
-                </div>
-                <div className="text-left">
-                  <p className="text-xs font-bold text-foreground">{item.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{item.description}</p>
-                </div>
-              </button>
-            ))}
-          </div>
+      {/* ─── Quick Actions ─── */}
+      <motion.div {...fadeUp} transition={{ duration: 0.3 }}>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Quick Actions</p>
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+          {enabledActions.slice(0, 6).map((action) => (
+            <button key={action.key} onClick={() => go(action.key === 'qr_scan' ? 'scan' : action.key === 'cash_out' ? 'cash-out' : action.key)} className="flex flex-col items-center gap-2">
+              <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
+                <action.icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
+                {isViewOnly && action.key !== 'bank' && (
+                  <div className="absolute -right-1 -top-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-muted-foreground/80">
+                    <Lock className="h-2.5 w-2.5 text-background" strokeWidth={2.5} />
+                  </div>
+                )}
+              </div>
+              <span className="text-xs font-semibold text-foreground">{action.label}</span>
+            </button>
+          ))}
+        </div>
+      </motion.div>
+
+      {/* ─── Media Banner ─── */}
+      {tenant.mediaSections && tenant.mediaSections.length > 0 && (
+        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.03 }}>
+          <MediaBanner items={tenant.mediaSections} cardSize="medium" />
         </motion.div>
       )}
 
-      {/* ─── Payments & Bills: Horizontal scroll medium cards ─── */}
-      {visiblePayments.length > 0 && (
-        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.05 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Payments & Bills</p>
+      {/* ─── Upcoming Bills ─── */}
+      {!isViewOnly && (
+        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Upcoming Bills</p>
+            <button onClick={() => go('bills')} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
+              View All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+            </button>
+          </div>
           <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
-            {visiblePayments.map((item) => (
-              <button key={item.path} onClick={() => go(item.path)}
-                className={`flex min-w-[110px] flex-col items-center gap-2.5 rounded-3xl ${item.color} p-4`}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
-                </div>
-                <p className="text-xs font-bold text-foreground">{item.label}</p>
-              </button>
-            ))}
-          </div>
-        </motion.div>
-      )}
-
-      {/* ─── Savings & Goals: 1 wide banner + 2 squares ─── */}
-      {visibleSavings.length > 0 && (
-        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.1 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Savings & Goals</p>
-          <div className="flex flex-col gap-3">
-            {visibleSavings[0] && (() => {
-              const FirstIcon = visibleSavings[0].icon;
-              return (
-                <button onClick={() => go(visibleSavings[0].path)}
-                  className={`flex items-center gap-4 rounded-3xl ${visibleSavings[0].color} p-5 text-left w-full`}>
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-background/50">
-                    <FirstIcon className={`h-7 w-7 ${visibleSavings[0].iconColor}`} strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground">{visibleSavings[0].label}</p>
-                    <p className="mt-0.5 text-[11px] text-muted-foreground leading-snug">{visibleSavings[0].description}</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
-                </button>
-              );
-            })()}
-            <div className="grid grid-cols-2 gap-3">
-              {visibleSavings.slice(1).map((item) => (
-                <button key={item.path} onClick={() => go(item.path)}
-                  className={`flex flex-col items-center gap-2.5 rounded-3xl ${item.color} p-5`}>
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
-                    <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
-                  </div>
-                  <p className="text-xs font-bold text-foreground">{item.label}</p>
-                  <p className="text-[10px] text-muted-foreground text-center">{item.description}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ─── Financial Health: 3 equal cards ─── */}
-      {visibleHealth.length > 0 && (
-        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.15 }}>
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Financial Health</p>
-          <div className="grid grid-cols-3 gap-3">
-            {visibleHealth.map((item) => (
-              <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col items-center gap-2 rounded-3xl ${item.color} p-4`}>
+            {upcomingBills.map((bill, i) => (
+              <div key={i} className={`flex min-w-[130px] flex-col items-center gap-2 rounded-3xl ${bill.bg} p-4`}>
                 <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background/50">
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
+                  <bill.icon className={`h-5 w-5 ${bill.iconColor}`} strokeWidth={1.5} />
                 </div>
-                <p className="text-[11px] font-bold text-foreground text-center leading-tight">{item.label}</p>
-              </button>
+                <p className="text-xs font-bold text-foreground">{bill.name}</p>
+                <p className="text-sm font-bold text-foreground">{bill.amount.toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">XAF</span></p>
+                <p className="text-[10px] font-medium text-muted-foreground">Due {bill.due}</p>
+              </div>
             ))}
           </div>
         </motion.div>
       )}
 
       {/* ─── Account ─── */}
-      <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.2 }}>
+      <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.09 }}>
         <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Account</p>
         <div className="space-y-2">
           {utilityItems.map((item) => (
