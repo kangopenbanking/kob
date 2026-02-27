@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLoanApplications, useLoanProducts, useApplyForLoan, useLoanRepayment } from '@/hooks/useBankingData';
 import { toast } from 'sonner';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const loanColorMap: Record<string, { color: string; fg: string }> = {
   personal_loan: { color: 'bg-[hsl(var(--bank-coral))]', fg: 'text-white' },
@@ -34,6 +35,7 @@ const BankLoans: React.FC = () => {
   const [repayLoanId, setRepayLoanId] = useState<string | null>(null);
   const [repayAmount, setRepayAmount] = useState('');
   const [repayMethod, setRepayMethod] = useState('bank_transfer');
+  const [showPin, setShowPin] = useState(false);
 
   const activeLoans = (loanApps || []).filter((l: any) => ['approved', 'disbursed', 'active'].includes(l.status));
 
@@ -55,6 +57,11 @@ const BankLoans: React.FC = () => {
   };
 
   const handleRepay = () => {
+    if (!repayLoanId || !repayAmount) return;
+    setShowPin(true);
+  };
+
+  const executeRepay = () => {
     if (!repayLoanId || !repayAmount) return;
     repayLoan.mutate({
       loan_account_id: repayLoanId,
@@ -246,6 +253,7 @@ const BankLoans: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executeRepay} />
     </div>
   );
 };

@@ -12,6 +12,7 @@ import { usePiggyBankPlans, usePiggyBankPayments, useCreatePiggyBankPlan, usePig
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { sounds } from '@/lib/sounds';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const CREDIT_DISCLAIMER_SAVINGS = 'Your savings plan payments will be tracked for credit scoring. Consistent payments improve your CrediQ score. Missed payments will negatively impact your credit.';
 const CREDIT_DISCLAIMER_RENT = '⚠️ Setting up rent reporting improves your credit score when you pay on time. However, missed or late payments WILL negatively impact your CrediQ score. Please only proceed if you are confident in making regular payments.';
@@ -313,10 +314,18 @@ const BankPiggyBank: React.FC = () => {
 // Schedule sub-component
 const ScheduleView: React.FC<{ planId: string; payments: any[] }> = ({ planId, payments }) => {
   const payMutation = usePiggyBankPay();
+  const [showPin, setShowPin] = useState(false);
+  const [pendingPaymentId, setPendingPaymentId] = useState<string | null>(null);
 
   const handlePay = (paymentId: string) => {
     sounds.tap();
-    payMutation.mutate({ payment_id: paymentId }, {
+    setPendingPaymentId(paymentId);
+    setShowPin(true);
+  };
+
+  const executePay = () => {
+    if (!pendingPaymentId) return;
+    payMutation.mutate({ payment_id: pendingPaymentId }, {
       onSuccess: (data) => {
         sounds.success();
         const delta = data.score_delta;
@@ -326,33 +335,36 @@ const ScheduleView: React.FC<{ planId: string; payments: any[] }> = ({ planId, p
   };
 
   return (
-    <div className="mt-3 flex flex-col gap-1.5 border-t pt-3">
-      {payments.sort((a: any, b: any) => a.due_date.localeCompare(b.due_date)).map((p: any, i: number) => (
-        <motion.div
-          key={p.id}
-          initial={{ opacity: 0, y: 4 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.03 }}
-          className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5 text-xs"
-        >
-          <div className="flex items-center gap-2">
-            {p.status === 'paid' ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> :
-             p.status === 'missed' ? <XCircle className="h-4 w-4 text-destructive" /> :
-             p.status === 'late' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> :
-             <Clock className="h-4 w-4 text-muted-foreground" />}
-            <span className="font-medium">{format(new Date(p.due_date), 'MMM d, yyyy')}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold">{Number(p.amount).toLocaleString()}</span>
-            {p.status === 'pending' && (
-              <Button size="sm" className="h-7 px-3 text-xs rounded-full bg-primary" onClick={() => handlePay(p.id)} disabled={payMutation.isPending}>
-                Pay
-              </Button>
-            )}
-          </div>
-        </motion.div>
-      ))}
-    </div>
+    <>
+      <div className="mt-3 flex flex-col gap-1.5 border-t pt-3">
+        {payments.sort((a: any, b: any) => a.due_date.localeCompare(b.due_date)).map((p: any, i: number) => (
+          <motion.div
+            key={p.id}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.03 }}
+            className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5 text-xs"
+          >
+            <div className="flex items-center gap-2">
+              {p.status === 'paid' ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> :
+               p.status === 'missed' ? <XCircle className="h-4 w-4 text-destructive" /> :
+               p.status === 'late' ? <AlertTriangle className="h-4 w-4 text-amber-500" /> :
+               <Clock className="h-4 w-4 text-muted-foreground" />}
+              <span className="font-medium">{format(new Date(p.due_date), 'MMM d, yyyy')}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold">{Number(p.amount).toLocaleString()}</span>
+              {p.status === 'pending' && (
+                <Button size="sm" className="h-7 px-3 text-xs rounded-full bg-primary" onClick={() => handlePay(p.id)} disabled={payMutation.isPending}>
+                  Pay
+                </Button>
+              )}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executePay} />
+    </>
   );
 };
 

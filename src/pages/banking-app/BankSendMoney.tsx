@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { motion } from 'framer-motion';
 import { useSendTransfer, useBankAccounts } from '@/hooks/useBankingData';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const BankSendMoney: React.FC = () => {
   const { institutionId } = useParams();
@@ -13,16 +14,21 @@ const BankSendMoney: React.FC = () => {
   const [step, setStep] = useState<'recipient' | 'amount' | 'confirm'>('recipient');
   const [recipient, setRecipient] = useState('');
   const [amount, setAmount] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const { data: accounts } = useBankAccounts();
   const sendTransfer = useSendTransfer();
 
-  const sourceAccount = accounts?.[0]; // Use primary account
+  const sourceAccount = accounts?.[0];
 
   const handleSend = () => {
+    setShowPin(true);
+  };
+
+  const executeSend = () => {
     if (!sourceAccount) return;
     sendTransfer.mutate({
       source_account_id: sourceAccount.id,
-      destination_account_id: recipient, // The recipient field serves as account ID or identifier
+      destination_account_id: recipient,
       amount: Number(amount),
       currency: 'XAF',
       description: `Transfer to ${recipient}`,
@@ -41,24 +47,14 @@ const BankSendMoney: React.FC = () => {
       <h1 className="mb-1 text-xl font-semibold tracking-tight text-foreground">Send Money</h1>
       <p className="mb-6 text-sm text-muted-foreground">Transfer funds to another account</p>
 
-      <motion.div
-        key={step}
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="flex flex-1 flex-col gap-4"
-      >
+      <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-1 flex-col gap-4">
         {step === 'recipient' && (
           <>
             <div className="space-y-2">
               <Label className="text-sm">Recipient</Label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                <Input
-                  placeholder="Account ID or phone number"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  className="pl-10"
-                />
+                <Input placeholder="Account ID or phone number" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="pl-10" />
               </div>
             </div>
             <Button onClick={() => setStep('amount')} disabled={!recipient} className="mt-4 gap-2">
@@ -71,13 +67,7 @@ const BankSendMoney: React.FC = () => {
           <>
             <div className="space-y-2">
               <Label className="text-sm">Amount (XAF)</Label>
-              <Input
-                type="number"
-                placeholder="0"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="text-2xl font-bold text-center h-16"
-              />
+              <Input type="number" placeholder="0" value={amount} onChange={(e) => setAmount(e.target.value)} className="text-2xl font-bold text-center h-16" />
             </div>
             <Button onClick={() => setStep('confirm')} disabled={!amount || Number(amount) <= 0} className="mt-4 gap-2">
               Review <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
@@ -111,6 +101,8 @@ const BankSendMoney: React.FC = () => {
           </>
         )}
       </motion.div>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executeSend} />
     </div>
   );
 };

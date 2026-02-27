@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { useNjangiGroups, useCreateNjangiGroup, useJoinNjangiGroup, useNjangiContribute, useNjangiPayout } from '@/hooks/useNjangiData';
 import { toast } from 'sonner';
 import { sounds } from '@/lib/sounds';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const BankNjangi: React.FC = () => {
   const { institutionId } = useParams();
@@ -29,6 +30,8 @@ const BankNjangi: React.FC = () => {
   const joinMutation = useJoinNjangiGroup();
   const contributeMutation = useNjangiContribute();
   const payoutMutation = useNjangiPayout();
+  const [showPin, setShowPin] = useState(false);
+  const [pendingContributeGroupId, setPendingContributeGroupId] = useState<string | null>(null);
 
   const handleCreate = () => {
     if (!formData.name || !formData.contribution_amount) { sounds.error(); toast.error('Fill required fields'); return; }
@@ -54,7 +57,13 @@ const BankNjangi: React.FC = () => {
 
   const handleContribute = (groupId: string) => {
     sounds.tap();
-    contributeMutation.mutate({ group_id: groupId }, {
+    setPendingContributeGroupId(groupId);
+    setShowPin(true);
+  };
+
+  const executeContribute = () => {
+    if (!pendingContributeGroupId) return;
+    contributeMutation.mutate({ group_id: pendingContributeGroupId }, {
       onSuccess: (data) => {
         sounds.success();
         const delta = data.score_delta;
@@ -327,6 +336,7 @@ const BankNjangi: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executeContribute} />
     </div>
   );
 };
