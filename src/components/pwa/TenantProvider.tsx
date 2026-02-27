@@ -129,7 +129,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         .from('institutions')
         .select('id, institution_name, logo_url, primary_color, tagline, app_config')
         .eq('id', institutionId)
-        .single();
+        .maybeSingle();
 
       if (error || !data) {
         setBranding({ ...defaultBranding, id: institutionId, isLoading: false });
