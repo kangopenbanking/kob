@@ -92,61 +92,53 @@ const CustomerHome: React.FC = () => {
   const spending = 68000;
 
   return (
-    <div className="flex flex-col gap-5 p-5 pb-6">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {tenant.logoUrl && (
-            <img src={tenant.logoUrl} alt={tenant.name} className="h-9 w-9 rounded-xl object-contain" />
-          )}
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Welcome back</p>
-            <h1 className="text-base font-bold text-foreground">{tenant.name}</h1>
-          </div>
-        </div>
-        <button onClick={() => go('alerts')} className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
-          <Bell className="h-5 w-5 text-foreground" strokeWidth={1.5} />
-          {unreadCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">{unreadCount > 9 ? '9+' : unreadCount}</span>
-          )}
-        </button>
-      </div>
-
-      {/* View-Only Banner */}
-      {isViewOnly && (
-        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-3 rounded-2xl border border-[hsl(45,60%,75%)] bg-[hsl(45,80%,92%)] p-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(45,70%,80%)]">
-            <Lock className="h-4 w-4 text-[hsl(45,50%,25%)]" strokeWidth={2} />
-          </div>
-          <div className="flex-1">
-            <p className="text-xs font-bold text-[hsl(45,40%,20%)]">View-Only Mode</p>
-            <p className="text-[11px] text-[hsl(45,30%,35%)]">Link an account to unlock transactions</p>
-          </div>
-          <button onClick={() => go('onboarding')} className="rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground">Link</button>
-        </motion.div>
-      )}
-
-      {/* ─── Balance Hero Section ─── */}
+    <div className="flex flex-col gap-5 pb-6">
+      {/* ─── Balance Hero Section (flush to edges) ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.35 }}>
-        <div className="rounded-3xl bg-primary p-6 pb-5 relative overflow-hidden">
+        <div className="bg-primary px-5 pt-5 pb-5 relative overflow-hidden rounded-b-3xl">
           {/* Decorative circles */}
           <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[hsl(0,0%,100%)]/5" />
           <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-[hsl(0,0%,100%)]/5" />
 
-          {/* Greeting */}
+          {/* Top Bar inside hero */}
           <div className="relative flex items-center justify-between mb-5">
-            <div>
-              <p className="text-[11px] font-medium text-primary-foreground/60">Hello,</p>
-              <h2 className="text-lg font-bold text-primary-foreground">{tenant.name}</h2>
+            <div className="flex items-center gap-3">
+              {tenant.logoUrl && (
+                <img src={tenant.logoUrl} alt={tenant.name} className="h-9 w-9 rounded-xl object-contain" />
+              )}
+              <div>
+                <p className="text-[10px] font-medium text-primary-foreground/60">Hello,</p>
+                <h2 className="text-lg font-bold text-primary-foreground">{tenant.name}</h2>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={() => setBalanceVisible(!balanceVisible)}
                 className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/10">
                 {balanceVisible ? <Eye className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} /> : <EyeOff className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
               </button>
+              <button onClick={() => go('alerts')} className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/10">
+                <Bell className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                )}
+              </button>
             </div>
           </div>
+
+          {/* View-Only Banner */}
+          {isViewOnly && (
+            <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+              className="relative flex items-center gap-3 rounded-2xl border border-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/10 p-3 mb-4">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/15">
+                <Lock className="h-4 w-4 text-primary-foreground" strokeWidth={2} />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold text-primary-foreground">View-Only Mode</p>
+                <p className="text-[11px] text-primary-foreground/60">Link an account to unlock transactions</p>
+              </div>
+              <button onClick={() => go('onboarding')} className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
+            </motion.div>
+          )}
 
           {/* Balances Label */}
           <div className="relative flex items-center justify-between mb-3">
@@ -195,6 +187,9 @@ const CustomerHome: React.FC = () => {
           )}
         </div>
       </motion.div>
+
+      {/* ─── Padded content ─── */}
+      <div className="flex flex-col gap-5 px-5">
 
       {/* ─── Money Movement ─── */}
       {visibleMoney.length > 0 && (
@@ -359,6 +354,7 @@ const CustomerHome: React.FC = () => {
           </div>
         )}
       </motion.div>
+      </div>
     </div>
   );
 };
