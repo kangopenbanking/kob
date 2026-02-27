@@ -14,7 +14,7 @@ interface MobileMoneyConfirmProps {
 
 type PollState = "polling" | "succeeded" | "failed" | "timeout";
 
-const MAX_ATTEMPTS = 12;
+const MAX_ATTEMPTS = 24;
 const POLL_INTERVAL = 5000;
 
 export const MobileMoneyConfirm = ({ fundingIntentId, message, onSuccess }: MobileMoneyConfirmProps) => {
