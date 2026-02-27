@@ -163,22 +163,22 @@ const BankFundAccount: React.FC = () => {
                     key={m.value}
                     whileTap={{ scale: 0.96 }}
                     onClick={() => setMethod(m.value)}
-                    className={`snap-start shrink-0 flex flex-col items-start gap-3 rounded-2xl p-4 w-[140px] transition-all duration-200 ${
+                    className={`snap-start shrink-0 flex flex-col items-start justify-between rounded-3xl p-5 w-[150px] h-[180px] transition-all duration-300 ${
                       active
-                        ? `${m.bg} text-white shadow-lg ${m.shadow}`
-                        : 'bg-card border border-border/60 text-foreground hover:border-primary/30'
+                        ? `${m.bg} text-white shadow-xl ${m.shadow} scale-[1.02]`
+                        : `${m.bg}/15 text-foreground hover:${m.bg}/25`
                     }`}
                   >
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${
-                      active ? 'bg-white/20' : 'bg-muted'
+                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${
+                      active ? 'bg-white/20' : `${m.bg}/20`
                     }`}>
-                      <Icon className={`h-5 w-5 ${active ? 'text-white' : 'text-muted-foreground'}`} />
+                      <Icon className={`h-6 w-6 ${active ? 'text-white' : ''}`} style={!active ? { opacity: 0.7 } : {}} />
                     </div>
-                    <div className="text-left">
-                      <p className={`text-sm font-bold leading-tight ${active ? 'text-white' : 'text-foreground'}`}>
+                    <div className="text-left mt-auto">
+                      <p className={`text-sm font-extrabold leading-tight ${active ? 'text-white' : ''}`}>
                         {m.label}
                       </p>
-                      <p className={`text-[10px] mt-0.5 leading-tight ${active ? 'text-white/70' : 'text-muted-foreground'}`}>
+                      <p className={`text-[10px] mt-1 leading-tight font-medium ${active ? 'text-white/70' : 'text-muted-foreground'}`}>
                         {m.subtitle}
                       </p>
                     </div>
