@@ -545,3 +545,7 @@ verify_jwt = false
 # Firebase Phone Authentication
 [functions.firebase-phone-verify]
 verify_jwt = false
+
+# Single Session Enforcement
+[functions.enforce-single-session]
+verify_jwt = false

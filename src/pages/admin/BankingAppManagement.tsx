@@ -22,7 +22,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
-import type { SectionStyle, SectionStyles, CardSize, WalkthroughConfig, HomeSectionKey, LayoutStyle } from "@/components/pwa/TenantProvider";
+import type { SectionStyle, SectionStyles, CardSize, WalkthroughConfig, HomeSectionKey, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
 
 // ─── Types ───
 interface AppConfig {
@@ -46,6 +46,7 @@ interface AppConfig {
   section_styles: SectionStyles;
   media_sections: MediaSection[];
   walkthrough_config: WalkthroughConfig;
+  card_colors: CardColors;
 }
 
 const defaultSectionOrder: HomeSectionKey[] = [
@@ -60,6 +61,7 @@ const defaultAppConfig: AppConfig = {
   section_styles: {},
   media_sections: [],
   walkthrough_config: { skip_enabled: true },
+  card_colors: {},
 };
 
 // ─── Hooks ───
@@ -227,6 +229,76 @@ function SectionStyleEditor({ sectionKey, style, onChange }: { sectionKey: strin
         </div>
       </div>
     </div>
+  );
+}
+
+// ─── Card Color Editor ───
+const CARD_COLOR_KEYS = {
+  quick_actions: [
+    { key: 'quick_action_send', label: 'Send' },
+    { key: 'quick_action_receive', label: 'Receive' },
+    { key: 'quick_action_momo', label: 'MoMo' },
+    { key: 'quick_action_qr pay', label: 'QR Pay' },
+  ],
+  financial_services: [
+    { key: 'financial_savings', label: 'Savings' },
+    { key: 'financial_loans', label: 'Loans' },
+    { key: 'financial_credit', label: 'Credit Score' },
+  ],
+  account_carousel: [
+    { key: 'account_XAF', label: 'XAF Account' },
+    { key: 'account_EUR', label: 'EUR Account' },
+    { key: 'account_USD', label: 'USD Account' },
+    { key: 'account_GBP', label: 'GBP Account' },
+  ],
+};
+
+function CardColorEditor({ cardColors, onChange }: { cardColors: CardColors; onChange: (c: CardColors) => void }) {
+  const updateCard = (key: string, field: 'bg_color' | 'text_color', value: string | undefined) => {
+    const existing = cardColors[key] || {};
+    const updated = { ...existing, [field]: value };
+    if (!updated.bg_color && !updated.text_color) {
+      const { [key]: _, ...rest } = cardColors;
+      onChange(rest);
+    } else {
+      onChange({ ...cardColors, [key]: updated });
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> Card Colors</CardTitle>
+        <CardDescription>Set individual background and text colors for each card</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {Object.entries(CARD_COLOR_KEYS).map(([section, cards]) => (
+          <div key={section} className="space-y-2">
+            <p className="text-sm font-semibold capitalize">{section.replace(/_/g, ' ')}</p>
+            <div className="grid gap-2">
+              {cards.map(({ key, label }) => {
+                const override = cardColors[key] || {};
+                return (
+                  <div key={key} className="flex items-center gap-3 rounded-lg border p-2">
+                    <span className="text-xs font-medium flex-1 min-w-[80px]">{label}</span>
+                    <div className="flex items-center gap-1">
+                      <Label className="text-[10px]">BG</Label>
+                      <input type="color" value={override.bg_color || '#ffffff'} onChange={(e) => updateCard(key, 'bg_color', e.target.value)} className="h-6 w-6 cursor-pointer rounded border" />
+                      {override.bg_color && <Button variant="ghost" size="sm" className="h-5 px-1 text-[9px]" onClick={() => updateCard(key, 'bg_color', undefined)}>✕</Button>}
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Label className="text-[10px]">Text</Label>
+                      <input type="color" value={override.text_color || '#000000'} onChange={(e) => updateCard(key, 'text_color', e.target.value)} className="h-6 w-6 cursor-pointer rounded border" />
+                      {override.text_color && <Button variant="ghost" size="sm" className="h-5 px-1 text-[9px]" onClick={() => updateCard(key, 'text_color', undefined)}>✕</Button>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -865,6 +937,12 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
           </CardContent>
         </Card>
 
+        {/* Card Colors */}
+        <CardColorEditor
+          cardColors={config.card_colors || {}}
+          onChange={(c) => setConfig(prev => ({ ...prev, card_colors: c }))}
+        />
+
         {/* Media Sections */}
         <MediaSectionManager
           mediaSections={config.media_sections || []}
@@ -994,6 +1072,7 @@ export default function BankingAppManagement() {
         section_styles: selectedInst.app_config?.section_styles || {},
         media_sections: selectedInst.app_config?.media_sections || [],
         walkthrough_config: selectedInst.app_config?.walkthrough_config || { skip_enabled: true },
+        card_colors: selectedInst.app_config?.card_colors || {},
       }
     : defaultAppConfig;
 
