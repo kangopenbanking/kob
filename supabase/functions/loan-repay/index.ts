@@ -226,6 +226,59 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── Credit event emission ──
+    let creditScoreResult: any = null;
+    try {
+      // Determine on-time vs late for each paid schedule item
+      for (const schedule of (schedules || [])) {
+        if (schedule.status === 'paid' || schedule.status === 'partial') {
+          const dueDate = new Date(schedule.due_date);
+          const graceDate = new Date(dueDate);
+          graceDate.setDate(graceDate.getDate() + 3);
+          const paidAt = new Date();
+          const isOnTime = paidAt <= graceDate;
+          const daysLate = isOnTime ? 0 : Math.floor((paidAt.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          await supabase.from('credit_events').insert({
+            user_id: roleResult.userId!,
+            institution_id: loan.institution_id,
+            event_type: isOnTime ? 'LOAN_REPAYMENT_ON_TIME' : 'LOAN_REPAYMENT_LATE',
+            event_time: new Date().toISOString(),
+            value_numeric: daysLate,
+            metadata: {
+              loan_id: loan_account_id,
+              schedule_item_id: schedule.id,
+              installment_number: schedule.installment_number,
+              amount_paid: amount,
+            },
+            source: 'loans_service',
+          });
+        }
+      }
+
+      if (isCompleted) {
+        await supabase.from('credit_events').insert({
+          user_id: roleResult.userId!,
+          institution_id: loan.institution_id,
+          event_type: 'LOAN_CLOSED',
+          event_time: new Date().toISOString(),
+          value_numeric: newRepaid,
+          metadata: { loan_id: loan_account_id, total_repaid: newRepaid },
+          source: 'loans_service',
+        });
+      }
+
+      // Recompute credit score
+      const scoreRes = await fetch(`${supabaseUrl}/functions/v1/credit-score-engine`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${supabaseKey}` },
+        body: JSON.stringify({ user_id: roleResult.userId! }),
+      });
+      creditScoreResult = await scoreRes.json();
+    } catch (creditErr) {
+      console.error('Credit event emission failed (non-blocking):', creditErr);
+    }
+
     const responseBody = {
       data: {
         payment_reference: paymentRef,
@@ -236,6 +289,13 @@ Deno.serve(async (req) => {
         remaining_balance: Math.max(0, Math.round(newOutstanding * 100) / 100),
         loan_status: isCompleted ? 'completed' : 'active',
         journal_entry_id: journalEntry.id,
+        ...(creditScoreResult ? {
+          credit_score: {
+            previous: creditScoreResult.previous_score,
+            current: creditScoreResult.score,
+            delta: creditScoreResult.delta,
+          }
+        } : {}),
       },
     };
 

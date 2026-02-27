@@ -2799,6 +2799,50 @@ export type Database = {
           },
         ]
       }
+      credit_events: {
+        Row: {
+          created_at: string
+          event_time: string
+          event_type: Database["public"]["Enums"]["credit_event_type"]
+          id: string
+          institution_id: string | null
+          metadata: Json | null
+          source: string
+          user_id: string
+          value_numeric: number | null
+        }
+        Insert: {
+          created_at?: string
+          event_time?: string
+          event_type: Database["public"]["Enums"]["credit_event_type"]
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          source?: string
+          user_id: string
+          value_numeric?: number | null
+        }
+        Update: {
+          created_at?: string
+          event_time?: string
+          event_type?: Database["public"]["Enums"]["credit_event_type"]
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          source?: string
+          user_id?: string
+          value_numeric?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_events_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_goals: {
         Row: {
           achieved_at: string | null
@@ -2941,6 +2985,47 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      credit_profiles: {
+        Row: {
+          created_at: string
+          current_score: number
+          id: string
+          institution_id: string | null
+          last_computed_at: string | null
+          score_band: Database["public"]["Enums"]["credit_score_band"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_score?: number
+          id?: string
+          institution_id?: string | null
+          last_computed_at?: string | null
+          score_band?: Database["public"]["Enums"]["credit_score_band"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_score?: number
+          id?: string
+          institution_id?: string | null
+          last_computed_at?: string | null
+          score_band?: Database["public"]["Enums"]["credit_score_band"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_profiles_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       credit_reports: {
         Row: {
@@ -3168,6 +3253,44 @@ export type Database = {
         }
         Relationships: []
       }
+      credit_score_snapshots: {
+        Row: {
+          computed_at: string
+          factors_json: Json
+          id: string
+          institution_id: string | null
+          score: number
+          score_band: Database["public"]["Enums"]["credit_score_band"]
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          factors_json?: Json
+          id?: string
+          institution_id?: string | null
+          score: number
+          score_band: Database["public"]["Enums"]["credit_score_band"]
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          factors_json?: Json
+          id?: string
+          institution_id?: string | null
+          score?: number
+          score_band?: Database["public"]["Enums"]["credit_score_band"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_score_snapshots_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       credit_score_tips: {
         Row: {
           completed_at: string | null
@@ -3304,6 +3427,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      credit_scoring_rules: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          institution_id: string | null
+          rule_key: string
+          updated_at: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          institution_id?: string | null
+          rule_key: string
+          updated_at?: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          institution_id?: string | null
+          rule_key?: string
+          updated_at?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "credit_scoring_rules_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       customer_due_diligence: {
         Row: {
@@ -7391,6 +7552,7 @@ export type Database = {
           installment_number: number
           interest_amount: number
           loan_id: string
+          missed_event_created: boolean
           paid_amount: number
           paid_at: string | null
           principal_amount: number
@@ -7406,6 +7568,7 @@ export type Database = {
           installment_number: number
           interest_amount?: number
           loan_id: string
+          missed_event_created?: boolean
           paid_amount?: number
           paid_at?: string | null
           principal_amount?: number
@@ -7421,6 +7584,7 @@ export type Database = {
           installment_number?: number
           interest_amount?: number
           loan_id?: string
+          missed_event_created?: boolean
           paid_amount?: number
           paid_at?: string | null
           principal_amount?: number
@@ -11546,6 +11710,16 @@ export type Database = {
         | "Revoked"
         | "Expired"
         | "Consumed"
+      credit_event_type:
+        | "LOAN_REPAYMENT_ON_TIME"
+        | "LOAN_REPAYMENT_LATE"
+        | "LOAN_INSTALLMENT_MISSED"
+        | "LOAN_DEFAULTED"
+        | "LOAN_CLOSED"
+        | "SAVINGS_DEPOSIT"
+        | "SAVINGS_WITHDRAWAL"
+        | "SAVINGS_BALANCE_STABLE"
+      credit_score_band: "A" | "B" | "C" | "D" | "F"
       institution_status: "pending" | "approved" | "rejected" | "suspended"
       institution_type: "bank" | "credit_union" | "fintech" | "developer"
       loan_status:
@@ -11775,6 +11949,17 @@ export const Constants = {
         "Expired",
         "Consumed",
       ],
+      credit_event_type: [
+        "LOAN_REPAYMENT_ON_TIME",
+        "LOAN_REPAYMENT_LATE",
+        "LOAN_INSTALLMENT_MISSED",
+        "LOAN_DEFAULTED",
+        "LOAN_CLOSED",
+        "SAVINGS_DEPOSIT",
+        "SAVINGS_WITHDRAWAL",
+        "SAVINGS_BALANCE_STABLE",
+      ],
+      credit_score_band: ["A", "B", "C", "D", "F"],
       institution_status: ["pending", "approved", "rejected", "suspended"],
       institution_type: ["bank", "credit_union", "fintech", "developer"],
       loan_status: [

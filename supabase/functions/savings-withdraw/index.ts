@@ -178,6 +178,25 @@ serve(async (req) => {
       console.error('Ledger posting failed (non-blocking):', ledgerErr);
     }
 
+    // ── Credit event emission (withdrawal, zero weight) ──
+    try {
+      await serviceSupabase.from('credit_events').insert({
+        user_id: user.id,
+        institution_id: savingsAccount.institution_id || null,
+        event_type: 'SAVINGS_WITHDRAWAL',
+        event_time: new Date().toISOString(),
+        value_numeric: amount,
+        metadata: {
+          savings_account_id,
+          balance_after: remainingBalance,
+          transaction_ref: txRef,
+        },
+        source: 'savings_service',
+      });
+    } catch (creditErr) {
+      console.error('Credit event emission failed (non-blocking):', creditErr);
+    }
+
     console.log('Withdrawal successful. New balance:', remainingBalance);
 
     return new Response(

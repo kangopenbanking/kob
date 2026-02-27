@@ -1,0 +1,52 @@
+[
+  {
+    "version": "2.2.0",
+    "date": "2026-02-27",
+    "title": "Loans & Savings ↔ Credit Score Linkage",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Credit Events System",
+        "description": "Immutable credit_events table with 8 event types for event-sourced credit scoring",
+        "endpoints_added": [],
+        "migrations": ["credit_events", "credit_profiles", "credit_score_snapshots", "credit_scoring_rules"],
+        "tests": ["credit-scoring-e2e.test.ts"]
+      },
+      {
+        "name": "Credit Scoring Engine",
+        "description": "Deterministic scoring engine computing scores 300-850 from credit events",
+        "endpoints_added": ["credit-score-engine"],
+        "migrations": [],
+        "tests": ["credit-scoring-e2e.test.ts"]
+      },
+      {
+        "name": "Loan Repayment ↔ Credit Score Link",
+        "description": "loan-repay now emits on-time/late credit events and returns optional credit_score",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": ["credit-scoring-e2e.test.ts"]
+      },
+      {
+        "name": "Overdue Detection Job",
+        "description": "loan-overdue-detect finds missed installments past 3-day grace, deduplicates via missed_event_created flag",
+        "endpoints_added": ["loan-overdue-detect"],
+        "migrations": ["loan_schedule.missed_event_created"],
+        "tests": ["credit-scoring-e2e.test.ts"]
+      },
+      {
+        "name": "Savings ↔ Credit Score Link",
+        "description": "savings-deposit/withdraw emit credit events with appropriate weights",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": ["credit-scoring-e2e.test.ts"]
+      },
+      {
+        "name": "Credit Scoring API Endpoints",
+        "description": "GET profile, events, explain; POST recompute",
+        "endpoints_added": ["credit-profile-get", "credit-events-list", "credit-explain", "credit-recompute"],
+        "migrations": [],
+        "tests": ["credit-scoring-e2e.test.ts"]
+      }
+    ]
+  }
+]
