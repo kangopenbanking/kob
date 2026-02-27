@@ -1,21 +1,123 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Bell } from 'lucide-react';
+import { ArrowLeft, Bell, ArrowUpRight, ShieldAlert, Gift, Info, CheckCheck, Circle } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
+
+type AlertType = 'transaction' | 'security' | 'promotion' | 'system';
+
+interface Alert {
+  id: string;
+  type: AlertType;
+  title: string;
+  message: string;
+  time: string;
+  read: boolean;
+}
+
+const initialAlerts: Alert[] = [
+  { id: '1', type: 'transaction', title: 'Money Received', message: 'You received 50,000 XAF from Marie Ngo', time: '2 min ago', read: false },
+  { id: '2', type: 'security', title: 'New Login Detected', message: 'A new device logged into your account from Douala', time: '1 hour ago', read: false },
+  { id: '3', type: 'promotion', title: 'Cashback Offer', message: 'Get 5% cashback on all bill payments this week', time: '3 hours ago', read: false },
+  { id: '4', type: 'transaction', title: 'Transfer Successful', message: 'Your transfer of 25,000 XAF to Paul Biya was completed', time: '5 hours ago', read: true },
+  { id: '5', type: 'system', title: 'Scheduled Maintenance', message: 'The app will be briefly unavailable on Mar 1 from 2-4 AM', time: 'Yesterday', read: true },
+  { id: '6', type: 'promotion', title: 'Refer & Earn', message: 'Invite friends and earn 2,000 XAF per referral', time: 'Yesterday', read: true },
+  { id: '7', type: 'security', title: 'Password Changed', message: 'Your account password was changed successfully', time: '2 days ago', read: true },
+  { id: '8', type: 'transaction', title: 'Bill Payment', message: 'ENEO electricity bill of 15,000 XAF paid', time: '3 days ago', read: true },
+];
+
+const filters: { label: string; value: AlertType | 'all' }[] = [
+  { label: 'All', value: 'all' },
+  { label: 'Transactions', value: 'transaction' },
+  { label: 'Security', value: 'security' },
+  { label: 'Promotions', value: 'promotion' },
+];
+
+const alertIcon: Record<AlertType, React.ReactNode> = {
+  transaction: <ArrowUpRight className="h-5 w-5" strokeWidth={1.5} />, 
+  security: <ShieldAlert className="h-5 w-5" strokeWidth={1.5} />,
+  promotion: <Gift className="h-5 w-5" strokeWidth={1.5} />,
+  system: <Info className="h-5 w-5" strokeWidth={1.5} />,
+};
+
+const alertColor: Record<AlertType, string> = {
+  transaction: 'hsl(160,60%,88%)',
+  security: 'hsl(0,70%,90%)',
+  promotion: 'hsl(45,90%,88%)',
+  system: 'hsl(210,80%,90%)',
+};
 
 const CustomerAlerts: React.FC = () => {
   const navigate = useNavigate();
+  const [alerts, setAlerts] = useState<Alert[]>(initialAlerts);
+  const [filter, setFilter] = useState<AlertType | 'all'>('all');
+
+  const filtered = filter === 'all' ? alerts : alerts.filter(a => a.type === filter);
+  const unreadCount = alerts.filter(a => !a.read).length;
+
+  const markRead = (id: string) => setAlerts(prev => prev.map(a => a.id === id ? { ...a, read: true } : a));
+  const markAllRead = () => { setAlerts(prev => prev.map(a => ({ ...a, read: true }))); toast.success('All marked as read'); };
+
   return (
-    <div className="flex flex-col gap-6 p-5">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
-        <h1 className="text-xl font-bold text-foreground">Alerts</h1>
-      </div>
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 py-20">
-        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-          <Bell className="h-8 w-8 text-foreground" strokeWidth={1.5} />
+    <div className="flex flex-col gap-5 p-5 pb-28">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
+          <h1 className="text-xl font-bold text-foreground">Alerts</h1>
+          {unreadCount > 0 && (
+            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-primary-foreground">{unreadCount}</span>
+          )}
         </div>
-        <p className="text-sm text-muted-foreground">No new alerts</p>
+        {unreadCount > 0 && (
+          <button onClick={markAllRead} className="flex items-center gap-1 text-xs font-medium text-primary">
+            <CheckCheck className="h-4 w-4" strokeWidth={1.5} /> Mark all read
+          </button>
+        )}
       </div>
+
+      <div className="flex gap-2 overflow-x-auto">
+        {filters.map(f => (
+          <button key={f.value} onClick={() => setFilter(f.value)}
+            className={`shrink-0 rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+              filter === f.value ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
+            }`}>
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <AnimatePresence mode="popLayout">
+        {filtered.length === 0 ? (
+          <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-3 py-16">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+              <Bell className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
+            </div>
+            <p className="text-sm text-muted-foreground">No alerts in this category</p>
+          </motion.div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {filtered.map(alert => (
+              <motion.button key={alert.id} layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                onClick={() => markRead(alert.id)}
+                className={`flex items-start gap-3 rounded-2xl border p-4 text-left transition-colors ${
+                  alert.read ? 'border-border bg-card' : 'border-primary/30 bg-primary/5'
+                }`}>
+                <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: alertColor[alert.type] }}>
+                  {alertIcon[alert.type]}
+                </div>
+                <div className="flex flex-1 flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-semibold text-foreground">{alert.title}</span>
+                    {!alert.read && <Circle className="h-2 w-2 fill-primary text-primary" />}
+                  </div>
+                  <p className="text-xs text-muted-foreground">{alert.message}</p>
+                  <span className="mt-1 text-[11px] text-muted-foreground/60">{alert.time}</span>
+                </div>
+              </motion.button>
+            ))}
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
