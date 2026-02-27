@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import Pusher from 'pusher-js';
+import type Pusher from 'pusher-js';
 
 interface AppNotification {
   id: string;
@@ -84,7 +84,8 @@ export function useNotifications(institutionId?: string) {
       await fetchPusherConfig();
       if (!cachedPusherKey || pusherRef.current) return;
 
-      const pusher = new Pusher(cachedPusherKey, {
+      const { default: PusherClient } = await import('pusher-js');
+      const pusher = new PusherClient(cachedPusherKey, {
         cluster: cachedPusherCluster,
       });
       pusherRef.current = pusher;
