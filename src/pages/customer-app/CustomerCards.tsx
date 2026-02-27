@@ -28,23 +28,28 @@ const CustomerCards: React.FC = () => {
       <div className="relative">
         <AnimatePresence mode="wait">
           <motion.div key={activeCard} initial={{ opacity: 0, x: 30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }}
-            className={`rounded-3xl ${card.color} p-6`}>
-            <div className="flex items-center justify-between">
+            className={`rounded-2xl ${card.color} p-6 relative overflow-hidden`}
+            style={{ aspectRatio: '1.586', maxHeight: '220px' }}>
+            {/* Card chip pattern */}
+            <div className="absolute right-6 top-6 h-20 w-20 rounded-full border border-[hsl(0,0%,100%)]/10" />
+            <div className="absolute right-10 top-10 h-14 w-14 rounded-full border border-[hsl(0,0%,100%)]/10" />
+
+            <div className="relative flex items-center justify-between">
               <CreditCard className="h-8 w-8 text-[hsl(0,0%,100%)]" strokeWidth={1.5} />
               <div className="flex items-center gap-2">
                 {card.frozen && <Snowflake className="h-4 w-4 text-[hsl(210,80%,75%)]" strokeWidth={1.5} />}
                 <Lock className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} />
               </div>
             </div>
-            <p className="mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
+            <p className="relative mt-6 text-lg font-mono tracking-widest text-[hsl(0,0%,100%)]">
               {showNumber ? '5312 8490 2716' : '**** **** ****'} {card.last4}
             </p>
-            <div className="mt-4 flex items-center justify-between">
+            <div className="relative mt-4 flex items-center justify-between">
               <div>
                 <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Card Holder</p>
                 <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{card.holder}</p>
               </div>
-              <div>
+              <div className="text-right">
                 <p className="text-[10px] uppercase text-[hsl(0,0%,100%)]/50">Expires</p>
                 <p className="text-sm font-semibold text-[hsl(0,0%,100%)]">{card.expires}</p>
               </div>
@@ -63,16 +68,22 @@ const CustomerCards: React.FC = () => {
 
       {/* Card Controls */}
       <div className="grid grid-cols-3 gap-3">
-        <button onClick={() => setShowNumber(!showNumber)} className="flex flex-col items-center gap-2 rounded-2xl bg-card p-3">
-          {showNumber ? <EyeOff className="h-5 w-5 text-foreground" strokeWidth={1.5} /> : <Eye className="h-5 w-5 text-foreground" strokeWidth={1.5} />}
+        <button onClick={() => setShowNumber(!showNumber)} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(210,70%,85%)]">
+            {showNumber ? <EyeOff className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} /> : <Eye className="h-5 w-5 text-[hsl(210,60%,40%)]" strokeWidth={1.5} />}
+          </div>
           <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Show'}</span>
         </button>
-        <button className="flex flex-col items-center gap-2 rounded-2xl bg-card p-3">
-          <Snowflake className="h-5 w-5 text-foreground" strokeWidth={1.5} />
+        <button className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(200,60%,82%)]">
+            <Snowflake className="h-5 w-5 text-[hsl(200,50%,38%)]" strokeWidth={1.5} />
+          </div>
           <span className="text-[10px] font-bold text-foreground">{card.frozen ? 'Unfreeze' : 'Freeze'}</span>
         </button>
-        <button className="flex flex-col items-center gap-2 rounded-2xl bg-card p-3">
-          <Settings className="h-5 w-5 text-foreground" strokeWidth={1.5} />
+        <button className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
+            <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
+          </div>
           <span className="text-[10px] font-bold text-foreground">Settings</span>
         </button>
       </div>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Bell, Eye, EyeOff, ArrowUpRight, ArrowDownLeft,
-  ShoppingBag, Lock, Smartphone, Gift,
+  ShoppingBag, Lock, Smartphone, Gift, Wallet,
   TrendingUp, TrendingDown, Send, Download, Banknote, Link2,
   Receipt, FileText, Users, RefreshCw, PiggyBank, CircleDollarSign,
   BarChart3, Home, Building2, ChevronRight
@@ -127,43 +127,73 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
-      {/* ─── Balance Card ─── */}
+      {/* ─── Balance Hero Section ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.35 }}>
-        <div className="rounded-3xl bg-[hsl(225,50%,22%)] p-6">
-          <div className="flex items-center justify-between">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Total Balance</p>
+        <div className="rounded-3xl bg-primary p-6 pb-5 relative overflow-hidden">
+          {/* Decorative circles */}
+          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[hsl(0,0%,100%)]/5" />
+          <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-[hsl(0,0%,100%)]/5" />
+
+          {/* Greeting */}
+          <div className="relative flex items-center justify-between mb-5">
+            <div>
+              <p className="text-[11px] font-medium text-primary-foreground/60">Hello,</p>
+              <h2 className="text-lg font-bold text-primary-foreground">{tenant.name}</h2>
+            </div>
             <div className="flex items-center gap-2">
-              <div className="flex rounded-xl bg-[hsl(225,40%,30%)] p-0.5">
-                {(['W', 'M', 'Y'] as const).map((p) => (
-                  <button key={p} onClick={() => setPeriod(p)}
-                    className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors ${period === p ? 'bg-[hsl(0,0%,100%)] text-[hsl(225,50%,22%)]' : 'text-[hsl(0,0%,100%)]/50'}`}>
-                    {p}
-                  </button>
-                ))}
-              </div>
-              <button onClick={() => setBalanceVisible(!balanceVisible)}>
-                {balanceVisible ? <Eye className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} /> : <EyeOff className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} />}
+              <button onClick={() => setBalanceVisible(!balanceVisible)}
+                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/10">
+                {balanceVisible ? <Eye className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} /> : <EyeOff className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
               </button>
             </div>
           </div>
-          <p className="mt-2 text-3xl font-bold text-[hsl(0,0%,100%)]">
-            {isViewOnly ? '• • • • •' : balanceVisible ? `XAF ${totalBalance.toLocaleString()}` : '• • • • •'}
-          </p>
+
+          {/* Balances Label */}
+          <div className="relative flex items-center justify-between mb-3">
+            <p className="text-xs font-semibold text-primary-foreground/80">Balances</p>
+            <div className="flex rounded-xl bg-[hsl(0,0%,100%)]/10 p-0.5">
+              {(['W', 'M', 'Y'] as const).map((p) => (
+                <button key={p} onClick={() => setPeriod(p)}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors ${period === p ? 'bg-primary-foreground text-primary' : 'text-primary-foreground/50'}`}>
+                  {p}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Account Cards Carousel */}
+          {!isViewOnly && (
+            <div className="relative flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+              {accountCards.map((acct, i) => (
+                <div key={i} className="flex min-w-[145px] flex-1 flex-col rounded-2xl bg-[hsl(0,0%,100%)]/15 backdrop-blur-sm p-4 border border-[hsl(0,0%,100%)]/10">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-xl ${acct.color}`}>
+                      {i === 0 && <Wallet className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
+                      {i === 1 && <PiggyBank className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
+                      {i === 2 && <Smartphone className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
+                    </div>
+                    <p className="text-[10px] font-semibold text-primary-foreground/80">{acct.name}</p>
+                  </div>
+                  <p className="text-lg font-bold text-primary-foreground">
+                    {balanceVisible ? `${acct.currency} ${acct.balance.toLocaleString()}` : '•••'}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isViewOnly && (
+            <p className="relative text-3xl font-bold text-primary-foreground text-center py-4">• • • • •</p>
+          )}
+
+          {/* Total */}
           {!isViewOnly && balanceVisible && (
-            <p className="mt-1 text-xs font-medium text-[hsl(150,60%,65%)]">+ 12,500 today</p>
+            <div className="relative mt-4 flex items-center justify-between border-t border-[hsl(0,0%,100%)]/10 pt-3">
+              <p className="text-xs font-medium text-primary-foreground/60">Total Balance</p>
+              <p className="text-base font-bold text-primary-foreground">XAF {totalBalance.toLocaleString()}</p>
+            </div>
           )}
         </div>
-        {!isViewOnly && (
-          <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
-            {accountCards.map((acct, i) => (
-              <div key={i} className={`flex min-w-[140px] flex-1 flex-col rounded-2xl ${acct.color} p-3.5`}>
-                <p className={`text-[10px] font-semibold uppercase tracking-wider ${acct.textColor}/70`}>{acct.name}</p>
-                <p className={`mt-1 text-base font-bold ${acct.textColor}`}>{balanceVisible ? acct.balance.toLocaleString() : '•••'}</p>
-                <p className={`text-[10px] ${acct.textColor}/50`}>{acct.currency}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </motion.div>
 
       {/* ─── Money Movement ─── */}
