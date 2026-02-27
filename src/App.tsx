@@ -318,6 +318,7 @@ import { CustomerAppLayout } from "./components/customer-app/CustomerAppLayout";
 import CustomerSplash from "./pages/customer-app/CustomerSplash";
 import CustomerAuth from "./pages/customer-app/CustomerAuth";
 import CustomerOnboarding from "./pages/customer-app/CustomerOnboarding";
+import CustomerRegister from "./pages/customer-app/CustomerRegister";
 import CustomerHome from "./pages/customer-app/CustomerHome";
 import CustomerScan from "./pages/customer-app/CustomerScan";
 import CustomerActivity from "./pages/customer-app/CustomerActivity";
@@ -705,6 +706,7 @@ function App() {
             {/* Customer App PWA Routes */}
             <Route path="/app/:institutionId" element={<CustomerSplash />} />
             <Route path="/app/:institutionId/auth" element={<CustomerAuth />} />
+            <Route path="/app/:institutionId/register" element={<CustomerRegister />} />
             <Route path="/app/:institutionId/onboarding" element={<CustomerOnboarding />} />
             <Route path="/app/:institutionId" element={<CustomerAppLayout />}>
               <Route path="home" element={<CustomerHome />} />
