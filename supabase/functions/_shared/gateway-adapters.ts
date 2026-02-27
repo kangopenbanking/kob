@@ -101,33 +101,34 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   // Detect country from phone number prefix for francophone mobile money
   const phoneStr = req.customer_phone || '';
   let country = 'CM'; // Default Cameroon
-  let network = 'MTN'; // Default MTN
-  if (phoneStr.startsWith('225')) { country = 'CI'; network = 'MTN'; }
-  else if (phoneStr.startsWith('221')) { country = 'SN'; network = 'ORANGEMONEY'; }
-  else if (phoneStr.startsWith('226')) { country = 'BF'; network = 'ORANGEMONEY'; }
+  if (phoneStr.startsWith('225')) { country = 'CI'; }
+  else if (phoneStr.startsWith('221')) { country = 'SN'; }
+  else if (phoneStr.startsWith('226')) { country = 'BF'; }
 
+  // Build payload per Flutterwave v3 docs — top-level fields, NOT nested in customer
   const body: Record<string, unknown> = {
     tx_ref: req.tx_ref,
     amount: req.amount,
     currency: req.currency,
-    redirect_url: req.metadata?.redirect_url || 'https://kangopenbanking.com/gateway/callback',
-    customer: {
-      email: req.customer_email || 'customer@example.com',
-      phonenumber: req.customer_phone,
-      name: req.customer_name,
-    },
-    meta: req.metadata,
+    email: req.customer_email || 'customer@kob.cm',
+    phone_number: req.customer_phone,
+    fullname: req.customer_name || 'Customer',
   };
+
+  let chargeType = 'charge';
 
   if (req.channel === 'mobile_money') {
     if (!req.customer_phone) throw new Error('customer_phone is required for mobile_money charges');
-    body.type = 'mobile_money_franco';
-    body.phone_number = req.customer_phone;
+    chargeType = 'mobile_money_franco';
     body.country = country;
-    body.network = network;
+  } else if (req.channel === 'card') {
+    chargeType = 'card';
+    body.redirect_url = req.metadata?.redirect_url || 'https://kangopenbanking.com/gateway/callback';
   }
 
-  const chargeType = req.channel === 'mobile_money' ? 'mobile_money_franco' : req.channel === 'card' ? 'card' : 'mobile_money_franco';
+  console.log('[Flutterwave] Sending charge request:', JSON.stringify({
+    type: chargeType, amount: req.amount, currency: req.currency, country, phone: phoneStr?.slice(0, 6) + '***',
+  }));
 
   let res: Response;
   try {
@@ -163,20 +164,26 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
     throw new Error('Failed to parse Flutterwave response as JSON');
   }
 
+  console.log('[Flutterwave] Charge response:', JSON.stringify({
+    status: data.status,
+    message: data.message,
+    data_status: data.data?.status,
+    flw_ref: data.data?.flw_ref,
+    auth_mode: data.meta?.authorization?.mode,
+    has_redirect: !!data.meta?.authorization?.redirect_url,
+  }));
+
+  // Throw on API-level errors so the intent creator doesn't save a broken intent
+  if (data.status === 'error') {
+    throw new Error(`Flutterwave charge failed: ${data.message || 'Unknown error'}`);
+  }
+
   const authMode = data.meta?.authorization?.mode;
   const redirectUrl = data.meta?.authorization?.redirect_url;
 
-  console.log('[Flutterwave] Charge response:', JSON.stringify({
-    status: data.status,
-    data_status: data.data?.status,
-    auth_mode: authMode,
-    has_redirect: !!redirectUrl,
-    flw_ref: data.data?.flw_ref,
-  }));
-
   return {
     provider_ref: data.data?.flw_ref || data.data?.id?.toString() || '',
-    status: mapFlutterwaveStatus(data.data?.status || data.status || 'pending'),
+    status: mapFlutterwaveStatus(data.data?.status || 'pending'),
     provider_raw: data,
     redirect_url: redirectUrl || undefined,
   };
