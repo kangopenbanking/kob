@@ -6,6 +6,26 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.4.0",
+      date: "2026-02-27",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Funding Intents API — canonical domain for account funding with full lifecycle tracking (created → pending → succeeded/failed/cancelled/expired)" },
+        { type: "feature", description: "4 new endpoints: Create, Get, List, Cancel Funding Intent under /v1/gateway/*" },
+        { type: "feature", description: "PayPal inbound funding — create PayPal checkout orders, auto-capture on approval, webhook finalization via PAYMENT.CAPTURE.COMPLETED" },
+        { type: "feature", description: "Bank transfer funding instructions — generate unique reference + bank details for manual bank transfer funding" },
+        { type: "feature", description: "Funding reconciliation job — auto-polls stuck intents from Flutterwave, Stripe, PayPal; expires intents older than 24h" },
+        { type: "feature", description: "Stripe webhook auto-credit for funding intents — payment_intent.succeeded now finalizes funding_intents and credits account" },
+        { type: "feature", description: "Flutterwave webhook funding intent finalization — matches by tx_ref reference" },
+        { type: "feature", description: "PayPal webhook funding intent finalization — handles CHECKOUT.ORDER.APPROVED (auto-capture) and PAYMENT.CAPTURE.COMPLETED" },
+        { type: "feature", description: "Immutable funding_events table — records created, webhook, reconciled, cancelled, expired events per intent" },
+        { type: "feature", description: "Idempotency enforcement — Idempotency-Key header with unique constraint per (account_id, key)" },
+        { type: "improvement", description: "Developer portal: Funding Intents Guide with provider-specific tabs (MoMo, Card, PayPal, Bank)" },
+        { type: "improvement", description: "Legacy Account Funding page marked with recommended migration notice" },
+        { type: "improvement", description: "Developer sidebar updated with Funding Intents link" },
+      ]
+    },
+    {
       version: "3.3.0",
       date: "2026-02-26",
       type: "minor",

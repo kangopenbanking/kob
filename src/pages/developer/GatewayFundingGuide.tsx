@@ -11,8 +11,14 @@ const GatewayFundingGuide = () => (
     <SEO title="Account Funding & Withdrawals API | Kang Open Banking" description="Add funds to KOB accounts and withdraw to external banks via Mobile Money, Card, and Bank Transfer." />
     <div>
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
-      <h1 className="text-3xl font-bold">Account Funding & Withdrawals</h1>
+      <h1 className="text-3xl font-bold">Account Funding & Withdrawals (Legacy)</h1>
       <p className="text-muted-foreground mt-2">Add funds to KOB accounts via Mobile Money (MTN/Orange), Card (Stripe), or Bank Transfer (Flutterwave). Withdraw from KOB accounts to any external bank.</p>
+      <Alert className="mt-3">
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          <strong>Recommended:</strong> Use the new <a href="/developer/gateway/funding-intents" className="text-primary underline font-semibold">Funding Intents API</a> for full lifecycle tracking, idempotency, PayPal support, and webhook-based finalization. This endpoint remains available for backward compatibility.
+        </AlertDescription>
+      </Alert>
     </div>
 
     <Alert>

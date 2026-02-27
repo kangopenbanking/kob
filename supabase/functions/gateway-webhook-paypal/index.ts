@@ -138,6 +138,61 @@ serve(async (req) => {
       }
     }
 
+    // ─── Funding Intents: handle PayPal checkout/capture events ───
+    if (eventType === 'PAYMENT.CAPTURE.COMPLETED' || eventType === 'CHECKOUT.ORDER.APPROVED') {
+      const orderId = payoutResource?.supplementary_data?.related_ids?.order_id || payoutResource?.id;
+      if (orderId) {
+        const { data: fundingIntent } = await supabase.from('funding_intents').select('*').eq('provider_reference', orderId).in('status', ['pending_provider', 'pending_customer_action', 'pending_verification', 'created']).maybeSingle();
+
+        if (fundingIntent) {
+          if (eventType === 'PAYMENT.CAPTURE.COMPLETED') {
+            await supabase.from('funding_intents').update({
+              status: 'succeeded', provider_payload: event,
+            }).eq('id', fundingIntent.id);
+
+            await supabase.from('funding_events').insert({
+              funding_intent_id: fundingIntent.id, event_type: 'webhook_succeeded',
+              payload: { provider: 'paypal', order_id: orderId },
+            });
+
+            // Credit account
+            await supabase.from('account_balances').insert({
+              account_id: fundingIntent.account_id, balance_type: 'InterimAvailable',
+              amount: fundingIntent.net_amount || fundingIntent.amount, currency: fundingIntent.currency,
+              credit_debit_indicator: 'Credit', balance_datetime: new Date().toISOString(),
+            });
+            await supabase.from('transactions').insert({
+              account_id: fundingIntent.account_id, amount: fundingIntent.net_amount || fundingIntent.amount,
+              currency: fundingIntent.currency, credit_debit_indicator: 'Credit', status: 'Booked',
+              booking_date_time: new Date().toISOString(), value_date_time: new Date().toISOString(),
+              transaction_information: `Account funding via PayPal - ${fundingIntent.reference}`,
+              transaction_reference: fundingIntent.reference, user_id: fundingIntent.user_id,
+            });
+            await supabase.from('audit_logs').insert({
+              action_type: 'funding_intent_succeeded', entity_type: 'funding_intent', entity_id: fundingIntent.id,
+              performed_by: fundingIntent.user_id, details: { amount: fundingIntent.amount, method: 'paypal' },
+            });
+          } else if (eventType === 'CHECKOUT.ORDER.APPROVED') {
+            // Auto-capture the order
+            try {
+              const { getPayPalAccessToken: getPPToken } = await import("../_shared/gateway-adapters.ts");
+              const ppToken = await getPPToken();
+              await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${ppToken}`, 'Content-Type': 'application/json' },
+              });
+              await supabase.from('funding_events').insert({
+                funding_intent_id: fundingIntent.id, event_type: 'paypal_auto_capture_initiated',
+                payload: { order_id: orderId },
+              });
+            } catch (e) {
+              console.error('PayPal auto-capture failed:', e);
+            }
+          }
+        }
+      }
+    }
+
     return new Response(JSON.stringify({ status: 'processed' }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

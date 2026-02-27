@@ -99,6 +99,43 @@ serve(async (req) => {
       }
     }
 
+    // ─── Funding Intents: finalize on Flutterwave webhook ───
+    if (txRef) {
+      const { data: fundingIntent } = await supabase.from('funding_intents').select('*').eq('reference', txRef).in('status', ['pending_provider', 'pending_customer_action', 'pending_verification', 'created']).maybeSingle();
+      if (fundingIntent) {
+        const fiStatus = mapFlutterwaveStatus(payload.data?.status || payload.status);
+        await supabase.from('funding_intents').update({
+          status: fiStatus === 'successful' ? 'succeeded' : fiStatus,
+          provider_payload: payload,
+          failure_message: fiStatus === 'failed' ? `Flutterwave: ${payload.data?.status}` : null,
+        }).eq('id', fundingIntent.id);
+
+        await supabase.from('funding_events').insert({
+          funding_intent_id: fundingIntent.id, event_type: `webhook_${fiStatus}`,
+          payload: { provider: 'flutterwave', flw_ref: eventId },
+        });
+
+        if (fiStatus === 'successful') {
+          await supabase.from('account_balances').insert({
+            account_id: fundingIntent.account_id, balance_type: 'InterimAvailable',
+            amount: fundingIntent.net_amount || fundingIntent.amount, currency: fundingIntent.currency,
+            credit_debit_indicator: 'Credit', balance_datetime: new Date().toISOString(),
+          });
+          await supabase.from('transactions').insert({
+            account_id: fundingIntent.account_id, amount: fundingIntent.net_amount || fundingIntent.amount,
+            currency: fundingIntent.currency, credit_debit_indicator: 'Credit', status: 'Booked',
+            booking_date_time: new Date().toISOString(), value_date_time: new Date().toISOString(),
+            transaction_information: `Account funding via ${fundingIntent.method} - ${fundingIntent.reference}`,
+            transaction_reference: fundingIntent.reference, user_id: fundingIntent.user_id,
+          });
+          await supabase.from('audit_logs').insert({
+            action_type: 'funding_intent_succeeded', entity_type: 'funding_intent', entity_id: fundingIntent.id,
+            performed_by: fundingIntent.user_id, details: { amount: fundingIntent.amount, method: fundingIntent.method },
+          });
+        }
+      }
+    }
+
     // Check for payout events
     const reference = payload.data?.reference;
     if (reference) {

@@ -4046,6 +4046,131 @@ export type Database = {
         }
         Relationships: []
       }
+      funding_events: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          funding_intent_id: string
+          id: string
+          payload: Json | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          funding_intent_id: string
+          id?: string
+          payload?: Json | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          funding_intent_id?: string
+          id?: string
+          payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_events_funding_intent_id_fkey"
+            columns: ["funding_intent_id"]
+            isOneToOne: false
+            referencedRelation: "funding_intents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      funding_intents: {
+        Row: {
+          account_id: string
+          amount: number
+          created_at: string | null
+          currency: string
+          expires_at: string | null
+          failure_code: string | null
+          failure_message: string | null
+          fee_amount: number | null
+          id: string
+          idempotency_key: string | null
+          institution_id: string | null
+          metadata: Json | null
+          method: string
+          net_amount: number | null
+          next_action: Json | null
+          provider: string
+          provider_payload: Json | null
+          provider_reference: string | null
+          reference: string | null
+          return_url: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          created_at?: string | null
+          currency?: string
+          expires_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          fee_amount?: number | null
+          id?: string
+          idempotency_key?: string | null
+          institution_id?: string | null
+          metadata?: Json | null
+          method: string
+          net_amount?: number | null
+          next_action?: Json | null
+          provider: string
+          provider_payload?: Json | null
+          provider_reference?: string | null
+          reference?: string | null
+          return_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          expires_at?: string | null
+          failure_code?: string | null
+          failure_message?: string | null
+          fee_amount?: number | null
+          id?: string
+          idempotency_key?: string | null
+          institution_id?: string | null
+          metadata?: Json | null
+          method?: string
+          net_amount?: number | null
+          next_action?: Json | null
+          provider?: string
+          provider_payload?: Json | null
+          provider_reference?: string | null
+          reference?: string | null
+          return_url?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "funding_intents_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "funding_intents_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_beneficiaries: {
         Row: {
           account_number: string | null

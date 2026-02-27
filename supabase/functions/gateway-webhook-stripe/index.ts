@@ -82,6 +82,42 @@ serve(async (req) => {
           });
         }
       }
+
+      // ─── Funding Intents: finalize on Stripe webhook ───
+      const { data: fundingIntent } = await supabase.from('funding_intents').select('*').eq('provider_reference', piId).in('status', ['pending_provider', 'pending_customer_action', 'pending_verification', 'created']).maybeSingle();
+      if (fundingIntent) {
+        const fiStatus = newStatus === 'successful' ? 'succeeded' : newStatus === 'cancelled' ? 'cancelled' : newStatus === 'failed' ? 'failed' : null;
+        if (fiStatus) {
+          await supabase.from('funding_intents').update({
+            status: fiStatus, provider_payload: obj,
+            failure_message: fiStatus === 'failed' ? `Stripe: ${obj.status}` : null,
+          }).eq('id', fundingIntent.id);
+
+          await supabase.from('funding_events').insert({
+            funding_intent_id: fundingIntent.id, event_type: `webhook_${fiStatus}`,
+            payload: { provider: 'stripe', pi_id: piId },
+          });
+
+          if (fiStatus === 'succeeded') {
+            await supabase.from('account_balances').insert({
+              account_id: fundingIntent.account_id, balance_type: 'InterimAvailable',
+              amount: fundingIntent.net_amount || fundingIntent.amount, currency: fundingIntent.currency,
+              credit_debit_indicator: 'Credit', balance_datetime: new Date().toISOString(),
+            });
+            await supabase.from('transactions').insert({
+              account_id: fundingIntent.account_id, amount: fundingIntent.net_amount || fundingIntent.amount,
+              currency: fundingIntent.currency, credit_debit_indicator: 'Credit', status: 'Booked',
+              booking_date_time: new Date().toISOString(), value_date_time: new Date().toISOString(),
+              transaction_information: `Account funding via card - ${fundingIntent.reference}`,
+              transaction_reference: fundingIntent.reference, user_id: fundingIntent.user_id,
+            });
+            await supabase.from('audit_logs').insert({
+              action_type: 'funding_intent_succeeded', entity_type: 'funding_intent', entity_id: fundingIntent.id,
+              performed_by: fundingIntent.user_id, details: { amount: fundingIntent.amount, method: 'card', provider: 'stripe' },
+            });
+          }
+        }
+      }
     }
 
     // Handle disputes
