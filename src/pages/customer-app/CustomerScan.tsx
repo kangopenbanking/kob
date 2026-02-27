@@ -69,6 +69,7 @@ const CustomerScan: React.FC = () => {
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [scanResult, setScanResult] = useState<{ account: string; amount?: number } | null>(null);
+  const [payAmount, setPayAmount] = useState('');
 
   // Camera state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -130,7 +131,7 @@ const CustomerScan: React.FC = () => {
     // For now, simulate a scan after 5 seconds of camera being active
     const timeout = setTimeout(() => {
       if (cameraActive && !scanResult) {
-        handleScanDetected({ type: 'kob_pay', account: 'KOB-7721-3384-5502', institution: institutionId, amount: 15000 });
+        handleScanDetected({ type: 'kob_pay', account: 'KOB-7721-3384-5502', institution: institutionId });
       }
     }, 6000);
     return () => clearTimeout(timeout);
@@ -141,6 +142,7 @@ const CustomerScan: React.FC = () => {
     stopCamera();
     if (data.type === 'kob_pay' && data.account) {
       setScanResult({ account: data.account, amount: data.amount });
+      setPayAmount(data.amount ? String(data.amount) : '');
       toast.success('QR Code scanned successfully!');
     } else {
       toast.error('Invalid QR code format');
@@ -160,8 +162,9 @@ const CustomerScan: React.FC = () => {
 
   const handlePayNow = () => {
     if (!scanResult) return;
+    const finalAmount = payAmount ? Number(payAmount) : undefined;
     navigate(`/app/${institutionId}/transfer`, {
-      state: { prefill: { recipient: scanResult.account, amount: scanResult.amount } },
+      state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
   };
 
@@ -183,6 +186,7 @@ const CustomerScan: React.FC = () => {
   const resetScan = () => {
     setScanResult(null);
     setManualCode('');
+    setPayAmount('');
   };
 
   const qrData = JSON.stringify({
@@ -233,14 +237,21 @@ const CustomerScan: React.FC = () => {
                 <div className="text-center">
                   <p className="text-lg font-bold text-foreground">QR Code Scanned</p>
                   <p className="mt-1 font-mono text-sm text-muted-foreground">{scanResult.account}</p>
-                  {scanResult.amount && (
-                    <p className="mt-2 text-2xl font-extrabold text-foreground">
-                      {scanResult.amount.toLocaleString()} XAF
-                    </p>
-                  )}
+                </div>
+                <div className="w-full">
+                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                    Amount to Pay
+                  </label>
+                  <Input
+                    type="number"
+                    placeholder="Enter amount in XAF"
+                    value={payAmount}
+                    onChange={(e) => setPayAmount(e.target.value)}
+                    className="h-12 rounded-2xl text-center text-lg font-bold"
+                  />
                 </div>
                 <div className="flex w-full flex-col gap-3 pt-4">
-                  <Button className="w-full rounded-2xl h-12 text-sm font-bold" onClick={handlePayNow}>
+                  <Button className="w-full rounded-2xl h-12 text-sm font-bold" disabled={!payAmount} onClick={handlePayNow}>
                     Pay Now
                   </Button>
                   <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={resetScan}>
