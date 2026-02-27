@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 
 type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'appearance';
 
@@ -29,8 +30,8 @@ const BankSettings: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [pin, setPin] = useState('');
   const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
   const [showPinDialog, setShowPinDialog] = useState(false);
 
   // Notifications
@@ -132,18 +133,23 @@ const BankSettings: React.FC = () => {
   };
 
   const handleSetPin = async () => {
-    if (newPin.length !== 4) {
-      toast.error('PIN must be 4 digits');
+    if (newPin.length !== 6) {
+      toast.error('PIN must be 6 digits');
+      return;
+    }
+    if (newPin !== confirmPin) {
+      toast.error('PINs do not match');
       return;
     }
     setSaving(true);
     try {
       const { error } = await supabase.functions.invoke('pin-code-set', {
-        body: { pin: newPin },
+        body: { pin_code: newPin },
       });
       if (error) throw error;
       toast.success('PIN set successfully');
       setNewPin('');
+      setConfirmPin('');
       setShowPinDialog(false);
     } catch (err: any) {
       toast.error(err.message || 'Failed to set PIN');
@@ -328,7 +334,7 @@ const BankSettings: React.FC = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-foreground">Transaction PIN</h3>
-                <p className="text-xs text-muted-foreground">4-digit PIN for payments</p>
+                <p className="text-xs text-muted-foreground">6-digit PIN for payments</p>
               </div>
               <Button variant="outline" size="sm" onClick={() => setShowPinDialog(true)} className="gap-1.5">
                 <KeyRound className="h-4 w-4" />
@@ -412,16 +418,40 @@ const BankSettings: React.FC = () => {
             <DialogTitle>Set Transaction PIN</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col gap-4 pt-2">
-            <Input
-              type="password"
-              maxLength={4}
-              inputMode="numeric"
-              placeholder="Enter 4-digit PIN"
-              value={newPin}
-              onChange={e => setNewPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
-              className="text-center text-2xl font-bold tracking-[0.5em] h-14"
-            />
-            <Button onClick={handleSetPin} disabled={saving || newPin.length !== 4}>
+            <div className="space-y-2">
+              <Label className="text-sm">Enter 6-digit PIN</Label>
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm">Confirm PIN</Label>
+              <div className="flex justify-center">
+                <InputOTP maxLength={6} value={confirmPin} onChange={setConfirmPin}>
+                  <InputOTPGroup>
+                    <InputOTPSlot index={0} />
+                    <InputOTPSlot index={1} />
+                    <InputOTPSlot index={2} />
+                    <InputOTPSlot index={3} />
+                    <InputOTPSlot index={4} />
+                    <InputOTPSlot index={5} />
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              {confirmPin.length === 6 && newPin !== confirmPin && (
+                <p className="text-xs text-destructive text-center">PINs do not match</p>
+              )}
+            </div>
+            <Button onClick={handleSetPin} disabled={saving || newPin.length !== 6 || newPin !== confirmPin}>
               {saving ? 'Setting...' : 'Confirm PIN'}
             </Button>
           </div>

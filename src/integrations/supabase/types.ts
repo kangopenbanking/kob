@@ -8767,13 +8767,20 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string | null
+          address: string | null
+          city: string | null
           country_code: string | null
           created_at: string
+          date_of_birth: string | null
           email: string | null
           full_name: string | null
+          gender: string | null
           id: string
+          institution_id: string | null
           migration_grace_period_ends: string | null
           migration_required: boolean | null
+          occupation: string | null
           phone_number: string | null
           phone_verified: boolean | null
           phone_verified_at: string | null
@@ -8785,13 +8792,20 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          account_type?: string | null
+          address?: string | null
+          city?: string | null
           country_code?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
+          gender?: string | null
           id: string
+          institution_id?: string | null
           migration_grace_period_ends?: string | null
           migration_required?: boolean | null
+          occupation?: string | null
           phone_number?: string | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
@@ -8803,13 +8817,20 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          account_type?: string | null
+          address?: string | null
+          city?: string | null
           country_code?: string | null
           created_at?: string
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
+          gender?: string | null
           id?: string
+          institution_id?: string | null
           migration_grace_period_ends?: string | null
           migration_required?: boolean | null
+          occupation?: string | null
           phone_number?: string | null
           phone_verified?: boolean | null
           phone_verified_at?: string | null
@@ -8820,7 +8841,15 @@ export type Database = {
           preferred_otp_method?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       rate_limits: {
         Row: {

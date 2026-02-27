@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -64,6 +65,7 @@ const BankFundAccount: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [accountOpen, setAccountOpen] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   React.useEffect(() => {
     if (accounts?.length && !selectedAccountId) {
@@ -75,11 +77,14 @@ const BankFundAccount: React.FC = () => {
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
   const selectedMethod = paymentMethods.find(m => m.value === method)!;
 
-  const handleFund = async () => {
+  const handleFund = () => {
     if (!selectedAccountId) { toast.error('Select an account to fund'); return; }
     if (!amount || Number(amount) <= 0) { toast.error('Enter a valid amount'); return; }
     if (method === 'mobile_money' && !phone) { toast.error('Phone number required for Mobile Money'); return; }
+    setShowPin(true);
+  };
 
+  const executeFund = async () => {
     setLoading(true);
     setResult(null);
     try {
@@ -335,6 +340,7 @@ const BankFundAccount: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={executeFund} />
     </div>
   );
 };
