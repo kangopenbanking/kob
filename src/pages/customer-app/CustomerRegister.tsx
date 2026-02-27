@@ -141,9 +141,11 @@ const CustomerRegister: React.FC = () => {
 
       // Set PIN via edge function
       if (newPin) {
-        await supabase.functions.invoke('pin-code-verify', {
-          body: { action: 'set', user_id: user.id, pin_code: newPin },
+        const { data: pinData, error: pinError } = await supabase.functions.invoke('pin-code-set', {
+          body: { user_id: user.id, pin_code: newPin },
         });
+        if (pinError) throw pinError;
+        if (pinData?.error) throw new Error(pinData.error);
       }
 
       toast.success('Registration complete!');
