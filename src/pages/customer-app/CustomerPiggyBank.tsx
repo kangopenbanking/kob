@@ -257,26 +257,32 @@ function CategoryCard({ image, title, subtitle, saved, bgClass, onClick }: {
   image: string; title: string; subtitle: string; saved: number; bgClass: string; onClick: () => void;
 }) {
   return (
-    <motion.button
-      whileTap={{ scale: 0.97 }}
-      onClick={onClick}
-      className={`relative rounded-3xl ${bgClass} p-4 text-left overflow-hidden aspect-[3/4] flex flex-col justify-between`}
-    >
-      <div className="relative z-10">
-        <p className="text-sm font-bold text-foreground">{title}</p>
-        <p className="text-[10px] text-foreground/60 mt-0.5">{subtitle}</p>
+    <div className="flex flex-col gap-2">
+      <div
+        className={`relative rounded-3xl ${bgClass} p-4 text-left overflow-hidden aspect-[3/4] flex flex-col justify-between`}
+      >
+        <div className="relative z-10">
+          <p className="text-sm font-bold text-foreground">{title}</p>
+          <p className="text-[10px] text-foreground/60 mt-0.5">{subtitle}</p>
+        </div>
+        <div className="relative z-10">
+          <p className="text-[10px] text-foreground/60">Saved</p>
+          <p className="text-lg font-bold text-foreground">{saved.toLocaleString()} <span className="text-[10px] font-medium">XAF</span></p>
+        </div>
+        <img
+          src={image}
+          alt={title}
+          className="absolute bottom-2 right-2 h-20 w-20 object-contain"
+        />
       </div>
-      <div className="relative z-10">
-        <p className="text-[10px] text-foreground/60">Saved</p>
-        <p className="text-lg font-bold text-foreground">{saved.toLocaleString()} <span className="text-[10px] font-medium">XAF</span></p>
-      </div>
-      <img
-        src={image}
-        alt={title}
-        className="absolute bottom-0 right-0 h-28 w-28 object-contain opacity-90"
-      />
-      <ChevronRight className="absolute top-4 right-3 h-4 w-4 text-foreground/40" />
-    </motion.button>
+      <Button
+        onClick={onClick}
+        className="w-full rounded-2xl h-10 text-xs font-semibold"
+        size="sm"
+      >
+        Start Saving
+      </Button>
+    </div>
   );
 }
 
