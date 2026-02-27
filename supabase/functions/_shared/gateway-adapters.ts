@@ -117,7 +117,8 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
     body.phone_number = req.customer_phone;
   }
 
-  const res = await fetch('https://api.flutterwave.com/v3/charges?type=mobile_money_franco', {
+  const chargeType = req.channel === 'mobile_money' ? 'mobile_money_franco' : req.channel === 'card' ? 'card' : 'mobile_money_franco';
+  const res = await fetch(`https://api.flutterwave.com/v3/charges?type=${chargeType}`, {
     method: 'POST',
     headers: {
       Authorization: `Bearer ${FLW_SECRET}`,

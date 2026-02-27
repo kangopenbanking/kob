@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
+import { useState, useEffect } from "react";
+import { loadStripe, Stripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -8,9 +8,35 @@ import { Loader2, CreditCard, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+// Try build-time env var first, otherwise fetch from backend
+let stripePromiseCache: Promise<Stripe | null> | null = null;
+
+function getStripePromise(): Promise<Stripe | null> {
+  if (stripePromiseCache) return stripePromiseCache;
+
+  const envKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+  if (envKey) {
+    stripePromiseCache = loadStripe(envKey);
+    return stripePromiseCache;
+  }
+
+  // Fetch publishable key from backend
+  stripePromiseCache = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("gateway-get-stripe-config");
+      if (error || !data?.publishable_key) {
+        console.error("Failed to fetch Stripe config:", error);
+        return null;
+      }
+      return loadStripe(data.publishable_key);
+    } catch (err) {
+      console.error("Stripe config fetch error:", err);
+      return null;
+    }
+  })();
+
+  return stripePromiseCache;
+}
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -37,7 +63,6 @@ const StripeCardConfirmInner = ({ clientSecret, fundingIntentId, onSuccess, amou
   const [confirmed, setConfirmed] = useState(false);
 
   const confirmWithBackend = async (intentId: string) => {
-    // Poll backend to verify provider status and credit the account/wallet
     let attempts = 0;
     const maxAttempts = 5;
     while (attempts < maxAttempts) {
@@ -49,16 +74,11 @@ const StripeCardConfirmInner = ({ clientSecret, fundingIntentId, onSuccess, amou
         console.error("Confirm funding error:", error);
         break;
       }
-      if (data?.status === "succeeded") {
-        return true;
-      }
-      if (data?.status === "failed" || data?.status === "cancelled") {
-        return false;
-      }
-      // Wait before retrying
+      if (data?.status === "succeeded") return true;
+      if (data?.status === "failed" || data?.status === "cancelled") return false;
       await new Promise(r => setTimeout(r, 2000));
     }
-    return null; // Still pending after retries
+    return null;
   };
 
   const handleConfirm = async () => {
@@ -75,7 +95,6 @@ const StripeCardConfirmInner = ({ clientSecret, fundingIntentId, onSuccess, amou
       if (error) {
         toast.error(error.message || "Card payment failed");
       } else if (paymentIntent?.status === "succeeded") {
-        // Confirm with backend to finalize funding intent
         if (fundingIntentId) {
           const result = await confirmWithBackend(fundingIntentId);
           if (result === true) {
@@ -142,18 +161,38 @@ interface StripeCardConfirmProps {
 }
 
 export const StripeCardConfirm = ({ clientSecret, fundingIntentId, onSuccess, amount, currency }: StripeCardConfirmProps) => {
-  if (!stripePromise) {
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    getStripePromise().then((s) => {
+      setStripeInstance(s);
+      setLoading(false);
+      if (!s) setFailed(true);
+    });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-6">
+        <Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading payment form...
+      </div>
+    );
+  }
+
+  if (failed || !stripeInstance) {
     return (
       <Alert>
         <AlertDescription>
-          Stripe is not configured. Please set <code>VITE_STRIPE_PUBLIC_KEY</code> to enable card payments.
+          Stripe is not configured. Card payments are unavailable.
         </AlertDescription>
       </Alert>
     );
   }
 
   return (
-    <Elements stripe={stripePromise} options={{ clientSecret }}>
+    <Elements stripe={stripeInstance} options={{ clientSecret }}>
       <StripeCardConfirmInner clientSecret={clientSecret} fundingIntentId={fundingIntentId} onSuccess={onSuccess} amount={amount} currency={currency} />
     </Elements>
   );

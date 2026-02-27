@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { loadStripe } from "@stripe/stripe-js";
+import { useState, useEffect } from "react";
+import { loadStripe, Stripe } from "@stripe/stripe-js";
 import { Elements, CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +11,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 
-const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
-  ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
-  : null;
+let stripePromiseCache: Promise<Stripe | null> | null = null;
+
+function getStripePromise(): Promise<Stripe | null> {
+  if (stripePromiseCache) return stripePromiseCache;
+  const envKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
+  if (envKey) {
+    stripePromiseCache = loadStripe(envKey);
+    return stripePromiseCache;
+  }
+  stripePromiseCache = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("gateway-get-stripe-config");
+      if (error || !data?.publishable_key) return null;
+      return loadStripe(data.publishable_key);
+    } catch { return null; }
+  })();
+  return stripePromiseCache;
+}
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -184,8 +199,21 @@ const CardPaymentFormContent = () => {
 };
 
 export const CardPaymentForm = () => {
+  const [stripeInstance, setStripeInstance] = useState<Stripe | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    getStripePromise().then((s) => {
+      setStripeInstance(s);
+      setLoading(false);
+    });
+  }, []);
+
+  if (loading) return <div className="flex items-center justify-center py-6"><Loader2 className="h-5 w-5 animate-spin mr-2" /> Loading...</div>;
+  if (!stripeInstance) return <Card><CardContent className="py-6">Stripe is not configured.</CardContent></Card>;
+
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripeInstance}>
       <CardPaymentFormContent />
     </Elements>
   );
