@@ -35,6 +35,17 @@
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
     <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- OneSignal Push Notifications -->
+    <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+    <script>
+      window.OneSignalDeferred = window.OneSignalDeferred || [];
+      OneSignalDeferred.push(async function(OneSignal) {
+        await OneSignal.init({
+          appId: "9638b372-516d-46e8-ab42-8f23f35eeb20",
+        });
+      });
+    </script>
     
     <!-- Hreflang for Multilingual Support -->
     <link rel="alternate" hreflang="en" href="https://kangopenbanking.com/" />
