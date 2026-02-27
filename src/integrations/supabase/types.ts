@@ -3547,6 +3547,53 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_linked_accounts: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          account_type: string
+          created_at: string | null
+          id: string
+          institution_id: string | null
+          is_active: boolean | null
+          is_primary: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          account_type: string
+          created_at?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          account_type?: string
+          created_at?: string | null
+          id?: string
+          institution_id?: string | null
+          is_active?: boolean | null
+          is_primary?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "customer_linked_accounts_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dashboard_widgets: {
         Row: {
           config: Json | null
@@ -8778,6 +8825,9 @@ export type Database = {
           gender: string | null
           id: string
           institution_id: string | null
+          linked_account_name: string | null
+          linked_account_number: string | null
+          linked_account_type: string | null
           migration_grace_period_ends: string | null
           migration_required: boolean | null
           occupation: string | null
@@ -8803,6 +8853,9 @@ export type Database = {
           gender?: string | null
           id: string
           institution_id?: string | null
+          linked_account_name?: string | null
+          linked_account_number?: string | null
+          linked_account_type?: string | null
           migration_grace_period_ends?: string | null
           migration_required?: boolean | null
           occupation?: string | null
@@ -8828,6 +8881,9 @@ export type Database = {
           gender?: string | null
           id?: string
           institution_id?: string | null
+          linked_account_name?: string | null
+          linked_account_number?: string | null
+          linked_account_type?: string | null
           migration_grace_period_ends?: string | null
           migration_required?: boolean | null
           occupation?: string | null
