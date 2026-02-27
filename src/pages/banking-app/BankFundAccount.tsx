@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Wallet, Loader2, Shield } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, Wallet, Loader2, Shield, Sparkles, TrendingUp, ChevronRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useBankAccounts } from '@/hooks/useBankingData';
 import { PaymentMethodSelector } from '@/components/funding/PaymentMethodSelector';
@@ -29,7 +29,6 @@ const BankFundAccount: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  // Auto-select first account
   React.useEffect(() => {
     if (accounts?.length && !selectedAccountId) {
       setSelectedAccountId(accounts[0].id);
@@ -37,6 +36,8 @@ const BankFundAccount: React.FC = () => {
   }, [accounts, selectedAccountId]);
 
   const feePercent = method === 'mobile_money' ? 0.035 : method === 'card' ? 0.03 : method === 'paypal' ? 0.035 : 0.015;
+
+  const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
 
   const handleFund = async () => {
     if (!selectedAccountId) { toast.error('Select an account to fund'); return; }
@@ -74,114 +75,214 @@ const BankFundAccount: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col px-4 py-6 pb-28">
-      {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
-          <ArrowLeft className="h-5 w-5 text-foreground" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Fund Account</h1>
-          <p className="text-sm text-muted-foreground">Add money via MoMo, Card, PayPal or Bank Transfer</p>
-        </div>
-      </div>
+    <div className="flex flex-col min-h-screen bg-background">
+      {/* Hero Header */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-primary/70 px-5 pb-8 pt-6"
+      >
+        {/* Decorative circles */}
+        <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-white/5" />
+        <div className="absolute -left-4 bottom-0 h-20 w-20 rounded-full bg-white/5" />
+        <div className="absolute right-12 bottom-4 h-12 w-12 rounded-full bg-white/10" />
 
-      {result ? (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
-          <FundingResult result={result} fmt={fmt} onSuccess={handleSuccess} />
-        </motion.div>
-      ) : (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
-          {/* Account Selector */}
-          {accounts && accounts.length > 1 && (
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Select Account</Label>
-              <div className="flex flex-col gap-2">
-                {accounts.map((acc) => (
-                  <button
-                    key={acc.id}
-                    onClick={() => setSelectedAccountId(acc.id)}
-                    className={`flex items-center gap-3 rounded-2xl border p-3.5 text-left transition-all ${
-                      selectedAccountId === acc.id
-                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                        : 'border-border bg-card hover:border-primary/40'
-                    }`}
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(var(--bank-mint))]">
-                      <Wallet className="h-5 w-5 text-white" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-foreground truncate">{acc.nickname || acc.account_holder_name}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{acc.account_id}</p>
-                    </div>
-                  </button>
-                ))}
+        <div className="relative z-10">
+          <div className="flex items-center justify-between mb-6">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm transition-colors hover:bg-white/20"
+            >
+              <ArrowLeft className="h-5 w-5 text-primary-foreground" />
+            </button>
+            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
+              <Sparkles className="h-5 w-5 text-primary-foreground" />
+            </div>
+          </div>
+
+          <h1 className="text-2xl font-bold tracking-tight text-primary-foreground">Fund Account</h1>
+          <p className="mt-1 text-sm text-primary-foreground/70">Add money via MoMo, Card, PayPal or Transfer</p>
+
+          {/* Selected account mini-card */}
+          {selectedAccount && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="mt-5 flex items-center gap-3 rounded-2xl bg-white/10 backdrop-blur-sm p-3.5"
+            >
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/15">
+                <Wallet className="h-5 w-5 text-primary-foreground" />
               </div>
-            </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-primary-foreground truncate">
+                  {selectedAccount.nickname || selectedAccount.account_holder_name}
+                </p>
+                <p className="text-xs text-primary-foreground/60 font-mono">{selectedAccount.account_id}</p>
+              </div>
+              <div className="flex items-center gap-1 text-primary-foreground/50">
+                <TrendingUp className="h-3.5 w-3.5" />
+              </div>
+            </motion.div>
           )}
+        </div>
+      </motion.div>
 
-          {/* Payment Method */}
-          <div className="space-y-2">
-            <Label className="text-sm font-semibold">Payment Method</Label>
-            <PaymentMethodSelector value={method} onChange={setMethod} />
-          </div>
+      {/* Main Content - pulled up with negative margin for overlap effect */}
+      <div className="flex-1 px-4 -mt-3">
+        <AnimatePresence mode="wait">
+          {result ? (
+            <motion.div
+              key="result"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              className="space-y-6 pt-1"
+            >
+              <FundingResult result={result} fmt={fmt} onSuccess={handleSuccess} />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="form"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              className="space-y-4 pt-1"
+            >
+              {/* Account Selector Card */}
+              {accounts && accounts.length > 1 && (
+                <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+                  <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
+                    Select Account
+                  </Label>
+                  <div className="flex flex-col gap-2">
+                    {accounts.map((acc) => (
+                      <button
+                        key={acc.id}
+                        onClick={() => setSelectedAccountId(acc.id)}
+                        className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all duration-200 ${
+                          selectedAccountId === acc.id
+                            ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                            : 'border-border/40 bg-background hover:border-primary/30 hover:bg-muted/30'
+                        }`}
+                      >
+                        <div className={`flex h-9 w-9 items-center justify-center rounded-xl transition-colors ${
+                          selectedAccountId === acc.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                        }`}>
+                          <Wallet className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{acc.nickname || acc.account_holder_name}</p>
+                          <p className="text-[11px] text-muted-foreground font-mono">{acc.account_id}</p>
+                        </div>
+                        {selectedAccountId === acc.id && (
+                          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
-          {/* Amount */}
-          <AmountInput value={amount} onChange={setAmount} feePercent={feePercent} fmt={fmt} />
+              {/* Payment Method Card */}
+              <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+                <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 block">
+                  Payment Method
+                </Label>
+                <PaymentMethodSelector value={method} onChange={setMethod} />
+              </div>
 
-          {/* Conditional Inputs */}
-          {method === 'mobile_money' && (
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Phone Number</Label>
-              <Input
-                type="tel"
-                placeholder="e.g. 237670000000"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                className="h-12"
-              />
-            </div>
+              {/* Amount Card */}
+              <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+                <AmountInput value={amount} onChange={setAmount} feePercent={feePercent} fmt={fmt} />
+              </div>
+
+              {/* Conditional Inputs Card */}
+              <AnimatePresence mode="wait">
+                {method === 'mobile_money' && (
+                  <motion.div
+                    key="phone"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                        Phone Number
+                      </Label>
+                      <Input
+                        type="tel"
+                        placeholder="e.g. 237670000000"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="h-12 rounded-xl border-border/60 bg-background text-base font-medium"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+
+                {(method === 'card' || method === 'paypal') && (
+                  <motion.div
+                    key="email"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm">
+                      <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">
+                        Email Address
+                      </Label>
+                      <Input
+                        type="email"
+                        placeholder="you@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="h-12 rounded-xl border-border/60 bg-background text-base font-medium"
+                      />
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Submit Button */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+              >
+                <Button
+                  onClick={handleFund}
+                  disabled={loading || !selectedAccountId || !amount || Number(amount) <= 0}
+                  className="w-full h-14 text-base font-bold rounded-2xl shadow-lg shadow-primary/20 transition-all duration-200 hover:shadow-xl hover:shadow-primary/30"
+                  size="lg"
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                  ) : (
+                    <Wallet className="h-5 w-5 mr-2" />
+                  )}
+                  {loading ? 'Processing…' : 'Fund Account'}
+                  {!loading && <ChevronRight className="h-4 w-4 ml-auto opacity-60" />}
+                </Button>
+              </motion.div>
+
+              {/* Security Badge */}
+              <div className="flex items-center justify-center gap-2 py-2">
+                <div className="flex items-center gap-1.5 rounded-full bg-muted/60 px-3 py-1.5">
+                  <Shield className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[11px] font-medium text-muted-foreground">Secured by Kang Open Banking</span>
+                </div>
+              </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
-          {(method === 'card' || method === 'paypal') && (
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Email Address</Label>
-              <Input
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-12"
-              />
-            </div>
-          )}
-
-          {/* Submit */}
-          <Button
-            onClick={handleFund}
-            disabled={loading || !selectedAccountId || !amount || Number(amount) <= 0}
-            className="w-full h-13 text-base font-bold rounded-2xl"
-            size="lg"
-          >
-            {loading ? (
-              <Loader2 className="h-5 w-5 animate-spin mr-2" />
-            ) : (
-              <Wallet className="h-5 w-5 mr-2" />
-            )}
-            {loading ? 'Processing…' : 'Fund Account'}
-          </Button>
-
-          {/* Security Note */}
-          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-            <Shield className="h-3.5 w-3.5" />
-            <span>Secured by Kang Open Banking</span>
-          </div>
-        </motion.div>
-      )}
-
-      {/* Funding History */}
-      <div className="mt-8">
-        <FundingHistory scope="end_user" accountId={selectedAccountId} fmt={fmt} />
+        {/* Funding History */}
+        <div className="mt-6 pb-8">
+          <FundingHistory scope="end_user" accountId={selectedAccountId} fmt={fmt} />
+        </div>
       </div>
     </div>
   );
