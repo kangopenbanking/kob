@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CreditCard, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const stripePromise = import.meta.env.VITE_STRIPE_PUBLIC_KEY
   ? loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY)
@@ -23,16 +24,42 @@ const CARD_ELEMENT_OPTIONS = {
 
 interface StripeCardConfirmInnerProps {
   clientSecret: string;
+  fundingIntentId?: string;
   onSuccess?: () => void;
   amount?: number;
   currency?: string;
 }
 
-const StripeCardConfirmInner = ({ clientSecret, onSuccess, amount, currency = "XAF" }: StripeCardConfirmInnerProps) => {
+const StripeCardConfirmInner = ({ clientSecret, fundingIntentId, onSuccess, amount, currency = "XAF" }: StripeCardConfirmInnerProps) => {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
+
+  const confirmWithBackend = async (intentId: string) => {
+    // Poll backend to verify provider status and credit the account/wallet
+    let attempts = 0;
+    const maxAttempts = 5;
+    while (attempts < maxAttempts) {
+      attempts++;
+      const { data, error } = await supabase.functions.invoke("gateway-confirm-funding", {
+        body: { funding_intent_id: intentId },
+      });
+      if (error) {
+        console.error("Confirm funding error:", error);
+        break;
+      }
+      if (data?.status === "succeeded") {
+        return true;
+      }
+      if (data?.status === "failed" || data?.status === "cancelled") {
+        return false;
+      }
+      // Wait before retrying
+      await new Promise(r => setTimeout(r, 2000));
+    }
+    return null; // Still pending after retries
+  };
 
   const handleConfirm = async () => {
     if (!stripe || !elements) return;
@@ -48,9 +75,25 @@ const StripeCardConfirmInner = ({ clientSecret, onSuccess, amount, currency = "X
       if (error) {
         toast.error(error.message || "Card payment failed");
       } else if (paymentIntent?.status === "succeeded") {
-        setConfirmed(true);
-        toast.success("Card payment confirmed successfully!");
-        onSuccess?.();
+        // Confirm with backend to finalize funding intent
+        if (fundingIntentId) {
+          const result = await confirmWithBackend(fundingIntentId);
+          if (result === true) {
+            setConfirmed(true);
+            toast.success("Payment confirmed and funds credited!");
+            onSuccess?.();
+          } else if (result === false) {
+            toast.error("Payment was processed but funding failed. Contact support.");
+          } else {
+            setConfirmed(true);
+            toast.success("Payment confirmed! Funds will be credited shortly.");
+            onSuccess?.();
+          }
+        } else {
+          setConfirmed(true);
+          toast.success("Card payment confirmed successfully!");
+          onSuccess?.();
+        }
       } else {
         toast.info(`Payment status: ${paymentIntent?.status}`);
       }
@@ -65,7 +108,7 @@ const StripeCardConfirmInner = ({ clientSecret, onSuccess, amount, currency = "X
       <Alert className="border-green-500/30 bg-green-50 dark:bg-green-950/20">
         <CheckCircle2 className="h-4 w-4 text-green-600" />
         <AlertDescription className="text-green-700 dark:text-green-400">
-          Card payment confirmed successfully. Funds will be credited shortly.
+          Card payment confirmed successfully. Funds have been credited.
         </AlertDescription>
       </Alert>
     );
@@ -92,12 +135,13 @@ const StripeCardConfirmInner = ({ clientSecret, onSuccess, amount, currency = "X
 
 interface StripeCardConfirmProps {
   clientSecret: string;
+  fundingIntentId?: string;
   onSuccess?: () => void;
   amount?: number;
   currency?: string;
 }
 
-export const StripeCardConfirm = ({ clientSecret, onSuccess, amount, currency }: StripeCardConfirmProps) => {
+export const StripeCardConfirm = ({ clientSecret, fundingIntentId, onSuccess, amount, currency }: StripeCardConfirmProps) => {
   if (!stripePromise) {
     return (
       <Alert>
@@ -110,7 +154,7 @@ export const StripeCardConfirm = ({ clientSecret, onSuccess, amount, currency }:
 
   return (
     <Elements stripe={stripePromise} options={{ clientSecret }}>
-      <StripeCardConfirmInner clientSecret={clientSecret} onSuccess={onSuccess} amount={amount} currency={currency} />
+      <StripeCardConfirmInner clientSecret={clientSecret} fundingIntentId={fundingIntentId} onSuccess={onSuccess} amount={amount} currency={currency} />
     </Elements>
   );
 };

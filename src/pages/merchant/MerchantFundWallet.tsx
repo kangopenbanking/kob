@@ -187,7 +187,7 @@ const MerchantFundWallet = () => {
               </Button>
             )}
             {result.next_action?.type === "stripe_confirm" && result.next_action?.client_secret && (
-              <StripeCardConfirm clientSecret={result.next_action.client_secret} amount={result.amount} currency={result.currency} />
+              <StripeCardConfirm clientSecret={result.next_action.client_secret} fundingIntentId={result.id} amount={result.amount} currency={result.currency} onSuccess={() => refetchWallets()} />
             )}
             {result.next_action?.type === "bank_transfer_instructions" && (
               <div className="bg-muted p-4 rounded-lg space-y-1 text-sm">
