@@ -168,7 +168,7 @@ const CustomerHome: React.FC = () => {
           <div className="grid grid-cols-2 gap-3">
             {visibleMoney.slice(0, 2).map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left min-h-[140px]`}>
+                className={`flex flex-col items-start gap-3 rounded-3xl ${item.color} p-5 text-left min-h-[140px] border-2 border-foreground`}>
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
                   <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
