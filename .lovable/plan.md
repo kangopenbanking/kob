@@ -1,76 +1,40 @@
 
 
-## Flutterwave Mobile Money Funding — End-to-End Gap Analysis & Fix Plan
+## Plan: Add Account Funding to Banking PWA
 
-### Root Cause
+### Overview
+Add a "Fund Account" feature to the banking app PWA (`/bank/:institutionId/fund`) that lets bank customers add money via Mobile Money, Card (Stripe), PayPal, and Bank Transfer. Reuses existing shared funding components.
 
-The funding intent is created successfully, but payments never complete because **there is no client-side polling mechanism for Flutterwave mobile money**. Unlike Stripe (which has `StripeCardConfirm` with `confirmWithBackend` polling), the Flutterwave mobile money flow dead-ends after intent creation.
+### Step 1: Create `BankFundAccount.tsx` page
+New file: `src/pages/banking-app/BankFundAccount.tsx`
 
-Here is the flow and where it breaks:
+- Mobile-first design matching PWA aesthetic (rounded-2xl cards, motion animations, bank color tokens)
+- Uses `useBankAccounts()` hook to get institution-scoped accounts
+- Reuses `PaymentMethodSelector`, `AmountInput`, `FundingResult`, `FundingHistory`, `MobileMoneyConfirm` components
+- Calls `gateway-create-funding-intent` with `funding_scope: "end_user"` and the selected account
+- Phone/email conditional inputs for Mobile Money and Card/PayPal
+- Back navigation via PWATopBar or inline back button
 
-```text
-Frontend → gateway-create-funding-intent → Flutterwave API (charge)
-         ← Intent created (status: pending_provider)
-         ← UI shows "Funding Intent Created" ... AND STOPS HERE
+### Step 2: Add route in `App.tsx`
+- Import `BankFundAccount` 
+- Add route inside the `BankingAppLayout` nested routes: `<Route path="fund" element={<BankFundAccount />} />`
+- No FeatureGate needed (funding is a core feature)
 
-         No polling. No webhook arriving. Payment stuck forever.
-```
+### Step 3: Add "Fund Account" entry point in BankHome quick actions
+File: `src/pages/banking-app/BankHome.tsx`
+- Add a "Fund" quick action with `Wallet` icon to the `allQuickActions` array, pointing to `fund`
 
-### Gaps Identified (5 total)
+### Step 4: Add "Fund Account" to BankPayments page
+File: `src/pages/banking-app/BankPayments.tsx`
+- Add a "Fund Account" payment option with `Wallet` icon, path `../fund`, description "Add money via MoMo, Card, PayPal"
 
-**Gap 1: No `next_action` for mobile money charges**
-In `gateway-create-funding-intent/index.ts` (line 151-161), when Flutterwave returns no `redirect_url` (which is the norm for USSD/STK-push mobile money), `next_action` stays `null`. The frontend has no instruction to poll or wait.
+### Step 5: Add "Fund Account" to BankMore page
+File: `src/pages/banking-app/BankMore.tsx`
+- Add entry in the Financial Services section: icon `Wallet`, label "Fund Account", path `fund`
 
-**Gap 2: No MobileMoneyConfirm component**
-`FundingResult.tsx` handles `redirect_url`, `approval_url`, `stripe_confirm`, and `bank_transfer_instructions` — but has **zero handling** for mobile money "waiting for user to confirm on phone" state with polling.
-
-**Gap 3: Flutterwave adapter lacks defensive response parsing**
-`gateway-adapters.ts` line 130: `const data = await res.json()` — if Flutterwave returns HTML (e.g., rate limit page or error), this crashes silently.
-
-**Gap 4: Flutterwave adapter missing timeout**
-No `AbortSignal.timeout()` on the fetch call — can hang indefinitely.
-
-**Gap 5: `gateway-confirm-funding` status mapping mismatch**
-Line 82: maps `successful` → `succeeded` but `mapFlutterwaveStatus` returns `'successful'` for completed transactions. The reconciler (`gateway-reconcile-funding`) maps to `'successful'` (not `'succeeded'`), creating an inconsistency — reconciler finalizes to `status: 'successful'` while confirm-funding finalizes to `status: 'succeeded'`.
-
----
-
-### Implementation Plan
-
-#### Step 1: Fix `createFlutterwaveCharge` adapter — defensive parsing + timeout
-File: `supabase/functions/_shared/gateway-adapters.ts`
-
-- Add `AbortSignal.timeout(60000)` to the Flutterwave fetch call
-- Check `Content-Type` before calling `.json()`
-- Wrap JSON parse in try/catch with meaningful error
-- Log the Flutterwave response for debugging
-
-#### Step 2: Set proper `next_action` for Flutterwave mobile money in intent creator
-File: `supabase/functions/gateway-create-funding-intent/index.ts`
-
-- When `resolvedProvider === 'flutterwave'` and no `redirect_url` is returned (USSD push flow), set:
-  ```
-  next_action = { type: 'mobile_money_confirm', message: 'Confirm the payment on your phone' }
-  status = 'pending_customer_action'
-  ```
-- When a `redirect_url` IS returned, keep existing redirect logic
-
-#### Step 3: Create `MobileMoneyConfirm` component with polling
-New file: `src/components/funding/MobileMoneyConfirm.tsx`
-
-- Shows a "Waiting for mobile money confirmation" UI with phone icon and animated indicator
-- Polls `gateway-confirm-funding` every 5 seconds (up to 12 attempts = 60s)
-- On success: shows success state, calls `onSuccess`
-- On failure: shows error with retry option
-- On timeout: shows "check back later" message
-
-#### Step 4: Wire `MobileMoneyConfirm` into `FundingResult`
-File: `src/components/funding/FundingResult.tsx`
-
-- Add a condition for `result.next_action?.type === "mobile_money_confirm"` that renders the new `MobileMoneyConfirm` component with `fundingIntentId={result.id}`
-
-#### Step 5: Fix status inconsistency in `gateway-reconcile-funding`
-File: `supabase/functions/gateway-reconcile-funding/index.ts`
-
-- In `finalizeIntent`, map `'successful'` → `'succeeded'` to match the `funding_intents` status enum used everywhere else
+### Technical Notes
+- All existing shared components (`PaymentMethodSelector`, `AmountInput`, `FundingResult`, `FundingHistory`, `MobileMoneyConfirm`, `StripeCardConfirm`) are reused without modification
+- The page uses `useParams()` for `institutionId` and `useBankAccounts()` for institution-scoped account selection
+- Currency defaults to XAF with the same `fmt` formatter used across the platform
+- No database changes needed — uses existing `funding_intents`, `accounts`, and gateway edge functions
 
