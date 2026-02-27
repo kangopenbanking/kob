@@ -239,7 +239,7 @@ export default function MerchantDashboard() {
               icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />}
               title="No transactions yet"
               description="Start integrating with our API to accept your first payment"
-              action={{ label: "View API Docs", onClick: () => navigate("/developer/gateway/collections") }}
+              action={{ label: "View API Docs", onClick: () => navigate("/developer/gateway/charges") }}
             />
           ) : (
             <div className="overflow-x-auto">
