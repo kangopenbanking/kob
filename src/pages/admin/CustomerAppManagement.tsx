@@ -1,37 +1,1122 @@
-import React from 'react';
-import { Smartphone } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Smartphone, Users, CreditCard, ArrowRightLeft, PiggyBank, Landmark,
+  Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
+  Eye, Send, QrCode, ScanLine, ChevronRight, BarChart3, Monitor,
+  Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
+  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock
+} from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
+import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
 
-const CustomerAppManagement: React.FC = () => {
+// ─── Types ───
+interface CustomerAppConfig {
+  features: {
+    qr_scan: boolean;
+    transfer: boolean;
+    request: boolean;
+    bills: boolean;
+    invoices: boolean;
+    bank: boolean;
+    split_bills: boolean;
+    pay_links: boolean;
+    cash_out: boolean;
+    recurring: boolean;
+    rewards: boolean;
+    piggy_bank: boolean;
+    njangi: boolean;
+    rent_reporting: boolean;
+    credit_score: boolean;
+    cards: boolean;
+  };
+  section_order: CustomerSectionKey[];
+  layout_style: LayoutStyle;
+  media_sections: MediaSection[];
+  walkthrough_config: WalkthroughConfig;
+  card_colors: CardColors;
+  support_phone: string;
+  support_email: string;
+}
+
+type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'recent_activities';
+
+const defaultSectionOrder: CustomerSectionKey[] = ['balance_card', 'quick_actions', 'media_banner', 'recent_activities'];
+
+const defaultConfig: CustomerAppConfig = {
+  features: {
+    qr_scan: true, transfer: true, request: true, bills: true, invoices: true,
+    bank: true, split_bills: true, pay_links: true, cash_out: true, recurring: true,
+    rewards: true, piggy_bank: true, njangi: true, rent_reporting: true,
+    credit_score: true, cards: true,
+  },
+  section_order: defaultSectionOrder,
+  layout_style: 'modern',
+  media_sections: [],
+  walkthrough_config: { skip_enabled: true },
+  card_colors: {},
+  support_phone: '',
+  support_email: '',
+};
+
+// ─── Hooks ───
+function useInstitutions() {
+  return useQuery({
+    queryKey: ["admin-institutions-customer"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("institutions")
+        .select("id, institution_name, institution_type, status, logo_url, primary_color, created_at, app_config")
+        .order("institution_name");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useLinkedAccounts(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-customer-linked", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("customer_linked_accounts")
+        .select("*, profiles:user_id(id, full_name, email, phone_number)")
+        .eq("institution_id", institutionId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionAccounts(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-accounts", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("accounts")
+        .select("*, account_balances(*)")
+        .eq("institution_id", institutionId!)
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionTransactions(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-transactions", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data: accounts } = await supabase.from("accounts").select("id").eq("institution_id", institutionId!);
+      const accountIds = (accounts || []).map((a) => a.id);
+      if (accountIds.length === 0) return [];
+      const { data, error } = await supabase.from("transactions").select("*").in("account_id", accountIds).order("created_at", { ascending: false }).limit(100) as any;
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionPiggyBank(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-piggybank", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("piggybank_plans").select("*, piggybank_payments(*)").eq("institution_id", institutionId!).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionNjangi(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-njangi", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).from("njangi_groups").select("*, njangi_members(*), njangi_contributions(*)").eq("institution_id", institutionId!).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionCards(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-cards", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data: accounts } = await supabase.from("accounts").select("user_id").eq("institution_id", institutionId!);
+      const userIds = [...new Set((accounts || []).map(a => a.user_id))];
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase.from("virtual_cards").select("*").in("user_id", userIds).order("created_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useInstitutionCreditScores(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-credit", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data: accounts } = await supabase.from("accounts").select("user_id").eq("institution_id", institutionId!);
+      const userIds = [...new Set((accounts || []).map(a => a.user_id))];
+      if (userIds.length === 0) return [];
+      const { data, error } = await supabase.from("credit_scores").select("*").in("user_id", userIds).order("calculated_at", { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+function useWalkthroughSlides(institutionId: string | null) {
+  return useQuery({
+    queryKey: ["admin-cust-walkthrough", institutionId],
+    enabled: !!institutionId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("institution_walkthroughs")
+        .select("*")
+        .eq("institution_id", institutionId!)
+        .order("slide_order");
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Stat Card ───
+function StatCard({ icon: Icon, label, value, color }: { icon: any; label: string; value: string | number; color: string }) {
+  return (
+    <Card>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${color}`}>
+          <Icon className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <p className="text-sm text-muted-foreground">{label}</p>
+          <p className="text-xl font-bold">{value}</p>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Media Section Manager ───
+function MediaSectionManager({ mediaSections, onChange, onAutoAddToOrder }: { mediaSections: MediaSection[]; onChange: (s: MediaSection[]) => void; onAutoAddToOrder?: () => void }) {
+  const [uploading, setUploading] = useState(false);
+
+  const addMedia = (type: 'image' | 'video') => {
+    const newItem: MediaSection = { id: crypto.randomUUID(), type, url: '', provider: type === 'video' ? 'youtube' : undefined, video_id: '', title: '', position: mediaSections.length, aspect: 'landscape' };
+    onChange([...mediaSections, newItem]);
+    onAutoAddToOrder?.();
+  };
+
+  const updateItem = (id: string, updates: Partial<MediaSection>) => onChange(mediaSections.map(m => m.id === id ? { ...m, ...updates } : m));
+  const removeItem = (id: string) => onChange(mediaSections.filter(m => m.id !== id));
+
+  const handleVideoUrl = (id: string, url: string) => {
+    const { provider, video_id } = detectProvider(url);
+    updateItem(id, { url, provider, video_id });
+  };
+
+  const handleImageUpload = async (id: string, file: File) => {
+    setUploading(true);
+    const path = `media/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+    if (error) { toast.error('Upload failed'); setUploading(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
+    updateItem(id, { url: publicUrl });
+    setUploading(false);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2"><Image className="h-4 w-4" /> Media Banners</CardTitle>
+        <CardDescription>Add image slides or embedded videos to the home screen</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {mediaSections.map((item, idx) => (
+          <div key={item.id} className="rounded-lg border p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Badge variant="outline" className="text-xs capitalize">{item.type}</Badge>
+                <span className="text-[10px] text-muted-foreground">#{idx + 1}</span>
+              </div>
+              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeItem(item.id)}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+            </div>
+            <Input placeholder="Title (optional)" value={item.title || ''} onChange={(e) => updateItem(item.id, { title: e.target.value })} className="h-8 text-xs" />
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">Dimension:</span>
+              <div className="flex gap-1">
+                <Button type="button" variant={(!item.aspect || item.aspect === 'landscape') ? 'default' : 'outline'} size="sm" className="h-7 text-xs gap-1 px-2" onClick={() => updateItem(item.id, { aspect: 'landscape' })}>
+                  <span className="inline-block w-4 h-2.5 border rounded-sm border-current" /> Landscape
+                </Button>
+                <Button type="button" variant={item.aspect === 'portrait' ? 'default' : 'outline'} size="sm" className="h-7 text-xs gap-1 px-2" onClick={() => updateItem(item.id, { aspect: 'portrait' })}>
+                  <span className="inline-block w-2.5 h-4 border rounded-sm border-current" /> Portrait
+                </Button>
+              </div>
+            </div>
+            {item.type === 'image' ? (
+              <div className="space-y-2">
+                <Input placeholder="Image URL" value={item.url} onChange={(e) => updateItem(item.id, { url: e.target.value })} className="h-8 text-xs" />
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Or upload image'}
+                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleImageUpload(item.id, e.target.files[0])} />
+                </label>
+                {item.url && <img src={item.url} alt="" className={`w-full rounded object-cover ${item.aspect === 'portrait' ? 'h-40' : 'h-20'}`} />}
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <Input placeholder="Video URL (YouTube, Facebook, X, etc.)" value={item.url} onChange={(e) => handleVideoUrl(item.id, e.target.value)} className="h-8 text-xs" />
+                {item.provider && <Badge variant="secondary" className="text-[10px]">{item.provider}</Badge>}
+              </div>
+            )}
+          </div>
+        ))}
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => addMedia('image')} className="gap-1"><Image className="h-3.5 w-3.5" /> Add Image</Button>
+          <Button variant="outline" size="sm" onClick={() => addMedia('video')} className="gap-1"><Video className="h-3.5 w-3.5" /> Add Video</Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// ─── Walkthrough Manager ───
+function WalkthroughManager({ institutionId, walkthroughConfig, onConfigChange }: {
+  institutionId: string;
+  walkthroughConfig: WalkthroughConfig;
+  onConfigChange: (c: WalkthroughConfig) => void;
+}) {
+  const queryClient = useQueryClient();
+  const { data: slides = [], isLoading } = useWalkthroughSlides(institutionId);
+  const [editSlide, setEditSlide] = useState<any>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const saveSlideMutation = useMutation({
+    mutationFn: async (slide: any) => {
+      if (slide.id && !slide.isNew) {
+        const { error } = await supabase.from('institution_walkthroughs').update({
+          title: slide.title, description: slide.description, media_type: slide.media_type,
+          media_url: slide.media_url, icon_name: slide.icon_name, bg_color: slide.bg_color,
+          text_color: slide.text_color, slide_order: slide.slide_order,
+        }).eq('id', slide.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('institution_walkthroughs').insert({
+          institution_id: institutionId, title: slide.title, description: slide.description,
+          media_type: slide.media_type || 'icon', media_url: slide.media_url,
+          icon_name: slide.icon_name || 'Shield', bg_color: slide.bg_color,
+          text_color: slide.text_color, slide_order: slide.slide_order || slides.length,
+        });
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-cust-walkthrough", institutionId] });
+      setEditSlide(null);
+      toast.success("Slide saved");
+    },
+    onError: () => toast.error("Failed to save slide"),
+  });
+
+  const deleteSlideMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('institution_walkthroughs').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-cust-walkthrough", institutionId] });
+      toast.success("Slide deleted");
+    },
+  });
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Customer App Management</h1>
-        <p className="text-sm text-muted-foreground">
-          Configure and manage customer-facing mobile applications
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2"><Palette className="h-4 w-4" /> Walkthrough Theme</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label className="text-xs">Background Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={walkthroughConfig.bg_color || '#ffffff'} onChange={(e) => onConfigChange({ ...walkthroughConfig, bg_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+                <span className="text-xs text-muted-foreground">{walkthroughConfig.bg_color || 'Default'}</span>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Text Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={walkthroughConfig.text_color || '#000000'} onChange={(e) => onConfigChange({ ...walkthroughConfig, text_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Accent Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={walkthroughConfig.accent_color || '#3b82f6'} onChange={(e) => onConfigChange({ ...walkthroughConfig, accent_color: e.target.value })} className="h-8 w-8 rounded border cursor-pointer" />
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <Label className="text-xs">Logo Override URL</Label>
+              <Input value={walkthroughConfig.logo_url || ''} onChange={(e) => onConfigChange({ ...walkthroughConfig, logo_url: e.target.value || null })} placeholder="https://..." className="h-8 text-xs mt-1" />
+            </div>
+            <div className="flex items-center gap-2 pt-4">
+              <Switch checked={walkthroughConfig.skip_enabled !== false} onCheckedChange={(v) => onConfigChange({ ...walkthroughConfig, skip_enabled: v })} />
+              <Label className="text-xs">Allow Skip</Label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Smartphone className="h-5 w-5" />
-            Customer App Configuration
-          </CardTitle>
+          <CardTitle className="text-base flex items-center gap-2"><BookOpen className="h-4 w-4" /> Walkthrough Slides</CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="flex flex-col items-center justify-center gap-4 py-12">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
-              <Smartphone className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
+        <CardContent className="space-y-3">
+          {isLoading ? (
+            <div className="flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin" /></div>
+          ) : slides.length === 0 && !editSlide ? (
+            <p className="text-sm text-muted-foreground text-center py-4">No custom slides</p>
+          ) : (
+            slides.map((slide: any) => (
+              <div key={slide.id} className="flex items-center gap-3 rounded-lg border p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium truncate">{slide.title}</p>
+                  <p className="text-xs text-muted-foreground truncate">{slide.description}</p>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => setEditSlide(slide)}>Edit</Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteSlideMutation.mutate(slide.id)}>
+                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                </Button>
+              </div>
+            ))
+          )}
+          {editSlide ? (
+            <div className="rounded-lg border-2 border-primary/20 p-4 space-y-3">
+              <p className="text-sm font-bold">{editSlide.isNew ? 'New Slide' : 'Edit Slide'}</p>
+              <Input placeholder="Title" value={editSlide.title || ''} onChange={(e) => setEditSlide({ ...editSlide, title: e.target.value })} />
+              <Textarea placeholder="Description" value={editSlide.description || ''} onChange={(e) => setEditSlide({ ...editSlide, description: e.target.value })} rows={2} />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Media Type</Label>
+                  <Select value={editSlide.media_type || 'icon'} onValueChange={(v) => setEditSlide({ ...editSlide, media_type: v })}>
+                    <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="icon">Icon</SelectItem>
+                      <SelectItem value="image">Image</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editSlide.media_type === 'icon' && (
+                  <div>
+                    <Label className="text-xs">Icon Name (Lucide)</Label>
+                    <Input value={editSlide.icon_name || 'Shield'} onChange={(e) => setEditSlide({ ...editSlide, icon_name: e.target.value })} className="h-8 text-xs" />
+                  </div>
+                )}
+                {(editSlide.media_type === 'image' || editSlide.media_type === 'video') && (
+                  <div>
+                    <Label className="text-xs">Media URL</Label>
+                    <Input value={editSlide.media_url || ''} onChange={(e) => setEditSlide({ ...editSlide, media_url: e.target.value })} className="h-8 text-xs" />
+                  </div>
+                )}
+              </div>
+              {editSlide.media_type === 'image' && (
+                <label className="flex cursor-pointer items-center gap-2 rounded border border-dashed p-2 text-xs text-muted-foreground hover:bg-accent/50">
+                  <Image className="h-3.5 w-3.5" /> {uploading ? 'Uploading...' : 'Upload image'}
+                  <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setUploading(true);
+                    const path = `walkthrough/${Date.now()}_${file.name}`;
+                    const { error } = await supabase.storage.from('pwa-media').upload(path, file);
+                    if (error) { toast.error('Upload failed'); setUploading(false); return; }
+                    const { data: { publicUrl } } = supabase.storage.from('pwa-media').getPublicUrl(path);
+                    setEditSlide((prev: any) => ({ ...prev, media_url: publicUrl }));
+                    setUploading(false);
+                  }} />
+                </label>
+              )}
+              <div className="flex gap-2">
+                <Button size="sm" onClick={() => saveSlideMutation.mutate(editSlide)} disabled={saveSlideMutation.isPending}>
+                  {saveSlideMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" /> : null}Save
+                </Button>
+                <Button variant="ghost" size="sm" onClick={() => setEditSlide(null)}>Cancel</Button>
+              </div>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Full admin management panel coming in Step 8
-            </p>
-          </div>
+          ) : (
+            <Button variant="outline" size="sm" className="gap-1" onClick={() => setEditSlide({ isNew: true, title: '', description: '', media_type: 'icon', icon_name: 'Shield', slide_order: slides.length })}>
+              <Plus className="h-3.5 w-3.5" /> Add Slide
+            </Button>
+          )}
         </CardContent>
       </Card>
     </div>
   );
-};
+}
 
-export default CustomerAppManagement;
+// ─── Feature Config Panel ───
+function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const queryClient = useQueryClient();
+  const [config, setConfig] = useState<CustomerAppConfig>(appConfig);
+
+  const mutation = useMutation({
+    mutationFn: async (newConfig: CustomerAppConfig) => {
+      // Save under customer_app_config key in app_config JSONB
+      const { data: inst } = await supabase.from("institutions").select("app_config").eq("id", institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentAppConfig, customer_app_config: newConfig }
+      }).eq("id", institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-customer"] });
+      toast.success("Customer app configuration saved");
+    },
+    onError: () => toast.error("Failed to save configuration"),
+  });
+
+  const toggleFeature = (key: keyof CustomerAppConfig["features"]) => {
+    setConfig(prev => ({ ...prev, features: { ...prev.features, [key]: !prev.features[key] } }));
+  };
+
+  const featureLabels: Record<string, string> = {
+    qr_scan: "QR Scanner", transfer: "Send Money", request: "Request Money",
+    bills: "Bill Payments", invoices: "Invoices", bank: "Bank Management",
+    split_bills: "Split Bills", pay_links: "Pay Links", cash_out: "Cash Out",
+    recurring: "Recurring Payments", rewards: "Rewards", piggy_bank: "Piggy Bank",
+    njangi: "Njangi Groups", rent_reporting: "Rent Reporting",
+    credit_score: "Credit Score", cards: "Virtual Cards",
+  };
+
+  const sectionLabels: Record<CustomerSectionKey, string> = {
+    balance_card: 'Balance Card', quick_actions: 'Quick Actions',
+    media_banner: 'Media Banner', recent_activities: 'Recent Activities',
+  };
+
+  const sectionOrder = config.section_order || defaultSectionOrder;
+  const hasMediaBanner = sectionOrder.includes('media_banner');
+
+  // ─── Phone Preview Mockup ───
+  const renderPreview = () => (
+    <div className="sticky top-4">
+      <p className="text-xs font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Monitor className="h-3.5 w-3.5" /> Live Preview</p>
+      <div className="mx-auto w-[180px] rounded-[20px] border-[3px] border-foreground/20 bg-background p-2 shadow-lg">
+        {/* Status bar */}
+        <div className="flex justify-between px-1 mb-1">
+          <span className="text-[6px] text-muted-foreground">9:41</span>
+          <span className="text-[6px] text-muted-foreground">100%</span>
+        </div>
+        {/* Content */}
+        <div className="space-y-1.5 pb-6">
+          {sectionOrder.map(key => renderPreviewSection(key))}
+        </div>
+        {/* Bottom Nav */}
+        <div className="flex items-end justify-around border-t pt-1 mt-1 relative">
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-primary" /><span className="text-[4px]">Home</span></div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">Activity</span></div>
+          <div className="flex flex-col items-center -mt-2">
+            <div className="h-5 w-5 rounded-full bg-primary flex items-center justify-center shadow"><ScanLine className="h-2.5 w-2.5 text-primary-foreground" /></div>
+            <span className="text-[4px] font-bold text-primary">Scan</span>
+          </div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">Cards</span></div>
+          <div className="flex flex-col items-center"><div className="h-2.5 w-2.5 rounded bg-muted" /><span className="text-[4px]">More</span></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderPreviewSection = (key: CustomerSectionKey) => {
+    switch (key) {
+      case 'balance_card':
+        return <div key={key} className="rounded-lg bg-[hsl(225,50%,22%)] p-2"><p className="text-[6px] text-white/60">Total Balance</p><p className="text-[9px] font-bold text-white">XAF 485,000</p><p className="text-[5px] text-emerald-400">+12,500 today</p></div>;
+      case 'quick_actions':
+        return (
+          <div key={key} className="flex justify-between px-1">
+            {['Send', 'Recv', 'Add'].map(a => (
+              <div key={a} className="flex flex-col items-center gap-0.5">
+                <div className="h-5 w-5 rounded-md bg-[hsl(210,80%,93%)]" />
+                <span className="text-[5px]">{a}</span>
+              </div>
+            ))}
+          </div>
+        );
+      case 'media_banner': {
+        const media = config.media_sections || [];
+        if (media.length === 0) return <div key={key} className="h-8 rounded-md border border-dashed border-primary/30 flex items-center justify-center"><p className="text-[5px] text-muted-foreground">Media Banner</p></div>;
+        const first = media[0];
+        return (
+          <div key={key} className="h-8 rounded-md overflow-hidden">
+            {first.type === 'image' && first.url ? <img src={first.url} alt="" className="h-full w-full object-cover" /> : <div className="h-full w-full bg-accent/30 flex items-center justify-center"><span className="text-[5px]">{first.provider || 'Video'}</span></div>}
+          </div>
+        );
+      }
+      case 'recent_activities':
+        return (
+          <div key={key}>
+            <p className="text-[6px] font-bold mb-0.5">Recent Activities</p>
+            {[1, 2].map(i => (
+              <div key={i} className="flex items-center justify-between py-0.5">
+                <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-muted" /><div><p className="text-[5px]">Payment</p></div></div>
+                <span className="text-[5px] font-bold">-5,000</span>
+              </div>
+            ))}
+          </div>
+        );
+      default: return null;
+    }
+  };
+
+  return (
+    <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="xl:col-span-2 space-y-6">
+        {/* Features */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">App Features</CardTitle><CardDescription>Toggle which features are available in the customer app</CardDescription></CardHeader>
+          <CardContent className="space-y-3">
+            {Object.entries(featureLabels).map(([key, label]) => (
+              <div key={key} className="flex items-center justify-between">
+                <Label htmlFor={`feat-${key}`} className="text-sm font-medium">{label}</Label>
+                <Switch id={`feat-${key}`} checked={config.features[key as keyof CustomerAppConfig["features"]]} onCheckedChange={() => toggleFeature(key as keyof CustomerAppConfig["features"])} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Layout Style */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Layout Style</CardTitle></CardHeader>
+          <CardContent>
+            <RadioGroup value={config.layout_style || 'modern'} onValueChange={(v) => setConfig(prev => ({ ...prev, layout_style: v as LayoutStyle }))} className="grid grid-cols-5 gap-2">
+              {([
+                { value: 'modern', label: 'Modern', desc: 'Bold dark hero' },
+                { value: 'classic', label: 'Classic', desc: 'Clean borders' },
+                { value: 'minimal', label: 'Minimal', desc: 'Typography-first' },
+                { value: 'bold', label: 'Bold', desc: 'Large colorful' },
+                { value: 'gradient', label: 'Gradient', desc: 'Gradient cards' },
+              ] as const).map(style => (
+                <label key={style.value} className={`cursor-pointer rounded-xl border-2 p-3 transition-colors ${config.layout_style === style.value ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/30'}`}>
+                  <RadioGroupItem value={style.value} className="sr-only" />
+                  <p className="text-xs font-bold">{style.label}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{style.desc}</p>
+                </label>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
+
+        {/* Section Order */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Home Section Order</CardTitle>
+            {!hasMediaBanner && (
+              <Button variant="outline" size="sm" className="gap-1" onClick={() => setConfig(prev => ({ ...prev, section_order: [...(prev.section_order || defaultSectionOrder), 'media_banner'] }))}>
+                <Plus className="h-3.5 w-3.5" /> Add Media Banner
+              </Button>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {sectionOrder.map((key, idx) => (
+              <div key={key} className="flex items-center gap-2 rounded-lg border p-3">
+                <GripVertical className="h-4 w-4 text-muted-foreground" />
+                <span className="flex-1 text-sm font-medium">{sectionLabels[key] || key}</span>
+                {key === 'media_banner' && (
+                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setConfig(prev => ({ ...prev, section_order: prev.section_order.filter(k => k !== 'media_banner') }))}>
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                  </Button>
+                )}
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === 0}
+                  onClick={() => { const order = [...sectionOrder]; [order[idx - 1], order[idx]] = [order[idx], order[idx - 1]]; setConfig(prev => ({ ...prev, section_order: order })); }}>
+                  <ArrowUp className="h-3.5 w-3.5" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" disabled={idx === sectionOrder.length - 1}
+                  onClick={() => { const order = [...sectionOrder]; [order[idx], order[idx + 1]] = [order[idx + 1], order[idx]]; setConfig(prev => ({ ...prev, section_order: order })); }}>
+                  <ArrowDown className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Support Contact */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2"><Phone className="h-4 w-4" /> Support Contact</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div>
+              <Label className="text-xs">Support Phone Number</Label>
+              <Input placeholder="+237 233 000 000" value={config.support_phone || ''} onChange={(e) => setConfig(prev => ({ ...prev, support_phone: e.target.value }))} className="mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs">Support Email</Label>
+              <Input placeholder="support@yourbank.com" value={config.support_email || ''} onChange={(e) => setConfig(prev => ({ ...prev, support_email: e.target.value }))} className="mt-1" />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Media Sections */}
+        <MediaSectionManager
+          mediaSections={config.media_sections || []}
+          onChange={(s) => setConfig(prev => ({ ...prev, media_sections: s }))}
+          onAutoAddToOrder={() => {
+            setConfig(prev => {
+              const order = prev.section_order || defaultSectionOrder;
+              if (order.includes('media_banner')) return prev;
+              const actIdx = order.indexOf('recent_activities');
+              const newOrder = [...order];
+              newOrder.splice(actIdx >= 0 ? actIdx : newOrder.length, 0, 'media_banner');
+              return { ...prev, section_order: newOrder };
+            });
+          }}
+        />
+
+        <Button onClick={() => mutation.mutate(config)} disabled={mutation.isPending} className="w-full">
+          {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Configuration
+        </Button>
+      </div>
+
+      {/* Preview Column */}
+      <div className="hidden xl:block">{renderPreview()}</div>
+    </div>
+  );
+}
+
+// ─── Main Component ───
+export default function CustomerAppManagement() {
+  const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
+
+  const { data: institutions = [], isLoading: loadingInstitutions } = useInstitutions();
+  const { data: linkedAccounts = [], isLoading: loadingLinked } = useLinkedAccounts(selectedInstitution);
+  const { data: accounts = [], isLoading: loadingAccounts } = useInstitutionAccounts(selectedInstitution);
+  const { data: transactions = [], isLoading: loadingTxns } = useInstitutionTransactions(selectedInstitution);
+  const { data: piggyPlans = [], isLoading: loadingPiggy } = useInstitutionPiggyBank(selectedInstitution);
+  const { data: njangiGroups = [], isLoading: loadingNjangi } = useInstitutionNjangi(selectedInstitution);
+  const { data: virtualCards = [], isLoading: loadingCards } = useInstitutionCards(selectedInstitution);
+  const { data: creditScores = [], isLoading: loadingCredit } = useInstitutionCreditScores(selectedInstitution);
+
+  const filteredInstitutions = institutions.filter((i: any) =>
+    i.institution_name?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const selectedInst = institutions.find((i: any) => i.id === selectedInstitution) as any;
+
+  const totalBalance = accounts.reduce((sum: number, acc: any) => sum + (acc.account_balances?.[0]?.amount || 0), 0);
+
+  const selectedAppConfig = (() => {
+    const raw = selectedInst?.app_config?.customer_app_config || {};
+    return selectedInst
+      ? {
+          ...defaultConfig,
+          ...raw,
+          features: { ...defaultConfig.features, ...(raw.features || {}) },
+          section_order: Array.isArray(raw.section_order) ? raw.section_order : defaultSectionOrder,
+          layout_style: raw.layout_style || 'modern',
+          media_sections: raw.media_sections || [],
+          walkthrough_config: raw.walkthrough_config || { skip_enabled: true },
+          card_colors: raw.card_colors || {},
+        }
+      : defaultConfig;
+  })();
+
+  const [walkthroughConfig, setWalkthroughConfig] = useState<WalkthroughConfig>(selectedAppConfig.walkthrough_config);
+  useEffect(() => { setWalkthroughConfig(selectedAppConfig.walkthrough_config); }, [selectedInstitution]);
+
+  const queryClient = useQueryClient();
+  const saveWalkthroughConfig = useMutation({
+    mutationFn: async () => {
+      const currentConfig = selectedInst?.app_config || {};
+      const customerConfig = currentConfig.customer_app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentConfig, customer_app_config: { ...customerConfig, walkthrough_config: walkthroughConfig } }
+      }).eq("id", selectedInstitution);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-customer"] });
+      toast.success("Walkthrough config saved");
+    },
+    onError: () => toast.error("Failed to save"),
+  });
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-2xl font-bold flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Customer App Management</h1>
+        <p className="text-muted-foreground">Manage customer-facing mobile applications per institution</p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Institution List */}
+        <Card className="lg:col-span-1">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Institutions</CardTitle>
+            <div className="relative">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input placeholder="Search..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-8 h-9" />
+            </div>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[500px]">
+              {loadingInstitutions ? (
+                <div className="flex justify-center p-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+              ) : filteredInstitutions.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center p-6">No institutions found</p>
+              ) : (
+                filteredInstitutions.map((inst: any) => (
+                  <button key={inst.id} onClick={() => setSelectedInstitution(inst.id)}
+                    className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-accent/50 transition-colors border-b last:border-b-0 ${selectedInstitution === inst.id ? "bg-primary/10 border-l-2 border-l-primary" : ""}`}>
+                    {inst.logo_url ? (
+                      <img src={inst.logo_url} alt="" className="h-8 w-8 rounded-md object-cover" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-md flex items-center justify-center text-white text-xs font-bold" style={{ backgroundColor: inst.primary_color || "hsl(var(--primary))" }}>
+                        {inst.institution_name.charAt(0)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{inst.institution_name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{inst.institution_type}</p>
+                    </div>
+                    <Badge variant={inst.status === "approved" ? "default" : "secondary"} className="text-[10px] shrink-0">{inst.status}</Badge>
+                  </button>
+                ))
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
+
+        {/* Main Content */}
+        <div className="lg:col-span-3 space-y-6">
+          {!selectedInstitution ? (
+            <Card>
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <Building2 className="h-12 w-12 text-muted-foreground/40 mb-4" />
+                <h3 className="text-lg font-medium">Select an Institution</h3>
+                <p className="text-sm text-muted-foreground mt-1">Choose an institution from the left to manage its customer app</p>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              {/* Institution Header */}
+              <Card>
+                <CardContent className="flex items-center gap-4 p-4">
+                  {selectedInst?.logo_url ? (
+                    <img src={selectedInst.logo_url} alt="" className="h-12 w-12 rounded-lg object-cover" />
+                  ) : (
+                    <div className="h-12 w-12 rounded-lg flex items-center justify-center text-white text-lg font-bold" style={{ backgroundColor: selectedInst?.primary_color || "hsl(var(--primary))" }}>
+                      {selectedInst?.institution_name?.charAt(0)}
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <h2 className="text-lg font-bold">{selectedInst?.institution_name}</h2>
+                    <p className="text-sm text-muted-foreground capitalize">{selectedInst?.institution_type} · Created {selectedInst?.created_at ? format(new Date(selectedInst.created_at), "MMM d, yyyy") : "—"}</p>
+                  </div>
+                  <Badge variant={selectedInst?.status === "approved" ? "default" : "secondary"}>{selectedInst?.status}</Badge>
+                </CardContent>
+              </Card>
+
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <StatCard icon={Users} label="Linked Accounts" value={linkedAccounts.length} color="bg-blue-500" />
+                <StatCard icon={Wallet} label="Total Balance" value={`${totalBalance.toLocaleString()} XAF`} color="bg-emerald-500" />
+                <StatCard icon={ArrowRightLeft} label="Transactions" value={transactions.length} color="bg-amber-500" />
+                <StatCard icon={Home} label="Piggy Plans" value={piggyPlans.length} color="bg-emerald-600" />
+                <StatCard icon={Users} label="Njangi Groups" value={njangiGroups.length} color="bg-violet-600" />
+                <StatCard icon={CreditCard} label="Virtual Cards" value={virtualCards.length} color="bg-pink-500" />
+                <StatCard icon={BarChart3} label="Avg Credit Score" value={creditScores.length > 0 ? Math.round(creditScores.reduce((s: number, c: any) => s + c.score, 0) / creditScores.length) : '—'} color="bg-orange-500" />
+                <StatCard icon={Lock} label="View-Only Users" value={linkedAccounts.filter((a: any) => a.account_type === 'none').length} color="bg-slate-500" />
+              </div>
+
+              {/* Tabs */}
+              <Tabs defaultValue="linked">
+                <TabsList className="w-full justify-start flex-wrap h-auto">
+                  <TabsTrigger value="linked" className="gap-1.5"><UserCheck className="h-3.5 w-3.5" /> Linked Accounts</TabsTrigger>
+                  <TabsTrigger value="accounts" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Accounts</TabsTrigger>
+                  <TabsTrigger value="transactions" className="gap-1.5"><ArrowRightLeft className="h-3.5 w-3.5" /> Transactions</TabsTrigger>
+                  <TabsTrigger value="piggybank" className="gap-1.5"><PiggyBank className="h-3.5 w-3.5" /> Piggy Bank</TabsTrigger>
+                  <TabsTrigger value="njangi" className="gap-1.5"><Users className="h-3.5 w-3.5" /> Njangi</TabsTrigger>
+                  <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Cards</TabsTrigger>
+                  <TabsTrigger value="credit" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
+                  <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
+                  <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
+                </TabsList>
+
+                {/* Linked Accounts Tab */}
+                <TabsContent value="linked">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingLinked ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : linkedAccounts.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No linked accounts found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Customer</TableHead><TableHead>Phone</TableHead><TableHead>Account Type</TableHead><TableHead>Account Number</TableHead><TableHead>Status</TableHead><TableHead>Linked</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {linkedAccounts.map((la: any) => (
+                              <TableRow key={la.id}>
+                                <TableCell className="font-medium">{la.profiles?.full_name || la.profiles?.email || '—'}</TableCell>
+                                <TableCell className="text-sm">{la.profiles?.phone_number || '—'}</TableCell>
+                                <TableCell>
+                                  <Badge variant={la.account_type === 'none' ? 'secondary' : 'default'} className="text-xs capitalize">
+                                    {la.account_type === 'momo_orange' ? 'Orange Money' : la.account_type === 'momo_mtn' ? 'MTN MoMo' : la.account_type === 'none' ? 'View Only' : la.account_type?.replace('_', ' ')}
+                                  </Badge>
+                                </TableCell>
+                                <TableCell className="font-mono text-xs">{la.account_number || '—'}</TableCell>
+                                <TableCell><Badge variant={la.is_active ? "default" : "secondary"} className="text-xs">{la.is_active ? "Active" : "Inactive"}</Badge></TableCell>
+                                <TableCell className="text-sm">{la.created_at ? format(new Date(la.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Accounts Tab */}
+                <TabsContent value="accounts">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingAccounts ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : accounts.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No accounts found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Account Holder</TableHead><TableHead>Account ID</TableHead><TableHead>Type</TableHead><TableHead>Currency</TableHead><TableHead className="text-right">Balance</TableHead><TableHead>Status</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {accounts.map((acc: any) => (
+                              <TableRow key={acc.id}>
+                                <TableCell className="font-medium">{acc.account_holder_name}</TableCell>
+                                <TableCell className="font-mono text-xs">{acc.account_id}</TableCell>
+                                <TableCell><Badge variant="outline" className="capitalize text-xs">{acc.account_subtype}</Badge></TableCell>
+                                <TableCell>{acc.currency}</TableCell>
+                                <TableCell className="text-right font-medium">{(acc.account_balances?.[0]?.amount || 0).toLocaleString()}</TableCell>
+                                <TableCell><Badge variant={acc.is_active ? "default" : "secondary"} className="text-xs">{acc.is_active ? "Active" : "Inactive"}</Badge></TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Transactions Tab */}
+                <TabsContent value="transactions">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingTxns ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : transactions.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No transactions found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Date</TableHead><TableHead>Reference</TableHead><TableHead>Description</TableHead><TableHead>Type</TableHead><TableHead className="text-right">Amount</TableHead><TableHead>Status</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {transactions.map((txn: any) => (
+                              <TableRow key={txn.id}>
+                                <TableCell className="text-sm">{txn.booking_date ? format(new Date(txn.booking_date), "MMM d, yyyy") : "—"}</TableCell>
+                                <TableCell className="font-mono text-xs">{txn.transaction_id?.slice(0, 12)}...</TableCell>
+                                <TableCell className="max-w-[200px] truncate text-sm">{txn.transaction_information || "—"}</TableCell>
+                                <TableCell><Badge variant={txn.credit_debit_indicator === "Credit" ? "default" : "secondary"} className="text-xs">{txn.credit_debit_indicator}</Badge></TableCell>
+                                <TableCell className={`text-right font-medium ${txn.credit_debit_indicator === "Credit" ? "text-emerald-600" : "text-red-500"}`}>
+                                  {txn.credit_debit_indicator === "Credit" ? "+" : "-"}{Number(txn.amount).toLocaleString()} {txn.currency}
+                                </TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{txn.status}</Badge></TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Piggy Bank Tab */}
+                <TabsContent value="piggybank">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingPiggy ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : piggyPlans.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No piggy bank plans found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Plan Name</TableHead><TableHead className="text-right">Target</TableHead><TableHead className="text-right">Saved</TableHead><TableHead>Frequency</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {piggyPlans.map((plan: any) => (
+                              <TableRow key={plan.id}>
+                                <TableCell className="font-medium">{plan.plan_name || 'Unnamed'}</TableCell>
+                                <TableCell className="text-right">{Number(plan.target_amount || 0).toLocaleString()} XAF</TableCell>
+                                <TableCell className="text-right font-medium">{Number(plan.current_amount || 0).toLocaleString()} XAF</TableCell>
+                                <TableCell className="capitalize text-sm">{plan.frequency || '—'}</TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{plan.status}</Badge></TableCell>
+                                <TableCell className="text-sm">{plan.created_at ? format(new Date(plan.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Njangi Tab */}
+                <TabsContent value="njangi">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingNjangi ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : njangiGroups.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No Njangi groups found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Group Name</TableHead><TableHead>Members</TableHead><TableHead className="text-right">Contribution</TableHead><TableHead>Frequency</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {njangiGroups.map((group: any) => (
+                              <TableRow key={group.id}>
+                                <TableCell className="font-medium">{group.group_name}</TableCell>
+                                <TableCell>{group.njangi_members?.length || 0}</TableCell>
+                                <TableCell className="text-right">{Number(group.contribution_amount || 0).toLocaleString()} XAF</TableCell>
+                                <TableCell className="capitalize text-sm">{group.frequency || '—'}</TableCell>
+                                <TableCell><Badge variant="outline" className="text-xs capitalize">{group.status}</Badge></TableCell>
+                                <TableCell className="text-sm">{group.created_at ? format(new Date(group.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Cards Tab */}
+                <TabsContent value="cards">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingCards ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : virtualCards.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No virtual cards found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>Card Number</TableHead><TableHead>Type</TableHead><TableHead>Provider</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {virtualCards.map((card: any) => (
+                              <TableRow key={card.id}>
+                                <TableCell className="font-mono text-sm">**** {card.last_four || card.card_number?.slice(-4) || '****'}</TableCell>
+                                <TableCell className="capitalize text-sm">{card.card_type || '—'}</TableCell>
+                                <TableCell className="capitalize text-sm">{card.provider || '—'}</TableCell>
+                                <TableCell><Badge variant={card.status === 'active' ? "default" : "secondary"} className="text-xs capitalize">{card.status}</Badge></TableCell>
+                                <TableCell className="text-sm">{card.created_at ? format(new Date(card.created_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Credit Scores Tab */}
+                <TabsContent value="credit">
+                  <Card>
+                    <CardContent className="p-0">
+                      {loadingCredit ? (
+                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
+                      ) : creditScores.length === 0 ? (
+                        <p className="text-sm text-muted-foreground text-center p-8">No credit scores found</p>
+                      ) : (
+                        <Table>
+                          <TableHeader><TableRow>
+                            <TableHead>User ID</TableHead><TableHead>Score</TableHead><TableHead>Category</TableHead><TableHead>Change</TableHead><TableHead>Calculated</TableHead>
+                          </TableRow></TableHeader>
+                          <TableBody>
+                            {creditScores.map((cs: any) => (
+                              <TableRow key={cs.id}>
+                                <TableCell className="font-mono text-xs">{cs.user_id?.slice(0, 8)}...</TableCell>
+                                <TableCell className="font-bold text-lg">{cs.score}</TableCell>
+                                <TableCell><Badge variant={cs.score >= 700 ? "default" : cs.score >= 500 ? "secondary" : "destructive"} className="text-xs capitalize">{cs.category || (cs.score >= 700 ? 'Good' : cs.score >= 500 ? 'Fair' : 'Poor')}</Badge></TableCell>
+                                <TableCell className={cs.score_change > 0 ? 'text-emerald-600' : cs.score_change < 0 ? 'text-red-500' : ''}>
+                                  {cs.score_change > 0 ? '+' : ''}{cs.score_change || 0}
+                                </TableCell>
+                                <TableCell className="text-sm">{cs.calculated_at ? format(new Date(cs.calculated_at), "MMM d, yyyy") : "—"}</TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      )}
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+
+                {/* Features Tab */}
+                <TabsContent value="features">
+                  <FeatureConfigPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+                {/* Walkthrough Tab */}
+                <TabsContent value="walkthrough">
+                  <WalkthroughManager
+                    institutionId={selectedInstitution!}
+                    walkthroughConfig={walkthroughConfig}
+                    onConfigChange={setWalkthroughConfig}
+                  />
+                  <Button onClick={() => saveWalkthroughConfig.mutate()} disabled={saveWalkthroughConfig.isPending} className="mt-4 w-full">
+                    {saveWalkthroughConfig.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                    Save Walkthrough Config
+                  </Button>
+                </TabsContent>
+              </Tabs>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
