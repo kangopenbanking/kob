@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   Bell, Eye, EyeOff, Send, Download, Plus, ArrowUpRight, ArrowDownLeft,
   ShoppingBag, Lock, QrCode, Receipt, Wallet, ChevronRight, CreditCard,
-  Smartphone, Gift
+  Smartphone, Gift, Zap, Wifi, Tv, TrendingUp, TrendingDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerTenant, type CustomerSectionKey } from '@/components/customer-app/CustomerTenantProvider';
@@ -36,12 +36,21 @@ const recentActivities = [
   { name: 'Reward Cashback', type: 'Rewards', amount: 1500, icon: Gift, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', time: '2 days ago' },
 ];
 
+/* ─── Mock Upcoming Bills ─── */
+const upcomingBills = [
+  { name: 'Electricity', amount: 15000, due: 'Mar 1', icon: Zap, bg: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
+  { name: 'Internet', amount: 25000, due: 'Mar 3', icon: Wifi, bg: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
+  { name: 'Cable TV', amount: 8500, due: 'Mar 5', icon: Tv, bg: 'bg-[hsl(340,50%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]' },
+  { name: 'Water Bill', amount: 6000, due: 'Mar 8', icon: Receipt, bg: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]' },
+];
+
 const CustomerHome: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
   const [balanceVisible, setBalanceVisible] = useState(true);
+  const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
 
   const isViewOnly = user?.isViewOnly ?? false;
 
@@ -65,25 +74,25 @@ const CustomerHome: React.FC = () => {
 
   /* ─── Section Renderers ─── */
   const renderBalanceCard = () => (
-    <motion.div
-      key="balance_card"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35 }}
-    >
+    <motion.div key="balance_card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
       {/* Main Balance */}
       <div className="rounded-3xl bg-[hsl(225,50%,22%)] p-6">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">
-            Total Balance
-          </p>
-          <button onClick={() => setBalanceVisible(!balanceVisible)}>
-            {balanceVisible ? (
-              <Eye className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} />
-            ) : (
-              <EyeOff className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} />
-            )}
-          </button>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Total Balance</p>
+          <div className="flex items-center gap-2">
+            {/* Period Toggle */}
+            <div className="flex rounded-xl bg-[hsl(225,40%,30%)] p-0.5">
+              {(['W', 'M', 'Y'] as const).map((p) => (
+                <button key={p} onClick={() => setPeriod(p)}
+                  className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors ${period === p ? 'bg-[hsl(0,0%,100%)] text-[hsl(225,50%,22%)]' : 'text-[hsl(0,0%,100%)]/50'}`}>
+                  {p}
+                </button>
+              ))}
+            </div>
+            <button onClick={() => setBalanceVisible(!balanceVisible)}>
+              {balanceVisible ? <Eye className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} /> : <EyeOff className="h-4 w-4 text-[hsl(0,0%,100%)]/60" strokeWidth={1.5} />}
+            </button>
+          </div>
         </div>
         <p className="mt-2 text-3xl font-bold text-[hsl(0,0%,100%)]">
           {isViewOnly ? '• • • • •' : balanceVisible ? `XAF ${totalBalance.toLocaleString()}` : '• • • • •'}
@@ -97,16 +106,9 @@ const CustomerHome: React.FC = () => {
       {!isViewOnly && (
         <div className="mt-3 flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
           {accountCards.map((acct, i) => (
-            <div
-              key={i}
-              className={`flex min-w-[140px] flex-1 flex-col rounded-2xl ${acct.color} p-3.5`}
-            >
-              <p className={`text-[10px] font-semibold uppercase tracking-wider ${acct.textColor}/70`}>
-                {acct.name}
-              </p>
-              <p className={`mt-1 text-base font-bold ${acct.textColor}`}>
-                {balanceVisible ? `${acct.balance.toLocaleString()}` : '•••'}
-              </p>
+            <div key={i} className={`flex min-w-[140px] flex-1 flex-col rounded-2xl ${acct.color} p-3.5`}>
+              <p className={`text-[10px] font-semibold uppercase tracking-wider ${acct.textColor}/70`}>{acct.name}</p>
+              <p className={`mt-1 text-base font-bold ${acct.textColor}`}>{balanceVisible ? acct.balance.toLocaleString() : '•••'}</p>
               <p className={`text-[10px] ${acct.textColor}/50`}>{acct.currency}</p>
             </div>
           ))}
@@ -116,19 +118,10 @@ const CustomerHome: React.FC = () => {
   );
 
   const renderQuickActions = () => (
-    <motion.div
-      key="quick_actions"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.05 }}
-    >
+    <motion.div key="quick_actions" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.05 }}>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
         {enabledActions.slice(0, 6).map((action) => (
-          <button
-            key={action.key}
-            onClick={() => handleAction(action.key, action.requiresAccount)}
-            className="flex flex-col items-center gap-2"
-          >
+          <button key={action.key} onClick={() => handleAction(action.key, action.requiresAccount)} className="flex flex-col items-center gap-2">
             <div className={`relative flex h-14 w-14 items-center justify-center rounded-2xl ${action.color}`}>
               <action.icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
               {action.requiresAccount && isViewOnly && (
@@ -144,35 +137,74 @@ const CustomerHome: React.FC = () => {
     </motion.div>
   );
 
+  const renderUpcomingBills = () => {
+    if (isViewOnly) return null;
+    return (
+      <motion.div key="upcoming_bills" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.08 }}>
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Upcoming Bills</p>
+          <button onClick={() => navigate(`/app/${institutionId}/bills`)} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
+            View All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+          </button>
+        </div>
+        <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+          {upcomingBills.map((bill, i) => (
+            <div key={i} className={`flex min-w-[130px] flex-col items-center gap-2 rounded-3xl ${bill.bg} p-4`}>
+              <div className={`flex h-11 w-11 items-center justify-center rounded-2xl bg-background/50`}>
+                <bill.icon className={`h-5 w-5 ${bill.iconColor}`} strokeWidth={1.5} />
+              </div>
+              <p className="text-xs font-bold text-foreground">{bill.name}</p>
+              <p className="text-sm font-bold text-foreground">{bill.amount.toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">XAF</span></p>
+              <p className="text-[10px] font-medium text-muted-foreground">Due {bill.due}</p>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+    );
+  };
+
+  const renderSpendingStats = () => {
+    if (isViewOnly) return null;
+    const earnings = 351500;
+    const spending = 68000;
+    return (
+      <motion.div key="spending_stats" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.1 }}>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-2 rounded-3xl bg-[hsl(150,40%,90%)] p-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(150,40%,80%)]">
+              <TrendingUp className="h-4.5 w-4.5 text-[hsl(150,40%,30%)]" strokeWidth={2} />
+            </div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(150,30%,35%)]">Earnings</p>
+            <p className="text-lg font-bold text-[hsl(150,40%,25%)]">{earnings.toLocaleString()}</p>
+            <p className="text-[10px] font-medium text-[hsl(150,30%,40%)]">This {period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'}</p>
+          </div>
+          <div className="flex flex-col gap-2 rounded-3xl bg-[hsl(0,60%,93%)] p-4">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,50%,85%)]">
+              <TrendingDown className="h-4.5 w-4.5 text-[hsl(0,50%,35%)]" strokeWidth={2} />
+            </div>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(0,30%,40%)]">Spending</p>
+            <p className="text-lg font-bold text-[hsl(0,50%,30%)]">{spending.toLocaleString()}</p>
+            <p className="text-[10px] font-medium text-[hsl(0,30%,45%)]">This {period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'}</p>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
+
   const renderMediaBanner = () => {
     if (!tenant.mediaSections || tenant.mediaSections.length === 0) return null;
     return (
-      <motion.div
-        key="media_banner"
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.35, delay: 0.1 }}
-      >
+      <motion.div key="media_banner" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.12 }}>
         <MediaBanner items={tenant.mediaSections} cardSize="medium" />
       </motion.div>
     );
   };
 
   const renderRecentActivities = () => (
-    <motion.div
-      key="recent_activities"
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: 0.15 }}
-    >
+    <motion.div key="recent_activities" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.15 }}>
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">
-          Recent Activities
-        </p>
-        <button
-          onClick={() => navigate(`/app/${institutionId}/activity`)}
-          className="flex items-center gap-0.5 text-xs font-semibold text-primary"
-        >
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Recent Activities</p>
+        <button onClick={() => navigate(`/app/${institutionId}/activity`)} className="flex items-center gap-0.5 text-xs font-semibold text-primary">
           See All <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
         </button>
       </div>
@@ -206,6 +238,8 @@ const CustomerHome: React.FC = () => {
   const sectionRenderers: Record<CustomerSectionKey, () => React.ReactNode> = {
     balance_card: renderBalanceCard,
     quick_actions: renderQuickActions,
+    upcoming_bills: renderUpcomingBills,
+    spending_stats: renderSpendingStats,
     media_banner: renderMediaBanner,
     recent_activities: renderRecentActivities,
   };
@@ -223,22 +257,16 @@ const CustomerHome: React.FC = () => {
             <h1 className="text-base font-bold text-foreground">{tenant.name}</h1>
           </div>
         </div>
-        <button
-          onClick={() => navigate(`/app/${institutionId}/notifications`)}
-          className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-muted"
-        >
+        <button onClick={() => navigate(`/app/${institutionId}/notifications`)} className="relative flex h-10 w-10 items-center justify-center rounded-2xl bg-muted">
           <Bell className="h-5 w-5 text-foreground" strokeWidth={1.5} />
-          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-[hsl(0,80%,60%)]" />
+          <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-destructive" />
         </button>
       </div>
 
       {/* View-Only Banner */}
       {isViewOnly && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="flex items-center gap-3 rounded-2xl border border-[hsl(45,60%,75%)] bg-[hsl(45,80%,92%)] p-3"
-        >
+        <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+          className="flex items-center gap-3 rounded-2xl border border-[hsl(45,60%,75%)] bg-[hsl(45,80%,92%)] p-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(45,70%,80%)]">
             <Lock className="h-4 w-4 text-[hsl(45,50%,25%)]" strokeWidth={2} />
           </div>
@@ -246,12 +274,7 @@ const CustomerHome: React.FC = () => {
             <p className="text-xs font-bold text-[hsl(45,40%,20%)]">View-Only Mode</p>
             <p className="text-[11px] text-[hsl(45,30%,35%)]">Link an account to unlock transactions</p>
           </div>
-          <button
-            onClick={() => navigate(`/app/${institutionId}/onboarding`)}
-            className="rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground"
-          >
-            Link
-          </button>
+          <button onClick={() => navigate(`/app/${institutionId}/onboarding`)} className="rounded-xl bg-primary px-3.5 py-1.5 text-xs font-bold text-primary-foreground">Link</button>
         </motion.div>
       )}
 

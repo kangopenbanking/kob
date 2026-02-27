@@ -27,6 +27,8 @@ export type CustomerSectionKey =
   | 'balance_card'
   | 'quick_actions'
   | 'media_banner'
+  | 'upcoming_bills'
+  | 'spending_stats'
   | 'recent_activities';
 
 interface CustomerTenantBranding {
@@ -68,6 +70,8 @@ const defaultFeatures: CustomerAppFeatures = {
 const defaultSectionOrder: CustomerSectionKey[] = [
   'balance_card',
   'quick_actions',
+  'upcoming_bills',
+  'spending_stats',
   'media_banner',
   'recent_activities',
 ];
