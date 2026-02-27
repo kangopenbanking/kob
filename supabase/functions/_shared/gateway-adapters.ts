@@ -98,6 +98,14 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   const FLW_SECRET = typeof Deno !== "undefined" ? Deno.env.get('FLUTTERWAVE_SECRET_KEY') : undefined;
   if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
 
+  // Detect country from phone number prefix for francophone mobile money
+  const phoneStr = req.customer_phone || '';
+  let country = 'CM'; // Default Cameroon
+  let network = 'MTN'; // Default MTN
+  if (phoneStr.startsWith('225')) { country = 'CI'; network = 'MTN'; }
+  else if (phoneStr.startsWith('221')) { country = 'SN'; network = 'ORANGEMONEY'; }
+  else if (phoneStr.startsWith('226')) { country = 'BF'; network = 'ORANGEMONEY'; }
+
   const body: Record<string, unknown> = {
     tx_ref: req.tx_ref,
     amount: req.amount,
@@ -115,6 +123,8 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
     if (!req.customer_phone) throw new Error('customer_phone is required for mobile_money charges');
     body.type = 'mobile_money_franco';
     body.phone_number = req.customer_phone;
+    body.country = country;
+    body.network = network;
   }
 
   const chargeType = req.channel === 'mobile_money' ? 'mobile_money_franco' : req.channel === 'card' ? 'card' : 'mobile_money_franco';
@@ -153,13 +163,22 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
     throw new Error('Failed to parse Flutterwave response as JSON');
   }
 
-  console.log('[Flutterwave] Charge response:', JSON.stringify({ status: data.status, data_status: data.data?.status, has_redirect: !!data.meta?.authorization?.redirect }));
+  const authMode = data.meta?.authorization?.mode;
+  const redirectUrl = data.meta?.authorization?.redirect_url;
+
+  console.log('[Flutterwave] Charge response:', JSON.stringify({
+    status: data.status,
+    data_status: data.data?.status,
+    auth_mode: authMode,
+    has_redirect: !!redirectUrl,
+    flw_ref: data.data?.flw_ref,
+  }));
 
   return {
     provider_ref: data.data?.flw_ref || data.data?.id?.toString() || '',
     status: mapFlutterwaveStatus(data.data?.status || data.status || 'pending'),
     provider_raw: data,
-    redirect_url: data.meta?.authorization?.redirect,
+    redirect_url: redirectUrl || undefined,
   };
 }
 
