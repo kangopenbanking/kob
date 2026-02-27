@@ -1,0 +1,116 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { mapStripeStatus, mapFlutterwaveStatus } from "../_shared/gateway-adapters.ts";
+import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+};
+
+/**
+ * gateway-confirm-funding
+ * Called by the frontend after a client-side payment confirmation (e.g. Stripe confirmCardPayment).
+ * Polls the provider to verify the payment succeeded and finalizes the funding intent.
+ */
+serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  try {
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const token = authHeader.replace('Bearer ', '');
+    const { data: claims, error: authError } = await supabase.auth.getUser(token);
+    if (authError || !claims?.user) {
+      return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const { funding_intent_id } = await req.json();
+    if (!funding_intent_id) {
+      return new Response(JSON.stringify({ error: 'missing_funding_intent_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // Fetch the funding intent
+    const { data: intent } = await supabase
+      .from('funding_intents')
+      .select('*')
+      .eq('id', funding_intent_id)
+      .in('status', ['pending_provider', 'pending_customer_action', 'pending_verification', 'created'])
+      .maybeSingle();
+
+    if (!intent) {
+      // Could be already succeeded — return current status
+      const { data: current } = await supabase.from('funding_intents').select('id, status').eq('id', funding_intent_id).maybeSingle();
+      return new Response(JSON.stringify({ status: current?.status || 'not_found', already_processed: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Poll the provider for current status
+    let providerStatus = 'pending';
+    let providerData: any = null;
+
+    if (intent.provider === 'stripe' && intent.provider_reference) {
+      const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
+      if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
+
+      const res = await fetch(`https://api.stripe.com/v1/payment_intents/${intent.provider_reference}`, {
+        headers: { Authorization: `Bearer ${STRIPE_SECRET}` },
+      });
+      providerData = await res.json();
+      providerStatus = mapStripeStatus(providerData.status || 'pending');
+      console.log('[ConfirmFunding] Stripe PI status:', providerData.status, '→', providerStatus);
+
+    } else if (intent.provider === 'flutterwave' && intent.reference) {
+      const FLW_SECRET = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+      if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
+
+      const res = await fetch(`https://api.flutterwave.com/v3/transactions/verify_by_reference?tx_ref=${intent.reference}`, {
+        headers: { Authorization: `Bearer ${FLW_SECRET}` },
+      });
+      providerData = await res.json();
+      providerStatus = mapFlutterwaveStatus(providerData.data?.status || 'pending');
+      console.log('[ConfirmFunding] Flutterwave status:', providerData.data?.status, '→', providerStatus);
+    }
+
+    // Finalize if terminal
+    if (providerStatus === 'successful' || providerStatus === 'failed' || providerStatus === 'cancelled') {
+      const fiStatus = providerStatus === 'successful' ? 'succeeded' : providerStatus === 'cancelled' ? 'cancelled' : 'failed';
+
+      await supabase.from('funding_intents').update({
+        status: fiStatus,
+        provider_payload: providerData,
+        failure_message: fiStatus === 'failed' ? `Provider: ${intent.provider} reported failure` : null,
+      }).eq('id', intent.id);
+
+      await supabase.from('funding_events').insert({
+        funding_intent_id: intent.id,
+        event_type: `confirmed_${fiStatus}`,
+        payload: { provider: intent.provider, confirmed_by: 'client_poll' },
+      });
+
+      if (fiStatus === 'succeeded') {
+        await creditFundingIntent(supabase, intent);
+      }
+
+      return new Response(JSON.stringify({ status: fiStatus, funded: fiStatus === 'succeeded' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Still pending
+    return new Response(JSON.stringify({ status: 'pending', provider_status: providerStatus }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+
+  } catch (err: any) {
+    console.error('Confirm funding error:', err);
+    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+});
