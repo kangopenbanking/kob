@@ -1,4 +1,5 @@
 import {
+  Smartphone,
   Palette,
   LayoutDashboard,
   Users,
@@ -74,6 +75,7 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Management",
     items: [
       { title: "Banking Apps", path: "/admin/banking-apps", icon: CreditCard },
+      { title: "Customer Apps", path: "/admin/customer-apps", icon: Smartphone },
       { title: "User Management", path: "/admin/users", icon: Users },
       { title: "Branch Management", path: "/admin/branches", icon: Building2 },
       { title: "API Clients", path: "/admin/api-clients", icon: Key },
