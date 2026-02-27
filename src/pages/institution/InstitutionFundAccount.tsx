@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast } from "sonner";
 import { Wallet, ArrowRight, CheckCircle2, Loader2, Info, Building2 } from "lucide-react";
+import { StripeCardConfirm } from "@/components/funding/StripeCardConfirm";
 import { useQuery } from "@tanstack/react-query";
 
 const InstitutionFundAccount = () => {
@@ -184,8 +185,8 @@ const InstitutionFundAccount = () => {
                 </a>
               </Button>
             )}
-            {result.next_action?.type === "stripe_confirm" && (
-              <Alert><AlertDescription>Use Stripe.js with client_secret to confirm the card payment.</AlertDescription></Alert>
+            {result.next_action?.type === "stripe_confirm" && result.next_action?.client_secret && (
+              <StripeCardConfirm clientSecret={result.next_action.client_secret} amount={result.amount} currency={result.currency} />
             )}
             {result.next_action?.type === "bank_transfer_instructions" && (
               <div className="bg-muted p-4 rounded-lg space-y-1 text-sm">
