@@ -1,0 +1,172 @@
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import type { MediaSection } from '@/components/pwa/MediaBanner';
+import type { LayoutStyle, CardColors, WalkthroughConfig } from '@/components/pwa/TenantProvider';
+
+export interface CustomerAppFeatures {
+  qr_scan: boolean;
+  transfer: boolean;
+  request: boolean;
+  bills: boolean;
+  invoices: boolean;
+  bank: boolean;
+  split_bills: boolean;
+  pay_links: boolean;
+  cash_out: boolean;
+  recurring: boolean;
+  rewards: boolean;
+  piggy_bank: boolean;
+  njangi: boolean;
+  rent_reporting: boolean;
+  credit_score: boolean;
+  cards: boolean;
+}
+
+export type CustomerSectionKey =
+  | 'balance_card'
+  | 'quick_actions'
+  | 'media_banner'
+  | 'recent_activities';
+
+interface CustomerTenantBranding {
+  id: string;
+  name: string;
+  logoUrl: string | null;
+  primaryColor: string;
+  tagline: string;
+  isLoading: boolean;
+  features: CustomerAppFeatures;
+  sectionOrder: CustomerSectionKey[];
+  layoutStyle: LayoutStyle;
+  mediaSections: MediaSection[];
+  walkthroughConfig: WalkthroughConfig;
+  cardColors: CardColors;
+  supportPhone: string;
+  supportEmail: string;
+}
+
+const defaultFeatures: CustomerAppFeatures = {
+  qr_scan: true,
+  transfer: true,
+  request: true,
+  bills: true,
+  invoices: true,
+  bank: true,
+  split_bills: true,
+  pay_links: true,
+  cash_out: true,
+  recurring: true,
+  rewards: true,
+  piggy_bank: true,
+  njangi: true,
+  rent_reporting: true,
+  credit_score: true,
+  cards: true,
+};
+
+const defaultSectionOrder: CustomerSectionKey[] = [
+  'balance_card',
+  'quick_actions',
+  'media_banner',
+  'recent_activities',
+];
+
+const defaultBranding: CustomerTenantBranding = {
+  id: '',
+  name: 'Kang Customer',
+  logoUrl: null,
+  primaryColor: '217 91% 35%',
+  tagline: 'Your money, your way',
+  isLoading: true,
+  features: defaultFeatures,
+  sectionOrder: defaultSectionOrder,
+  layoutStyle: 'modern',
+  mediaSections: [],
+  walkthroughConfig: { skip_enabled: true },
+  cardColors: {},
+  supportPhone: '',
+  supportEmail: '',
+};
+
+const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
+
+export const useCustomerTenant = () => useContext(CustomerTenantContext);
+
+export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { institutionId } = useParams<{ institutionId: string }>();
+  const [branding, setBranding] = useState<CustomerTenantBranding>(defaultBranding);
+
+  useEffect(() => {
+    if (!institutionId) {
+      setBranding({ ...defaultBranding, isLoading: false });
+      return;
+    }
+
+    const fetchInstitution = async () => {
+      const { data, error } = await supabase
+        .from('institutions')
+        .select('id, institution_name, logo_url, primary_color, tagline, app_config')
+        .eq('id', institutionId)
+        .maybeSingle();
+
+      if (error || !data) {
+        setBranding({ ...defaultBranding, id: institutionId, isLoading: false });
+        return;
+      }
+
+      const inst = data as any;
+      const appConfig = inst.app_config || {};
+      const customerConfig = appConfig.customer_app_config || {};
+
+      const features = { ...defaultFeatures, ...(customerConfig.features || {}) };
+      const sectionOrder: CustomerSectionKey[] = Array.isArray(customerConfig.section_order)
+        ? customerConfig.section_order
+        : defaultSectionOrder;
+      const layoutStyle: LayoutStyle = (['modern', 'classic', 'minimal', 'bold', 'gradient'] as const).includes(customerConfig.layout_style)
+        ? customerConfig.layout_style
+        : 'modern';
+      const mediaSections: MediaSection[] = Array.isArray(customerConfig.media_sections)
+        ? customerConfig.media_sections
+        : [];
+      const walkthroughConfig: WalkthroughConfig = customerConfig.walkthrough_config || { skip_enabled: true };
+      const cardColors: CardColors = customerConfig.card_colors || {};
+      const supportPhone: string = customerConfig.support_phone || appConfig.support_phone || '';
+      const supportEmail: string = customerConfig.support_email || appConfig.support_email || '';
+
+      setBranding({
+        id: inst.id,
+        name: inst.institution_name,
+        logoUrl: inst.logo_url ?? null,
+        primaryColor: inst.primary_color ?? '217 91% 35%',
+        tagline: inst.tagline ?? 'Your money, your way',
+        isLoading: false,
+        features,
+        sectionOrder,
+        layoutStyle,
+        mediaSections,
+        walkthroughConfig,
+        cardColors,
+        supportPhone,
+        supportEmail,
+      });
+    };
+
+    fetchInstitution();
+  }, [institutionId]);
+
+  useEffect(() => {
+    if (!branding.isLoading && branding.primaryColor) {
+      document.documentElement.style.setProperty('--pwa-primary', branding.primaryColor);
+    }
+    return () => {
+      document.documentElement.style.removeProperty('--pwa-primary');
+    };
+  }, [branding.isLoading, branding.primaryColor]);
+
+  return (
+    <CustomerTenantContext.Provider value={branding}>
+      {children}
+    </CustomerTenantContext.Provider>
+  );
+};
