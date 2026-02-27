@@ -644,6 +644,8 @@ function App() {
             <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            {/* Banking App redirects for legacy /banking-app paths */}
+            <Route path="/banking-app/*" element={<Navigate to="/apps" replace />} />
             {/* Banking App PWA Routes */}
             <Route path="/bank/:institutionId" element={<BankSplash />} />
             <Route path="/bank/:institutionId/auth" element={<BankAuth />} />
