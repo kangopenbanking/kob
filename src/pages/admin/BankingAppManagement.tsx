@@ -907,14 +907,17 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
         const media = config.media_sections || [];
         if (media.length === 0) {
           return (
-            <div key={key} className="h-8 rounded-md bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center border border-dashed border-primary/30">
-              <p className="text-[6px] text-muted-foreground">📸 Media Banner</p>
+            <div key={key} className="h-10 rounded-md bg-gradient-to-r from-primary/20 to-accent/20 flex items-center justify-center border border-dashed border-primary/30">
+              <p className="text-[7px] text-muted-foreground">📸 Media Banner — Add banners below to display here</p>
             </div>
           );
         }
         const firstMedia = media[0];
         const bannerSize = (config.section_styles?.media_banner?.card_size) || 'medium';
-        const bannerH = { small: 'h-6', medium: 'h-10', large: 'h-14' }[bannerSize];
+        const isPortrait = firstMedia.aspect === 'portrait';
+        const landscapeH = { small: 'h-6', medium: 'h-10', large: 'h-14' }[bannerSize];
+        const portraitH = { small: 'h-14', medium: 'h-20', large: 'h-28' }[bannerSize];
+        const bannerH = isPortrait ? portraitH : landscapeH;
         return (
           <div key={key} className={`${bannerH} rounded-md overflow-hidden relative`}>
             {firstMedia.type === 'image' && firstMedia.url ? (
@@ -936,7 +939,7 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
             )}
             {media.length > 1 && (
               <div className="absolute top-0.5 right-1 bg-black/50 rounded px-0.5">
-                <p className="text-[5px] text-white">{media.length}</p>
+                <p className="text-[5px] text-white">1/{media.length}</p>
               </div>
             )}
           </div>
@@ -1241,20 +1244,30 @@ export default function BankingAppManagement() {
     i.institution_name.toLowerCase().includes(search.toLowerCase())
   );
 
-  const selectedAppConfig: AppConfig = selectedInst
-    ? {
-        ...defaultAppConfig,
-        ...(selectedInst.app_config || {}),
-        features: { ...defaultAppConfig.features, ...(selectedInst.app_config?.features || {}) },
-        home_layout: { ...defaultAppConfig.home_layout, ...(selectedInst.app_config?.home_layout || {}) },
-        section_order: selectedInst.app_config?.section_order || defaultSectionOrder,
-        layout_style: selectedInst.app_config?.layout_style || 'modern',
-        section_styles: selectedInst.app_config?.section_styles || {},
-        media_sections: selectedInst.app_config?.media_sections || [],
-        walkthrough_config: selectedInst.app_config?.walkthrough_config || { skip_enabled: true },
-        card_colors: selectedInst.app_config?.card_colors || {},
-      }
-    : defaultAppConfig;
+  const selectedAppConfig: AppConfig = (() => {
+    const raw = selectedInst?.app_config || {};
+    let sectionOrder: HomeSectionKey[] = raw.section_order || defaultSectionOrder;
+    // Always ensure media_banner is present in section order
+    if (!sectionOrder.includes('media_banner')) {
+      const txIdx = sectionOrder.indexOf('recent_transactions');
+      sectionOrder = [...sectionOrder];
+      sectionOrder.splice(txIdx >= 0 ? txIdx : sectionOrder.length, 0, 'media_banner');
+    }
+    return selectedInst
+      ? {
+          ...defaultAppConfig,
+          ...raw,
+          features: { ...defaultAppConfig.features, ...(raw.features || {}) },
+          home_layout: { ...defaultAppConfig.home_layout, ...(raw.home_layout || {}) },
+          section_order: sectionOrder,
+          layout_style: raw.layout_style || 'modern',
+          section_styles: raw.section_styles || {},
+          media_sections: raw.media_sections || [],
+          walkthrough_config: raw.walkthrough_config || { skip_enabled: true },
+          card_colors: raw.card_colors || {},
+        }
+      : defaultAppConfig;
+  })();
 
   // Walkthrough config state for the walkthrough tab
   const [walkthroughConfig, setWalkthroughConfig] = useState<WalkthroughConfig>(selectedAppConfig.walkthrough_config);

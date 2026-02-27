@@ -145,7 +145,13 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const appConfig = inst.app_config || {};
       const features = { ...defaultFeatures, ...(appConfig.features || {}) };
       const homeLayout = { ...defaultHomeLayout, ...(appConfig.home_layout || {}) };
-      const sectionOrder: HomeSectionKey[] = Array.isArray(appConfig.section_order) ? appConfig.section_order : defaultSectionOrder;
+      let sectionOrder: HomeSectionKey[] = Array.isArray(appConfig.section_order) ? appConfig.section_order : defaultSectionOrder;
+      // Ensure media_banner is always in the section order
+      if (!sectionOrder.includes('media_banner')) {
+        const txIdx = sectionOrder.indexOf('recent_transactions');
+        sectionOrder = [...sectionOrder];
+        sectionOrder.splice(txIdx >= 0 ? txIdx : sectionOrder.length, 0, 'media_banner');
+      }
       const layoutStyle: LayoutStyle = (['modern', 'classic', 'minimal', 'bold', 'gradient'] as const).includes(appConfig.layout_style) ? appConfig.layout_style : 'modern';
       const sectionStyles: SectionStyles = appConfig.section_styles || {};
       const mediaSections: MediaSection[] = Array.isArray(appConfig.media_sections) ? appConfig.media_sections : [];
