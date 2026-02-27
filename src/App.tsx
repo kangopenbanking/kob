@@ -314,6 +314,33 @@ import BankNjangi from "./pages/banking-app/BankNjangi";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 import { FeatureGate } from "./components/pwa/FeatureGate";
 import Apps from "./pages/Apps";
+import { CustomerAppLayout } from "./components/customer-app/CustomerAppLayout";
+import CustomerSplash from "./pages/customer-app/CustomerSplash";
+import CustomerAuth from "./pages/customer-app/CustomerAuth";
+import CustomerOnboarding from "./pages/customer-app/CustomerOnboarding";
+import CustomerHome from "./pages/customer-app/CustomerHome";
+import CustomerScan from "./pages/customer-app/CustomerScan";
+import CustomerActivity from "./pages/customer-app/CustomerActivity";
+import CustomerCards from "./pages/customer-app/CustomerCards";
+import CustomerMore from "./pages/customer-app/CustomerMore";
+import CustomerTransfer from "./pages/customer-app/CustomerTransfer";
+import CustomerRequest from "./pages/customer-app/CustomerRequest";
+import CustomerBills from "./pages/customer-app/CustomerBills";
+import CustomerInvoices from "./pages/customer-app/CustomerInvoices";
+import CustomerBank from "./pages/customer-app/CustomerBank";
+import CustomerSplitBills from "./pages/customer-app/CustomerSplitBills";
+import CustomerPayLinks from "./pages/customer-app/CustomerPayLinks";
+import CustomerCashOut from "./pages/customer-app/CustomerCashOut";
+import CustomerRecurring from "./pages/customer-app/CustomerRecurring";
+import CustomerRewards from "./pages/customer-app/CustomerRewards";
+import CustomerPiggyBank from "./pages/customer-app/CustomerPiggyBank";
+import CustomerNjangi from "./pages/customer-app/CustomerNjangi";
+import CustomerRentReporting from "./pages/customer-app/CustomerRentReporting";
+import CustomerCreditScore from "./pages/customer-app/CustomerCreditScore";
+import CustomerSettings from "./pages/customer-app/CustomerSettings";
+import CustomerAlerts from "./pages/customer-app/CustomerAlerts";
+import CustomerHelp from "./pages/customer-app/CustomerHelp";
+import CustomerAppManagement from "./pages/admin/CustomerAppManagement";
 import CustomerFundAccount from "./pages/CustomerFundAccount";
 import InstitutionFundAccount from "./pages/institution/InstitutionFundAccount";
 const queryClient = new QueryClient({
@@ -459,6 +486,7 @@ function App() {
               <Route path="merchants" element={<MerchantManagementAdmin />} />
               <Route path="auth-branding" element={<AuthBrandingManager />} />
               <Route path="banking-apps" element={<BankingAppManagement />} />
+              <Route path="customer-apps" element={<CustomerAppManagement />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
@@ -672,6 +700,35 @@ function App() {
               <Route path="more/piggybank" element={<BankPiggyBank />} />
               <Route path="more/njangi" element={<BankNjangi />} />
               <Route path="more/help" element={<BankHelp />} />
+            </Route>
+
+            {/* Customer App PWA Routes */}
+            <Route path="/app/:institutionId" element={<CustomerSplash />} />
+            <Route path="/app/:institutionId/auth" element={<CustomerAuth />} />
+            <Route path="/app/:institutionId/onboarding" element={<CustomerOnboarding />} />
+            <Route path="/app/:institutionId" element={<CustomerAppLayout />}>
+              <Route path="home" element={<CustomerHome />} />
+              <Route path="activity" element={<CustomerActivity />} />
+              <Route path="scan" element={<CustomerScan />} />
+              <Route path="cards" element={<CustomerCards />} />
+              <Route path="more" element={<CustomerMore />} />
+              <Route path="transfer" element={<CustomerTransfer />} />
+              <Route path="request" element={<CustomerRequest />} />
+              <Route path="bills" element={<CustomerBills />} />
+              <Route path="invoices" element={<CustomerInvoices />} />
+              <Route path="bank" element={<CustomerBank />} />
+              <Route path="split-bills" element={<CustomerSplitBills />} />
+              <Route path="pay-links" element={<CustomerPayLinks />} />
+              <Route path="cash-out" element={<CustomerCashOut />} />
+              <Route path="recurring" element={<CustomerRecurring />} />
+              <Route path="rewards" element={<CustomerRewards />} />
+              <Route path="piggybank" element={<CustomerPiggyBank />} />
+              <Route path="njangi" element={<CustomerNjangi />} />
+              <Route path="rent-reporting" element={<CustomerRentReporting />} />
+              <Route path="credit" element={<CustomerCreditScore />} />
+              <Route path="settings" element={<CustomerSettings />} />
+              <Route path="alerts" element={<CustomerAlerts />} />
+              <Route path="help" element={<CustomerHelp />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
