@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
 /* ─── QR Matrix Generator (same as BankQRPay) ─── */
 function generateQRMatrix(data: string): boolean[][] {
   const size = 21;
@@ -64,6 +65,10 @@ type Tab = 'scan' | 'receive';
 const CustomerScan: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
+  const { data: accounts } = useCustomerAccounts(user?.id, institutionId);
+  const { data: profile } = useCustomerProfile(user?.id);
+
   const [activeTab, setActiveTab] = useState<Tab>('scan');
   const [manualCode, setManualCode] = useState('');
   const [showManualEntry, setShowManualEntry] = useState(false);
@@ -78,9 +83,9 @@ const CustomerScan: React.FC = () => {
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
 
-  // Receive tab state
+  // Receive tab state - use real account data
   const [receiveAmount, setReceiveAmount] = useState('');
-  const mockAccountId = 'KOB-4850-2837-9921';
+  const userAccountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
 
   /* ─── Camera Controls ─── */
   const startCamera = useCallback(async () => {
@@ -169,7 +174,7 @@ const CustomerScan: React.FC = () => {
   };
 
   const handleShareQR = async () => {
-    const shareText = `Pay me via KOB\nAccount: ${mockAccountId}${receiveAmount ? `\nAmount: ${Number(receiveAmount).toLocaleString()} XAF` : ''}`;
+    const shareText = `Pay me via KOB\nAccount: ${userAccountId}${receiveAmount ? `\nAmount: ${Number(receiveAmount).toLocaleString()} XAF` : ''}`;
     if (navigator.share) {
       try { await navigator.share({ title: 'Pay Me', text: shareText }); } catch {}
     } else {
@@ -179,7 +184,7 @@ const CustomerScan: React.FC = () => {
   };
 
   const handleCopyCode = async () => {
-    await navigator.clipboard.writeText(mockAccountId);
+    await navigator.clipboard.writeText(userAccountId);
     toast.success('Account code copied!');
   };
 
@@ -191,7 +196,7 @@ const CustomerScan: React.FC = () => {
 
   const qrData = JSON.stringify({
     type: 'kob_pay',
-    account: mockAccountId,
+    account: userAccountId,
     institution: institutionId,
     ...(receiveAmount ? { amount: Number(receiveAmount) } : {}),
   });
@@ -380,7 +385,7 @@ const CustomerScan: React.FC = () => {
             </div>
 
             <div className="text-center">
-              <p className="font-mono text-sm font-bold text-foreground">{mockAccountId}</p>
+              <p className="font-mono text-sm font-bold text-foreground">{userAccountId}</p>
               <p className="mt-1 text-xs text-muted-foreground">Share this QR code to receive payments</p>
             </div>
 
