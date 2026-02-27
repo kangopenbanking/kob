@@ -1,67 +1,62 @@
 
 
-## Gap Analysis
+## Findings
 
-### Current State
-- **CustomerHome**: Balance card + quick actions + transactions list. Functional but basic.
-- **CustomerMore**: All 15 features in a flat 4-column grid of identical small icons. No grouping, no visual hierarchy.
-- **12 feature pages**: All are identical "coming soon" placeholders (Transfer, Request, Bills, Invoices, Bank, SplitBills, PayLinks, CashOut, Recurring, Rewards, PiggyBank, Njangi, RentReporting, CreditScore).
-- **CustomerActivity**: Basic flat transaction list, no filters or date grouping.
-- **CustomerCards**: Minimal single card preview.
+4 pages remain as "coming soon" placeholders:
+1. **CustomerBills.tsx** - Empty placeholder
+2. **CustomerBank.tsx** - Empty placeholder  
+3. **CustomerSettings.tsx** - Empty placeholder
+4. **CustomerHelp.tsx** - Empty placeholder
 
-### Plan (6 tasks)
+Additionally, **CustomerAlerts.tsx** shows "No new alerts" with no functional UI.
 
-#### 1. Redesign CustomerHome with reference-inspired UI
-Enhance the home screen drawing from the uploaded reference designs:
-- **Upcoming Bills row**: Horizontal scroll of pastel pill cards (like the Evernote/Apple bill cards in image 1) showing due bills with amounts and brand icons
-- **Spending Stats card**: A salmon/mint colored card showing "Monthly Stats" with earnings vs spending summary (inspired by image 1 right panel)
-- **Enhanced balance card**: Add a period toggle (W/M/Y) like image 3, keep the navy hero card
-- Add these as new section keys in `CustomerSectionKey` and `sectionOrder`
+All other feature pages (Transfer, Request, CashOut, PiggyBank, Njangi, Rewards, CreditScore, Invoices, SplitBills, Recurring, RentReporting, PayLinks, Activity, Cards, Scan) are already implemented with functional mock UIs.
 
-#### 2. Redesign CustomerMore with grouped service sections and varied card styles
-Replace the flat grid with categorized sections using mixed card sizes:
-- **Money Movement** (Transfer, Request, Cash Out, Pay Links): 2 large feature cards (half-width, tall, with description text) + 2 small icon cards
-- **Payments & Bills** (Bills, Invoices, Split Bills, Recurring): Horizontal scroll of medium pastel cards
-- **Savings & Goals** (Piggy Bank, Njangi, Rewards): 1 wide banner card + 2 square cards side by side
-- **Financial Health** (Credit Score, Rent Reporting, Bank): 3 equal cards in a row with progress indicators
-- **Account** section stays as list items (Settings, Alerts, Help)
-- Each section uses different card dimensions, colors, and layouts for visual variety
+## Implementation Plan (5 pages)
 
-#### 3. Build functional feature pages (batch 1: core money features)
-Replace "coming soon" with real mock UIs:
-- **CustomerTransfer**: Amount input, recipient selector (recent contacts row), account picker, confirm button
-- **CustomerRequest**: Amount input, generate QR/link, share options
-- **CustomerBills**: Bill categories grid (Electricity, Water, Internet, TV), biller search, payment form
-- **CustomerCashOut**: Agent locator, amount input, withdrawal method selector
+### 1. CustomerBills.tsx - Full bill payment UI
+- Bill categories grid (Electricity, Water, Internet, TV, Phone, Insurance)
+- Biller search with text input
+- Selected biller payment form: account/meter number input, amount input, confirm button
+- Recent bill payments history list
+- Uses same design patterns: `rounded-3xl` cards, pastel colors, `framer-motion` animations
 
-#### 4. Build functional feature pages (batch 2: financial services)
-- **CustomerPiggyBank**: Savings goals with progress bars, create goal form, deposit/withdraw actions
-- **CustomerNjangi**: Group savings circles, member list, contribution tracker, payout schedule
-- **CustomerRewards**: Points balance card, earn/redeem tabs, reward catalog grid
-- **CustomerCreditScore**: Score gauge visualization, score factors breakdown, tips list
+### 2. CustomerBank.tsx - Linked accounts management
+- List of linked bank accounts with bank name, account number (masked), balance
+- "Link New Account" button with bank selector
+- Account details: tap to expand showing recent transactions
+- Unlink account option per entry
 
-#### 5. Build functional feature pages (batch 3: utilities)
-- **CustomerInvoices**: Invoice list with status badges, create invoice form
-- **CustomerSplitBills**: Split calculator, participant list, share breakdown
-- **CustomerRecurring**: Scheduled payments list with toggle switches, add recurring form
-- **CustomerRentReporting**: Rent payment history, landlord info, credit impact indicator
-- **CustomerPayLinks**: Generate payment link, link history, share options
+### 3. CustomerSettings.tsx - App settings page
+- Profile section: name, email, phone (editable)
+- Security section: Change PIN, Biometric toggle, 2FA toggle
+- Preferences section: Notification toggle, Language selector, Currency display
+- App section: App version, Terms, Privacy Policy, Log Out button
+- Each section as a card with list items and toggle switches
 
-#### 6. Enhance CustomerActivity and CustomerCards
-- **CustomerActivity**: Date-grouped sections (Today, Yesterday, This Week), filter chips (All, Income, Expenses, Transfers), search bar
-- **CustomerCards**: Multiple card carousel, card controls (freeze, PIN, limits), recent card transactions
+### 4. CustomerHelp.tsx - Help & support center
+- FAQ accordion list (common questions)
+- Contact options: Live Chat, Email, Phone cards
+- Report a Problem form with subject + description
+- Quick links: Terms, Privacy, Community
+
+### 5. CustomerAlerts.tsx - Notifications center
+- Alert list with types: transaction, security, promotion, system
+- Filter chips (All, Transactions, Security, Promotions)
+- Each alert card with icon, title, message, timestamp
+- Mark as read / mark all read functionality
+- Empty state when filtered results are empty
 
 ### Files Modified
-- `src/components/customer-app/CustomerTenantProvider.tsx` (add new section keys)
-- `src/pages/customer-app/CustomerHome.tsx`
-- `src/pages/customer-app/CustomerMore.tsx`
-- `src/pages/customer-app/CustomerActivity.tsx`
-- `src/pages/customer-app/CustomerCards.tsx`
-- All 12 feature page files (Transfer, Request, Bills, CashOut, PiggyBank, Njangi, Rewards, CreditScore, Invoices, SplitBills, Recurring, RentReporting, PayLinks)
+- `src/pages/customer-app/CustomerBills.tsx`
+- `src/pages/customer-app/CustomerBank.tsx`
+- `src/pages/customer-app/CustomerSettings.tsx`
+- `src/pages/customer-app/CustomerHelp.tsx`
+- `src/pages/customer-app/CustomerAlerts.tsx`
 
 ### Technical Notes
-- All pages use mock data (no database changes needed)
-- Design follows the established palette: Navy `hsl(225,50%,22%)`, Salmon `hsl(0,60%,85%)`, Mint `hsl(150,40%,90%)`, Sky `hsl(210,80%,93%)`, Amber `hsl(45,70%,90%)`
-- Cards use `rounded-3xl`, Lucide icons with `strokeWidth={1.5}`, framer-motion entrance animations
-- Feature visibility respects `tenant.features` toggles throughout
+- All pages use mock data (no database changes)
+- Design follows established patterns: Lucide icons `strokeWidth={1.5}`, `framer-motion` entrance animations, pastel HSL color palette, `rounded-2xl`/`rounded-3xl` cards
+- All interactive elements (toggles, buttons, inputs) will be functional with local state
+- Each page will be tested in browser after implementation
 
