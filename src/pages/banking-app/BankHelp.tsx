@@ -1,17 +1,73 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, MessageCircle, Phone, Mail, FileText, ChevronRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, MessageCircle, Phone, Mail, FileText, ChevronRight, Send, X } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { toast } from 'sonner';
+import { useTenant } from '@/components/pwa/TenantProvider';
 
-const helpItems = [
-  { icon: FileText, label: 'FAQs', description: 'Frequently asked questions' },
-  { icon: MessageCircle, label: 'Live Chat', description: 'Chat with support' },
-  { icon: Phone, label: 'Call Us', description: '+237 233 XXX XXX' },
-  { icon: Mail, label: 'Email Support', description: 'support@kangbank.com' },
+const faqs = [
+  { q: 'How do I fund my account?', a: 'Go to Home → Fund Account and choose from Mobile Money, Card, PayPal, or Bank Transfer. Follow the prompts to complete your deposit.' },
+  { q: 'How long do transfers take?', a: 'Internal transfers are instant. Mobile Money transfers typically complete within 1–5 minutes. Bank transfers may take 1–3 business days.' },
+  { q: 'How do I reset my transaction PIN?', a: 'Go to More → Settings → Change Transaction PIN. You will need to verify your identity before setting a new PIN.' },
+  { q: 'What are virtual cards?', a: 'Virtual cards are digital Visa/Mastercard cards you can use for online purchases. Create one from the Cards tab on the home screen.' },
+  { q: 'How do I check my credit score?', a: 'Go to More → Credit Score to view your CrediQ rating, score history, and tips to improve your score.' },
+  { q: 'Is my money safe?', a: 'Yes. All accounts are protected with bank-grade encryption, two-factor authentication, and transaction PIN verification for every payment.' },
+  { q: 'How do I close my account?', a: 'Please contact our support team via Live Chat or email. Account closure requests are processed within 5 business days.' },
 ];
 
 const BankHelp: React.FC = () => {
   const navigate = useNavigate();
+  const { name: institutionName } = useTenant();
+  const [showChat, setShowChat] = useState(false);
+  const [chatMessage, setChatMessage] = useState('');
+  const [chatSubject, setChatSubject] = useState('');
+
+  const phoneNumber = '+237 233 000 000';
+  const emailAddress = 'support@kangbank.com';
+
+  const handleSendChat = () => {
+    if (!chatSubject.trim() || !chatMessage.trim()) {
+      toast.error('Please fill in subject and message');
+      return;
+    }
+    toast.success('Message sent! Our team will respond within 24 hours.');
+    setChatMessage('');
+    setChatSubject('');
+    setShowChat(false);
+  };
+
+  const helpActions = [
+    {
+      icon: FileText,
+      label: 'FAQs',
+      description: 'Frequently asked questions',
+      onClick: () => {
+        document.getElementById('faq-section')?.scrollIntoView({ behavior: 'smooth' });
+      },
+    },
+    {
+      icon: MessageCircle,
+      label: 'Live Chat',
+      description: 'Chat with support',
+      onClick: () => setShowChat(true),
+    },
+    {
+      icon: Phone,
+      label: 'Call Us',
+      description: phoneNumber,
+      onClick: () => { window.location.href = `tel:${phoneNumber.replace(/\s/g, '')}`; },
+    },
+    {
+      icon: Mail,
+      label: 'Email Support',
+      description: emailAddress,
+      onClick: () => { window.location.href = `mailto:${emailAddress}?subject=Support Request — ${institutionName}`; },
+    },
+  ];
 
   return (
     <div className="flex min-h-screen flex-col px-4 py-6">
@@ -23,8 +79,9 @@ const BankHelp: React.FC = () => {
       <h1 className="mb-1 text-xl font-semibold tracking-tight text-foreground">Help & Support</h1>
       <p className="mb-6 text-sm text-muted-foreground">How can we help you?</p>
 
-      <div className="flex flex-col gap-2">
-        {helpItems.map((item, i) => {
+      {/* Contact Actions */}
+      <div className="flex flex-col gap-2 mb-8">
+        {helpActions.map((item, i) => {
           const Icon = item.icon;
           return (
             <motion.button
@@ -33,6 +90,7 @@ const BankHelp: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
               whileTap={{ scale: 0.98 }}
+              onClick={item.onClick}
               className="flex items-center justify-between rounded-xl border bg-card p-4 text-left"
             >
               <div className="flex items-center gap-3">
@@ -49,6 +107,64 @@ const BankHelp: React.FC = () => {
           );
         })}
       </div>
+
+      {/* FAQ Section */}
+      <div id="faq-section">
+        <h2 className="mb-3 text-base font-semibold text-foreground">Frequently Asked Questions</h2>
+        <Accordion type="single" collapsible className="w-full">
+          {faqs.map((faq, i) => (
+            <AccordionItem key={i} value={`faq-${i}`}>
+              <AccordionTrigger className="text-sm text-left">{faq.q}</AccordionTrigger>
+              <AccordionContent className="text-sm text-muted-foreground">{faq.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </div>
+
+      {/* Live Chat Modal */}
+      <AnimatePresence>
+        {showChat && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4"
+            onClick={() => setShowChat(false)}
+          >
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-t-2xl bg-card p-6 shadow-xl"
+            >
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-foreground">Send a Message</h3>
+                <button onClick={() => setShowChat(false)}>
+                  <X className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
+                </button>
+              </div>
+              <div className="flex flex-col gap-3">
+                <Input
+                  placeholder="Subject"
+                  value={chatSubject}
+                  onChange={(e) => setChatSubject(e.target.value)}
+                />
+                <Textarea
+                  placeholder="Describe your issue..."
+                  value={chatMessage}
+                  onChange={(e) => setChatMessage(e.target.value)}
+                  rows={4}
+                />
+                <Button onClick={handleSendChat} className="w-full gap-2">
+                  <Send className="h-4 w-4" strokeWidth={1.5} />
+                  Send Message
+                </Button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
