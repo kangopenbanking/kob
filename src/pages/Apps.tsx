@@ -76,13 +76,13 @@ const apps: AppPhase[] = [
   },
   {
     title: 'Customer App',
-    subtitle: 'Premium fintech wallet with 20+ features',
+    subtitle: 'Unified fintech wallet connecting all banking institutions',
     status: 'live',
     accentColor: 'bg-fi-purple',
     bgAccent: 'bg-fi-purple/10',
     textAccent: 'text-fi-purple',
     phase: 3,
-    link: '/app/f493095b-037a-40cf-82bc-3a3ab74550dd',
+    link: '/app',
     features: [
       { icon: QrCode, label: 'QR Scan Pay' },
       { icon: Send, label: 'Transfer & Request' },
@@ -359,8 +359,8 @@ export default function Apps() {
                 </div>
                 <div className="flex items-center gap-3 rounded-lg bg-muted p-3">
                   <Layers className="h-5 w-5 text-fi-purple" />
-                  <code className="text-sm font-mono text-foreground">/app/:institutionId/*</code>
-                  <Badge variant="secondary" className="ml-auto">Phase 3</Badge>
+                  <code className="text-sm font-mono text-foreground">/app/*</code>
+                  <Badge variant="secondary" className="ml-auto">Phase 3 — Unified</Badge>
                 </div>
                 <div className="mt-4 rounded-lg border border-border p-4">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Context Flow</p>
@@ -371,6 +371,7 @@ export default function Apps() {
                     <ArrowRight className="h-3 w-3 text-muted-foreground" />
                     <code className="rounded bg-primary/10 px-2 py-0.5 text-primary">Branded UI</code>
                   </div>
+                  <p className="text-[10px] text-muted-foreground mt-2">Banking Apps: per-institution • Customer App: unified platform</p>
                 </div>
               </CardContent>
             </Card>
