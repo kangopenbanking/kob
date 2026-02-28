@@ -1,84 +1,51 @@
 
 
-## Audit: All Links Referencing Lovable or Raw Infrastructure URLs
+## Analysis: Banking vs Customer App Management Field Mismatches
 
-### Findings
+After reviewing both management pages, the actual apps, and their respective tenant providers, here are the issues found:
 
-**Category 1: `window.location.origin` — Dynamic URLs that resolve to Lovable preview/staging domain**
-These 11 files generate shareable links, redirect URLs, and email callbacks using `window.location.origin`, which resolves to `*.lovable.app` in preview or staging. These must use the production custom domain `kangopenbanking.com` instead.
+### Problems in Banking App Management (`BankingAppManagement.tsx`)
 
-| File | Usage |
-|---|---|
-| `src/pages/admin/InstitutionVerification.tsx` | `dashboard_url` in email |
-| `src/pages/Admin.tsx` | `portal_url`, `reapply_url` in emails |
-| `src/pages/CustomerFundAccount.tsx` | `return_url` for payment callback |
-| `src/pages/customer-app/CustomerRequest.tsx` | Shareable payment link |
-| `src/pages/merchant/MerchantPaymentLinks.tsx` | Copy payment link |
-| `src/pages/banking-app/BankFundAccount.tsx` | `return_url` for payment callback |
-| `src/pages/institution/GatewayPaymentLinks.tsx` | Copy payment link |
-| `src/pages/institution/InstitutionFundAccount.tsx` | `return_url` for payment callback |
-| `src/pages/merchant/MerchantFundWallet.tsx` | `return_url` for payment callback |
-| `src/pages/customer-app/CustomerRewards.tsx` | Referral link |
-| `src/components/pwa/MobileAuthForm.tsx` | `emailRedirectTo` for auth |
+**1. Piggy Bank & Njangi tabs should NOT be in the Banking App Management**
+- The Banking App's `TenantProvider` (`AppFeatures`) only defines: `cards`, `savings`, `loans`, `credit_score`, `mobile_money`, `qr_payments`, `bill_payments`
+- Piggy Bank and Njangi are Customer App features (defined in `CustomerAppFeatures` in `CustomerTenantProvider.tsx`)
+- Even though the Banking App's "More" page (BankMore.tsx) links to piggy bank and njangi routes, those are shared services -- the **admin management** view should only show features native to that app's config model
+- The Banking App Management currently fetches and displays: Piggy Bank Plans tab, Njangi Groups tab, Piggy Bank stat card, Njangi stat card
+- These should be **removed** from Banking App Management since they belong in Customer App Management (which already has them)
 
-**Category 2: Raw Supabase project URLs (`ftwbtzbeqkqrdmxmyvvz.supabase.co`) in frontend**
-These should use `api.kangopenbanking.com` instead.
+**2. `account_funding` feature toggle exists in Banking Management but not in `AppFeatures` type**
+- The `featureLabels` map lists `account_funding: "Account Funding"` but the actual `AppFeatures` interface in TenantProvider doesn't include it
+- This is a phantom toggle that does nothing
 
-| File | Usage |
-|---|---|
-| `src/config/api.ts` | `BASE_URL_FALLBACK` |
-| `src/pages/developer/ApiExplorer.tsx` | Fallback URL for OpenAPI spec |
-| `src/pages/WooForKang.tsx` | Plugin download fetch |
-| `src/pages/integrations/WooCommercePluginCode.tsx` | Plugin download fetch |
-| `src/pages/integrations/WooCommerceGuide.tsx` | Plugin download fetch |
+**3. Preview bottom nav shows emoji** (minor)
+- Line 1158: `"Good afternoon 👋"` -- uses emoji, should be removed per design standards
 
-**Category 3: Raw Supabase project URLs in edge functions**
+### Problems in Customer App Management (`CustomerAppManagement.tsx`)
 
-| File | Usage |
-|---|---|
-| `supabase/functions/oidc-config/index.ts` | OAuth endpoints use raw Supabase URL |
-| `supabase/functions/public-api-spec/index.ts` | OAuth URLs in security schemes |
-| `supabase/functions/admin-institution-approve/index.ts` | Dashboard URL construction |
-
-**Category 4: Lovable AI gateway (`ai.gateway.lovable.dev`) — KEEP AS-IS**
-These are internal Lovable AI service calls and must NOT be changed:
-- `supabase/functions/ai-anomaly-detection/index.ts`
-- `supabase/functions/credit-score-tips/index.ts`
-
-**Category 5: PostiQ external service URLs — KEEP AS-IS**
-These reference a different Supabase project (PostiQ) and are correct:
-- `supabase/functions/postiq-lookup-code/index.ts`
-- `supabase/functions/postiq-create-code/index.ts`
-
----
+**4. Customer App sections are missing from the section order**
+- `CustomerTenantProvider` defines sections: `balance_card`, `quick_actions`, `media_banner`, `upcoming_bills`, `spending_stats`, `recent_activities`
+- But the Customer App Management only allows ordering: `balance_card`, `quick_actions`, `media_banner`, `recent_activities`
+- Missing: `upcoming_bills` and `spending_stats` from the reorderable section list
 
 ### Implementation Plan
 
-**Step 1: Create a centralized site URL constant**
-Add `SITE_URL` to `src/config/api.ts`:
-```typescript
-SITE_URL: 'https://kangopenbanking.com',
-```
+**Step 1: Clean Banking App Management**
+- Remove `useInstitutionPiggyBankPlans` and `useInstitutionNjangiGroups` hooks and their usage
+- Remove Piggy Bank and Njangi tab triggers and tab content
+- Remove Piggy Bank and Njangi stat cards
+- Remove `account_funding` from the feature toggle list (or add it to the actual AppFeatures type if intended)
+- Replace emoji in preview greeting
 
-**Step 2: Replace all `window.location.origin` with `API_CONFIG.SITE_URL`**
-Update all 11 files in Category 1 to import `API_CONFIG` and use `API_CONFIG.SITE_URL` instead of `window.location.origin`. This ensures all shared links, payment callbacks, referral URLs, and auth redirects point to `kangopenbanking.com` regardless of the environment.
+**Step 2: Fix Customer App Management section order**
+- Add `upcoming_bills` and `spending_stats` to `CustomerSectionKey` type and `sectionLabels` map
+- Add these to `defaultSectionOrder`
+- Add preview rendering for these sections
 
-**Step 3: Replace raw Supabase URLs in frontend (Category 2)**
-- `src/pages/developer/ApiExplorer.tsx` — change fallback to use `api.kangopenbanking.com`
-- `src/pages/WooForKang.tsx`, `WooCommercePluginCode.tsx`, `WooCommerceGuide.tsx` — change plugin download URL to `https://api.kangopenbanking.com/functions/v1/woocommerce-download-plugin`
+**Step 3: Verify consistency**
+- Ensure Banking features config only shows toggles that exist in the `AppFeatures` interface
+- Ensure Customer features config matches `CustomerAppFeatures` interface
 
-**Step 4: Replace raw Supabase URLs in edge functions (Category 3)**
-- `oidc-config/index.ts` — replace `supabaseUrl` variable with `https://api.kangopenbanking.com/functions/v1` for all OAuth/JWKS/DCR endpoints
-- `public-api-spec/index.ts` — update OAuth security scheme URLs
-- `admin-institution-approve/index.ts` — use `https://kangopenbanking.com/fi-portal` directly
-
-**Step 5: Update tests**
-- `src/test/api-config.test.ts` — add test for `SITE_URL`
-- No changes needed for fallback tests (fallback URL stays as internal safety net in config but isn't actively used in frontend code)
-
-### Files Changed (total: ~18 files)
-- 1 config file (`src/config/api.ts`)
-- 11 frontend files (Category 1 + 2)
-- 3 edge functions (Category 3)
-- 1 test file
+### Files to modify:
+- `src/pages/admin/BankingAppManagement.tsx` -- Remove Piggy Bank, Njangi tabs/stats/hooks; fix feature labels; remove emoji
+- `src/pages/admin/CustomerAppManagement.tsx` -- Add missing section keys (`upcoming_bills`, `spending_stats`)
 
