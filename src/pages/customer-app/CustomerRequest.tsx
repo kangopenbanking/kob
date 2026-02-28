@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Share2, Link2, CheckCircle2, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -63,9 +63,8 @@ function QRCodeSVG({ data, size = 200 }: { data: string; size?: number }) {
 
 const CustomerRequest: React.FC = () => {
   const navigate = useNavigate();
-  const { institutionId } = useParams<{ institutionId: string }>();
   const { user } = useCustomerAuth();
-  const { data: accounts } = useCustomerAccounts(user?.id, institutionId);
+  const { data: accounts } = useCustomerAccounts(user?.id);
   const { data: profile } = useCustomerProfile(user?.id);
 
   const [amount, setAmount] = useState('');
@@ -80,21 +79,19 @@ const CustomerRequest: React.FC = () => {
   const paymentData = useMemo(() => JSON.stringify({
     type: 'kob_pay',
     account: accountId,
-    institution: institutionId,
     ...(amount ? { amount: Number(amount) } : {}),
     name: displayName,
-  }), [accountId, institutionId, amount, displayName]);
+  }), [accountId, amount, displayName]);
 
   // Build a shareable payment link
   const payLink = useMemo(() => {
     const base = API_CONFIG.SITE_URL;
     const params = new URLSearchParams({
       to: accountId,
-      inst: institutionId || '',
       ...(amount ? { amt: amount } : {}),
     });
-    return `${base}/app/${institutionId}/transfer?${params.toString()}`;
-  }, [accountId, institutionId, amount]);
+    return `${base}/app/transfer?${params.toString()}`;
+  }, [accountId, amount]);
 
   const handleGenerate = () => {
     if (!amount) return;

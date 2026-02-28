@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Building2, ChevronDown, ChevronUp, Plus, Trash2, X, Loader2, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -20,13 +20,12 @@ const bankColors: Record<string, string> = {
 
 const CustomerBank: React.FC = () => {
   const navigate = useNavigate();
-  const { institutionId } = useParams<{ institutionId: string }>();
   const { user } = useCustomerAuth();
 
-  const { data: accounts = [], isLoading, refetch } = useCustomerAccounts(user?.id, institutionId);
+  const { data: accounts = [], isLoading, refetch } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
-  const { data: recentTxns = [] } = useCustomerTransactions(user?.id, institutionId, 20);
+  const { data: recentTxns = [] } = useCustomerTransactions(user?.id, undefined, 20);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showLinkForm, setShowLinkForm] = useState(false);

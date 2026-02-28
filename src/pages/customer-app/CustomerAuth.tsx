@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import { toast } from 'sonner';
 type AuthMode = 'welcome' | 'phone' | 'otp' | 'pin' | 'verifying';
 
 const CustomerAuth: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<AuthMode>('welcome');
@@ -21,23 +20,9 @@ const CustomerAuth: React.FC = () => {
   const [pin, setPin] = useState('');
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
-  const [branding, setBranding] = useState<{ name: string; logoUrl: string | null }>({ name: '', logoUrl: null });
+  const [branding] = useState<{ name: string; logoUrl: string | null }>({ name: 'Kang', logoUrl: null });
 
   const { step: otpStep, loading: otpLoading, error: otpError, sendOTP, verifyOTP, reset: resetOTP } = useFirebasePhoneAuth();
-
-  useEffect(() => {
-    if (!institutionId) return;
-    supabase
-      .from('institutions')
-      .select('institution_name, logo_url')
-      .eq('id', institutionId)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setBranding({ name: (data as any).institution_name || '', logoUrl: (data as any).logo_url || null });
-        }
-      });
-  }, [institutionId]);
 
   useEffect(() => {
     if (otpStep === 'otp' && mode === 'phone') setMode('otp');
@@ -57,8 +42,7 @@ const CustomerAuth: React.FC = () => {
     const success = await verifyOTP(code);
     if (success) {
       if (isNewUser) {
-        // New registration — go to the onboarding questionnaire
-        navigate(`/app/${institutionId}/register`, { replace: true });
+        navigate('/app/register', { replace: true });
       } else {
         const { data: profile } = await supabase
           .from('profiles')
@@ -66,9 +50,9 @@ const CustomerAuth: React.FC = () => {
           .eq('phone_number', phone)
           .maybeSingle();
         if (profile && (profile as any).linked_account_type) {
-          navigate(`/app/${institutionId}/home`, { replace: true });
+          navigate('/app/home', { replace: true });
         } else {
-          navigate(`/app/${institutionId}/register`, { replace: true });
+          navigate('/app/register', { replace: true });
         }
       }
     }
@@ -103,9 +87,9 @@ const CustomerAuth: React.FC = () => {
           .eq('id', user.id)
           .maybeSingle();
         if (profile && (profile as any).linked_account_type) {
-          navigate(`/app/${institutionId}/home`, { replace: true });
+          navigate('/app/home', { replace: true });
         } else {
-          navigate(`/app/${institutionId}/register`, { replace: true });
+          navigate('/app/register', { replace: true });
         }
       }
     } catch (err: any) {
@@ -122,7 +106,7 @@ const CustomerAuth: React.FC = () => {
     if (mode === 'otp') { resetOTP(); setMode('phone'); }
     else if (mode === 'pin') { setMode('phone'); setPin(''); setPinError(null); }
     else if (mode === 'phone') { setMode('welcome'); }
-    else { navigate(`/app/${institutionId}`); }
+    else { navigate('/app'); }
   };
 
   const handlePhoneContinue = useCallback(async () => {
@@ -172,7 +156,7 @@ const CustomerAuth: React.FC = () => {
             <Building2 className="h-8 w-8 text-foreground" strokeWidth={1.5} />
           </div>
         )}
-        <h1 className="text-xl font-bold text-foreground">{branding.name || 'Kang'}</h1>
+        <h1 className="text-xl font-bold text-foreground">{branding.name}</h1>
       </div>
 
       {/* Content */}

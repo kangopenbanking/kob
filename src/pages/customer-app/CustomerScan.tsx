@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, ScanLine, Keyboard, QrCode, Camera, Share2, Copy, CheckCircle2, X, Flashlight, FlashlightOff, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,10 +63,9 @@ function QRCodeSVG({ data, size = 200 }: { data: string; size?: number }) {
 type Tab = 'scan' | 'receive';
 
 const CustomerScan: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
-  const { data: accounts } = useCustomerAccounts(user?.id, institutionId);
+  const { data: accounts } = useCustomerAccounts(user?.id);
   const { data: profile } = useCustomerProfile(user?.id);
 
   const [activeTab, setActiveTab] = useState<Tab>('scan');
@@ -136,11 +135,11 @@ const CustomerScan: React.FC = () => {
     // For now, simulate a scan after 5 seconds of camera being active
     const timeout = setTimeout(() => {
       if (cameraActive && !scanResult) {
-        handleScanDetected({ type: 'kob_pay', account: 'KOB-7721-3384-5502', institution: institutionId });
+        handleScanDetected({ type: 'kob_pay', account: 'KOB-7721-3384-5502' });
       }
     }, 6000);
     return () => clearTimeout(timeout);
-  }, [cameraActive, scanResult, institutionId]);
+  }, [cameraActive, scanResult]);
 
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
@@ -168,7 +167,7 @@ const CustomerScan: React.FC = () => {
   const handlePayNow = () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
-    navigate(`/app/${institutionId}/transfer`, {
+    navigate('/app/transfer', {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
   };
@@ -197,7 +196,6 @@ const CustomerScan: React.FC = () => {
   const qrData = JSON.stringify({
     type: 'kob_pay',
     account: userAccountId,
-    institution: institutionId,
     ...(receiveAmount ? { amount: Number(receiveAmount) } : {}),
   });
 

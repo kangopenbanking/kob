@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Banknote, MapPin, Smartphone, Building2, CheckCircle2, CreditCard, Wallet, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -56,7 +56,6 @@ const allMethods: CashOutMethod[] = [
 
 const CustomerCashOut: React.FC = () => {
   const navigate = useNavigate();
-  const { institutionId } = useParams();
   const [amount, setAmount] = useState('');
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -66,13 +65,10 @@ const CustomerCashOut: React.FC = () => {
 
   // Fetch admin-managed cash out config
   const { data: enabledMethods } = useQuery({
-    queryKey: ['cashout-config', institutionId],
+    queryKey: ['cashout-config'],
     queryFn: async () => {
-      if (!institutionId) return allMethods.map(m => m.key);
-      const { data } = await supabase.from('institutions').select('app_config').eq('id', institutionId).single();
-      const config = (data as any)?.app_config?.customer_app_config?.cashout_methods;
-      if (!config) return allMethods.map(m => m.key); // default: all enabled
-      return Object.entries(config).filter(([_, v]) => v).map(([k]) => k);
+      return allMethods.map(m => m.key);
+    },
     },
   });
 

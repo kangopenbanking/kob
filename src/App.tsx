@@ -705,12 +705,15 @@ function App() {
               <Route path="more/help" element={<BankHelp />} />
             </Route>
 
-            {/* Customer App PWA Routes */}
-            <Route path="/app/:institutionId" element={<CustomerSplash />} />
-            <Route path="/app/:institutionId/auth" element={<CustomerAuth />} />
-            <Route path="/app/:institutionId/register" element={<CustomerRegister />} />
-            <Route path="/app/:institutionId/onboarding" element={<CustomerOnboarding />} />
-            <Route path="/app/:institutionId" element={<CustomerAppLayout />}>
+            {/* Customer App PWA Routes — unified (no institutionId) */}
+            <Route path="/app" element={<CustomerSplash />} />
+            <Route path="/app/auth" element={<CustomerAuth />} />
+            <Route path="/app/register" element={<CustomerRegister />} />
+            <Route path="/app/onboarding" element={<CustomerOnboarding />} />
+            {/* Legacy redirect: old institution-scoped URLs */}
+            <Route path="/app/:institutionId" element={<Navigate to="/app" replace />} />
+            <Route path="/app/:institutionId/*" element={<Navigate to="/app" replace />} />
+            <Route path="/app" element={<CustomerAppLayout />}>
               <Route path="home" element={<CustomerHome />} />
               <Route path="activity" element={<CustomerActivity />} />
               <Route path="scan" element={<CustomerScan />} />

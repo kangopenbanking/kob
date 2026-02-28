@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,6 @@ const WELCOME_KEY = 'piggybank_welcome_seen';
 
 const CustomerPiggyBank: React.FC = () => {
   const navigate = useNavigate();
-  const { institutionId } = useParams();
   const { user } = useCustomerAuth();
   const { data: plans = [], isLoading } = usePiggyBankPlans();
   const createPlan = useCreatePiggyBankPlan();

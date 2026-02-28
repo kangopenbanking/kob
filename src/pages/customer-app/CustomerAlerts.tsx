@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Bell, ArrowUpRight, ShieldAlert, Gift, Info, CheckCheck, Circle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -40,8 +40,7 @@ const alertColor: Record<AlertType, string> = {
 
 const CustomerAlerts: React.FC = () => {
   const navigate = useNavigate();
-  const { institutionId } = useParams<{ institutionId: string }>();
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications(institutionId);
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
   const [filter, setFilter] = useState<AlertType | 'all'>('all');
 
   const mapped = notifications.map(n => ({

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Send, Download, Receipt, Building2, Users,
   Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
@@ -29,15 +29,14 @@ const utilityItems = [
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
 
 const CustomerMore: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
   const isViewOnly = user?.isViewOnly ?? false;
 
-  const { data: recentBills = [], isLoading: billsLoading } = useRecentBillPayments(user?.id, institutionId);
+  const { data: recentBills = [], isLoading: billsLoading } = useRecentBillPayments(user?.id);
 
-  const go = (path: string) => navigate(`/app/${institutionId}/${path}`);
+  const go = (path: string) => navigate(`/app/${path}`);
   const isFeatureVisible = (featureKey?: string) => !featureKey || tenant.features[featureKey as keyof typeof tenant.features] !== false;
   const enabledActions = allQuickActions.filter((a) => isFeatureVisible(a.featureKey));
 
