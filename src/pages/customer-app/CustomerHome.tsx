@@ -33,6 +33,7 @@ const moneyMovement: FeatureItem[] = [
   { label: 'Cash Out', description: 'Withdraw to your accounts', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-[hsl(45,60%,55%)]', featureKey: 'cash_out' },
   { label: 'Request', description: 'Ask someone to pay you', icon: ArrowDownLeft, path: 'request', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,40%)]', featureKey: 'request' },
   { label: 'Pay Links', description: 'Share a payment link', icon: Link2, path: 'pay-links', color: 'bg-[hsl(180,50%,90%)]', iconColor: 'text-[hsl(180,40%,35%)]', borderColor: 'border-[hsl(180,40%,55%)]', featureKey: 'pay_links' },
+  { label: 'Accounts', description: 'Manage linked accounts', icon: Building2, path: 'linked-accounts', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', borderColor: 'border-[hsl(225,40%,60%)]', featureKey: 'bank' },
 ];
 
 const paymentsBills: FeatureItem[] = [
@@ -51,7 +52,6 @@ const savingsGoals: FeatureItem[] = [
 const financialHealth: FeatureItem[] = [
   { label: 'Credit Score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
   { label: 'Rent Report', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
-  { label: 'Accounts', icon: Building2, path: 'linked-accounts', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', borderColor: 'border-[hsl(225,40%,60%)]', featureKey: 'bank' },
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
@@ -247,14 +247,14 @@ const CustomerHome: React.FC = () => {
       {visiblePayments.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Payments & Bills</p>
-          <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
             {visiblePayments.map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex min-w-[110px] flex-col items-center gap-2.5 rounded-3xl ${item.color} p-4 border-2 ${item.borderColor}`}>
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
+                className={`flex min-w-[80px] flex-col items-center gap-2 rounded-2xl ${item.color} p-3 border ${item.borderColor}`}>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/50">
+                  <item.icon className={`h-4 w-4 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
-                <p className="text-xs font-bold text-foreground">{item.label}</p>
+                <p className="text-[10px] font-bold text-foreground">{item.label}</p>
               </button>
             ))}
           </div>
