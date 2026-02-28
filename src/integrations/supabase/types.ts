@@ -575,6 +575,7 @@ export type Database = {
         Row: {
           api_key: string
           api_secret: string
+          api_secret_hash: string | null
           created_at: string
           environment: string
           id: string
@@ -585,6 +586,7 @@ export type Database = {
         Insert: {
           api_key: string
           api_secret: string
+          api_secret_hash?: string | null
           created_at?: string
           environment?: string
           id?: string
@@ -595,6 +597,7 @@ export type Database = {
         Update: {
           api_key?: string
           api_secret?: string
+          api_secret_hash?: string | null
           created_at?: string
           environment?: string
           id?: string
@@ -5105,6 +5108,7 @@ export type Database = {
           velocity_max_charges: number | null
           velocity_window_minutes: number | null
           webhook_secret: string | null
+          webhook_secret_hash: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -5128,6 +5132,7 @@ export type Database = {
           velocity_max_charges?: number | null
           velocity_window_minutes?: number | null
           webhook_secret?: string | null
+          webhook_secret_hash?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -5151,6 +5156,7 @@ export type Database = {
           velocity_max_charges?: number | null
           velocity_window_minutes?: number | null
           webhook_secret?: string | null
+          webhook_secret_hash?: string | null
           webhook_url?: string | null
         }
         Relationships: [
@@ -10917,6 +10923,7 @@ export type Database = {
           client_id: string
           client_name: string
           client_secret: string
+          client_secret_hash: string | null
           created_at: string | null
           environment: string
           fapi_profile: string | null
@@ -10941,6 +10948,7 @@ export type Database = {
           client_id: string
           client_name: string
           client_secret: string
+          client_secret_hash?: string | null
           created_at?: string | null
           environment?: string
           fapi_profile?: string | null
@@ -10965,6 +10973,7 @@ export type Database = {
           client_id?: string
           client_name?: string
           client_secret?: string
+          client_secret_hash?: string | null
           created_at?: string | null
           environment?: string
           fapi_profile?: string | null
@@ -11799,6 +11808,7 @@ export type Database = {
           updated_at: string | null
           user_id: string
           webhook_secret: string | null
+          webhook_secret_hash: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -11816,6 +11826,7 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           webhook_secret?: string | null
+          webhook_secret_hash?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -11833,6 +11844,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           webhook_secret?: string | null
+          webhook_secret_hash?: string | null
           webhook_url?: string | null
         }
         Relationships: []
@@ -12002,6 +12014,14 @@ export type Database = {
       cleanup_expired_idempotency_keys: { Args: never; Returns: undefined }
       cleanup_expired_oauth_sessions: { Args: never; Returns: undefined }
       cleanup_expired_par_requests: { Args: never; Returns: undefined }
+      compute_webhook_hmac: {
+        Args: { p_merchant_id: string; p_payload: string }
+        Returns: string
+      }
+      compute_woo_webhook_hmac: {
+        Args: { p_merchant_id: string; p_payload: string }
+        Returns: string
+      }
       encrypt_sandbox_credentials: {
         Args: {
           _client_id: string
@@ -12085,6 +12105,7 @@ export type Database = {
         Returns: boolean
       }
       hash_ip_address: { Args: { ip_address: unknown }; Returns: string }
+      hash_secret_value: { Args: { secret: string }; Returns: string }
       is_consent_valid: {
         Args: { _consent_id: string; _consent_type: string }
         Returns: boolean
@@ -12178,12 +12199,20 @@ export type Database = {
         Args: { _amount: number; _consent_id: string; _user_id: string }
         Returns: Json
       }
+      verify_api_credential: {
+        Args: { p_api_key: string; p_candidate_secret: string }
+        Returns: boolean
+      }
       verify_sandbox_credentials: {
         Args: {
           _client_id: string
           _client_secret: string
           _institution_id: string
         }
+        Returns: boolean
+      }
+      verify_tpp_client_secret: {
+        Args: { p_candidate_secret: string; p_client_id: string }
         Returns: boolean
       }
     }
