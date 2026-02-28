@@ -3596,6 +3596,11 @@ export type Database = {
           institution_id: string | null
           is_active: boolean | null
           is_primary: boolean | null
+          last4: string | null
+          metadata: Json | null
+          provider_name: string | null
+          provider_type: string | null
+          status: string | null
           updated_at: string | null
           user_id: string
         }
@@ -3608,6 +3613,11 @@ export type Database = {
           institution_id?: string | null
           is_active?: boolean | null
           is_primary?: boolean | null
+          last4?: string | null
+          metadata?: Json | null
+          provider_name?: string | null
+          provider_type?: string | null
+          status?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -3620,6 +3630,11 @@ export type Database = {
           institution_id?: string | null
           is_active?: boolean | null
           is_primary?: boolean | null
+          last4?: string | null
+          metadata?: Json | null
+          provider_name?: string | null
+          provider_type?: string | null
+          status?: string | null
           updated_at?: string | null
           user_id?: string
         }

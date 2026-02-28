@@ -4,9 +4,10 @@ import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loa
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 
 const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 
@@ -23,10 +24,19 @@ const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const CustomerCashOut: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState('');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [step, setStep] = useState<'dest' | 'amount' | 'confirm' | 'success'>('dest');
   const [processing, setProcessing] = useState(false);
+
+  // Get user's Kang accounts for balance check
+  const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
+  const accountIds = kangAccounts.map((a: any) => a.id);
+  const { data: balances = [] } = useAccountBalances(accountIds);
+  const primaryAccount = kangAccounts[0] as any;
+  const primaryBalance = primaryAccount ? balances.find((b: any) => b.account_id === primaryAccount.id) : null;
+  const walletBalance = (primaryBalance?.amount as number) ?? 0;
 
   // Fetch linked accounts
   const { data: linkedAccounts = [], isLoading: acctLoading } = useQuery({
@@ -81,23 +91,64 @@ const CustomerCashOut: React.FC = () => {
   const numAmount = Number(amount) || 0;
   const fee = calculateFee(numAmount);
   const netAmount = Math.max(numAmount - fee, 0);
+  const isOverBalance = numAmount > walletBalance;
 
   const getIcon = (type: string) => iconMap[type] || iconMap.bank_account;
 
   const handleConfirm = () => {
     if (!amount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
     if (numAmount <= fee) { toast.error('Amount must be greater than the fee'); return; }
+    if (isOverBalance) { toast.error('Insufficient wallet balance'); return; }
     setStep('confirm');
   };
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      // 1. Create withdrawal transaction
+      const { error: txError } = await supabase.from('transactions').insert({
+        user_id: user!.id,
+        institution_id: KANG_PLATFORM_ID,
+        account_id: primaryAccount?.id || null,
+        transaction_type: 'withdrawal',
+        amount: numAmount,
+        currency: 'XAF',
+        status: 'completed',
+        credit_debit_indicator: 'Debit',
+        transaction_information: `Withdrawal to ${selectedAccount?.provider_name || selectedAccount?.account_type} ···${selectedAccount?.last4 || ''}`,
+        booking_datetime: new Date().toISOString(),
+        value_datetime: new Date().toISOString(),
+        metadata: {
+          destination_linked_account_id: selectedAccount?.id,
+          destination_type: selectedAccount?.account_type,
+          destination_provider: selectedAccount?.provider_name,
+          fee_amount: fee,
+          net_amount: netAmount,
+        },
+      });
+      if (txError) throw txError;
+
+      // 2. Deduct from wallet balance
+      if (primaryAccount?.id && primaryBalance) {
+        const newAmount = Math.max(walletBalance - numAmount, 0);
+        await supabase.from('account_balances')
+          .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
+          .eq('id', (primaryBalance as any).id);
+      }
+
+      // 3. Invalidate caches
+      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+
       setStep('success');
       toast.success(`XAF ${netAmount.toLocaleString()} withdrawal initiated`);
       setTimeout(() => navigate(-1), 2500);
-    }, 1800);
+    } catch (err: any) {
+      toast.error(err.message || 'Withdrawal failed. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const goBack = () => {
@@ -143,6 +194,12 @@ const CustomerCashOut: React.FC = () => {
                   ) : 'Fee schedule loading...'}
                 </p>
               </div>
+            </div>
+
+            {/* Wallet balance */}
+            <div className="rounded-2xl bg-card border border-border p-4">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Wallet Balance</p>
+              <p className="text-xl font-bold text-foreground mt-1">XAF {walletBalance.toLocaleString()}</p>
             </div>
 
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Withdraw To</p>
@@ -208,6 +265,9 @@ const CustomerCashOut: React.FC = () => {
                   onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
                   placeholder="0" className="bg-transparent text-4xl font-bold text-[hsl(0,0%,100%)] outline-none w-full text-center placeholder:text-[hsl(0,0%,100%)]/30" />
               </div>
+              <p className={`text-xs ${isOverBalance ? 'text-[hsl(0,70%,75%)]' : 'text-[hsl(0,0%,100%)]/40'}`}>
+                {isOverBalance ? 'Insufficient balance' : `Available: XAF ${walletBalance.toLocaleString()}`}
+              </p>
             </div>
 
             {/* Quick amounts */}
@@ -239,7 +299,7 @@ const CustomerCashOut: React.FC = () => {
               </motion.div>
             )}
 
-            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || numAmount <= fee} className="w-full rounded-2xl h-12 text-sm font-bold">
+            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || numAmount <= fee || isOverBalance} className="w-full rounded-2xl h-12 text-sm font-bold">
               Continue
             </Button>
           </motion.div>

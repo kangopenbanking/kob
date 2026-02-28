@@ -7,12 +7,16 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
+const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 const CustomerTransfer: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
@@ -31,12 +35,12 @@ const CustomerTransfer: React.FC = () => {
     return sum + (b?.amount ?? 0);
   }, 0);
 
-  const selectedAccount = accounts[selectedAccountIdx];
+  const selectedAccount = accounts[selectedAccountIdx] as any;
   const selectedBalance = selectedAccount
     ? balances.find((b: any) => b.account_id === selectedAccount.id)
     : null;
-  const availableBalance = selectedBalance?.amount ?? totalBalance;
-  const currency = balances[0]?.currency || 'XAF';
+  const availableBalance = (selectedBalance?.amount as number) ?? totalBalance;
+  const currency = (balances[0] as any)?.currency || 'XAF';
   const amountNum = Number(amount || 0);
   const isOverBalance = amountNum > availableBalance;
 
@@ -47,14 +51,55 @@ const CustomerTransfer: React.FC = () => {
     setStep('confirm');
   };
 
-  const handleSend = () => {
+  const handleSend = async () => {
     setSending(true);
-    // TODO: Integrate with actual transfer API
-    setTimeout(() => {
-      setSending(false);
+    try {
+      // 1. Create transfer transaction record
+      const { error: txError } = await supabase.from('transactions').insert({
+        user_id: user!.id,
+        institution_id: KANG_PLATFORM_ID,
+        account_id: selectedAccount?.id || null,
+        transaction_type: 'transfer',
+        amount: amountNum,
+        currency: currency,
+        status: 'completed',
+        credit_debit_indicator: 'Debit',
+        transaction_information: `Transfer to ${recipient}${note ? ` - ${note}` : ''}`,
+        booking_datetime: new Date().toISOString(),
+        value_datetime: new Date().toISOString(),
+        creditor_account: {
+          type: recipientType,
+          identification: recipient,
+        },
+        metadata: {
+          recipient_type: recipientType,
+          recipient_identifier: recipient,
+          note: note || null,
+          fee: 0,
+        },
+      });
+      if (txError) throw txError;
+
+      // 2. Deduct from sender's balance
+      if (selectedAccount?.id && selectedBalance) {
+        const newAmount = Math.max(availableBalance - amountNum, 0);
+        await supabase.from('account_balances')
+          .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
+          .eq('id', (selectedBalance as any).id);
+      }
+
+      // 3. Invalidate caches
+      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+
       setStep('success');
       toast.success(`${currency} ${amountNum.toLocaleString()} sent successfully`);
-    }, 1500);
+    } catch (err: any) {
+      toast.error(err.message || 'Transfer failed. Please try again.');
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleReset = () => {
@@ -270,7 +315,7 @@ const CustomerTransfer: React.FC = () => {
                             {acc.nickname || acc.account_holder_name || `Account ${i + 1}`}
                           </p>
                           <p className={`text-[10px] ${isSelected ? 'text-[hsl(0,0%,100%)]/60' : 'text-muted-foreground'}`}>
-                            {(bal?.amount ?? 0).toLocaleString()} {currency}
+                            {((bal as any)?.amount ?? 0).toLocaleString()} {currency}
                           </p>
                         </div>
                         {isSelected && (
