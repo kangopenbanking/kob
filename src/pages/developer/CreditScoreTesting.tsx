@@ -50,19 +50,7 @@ const CreditScoreTesting = () => {
     const startTime = Date.now();
 
     try {
-      // Step 1: Generate test data
-      toast.info('Generating test data...');
-      const { data: generateData, error: generateError } = await supabase.functions.invoke(
-        'test-data-generator',
-        {
-          body: { scenario, clear_existing: true }
-        }
-      );
-
-      if (generateError) throw generateError;
-      toast.success('Test data generated');
-
-      // Step 2: Calculate internal score
+      // Step 1: Calculate internal score using real user data
       toast.info('Calculating internal score...');
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
