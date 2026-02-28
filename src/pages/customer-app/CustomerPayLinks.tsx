@@ -18,11 +18,7 @@ interface PayLink {
   active: boolean;
 }
 
-const initialLinks: PayLink[] = [
-  { name: 'Product Payment', description: 'Payment for digital products', amount: 25000, clicks: 12, payments: 8, created: 'Feb 20', expiresAt: null, active: true },
-  { name: 'Service Fee', description: 'Consulting service fee', amount: 50000, clicks: 5, payments: 3, created: 'Feb 15', expiresAt: 'Mar 31', active: true },
-  { name: 'Donation Link', description: 'Open donation for community', amount: null, clicks: 34, payments: 22, created: 'Jan 30', expiresAt: null, active: false },
-];
+const initialLinks: PayLink[] = [];
 
 const CustomerPayLinks: React.FC = () => {
   const navigate = useNavigate();
