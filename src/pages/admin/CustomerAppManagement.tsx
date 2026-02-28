@@ -52,6 +52,12 @@ interface CustomerAppConfig {
   card_colors: CardColors;
   support_phone: string;
   support_email: string;
+  cashout_methods: {
+    bank_transfer: boolean;
+    mobile_money: boolean;
+    paypal: boolean;
+    agent: boolean;
+  };
 }
 
 type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'recent_activities';
@@ -72,6 +78,7 @@ const defaultConfig: CustomerAppConfig = {
   card_colors: {},
   support_phone: '',
   support_email: '',
+  cashout_methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true },
 };
 
 // ─── Hooks ───
@@ -607,6 +614,33 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
               <div key={key} className="flex items-center justify-between">
                 <Label htmlFor={`feat-${key}`} className="text-sm font-medium">{label}</Label>
                 <Switch id={`feat-${key}`} checked={config.features[key as keyof CustomerAppConfig["features"]]} onCheckedChange={() => toggleFeature(key as keyof CustomerAppConfig["features"])} />
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        {/* Cash Out Methods */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Cash Out Methods</CardTitle><CardDescription>Activate or deactivate cash out options for customers</CardDescription></CardHeader>
+          <CardContent className="space-y-3">
+            {([
+              { key: 'bank_transfer', label: 'Bank Transfer', desc: 'Withdraw to bank account' },
+              { key: 'mobile_money', label: 'Mobile Money', desc: 'Withdraw to MoMo wallet' },
+              { key: 'paypal', label: 'PayPal', desc: 'Withdraw to PayPal account' },
+              { key: 'agent', label: 'Agent Cashout', desc: 'Withdraw at a nearby agent' },
+            ] as const).map(m => (
+              <div key={m.key} className="flex items-center justify-between">
+                <div>
+                  <Label className="text-sm font-medium">{m.label}</Label>
+                  <p className="text-xs text-muted-foreground">{m.desc}</p>
+                </div>
+                <Switch
+                  checked={config.cashout_methods?.[m.key] ?? true}
+                  onCheckedChange={() => setConfig(prev => ({
+                    ...prev,
+                    cashout_methods: { ...prev.cashout_methods, [m.key]: !(prev.cashout_methods?.[m.key] ?? true) }
+                  }))}
+                />
               </div>
             ))}
           </CardContent>
