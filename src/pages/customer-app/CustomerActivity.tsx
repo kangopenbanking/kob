@@ -1,9 +1,20 @@
 import React, { useState } from 'react';
-import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Zap, Smartphone, Search, Gift, Receipt, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Zap, Smartphone, Search, Gift, Receipt, Loader2, Trash2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerTransactions } from '@/hooks/useCustomerData';
+import { useCustomerTransactions, useDeleteTransaction } from '@/hooks/useCustomerData';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
+import { toast } from 'sonner';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const filters = ['All', 'Income', 'Expenses', 'Transfers'];
 
@@ -35,8 +46,10 @@ const CustomerActivity: React.FC = () => {
   const { user } = useCustomerAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; info: string } | null>(null);
 
   const { data: transactions = [], isLoading } = useCustomerTransactions(user?.id, undefined, 50);
+  const deleteMutation = useDeleteTransaction();
 
   const filtered = transactions.filter((tx: any) => {
     const cat = getTxCategory(tx);
@@ -50,6 +63,24 @@ const CustomerActivity: React.FC = () => {
     (acc[group] = acc[group] || []).push(tx);
     return acc;
   }, {});
+
+  const handleDelete = (tx: any) => {
+    setDeleteTarget({ id: tx.id, info: tx.transaction_information || tx.transaction_type || 'Transaction' });
+  };
+
+  const confirmDelete = () => {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => {
+        toast.success('Transaction record deleted');
+        setDeleteTarget(null);
+      },
+      onError: () => {
+        toast.error('Failed to delete transaction');
+        setDeleteTarget(null);
+      },
+    });
+  };
 
   return (
     <div className="flex flex-col gap-5 p-5">
@@ -90,7 +121,7 @@ const CustomerActivity: React.FC = () => {
                 const time = tx.booking_datetime ? format(new Date(tx.booking_datetime), 'h:mm a') : '';
                 return (
                   <motion.div key={tx.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card p-3">
+                    transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card p-3 group">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${iconInfo.color}`}>
                       <TxIcon className={`h-5 w-5 ${iconInfo.iconColor}`} strokeWidth={1.5} />
                     </div>
@@ -101,6 +132,13 @@ const CustomerActivity: React.FC = () => {
                     <p className={`text-sm font-bold tabular-nums ${isCredit ? 'text-[hsl(150,60%,40%)]' : 'text-foreground'}`}>
                       {isCredit ? '+' : '-'}{Math.abs(amount).toLocaleString()} <span className="text-[10px] font-medium text-muted-foreground">{tx.currency}</span>
                     </p>
+                    <button
+                      onClick={() => handleDelete(tx)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-xl hover:bg-destructive/10 active:scale-95"
+                      aria-label="Delete transaction"
+                    >
+                      <Trash2 className="h-4 w-4 text-destructive" strokeWidth={1.5} />
+                    </button>
                   </motion.div>
                 );
               })}
@@ -108,6 +146,28 @@ const CustomerActivity: React.FC = () => {
           </div>
         ))
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent className="rounded-2xl max-w-[90vw]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{deleteTarget?.info}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

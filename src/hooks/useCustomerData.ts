@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 // ─── Linked Institutions ───
@@ -249,6 +249,23 @@ export function useSpendingSummary(userId?: string, institutionId?: string, peri
         else spending += amt;
       });
       return { earnings, spending };
+    },
+  });
+}
+
+// ─── Delete Transaction ───
+export function useDeleteTransaction() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (transactionId: string) => {
+      const { error } = await supabase
+        .from('transactions')
+        .delete()
+        .eq('id', transactionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
     },
   });
 }
