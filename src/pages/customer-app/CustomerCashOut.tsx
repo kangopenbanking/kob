@@ -15,7 +15,7 @@ interface CashOutMethod {
   icon: React.ElementType;
   color: string;
   iconColor: string;
-  fields: { key: string; label: string; placeholder: string; type?: string }[];
+  fields: { key: string; label: string; placeholder: string; type?: string; optional?: boolean }[];
 }
 
 const allMethods: CashOutMethod[] = [
@@ -49,7 +49,7 @@ const allMethods: CashOutMethod[] = [
     key: 'agent', label: 'Agent Cashout', description: 'Withdraw at a nearby agent',
     icon: MapPin, color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]',
     fields: [
-      { key: 'agentCode', label: 'Agent Code', placeholder: 'Enter agent code (optional)' },
+      { key: 'agentCode', label: 'Agent Code', placeholder: 'Enter agent code (optional)', optional: true },
     ],
   },
 ];
@@ -90,7 +90,7 @@ const CustomerCashOut: React.FC = () => {
     if (!currentMethod) return;
     // Validate required fields
     for (const field of currentMethod.fields) {
-      if (!formData[field.key]?.trim()) {
+      if (!field.optional && !formData[field.key]?.trim()) {
         toast.error(`Enter ${field.label.toLowerCase()}`);
         return;
       }
