@@ -119,6 +119,7 @@ import SLA from "./pages/SLA";
 import AUP from "./pages/AUP";
 import DataProtection from "./pages/DataProtection";
 import About from "./pages/About";
+import ProductManual from "./pages/ProductManual";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
 import Status from "./pages/Status";
@@ -619,6 +620,7 @@ function App() {
             <Route path="/embed-status-widget" element={<EmbedStatusWidget />} />
             <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
+            <Route path="/manual/:type" element={<Layout><ProductManual /></Layout>} />
         <Route path="/contact" element={<Layout><Contact /></Layout>} />
         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
         <Route path="/status" element={<Layout><Status /></Layout>} />

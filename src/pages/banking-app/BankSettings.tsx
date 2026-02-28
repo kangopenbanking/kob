@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { User, Lock, Bell, Globe, Moon, ChevronRight, Loader2, Save, Check, KeyRound } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { User, Lock, Bell, Globe, Moon, ChevronRight, Loader2, Save, Check, KeyRound, FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -12,12 +12,16 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
+import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 
-type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'appearance';
+type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'appearance' | 'legal' | 'legal-view';
 
 const BankSettings: React.FC = () => {
   const navigate = useNavigate();
+  const { institutionId } = useParams();
   const [loading, setLoading] = useState(true);
+  const [legalSlug, setLegalSlug] = useState('');
   const [activeSection, setActiveSection] = useState<SettingsSection>(null);
 
   // Personal info
@@ -234,6 +238,7 @@ const BankSettings: React.FC = () => {
     { id: 'notifications' as const, icon: Bell, label: 'Notifications', description: 'Push, email, SMS preferences' },
     { id: 'language' as const, icon: Globe, label: 'Language & Region', description: `${language === 'en' ? 'English' : language === 'fr' ? 'Français' : language} · ${currency}` },
     { id: 'appearance' as const, icon: Moon, label: 'Appearance', description: darkMode ? 'Dark mode' : 'Light mode' },
+    { id: 'legal' as const, icon: FileText, label: 'Legal & Policies', description: 'Terms, Privacy, KYC, Security' },
   ];
 
   return (
@@ -409,6 +414,23 @@ const BankSettings: React.FC = () => {
             {saving ? 'Saving...' : 'Save'}
           </Button>
         </motion.div>
+      )}
+
+      {/* Legal & Policies */}
+      {activeSection === 'legal' && (
+        <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-2">
+          <button onClick={() => setActiveSection(null)} className="mb-2 text-left text-sm font-semibold text-primary">← Back to Settings</button>
+          <h2 className="text-base font-bold text-foreground mb-1">Legal & Policies</h2>
+          <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setActiveSection('legal-view'); }} />
+        </motion.div>
+      )}
+
+      {/* Legal page viewer */}
+      {activeSection === 'legal-view' && legalSlug && (
+        <div>
+          <button onClick={() => setActiveSection('legal')} className="mb-2 text-left text-sm font-semibold text-primary px-1">← Back to Legal</button>
+          <AppLegalPageViewer slug={legalSlug} />
+        </div>
       )}
 
       {/* PIN Dialog */}
