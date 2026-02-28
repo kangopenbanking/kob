@@ -810,6 +810,42 @@ export type Database = {
           },
         ]
       }
+      app_legal_pages: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          slug: string
+          sort_order: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       app_notifications: {
         Row: {
           created_at: string
@@ -8808,6 +8844,77 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_glossary: {
+        Row: {
+          created_at: string
+          definition: string
+          id: string
+          manual_type: string
+          term: string
+        }
+        Insert: {
+          created_at?: string
+          definition: string
+          id?: string
+          manual_type: string
+          term: string
+        }
+        Update: {
+          created_at?: string
+          definition?: string
+          id?: string
+          manual_type?: string
+          term?: string
+        }
+        Relationships: []
+      }
+      product_manuals: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          is_active: boolean
+          manual_type: string
+          parent_id: string | null
+          section_slug: string
+          section_title: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manual_type: string
+          parent_id?: string | null
+          section_slug: string
+          section_title: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          manual_type?: string
+          parent_id?: string | null
+          section_slug?: string
+          section_title?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_manuals_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "product_manuals"
             referencedColumns: ["id"]
           },
         ]
