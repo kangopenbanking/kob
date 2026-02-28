@@ -293,6 +293,16 @@ const CustomerPiggyBank: React.FC = () => {
 
 // ─── Explore View ───
 
+// Rotating institution color palettes (flat, no gradients, premium aesthetic)
+const INSTITUTION_COLORS = [
+  { bg: 'bg-[hsl(225,50%,93%)]', accent: 'bg-[hsl(225,50%,22%)]', icon: 'text-[hsl(225,50%,22%)]', border: 'border-[hsl(225,50%,80%)]', badge: 'bg-[hsl(225,50%,88%)]', rate: 'text-[hsl(225,50%,30%)]' },
+  { bg: 'bg-[hsl(150,35%,92%)]', accent: 'bg-[hsl(150,35%,30%)]', icon: 'text-[hsl(150,35%,30%)]', border: 'border-[hsl(150,35%,78%)]', badge: 'bg-[hsl(150,35%,86%)]', rate: 'text-[hsl(150,35%,28%)]' },
+  { bg: 'bg-[hsl(25,60%,92%)]',  accent: 'bg-[hsl(25,60%,35%)]',  icon: 'text-[hsl(25,60%,35%)]',  border: 'border-[hsl(25,60%,80%)]',  badge: 'bg-[hsl(25,60%,87%)]',  rate: 'text-[hsl(25,60%,30%)]' },
+  { bg: 'bg-[hsl(260,40%,93%)]', accent: 'bg-[hsl(260,40%,40%)]', icon: 'text-[hsl(260,40%,40%)]', border: 'border-[hsl(260,40%,82%)]', badge: 'bg-[hsl(260,40%,88%)]', rate: 'text-[hsl(260,40%,35%)]' },
+  { bg: 'bg-[hsl(340,50%,93%)]', accent: 'bg-[hsl(340,50%,40%)]', icon: 'text-[hsl(340,50%,40%)]', border: 'border-[hsl(340,50%,82%)]', badge: 'bg-[hsl(340,50%,88%)]', rate: 'text-[hsl(340,50%,35%)]' },
+  { bg: 'bg-[hsl(45,60%,90%)]',  accent: 'bg-[hsl(45,60%,30%)]',  icon: 'text-[hsl(45,60%,30%)]',  border: 'border-[hsl(45,60%,78%)]',  badge: 'bg-[hsl(45,60%,84%)]',  rate: 'text-[hsl(45,60%,28%)]' },
+];
+
 function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
   onApply: (product: any) => void;
   onViewPlans: () => void;
@@ -318,9 +328,9 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
 
   const getTypeIcon = (type: string) => {
     switch (type) {
-      case 'fixed_deposit': return <Lock className="h-4 w-4" />;
-      case 'goal_savings': return <Target className="h-4 w-4" />;
-      default: return <PiggyBank className="h-4 w-4" />;
+      case 'fixed_deposit': return <Lock className="h-4 w-4" strokeWidth={1.5} />;
+      case 'goal_savings': return <Target className="h-4 w-4" strokeWidth={1.5} />;
+      default: return <PiggyBank className="h-4 w-4" strokeWidth={1.5} />;
     }
   };
 
@@ -345,7 +355,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
   return (
     <motion.div key="explore" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-5">
       {/* Intro banner */}
-      <div className="rounded-3xl bg-gradient-to-br from-[hsl(260,40%,92%)] to-[hsl(260,50%,85%)] p-5">
+      <div className="rounded-3xl bg-[hsl(225,50%,93%)] p-5 border-2 border-foreground">
         <p className="text-sm font-bold text-foreground">Explore Savings Products</p>
         <p className="text-xs text-muted-foreground mt-1">
           Compare savings accounts from top financial institutions and apply directly.
@@ -359,7 +369,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
 
       {institutions.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12">
-          <Building2 className="h-12 w-12 text-muted-foreground/40" />
+          <Building2 className="h-12 w-12 text-muted-foreground/40" strokeWidth={1.5} />
           <p className="text-sm font-semibold text-muted-foreground">No savings products available</p>
           <p className="text-xs text-muted-foreground text-center max-w-[220px]">
             Financial institutions haven't published savings products yet. Check back soon!
@@ -367,93 +377,91 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
         </div>
       ) : (
         <div className="space-y-6">
-          {institutions.map(({ institution, products: instProducts }, idx) => (
-            <motion.div
-              key={institution?.id || idx}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: idx * 0.08 }}
-            >
-              {/* Institution Header */}
-              <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                  {institution?.logo_url ? (
-                    <img src={institution.logo_url} alt={institution.institution_name} className="h-6 w-6 rounded object-contain" />
-                  ) : (
-                    <Building2 className="h-5 w-5 text-primary" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold text-foreground truncate">{institution?.institution_name || 'Institution'}</p>
-                  {institution?.institution_type && (
-                    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 mt-0.5">
-                      {institution.institution_type.replace(/_/g, ' ')}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* Products */}
-              <div className="space-y-3">
-                {instProducts.map((product: any) => (
-                  <div
-                    key={product.id}
-                    className="rounded-2xl border border-border bg-card p-4 hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                          {getTypeIcon(product.savings_type)}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-bold text-foreground truncate">{product.product_name}</p>
-                          <p className="text-[10px] text-muted-foreground">{getTypeLabel(product.savings_type)}</p>
-                        </div>
-                      </div>
-                      <div className="text-right shrink-0 ml-2">
-                        <p className="text-lg font-bold text-primary">{product.base_interest_rate}%</p>
-                        <p className="text-[9px] text-muted-foreground">p.a.</p>
-                      </div>
-                    </div>
-
-                    {product.description && (
-                      <p className="text-[11px] text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
+          {institutions.map(({ institution, products: instProducts }, idx) => {
+            const palette = INSTITUTION_COLORS[idx % INSTITUTION_COLORS.length];
+            return (
+              <motion.div
+                key={institution?.id || idx}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.08 }}
+              >
+                {/* Institution Header */}
+                <div className={`flex items-center gap-3 mb-3 rounded-2xl ${palette.bg} p-3 border ${palette.border}`}>
+                  <div className={`h-10 w-10 rounded-xl ${palette.accent} flex items-center justify-center shrink-0`}>
+                    {institution?.logo_url ? (
+                      <img src={institution.logo_url} alt={institution.institution_name} className="h-6 w-6 rounded object-contain" />
+                    ) : (
+                      <Building2 className="h-5 w-5 text-white" strokeWidth={1.5} />
                     )}
-
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="rounded-xl bg-muted/50 px-3 py-2">
-                        <p className="text-[9px] text-muted-foreground">Min. Opening</p>
-                        <p className="text-xs font-semibold text-foreground">{formatCurrency(product.min_opening_balance)}</p>
-                      </div>
-                      <div className="rounded-xl bg-muted/50 px-3 py-2">
-                        <p className="text-[9px] text-muted-foreground">Interest Paid</p>
-                        <p className="text-xs font-semibold text-foreground capitalize">{product.interest_payment_frequency}</p>
-                      </div>
-                      {product.lock_in_period_months && (
-                        <div className="rounded-xl bg-muted/50 px-3 py-2">
-                          <p className="text-[9px] text-muted-foreground">Lock-in</p>
-                          <p className="text-xs font-semibold text-foreground">{product.lock_in_period_months} months</p>
-                        </div>
-                      )}
-                      {product.max_withdrawals_per_month && (
-                        <div className="rounded-xl bg-muted/50 px-3 py-2">
-                          <p className="text-[9px] text-muted-foreground">Withdrawals/Mo</p>
-                          <p className="text-xs font-semibold text-foreground">{product.max_withdrawals_per_month}</p>
-                        </div>
-                      )}
-                    </div>
-
-                    <Button
-                      className="w-full rounded-xl h-10 text-xs font-semibold"
-                      onClick={() => onApply(product)}
-                    >
-                      Apply Now
-                    </Button>
                   </div>
-                ))}
-              </div>
-            </motion.div>
-          ))}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-bold text-foreground truncate">{institution?.institution_name || 'Institution'}</p>
+                    {institution?.institution_type && (
+                      <span className={`inline-block text-[9px] font-semibold px-2 py-0.5 rounded-full ${palette.badge} text-foreground/70 mt-0.5`}>
+                        {institution.institution_type.replace(/_/g, ' ')}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] font-semibold text-muted-foreground">{instProducts.length} product{instProducts.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                {/* Products Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {instProducts.map((product: any, pIdx: number) => (
+                    <motion.div
+                      key={product.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.08 + pIdx * 0.04 }}
+                      className={`rounded-3xl ${palette.bg} border ${palette.border} p-4 flex flex-col justify-between`}
+                    >
+                      {/* Icon + Type */}
+                      <div>
+                        <div className={`h-9 w-9 rounded-xl ${palette.accent} flex items-center justify-center mb-3`}>
+                          <span className="text-white">{getTypeIcon(product.savings_type)}</span>
+                        </div>
+                        <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{product.product_name}</p>
+                        <p className="text-[9px] text-muted-foreground mt-0.5">{getTypeLabel(product.savings_type)}</p>
+                      </div>
+
+                      {/* Rate */}
+                      <div className="mt-3">
+                        <p className={`text-2xl font-bold ${palette.rate}`}>{product.base_interest_rate}%</p>
+                        <p className="text-[9px] text-muted-foreground">per annum</p>
+                      </div>
+
+                      {/* Details */}
+                      <div className="mt-3 space-y-1.5">
+                        <div className={`rounded-lg ${palette.badge} px-2 py-1.5`}>
+                          <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Min. Opening</p>
+                          <p className="text-[11px] font-semibold text-foreground">{formatCurrency(product.min_opening_balance)}</p>
+                        </div>
+                        {product.lock_in_period_months && (
+                          <div className={`rounded-lg ${palette.badge} px-2 py-1.5`}>
+                            <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Lock-in</p>
+                            <p className="text-[11px] font-semibold text-foreground">{product.lock_in_period_months} months</p>
+                          </div>
+                        )}
+                        <div className={`rounded-lg ${palette.badge} px-2 py-1.5`}>
+                          <p className="text-[8px] text-muted-foreground uppercase tracking-wider">Interest</p>
+                          <p className="text-[11px] font-semibold text-foreground capitalize">{product.interest_payment_frequency}</p>
+                        </div>
+                      </div>
+
+                      {/* Apply */}
+                      <Button
+                        className="w-full rounded-2xl h-9 text-[11px] font-semibold mt-3"
+                        onClick={() => onApply(product)}
+                      >
+                        Apply Now
+                      </Button>
+                    </motion.div>
+                  ))}
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       )}
     </motion.div>
