@@ -26,6 +26,15 @@ import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner"
 import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
 
 // ─── Types ───
+interface RewardsConfig {
+  cashback_enabled: boolean;
+  cashback_min_transfer: number;
+  cashback_rate: number;
+  referral_enabled: boolean;
+  referral_bonus: number;
+  coupons: { name: string; description: string; code: string; active: boolean }[];
+}
+
 interface CustomerAppConfig {
   features: {
     qr_scan: boolean;
@@ -58,11 +67,21 @@ interface CustomerAppConfig {
     paypal: boolean;
     agent: boolean;
   };
+  rewards_config: RewardsConfig;
 }
 
 type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'recent_activities';
 
 const defaultSectionOrder: CustomerSectionKey[] = ['balance_card', 'quick_actions', 'media_banner', 'recent_activities'];
+
+const defaultRewardsConfig: RewardsConfig = {
+  cashback_enabled: true,
+  cashback_min_transfer: 10000,
+  cashback_rate: 1,
+  referral_enabled: true,
+  referral_bonus: 500,
+  coupons: [],
+};
 
 const defaultConfig: CustomerAppConfig = {
   features: {
@@ -79,6 +98,7 @@ const defaultConfig: CustomerAppConfig = {
   support_phone: '',
   support_email: '',
   cashout_methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true },
+  rewards_config: defaultRewardsConfig,
 };
 
 // ─── Hooks ───
@@ -646,6 +666,75 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
           </CardContent>
         </Card>
 
+        {/* Rewards Configuration */}
+        <Card>
+          <CardHeader><CardTitle className="text-base flex items-center gap-2"><Gift className="h-4 w-4" /> Rewards Configuration</CardTitle><CardDescription>Manage cashback thresholds, referral bonuses, and coupons</CardDescription></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div><Label className="text-sm font-medium">Cashback Enabled</Label><p className="text-xs text-muted-foreground">Earn cashback on qualifying transfers</p></div>
+              <Switch checked={config.rewards_config?.cashback_enabled ?? true}
+                onCheckedChange={() => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, cashback_enabled: !(prev.rewards_config?.cashback_enabled ?? true) } }))} />
+            </div>
+            {(config.rewards_config?.cashback_enabled ?? true) && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Min Transfer Amount (XAF)</Label>
+                  <Input type="number" value={config.rewards_config?.cashback_min_transfer || 10000}
+                    onChange={e => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, cashback_min_transfer: parseInt(e.target.value) || 10000 } }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs">Cashback Rate (%)</Label>
+                  <Input type="number" value={config.rewards_config?.cashback_rate || 1} min={0} max={100} step={0.1}
+                    onChange={e => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, cashback_rate: parseFloat(e.target.value) || 1 } }))} className="mt-1" />
+                </div>
+              </div>
+            )}
+            <div className="border-t pt-3 flex items-center justify-between">
+              <div><Label className="text-sm font-medium">Referral Program</Label><p className="text-xs text-muted-foreground">Earn bonus for referring friends</p></div>
+              <Switch checked={config.rewards_config?.referral_enabled ?? true}
+                onCheckedChange={() => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, referral_enabled: !(prev.rewards_config?.referral_enabled ?? true) } }))} />
+            </div>
+            {(config.rewards_config?.referral_enabled ?? true) && (
+              <div>
+                <Label className="text-xs">Referral Bonus (XAF)</Label>
+                <Input type="number" value={config.rewards_config?.referral_bonus || 500}
+                  onChange={e => setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, referral_bonus: parseInt(e.target.value) || 500 } }))} className="mt-1" />
+              </div>
+            )}
+            <div className="border-t pt-3">
+              <div className="flex items-center justify-between mb-2">
+                <Label className="text-sm font-medium">Coupons</Label>
+                <Button variant="outline" size="sm" className="gap-1 h-7" onClick={() => setConfig(prev => ({
+                  ...prev, rewards_config: {
+                    ...prev.rewards_config,
+                    coupons: [...(prev.rewards_config?.coupons || []), { name: '', description: '', code: '', active: true }]
+                  }
+                }))}><Plus className="h-3 w-3" /> Add Coupon</Button>
+              </div>
+              {(config.rewards_config?.coupons || []).map((coupon: any, idx: number) => (
+                <div key={idx} className="rounded-lg border p-3 mb-2 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Input placeholder="Coupon name" value={coupon.name} className="h-8 text-xs flex-1 mr-2"
+                      onChange={e => { const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], name: e.target.value }; setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } })); }} />
+                    <Switch checked={coupon.active} onCheckedChange={() => {
+                      const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], active: !c[idx].active };
+                      setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } }));
+                    }} />
+                    <Button variant="ghost" size="icon" className="h-7 w-7 ml-1" onClick={() => {
+                      const c = (config.rewards_config?.coupons || []).filter((_: any, i: number) => i !== idx);
+                      setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } }));
+                    }}><Trash2 className="h-3.5 w-3.5 text-destructive" /></Button>
+                  </div>
+                  <Input placeholder="Description" value={coupon.description} className="h-8 text-xs"
+                    onChange={e => { const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], description: e.target.value }; setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } })); }} />
+                  <Input placeholder="Code (e.g. WELCOME10)" value={coupon.code} className="h-8 text-xs font-mono"
+                    onChange={e => { const c = [...(config.rewards_config?.coupons || [])]; c[idx] = { ...c[idx], code: e.target.value.toUpperCase() }; setConfig(prev => ({ ...prev, rewards_config: { ...prev.rewards_config, coupons: c } })); }} />
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Layout Style */}
         <Card>
           <CardHeader><CardTitle className="text-base">Layout Style</CardTitle></CardHeader>
@@ -781,6 +870,7 @@ export default function CustomerAppManagement() {
           walkthrough_config: raw.walkthrough_config || { skip_enabled: true },
           card_colors: raw.card_colors || {},
           cashout_methods: { ...defaultConfig.cashout_methods, ...(raw.cashout_methods || {}) },
+          rewards_config: { ...defaultRewardsConfig, ...(raw.rewards_config || {}) },
         }
       : defaultConfig;
   })();
