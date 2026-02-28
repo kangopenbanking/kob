@@ -1,18 +1,36 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
-// ─── Accounts & Balances ───
+// ─── Linked Institutions ───
+export function useLinkedInstitutions(userId?: string) {
+  return useQuery({
+    queryKey: ['linked-institutions', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const { data, error } = await (supabase
+        .from('customer_linked_accounts') as any)
+        .select('id, institution_id, account_type, status, linked_at')
+        .eq('user_id', userId!)
+        .eq('status', 'active');
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
+
+// ─── Accounts & Balances (multi-institution) ───
 export function useCustomerAccounts(userId?: string, institutionId?: string) {
   return useQuery({
     queryKey: ['customer-accounts', userId, institutionId],
-    enabled: !!userId && !!institutionId,
+    enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('accounts')
         .select('id, account_holder_name, account_id, account_type, account_subtype, currency, nickname, is_active, institution_id')
         .eq('user_id', userId!)
-        .eq('institution_id', institutionId!)
         .eq('is_active', true);
+      if (institutionId) query = query.eq('institution_id', institutionId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -35,19 +53,20 @@ export function useAccountBalances(accountIds: string[]) {
   });
 }
 
-// ─── Transactions ───
+// ─── Transactions (multi-institution) ───
 export function useCustomerTransactions(userId?: string, institutionId?: string, limit = 20) {
   return useQuery({
     queryKey: ['customer-transactions', userId, institutionId, limit],
-    enabled: !!userId && !!institutionId,
+    enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('id, amount, currency, credit_debit_indicator, transaction_type, transaction_information, booking_datetime, status, merchant_details, metadata')
         .eq('user_id', userId!)
-        .eq('institution_id', institutionId!)
         .order('booking_datetime', { ascending: false })
         .limit(limit);
+      if (institutionId) query = query.eq('institution_id', institutionId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
@@ -110,7 +129,6 @@ export function useCustomerNjangi(userId?: string, institutionId?: string) {
     queryKey: ['customer-njangi', userId, institutionId],
     enabled: !!userId,
     queryFn: async () => {
-      // Get member records for this user
       const { data: memberships, error: memberErr } = await supabase
         .from('njangi_members')
         .select('id, group_id, status')
@@ -126,7 +144,6 @@ export function useCustomerNjangi(userId?: string, institutionId?: string) {
         .in('id', groupIds);
       if (groupErr) throw groupErr;
 
-      // Get member counts per group
       const results = await Promise.all((groups || []).map(async (g) => {
         const { count } = await supabase
           .from('njangi_members')
@@ -176,31 +193,32 @@ export function useCustomerProfile(userId?: string) {
   });
 }
 
-// ─── Bill Payments (from transactions) ───
+// ─── Bill Payments (multi-institution) ───
 export function useRecentBillPayments(userId?: string, institutionId?: string) {
   return useQuery({
     queryKey: ['customer-bill-payments', userId, institutionId],
-    enabled: !!userId && !!institutionId,
+    enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('id, amount, currency, transaction_information, booking_datetime, status, metadata')
         .eq('user_id', userId!)
-        .eq('institution_id', institutionId!)
         .eq('transaction_type', 'bill_payment')
         .order('booking_datetime', { ascending: false })
         .limit(10);
+      if (institutionId) query = query.eq('institution_id', institutionId);
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
   });
 }
 
-// ─── Spending Summary ───
+// ─── Spending Summary (multi-institution) ───
 export function useSpendingSummary(userId?: string, institutionId?: string, period: 'W' | 'M' | 'Y' = 'M') {
   return useQuery({
     queryKey: ['spending-summary', userId, institutionId, period],
-    enabled: !!userId && !!institutionId,
+    enabled: !!userId,
     queryFn: async () => {
       const now = new Date();
       let from: Date;
@@ -213,13 +231,14 @@ export function useSpendingSummary(userId?: string, institutionId?: string, peri
         from = new Date(now.getFullYear(), 0, 1);
       }
 
-      const { data, error } = await supabase
+      let query = supabase
         .from('transactions')
         .select('amount, credit_debit_indicator')
         .eq('user_id', userId!)
-        .eq('institution_id', institutionId!)
         .gte('booking_datetime', from.toISOString())
         .eq('status', 'Booked');
+      if (institutionId) query = query.eq('institution_id', institutionId);
+      const { data, error } = await query;
       if (error) throw error;
 
       let earnings = 0;

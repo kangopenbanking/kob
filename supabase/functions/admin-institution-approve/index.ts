@@ -72,16 +72,36 @@ serve(async (req) => {
       throw new Error('Institution KYB must be approved before final approval');
     }
 
+    // Backfill app_config if missing
+    const needsAppConfig = !institution.app_config || Object.keys(institution.app_config).length === 0;
+    const updatePayload: Record<string, any> = {
+      verification_step: 'approved',
+      status: 'approved',
+      approved_at: new Date().toISOString(),
+      approved_by: user.id,
+      updated_at: new Date().toISOString(),
+    };
+    if (needsAppConfig) {
+      updatePayload.app_config = {
+        features: {
+          cards: true, savings: true, loans: true, credit_score: true,
+          mobile_money: true, qr_payments: true, bill_payments: true,
+          transfers: true, account_funding: true, notifications: true,
+        },
+        home_layout: { show_balance_card: true, show_quick_actions: true, show_recent_transactions: true, show_promo_banner: true },
+        section_order: ['balance_card', 'quick_actions', 'recent_transactions', 'promo_banner'],
+        layout_style: 'modern',
+        walkthrough_config: { skip_enabled: true },
+        card_colors: {},
+        support_phone: '',
+        support_email: '',
+      };
+    }
+
     // Update institution to fully approved
     const { error: instError } = await supabaseAdmin
       .from('institutions')
-      .update({ 
-        verification_step: 'approved',
-        status: 'approved',
-        approved_at: new Date().toISOString(),
-        approved_by: user.id,
-        updated_at: new Date().toISOString()
-      })
+      .update(updatePayload)
       .eq('id', institution_id);
 
     if (instError) throw instError;

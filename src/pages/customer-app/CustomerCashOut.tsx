@@ -69,7 +69,6 @@ const CustomerCashOut: React.FC = () => {
     queryFn: async () => {
       return allMethods.map(m => m.key);
     },
-    },
   });
 
   const availableMethods = allMethods.filter(m => enabledMethods?.includes(m.key));

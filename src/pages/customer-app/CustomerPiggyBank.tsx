@@ -69,7 +69,7 @@ const CustomerPiggyBank: React.FC = () => {
         installment_amount: Number(installmentAmount),
         schedule_frequency: frequency,
         start_date: startDate,
-        institution_id: selectedCategory === 'bank' ? institutionId : null,
+        institution_id: selectedCategory === 'bank' ? undefined : null,
       });
       toast.success('Savings plan created!');
       setPlanName('');
