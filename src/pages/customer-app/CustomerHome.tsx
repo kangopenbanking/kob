@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Bell, Eye, EyeOff, ArrowUpRight, ArrowDownLeft,
   ShoppingBag, Lock, Smartphone, Gift, Wallet,
@@ -68,22 +68,21 @@ const acctIcons = [Wallet, PiggyBank, Smartphone];
 const acctColors = ['bg-[hsl(225,50%,22%)]', 'bg-[hsl(150,35%,30%)]', 'bg-[hsl(25,60%,35%)]'];
 
 const CustomerHome: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
-  const { unreadCount } = useNotifications(institutionId);
+  const { unreadCount } = useNotifications();
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
 
   const isViewOnly = user?.isViewOnly ?? false;
 
   // ─── Live Data ───
-  const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id, institutionId);
+  const { data: accounts = [], isLoading: acctLoading } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
-  const { data: recentTxns = [], isLoading: txnLoading } = useCustomerTransactions(user?.id, institutionId, 5);
-  const { data: summary } = useSpendingSummary(user?.id, institutionId, period);
+  const { data: recentTxns = [], isLoading: txnLoading } = useCustomerTransactions(user?.id, undefined, 5);
+  const { data: summary } = useSpendingSummary(user?.id, undefined, period);
 
   // Build account cards from live data
   const accountCards = accounts.map((acct: any, i: number) => {
@@ -99,7 +98,7 @@ const CustomerHome: React.FC = () => {
   const earnings = summary?.earnings ?? 0;
   const spending = summary?.spending ?? 0;
 
-  const go = (path: string) => navigate(`/app/${institutionId}/${path}`);
+  const go = (path: string) => navigate(`/app/${path}`);
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
 
   const visibleMoney = moneyMovement.filter(isVisible);

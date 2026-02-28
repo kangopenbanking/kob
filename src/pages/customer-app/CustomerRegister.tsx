@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +35,6 @@ const reasonOptions = [
 const genderOptions = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
 
 const CustomerRegister: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -119,7 +118,7 @@ const CustomerRegister: React.FC = () => {
     if (step > 0) {
       setStep(step - 1);
     } else {
-      navigate(`/app/${institutionId}/auth`);
+      navigate('/app/auth');
     }
   };
 
@@ -136,7 +135,6 @@ const CustomerRegister: React.FC = () => {
         date_of_birth: dob ? format(dob, 'yyyy-MM-dd') : null,
         gender: gender || null,
         address: address || null,
-        institution_id: institutionId,
       } as any).eq('id', user.id);
 
       // Set PIN via edge function
@@ -149,7 +147,7 @@ const CustomerRegister: React.FC = () => {
       }
 
       toast.success('Registration complete!');
-      navigate(`/app/${institutionId}/onboarding`, { replace: true });
+      navigate('/app/onboarding', { replace: true });
     } catch (err: any) {
       toast.error(err.message || 'Registration failed');
     } finally {

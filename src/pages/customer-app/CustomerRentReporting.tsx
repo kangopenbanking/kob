@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Home, TrendingUp, CheckCircle2, Loader2, Plus, Calendar, Banknote, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 
 const CustomerRentReporting: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [showSetup, setShowSetup] = useState(false);
@@ -24,7 +23,7 @@ const CustomerRentReporting: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
 
   // Fetch rent-type transactions
-  const { data: allTxns = [], isLoading } = useCustomerTransactions(user?.id, institutionId, 50);
+  const { data: allTxns = [], isLoading } = useCustomerTransactions(user?.id, undefined, 50);
   const { data: creditScore } = useCustomerCreditScore(user?.id);
 
   // Fetch piggybank rent plans
@@ -70,7 +69,7 @@ const CustomerRentReporting: React.FC = () => {
       const refCode = 'KRENTS' + Math.floor(1000 + Math.random() * 9000);
       const { error } = await (supabase as any).from('piggybank_plans').insert({
         user_id: user!.id,
-        institution_id: institutionId,
+        institution_id: null,
         plan_name: landlordName.trim(),
         category: 'rent',
         target_amount: amount * 12,

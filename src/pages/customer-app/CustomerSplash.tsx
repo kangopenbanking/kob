@@ -1,23 +1,17 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { CustomerTenantProvider, useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { SplashScreen } from '@/components/pwa/SplashScreen';
 import { WalkthroughCarousel } from '@/components/pwa/WalkthroughCarousel';
 import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { supabase } from '@/integrations/supabase/client';
 
-/**
- * Inner component that consumes CustomerTenantProvider context
- * but maps it to the shape SplashScreen/Walkthrough expect via TenantProvider.
- */
 const CustomerSplashInner: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const [phase, setPhase] = useState<'splash' | 'walkthrough' | 'install'>('splash');
 
   const handleInstallComplete = async () => {
-    // Check if user is already authenticated
     const { data: { session } } = await supabase.auth.getSession();
     if (session) {
       const { data: profile } = await supabase
@@ -26,12 +20,12 @@ const CustomerSplashInner: React.FC = () => {
         .eq('id', session.user.id)
         .maybeSingle();
       if (profile && (profile as any).linked_account_type) {
-        navigate(`/app/${institutionId}/home`, { replace: true });
+        navigate('/app/home', { replace: true });
       } else {
-        navigate(`/app/${institutionId}/onboarding`, { replace: true });
+        navigate('/app/onboarding', { replace: true });
       }
     } else {
-      navigate(`/app/${institutionId}/auth`, { replace: true });
+      navigate('/app/auth', { replace: true });
     }
   };
 
@@ -62,10 +56,6 @@ const CustomerSplashInner: React.FC = () => {
   );
 };
 
-/**
- * CustomerSplash wraps with CustomerTenantProvider BUT also needs TenantProvider
- * for SplashScreen and WalkthroughCarousel which depend on useTenant().
- */
 import { TenantProvider } from '@/components/pwa/TenantProvider';
 
 const CustomerSplash: React.FC = () => {

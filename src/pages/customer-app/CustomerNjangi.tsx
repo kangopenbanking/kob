@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, CircleDollarSign, Users, Calendar, Plus, ChevronRight, X,
   Loader2, Banknote, AlertCircle, CheckCircle2, Clock, UserPlus, Trophy
@@ -26,10 +26,9 @@ const circleColors = [
 type ViewMode = 'list' | 'create' | 'join' | 'detail';
 
 const CustomerNjangi: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
-  const { data: circles = [], isLoading, refetch } = useCustomerNjangi(user?.id, institutionId);
+  const { data: circles = [], isLoading, refetch } = useCustomerNjangi(user?.id);
 
   const createMutation = useCreateNjangiGroup();
   const joinMutation = useJoinNjangiGroup();
@@ -106,7 +105,7 @@ const CustomerNjangi: React.FC = () => {
       payout_method: newPayoutMethod,
       late_interest_rate: lateRate,
       max_members: members,
-      institution_id: institutionId || null,
+      institution_id: null,
     }, {
       onSuccess: () => {
         toast.success('Njangi circle created!');

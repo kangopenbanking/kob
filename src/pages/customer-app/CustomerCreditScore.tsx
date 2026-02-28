@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';

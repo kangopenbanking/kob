@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,7 +28,6 @@ const accountOptions: AccountOption[] = [
 type Step = 'select' | 'details' | 'confirming';
 
 const CustomerOnboarding: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
 
   const [step, setStep] = useState<Step>('select');
@@ -78,7 +77,6 @@ const CustomerOnboarding: React.FC = () => {
       if (selected !== 'none') {
         await supabase.from('customer_linked_accounts' as any).insert({
           user_id: user.id,
-          institution_id: institutionId,
           account_type: selected,
           account_number: accountNumber || null,
           account_name: accountName || null,
@@ -87,7 +85,7 @@ const CustomerOnboarding: React.FC = () => {
       }
 
       toast.success(selected === 'none' ? 'Browsing in view-only mode' : 'Account linked successfully');
-      navigate(`/app/${institutionId}/home`, { replace: true });
+      navigate('/app/home', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Failed to complete setup');
       setStep('details');
@@ -104,7 +102,7 @@ const CustomerOnboarding: React.FC = () => {
       setAccountName('');
     } else {
       // Can't go back from select — maybe go to auth
-      navigate(`/app/${institutionId}/auth`);
+      navigate('/app/auth');
     }
   };
 

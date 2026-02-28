@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { ArrowUpRight, ArrowDownLeft, ShoppingBag, Zap, Smartphone, Search, Gift, Receipt, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
@@ -33,12 +32,11 @@ function getTxCategory(tx: any): string {
 }
 
 const CustomerActivity: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const { user } = useCustomerAuth();
   const [activeFilter, setActiveFilter] = useState('All');
   const [search, setSearch] = useState('');
 
-  const { data: transactions = [], isLoading } = useCustomerTransactions(user?.id, institutionId, 50);
+  const { data: transactions = [], isLoading } = useCustomerTransactions(user?.id, undefined, 50);
 
   const filtered = transactions.filter((tx: any) => {
     const cat = getTxCategory(tx);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Gift, Star, Copy, Share2, Loader2, CheckCircle2, Banknote, UserPlus, Ticket, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -10,22 +10,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { API_CONFIG } from '@/config/api';
 
 const CustomerRewards: React.FC = () => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [tab, setTab] = useState<'cashback' | 'coupons' | 'referrals'>('cashback');
 
   // Fetch rewards config from institution
   const { data: rewardsConfig } = useQuery({
-    queryKey: ['rewards-config', institutionId],
-    enabled: !!institutionId,
+    queryKey: ['rewards-config'],
     queryFn: async () => {
-      const { data } = await supabase
-        .from('institutions')
-        .select('app_config')
-        .eq('id', institutionId!)
-        .maybeSingle();
-      return (data as any)?.app_config?.customer_app_config?.rewards_config || {
+      return {
         cashback_enabled: true,
         cashback_min_transfer: 10000,
         cashback_rate: 1,
@@ -36,16 +29,14 @@ const CustomerRewards: React.FC = () => {
     },
   });
 
-  // Fetch user's earned cashback from transactions
   const { data: cashbackHistory = [], isLoading } = useQuery({
-    queryKey: ['customer-cashback', user?.id, institutionId],
-    enabled: !!user?.id && !!institutionId,
+    queryKey: ['customer-cashback', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from('transactions')
         .select('id, amount, currency, transaction_information, booking_datetime, metadata')
         .eq('user_id', user!.id)
-        .eq('institution_id', institutionId!)
         .in('transaction_type', ['cashback', 'reward', 'referral_bonus'])
         .order('booking_datetime', { ascending: false })
         .limit(50);
@@ -55,14 +46,13 @@ const CustomerRewards: React.FC = () => {
 
   // Total transfers to check cashback eligibility
   const { data: transferStats } = useQuery({
-    queryKey: ['transfer-stats', user?.id, institutionId],
-    enabled: !!user?.id && !!institutionId,
+    queryKey: ['transfer-stats', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
       const { data } = await supabase
         .from('transactions')
         .select('amount')
         .eq('user_id', user!.id)
-        .eq('institution_id', institutionId!)
         .eq('transaction_type', 'transfer')
         .eq('status', 'Booked');
       const total = (data || []).reduce((s, t) => s + Math.abs(t.amount || 0), 0);
@@ -71,7 +61,7 @@ const CustomerRewards: React.FC = () => {
   });
 
   const totalCashback = cashbackHistory.reduce((s, t: any) => s + Math.abs(t.amount || 0), 0);
-  const referralLink = `${API_CONFIG.SITE_URL}/app/${institutionId}/register?ref=${user?.id?.slice(0, 8)}`;
+  const referralLink = `${API_CONFIG.SITE_URL}/app/register?ref=${user?.id?.slice(0, 8)}`;
 
   const coupons = rewardsConfig?.coupons || [];
   const activeCoupons = coupons.filter((c: any) => c.active);

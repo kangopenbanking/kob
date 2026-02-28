@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import type { MediaSection } from '@/components/pwa/MediaBanner';
 import type { LayoutStyle, CardColors, WalkthroughConfig } from '@/components/pwa/TenantProvider';
@@ -76,9 +75,12 @@ const defaultSectionOrder: CustomerSectionKey[] = [
   'recent_activities',
 ];
 
+// Kang platform ID — the main institution that owns the unified Customer App
+const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+
 const defaultBranding: CustomerTenantBranding = {
-  id: '',
-  name: 'Kang Customer',
+  id: KANG_PLATFORM_ID,
+  name: 'Kang',
   logoUrl: null,
   primaryColor: '217 91% 35%',
   tagline: 'Your money, your way',
@@ -98,24 +100,18 @@ const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBrand
 export const useCustomerTenant = () => useContext(CustomerTenantContext);
 
 export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { institutionId } = useParams<{ institutionId: string }>();
   const [branding, setBranding] = useState<CustomerTenantBranding>(defaultBranding);
 
   useEffect(() => {
-    if (!institutionId) {
-      setBranding({ ...defaultBranding, isLoading: false });
-      return;
-    }
-
-    const fetchInstitution = async () => {
+    const fetchPlatformConfig = async () => {
       const { data, error } = await supabase
         .from('institutions')
         .select('id, institution_name, logo_url, primary_color, tagline, app_config')
-        .eq('id', institutionId)
+        .eq('id', KANG_PLATFORM_ID)
         .maybeSingle();
 
       if (error || !data) {
-        setBranding({ ...defaultBranding, id: institutionId, isLoading: false });
+        setBranding({ ...defaultBranding, isLoading: false });
         return;
       }
 
@@ -140,7 +136,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
 
       setBranding({
         id: inst.id,
-        name: inst.institution_name,
+        name: inst.institution_name || 'Kang',
         logoUrl: inst.logo_url ?? null,
         primaryColor: inst.primary_color ?? '217 91% 35%',
         tagline: inst.tagline ?? 'Your money, your way',
@@ -156,8 +152,8 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       });
     };
 
-    fetchInstitution();
-  }, [institutionId]);
+    fetchPlatformConfig();
+  }, []);
 
   useEffect(() => {
     if (!branding.isLoading && branding.primaryColor) {
