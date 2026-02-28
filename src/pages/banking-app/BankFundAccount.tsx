@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { API_CONFIG } from '@/config/api';
 
 const fmt = (n: number) =>
   new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
@@ -96,7 +97,7 @@ const BankFundAccount: React.FC = () => {
           funding_scope: 'end_user',
           account_id: selectedAccountId,
           customer: { phone, email },
-          return_url: `${window.location.origin}/bank/${institutionId}/fund`,
+          return_url: `${API_CONFIG.SITE_URL}/bank/${institutionId}/fund`,
         },
       });
       if (error) throw error;

@@ -22,9 +22,8 @@ const WooCommercePluginCode = () => {
   const handleDownloadDocs = async () => {
     setDownloading(true);
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/woocommerce-download-plugin`,
+        `https://api.kangopenbanking.com/functions/v1/woocommerce-download-plugin`,
         { headers: { 'Content-Type': 'application/json' } }
       );
 

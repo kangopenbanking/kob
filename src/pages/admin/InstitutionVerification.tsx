@@ -30,6 +30,7 @@ import {
   Settings
 } from "lucide-react";
 import { format } from "date-fns";
+import { API_CONFIG } from "@/config/api";
 
 interface Institution {
   id: string;
@@ -259,7 +260,7 @@ export default function InstitutionVerification() {
           variables: {
             recipient_name: profile.full_name || 'Institution Representative',
             institution_name: institution.institution_name,
-            dashboard_url: `${window.location.origin}/business-kyb-submission`
+            dashboard_url: `${API_CONFIG.SITE_URL}/business-kyb-submission`
           }
         }
       });

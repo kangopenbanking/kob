@@ -13,6 +13,7 @@ import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { enforceSingleSession } from '@/hooks/useSingleSession';
 import { toast } from 'sonner';
 import { sounds } from '@/lib/sounds';
+import { API_CONFIG } from '@/config/api';
 
 const COUNTRY_CODES = [
   { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
@@ -62,7 +63,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
           password: form.password,
           options: {
             data: { full_name: form.fullName },
-            emailRedirectTo: window.location.origin,
+            emailRedirectTo: API_CONFIG.SITE_URL,
           },
         });
         if (error) throw error;

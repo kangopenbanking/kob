@@ -24,6 +24,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { CreateBranchDialog } from "@/components/admin/CreateBranchDialog";
+import { API_CONFIG } from "@/config/api";
 
 const Admin = () => {
   const { toast } = useToast();
@@ -181,7 +182,7 @@ const Admin = () => {
             recipient_id: institution.user_id,
             variables: {
               institution_name: institution.institution_name,
-              portal_url: `${window.location.origin}/fi-portal`,
+              portal_url: `${API_CONFIG.SITE_URL}/fi-portal`,
               client_id: sandboxClientId || '',
               client_secret: sandboxClientSecret || '',
               is_developer: institution.institution_type === 'developer',
@@ -263,7 +264,7 @@ const Admin = () => {
               institution_name: institution.institution_name,
               rejection_reason: reason,
               support_email: 'support@kangopenbanking.com',
-              reapply_url: `${window.location.origin}/register`
+              reapply_url: `${API_CONFIG.SITE_URL}/register`
             }
           }
         });

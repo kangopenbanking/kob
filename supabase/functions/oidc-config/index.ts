@@ -14,15 +14,15 @@ Deno.serve(async (req) => {
     const issuer = `${apiBaseUrl}/auth/v1`;
 
     // OpenID Connect Discovery document aligned with FAPI 1.0 Advanced
-    const supabaseUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co';
+    const apiBase = 'https://api.kangopenbanking.com/functions/v1';
     const config = {
       issuer,
-      authorization_endpoint: `${supabaseUrl}/functions/v1/oauth-authorize`,
-      token_endpoint: `${supabaseUrl}/functions/v1/oauth-token`,
-      userinfo_endpoint: `${supabaseUrl}/functions/v1/userinfo`,
-      jwks_uri: `${supabaseUrl}/functions/v1/jwks-endpoint`,
-      registration_endpoint: `${supabaseUrl}/functions/v1/dcr-register`,
-      pushed_authorization_request_endpoint: `${supabaseUrl}/functions/v1/par-endpoint`,
+      authorization_endpoint: `${apiBase}/oauth-authorize`,
+      token_endpoint: `${apiBase}/oauth-token`,
+      userinfo_endpoint: `${apiBase}/userinfo`,
+      jwks_uri: `${apiBase}/jwks-endpoint`,
+      registration_endpoint: `${apiBase}/dcr-register`,
+      pushed_authorization_request_endpoint: `${apiBase}/par-endpoint`,
       
       // Supported features
       scopes_supported: ['openid', 'accounts', 'payments', 'offline_access'],

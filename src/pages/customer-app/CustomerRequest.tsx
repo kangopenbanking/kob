@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
+import { API_CONFIG } from '@/config/api';
 
 /* ─── QR Matrix Generator ─── */
 function generateQRMatrix(data: string): boolean[][] {
@@ -86,7 +87,7 @@ const CustomerRequest: React.FC = () => {
 
   // Build a shareable payment link
   const payLink = useMemo(() => {
-    const base = window.location.origin;
+    const base = API_CONFIG.SITE_URL;
     const params = new URLSearchParams({
       to: accountId,
       inst: institutionId || '',

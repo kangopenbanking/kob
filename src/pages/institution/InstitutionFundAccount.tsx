@@ -12,6 +12,7 @@ import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelecto
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { API_CONFIG } from "@/config/api";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -59,7 +60,7 @@ const InstitutionFundAccount = () => {
           account_id: selectedAccountId,
           target_description: description || "Institution account funding",
           customer: { phone, email },
-          return_url: `${window.location.origin}/fi-portal/fund-account`,
+          return_url: `${API_CONFIG.SITE_URL}/fi-portal/fund-account`,
         },
       });
       if (error) throw error;

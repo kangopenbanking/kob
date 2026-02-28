@@ -134,7 +134,7 @@ serve(async (req) => {
           variables: {
             recipient_name: profile.full_name || 'Institution Representative',
             institution_name: institution.institution_name,
-            dashboard_url: `${Deno.env.get('SUPABASE_URL')?.replace('.supabase.co', '')}/fi-portal`
+            dashboard_url: 'https://kangopenbanking.com/fi-portal'
           }
         }
       });

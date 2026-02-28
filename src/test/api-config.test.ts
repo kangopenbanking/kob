@@ -19,4 +19,9 @@ describe("API Configuration", () => {
     expect(API_CONFIG.DOCS_URL).toBeDefined();
     expect(API_CONFIG.EXPLORER_URL).toBeDefined();
   });
+
+  it("should have SITE_URL configured", async () => {
+    const { API_CONFIG } = await import("@/config/api");
+    expect(API_CONFIG.SITE_URL).toBe("https://kangopenbanking.com");
+  });
 });
