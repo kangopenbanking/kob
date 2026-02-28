@@ -32,12 +32,7 @@ interface RecentBill {
   status: 'paid' | 'pending';
 }
 
-const recentBills: RecentBill[] = [
-  { id: '1', biller: 'ENEO', category: 'Electricity', amount: 15000, date: '2026-02-25', status: 'paid' },
-  { id: '2', biller: 'CamWater', category: 'Water', amount: 8500, date: '2026-02-20', status: 'paid' },
-  { id: '3', biller: 'Canal+', category: 'TV', amount: 25000, date: '2026-02-15', status: 'paid' },
-  { id: '4', biller: 'MTN', category: 'Phone', amount: 5000, date: '2026-02-10', status: 'paid' },
-];
+const recentBills: RecentBill[] = [];
 
 const CustomerBills: React.FC = () => {
   const navigate = useNavigate();

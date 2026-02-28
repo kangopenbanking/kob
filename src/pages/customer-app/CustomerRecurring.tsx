@@ -29,11 +29,7 @@ const categories = [
   { label: 'Other', icon: Tag, color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
 ];
 
-const initialPayments: RecurringPayment[] = [
-  { name: 'ENEO Electricity', category: 'Utilities', amount: 15000, frequency: 'Monthly', startDate: '2024-01-01', endDate: null, nextDate: 'Mar 1', active: true, notify: true, paymentsMade: 14, icon: Zap, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
-  { name: 'Camtel Internet', category: 'Internet', amount: 25000, frequency: 'Monthly', startDate: '2024-03-01', endDate: null, nextDate: 'Mar 5', active: true, notify: true, paymentsMade: 11, icon: Wifi, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
-  { name: 'MTN Airtime', category: 'Mobile', amount: 5000, frequency: 'Weekly', startDate: '2024-06-01', endDate: '2025-06-01', nextDate: 'Feb 28', active: false, notify: false, paymentsMade: 34, icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
-];
+const initialPayments: RecurringPayment[] = [];
 
 const CustomerRecurring: React.FC = () => {
   const navigate = useNavigate();

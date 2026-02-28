@@ -33,23 +33,7 @@ const colors = [
   'bg-[hsl(45,70%,90%)]', 'bg-[hsl(270,60%,92%)]', 'bg-[hsl(25,80%,92%)]',
 ];
 
-const initialBills: SplitBill[] = [
-  {
-    id: 'SB-001', title: 'Friday Dinner', total: 36000, splitMode: 'equal', date: 'Feb 25', notes: '',
-    participants: [
-      { name: 'You', phone: '', initials: 'ME', color: colors[0], customAmount: 0, customPercent: 0, paid: true },
-      { name: 'John Doe', phone: '+237 6XX', initials: 'JD', color: colors[1], customAmount: 0, customPercent: 0, paid: true },
-      { name: 'Marie K.', phone: '+237 6XX', initials: 'MK', color: colors[2], customAmount: 0, customPercent: 0, paid: false },
-    ],
-  },
-  {
-    id: 'SB-002', title: 'Office Supplies', total: 25000, splitMode: 'equal', date: 'Feb 20', notes: 'Printer ink + paper',
-    participants: [
-      { name: 'You', phone: '', initials: 'ME', color: colors[0], customAmount: 0, customPercent: 0, paid: true },
-      { name: 'Paul N.', phone: '+237 6XX', initials: 'PN', color: colors[3], customAmount: 0, customPercent: 0, paid: false },
-    ],
-  },
-];
+const initialBills: SplitBill[] = [];
 
 const makeParticipant = (name: string, phone: string, color: string, paid: boolean): Participant => {
   const initials = name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
