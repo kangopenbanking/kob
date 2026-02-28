@@ -1,62 +1,84 @@
 
 
-## Findings
+## Audit: All Links Referencing Lovable or Raw Infrastructure URLs
 
-4 pages remain as "coming soon" placeholders:
-1. **CustomerBills.tsx** - Empty placeholder
-2. **CustomerBank.tsx** - Empty placeholder  
-3. **CustomerSettings.tsx** - Empty placeholder
-4. **CustomerHelp.tsx** - Empty placeholder
+### Findings
 
-Additionally, **CustomerAlerts.tsx** shows "No new alerts" with no functional UI.
+**Category 1: `window.location.origin` — Dynamic URLs that resolve to Lovable preview/staging domain**
+These 11 files generate shareable links, redirect URLs, and email callbacks using `window.location.origin`, which resolves to `*.lovable.app` in preview or staging. These must use the production custom domain `kangopenbanking.com` instead.
 
-All other feature pages (Transfer, Request, CashOut, PiggyBank, Njangi, Rewards, CreditScore, Invoices, SplitBills, Recurring, RentReporting, PayLinks, Activity, Cards, Scan) are already implemented with functional mock UIs.
+| File | Usage |
+|---|---|
+| `src/pages/admin/InstitutionVerification.tsx` | `dashboard_url` in email |
+| `src/pages/Admin.tsx` | `portal_url`, `reapply_url` in emails |
+| `src/pages/CustomerFundAccount.tsx` | `return_url` for payment callback |
+| `src/pages/customer-app/CustomerRequest.tsx` | Shareable payment link |
+| `src/pages/merchant/MerchantPaymentLinks.tsx` | Copy payment link |
+| `src/pages/banking-app/BankFundAccount.tsx` | `return_url` for payment callback |
+| `src/pages/institution/GatewayPaymentLinks.tsx` | Copy payment link |
+| `src/pages/institution/InstitutionFundAccount.tsx` | `return_url` for payment callback |
+| `src/pages/merchant/MerchantFundWallet.tsx` | `return_url` for payment callback |
+| `src/pages/customer-app/CustomerRewards.tsx` | Referral link |
+| `src/components/pwa/MobileAuthForm.tsx` | `emailRedirectTo` for auth |
 
-## Implementation Plan (5 pages)
+**Category 2: Raw Supabase project URLs (`ftwbtzbeqkqrdmxmyvvz.supabase.co`) in frontend**
+These should use `api.kangopenbanking.com` instead.
 
-### 1. CustomerBills.tsx - Full bill payment UI
-- Bill categories grid (Electricity, Water, Internet, TV, Phone, Insurance)
-- Biller search with text input
-- Selected biller payment form: account/meter number input, amount input, confirm button
-- Recent bill payments history list
-- Uses same design patterns: `rounded-3xl` cards, pastel colors, `framer-motion` animations
+| File | Usage |
+|---|---|
+| `src/config/api.ts` | `BASE_URL_FALLBACK` |
+| `src/pages/developer/ApiExplorer.tsx` | Fallback URL for OpenAPI spec |
+| `src/pages/WooForKang.tsx` | Plugin download fetch |
+| `src/pages/integrations/WooCommercePluginCode.tsx` | Plugin download fetch |
+| `src/pages/integrations/WooCommerceGuide.tsx` | Plugin download fetch |
 
-### 2. CustomerBank.tsx - Linked accounts management
-- List of linked bank accounts with bank name, account number (masked), balance
-- "Link New Account" button with bank selector
-- Account details: tap to expand showing recent transactions
-- Unlink account option per entry
+**Category 3: Raw Supabase project URLs in edge functions**
 
-### 3. CustomerSettings.tsx - App settings page
-- Profile section: name, email, phone (editable)
-- Security section: Change PIN, Biometric toggle, 2FA toggle
-- Preferences section: Notification toggle, Language selector, Currency display
-- App section: App version, Terms, Privacy Policy, Log Out button
-- Each section as a card with list items and toggle switches
+| File | Usage |
+|---|---|
+| `supabase/functions/oidc-config/index.ts` | OAuth endpoints use raw Supabase URL |
+| `supabase/functions/public-api-spec/index.ts` | OAuth URLs in security schemes |
+| `supabase/functions/admin-institution-approve/index.ts` | Dashboard URL construction |
 
-### 4. CustomerHelp.tsx - Help & support center
-- FAQ accordion list (common questions)
-- Contact options: Live Chat, Email, Phone cards
-- Report a Problem form with subject + description
-- Quick links: Terms, Privacy, Community
+**Category 4: Lovable AI gateway (`ai.gateway.lovable.dev`) — KEEP AS-IS**
+These are internal Lovable AI service calls and must NOT be changed:
+- `supabase/functions/ai-anomaly-detection/index.ts`
+- `supabase/functions/credit-score-tips/index.ts`
 
-### 5. CustomerAlerts.tsx - Notifications center
-- Alert list with types: transaction, security, promotion, system
-- Filter chips (All, Transactions, Security, Promotions)
-- Each alert card with icon, title, message, timestamp
-- Mark as read / mark all read functionality
-- Empty state when filtered results are empty
+**Category 5: PostiQ external service URLs — KEEP AS-IS**
+These reference a different Supabase project (PostiQ) and are correct:
+- `supabase/functions/postiq-lookup-code/index.ts`
+- `supabase/functions/postiq-create-code/index.ts`
 
-### Files Modified
-- `src/pages/customer-app/CustomerBills.tsx`
-- `src/pages/customer-app/CustomerBank.tsx`
-- `src/pages/customer-app/CustomerSettings.tsx`
-- `src/pages/customer-app/CustomerHelp.tsx`
-- `src/pages/customer-app/CustomerAlerts.tsx`
+---
 
-### Technical Notes
-- All pages use mock data (no database changes)
-- Design follows established patterns: Lucide icons `strokeWidth={1.5}`, `framer-motion` entrance animations, pastel HSL color palette, `rounded-2xl`/`rounded-3xl` cards
-- All interactive elements (toggles, buttons, inputs) will be functional with local state
-- Each page will be tested in browser after implementation
+### Implementation Plan
+
+**Step 1: Create a centralized site URL constant**
+Add `SITE_URL` to `src/config/api.ts`:
+```typescript
+SITE_URL: 'https://kangopenbanking.com',
+```
+
+**Step 2: Replace all `window.location.origin` with `API_CONFIG.SITE_URL`**
+Update all 11 files in Category 1 to import `API_CONFIG` and use `API_CONFIG.SITE_URL` instead of `window.location.origin`. This ensures all shared links, payment callbacks, referral URLs, and auth redirects point to `kangopenbanking.com` regardless of the environment.
+
+**Step 3: Replace raw Supabase URLs in frontend (Category 2)**
+- `src/pages/developer/ApiExplorer.tsx` — change fallback to use `api.kangopenbanking.com`
+- `src/pages/WooForKang.tsx`, `WooCommercePluginCode.tsx`, `WooCommerceGuide.tsx` — change plugin download URL to `https://api.kangopenbanking.com/functions/v1/woocommerce-download-plugin`
+
+**Step 4: Replace raw Supabase URLs in edge functions (Category 3)**
+- `oidc-config/index.ts` — replace `supabaseUrl` variable with `https://api.kangopenbanking.com/functions/v1` for all OAuth/JWKS/DCR endpoints
+- `public-api-spec/index.ts` — update OAuth security scheme URLs
+- `admin-institution-approve/index.ts` — use `https://kangopenbanking.com/fi-portal` directly
+
+**Step 5: Update tests**
+- `src/test/api-config.test.ts` — add test for `SITE_URL`
+- No changes needed for fallback tests (fallback URL stays as internal safety net in config but isn't actively used in frontend code)
+
+### Files Changed (total: ~18 files)
+- 1 config file (`src/config/api.ts`)
+- 11 frontend files (Category 1 + 2)
+- 3 edge functions (Category 3)
+- 1 test file
 
