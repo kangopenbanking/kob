@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { API_CONFIG } from "@/config/api";
 import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
 import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
 
@@ -995,7 +996,7 @@ export default function CustomerAppManagement() {
                     <p className="text-xs font-medium text-primary">Customer Mobile App Configuration</p>
                     <p className="text-sm text-muted-foreground capitalize">{selectedInst?.institution_type} · Created {selectedInst?.created_at ? format(new Date(selectedInst.created_at), "MMM d, yyyy") : "—"}</p>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`/app/${selectedInstitution}/home`, '_blank')}>
+                  <Button variant="outline" size="sm" className="gap-1.5" onClick={() => window.open(`${API_CONFIG.SITE_URL}/app/${selectedInstitution}/home`, '_blank')}>
                     <ExternalLink className="h-3.5 w-3.5" /> Open Customer App
                   </Button>
                   <Badge variant={selectedInst?.status === "approved" ? "default" : "secondary"}>{selectedInst?.status}</Badge>
@@ -1039,7 +1040,7 @@ export default function CustomerAppManagement() {
                           <UserCheck className="h-10 w-10 text-muted-foreground/40 mb-3" />
                           <p className="text-sm font-medium">No customers have linked accounts yet</p>
                           <p className="text-xs text-muted-foreground mt-1 max-w-sm">Share your customer app link to get started:</p>
-                          <code className="mt-2 rounded bg-muted px-3 py-1.5 text-xs font-mono text-primary select-all">/app/{selectedInstitution}/home</code>
+                          <code className="mt-2 rounded bg-muted px-3 py-1.5 text-xs font-mono text-primary select-all">{API_CONFIG.SITE_URL}/app/{selectedInstitution}/home</code>
                         </div>
                       ) : (
                         <Table>
