@@ -122,13 +122,27 @@ function useLinkedAccounts(institutionId: string | null) {
     queryKey: ["admin-customer-linked", institutionId],
     enabled: !!institutionId,
     queryFn: async () => {
-      const { data, error } = await (supabase as any)
+      // Fetch linked accounts
+      const { data: accounts, error } = await (supabase as any)
         .from("customer_linked_accounts")
-        .select("*, profiles:user_id(id, full_name, email, phone_number)")
+        .select("*")
         .eq("institution_id", institutionId!)
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data || [];
+      if (!accounts || accounts.length === 0) return [];
+
+      // Fetch profiles for each unique user_id
+      const userIds = [...new Set(accounts.map((a: any) => a.user_id))] as string[];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, email, phone_number")
+        .in("id", userIds);
+
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+      return accounts.map((a: any) => ({
+        ...a,
+        profiles: profileMap.get(a.user_id) || null,
+      }));
     },
   });
 }
