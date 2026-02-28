@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, PiggyBank, Percent } from 'lucide-react';
+import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, PiggyBank, Percent, Search, SlidersHorizontal, ArrowUpDown, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +19,8 @@ import PersonalSavingImg from '@/assets/Personal_Savings.png';
 
 type SavingsCategory = 'bank' | 'personal' | null;
 type ViewMode = 'home' | 'list' | 'create' | 'explore';
+type GroupBy = 'institution' | 'type' | 'rate';
+type SavingsTypeFilter = 'all' | 'fixed_deposit' | 'goal_savings' | 'high_yield' | 'kids_savings';
 
 const WELCOME_KEY = 'piggybank_welcome_seen';
 
@@ -303,25 +305,71 @@ const INSTITUTION_COLORS = [
   { bg: 'bg-[hsl(45,60%,90%)]',  accent: 'bg-[hsl(45,60%,30%)]',  icon: 'text-[hsl(45,60%,30%)]',  border: 'border-[hsl(45,60%,78%)]',  badge: 'bg-[hsl(45,60%,84%)]',  rate: 'text-[hsl(45,60%,28%)]' },
 ];
 
+const getTypeLabel = (type: string) => {
+  switch (type) {
+    case 'fixed_deposit': return 'Fixed Deposit';
+    case 'goal_savings': return 'Goal Savings';
+    case 'high_yield': return 'High Yield';
+    case 'kids_savings': return 'Kids Savings';
+    default: return 'Savings';
+  }
+};
+
 function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
   onApply: (product: any) => void;
   onViewPlans: () => void;
   bankPlansCount: number;
 }) {
   const { data: products = [], isLoading } = useSavingsProducts();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [typeFilter, setTypeFilter] = useState<SavingsTypeFilter>('all');
+  const [groupBy, setGroupBy] = useState<GroupBy>('institution');
+  const [showCompare, setShowCompare] = useState(false);
 
-  // Group products by institution
-  const grouped = (products as any[]).reduce((acc: Record<string, { institution: any; products: any[] }>, product: any) => {
-    const inst = product.institutions;
-    const instId = inst?.id || 'unknown';
-    if (!acc[instId]) {
-      acc[instId] = { institution: inst, products: [] };
+  const allProducts = products as any[];
+
+  // Filter
+  const filtered = allProducts.filter((p: any) => {
+    if (typeFilter !== 'all' && p.savings_type !== typeFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const name = (p.product_name || '').toLowerCase();
+      const inst = (p.institutions?.institution_name || '').toLowerCase();
+      if (!name.includes(q) && !inst.includes(q)) return false;
     }
-    acc[instId].products.push(product);
-    return acc;
-  }, {} as Record<string, { institution: any; products: any[] }>);
+    return true;
+  });
 
-  const institutions = Object.values(grouped);
+  // Group
+  const buildGroups = (): { key: string; label: string; items: any[]; colorIdx: number }[] => {
+    if (groupBy === 'institution') {
+      const map: Record<string, { inst: any; items: any[] }> = {};
+      filtered.forEach((p: any) => {
+        const id = p.institutions?.id || 'unknown';
+        if (!map[id]) map[id] = { inst: p.institutions, items: [] };
+        map[id].items.push(p);
+      });
+      return Object.entries(map).map(([id, { inst, items }], i) => ({
+        key: id, label: inst?.institution_name || 'Unknown', items, colorIdx: i,
+      }));
+    }
+    if (groupBy === 'type') {
+      const map: Record<string, any[]> = {};
+      filtered.forEach((p: any) => {
+        const t = p.savings_type || 'other';
+        if (!map[t]) map[t] = [];
+        map[t].push(p);
+      });
+      return Object.entries(map).map(([type, items], i) => ({
+        key: type, label: getTypeLabel(type), items, colorIdx: i,
+      }));
+    }
+    // rate — sort all by rate descending, single group
+    const sorted = [...filtered].sort((a, b) => (b.base_interest_rate || 0) - (a.base_interest_rate || 0));
+    return [{ key: 'all', label: 'Best Rates First', items: sorted, colorIdx: 0 }];
+  };
+
+  const groups = buildGroups();
 
   const formatCurrency = (amount: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
@@ -334,15 +382,12 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
     }
   };
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'fixed_deposit': return 'Fixed Deposit';
-      case 'goal_savings': return 'Goal Savings';
-      case 'high_yield': return 'High Yield';
-      case 'kids_savings': return 'Kids Savings';
-      default: return 'Savings';
-    }
-  };
+  // Rate comparison stats
+  const rateStats = allProducts.length > 0 ? {
+    highest: Math.max(...allProducts.map((p: any) => p.base_interest_rate || 0)),
+    lowest: Math.min(...allProducts.map((p: any) => p.base_interest_rate || 0)),
+    avg: (allProducts.reduce((s: number, p: any) => s + (p.base_interest_rate || 0), 0) / allProducts.length).toFixed(1),
+  } : null;
 
   if (isLoading) {
     return (
@@ -353,7 +398,7 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
   }
 
   return (
-    <motion.div key="explore" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-5">
+    <motion.div key="explore" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-4">
       {/* Intro banner */}
       <div className="rounded-3xl bg-[hsl(225,50%,93%)] p-5 border-2 border-foreground">
         <p className="text-sm font-bold text-foreground">Explore Savings Products</p>
@@ -367,53 +412,169 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
         )}
       </div>
 
-      {institutions.length === 0 ? (
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+        <Input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search by product or institution..."
+          className="rounded-2xl pl-9 h-11 text-xs"
+        />
+      </div>
+
+      {/* Filter chips row */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+        {(['all', 'fixed_deposit', 'goal_savings', 'high_yield', 'kids_savings'] as SavingsTypeFilter[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTypeFilter(t)}
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold transition-colors border ${
+              typeFilter === t
+                ? 'bg-foreground text-background border-foreground'
+                : 'bg-card text-muted-foreground border-border hover:border-foreground/30'
+            }`}
+          >
+            {t === 'all' ? 'All Types' : getTypeLabel(t)}
+          </button>
+        ))}
+      </div>
+
+      {/* Group by + Compare toggle */}
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 flex-1 rounded-2xl border border-border bg-card p-1">
+          {([
+            { value: 'institution' as GroupBy, icon: Building2, label: 'Bank' },
+            { value: 'type' as GroupBy, icon: SlidersHorizontal, label: 'Type' },
+            { value: 'rate' as GroupBy, icon: ArrowUpDown, label: 'Rate' },
+          ]).map(({ value, icon: Icon, label }) => (
+            <button
+              key={value}
+              onClick={() => setGroupBy(value)}
+              className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-xl text-[10px] font-semibold transition-colors ${
+                groupBy === value ? 'bg-foreground text-background' : 'text-muted-foreground'
+              }`}
+            >
+              <Icon className="h-3 w-3" strokeWidth={1.5} />
+              {label}
+            </button>
+          ))}
+        </div>
+        <button
+          onClick={() => setShowCompare(!showCompare)}
+          className={`shrink-0 h-9 w-9 rounded-xl flex items-center justify-center border transition-colors ${
+            showCompare ? 'bg-foreground text-background border-foreground' : 'bg-card text-muted-foreground border-border'
+          }`}
+        >
+          <BarChart3 className="h-4 w-4" strokeWidth={1.5} />
+        </button>
+      </div>
+
+      {/* Rate Comparison Panel */}
+      <AnimatePresence>
+        {showCompare && rateStats && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="rounded-3xl border-2 border-foreground bg-card p-4">
+              <p className="text-xs font-bold text-foreground mb-3 flex items-center gap-1.5">
+                <BarChart3 className="h-3.5 w-3.5" strokeWidth={1.5} />
+                Rate Comparison
+              </p>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-2xl bg-[hsl(150,35%,92%)] p-3 text-center">
+                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Highest</p>
+                  <p className="text-xl font-bold text-[hsl(150,35%,28%)]">{rateStats.highest}%</p>
+                </div>
+                <div className="rounded-2xl bg-[hsl(225,50%,93%)] p-3 text-center">
+                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Average</p>
+                  <p className="text-xl font-bold text-[hsl(225,50%,30%)]">{rateStats.avg}%</p>
+                </div>
+                <div className="rounded-2xl bg-[hsl(25,60%,92%)] p-3 text-center">
+                  <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Lowest</p>
+                  <p className="text-xl font-bold text-[hsl(25,60%,30%)]">{rateStats.lowest}%</p>
+                </div>
+              </div>
+
+              {/* Top rates table */}
+              <div className="mt-3 space-y-1.5">
+                <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider">Top Rates</p>
+                {[...allProducts]
+                  .sort((a, b) => (b.base_interest_rate || 0) - (a.base_interest_rate || 0))
+                  .slice(0, 5)
+                  .map((p: any, i: number) => (
+                    <div key={p.id} className="flex items-center gap-2 rounded-xl bg-muted/40 px-3 py-2">
+                      <span className="text-[10px] font-bold text-muted-foreground w-4">{i + 1}.</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[11px] font-semibold text-foreground truncate">{p.product_name}</p>
+                        <p className="text-[9px] text-muted-foreground truncate">{p.institutions?.institution_name}</p>
+                      </div>
+                      <p className="text-sm font-bold text-primary shrink-0">{p.base_interest_rate}%</p>
+                      <Button size="sm" className="h-6 text-[9px] rounded-lg px-2 shrink-0" onClick={() => onApply(p)}>
+                        Apply
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Results count */}
+      <p className="text-[10px] font-semibold text-muted-foreground">
+        {filtered.length} product{filtered.length !== 1 ? 's' : ''} found
+        {typeFilter !== 'all' && ` · ${getTypeLabel(typeFilter)}`}
+        {searchQuery.trim() && ` · "${searchQuery}"`}
+      </p>
+
+      {filtered.length === 0 ? (
         <div className="flex flex-col items-center gap-3 py-12">
-          <Building2 className="h-12 w-12 text-muted-foreground/40" strokeWidth={1.5} />
-          <p className="text-sm font-semibold text-muted-foreground">No savings products available</p>
-          <p className="text-xs text-muted-foreground text-center max-w-[220px]">
-            Financial institutions haven't published savings products yet. Check back soon!
-          </p>
+          <Search className="h-10 w-10 text-muted-foreground/40" strokeWidth={1.5} />
+          <p className="text-sm font-semibold text-muted-foreground">No products match your filters</p>
+          <Button variant="secondary" size="sm" className="rounded-2xl text-xs" onClick={() => { setSearchQuery(''); setTypeFilter('all'); }}>
+            Clear Filters
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">
-          {institutions.map(({ institution, products: instProducts }, idx) => {
-            const palette = INSTITUTION_COLORS[idx % INSTITUTION_COLORS.length];
+          {groups.map((group, idx) => {
+            const palette = INSTITUTION_COLORS[group.colorIdx % INSTITUTION_COLORS.length];
             return (
               <motion.div
-                key={institution?.id || idx}
+                key={group.key}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.08 }}
+                transition={{ delay: idx * 0.06 }}
               >
-                {/* Institution Header */}
+                {/* Group Header */}
                 <div className={`flex items-center gap-3 mb-3 rounded-2xl ${palette.bg} p-3 border ${palette.border}`}>
                   <div className={`h-10 w-10 rounded-xl ${palette.accent} flex items-center justify-center shrink-0`}>
-                    {institution?.logo_url ? (
-                      <img src={institution.logo_url} alt={institution.institution_name} className="h-6 w-6 rounded object-contain" />
-                    ) : (
+                    {groupBy === 'institution' ? (
                       <Building2 className="h-5 w-5 text-white" strokeWidth={1.5} />
+                    ) : groupBy === 'type' ? (
+                      <span className="text-white">{getTypeIcon(group.key)}</span>
+                    ) : (
+                      <ArrowUpDown className="h-5 w-5 text-white" strokeWidth={1.5} />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold text-foreground truncate">{institution?.institution_name || 'Institution'}</p>
-                    {institution?.institution_type && (
-                      <span className={`inline-block text-[9px] font-semibold px-2 py-0.5 rounded-full ${palette.badge} text-foreground/70 mt-0.5`}>
-                        {institution.institution_type.replace(/_/g, ' ')}
-                      </span>
-                    )}
+                    <p className="text-sm font-bold text-foreground truncate">{group.label}</p>
                   </div>
-                  <span className="text-[10px] font-semibold text-muted-foreground">{instProducts.length} product{instProducts.length !== 1 ? 's' : ''}</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">{group.items.length} product{group.items.length !== 1 ? 's' : ''}</span>
                 </div>
 
                 {/* Products Grid */}
                 <div className="grid grid-cols-2 gap-3">
-                  {instProducts.map((product: any, pIdx: number) => (
+                  {group.items.map((product: any, pIdx: number) => (
                     <motion.div
                       key={product.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: idx * 0.08 + pIdx * 0.04 }}
+                      transition={{ delay: idx * 0.06 + pIdx * 0.03 }}
                       className={`rounded-3xl ${palette.bg} border ${palette.border} p-4 flex flex-col justify-between`}
                     >
                       {/* Icon + Type */}
@@ -422,7 +583,9 @@ function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
                           <span className="text-white">{getTypeIcon(product.savings_type)}</span>
                         </div>
                         <p className="text-xs font-bold text-foreground leading-tight line-clamp-2">{product.product_name}</p>
-                        <p className="text-[9px] text-muted-foreground mt-0.5">{getTypeLabel(product.savings_type)}</p>
+                        <p className="text-[9px] text-muted-foreground mt-0.5">
+                          {groupBy !== 'institution' ? (product.institutions?.institution_name || '') : getTypeLabel(product.savings_type)}
+                        </p>
                       </div>
 
                       {/* Rate */}
