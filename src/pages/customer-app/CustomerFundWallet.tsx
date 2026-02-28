@@ -4,9 +4,12 @@ import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loa
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useCustomerAccounts } from '@/hooks/useCustomerData';
+
+const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 
 const iconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
   bank_account: { icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
@@ -21,10 +24,14 @@ const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const CustomerFundWallet: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const [amount, setAmount] = useState('');
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [step, setStep] = useState<'source' | 'amount' | 'confirm' | 'success'>('source');
   const [processing, setProcessing] = useState(false);
+
+  // Get user's Kang accounts for crediting
+  const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
 
   const { data: linkedAccounts = [], isLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
@@ -48,14 +55,75 @@ const CustomerFundWallet: React.FC = () => {
     setStep('confirm');
   };
 
-  const handleDeposit = () => {
+  const handleDeposit = async () => {
     setProcessing(true);
-    setTimeout(() => {
-      setProcessing(false);
+    try {
+      const numAmount = Number(amount);
+      const primaryAccount = kangAccounts[0];
+
+      // 1. Create a deposit transaction record
+      const { error: txError } = await supabase.from('transactions').insert({
+        user_id: user!.id,
+        institution_id: KANG_PLATFORM_ID,
+        account_id: primaryAccount?.id || null,
+        transaction_type: 'deposit',
+        amount: numAmount,
+        currency: 'XAF',
+        status: 'completed',
+        credit_debit_indicator: 'Credit',
+        transaction_information: `Deposit from ${selectedAccount?.provider_name || selectedAccount?.account_type} ···${selectedAccount?.last4 || ''}`,
+        booking_datetime: new Date().toISOString(),
+        value_datetime: new Date().toISOString(),
+        metadata: {
+          source_linked_account_id: selectedAccount?.id,
+          source_type: selectedAccount?.account_type,
+          source_provider: selectedAccount?.provider_name,
+          fee: 0,
+        },
+      });
+      if (txError) throw txError;
+
+      // 2. Update account balance if account exists
+      if (primaryAccount?.id) {
+        const { data: currentBal } = await supabase
+          .from('account_balances')
+          .select('*')
+          .eq('account_id', primaryAccount.id)
+          .order('balance_datetime', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        const newAmount = (currentBal?.amount ?? 0) + numAmount;
+
+        if (currentBal) {
+          await supabase.from('account_balances')
+            .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
+            .eq('id', currentBal.id);
+        } else {
+          await supabase.from('account_balances').insert({
+            account_id: primaryAccount.id,
+            amount: newAmount,
+            balance_type: 'ClosingAvailable',
+            credit_debit_indicator: 'Credit',
+            currency: 'XAF',
+            balance_datetime: new Date().toISOString(),
+          });
+        }
+      }
+
+      // 3. Invalidate caches
+      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+
       setStep('success');
-      toast.success(`XAF ${Number(amount).toLocaleString()} deposited to your wallet`);
+      toast.success(`XAF ${numAmount.toLocaleString()} deposited to your wallet`);
       setTimeout(() => navigate(-1), 2500);
-    }, 1800);
+    } catch (err: any) {
+      toast.error(err.message || 'Deposit failed. Please try again.');
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
