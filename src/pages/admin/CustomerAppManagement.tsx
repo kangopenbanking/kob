@@ -780,6 +780,7 @@ export default function CustomerAppManagement() {
           media_sections: raw.media_sections || [],
           walkthrough_config: raw.walkthrough_config || { skip_enabled: true },
           card_colors: raw.card_colors || {},
+          cashout_methods: { ...defaultConfig.cashout_methods, ...(raw.cashout_methods || {}) },
         }
       : defaultConfig;
   })();
