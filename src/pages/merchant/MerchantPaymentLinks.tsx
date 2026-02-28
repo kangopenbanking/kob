@@ -134,7 +134,7 @@ export default function MerchantPaymentLinks() {
                   </div>
                   <div className="flex items-center gap-1">
                     <Button variant="ghost" size="sm" onClick={() => copyLink(l.slug)} title="Copy link"><Copy className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => window.open(`/pay/${l.slug}`, "_blank")} title="Open"><ExternalLink className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="sm" onClick={() => window.open(`${API_CONFIG.SITE_URL}/pay/${l.slug}`, "_blank")} title="Open"><ExternalLink className="h-4 w-4" /></Button>
                     <Button variant="ghost" size="sm" onClick={() => toggleActive(l.id, l.status === "active")}>{l.status === "active" ? "Disable" : "Enable"}</Button>
                     <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteLink(l.id)}><Trash2 className="h-4 w-4" /></Button>
                   </div>

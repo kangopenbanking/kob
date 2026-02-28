@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { API_CONFIG } from '@/config/api';
 
 interface PayLink {
   name: string;
@@ -62,7 +63,7 @@ const CustomerPayLinks: React.FC = () => {
 
   const resetForm = () => { setNewName(''); setNewDescription(''); setNewAmount(''); setNewExpiry(''); setIsOpenAmount(false); };
 
-  const getUrl = (name: string) => `https://pay.kobpay.com/${name.toLowerCase().replace(/\s/g, '-')}`;
+  const getUrl = (name: string) => `${API_CONFIG.SITE_URL}/pay/${name.toLowerCase().replace(/\s/g, '-')}`;
 
   const handleCopy = (name: string) => {
     navigator.clipboard.writeText(getUrl(name)).then(
