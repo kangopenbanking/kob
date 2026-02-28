@@ -8,45 +8,37 @@ import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import yaml from 'js-yaml';
+import { supabase } from '@/integrations/supabase/client';
 
 const ApiExplorer = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [effectiveUrl, setEffectiveUrl] = useState<string>('');
-  const [usingFallback, setUsingFallback] = useState(false);
+  const [spec, setSpec] = useState<object | null>(null);
   const [isChecking, setIsChecking] = useState(true);
   const [authGuideOpen, setAuthGuideOpen] = useState(false);
-  
-  const primaryUrl = 'https://api.kangopenbanking.com/functions/v1/public-api-spec';
-  const fallbackUrl = 'https://api.kangopenbanking.com/functions/v1/public-api-spec';
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkUrl = async () => {
+    const fetchSpec = async () => {
       try {
-        const response = await fetch(primaryUrl, { method: 'HEAD' });
-        if (response.ok) {
-          setEffectiveUrl(primaryUrl);
-          setUsingFallback(false);
-        } else {
-          throw new Error('Primary URL not accessible');
-        }
+        const { data, error } = await supabase.functions.invoke('public-api-spec');
+        if (error) throw error;
+        setSpec(data);
+        setFetchError(null);
       } catch (error) {
-        console.log('Primary URL failed, using fallback:', error);
-        setEffectiveUrl(fallbackUrl);
-        setUsingFallback(true);
+        console.error('Failed to fetch OpenAPI spec:', error);
+        setFetchError('Failed to load API specification. Please try again later.');
       } finally {
         setIsChecking(false);
       }
     };
-    checkUrl();
-  }, [primaryUrl, fallbackUrl]);
+    fetchSpec();
+  }, []);
 
   const handleDownload = async (format: 'json' | 'yaml') => {
+    if (!spec) return;
     setLoading(true);
     try {
-      const response = await fetch(effectiveUrl);
-      if (!response.ok) throw new Error('Failed to fetch API spec');
-      const spec = await response.json();
       let content: string;
       let filename: string;
       let mimeType: string;
@@ -94,12 +86,10 @@ const ApiExplorer = () => {
           Interactive documentation powered by Swagger UI. Test endpoints directly from your browser.
         </p>
 
-        {usingFallback && (
-          <Alert className="mb-6">
+        {fetchError && (
+          <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-              Using fallback API endpoint. Custom domain routing is being configured.
-            </AlertDescription>
+            <AlertDescription>{fetchError}</AlertDescription>
           </Alert>
         )}
 
@@ -221,7 +211,7 @@ grant_type=client_credentials
           <Button
             onClick={() => handleDownload('json')}
             variant="outline"
-            disabled={loading || isChecking}
+            disabled={loading || isChecking || !spec}
           >
             <Download className="mr-2 h-4 w-4" />
             Download OpenAPI JSON
@@ -229,14 +219,14 @@ grant_type=client_credentials
           <Button
             onClick={() => handleDownload('yaml')}
             variant="outline"
-            disabled={loading || isChecking}
+            disabled={loading || isChecking || !spec}
           >
             <Download className="mr-2 h-4 w-4" />
             Download OpenAPI YAML
           </Button>
           <Button variant="outline" asChild disabled={isChecking}>
             <a
-              href={effectiveUrl ? `https://editor.swagger.io/?url=${encodeURIComponent(effectiveUrl)}` : '#'}
+              href={`https://editor.swagger.io/?url=${encodeURIComponent(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/public-api-spec`)}`}
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -250,17 +240,21 @@ grant_type=client_credentials
       <Card className="overflow-hidden swagger-container">
         {isChecking ? (
           <div className="p-8 text-center text-muted-foreground">
-            Checking API availability...
+            Loading API specification...
           </div>
-        ) : (
+        ) : spec ? (
           <SwaggerUI
-            url={`${effectiveUrl}?_t=${Date.now()}`}
+            spec={spec}
             docExpansion="list"
             deepLinking={true}
             displayOperationId={true}
             filter={true}
             tryItOutEnabled={true}
           />
+        ) : (
+          <div className="p-8 text-center text-muted-foreground">
+            Failed to load API specification. Please refresh the page.
+          </div>
         )}
       </Card>
     </div>
