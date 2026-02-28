@@ -70,9 +70,9 @@ interface CustomerAppConfig {
   rewards_config: RewardsConfig;
 }
 
-type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'recent_activities';
+type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'upcoming_bills' | 'spending_stats' | 'recent_activities';
 
-const defaultSectionOrder: CustomerSectionKey[] = ['balance_card', 'quick_actions', 'media_banner', 'recent_activities'];
+const defaultSectionOrder: CustomerSectionKey[] = ['balance_card', 'quick_actions', 'upcoming_bills', 'spending_stats', 'media_banner', 'recent_activities'];
 
 const defaultRewardsConfig: RewardsConfig = {
   cashback_enabled: true,
@@ -547,7 +547,8 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
 
   const sectionLabels: Record<CustomerSectionKey, string> = {
     balance_card: 'Balance Card', quick_actions: 'Quick Actions',
-    media_banner: 'Media Banner', recent_activities: 'Recent Activities',
+    media_banner: 'Media Banner', upcoming_bills: 'Upcoming Bills',
+    spending_stats: 'Spending Stats', recent_activities: 'Recent Activities',
   };
 
   const sectionOrder = config.section_order || defaultSectionOrder;
@@ -607,6 +608,32 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
           </div>
         );
       }
+      case 'upcoming_bills':
+        return (
+          <div key={key}>
+            <p className="text-[6px] font-bold mb-0.5">Upcoming Bills</p>
+            {[1, 2].map(i => (
+              <div key={i} className="flex items-center justify-between py-0.5">
+                <div className="flex items-center gap-1"><div className="h-3 w-3 rounded bg-orange-100" /><p className="text-[5px]">Bill #{i}</p></div>
+                <span className="text-[5px] font-bold text-orange-600">15,000</span>
+              </div>
+            ))}
+          </div>
+        );
+      case 'spending_stats':
+        return (
+          <div key={key}>
+            <p className="text-[6px] font-bold mb-0.5">Spending Stats</p>
+            <div className="flex gap-1">
+              {[60, 40, 80, 30].map((h, i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-0.5">
+                  <div className="w-full rounded-sm bg-primary/30" style={{ height: `${h / 10}px` }} />
+                  <span className="text-[4px] text-muted-foreground">W{i + 1}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
       case 'recent_activities':
         return (
           <div key={key}>
