@@ -1,6 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { signPayload } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +15,7 @@ serve(async (req) => {
     // Find pending webhook events ready for delivery
     const { data: events, error } = await supabase
       .from('gateway_webhook_events')
-      .select('*, gateway_merchants(webhook_url, webhook_secret)')
+      .select('*, gateway_merchants(id, webhook_url)')
       .eq('status', 'pending')
       .lte('next_retry_at', new Date().toISOString())
       .lt('attempts', 7)
@@ -41,9 +40,16 @@ serve(async (req) => {
 
       const payloadStr = JSON.stringify(event.payload);
       const timestamp = Math.floor(Date.now() / 1000).toString();
-      const signature = merchant.webhook_secret
-        ? await signPayload(`${timestamp}.${payloadStr}`, merchant.webhook_secret)
-        : '';
+      
+      // Compute HMAC server-side via DB function — webhook_secret never leaves the database
+      let signature = '';
+      if (merchant.id) {
+        const { data: hmacResult } = await supabase.rpc('compute_webhook_hmac', {
+          p_merchant_id: merchant.id,
+          p_payload: `${timestamp}.${payloadStr}`,
+        });
+        signature = hmacResult || '';
+      }
 
       try {
         const res = await fetch(merchant.webhook_url, {
