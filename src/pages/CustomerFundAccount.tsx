@@ -13,6 +13,7 @@ import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelecto
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { API_CONFIG } from "@/config/api";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
@@ -52,7 +53,7 @@ const CustomerFundAccount = () => {
           funding_scope: "end_user",
           account_id: selectedAccountId,
           customer: { phone, email },
-          return_url: `${window.location.origin}/fund-account`,
+          return_url: `${API_CONFIG.SITE_URL}/fund-account`,
         },
       });
       if (error) throw error;

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Link2, Plus, Copy, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
+import { API_CONFIG } from "@/config/api";
 
 export default function GatewayPaymentLinks() {
   const [search, setSearch] = useState("");
@@ -30,7 +31,7 @@ export default function GatewayPaymentLinks() {
   );
 
   const copyLink = (slug: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/pay/${slug}`);
+    navigator.clipboard.writeText(`${API_CONFIG.SITE_URL}/pay/${slug}`);
     toast.success("Payment link copied!");
   };
 

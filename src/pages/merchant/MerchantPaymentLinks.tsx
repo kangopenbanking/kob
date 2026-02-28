@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Loader2, Link2, Copy, Plus, ExternalLink, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { API_CONFIG } from "@/config/api";
 
 export default function MerchantPaymentLinks() {
   const [links, setLinks] = useState<any[]>([]);
@@ -59,7 +60,7 @@ export default function MerchantPaymentLinks() {
   };
 
   const copyLink = (slug: string) => {
-    navigator.clipboard.writeText(`${window.location.origin}/pay/${slug}`);
+    navigator.clipboard.writeText(`${API_CONFIG.SITE_URL}/pay/${slug}`);
     toast.success("Payment link copied!");
   };
 

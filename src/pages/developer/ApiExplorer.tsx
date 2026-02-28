@@ -18,7 +18,7 @@ const ApiExplorer = () => {
   const [authGuideOpen, setAuthGuideOpen] = useState(false);
   
   const primaryUrl = 'https://api.kangopenbanking.com/functions/v1/public-api-spec';
-  const fallbackUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/public-api-spec';
+  const fallbackUrl = 'https://api.kangopenbanking.com/functions/v1/public-api-spec';
 
   useEffect(() => {
     const checkUrl = async () => {

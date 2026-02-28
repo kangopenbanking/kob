@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { API_CONFIG } from '@/config/api';
 
 const CustomerRewards: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
@@ -70,7 +71,7 @@ const CustomerRewards: React.FC = () => {
   });
 
   const totalCashback = cashbackHistory.reduce((s, t: any) => s + Math.abs(t.amount || 0), 0);
-  const referralLink = `${window.location.origin}/app/${institutionId}/register?ref=${user?.id?.slice(0, 8)}`;
+  const referralLink = `${API_CONFIG.SITE_URL}/app/${institutionId}/register?ref=${user?.id?.slice(0, 8)}`;
 
   const coupons = rewardsConfig?.coupons || [];
   const activeCoupons = coupons.filter((c: any) => c.active);

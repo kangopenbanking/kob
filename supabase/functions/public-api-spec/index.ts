@@ -1805,8 +1805,8 @@ serve(async (req) => {
             type: 'oauth2',
             flows: {
               authorizationCode: {
-                authorizationUrl: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oauth-authorize',
-                tokenUrl: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1/oauth-token',
+                authorizationUrl: 'https://api.kangopenbanking.com/functions/v1/oauth-authorize',
+                tokenUrl: 'https://api.kangopenbanking.com/functions/v1/oauth-token',
                 scopes: {
                   openid: 'OpenID Connect',
                   accounts: 'Read account information',

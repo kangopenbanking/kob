@@ -6,6 +6,7 @@
  * until custom domain function routing is fully configured.
  */
 export const API_CONFIG = {
+  SITE_URL: 'https://kangopenbanking.com',
   BASE_URL: 'https://api.kangopenbanking.com/functions/v1',
   BASE_URL_FALLBACK: 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/functions/v1',
   DOCS_URL: 'https://kangopenbanking.com/documentation',
