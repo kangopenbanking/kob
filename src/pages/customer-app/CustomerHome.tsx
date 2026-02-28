@@ -28,9 +28,10 @@ interface FeatureItem {
 }
 
 const moneyMovement: FeatureItem[] = [
+  { label: 'Add Money', description: 'Deposit from linked accounts', icon: Download, path: 'fund', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,35%)]' },
   { label: 'Transfer', description: 'Send money to anyone instantly', icon: Send, path: 'transfer', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,45%)]', featureKey: 'transfer' },
-  { label: 'Request', description: 'Ask someone to pay you', icon: Download, path: 'request', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,35%)]', featureKey: 'request' },
-  { label: 'Cash Out', description: 'Withdraw at agents', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-[hsl(45,60%,55%)]', featureKey: 'cash_out' },
+  { label: 'Cash Out', description: 'Withdraw to your accounts', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-[hsl(45,60%,55%)]', featureKey: 'cash_out' },
+  { label: 'Request', description: 'Ask someone to pay you', icon: ArrowDownLeft, path: 'request', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,40%)]', featureKey: 'request' },
   { label: 'Pay Links', description: 'Share a payment link', icon: Link2, path: 'pay-links', color: 'bg-[hsl(180,50%,90%)]', iconColor: 'text-[hsl(180,40%,35%)]', borderColor: 'border-[hsl(180,40%,55%)]', featureKey: 'pay_links' },
 ];
 
@@ -50,7 +51,7 @@ const savingsGoals: FeatureItem[] = [
 const financialHealth: FeatureItem[] = [
   { label: 'Credit Score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
   { label: 'Rent Report', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
-  { label: 'Bank', icon: Building2, path: 'bank', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', borderColor: 'border-[hsl(225,40%,60%)]', featureKey: 'bank' },
+  { label: 'Accounts', icon: Building2, path: 'linked-accounts', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', borderColor: 'border-[hsl(225,40%,60%)]', featureKey: 'bank' },
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
