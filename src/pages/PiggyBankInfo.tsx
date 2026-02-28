@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   PiggyBank, Home, ArrowRight, CheckCircle, TrendingUp, Shield, Clock,
-  Calendar, AlertTriangle, Zap, BarChart3
+  Calendar, AlertTriangle, Zap, BarChart3, Building2, Search, Lock, Target
 } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 
@@ -14,7 +14,7 @@ const PiggyBankInfo = () => {
     <div className="min-h-screen">
       <Helmet>
         <title>Piggy Bank — Savings & Rent Plans | Kang Open Banking</title>
-        <meta name="description" content="Build your credit score with automated savings and rent payment plans. Track progress, stay on schedule, and improve your CrediQ rating with Kang's Piggy Bank." />
+        <meta name="description" content="Explore savings products from banks and credit unions, or create personal savings plans. Build your credit score with every on-time payment through Kang's Piggy Bank." />
       </Helmet>
 
       {/* Hero */}
@@ -30,7 +30,7 @@ const PiggyBankInfo = () => {
               Piggy Bank
             </h1>
             <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-2xl mx-auto">
-              Automated savings & rent plans that build your credit score. Every on-time payment counts.
+              Explore savings from real banks, create personal goals, and build your credit score — all in one place.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link to="/auth">
@@ -61,11 +61,11 @@ const PiggyBankInfo = () => {
             <div className="grid md:grid-cols-3 gap-8">
               <Card className="p-8 text-center hover:shadow-lg transition-shadow">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-4">
-                  <Calendar className="h-8 w-8 text-primary" />
+                  <Search className="h-8 w-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">1. Set Your Goal</h3>
+                <h3 className="text-xl font-bold mb-3">1. Explore or Create</h3>
                 <p className="text-muted-foreground">
-                  Choose a savings target or set up rent payments. Pick your schedule — daily, weekly, or monthly.
+                  Browse savings products from banks and credit unions, or create your own personal savings plan with custom goals.
                 </p>
               </Card>
 
@@ -73,9 +73,9 @@ const PiggyBankInfo = () => {
                 <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-4">
                   <Zap className="h-8 w-8 text-accent" />
                 </div>
-                <h3 className="text-xl font-bold mb-3">2. Auto-Pilot Payments</h3>
+                <h3 className="text-xl font-bold mb-3">2. Save Consistently</h3>
                 <p className="text-muted-foreground">
-                  The app tracks your payment schedule. Make payments on time and watch your credit improve.
+                  Make regular deposits — daily, weekly, or monthly. Track your progress with visual indicators and stay on schedule.
                 </p>
               </Card>
 
@@ -93,63 +93,102 @@ const PiggyBankInfo = () => {
         </div>
       </section>
 
-      {/* Two Plan Types */}
+      {/* Two Categories */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
             <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">Two Plan Types</h2>
+              <h2 className="text-3xl md:text-4xl font-bold mb-4">Two Ways to Save</h2>
+              <p className="text-xl text-muted-foreground">Choose the approach that fits your needs</p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8">
-              {/* Savings Plan */}
+              {/* Bank Savings */}
               <Card className="p-8 border-2 border-primary/20 hover:shadow-xl transition-shadow">
                 <div className="flex items-center gap-3 mb-6">
                   <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <PiggyBank className="h-6 w-6 text-primary" />
+                    <Building2 className="h-6 w-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-2xl font-bold">Savings Plan</h3>
-                    <p className="text-sm text-muted-foreground">Goal-based savings</p>
+                    <h3 className="text-2xl font-bold">Bank Savings</h3>
+                    <p className="text-sm text-muted-foreground">From financial institutions</p>
                   </div>
                 </div>
                 <ul className="space-y-3 mb-6">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <span>Set a target amount (e.g., 1,000,000 XAF)</span>
+                    <span>Browse savings products from real banks & credit unions</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <span>Choose daily, weekly, or monthly installments</span>
+                    <span>Compare interest rates, lock-in periods, and features</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <span>Track progress with visual indicators</span>
+                    <span>Apply directly from the app — no branch visit needed</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <TrendingUp className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-                    <span className="font-semibold">+3 to +5 credit points per on-time payment</span>
+                    <span className="font-semibold">Earn interest on your deposits</span>
                   </li>
                 </ul>
                 <div className="p-4 rounded-lg bg-primary/5 border border-primary/10">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Product Types:</strong> Fixed deposits, goal savings, high-yield accounts, kids savings — each with different rates and terms.
+                  </p>
+                </div>
+              </Card>
+
+              {/* Personal Savings */}
+              <Card className="p-8 border-2 border-accent/20 hover:shadow-xl transition-shadow">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <PiggyBank className="h-6 w-6 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold">Personal Savings</h3>
+                    <p className="text-sm text-muted-foreground">Goal-based plans</p>
+                  </div>
+                </div>
+                <ul className="space-y-3 mb-6">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+                    <span>Create unlimited custom savings plans</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+                    <span>Set targets, installment amounts, and schedules</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+                    <span>Track progress with visual bars and payment counters</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <TrendingUp className="h-5 w-5 text-accent mt-0.5 shrink-0" />
+                    <span className="font-semibold">+3 to +5 credit points per on-time payment</span>
+                  </li>
+                </ul>
+                <div className="p-4 rounded-lg bg-accent/5 border border-accent/10">
                   <p className="text-sm text-muted-foreground">
                     <strong>Credit Impact:</strong> On-time savings payments demonstrate financial discipline and consistently improve your CrediQ score.
                   </p>
                 </div>
               </Card>
+            </div>
 
-              {/* Rent Plan */}
-              <Card className="p-8 border-2 border-accent/20 hover:shadow-xl transition-shadow">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
-                    <Home className="h-6 w-6 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="text-2xl font-bold">Rent Plan</h3>
-                    <Badge className="bg-accent">KRENTS****</Badge>
-                  </div>
+            {/* Rent Plan add-on */}
+            <Card className="mt-8 p-8 border-2 border-accent/20 hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="h-12 w-12 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <Home className="h-6 w-6 text-accent" />
                 </div>
-                <ul className="space-y-3 mb-6">
+                <div>
+                  <h3 className="text-2xl font-bold">Rent Reporting</h3>
+                  <Badge className="bg-accent">KRENTS****</Badge>
+                </div>
+              </div>
+              <div className="grid md:grid-cols-2 gap-6">
+                <ul className="space-y-3">
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
                     <span>Unique <strong className="font-mono">KRENTS</strong> reference ID assigned automatically</span>
@@ -157,10 +196,6 @@ const PiggyBankInfo = () => {
                   <li className="flex items-start gap-2">
                     <CheckCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
                     <span>Funds transfer directly from tenant to landlord</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-5 w-5 text-accent mt-0.5 shrink-0" />
-                    <span>Only successful payments are reported to credit</span>
                   </li>
                   <li className="flex items-start gap-2">
                     <TrendingUp className="h-5 w-5 text-accent mt-0.5 shrink-0" />
@@ -175,8 +210,8 @@ const PiggyBankInfo = () => {
                     </p>
                   </div>
                 </div>
-              </Card>
-            </div>
+              </div>
+            </Card>
           </div>
         </div>
       </section>
@@ -219,7 +254,7 @@ const PiggyBankInfo = () => {
                 <div>
                   <h4 className="font-bold mb-1">Monthly Credit Reports</h4>
                   <p className="text-muted-foreground text-sm">
-                    You'll receive a monthly credit report via push notification and email summarizing your payment performance, on-time percentage, and score changes. Example: "You made 4/4 payments on time. Your score improved by +18 this month."
+                    You'll receive a monthly credit report via push notification and email summarizing your payment performance, on-time percentage, and score changes.
                   </p>
                 </div>
               </div>
@@ -233,7 +268,7 @@ const PiggyBankInfo = () => {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-6">Start Building Your Credit Today</h2>
           <p className="text-xl mb-8 opacity-90 max-w-xl mx-auto">
-            Create a savings or rent plan and start improving your CrediQ score with every payment.
+            Explore savings products from top institutions or create your own plan — and improve your CrediQ score with every payment.
           </p>
           <Link to="/auth">
             <Button size="lg" className="text-lg px-10 py-6 bg-white text-primary hover:bg-white/90">
