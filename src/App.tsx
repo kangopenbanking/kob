@@ -222,7 +222,7 @@ import WooCommerceMerchantRegister from "./pages/integrations/WooCommerceMerchan
 import WooCommercePluginCode from "./pages/integrations/WooCommercePluginCode";
 import StatusWidget from "./pages/StatusWidget";
 import EmbedStatusWidget from "./pages/EmbedStatusWidget";
-import LiveDemo from "./pages/LiveDemo";
+
 import Architecture from "./pages/Architecture";
 import KeyFunctionsSummary from "./pages/KeyFunctionsSummary";
 import ROICalculator from "./pages/ROICalculator";
@@ -625,7 +625,7 @@ function App() {
         <Route path="/faq" element={<Layout><FAQ /></Layout>} />
         <Route path="/status" element={<Layout><Status /></Layout>} />
             <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
-            <Route path="/demo" element={<Layout><LiveDemo /></Layout>} />
+            
             <Route path="/architecture" element={<Layout><Architecture /></Layout>} />
             <Route path="/key-functions" element={<Layout><KeyFunctionsSummary /></Layout>} />
             <Route path="/roi-calculator" element={<Layout><ROICalculator /></Layout>} />

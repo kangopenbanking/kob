@@ -160,7 +160,7 @@ const ZapierGuide = () => {
                         {
                           language: "bash",
                           label: "cURL",
-                          code: `curl -X POST ${apiBaseUrl}/test-data-generator \\
+                          code: `curl -X POST ${apiBaseUrl}/crediq-score \\
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"type": "transaction", "count": 1}'`
