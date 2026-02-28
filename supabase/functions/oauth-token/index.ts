@@ -296,7 +296,6 @@ Deno.serve(async (req) => {
         JSON.stringify(refreshTokenResponse),
         { status: 200, headers: refreshResponseHeaders }
       );
-    }
 
     } else if (grant_type === 'client_credentials') {
       // ─── Client Credentials Grant (M2M / External API funding) ───
