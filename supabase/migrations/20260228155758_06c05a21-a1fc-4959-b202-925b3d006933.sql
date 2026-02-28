@@ -1,0 +1,1 @@
+UPDATE institutions SET institution_name = 'Kang' WHERE id = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
