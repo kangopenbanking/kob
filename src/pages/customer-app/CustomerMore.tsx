@@ -9,7 +9,6 @@ import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useRecentBillPayments } from '@/hooks/useCustomerData';
-import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { format } from 'date-fns';
 
 const allQuickActions = [
@@ -65,13 +64,6 @@ const CustomerMore: React.FC = () => {
           ))}
         </div>
       </motion.div>
-
-      {/* Media Banner */}
-      {tenant.mediaSections && tenant.mediaSections.length > 0 && (
-        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.03 }}>
-          <MediaBanner items={tenant.mediaSections} cardSize="medium" />
-        </motion.div>
-      )}
 
       {/* Recent Bill Payments (Live) */}
       {!isViewOnly && (

@@ -12,6 +12,7 @@ import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvi
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSpendingSummary } from '@/hooks/useCustomerData';
+import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
 
 /* ─── Service Section Data (static config — NOT mock data) ─── */
@@ -336,6 +337,13 @@ const CustomerHome: React.FC = () => {
               <p className="text-[10px] font-medium text-[hsl(0,30%,45%)]">This {period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'}</p>
             </div>
           </div>
+        </motion.div>
+      )}
+
+      {/* ─── Media Banner ─── */}
+      {tenant.mediaSections && tenant.mediaSections.length > 0 && (
+        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.17 }}>
+          <MediaBanner items={tenant.mediaSections} cardSize="medium" />
         </motion.div>
       )}
 
