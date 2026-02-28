@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Search, BookOpen, Download, ChevronRight, ChevronLeft,
   Loader2, GraduationCap, CheckCircle2, Circle, List, X,
+  Landmark, Smartphone, Code, ClipboardList,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -25,10 +26,10 @@ interface GlossaryItem {
   definition: string;
 }
 
-const manualMeta: Record<string, { title: string; subtitle: string; code: string; icon: string }> = {
-  banks: { title: 'Banking & FI Training', subtitle: 'Step-by-step guide for banks and financial institutions', code: 'KOB-MAN-BANK', icon: '🏦' },
-  customers: { title: 'Customer Training', subtitle: 'Learn how to use the Kang app from start to finish', code: 'KOB-MAN-CUST', icon: '📱' },
-  developers: { title: 'Developer Training', subtitle: 'API integration course with hands-on examples', code: 'KOB-MAN-DEV', icon: '💻' },
+const manualMeta: Record<string, { title: string; subtitle: string; code: string; icon: React.ElementType }> = {
+  banks: { title: 'Banking & FI Training', subtitle: 'Step-by-step guide for banks and financial institutions', code: 'KOB-MAN-BANK', icon: Landmark },
+  customers: { title: 'Customer Training', subtitle: 'Learn how to use the Kang app from start to finish', code: 'KOB-MAN-CUST', icon: Smartphone },
+  developers: { title: 'Developer Training', subtitle: 'API integration course with hands-on examples', code: 'KOB-MAN-DEV', icon: Code },
 };
 
 const COMPLETED_KEY = 'kob-manual-completed';
@@ -199,7 +200,7 @@ const ProductManual: React.FC = () => {
               >
                 <List className="h-5 w-5 text-foreground" />
               </button>
-              <span className="text-lg">{meta.icon}</span>
+              <meta.icon className="h-5 w-5 text-primary" />
               <div className="hidden sm:block">
                 <h1 className="text-sm font-bold text-foreground leading-tight">{meta.title}</h1>
                 <p className="text-xs text-muted-foreground">
@@ -247,7 +248,7 @@ const ProductManual: React.FC = () => {
                   : 'text-muted-foreground hover:bg-muted'
               }`}
             >
-              <span>{m.icon}</span>
+              <m.icon className="h-4 w-4" />
               {m.title}
             </Link>
           ))}
@@ -292,7 +293,7 @@ const ProductManual: React.FC = () => {
                     : 'text-muted-foreground hover:bg-muted'
                 }`}
               >
-                <span className="text-base">📋</span>
+                <ClipboardList className="h-4 w-4 text-primary shrink-0" />
                 Overview
               </button>
               {sections.map((s, i) => {
@@ -449,7 +450,7 @@ const ProductManual: React.FC = () => {
                   {/* Hero card */}
                   <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent p-8 md:p-10 mb-6">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-4xl">{meta.icon}</span>
+                      <meta.icon className="h-9 w-9 text-primary" />
                       <div>
                         <h1 className="text-2xl md:text-3xl font-extrabold text-foreground">{meta.title}</h1>
                         <p className="text-muted-foreground mt-1">{meta.subtitle}</p>
