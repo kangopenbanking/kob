@@ -1,222 +1,278 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Banknote, MapPin, Smartphone, Building2, CheckCircle2, CreditCard, Wallet, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, AlertCircle, Banknote, Plus } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
-interface CashOutMethod {
-  key: string;
-  label: string;
-  description: string;
-  icon: React.ElementType;
-  color: string;
-  iconColor: string;
-  fields: { key: string; label: string; placeholder: string; type?: string; optional?: boolean }[];
-}
+const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 
-const allMethods: CashOutMethod[] = [
-  {
-    key: 'bank_transfer', label: 'Bank Transfer', description: 'Withdraw to your bank account',
-    icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]',
-    fields: [
-      { key: 'bankName', label: 'Bank Name', placeholder: 'e.g. Afriland First Bank' },
-      { key: 'accountNumber', label: 'Account Number', placeholder: 'Enter account number' },
-      { key: 'accountName', label: 'Account Holder Name', placeholder: 'Full name on account' },
-    ],
-  },
-  {
-    key: 'mobile_money', label: 'Mobile Money', description: 'Withdraw to MoMo wallet',
-    icon: Smartphone, color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]',
-    fields: [
-      { key: 'provider', label: 'Provider', placeholder: 'MTN MoMo / Orange Money' },
-      { key: 'phoneNumber', label: 'Phone Number', placeholder: '+237 6XX XXX XXX', type: 'tel' },
-      { key: 'accountName', label: 'Account Name', placeholder: 'Name on MoMo account' },
-    ],
-  },
-  {
-    key: 'paypal', label: 'PayPal', description: 'Withdraw to PayPal account',
-    icon: Wallet, color: 'bg-[hsl(210,70%,90%)]', iconColor: 'text-[hsl(210,70%,50%)]',
-    fields: [
-      { key: 'paypalEmail', label: 'PayPal Email', placeholder: 'your@email.com', type: 'email' },
-      { key: 'confirmEmail', label: 'Confirm Email', placeholder: 'Confirm PayPal email', type: 'email' },
-    ],
-  },
-  {
-    key: 'agent', label: 'Agent Cashout', description: 'Withdraw at a nearby agent',
-    icon: MapPin, color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]',
-    fields: [
-      { key: 'agentCode', label: 'Agent Code', placeholder: 'Enter agent code (optional)', optional: true },
-    ],
-  },
-];
+const iconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
+  bank_account: { icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
+  momo_mtn: { icon: Smartphone, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
+  momo_orange: { icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
+  paypal: { icon: Wallet, color: 'bg-[hsl(210,70%,90%)]', iconColor: 'text-[hsl(210,70%,50%)]' },
+  bank_card: { icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
+};
+
+const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 const CustomerCashOut: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
   const [amount, setAmount] = useState('');
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [formData, setFormData] = useState<Record<string, string>>({});
+  const [selectedAccount, setSelectedAccount] = useState<any>(null);
+  const [step, setStep] = useState<'dest' | 'amount' | 'confirm' | 'success'>('dest');
   const [processing, setProcessing] = useState(false);
-  const [done, setDone] = useState(false);
-  const [step, setStep] = useState<'method' | 'details'>('method');
 
-  // Fetch admin-managed cash out config
-  const { data: enabledMethods } = useQuery({
-    queryKey: ['cashout-config'],
+  // Fetch linked accounts
+  const { data: linkedAccounts = [], isLoading: acctLoading } = useQuery({
+    queryKey: ['customer-linked-accounts', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
-      return allMethods.map(m => m.key);
+      const { data, error } = await (supabase as any)
+        .from('customer_linked_accounts')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false });
+      if (error) throw error;
+      return data || [];
     },
   });
 
-  const availableMethods = allMethods.filter(m => enabledMethods?.includes(m.key));
-  const currentMethod = allMethods.find(m => m.key === selectedMethod);
+  // Fetch withdrawal fee structure from admin
+  const { data: feeStructure } = useQuery({
+    queryKey: ['withdrawal-fee', KANG_PLATFORM_ID],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('fee_structures')
+        .select('*')
+        .eq('institution_id', KANG_PLATFORM_ID)
+        .eq('transaction_type', 'withdrawal')
+        .eq('is_active', true)
+        .order('effective_from', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  const handleSelectMethod = (key: string) => {
-    setSelectedMethod(key);
-    setFormData({});
-    setStep('details');
+  const calculateFee = (amt: number): number => {
+    if (!feeStructure || amt <= 0) return 0;
+    const fs = feeStructure as any;
+    let fee = 0;
+    if (fs.fee_model === 'fixed') {
+      fee = fs.fixed_amount || 0;
+    } else if (fs.fee_model === 'percentage') {
+      fee = (amt * (fs.percentage_rate || 0)) / 100;
+    } else if (fs.fee_model === 'hybrid') {
+      fee = (fs.fixed_amount || 0) + (amt * (fs.percentage_rate || 0)) / 100;
+    }
+    if (fs.min_fee_amount && fee < fs.min_fee_amount) fee = fs.min_fee_amount;
+    if (fs.max_fee_amount && fee > fs.max_fee_amount) fee = fs.max_fee_amount;
+    return Math.round(fee);
   };
 
-  const handleCashOut = () => {
-    if (!amount || Number(amount) <= 0) { toast.error('Enter a valid amount'); return; }
-    if (!currentMethod) return;
-    // Validate required fields
-    for (const field of currentMethod.fields) {
-      if (!field.optional && !formData[field.key]?.trim()) {
-        toast.error(`Enter ${field.label.toLowerCase()}`);
-        return;
-      }
-    }
-    // PayPal email confirmation
-    if (selectedMethod === 'paypal' && formData.paypalEmail !== formData.confirmEmail) {
-      toast.error('PayPal emails do not match'); return;
-    }
+  const numAmount = Number(amount) || 0;
+  const fee = calculateFee(numAmount);
+  const netAmount = Math.max(numAmount - fee, 0);
+
+  const getIcon = (type: string) => iconMap[type] || iconMap.bank_account;
+
+  const handleConfirm = () => {
+    if (!amount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
+    if (numAmount <= fee) { toast.error('Amount must be greater than the fee'); return; }
+    setStep('confirm');
+  };
+
+  const handleWithdraw = () => {
     setProcessing(true);
     setTimeout(() => {
       setProcessing(false);
-      setDone(true);
-      toast.success(`Cash out of XAF ${Number(amount).toLocaleString()} via ${currentMethod.label} initiated`);
-      setTimeout(() => {
-        setDone(false);
-        setAmount('');
-        setSelectedMethod(null);
-        setFormData({});
-        setStep('method');
-      }, 2500);
-    }, 1500);
+      setStep('success');
+      toast.success(`XAF ${netAmount.toLocaleString()} withdrawal initiated`);
+      setTimeout(() => navigate(-1), 2500);
+    }, 1800);
+  };
+
+  const goBack = () => {
+    if (step === 'amount') { setStep('dest'); setSelectedAccount(null); }
+    else if (step === 'confirm') setStep('amount');
+    else navigate(-1);
   };
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
-        <button onClick={() => { if (step === 'details') { setStep('method'); setSelectedMethod(null); } else navigate(-1); }}>
+        <button onClick={goBack}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
         <h1 className="text-xl font-bold text-foreground">Cash Out</h1>
       </div>
 
       <AnimatePresence mode="wait">
-        {done ? (
+        {step === 'success' ? (
           <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
             className="flex flex-col items-center gap-4 py-16">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(150,40%,90%)]">
               <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
             </div>
-            <p className="text-lg font-bold text-foreground">Cash Out Initiated!</p>
-            <p className="text-sm text-muted-foreground">XAF {Number(amount || 0).toLocaleString()} via {currentMethod?.label}</p>
+            <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
+            <p className="text-sm text-muted-foreground">XAF {netAmount.toLocaleString()} to {selectedAccount?.account_name}</p>
+            <p className="text-xs text-muted-foreground">Fee: XAF {fee.toLocaleString()}</p>
           </motion.div>
-        ) : step === 'method' ? (
-          <motion.div key="method" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
-            {/* Amount Input */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center gap-2 rounded-3xl bg-[hsl(25,60%,35%)] p-8">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Withdrawal Amount</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-lg font-bold text-[hsl(0,0%,100%)]/60">XAF</span>
-                <input type="text" inputMode="numeric" value={amount} onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
-                  placeholder="0" className="bg-transparent text-4xl font-bold text-[hsl(0,0%,100%)] outline-none w-full text-center placeholder:text-[hsl(0,0%,100%)]/30" />
+        ) : step === 'dest' ? (
+          <motion.div key="dest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
+            {/* Fee notice */}
+            <div className="flex items-start gap-3 rounded-2xl bg-[hsl(45,70%,90%)] p-4">
+              <AlertCircle className="h-5 w-5 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
+              <div>
+                <p className="text-xs font-bold text-foreground">Withdrawal Fee Applies</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {feeStructure ? (
+                    (feeStructure as any).fee_model === 'percentage'
+                      ? `${(feeStructure as any).percentage_rate}% fee (min XAF ${((feeStructure as any).min_fee_amount || 0).toLocaleString()}, max XAF ${((feeStructure as any).max_fee_amount || 0).toLocaleString()})`
+                      : (feeStructure as any).fee_model === 'fixed'
+                        ? `Flat fee of XAF ${((feeStructure as any).fixed_amount || 0).toLocaleString()}`
+                        : 'Fee applies per admin schedule'
+                  ) : 'Fee schedule loading...'}
+                </p>
               </div>
-            </motion.div>
+            </div>
 
-            {/* Methods */}
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Withdrawal Method</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Withdraw To</p>
 
-            {availableMethods.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-8 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(0,60%,93%)]">
-                  <AlertCircle className="h-6 w-6 text-[hsl(0,60%,50%)]" strokeWidth={1.5} />
+            {acctLoading ? (
+              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+            ) : linkedAccounts.length === 0 ? (
+              <div className="flex flex-col items-center gap-3 py-12">
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                  <Banknote className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-bold text-foreground">No Cash Out Methods Available</p>
-                <p className="text-xs text-muted-foreground">Cash out is currently disabled by your institution.</p>
+                <p className="text-sm font-semibold text-foreground">No linked accounts</p>
+                <p className="text-xs text-muted-foreground text-center">Link an account first to withdraw funds.</p>
+                <Button onClick={() => navigate('/app/linked-accounts')} className="rounded-2xl mt-2">
+                  <Plus className="h-4 w-4 mr-1" /> Link Account
+                </Button>
               </div>
             ) : (
               <div className="space-y-2">
-                {availableMethods.map((m) => (
-                  <button key={m.key} onClick={() => handleSelectMethod(m.key)}
-                    className="flex w-full items-center gap-3 rounded-3xl border-2 border-border bg-card p-4 text-left transition-all hover:border-primary active:scale-[0.98]">
-                    <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${m.color}`}>
-                      <m.icon className={`h-5 w-5 ${m.iconColor}`} strokeWidth={1.5} />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-foreground">{m.label}</p>
-                      <p className="text-[11px] text-muted-foreground">{m.description}</p>
-                    </div>
-                    <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" strokeWidth={1.5} />
-                  </button>
-                ))}
+                {linkedAccounts.map((acc: any) => {
+                  const { icon: Icon, color, iconColor } = getIcon(acc.account_type);
+                  return (
+                    <button key={acc.id} onClick={() => { setSelectedAccount(acc); setStep('amount'); }}
+                      className="flex w-full items-center gap-3 rounded-3xl border-2 border-border bg-card p-4 text-left transition-all hover:border-primary active:scale-[0.98]">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${color}`}>
+                        <Icon className={`h-5 w-5 ${iconColor}`} strokeWidth={1.5} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-foreground">{acc.account_name || acc.account_type}</p>
+                        <p className="text-[11px] text-muted-foreground">{acc.provider_name} {acc.last4 ? `•••• ${acc.last4}` : ''}</p>
+                      </div>
+                      <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" strokeWidth={1.5} />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </motion.div>
-        ) : (
-          <motion.div key="details" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
-            {/* Selected method header */}
-            {currentMethod && (
-              <div className="flex items-center gap-3 rounded-3xl bg-card border-2 border-border p-4">
-                <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${currentMethod.color}`}>
-                  <currentMethod.icon className={`h-5 w-5 ${currentMethod.iconColor}`} strokeWidth={1.5} />
+        ) : step === 'amount' ? (
+          <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
+            {/* Destination display */}
+            {selectedAccount && (() => {
+              const { icon: Icon, color, iconColor } = getIcon(selectedAccount.account_type);
+              return (
+                <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
+                    <Icon className={`h-5 w-5 ${iconColor}`} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">To: {selectedAccount.account_name}</p>
+                    <p className="text-[10px] text-muted-foreground">{selectedAccount.provider_name} {selectedAccount.last4 ? `•••• ${selectedAccount.last4}` : ''}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-foreground">{currentMethod.label}</p>
-                  <p className="text-[11px] text-muted-foreground">{currentMethod.description}</p>
-                </div>
-              </div>
-            )}
+              );
+            })()}
 
-            {/* Amount display */}
-            <div className="rounded-2xl bg-muted p-3 text-center">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Amount</p>
-              <p className="text-xl font-bold text-foreground">XAF {Number(amount || 0).toLocaleString()}</p>
+            {/* Amount Input */}
+            <div className="flex flex-col items-center gap-2 rounded-3xl bg-[hsl(25,60%,35%)] p-8">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Withdrawal Amount</p>
+              <div className="flex items-baseline gap-1">
+                <span className="text-lg font-bold text-[hsl(0,0%,100%)]/60">XAF</span>
+                <input type="text" inputMode="numeric" value={amount}
+                  onChange={(e) => setAmount(e.target.value.replace(/\D/g, ''))}
+                  placeholder="0" className="bg-transparent text-4xl font-bold text-[hsl(0,0%,100%)] outline-none w-full text-center placeholder:text-[hsl(0,0%,100%)]/30" />
+              </div>
             </div>
 
-            {/* Form fields */}
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{currentMethod?.label} Details</p>
-              {currentMethod?.fields.map(field => (
-                <div key={field.key} className="space-y-1">
-                  <label className="text-[11px] font-semibold text-muted-foreground">{field.label}</label>
-                  <Input
-                    type={field.type || 'text'}
-                    value={formData[field.key] || ''}
-                    onChange={e => setFormData({ ...formData, [field.key]: e.target.value })}
-                    placeholder={field.placeholder}
-                    className="rounded-xl"
-                  />
-                </div>
+            {/* Quick amounts */}
+            <div className="flex gap-2 flex-wrap">
+              {quickAmounts.map(a => (
+                <button key={a} onClick={() => setAmount(String(a))}
+                  className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${amount === String(a) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+                  {a.toLocaleString()}
+                </button>
               ))}
             </div>
 
-            {/* Fee notice */}
-            <div className="flex items-start gap-2 rounded-2xl bg-[hsl(45,70%,90%)] p-3">
-              <AlertCircle className="h-4 w-4 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
-              <p className="text-[11px] text-[hsl(45,60%,35%)]">A processing fee may apply. The exact fee will be shown before confirmation.</p>
+            {/* Live fee calculation */}
+            {numAmount > 0 && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                className="rounded-2xl bg-card border border-border p-4 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-semibold text-foreground">XAF {numAmount.toLocaleString()}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Fee</span>
+                  <span className="font-semibold text-destructive">- XAF {fee.toLocaleString()}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between text-sm">
+                  <span className="font-bold text-foreground">You receive</span>
+                  <span className="font-extrabold text-foreground">XAF {netAmount.toLocaleString()}</span>
+                </div>
+              </motion.div>
+            )}
+
+            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || numAmount <= fee} className="w-full rounded-2xl h-12 text-sm font-bold">
+              Continue
+            </Button>
+          </motion.div>
+        ) : (
+          <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
+            <p className="text-center text-sm font-semibold text-muted-foreground">Confirm Withdrawal</p>
+
+            <div className="rounded-3xl bg-card border-2 border-border p-5 space-y-4">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Withdrawal Amount</span>
+                <span className="font-bold text-foreground">XAF {numAmount.toLocaleString()}</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Fee ({feeStructure ? `${(feeStructure as any).percentage_rate || 0}%` : ''})</span>
+                <span className="font-bold text-destructive">- XAF {fee.toLocaleString()}</span>
+              </div>
+              <div className="border-t border-border pt-3 flex justify-between text-sm">
+                <span className="text-muted-foreground">To</span>
+                <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{selectedAccount?.provider_name}</span>
+                <span>{selectedAccount?.last4 ? `•••• ${selectedAccount.last4}` : ''}</span>
+              </div>
+              <div className="border-t border-border pt-3 flex justify-between text-base">
+                <span className="font-bold text-foreground">You receive</span>
+                <span className="font-extrabold text-foreground">XAF {netAmount.toLocaleString()}</span>
+              </div>
             </div>
 
-            <Button className="w-full rounded-2xl h-12 text-sm font-bold" disabled={!amount || processing} onClick={handleCashOut}>
+            <Button onClick={handleWithdraw} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
-                <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> Processing...</span>
+                <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
               ) : (
                 <><Banknote className="mr-2 h-4 w-4" strokeWidth={1.5} /> Confirm Cash Out</>
               )}

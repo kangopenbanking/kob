@@ -333,6 +333,8 @@ import CustomerBank from "./pages/customer-app/CustomerBank";
 import CustomerSplitBills from "./pages/customer-app/CustomerSplitBills";
 import CustomerPayLinks from "./pages/customer-app/CustomerPayLinks";
 import CustomerCashOut from "./pages/customer-app/CustomerCashOut";
+import CustomerLinkedAccounts from "./pages/customer-app/CustomerLinkedAccounts";
+import CustomerFundWallet from "./pages/customer-app/CustomerFundWallet";
 import CustomerRecurring from "./pages/customer-app/CustomerRecurring";
 import CustomerRewards from "./pages/customer-app/CustomerRewards";
 import CustomerPiggyBank from "./pages/customer-app/CustomerPiggyBank";
@@ -736,6 +738,8 @@ function App() {
               <Route path="settings" element={<CustomerSettings />} />
               <Route path="alerts" element={<CustomerAlerts />} />
               <Route path="help" element={<CustomerHelp />} />
+              <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />
+              <Route path="fund" element={<CustomerFundWallet />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
