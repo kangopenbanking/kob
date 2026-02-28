@@ -12,6 +12,9 @@ const footerSections = [
       { label: "Investor Relations", to: "/investors/technical-overview" },
       { label: "Contact", to: "/contact" },
       { label: "FAQ", to: "/faq" },
+      { label: "Bank Manual", to: "/manual/banks" },
+      { label: "Customer Guide", to: "/manual/customers" },
+      { label: "Developer Manual", to: "/manual/developers" },
     ],
   },
   {

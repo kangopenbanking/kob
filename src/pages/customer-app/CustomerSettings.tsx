@@ -1,15 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Lock, Fingerprint, ShieldCheck, Bell, Globe, DollarSign, Info, FileText, LogOut, ChevronRight, Mail } from 'lucide-react';
+import { ArrowLeft, User, Lock, Fingerprint, ShieldCheck, Bell, Globe, DollarSign, Info, FileText, LogOut, ChevronRight, Mail, Scale } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
+import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 
 const CustomerSettings: React.FC = () => {
   const navigate = useNavigate();
+  const [legalSlug, setLegalSlug] = useState('');
+  const [showLegalList, setShowLegalList] = useState(false);
+  const [showLegalPage, setShowLegalPage] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -143,12 +148,42 @@ const CustomerSettings: React.FC = () => {
         <Row icon={<DollarSign className="h-5 w-5" strokeWidth={1.5} />} label="Currency: XAF" />
       </Section>
 
+      <Section title="Legal & Policies">
+        <Row icon={<Scale className="h-5 w-5" strokeWidth={1.5} />} label="Legal & Policies" onClick={() => setShowLegalList(true)} />
+      </Section>
+
       <Section title="App">
         <Row icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label="App Version 2.1.0" right={<span />} />
-        <Row icon={<FileText className="h-5 w-5" strokeWidth={1.5} />} label="Terms of Service" onClick={() => toast.info('Terms of Service')} />
-        <Row icon={<FileText className="h-5 w-5" strokeWidth={1.5} />} label="Privacy Policy" onClick={() => toast.info('Privacy Policy')} />
         <Row icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
       </Section>
+
+      {/* Legal pages list overlay */}
+      {showLegalList && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
+          <div className="p-5">
+            <div className="flex items-center gap-3 mb-4">
+              <button onClick={() => setShowLegalList(false)}>
+                <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
+              </button>
+              <h1 className="text-lg font-bold text-foreground">Legal & Policies</h1>
+            </div>
+            <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setShowLegalList(false); setShowLegalPage(true); }} />
+          </div>
+        </motion.div>
+      )}
+
+      {/* Legal page viewer overlay */}
+      {showLegalPage && legalSlug && (
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
+          <AppLegalPageViewer slug={legalSlug} backPath="" />
+          <button
+            onClick={() => { setShowLegalPage(false); setShowLegalList(true); }}
+            className="fixed top-5 left-5 z-60 flex items-center gap-1 text-sm font-semibold text-primary"
+          >
+            <ArrowLeft className="h-4 w-4" /> Back
+          </button>
+        </motion.div>
+      )}
     </div>
   );
 };
