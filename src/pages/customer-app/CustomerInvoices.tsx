@@ -30,12 +30,7 @@ const statusConfig = {
   overdue: { icon: XCircle, color: 'text-[hsl(0,60%,50%)]', bg: 'bg-[hsl(0,60%,93%)]', label: 'Overdue' },
 };
 
-const initialInvoices: Invoice[] = [
-  { id: 'INV-001', client: 'Acme Corp', clientEmail: 'billing@acme.com', amount: 150000, status: 'paid', date: 'Feb 20', dueDate: 'Mar 20', items: [{ description: 'Web Development', quantity: 1, unitPrice: 150000 }], notes: '' },
-  { id: 'INV-002', client: 'Tech Solutions', clientEmail: 'pay@techsol.cm', amount: 85000, status: 'pending', date: 'Feb 25', dueDate: 'Mar 25', items: [{ description: 'Consulting', quantity: 5, unitPrice: 17000 }], notes: 'Net 30' },
-  { id: 'INV-003', client: 'Global Imports', clientEmail: 'finance@global.cm', amount: 320000, status: 'overdue', date: 'Feb 10', dueDate: 'Feb 25', items: [{ description: 'Logistics Fee', quantity: 1, unitPrice: 320000 }], notes: 'Urgent' },
-  { id: 'INV-004', client: 'Local Shop', clientEmail: 'shop@local.cm', amount: 45000, status: 'paid', date: 'Feb 18', dueDate: 'Mar 18', items: [{ description: 'POS Setup', quantity: 1, unitPrice: 45000 }], notes: '' },
-];
+const initialInvoices: Invoice[] = [];
 
 type StatusFilter = 'all' | 'paid' | 'pending' | 'overdue';
 
