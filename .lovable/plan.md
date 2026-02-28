@@ -1,51 +1,79 @@
 
 
-## Analysis: Banking vs Customer App Management Field Mismatches
+## Architecture Clarification
 
-After reviewing both management pages, the actual apps, and their respective tenant providers, here are the issues found:
+The current system treats the Customer App as institution-specific (`/app/:institutionId`), mirroring the Banking App pattern. The user wants a different model:
 
-### Problems in Banking App Management (`BankingAppManagement.tsx`)
+- **Banking Apps**: One per institution (current pattern is correct - `/bank/:institutionId`)
+- **Customer App**: ONE unified app for ALL customers (`/app/*`), not scoped to a single institution. Customers link to one or more banking institutions through the API.
 
-**1. Piggy Bank & Njangi tabs should NOT be in the Banking App Management**
-- The Banking App's `TenantProvider` (`AppFeatures`) only defines: `cards`, `savings`, `loans`, `credit_score`, `mobile_money`, `qr_payments`, `bill_payments`
-- Piggy Bank and Njangi are Customer App features (defined in `CustomerAppFeatures` in `CustomerTenantProvider.tsx`)
-- Even though the Banking App's "More" page (BankMore.tsx) links to piggy bank and njangi routes, those are shared services -- the **admin management** view should only show features native to that app's config model
-- The Banking App Management currently fetches and displays: Piggy Bank Plans tab, Njangi Groups tab, Piggy Bank stat card, Njangi stat card
-- These should be **removed** from Banking App Management since they belong in Customer App Management (which already has them)
+## Plan
 
-**2. `account_funding` feature toggle exists in Banking Management but not in `AppFeatures` type**
-- The `featureLabels` map lists `account_funding: "Account Funding"` but the actual `AppFeatures` interface in TenantProvider doesn't include it
-- This is a phantom toggle that does nothing
+### 1. Restructure Customer App routes from institution-scoped to unified
 
-**3. Preview bottom nav shows emoji** (minor)
-- Line 1158: `"Good afternoon 👋"` -- uses emoji, should be removed per design standards
+**File:** `src/App.tsx`
+- Change all `/app/:institutionId/*` routes to `/app/*` (no institutionId param)
+- Update splash, auth, register, onboarding, and all nested routes
 
-### Problems in Customer App Management (`CustomerAppManagement.tsx`)
+### 2. Replace CustomerTenantProvider with a unified Kang-branded context
 
-**4. Customer App sections are missing from the section order**
-- `CustomerTenantProvider` defines sections: `balance_card`, `quick_actions`, `media_banner`, `upcoming_bills`, `spending_stats`, `recent_activities`
-- But the Customer App Management only allows ordering: `balance_card`, `quick_actions`, `media_banner`, `recent_activities`
-- Missing: `upcoming_bills` and `spending_stats` from the reorderable section list
+**File:** `src/components/customer-app/CustomerTenantProvider.tsx`
+- Remove dependency on `institutionId` URL param
+- Hardcode Kang Open Banking branding (name: "Kang", platform primary color)
+- Customer app config comes from a single platform-level config, not per-institution
 
-### Implementation Plan
+### 3. Update CustomerAppLayout to remove institution scoping
 
-**Step 1: Clean Banking App Management**
-- Remove `useInstitutionPiggyBankPlans` and `useInstitutionNjangiGroups` hooks and their usage
-- Remove Piggy Bank and Njangi tab triggers and tab content
-- Remove Piggy Bank and Njangi stat cards
-- Remove `account_funding` from the feature toggle list (or add it to the actual AppFeatures type if intended)
-- Replace emoji in preview greeting
+**File:** `src/components/customer-app/CustomerAppLayout.tsx`
+- Remove `useParams` for institutionId
+- Set basePath to `/app`
+- Remove OneSignal institution scoping (or scope to platform-level)
 
-**Step 2: Fix Customer App Management section order**
-- Add `upcoming_bills` and `spending_stats` to `CustomerSectionKey` type and `sectionLabels` map
-- Add these to `defaultSectionOrder`
-- Add preview rendering for these sections
+### 4. Update all Customer App pages to remove institutionId from navigation
 
-**Step 3: Verify consistency**
-- Ensure Banking features config only shows toggles that exist in the `AppFeatures` interface
-- Ensure Customer features config matches `CustomerAppFeatures` interface
+**Files:** All `src/pages/customer-app/*.tsx` files
+- Remove `useParams` calls that extract `institutionId`
+- Update all `navigate()` calls from `/app/${institutionId}/...` to `/app/...`
+- Data fetching will use the user's linked accounts (from `customer_linked_accounts` table) to determine which institutions they're connected to, rather than URL-based scoping
 
-### Files to modify:
-- `src/pages/admin/BankingAppManagement.tsx` -- Remove Piggy Bank, Njangi tabs/stats/hooks; fix feature labels; remove emoji
-- `src/pages/admin/CustomerAppManagement.tsx` -- Add missing section keys (`upcoming_bills`, `spending_stats`)
+### 5. Update Customer App data hooks to be multi-institution
+
+**File:** `src/hooks/useCustomerData.ts`
+- Instead of filtering by a single `institution_id` from URL, fetch data across ALL institutions the user has linked accounts with
+- Use `customer_linked_accounts` table to get the user's connected institutions
+- Aggregate balances, transactions, etc. across all linked banking institutions
+
+### 6. Add institution selector/switcher in Customer App
+
+The Customer App home should show accounts from ALL linked banking institutions. Users can see which bank each account belongs to. This replaces the current single-institution view.
+
+### 7. Update admin Customer App Management
+
+**File:** `src/pages/admin/CustomerAppManagement.tsx`
+- The management page currently selects an institution and configures per-institution customer app settings
+- Restructure to manage the ONE unified customer app config at the platform level
+- Keep the institution list for viewing linked customers per institution
+
+### 8. Update Apps.tsx references
+
+**File:** `src/pages/Apps.tsx`
+- Change Customer App link from `/app/f493095b-037a-40cf-82bc-3a3ab74550dd` to `/app`
+- Update description to reflect unified app model
+
+### 9. Auto-initialize Banking App config on institution registration
+
+**File:** `supabase/functions/institution-register/index.ts`
+- Add default `app_config` with banking app defaults when inserting institution
+- Each institution gets their own Banking App automatically
+
+**File:** `supabase/functions/admin-institution-approve/index.ts`
+- Backfill `app_config` if missing during approval
+
+### 10. Deep-link support for cross-institution transfers
+
+Update transfer and payment flows in the Customer App to support selecting which linked institution/account to pay from, enabling the "one customer app connects to many banking apps" model via the API.
+
+---
+
+**Summary**: This restructures the Customer App from a per-institution clone to a single unified "Kang" wallet app where customers link multiple banking institutions. Banking Apps remain institution-specific. The Super Admin manages both from the admin portal.
 
