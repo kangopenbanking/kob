@@ -1,21 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Loader2, X, ChevronRight, Calendar, TrendingUp, Shield, CheckCircle2, Building2, Lock, Target, PiggyBank, Percent } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { usePiggyBankPlans, useCreatePiggyBankPlan, usePiggyBankPay } from '@/hooks/usePiggyBankData';
+import { CreateSavingsForm } from '@/components/savings/CreateSavingsForm';
 import BankSavingImg from '@/assets/Bank_Saving.png';
 import PersonalSavingImg from '@/assets/Personal_Savings.png';
 
 type SavingsCategory = 'bank' | 'personal' | null;
-type ViewMode = 'home' | 'list' | 'create';
+type ViewMode = 'home' | 'list' | 'create' | 'explore';
 
 const WELCOME_KEY = 'piggybank_welcome_seen';
+
+// Hook to fetch savings products grouped by institution
+function useSavingsProducts() {
+  return useQuery({
+    queryKey: ['savings-products-explore'],
+    queryFn: async () => {
+      const { data, error } = await (supabase
+        .from('savings_products') as any)
+        .select('*, institutions(id, institution_name, institution_type, logo_url)')
+        .eq('is_active', true)
+        .order('base_interest_rate', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+}
 
 const CustomerPiggyBank: React.FC = () => {
   const navigate = useNavigate();
@@ -27,6 +48,7 @@ const CustomerPiggyBank: React.FC = () => {
   const [showWelcome, setShowWelcome] = useState(false);
   const [view, setView] = useState<ViewMode>('home');
   const [selectedCategory, setSelectedCategory] = useState<SavingsCategory>(null);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // Create form state
   const [planName, setPlanName] = useState('');
@@ -86,6 +108,20 @@ const CustomerPiggyBank: React.FC = () => {
     } catch { /* error handled by hook */ }
   };
 
+  const getHeaderTitle = () => {
+    if (view === 'home') return 'Piggy Bank';
+    if (view === 'explore') return 'Explore Savings';
+    if (view === 'list') return selectedCategory === 'bank' ? 'Bank Savings' : 'Personal Savings';
+    return 'New Savings Plan';
+  };
+
+  const handleBack = () => {
+    if (view === 'create') setView('list');
+    else if (view === 'list') { setView('home'); setSelectedCategory(null); }
+    else if (view === 'explore') { setView('home'); setSelectedCategory(null); }
+    else navigate(-1);
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col gap-5 p-5">
@@ -102,15 +138,20 @@ const CustomerPiggyBank: React.FC = () => {
       {/* Welcome Popup */}
       <WelcomeDialog open={showWelcome} onClose={dismissWelcome} />
 
-      <Header onBack={() => {
-        if (view === 'create') setView('list');
-        else if (view === 'list') { setView('home'); setSelectedCategory(null); }
-        else navigate(-1);
-      }} title={
-        view === 'home' ? 'Piggy Bank' :
-        view === 'list' ? (selectedCategory === 'bank' ? 'Bank Savings' : 'Personal Savings') :
-        'New Savings Plan'
-      } />
+      {/* Savings Form Dialog */}
+      {selectedProduct && (
+        <CreateSavingsForm
+          products={[selectedProduct]}
+          onSuccess={() => {
+            setSelectedProduct(null);
+            setView('home');
+            toast.success('Savings account opened!');
+          }}
+          onCancel={() => setSelectedProduct(null)}
+        />
+      )}
+
+      <Header onBack={handleBack} title={getHeaderTitle()} />
 
       <AnimatePresence mode="wait">
         {view === 'home' && (
@@ -123,7 +164,8 @@ const CustomerPiggyBank: React.FC = () => {
                 subtitle={`${bankPlans.length} plan${bankPlans.length !== 1 ? 's' : ''}`}
                 saved={totalSaved(bankPlans)}
                 bgClass="bg-[hsl(260,40%,65%)]"
-                onClick={() => { setSelectedCategory('bank'); setView('list'); }}
+                buttonLabel="Explore Now"
+                onClick={() => { setSelectedCategory('bank'); setView('explore'); }}
               />
               <CategoryCard
                 image={PersonalSavingImg}
@@ -131,6 +173,7 @@ const CustomerPiggyBank: React.FC = () => {
                 subtitle={`${personalPlans.length} plan${personalPlans.length !== 1 ? 's' : ''}`}
                 saved={totalSaved(personalPlans)}
                 bgClass="bg-[hsl(45,70%,82%)]"
+                buttonLabel="Start Saving"
                 onClick={() => { setSelectedCategory('personal'); setView('list'); }}
               />
             </div>
@@ -147,6 +190,15 @@ const CustomerPiggyBank: React.FC = () => {
               </div>
             </div>
           </motion.div>
+        )}
+
+        {view === 'explore' && (
+          <ExploreView
+            key="explore"
+            onApply={(product: any) => setSelectedProduct(product)}
+            onViewPlans={() => { setSelectedCategory('bank'); setView('list'); }}
+            bankPlansCount={bankPlans.length}
+          />
         )}
 
         {view === 'list' && selectedCategory && (
@@ -239,6 +291,175 @@ const CustomerPiggyBank: React.FC = () => {
   );
 };
 
+// ─── Explore View ───
+
+function ExploreView({ onApply, onViewPlans, bankPlansCount }: {
+  onApply: (product: any) => void;
+  onViewPlans: () => void;
+  bankPlansCount: number;
+}) {
+  const { data: products = [], isLoading } = useSavingsProducts();
+
+  // Group products by institution
+  const grouped = (products as any[]).reduce((acc: Record<string, { institution: any; products: any[] }>, product: any) => {
+    const inst = product.institutions;
+    const instId = inst?.id || 'unknown';
+    if (!acc[instId]) {
+      acc[instId] = { institution: inst, products: [] };
+    }
+    acc[instId].products.push(product);
+    return acc;
+  }, {} as Record<string, { institution: any; products: any[] }>);
+
+  const institutions = Object.values(grouped);
+
+  const formatCurrency = (amount: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
+
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'fixed_deposit': return <Lock className="h-4 w-4" />;
+      case 'goal_savings': return <Target className="h-4 w-4" />;
+      default: return <PiggyBank className="h-4 w-4" />;
+    }
+  };
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'fixed_deposit': return 'Fixed Deposit';
+      case 'goal_savings': return 'Goal Savings';
+      case 'high_yield': return 'High Yield';
+      case 'kids_savings': return 'Kids Savings';
+      default: return 'Savings';
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <motion.div key="explore" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="flex justify-center py-16">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div key="explore" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} className="flex flex-col gap-5">
+      {/* Intro banner */}
+      <div className="rounded-3xl bg-gradient-to-br from-[hsl(260,40%,92%)] to-[hsl(260,50%,85%)] p-5">
+        <p className="text-sm font-bold text-foreground">Explore Savings Products</p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Compare savings accounts from top financial institutions and apply directly.
+        </p>
+        {bankPlansCount > 0 && (
+          <Button variant="link" size="sm" className="px-0 mt-2 h-auto text-xs text-primary" onClick={onViewPlans}>
+            View my {bankPlansCount} existing plan{bankPlansCount !== 1 ? 's' : ''} →
+          </Button>
+        )}
+      </div>
+
+      {institutions.length === 0 ? (
+        <div className="flex flex-col items-center gap-3 py-12">
+          <Building2 className="h-12 w-12 text-muted-foreground/40" />
+          <p className="text-sm font-semibold text-muted-foreground">No savings products available</p>
+          <p className="text-xs text-muted-foreground text-center max-w-[220px]">
+            Financial institutions haven't published savings products yet. Check back soon!
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-6">
+          {institutions.map(({ institution, products: instProducts }, idx) => (
+            <motion.div
+              key={institution?.id || idx}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.08 }}
+            >
+              {/* Institution Header */}
+              <div className="flex items-center gap-3 mb-3">
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                  {institution?.logo_url ? (
+                    <img src={institution.logo_url} alt={institution.institution_name} className="h-6 w-6 rounded object-contain" />
+                  ) : (
+                    <Building2 className="h-5 w-5 text-primary" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground truncate">{institution?.institution_name || 'Institution'}</p>
+                  {institution?.institution_type && (
+                    <Badge variant="secondary" className="text-[9px] h-4 px-1.5 mt-0.5">
+                      {institution.institution_type.replace(/_/g, ' ')}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+
+              {/* Products */}
+              <div className="space-y-3">
+                {instProducts.map((product: any) => (
+                  <div
+                    key={product.id}
+                    className="rounded-2xl border border-border bg-card p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                          {getTypeIcon(product.savings_type)}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">{product.product_name}</p>
+                          <p className="text-[10px] text-muted-foreground">{getTypeLabel(product.savings_type)}</p>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0 ml-2">
+                        <p className="text-lg font-bold text-primary">{product.base_interest_rate}%</p>
+                        <p className="text-[9px] text-muted-foreground">p.a.</p>
+                      </div>
+                    </div>
+
+                    {product.description && (
+                      <p className="text-[11px] text-muted-foreground mb-3 line-clamp-2">{product.description}</p>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-2 mb-3">
+                      <div className="rounded-xl bg-muted/50 px-3 py-2">
+                        <p className="text-[9px] text-muted-foreground">Min. Opening</p>
+                        <p className="text-xs font-semibold text-foreground">{formatCurrency(product.min_opening_balance)}</p>
+                      </div>
+                      <div className="rounded-xl bg-muted/50 px-3 py-2">
+                        <p className="text-[9px] text-muted-foreground">Interest Paid</p>
+                        <p className="text-xs font-semibold text-foreground capitalize">{product.interest_payment_frequency}</p>
+                      </div>
+                      {product.lock_in_period_months && (
+                        <div className="rounded-xl bg-muted/50 px-3 py-2">
+                          <p className="text-[9px] text-muted-foreground">Lock-in</p>
+                          <p className="text-xs font-semibold text-foreground">{product.lock_in_period_months} months</p>
+                        </div>
+                      )}
+                      {product.max_withdrawals_per_month && (
+                        <div className="rounded-xl bg-muted/50 px-3 py-2">
+                          <p className="text-[9px] text-muted-foreground">Withdrawals/Mo</p>
+                          <p className="text-xs font-semibold text-foreground">{product.max_withdrawals_per_month}</p>
+                        </div>
+                      )}
+                    </div>
+
+                    <Button
+                      className="w-full rounded-xl h-10 text-xs font-semibold"
+                      onClick={() => onApply(product)}
+                    >
+                      Apply Now
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 // ─── Sub-components ───
 
 function Header({ onBack, title = 'Piggy Bank' }: { onBack: () => void; title?: string }) {
@@ -252,8 +473,8 @@ function Header({ onBack, title = 'Piggy Bank' }: { onBack: () => void; title?: 
   );
 }
 
-function CategoryCard({ image, title, subtitle, saved, bgClass, onClick }: {
-  image: string; title: string; subtitle: string; saved: number; bgClass: string; onClick: () => void;
+function CategoryCard({ image, title, subtitle, saved, bgClass, buttonLabel, onClick }: {
+  image: string; title: string; subtitle: string; saved: number; bgClass: string; buttonLabel: string; onClick: () => void;
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -279,7 +500,7 @@ function CategoryCard({ image, title, subtitle, saved, bgClass, onClick }: {
         className="w-full rounded-2xl h-10 text-xs font-semibold"
         size="sm"
       >
-        Start Saving
+        {buttonLabel}
       </Button>
     </div>
   );
