@@ -51,10 +51,6 @@ interface FeatureItem {
 const moneyMovement: FeatureItem[] = [
   { label: 'Add Money', description: 'Deposit from linked accounts', icon: Download, path: 'fund', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,35%)]' },
   { label: 'Transfer', description: 'Send money to anyone instantly', icon: Send, path: 'transfer', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,45%)]', featureKey: 'transfer' },
-  { label: 'Cash Out', description: 'Withdraw to your accounts', icon: Banknote, path: 'cash-out', color: 'bg-[hsl(45,70%,90%)]', iconColor: 'text-[hsl(45,60%,35%)]', borderColor: 'border-[hsl(45,60%,55%)]', featureKey: 'cash_out' },
-  { label: 'Request', description: 'Ask someone to pay you', icon: ArrowDownLeft, path: 'request', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,40%)]', featureKey: 'request' },
-  { label: 'Pay Links', description: 'Share a payment link', icon: Link2, path: 'pay-links', color: 'bg-[hsl(180,50%,90%)]', iconColor: 'text-[hsl(180,40%,35%)]', borderColor: 'border-[hsl(180,40%,55%)]', featureKey: 'pay_links' },
-  { label: 'Accounts', description: 'Manage linked accounts', icon: Building2, path: 'linked-accounts', color: 'bg-[hsl(225,50%,92%)]', iconColor: 'text-[hsl(225,40%,40%)]', borderColor: 'border-[hsl(225,40%,60%)]', featureKey: 'bank' },
 ];
 
 const paymentsBills: FeatureItem[] = [
@@ -71,8 +67,8 @@ const savingsGoals: FeatureItem[] = [
 ];
 
 const financialHealth: FeatureItem[] = [
-  { label: 'Credit Score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
-  { label: 'Rent Report', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
+  { label: 'Credit Score', description: 'Track & improve your score', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
+  { label: 'Rent Report', description: 'Build credit with rent', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
@@ -131,10 +127,10 @@ const CustomerHome: React.FC = () => {
 
   // Quick action buttons for hero card
   const heroActions = [
-    { label: 'Accounts', icon: Building2, path: 'linked-accounts', featureKey: 'bank' },
-    { label: 'Cash Out', icon: Banknote, path: 'cash-out', featureKey: 'cash_out' },
-    { label: 'Request', icon: ArrowDownLeft, path: 'request', featureKey: 'request' },
-    { label: 'Pay Links', icon: Link2, path: 'pay-links', featureKey: 'pay_links' },
+    { label: 'Accounts', icon: Building2, path: 'linked-accounts', featureKey: 'bank', iconColor: 'text-[hsl(225,60%,65%)]' },
+    { label: 'Cash Out', icon: Banknote, path: 'cash-out', featureKey: 'cash_out', iconColor: 'text-[hsl(45,70%,55%)]' },
+    { label: 'Request', icon: ArrowDownLeft, path: 'request', featureKey: 'request', iconColor: 'text-[hsl(340,60%,65%)]' },
+    { label: 'Pay Links', icon: Link2, path: 'pay-links', featureKey: 'pay_links', iconColor: 'text-[hsl(180,50%,55%)]' },
   ].filter(a => !a.featureKey || tenant.features[a.featureKey as keyof typeof tenant.features] !== false);
 
   // Admin-configurable hero background
@@ -305,8 +301,8 @@ const CustomerHome: React.FC = () => {
                     onClick={() => go(action.path)}
                     className="flex flex-col items-center gap-1.5"
                   >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground shadow-md">
-                      <Icon className="h-5 w-5 text-background" strokeWidth={1.5} />
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground shadow-md">
+                      <Icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
                     </div>
                     <span className="text-[10px] font-semibold text-primary-foreground/80">{action.label}</span>
                   </motion.button>
@@ -415,43 +411,23 @@ const CustomerHome: React.FC = () => {
       {visibleHealth.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.12 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Financial Health</p>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3">
             {visibleHealth.map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col items-center gap-2 rounded-3xl ${item.color} p-4 border-2 ${item.borderColor}`}>
-                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background/50">
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
+                className={`flex flex-col gap-2 rounded-3xl ${item.color} p-4 text-left`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.color}`}>
+                  <item.icon className={`h-4.5 w-4.5 ${item.iconColor}`} strokeWidth={2} />
                 </div>
-                <p className="text-[11px] font-bold text-foreground text-center leading-tight">{item.label}</p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider ${item.iconColor}">{item.label}</p>
+                <p className="text-lg font-bold text-foreground">View</p>
+                <p className="text-[10px] font-medium text-muted-foreground">{item.description}</p>
               </button>
             ))}
           </div>
         </motion.div>
       )}
 
-      {/* ─── Spending Stats (Live) ─── */}
-      {!isViewOnly && (
-        <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.15 }}>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="flex flex-col gap-2 rounded-3xl bg-[hsl(150,40%,90%)] p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(150,40%,80%)]">
-                <TrendingUp className="h-4.5 w-4.5 text-[hsl(150,40%,30%)]" strokeWidth={2} />
-              </div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(150,30%,35%)]">Earnings</p>
-              <p className="text-lg font-bold text-[hsl(150,40%,25%)]">{earnings.toLocaleString()}</p>
-              <p className="text-[10px] font-medium text-[hsl(150,30%,40%)]">This {period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'}</p>
-            </div>
-            <div className="flex flex-col gap-2 rounded-3xl bg-[hsl(0,60%,93%)] p-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,50%,85%)]">
-                <TrendingDown className="h-4.5 w-4.5 text-[hsl(0,50%,35%)]" strokeWidth={2} />
-              </div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(0,30%,40%)]">Spending</p>
-              <p className="text-lg font-bold text-[hsl(0,50%,30%)]">{spending.toLocaleString()}</p>
-              <p className="text-[10px] font-medium text-[hsl(0,30%,45%)]">This {period === 'W' ? 'week' : period === 'M' ? 'month' : 'year'}</p>
-            </div>
-          </div>
-        </motion.div>
-      )}
+      {/* Earnings & Spending cards hidden — data shown in hero section */}
 
       {/* ─── Media Banner ─── */}
       {tenant.mediaSections && tenant.mediaSections.length > 0 && (
