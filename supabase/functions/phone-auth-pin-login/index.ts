@@ -3,7 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -18,9 +18,9 @@ serve(async (req) => {
 
     const { phone_number, pin_code, captcha_session_id } = await req.json();
 
-    if (!phone_number || !pin_code || !captcha_session_id) {
+    if (!phone_number || !pin_code) {
       return new Response(
-        JSON.stringify({ error: 'phone_number, pin_code, and captcha_session_id are required' }),
+        JSON.stringify({ error: 'phone_number and pin_code are required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -33,20 +33,22 @@ serve(async (req) => {
       );
     }
 
-    // Verify captcha first
-    const { data: captchaData, error: captchaError } = await supabase
-      .from('captcha_challenges')
-      .select('*')
-      .eq('session_id', captcha_session_id)
-      .eq('status', 'verified')
-      .gt('expires_at', new Date().toISOString())
-      .single();
+    // Verify captcha if provided (optional — PIN lockout provides brute-force protection)
+    if (captcha_session_id) {
+      const { data: captchaData, error: captchaError } = await supabase
+        .from('captcha_challenges')
+        .select('*')
+        .eq('session_id', captcha_session_id)
+        .eq('status', 'verified')
+        .gt('expires_at', new Date().toISOString())
+        .single();
 
-    if (captchaError || !captchaData) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired captcha session' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-      );
+      if (captchaError || !captchaData) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid or expired captcha session' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+        );
+      }
     }
 
     // Get profile by phone number
@@ -66,7 +68,7 @@ serve(async (req) => {
 
     if (!profile.pin_code_hash) {
       return new Response(
-        JSON.stringify({ error: 'No PIN code set for this account' }),
+        JSON.stringify({ error: 'No PIN code set for this account', no_pin: true }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -80,13 +82,14 @@ serve(async (req) => {
         JSON.stringify({ 
           error: `Account locked. Try again in ${minutesRemaining} minutes.`,
           locked_until: profile.pin_locked_until,
-          remaining_attempts: 0
+          remaining_attempts: 0,
+          locked: true,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
       );
     }
 
-    // Verify PIN (support salted SHA-256 format: s2$<saltHex>$<hashHex>)
+    // Verify PIN (salted SHA-256 format: s2$<saltHex>$<hashHex>)
     let pinValid = false;
     const stored = profile.pin_code_hash as string;
     if (stored.startsWith('s2$')) {
@@ -147,12 +150,16 @@ serve(async (req) => {
       }
 
       // Log success
-      await supabase.rpc('log_security_event', {
-        _user_id: profile.id,
-        _event_type: 'pin_login_success',
-        _event_category: 'authentication',
-        _metadata: { action: 'pin_login', method: 'pin' },
-      });
+      try {
+        await supabase.rpc('log_security_event', {
+          _user_id: profile.id,
+          _event_type: 'pin_login_success',
+          _event_category: 'authentication',
+          _metadata: { action: 'pin_login', method: 'pin' },
+        });
+      } catch (logErr) {
+        console.warn('Failed to log security event:', logErr);
+      }
 
       console.log(`PIN login successful for user: ${profile.id}`);
 
@@ -182,15 +189,16 @@ serve(async (req) => {
         .eq('id', profile.id);
 
       // Log failure
-      await supabase.rpc('log_security_event', {
-        _user_id: profile.id,
-        _event_type: 'pin_login_failed',
-        _event_category: 'authentication',
-        _metadata: { 
-          action: 'pin_login',
-          attempts: newAttempts 
-        },
-      });
+      try {
+        await supabase.rpc('log_security_event', {
+          _user_id: profile.id,
+          _event_type: 'pin_login_failed',
+          _event_category: 'authentication',
+          _metadata: { action: 'pin_login', attempts: newAttempts },
+        });
+      } catch (logErr) {
+        console.warn('Failed to log security event:', logErr);
+      }
 
       console.log(`PIN login failed for user: ${profile.id}, attempts: ${newAttempts}`);
 
