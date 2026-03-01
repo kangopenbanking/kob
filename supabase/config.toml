@@ -169,6 +169,18 @@ verify_jwt = false
 [functions.validate-bic]
 verify_jwt = false
 
+# RIB validator (Cameroon domestic)
+[functions.validate-rib]
+verify_jwt = false
+
+# Unified account identifier validator
+[functions.validate-account-identifier]
+verify_jwt = false
+
+# Cameroon bank directory
+[functions.directory-banks-cm]
+verify_jwt = false
+
 # Phase 1: Authentication & Security Functions
 
 [functions.phone-auth-send-otp]
