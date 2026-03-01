@@ -888,6 +888,8 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
   const [bgImage, setBgImage] = useState(appConfig.hero_bg_image || '');
   const [uploading, setUploading] = useState(false);
 
+  const isVideo = bgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(bgImage) : false;
+
   useEffect(() => {
     setBgColor(appConfig.hero_bg_color || '');
     setBgImage(appConfig.hero_bg_image || '');
@@ -910,21 +912,16 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
     onError: () => toast.error("Failed to save hero section"),
   });
 
-  const handleImageUpload = async (file: File) => {
+  const handleMediaUpload = async (file: File) => {
     setUploading(true);
     try {
       const ext = file.name.split('.').pop();
       const fileName = `hero-bg-${institutionId}-${Date.now()}.${ext}`;
       const { error: uploadError } = await supabase.storage.from('institution-assets').upload(fileName, file, { upsert: true });
-      if (uploadError) {
-        // Try creating the bucket first
-        await supabase.storage.createBucket('institution-assets', { public: true });
-        const { error: retryError } = await supabase.storage.from('institution-assets').upload(fileName, file, { upsert: true });
-        if (retryError) throw retryError;
-      }
+      if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('institution-assets').getPublicUrl(fileName);
       setBgImage(urlData.publicUrl);
-      toast.success('Image uploaded');
+      toast.success(`${file.type.startsWith('video/') ? 'Video' : 'Image'} uploaded`);
     } catch (err: any) {
       toast.error(err.message || 'Upload failed');
     } finally {
@@ -945,16 +942,22 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
           <div
             className="rounded-2xl h-40 flex items-end p-4 relative overflow-hidden"
             style={{
-              ...(bgImage ? {
+              ...(bgImage && !isVideo ? {
                 backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${bgImage})`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-              } : {
+              } : !bgImage ? {
                 background: bgColor || 'hsl(var(--primary))',
-              }),
+              } : {}),
             }}
           >
-            <div className="text-white">
+            {isVideo && bgImage && (
+              <>
+                <video src={bgImage} autoPlay loop muted playsInline className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-b from-black/15 to-black/35" />
+              </>
+            )}
+            <div className="relative text-white z-10">
               <p className="text-xs opacity-80">Getting funds</p>
               <p className="text-2xl font-bold">1,250,000 XAF</p>
             </div>
@@ -964,7 +967,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
         {/* Background Color */}
         <div className="space-y-2">
           <Label>Background Color</Label>
-          <p className="text-xs text-muted-foreground">CSS color value (e.g. #1a3a5c, hsl(217 91% 35%), linear-gradient(...)). Used when no image is set.</p>
+          <p className="text-xs text-muted-foreground">CSS color value (e.g. #1a3a5c, hsl(217 91% 35%), linear-gradient(...)). Used when no image/video is set.</p>
           <div className="flex gap-2">
             <Input value={bgColor} onChange={e => setBgColor(e.target.value)} placeholder="e.g. #1a3a5c or hsl(217, 91%, 35%)" />
             {bgColor && (
@@ -973,22 +976,26 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
           </div>
         </div>
 
-        {/* Background Image */}
+        {/* Background Image / Video */}
         <div className="space-y-2">
-          <Label>Background Image</Label>
-          <p className="text-xs text-muted-foreground">Upload or paste a URL for the hero cover image. Overrides the color when set.</p>
+          <Label>Background Image or Video</Label>
+          <p className="text-xs text-muted-foreground">Upload an image (JPG, PNG, WebP) or video (MP4, WebM). Overrides the color when set.</p>
           {bgImage && (
             <div className="relative w-full max-w-sm rounded-lg border overflow-hidden bg-muted">
-              <img src={bgImage} alt="Hero background" className="w-full h-32 object-cover" />
+              {isVideo ? (
+                <video src={bgImage} autoPlay loop muted playsInline className="w-full h-32 object-cover" />
+              ) : (
+                <img src={bgImage} alt="Hero background" className="w-full h-32 object-cover" />
+              )}
               <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setBgImage('')}>
                 <Trash2 className="h-3 w-3 mr-1" /> Remove
               </Button>
             </div>
           )}
           <div className="flex items-center gap-2">
-            <Input value={bgImage} onChange={e => setBgImage(e.target.value)} placeholder="Image URL or upload below" />
+            <Input value={bgImage} onChange={e => setBgImage(e.target.value)} placeholder="Image/Video URL or upload below" />
             <label className="cursor-pointer">
-              <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+              <input type="file" accept="image/*,video/mp4,video/webm,video/ogg" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleMediaUpload(f); }} />
               <Button variant="outline" size="icon" asChild disabled={uploading}>
                 <span>{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}</span>
               </Button>
