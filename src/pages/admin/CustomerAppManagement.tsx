@@ -18,7 +18,7 @@ import {
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ScanLine, ChevronRight, BarChart3, Monitor, ExternalLink,
   Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
-  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock
+  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock, Upload, ImageIcon
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
@@ -69,6 +69,8 @@ interface CustomerAppConfig {
     agent: boolean;
   };
   rewards_config: RewardsConfig;
+  hero_bg_color: string;
+  hero_bg_image: string;
 }
 
 type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'upcoming_bills' | 'spending_stats' | 'recent_activities';
@@ -100,6 +102,8 @@ const defaultConfig: CustomerAppConfig = {
   support_email: '',
   cashout_methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true },
   rewards_config: defaultRewardsConfig,
+  hero_bg_color: '',
+  hero_bg_image: '',
 };
 
 // ─── Hooks ───
@@ -877,6 +881,130 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   );
 }
 
+// ─── Hero Section Panel ───
+function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const queryClient = useQueryClient();
+  const [bgColor, setBgColor] = useState(appConfig.hero_bg_color || '');
+  const [bgImage, setBgImage] = useState(appConfig.hero_bg_image || '');
+  const [uploading, setUploading] = useState(false);
+
+  useEffect(() => {
+    setBgColor(appConfig.hero_bg_color || '');
+    setBgImage(appConfig.hero_bg_image || '');
+  }, [appConfig]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { data: inst } = await supabase.from("institutions").select("app_config").eq("id", institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const customerConfig = currentAppConfig.customer_app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, hero_bg_color: bgColor, hero_bg_image: bgImage } }
+      }).eq("id", institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-customer"] });
+      toast.success("Hero section updated");
+    },
+    onError: () => toast.error("Failed to save hero section"),
+  });
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const fileName = `hero-bg-${institutionId}-${Date.now()}.${ext}`;
+      const { error: uploadError } = await supabase.storage.from('institution-assets').upload(fileName, file, { upsert: true });
+      if (uploadError) {
+        // Try creating the bucket first
+        await supabase.storage.createBucket('institution-assets', { public: true });
+        const { error: retryError } = await supabase.storage.from('institution-assets').upload(fileName, file, { upsert: true });
+        if (retryError) throw retryError;
+      }
+      const { data: urlData } = supabase.storage.from('institution-assets').getPublicUrl(fileName);
+      setBgImage(urlData.publicUrl);
+      toast.success('Image uploaded');
+    } catch (err: any) {
+      toast.error(err.message || 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><ImageIcon className="h-5 w-5" /> Hero Section Appearance</CardTitle>
+        <CardDescription>Customize the hero background on the Customer App home screen</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Preview */}
+        <div>
+          <Label className="text-sm font-medium mb-2 block">Preview</Label>
+          <div
+            className="rounded-2xl h-40 flex items-end p-4 relative overflow-hidden"
+            style={{
+              ...(bgImage ? {
+                backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${bgImage})`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              } : {
+                background: bgColor || 'hsl(var(--primary))',
+              }),
+            }}
+          >
+            <div className="text-white">
+              <p className="text-xs opacity-80">Getting funds</p>
+              <p className="text-2xl font-bold">1,250,000 XAF</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Background Color */}
+        <div className="space-y-2">
+          <Label>Background Color</Label>
+          <p className="text-xs text-muted-foreground">CSS color value (e.g. #1a3a5c, hsl(217 91% 35%), linear-gradient(...)). Used when no image is set.</p>
+          <div className="flex gap-2">
+            <Input value={bgColor} onChange={e => setBgColor(e.target.value)} placeholder="e.g. #1a3a5c or hsl(217, 91%, 35%)" />
+            {bgColor && (
+              <div className="h-10 w-10 rounded-lg border shrink-0" style={{ background: bgColor }} />
+            )}
+          </div>
+        </div>
+
+        {/* Background Image */}
+        <div className="space-y-2">
+          <Label>Background Image</Label>
+          <p className="text-xs text-muted-foreground">Upload or paste a URL for the hero cover image. Overrides the color when set.</p>
+          {bgImage && (
+            <div className="relative w-full max-w-sm rounded-lg border overflow-hidden bg-muted">
+              <img src={bgImage} alt="Hero background" className="w-full h-32 object-cover" />
+              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setBgImage('')}>
+                <Trash2 className="h-3 w-3 mr-1" /> Remove
+              </Button>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <Input value={bgImage} onChange={e => setBgImage(e.target.value)} placeholder="Image URL or upload below" />
+            <label className="cursor-pointer">
+              <input type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) handleImageUpload(f); }} />
+              <Button variant="outline" size="icon" asChild disabled={uploading}>
+                <span>{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}</span>
+              </Button>
+            </label>
+          </div>
+        </div>
+
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
+          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Hero Section
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Component ───
 export default function CustomerAppManagement() {
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
@@ -1041,6 +1169,7 @@ export default function CustomerAppManagement() {
                   <TabsTrigger value="credit" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
+                  <TabsTrigger value="hero" className="gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Hero Section</TabsTrigger>
                 </TabsList>
 
                 {/* Linked Accounts Tab */}
@@ -1295,6 +1424,11 @@ export default function CustomerAppManagement() {
                     {saveWalkthroughConfig.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Save Walkthrough Config
                   </Button>
+                </TabsContent>
+
+                {/* Hero Section Tab */}
+                <TabsContent value="hero">
+                  <HeroSectionPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
               </Tabs>
             </>
