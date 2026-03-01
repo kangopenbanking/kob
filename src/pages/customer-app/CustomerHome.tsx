@@ -8,6 +8,7 @@ import {
   BarChart3, Home, Building2, ChevronRight, Loader2
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import kangLogo from '@/assets/kang-logo.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -167,9 +168,7 @@ const CustomerHome: React.FC = () => {
                 {tenant.logoUrl ? (
                   <img src={tenant.logoUrl} alt={tenant.name} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20" />
                 ) : (
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/15 ring-2 ring-[hsl(0,0%,100%)]/20">
-                    <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
-                  </div>
+                  <img src={kangLogo} alt="Kang" className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/15 p-1" />
                 )}
                 <div>
                   <p className="text-[10px] font-medium text-primary-foreground/50">Welcome back</p>
