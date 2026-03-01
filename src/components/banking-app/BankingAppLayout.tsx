@@ -18,8 +18,8 @@ export const BankingAppLayout: React.FC = () => {
     supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id));
   }, []);
 
-  // Auto-refresh balances & transactions in realtime
-  useRealtimeBalanceSync(userId);
+  // Auto-refresh balances & transactions in realtime, scoped to this institution
+  useRealtimeBalanceSync(userId, institutionId);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
