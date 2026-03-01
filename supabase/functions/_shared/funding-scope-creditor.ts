@@ -35,14 +35,30 @@ export async function creditFundingIntent(supabase: any, fundingIntent: any) {
       return;
     }
 
-    await supabase.from('account_balances').insert({
-      account_id: fundingIntent.account_id,
-      balance_type: 'InterimAvailable',
-      amount: creditAmount,
-      currency: fundingIntent.currency,
-      credit_debit_indicator: 'Credit',
-      balance_datetime: now,
-    });
+    // Upsert ClosingAvailable balance (add to existing or create)
+    const { data: existingBalance } = await supabase
+      .from('account_balances')
+      .select('id, amount')
+      .eq('account_id', fundingIntent.account_id)
+      .eq('balance_type', 'ClosingAvailable')
+      .eq('credit_debit_indicator', 'Credit')
+      .maybeSingle();
+
+    if (existingBalance) {
+      await supabase.from('account_balances').update({
+        amount: existingBalance.amount + creditAmount,
+        balance_datetime: now,
+      }).eq('id', existingBalance.id);
+    } else {
+      await supabase.from('account_balances').insert({
+        account_id: fundingIntent.account_id,
+        balance_type: 'ClosingAvailable',
+        amount: creditAmount,
+        currency: fundingIntent.currency,
+        credit_debit_indicator: 'Credit',
+        balance_datetime: now,
+      });
+    }
 
     await supabase.from('transactions').insert({
       account_id: fundingIntent.account_id,

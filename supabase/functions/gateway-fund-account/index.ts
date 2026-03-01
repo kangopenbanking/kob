@@ -162,15 +162,32 @@ serve(async (req) => {
 
 // Helper: credit user's account balance
 async function creditAccount(supabase: any, accountId: string, amount: number, currency: string, txRef: string, userId: string) {
-  // Update account balance
-  await supabase.from('account_balances').insert({
-    account_id: accountId,
-    balance_type: 'InterimAvailable',
-    amount,
-    currency,
-    credit_debit_indicator: 'Credit',
-    balance_datetime: new Date().toISOString(),
-  });
+  const now = new Date().toISOString();
+
+  // Upsert ClosingAvailable balance
+  const { data: existing } = await supabase
+    .from('account_balances')
+    .select('id, amount')
+    .eq('account_id', accountId)
+    .eq('balance_type', 'ClosingAvailable')
+    .eq('credit_debit_indicator', 'Credit')
+    .maybeSingle();
+
+  if (existing) {
+    await supabase.from('account_balances').update({
+      amount: existing.amount + amount,
+      balance_datetime: now,
+    }).eq('id', existing.id);
+  } else {
+    await supabase.from('account_balances').insert({
+      account_id: accountId,
+      balance_type: 'ClosingAvailable',
+      amount,
+      currency,
+      credit_debit_indicator: 'Credit',
+      balance_datetime: now,
+    });
+  }
 
   // Record transaction
   await supabase.from('transactions').insert({
@@ -179,8 +196,8 @@ async function creditAccount(supabase: any, accountId: string, amount: number, c
     currency,
     credit_debit_indicator: 'Credit',
     status: 'Booked',
-    booking_date_time: new Date().toISOString(),
-    value_date_time: new Date().toISOString(),
+    booking_date_time: now,
+    value_date_time: now,
     transaction_information: `Account funding via gateway - ${txRef}`,
     transaction_reference: txRef,
     user_id: userId,
