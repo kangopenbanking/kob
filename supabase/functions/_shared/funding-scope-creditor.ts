@@ -66,11 +66,18 @@ export async function creditFundingIntent(supabase: any, fundingIntent: any) {
       currency: fundingIntent.currency,
       credit_debit_indicator: 'Credit',
       status: 'Booked',
-      booking_date_time: now,
-      value_date_time: now,
+      booking_datetime: now,
+      value_datetime: now,
+      transaction_type: 'deposit',
       transaction_information: `${scope === 'end_user' ? 'Account' : scope === 'institution' ? 'Institution account' : 'API-initiated'} funding via ${fundingIntent.method} - ${fundingIntent.reference}`,
-      transaction_reference: fundingIntent.reference,
       user_id: fundingIntent.user_id,
+      institution_id: fundingIntent.institution_id,
+      metadata: {
+        funding_intent_id: fundingIntent.id,
+        funding_reference: fundingIntent.reference,
+        funding_scope: scope,
+        method: fundingIntent.method,
+      },
     });
 
     await supabase.from('audit_logs').insert({

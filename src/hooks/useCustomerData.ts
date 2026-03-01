@@ -44,11 +44,31 @@ export function useAccountBalances(accountIds: string[]) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('account_balances')
-        .select('id, account_id, amount, currency, balance_type, credit_debit_indicator')
+        .select('id, account_id, amount, currency, balance_type, credit_debit_indicator, balance_datetime')
         .in('account_id', accountIds)
-        .eq('balance_type', 'ClosingAvailable');
+        .in('balance_type', ['ClosingAvailable', 'InterimAvailable']);
       if (error) throw error;
-      return data || [];
+
+      // Prefer ClosingAvailable; fallback to InterimAvailable for legacy rows
+      const byAccount = new Map<string, any>();
+      for (const row of (data || [])) {
+        const existing = byAccount.get(row.account_id);
+        if (!existing) {
+          byAccount.set(row.account_id, row);
+          continue;
+        }
+        const rowPriority = row.balance_type === 'ClosingAvailable' ? 2 : 1;
+        const existingPriority = existing.balance_type === 'ClosingAvailable' ? 2 : 1;
+        if (rowPriority > existingPriority) {
+          byAccount.set(row.account_id, row);
+        } else if (rowPriority === existingPriority) {
+          const rowTime = new Date(row.balance_datetime || 0).getTime();
+          const exTime = new Date(existing.balance_datetime || 0).getTime();
+          if (rowTime > exTime) byAccount.set(row.account_id, row);
+        }
+      }
+
+      return Array.from(byAccount.values());
     },
   });
 }

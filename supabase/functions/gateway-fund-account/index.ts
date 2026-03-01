@@ -196,10 +196,14 @@ async function creditAccount(supabase: any, accountId: string, amount: number, c
     currency,
     credit_debit_indicator: 'Credit',
     status: 'Booked',
-    booking_date_time: now,
-    value_date_time: now,
+    booking_datetime: now,
+    value_datetime: now,
+    transaction_type: 'deposit',
     transaction_information: `Account funding via gateway - ${txRef}`,
-    transaction_reference: txRef,
     user_id: userId,
+    metadata: {
+      gateway_reference: txRef,
+      source: 'gateway_fund_account',
+    },
   }).then(() => {}).catch(() => {});
 }
