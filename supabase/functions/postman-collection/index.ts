@@ -885,6 +885,32 @@ Deno.serve(async (req) => {
           }),
         ],
       },
+
+      // ── Standards & Directory ───────────────────────────────────────
+      {
+        name: 'Standards & Directory',
+        item: [
+          r('Validate IBAN', 'POST', '/v1/standards/validate/iban', {
+            body: { iban: 'CM21 10005 00100 01234567890 23' },
+            desc: 'Validate an IBAN with MOD-97 checksum',
+          }),
+          r('Validate BIC/SWIFT', 'POST', '/v1/standards/validate/bic', {
+            body: { bic: 'AFRIACMCXXX' },
+            desc: 'Validate a BIC/SWIFT code structure',
+          }),
+          r('Validate Cameroon RIB', 'POST', '/v1/standards/validate/rib', {
+            body: { rib: '10005001000123456789023', country: 'CM' },
+            desc: 'Validate a 23-digit Cameroon domestic RIB with MOD-97 key check, returns structured fields and derived IBAN',
+          }),
+          r('Validate Account Identifier', 'POST', '/v1/standards/validate/account-identifier', {
+            body: { type: 'DOMESTIC_RIB', value: '10005001000123456789023', country: 'CM' },
+            desc: 'Unified validator for DOMESTIC_RIB, IBAN, LOCAL_BANK, or MOMO with automatic rail determination',
+          }),
+          r('Cameroon Bank Directory', 'GET', '/v1/directory/banks/cm', {
+            desc: 'Static catalog of Cameroon banks with 5-digit codes, SWIFT BICs, and RIB support flags',
+          }),
+        ],
+      },
     ],
   };
 

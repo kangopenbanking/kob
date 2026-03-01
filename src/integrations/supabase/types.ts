@@ -126,6 +126,7 @@ export type Database = {
       }
       accounts: {
         Row: {
+          account_country: string | null
           account_holder_name: string
           account_id: string
           account_subtype: Database["public"]["Enums"]["account_subtype"]
@@ -141,12 +142,18 @@ export type Database = {
           is_active: boolean | null
           nickname: string | null
           opened_date: string | null
+          rib_account_number: string | null
+          rib_bank_code: string | null
+          rib_branch_code: string | null
+          rib_key: string | null
           secondary_identification: string | null
+          swift_bic: string | null
           transaction_limits: Json | null
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          account_country?: string | null
           account_holder_name: string
           account_id: string
           account_subtype?: Database["public"]["Enums"]["account_subtype"]
@@ -162,12 +169,18 @@ export type Database = {
           is_active?: boolean | null
           nickname?: string | null
           opened_date?: string | null
+          rib_account_number?: string | null
+          rib_bank_code?: string | null
+          rib_branch_code?: string | null
+          rib_key?: string | null
           secondary_identification?: string | null
+          swift_bic?: string | null
           transaction_limits?: Json | null
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          account_country?: string | null
           account_holder_name?: string
           account_id?: string
           account_subtype?: Database["public"]["Enums"]["account_subtype"]
@@ -183,7 +196,12 @@ export type Database = {
           is_active?: boolean | null
           nickname?: string | null
           opened_date?: string | null
+          rib_account_number?: string | null
+          rib_bank_code?: string | null
+          rib_branch_code?: string | null
+          rib_key?: string | null
           secondary_identification?: string | null
+          swift_bic?: string | null
           transaction_limits?: Json | null
           updated_at?: string | null
           user_id?: string
@@ -12232,7 +12250,7 @@ export type Database = {
       }
     }
     Enums: {
-      account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN"
+      account_scheme: "LOCAL_BANK" | "MOMO" | "IBAN" | "DOMESTIC_RIB"
       account_subtype: "Current" | "Savings" | "CreditCard" | "Loan"
       account_type: "Business" | "Personal"
       app_role:
@@ -12478,7 +12496,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      account_scheme: ["LOCAL_BANK", "MOMO", "IBAN"],
+      account_scheme: ["LOCAL_BANK", "MOMO", "IBAN", "DOMESTIC_RIB"],
       account_subtype: ["Current", "Savings", "CreditCard", "Loan"],
       account_type: ["Business", "Personal"],
       app_role: [
