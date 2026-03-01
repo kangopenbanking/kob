@@ -6,6 +6,26 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.5.0",
+      date: "2026-03-01",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Cameroon Banking Identifiers — full RIB (23-digit) and IBAN (27-char) validation with MOD-97 checksum verification" },
+        { type: "feature", description: "validate-rib edge function — validates Cameroon domestic RIB structure, computes MOD-97 key, derives corresponding IBAN" },
+        { type: "feature", description: "validate-account-identifier edge function — unified validator mapping identifiers to transfer rails (DOMESTIC, INTERNATIONAL, LOCAL)" },
+        { type: "feature", description: "directory-banks-cm edge function — static directory of 15 Cameroon banks with 5-digit codes, SWIFT BICs, and RIB support flags" },
+        { type: "feature", description: "DOMESTIC_RIB added to account_scheme enum — accounts table now stores structured RIB fields (bank_code, branch_code, account_number, rib_key)" },
+        { type: "feature", description: "Beneficiary creation enhanced with structured account_identifier input — auto-enriches bank metadata from RIB code" },
+        { type: "feature", description: "Transfer rail auto-selection — internal (same bank), domestic_interbank (different CM banks), international (IBAN cross-border)" },
+        { type: "feature", description: "BIC/SWIFT validation alongside RIB and IBAN for full international wire transfer compliance" },
+        { type: "improvement", description: "Customer App: Bank Account (RIB) linking with bank selector, auto-formatting input mask, and client-side MOD-97 validation" },
+        { type: "improvement", description: "Customer App: International (IBAN) account linking with formatting and length validation" },
+        { type: "improvement", description: "Banking App Send Money: identifier type selector (RIB/IBAN/Account Number) with real-time validation hints" },
+        { type: "improvement", description: "OpenAPI spec updated with validate-rib, validate-account-identifier, directory-banks-cm endpoints and Account schema RIB fields" },
+        { type: "improvement", description: "Postman collection updated with Cameroon Banking Identifiers folder containing validation and directory requests" },
+      ]
+    },
+    {
       version: "3.4.0",
       date: "2026-02-27",
       type: "minor",
