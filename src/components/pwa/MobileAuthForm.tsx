@@ -146,9 +146,21 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       const { data: captchaData, error: captchaError } = await supabase.functions.invoke('captcha-generate', { body: {} });
       if (captchaError) throw captchaError;
 
+      // Solve the simple math captcha (e.g. "1 + 1")
+      const solveCaptcha = (q: string): number => {
+        const match = q.match(/(\d+)\s*([+\-*])\s*(\d+)/);
+        if (!match) return 0;
+        const [, a, op, b] = match;
+        if (op === '+') return parseInt(a) + parseInt(b);
+        if (op === '-') return parseInt(a) - parseInt(b);
+        if (op === '*') return parseInt(a) * parseInt(b);
+        return 0;
+      };
+      const captchaAnswer = solveCaptcha(captchaData.question);
+
       // Auto-verify captcha
       const { error: verifyError } = await supabase.functions.invoke('captcha-verify', {
-        body: { session_id: captchaData.session_id, answer: captchaData.answer },
+        body: { session_id: captchaData.session_id, answer: captchaAnswer },
       });
       if (verifyError) throw verifyError;
 
