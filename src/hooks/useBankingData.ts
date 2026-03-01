@@ -364,6 +364,7 @@ export function useSendTransfer() {
       amount: number;
       currency?: string;
       description?: string;
+      identifier_type?: string;
     }) => {
       const { data, error } = await supabase.functions.invoke('api-transfers', {
         body: { ...body, institution_id: institutionId },
