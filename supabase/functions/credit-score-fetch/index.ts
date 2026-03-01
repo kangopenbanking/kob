@@ -137,7 +137,7 @@ Deno.serve(async (req) => {
 
     // Log as soft inquiry
     if (scoreData?.score) {
-      await supabase.from('credit_inquiries').insert({
+      const { error: inquiryErr } = await supabase.from('credit_inquiries').insert({
         user_id,
         inquiry_type: 'soft',
         inquirer_type: 'self',
@@ -145,7 +145,8 @@ Deno.serve(async (req) => {
         purpose: 'score_check',
         user_consent_given: true,
         score_provided: scoreData.score,
-      }).catch(() => {}); // Non-blocking
+      });
+      if (inquiryErr) console.warn('Non-critical: inquiry log failed:', inquiryErr.message);
     }
 
     let reportData = null;
