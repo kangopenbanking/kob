@@ -138,19 +138,20 @@ serve(async (req) => {
       if (balErr) throw new Error('Failed to create balance: ' + balErr.message);
     }
 
-    // 2. Create transaction record
+    // 2. Create transaction record (include user_id so account owner sees it in their app)
     const { error: txErr } = await serviceSupabase
       .from('transactions')
       .insert({
         account_id,
         institution_id,
+        user_id: account.user_id,
         transaction_id: txRef,
         amount,
         currency: account.currency,
         credit_debit_indicator: creditDebit,
         status: 'completed',
-        booking_datetime: now,
-        value_datetime: now,
+        booking_date: now,
+        value_date: now,
         transaction_information: txDescription,
         transaction_type: `teller_${operation}`,
         merchant_category_code: 'TELLER',
