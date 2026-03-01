@@ -91,6 +91,9 @@ export const FundingResult = ({ result, fmt, onSuccess }: FundingResultProps) =>
           <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-2">
             <div className="flex items-center gap-2 text-sm font-semibold text-foreground mb-3">
               <Clock className="h-4 w-4 text-primary" /> Bank Transfer Instructions
+              {result.next_action.is_kob_partner && (
+                <Badge variant="secondary" className="text-[10px] bg-primary/10 text-primary">⚡ KOB Instant</Badge>
+              )}
             </div>
             {[
               { label: "Bank", value: result.next_action.bank_name },

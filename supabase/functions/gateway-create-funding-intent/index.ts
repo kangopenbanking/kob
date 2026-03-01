@@ -37,7 +37,7 @@ serve(async (req) => {
     const token = authHeader.replace('Bearer ', '');
 
     const body = await req.json();
-    const { amount, currency = 'XAF', method, provider, account_id, return_url, metadata = {} } = body;
+    const { amount, currency = 'XAF', method, provider, account_id, return_url, metadata = {}, bank_code, bank_name, bank_source } = body;
     const fundingScope = body.funding_scope || 'end_user';
     const merchantId = body.merchant_id || null;
     const targetDescription = body.target_description || null;
@@ -197,16 +197,23 @@ serve(async (req) => {
     } else if (resolvedProvider === 'bank') {
       const bankRef = `KOBFUND-${txRef.slice(-8).toUpperCase()}`;
       providerRef = bankRef;
+      const resolvedBankName = bank_name || 'Afriland First Bank';
+      const resolvedBankCode = bank_code || 'AFRILANDFB';
+      const isKobBank = bank_source === 'kob';
       nextAction = {
         type: 'bank_transfer_instructions',
-        bank_name: 'Afriland First Bank',
+        bank_name: resolvedBankName,
+        bank_code: resolvedBankCode,
         account_number: '10005 00041 09200950141 92',
         account_name: 'Kang Open Banking SA',
         reference: bankRef,
         amount, currency,
-        instructions: `Transfer exactly ${amount} ${currency} to the account above with reference: ${bankRef}. Funds will be credited within 24-48 hours after verification.`,
+        is_kob_partner: isKobBank,
+        instructions: isKobBank
+          ? `Transfer exactly ${amount} ${currency} via ${resolvedBankName} (KOB partner). Reference: ${bankRef}. Funds credited instantly.`
+          : `Transfer exactly ${amount} ${currency} to the account above with reference: ${bankRef}. Funds will be credited within 24-48 hours after verification.`,
       };
-      status = 'pending_verification';
+      status = isKobBank ? 'pending_customer_action' : 'pending_verification';
     }
 
     // Build target description
