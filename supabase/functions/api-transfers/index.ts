@@ -106,15 +106,16 @@ serve(async (req) => {
       });
     }
 
-    // Verify destination account exists — support UUID, account_id, or identification_value lookup
+    // Verify destination account exists — support UUID, account_id, identification_value, or DOMESTIC_RIB lookup
     let destAccount: any = null;
+    let transferRail = 'internal'; // default rail
 
     // Try by UUID first
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (uuidRegex.test(destination_account_id)) {
       const { data } = await supabase
         .from('accounts')
-        .select('id, account_holder_name, user_id, institution_id')
+        .select('id, account_holder_name, user_id, institution_id, identification_scheme')
         .eq('id', destination_account_id)
         .eq('is_active', true)
         .single();
@@ -125,7 +126,7 @@ serve(async (req) => {
     if (!destAccount) {
       const { data } = await supabase
         .from('accounts')
-        .select('id, account_holder_name, user_id, institution_id')
+        .select('id, account_holder_name, user_id, institution_id, identification_scheme')
         .eq('account_id', destination_account_id)
         .eq('is_active', true)
         .maybeSingle();
@@ -136,18 +137,59 @@ serve(async (req) => {
     if (!destAccount) {
       const { data } = await supabase
         .from('accounts')
-        .select('id, account_holder_name, user_id, institution_id')
+        .select('id, account_holder_name, user_id, institution_id, identification_scheme')
         .eq('identification_value', destination_account_id)
         .eq('is_active', true)
         .maybeSingle();
       destAccount = data;
     }
 
+    // Tier 4: Try by DOMESTIC_RIB identification_value
     if (!destAccount) {
-      return new Response(JSON.stringify({ error: 'Destination account not found. Try an account number, ID, or phone number.' }), {
+      const cleanValue = destination_account_id.replace(/[\s\-]/g, '');
+      if (/^\d{23}$/.test(cleanValue)) {
+        const { data } = await supabase
+          .from('accounts')
+          .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+          .eq('identification_scheme', 'DOMESTIC_RIB')
+          .eq('identification_value', cleanValue)
+          .eq('is_active', true)
+          .maybeSingle();
+        destAccount = data;
+        if (destAccount) transferRail = 'domestic_interbank';
+      }
+    }
+
+    // Tier 5: Try IBAN lookup
+    if (!destAccount) {
+      const cleanIban = destination_account_id.replace(/\s/g, '').toUpperCase();
+      if (/^[A-Z]{2}\d{2}/.test(cleanIban) && cleanIban.length >= 15) {
+        const { data } = await supabase
+          .from('accounts')
+          .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+          .eq('identification_scheme', 'IBAN')
+          .eq('identification_value', cleanIban)
+          .eq('is_active', true)
+          .maybeSingle();
+        destAccount = data;
+        if (destAccount) transferRail = 'international';
+      }
+    }
+
+    if (!destAccount) {
+      return new Response(JSON.stringify({ error: 'Destination account not found. Try an account number, ID, phone number, RIB, or IBAN.' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
+    }
+
+    // Determine rail based on institution relationship
+    if (transferRail === 'internal' && sourceAccount.institution_id !== destAccount.institution_id) {
+      if (destAccount.identification_scheme === 'IBAN') {
+        transferRail = 'international';
+      } else {
+        transferRail = 'domestic_interbank';
+      }
     }
 
     // Generate transaction reference
@@ -272,7 +314,8 @@ serve(async (req) => {
         merchant_details: {
           destination_account_id: destAccount.id,
           destination_account_holder: destAccount.account_holder_name,
-          transfer_type: sourceAccount.institution_id === destAccount.institution_id ? 'internal' : 'interbank',
+          transfer_type: transferRail,
+          rail: transferRail,
         },
       })
       .select('id')
@@ -305,7 +348,8 @@ serve(async (req) => {
         merchant_details: {
           source_account_id,
           source_account_holder: sourceAccount.account_holder_name,
-          transfer_type: sourceAccount.institution_id === destAccount.institution_id ? 'internal' : 'interbank',
+          transfer_type: transferRail,
+          rail: transferRail,
         },
       });
 
@@ -386,6 +430,7 @@ serve(async (req) => {
       currency: txCurrency,
       sender: sourceAccount.account_holder_name,
       receiver: destAccount.account_holder_name,
+      rail: transferRail,
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
