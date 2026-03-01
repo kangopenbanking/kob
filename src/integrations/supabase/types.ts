@@ -3618,6 +3618,8 @@ export type Database = {
           metadata: Json | null
           provider_name: string | null
           provider_type: string | null
+          removal_count: number | null
+          removed_at: string | null
           status: string | null
           updated_at: string | null
           user_id: string
@@ -3635,6 +3637,8 @@ export type Database = {
           metadata?: Json | null
           provider_name?: string | null
           provider_type?: string | null
+          removal_count?: number | null
+          removed_at?: string | null
           status?: string | null
           updated_at?: string | null
           user_id: string
@@ -3652,6 +3656,8 @@ export type Database = {
           metadata?: Json | null
           provider_name?: string | null
           provider_type?: string | null
+          removal_count?: number | null
+          removed_at?: string | null
           status?: string | null
           updated_at?: string | null
           user_id?: string
@@ -7098,6 +7104,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      linked_account_change_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          request_type: string
+          requested_account_data: Json
+          review_notes: string | null
+          reviewed_by: string | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          request_type?: string
+          requested_account_data: Json
+          review_notes?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          request_type?: string
+          requested_account_data?: Json
+          review_notes?: string | null
+          reviewed_by?: string | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       load_test_results: {
         Row: {
