@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerAccounts } from '@/hooks/useCustomerData';
+import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { cn } from '@/lib/utils';
 
@@ -35,8 +35,7 @@ const CustomerFundWallet: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [fundingResult, setFundingResult] = useState<any>(null);
 
-  const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
-  const primaryAccount = kangAccounts[0];
+  const { account: primaryAccount, loading: accountLoading } = useEnsureWalletAccount(user?.id);
 
   const feePercent = method === 'card' ? 0.035 : method === 'paypal' ? 0.035 : method === 'bank_transfer' ? 0.025 : 0.025;
   const numAmount = Number(amount);
