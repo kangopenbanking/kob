@@ -135,8 +135,9 @@ const CustomerHome: React.FC = () => {
   ].filter(a => !a.featureKey || tenant.features[a.featureKey as keyof typeof tenant.features] !== false);
 
   // Admin-configurable hero background
+  const isHeroVideo = tenant.heroBgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(tenant.heroBgImage) : false;
   const heroBgStyle: React.CSSProperties = {
-    ...(tenant.heroBgImage ? {
+    ...(tenant.heroBgImage && !isHeroVideo ? {
       backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${tenant.heroBgImage})`,
       backgroundSize: 'cover',
       backgroundPosition: 'center',
@@ -156,6 +157,20 @@ const CustomerHome: React.FC = () => {
           className="relative overflow-hidden rounded-b-[28px] bg-primary shadow-[0_8px_32px_-8px_rgba(0,0,0,0.25)]"
           style={heroBgStyle}
         >
+          {/* Video background */}
+          {isHeroVideo && tenant.heroBgImage && (
+            <>
+              <video
+                src={tenant.heroBgImage}
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/15 to-black/35" />
+            </>
+          )}
           {/* Decorative circles */}
           <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[hsl(0,0%,100%)]/[0.06]" />
           <div className="absolute -left-8 bottom-16 h-28 w-28 rounded-full bg-[hsl(0,0%,100%)]/[0.04]" />
