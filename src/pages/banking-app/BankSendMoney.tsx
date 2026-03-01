@@ -52,9 +52,10 @@ const BankSendMoney: React.FC = () => {
           <>
             <div className="space-y-2">
               <Label className="text-sm">Recipient</Label>
+              <p className="text-xs text-muted-foreground">Enter their account number, phone number, or national ID</p>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
-                <Input placeholder="Account ID or phone number" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="pl-10" />
+                <Input placeholder="e.g. ACC-1234... or 6XXXXXXXX" value={recipient} onChange={(e) => setRecipient(e.target.value)} className="pl-10" />
               </div>
             </div>
             <Button onClick={() => setStep('amount')} disabled={!recipient} className="mt-4 gap-2">

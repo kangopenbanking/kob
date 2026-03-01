@@ -106,15 +106,45 @@ serve(async (req) => {
       });
     }
 
-    // Verify destination account exists
-    const { data: destAccount, error: destError } = await supabase
-      .from('accounts')
-      .select('id, account_holder_name, user_id, institution_id')
-      .eq('id', destination_account_id)
-      .single();
+    // Verify destination account exists — support UUID, account_id, or identification_value lookup
+    let destAccount: any = null;
 
-    if (destError || !destAccount) {
-      return new Response(JSON.stringify({ error: 'Destination account not found' }), {
+    // Try by UUID first
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (uuidRegex.test(destination_account_id)) {
+      const { data } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, user_id, institution_id')
+        .eq('id', destination_account_id)
+        .eq('is_active', true)
+        .single();
+      destAccount = data;
+    }
+
+    // Fallback: try by human-readable account_id (e.g. ACC-...)
+    if (!destAccount) {
+      const { data } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, user_id, institution_id')
+        .eq('account_id', destination_account_id)
+        .eq('is_active', true)
+        .maybeSingle();
+      destAccount = data;
+    }
+
+    // Fallback: try by identification_value (phone number, national ID, etc.)
+    if (!destAccount) {
+      const { data } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, user_id, institution_id')
+        .eq('identification_value', destination_account_id)
+        .eq('is_active', true)
+        .maybeSingle();
+      destAccount = data;
+    }
+
+    if (!destAccount) {
+      return new Response(JSON.stringify({ error: 'Destination account not found. Try an account number, ID, or phone number.' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -153,7 +183,7 @@ serve(async (req) => {
     const { data: destInterimBal } = await supabase
       .from('account_balances')
       .select('id, amount, balance_type')
-      .eq('account_id', destination_account_id)
+      .eq('account_id', destAccount.id)
       .eq('balance_type', 'InterimAvailable')
       .single();
 
@@ -163,7 +193,7 @@ serve(async (req) => {
       const { data: destClosingBal } = await supabase
         .from('account_balances')
         .select('id, amount, balance_type')
-        .eq('account_id', destination_account_id)
+        .eq('account_id', destAccount.id)
         .eq('balance_type', 'ClosingAvailable')
         .single();
       destBalance = destClosingBal;
@@ -195,7 +225,7 @@ serve(async (req) => {
       const { error: insertBalErr } = await supabase
         .from('account_balances')
         .insert({
-          account_id: destination_account_id,
+          account_id: destAccount.id,
           balance_type: 'ClosingAvailable',
           credit_debit_indicator: 'Credit',
           amount: transferAmount,
@@ -203,7 +233,7 @@ serve(async (req) => {
           balance_datetime: now,
         });
 
-      if (insertBalErr) {
+    if (insertBalErr) {
         // Rollback source debit
         await supabase.from('account_balances')
           .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
@@ -216,6 +246,9 @@ serve(async (req) => {
       }
     }
 
+    // Use resolved destination account ID for all subsequent operations
+    const resolvedDestId = destAccount.id;
+
     // ══════════════════════════════════════════════
     // STEP 3: Create debit transaction for sender
     // ══════════════════════════════════════════════
@@ -226,6 +259,7 @@ serve(async (req) => {
       .insert({
         user_id: user.id,
         account_id: source_account_id,
+        institution_id: sourceAccount.institution_id,
         transaction_id: transactionRef,
         credit_debit_indicator: 'Debit',
         status: 'Booked',
@@ -236,9 +270,9 @@ serve(async (req) => {
         currency: txCurrency,
         transaction_information: txDescription,
         merchant_details: {
-          destination_account_id,
+          destination_account_id: destAccount.id,
           destination_account_holder: destAccount.account_holder_name,
-          transfer_type: 'internal',
+          transfer_type: sourceAccount.institution_id === destAccount.institution_id ? 'internal' : 'interbank',
         },
       })
       .select('id')
@@ -257,7 +291,8 @@ serve(async (req) => {
       .from('transactions')
       .insert({
         user_id: destAccount.user_id,
-        account_id: destination_account_id,
+        account_id: destAccount.id,
+        institution_id: destAccount.institution_id,
         transaction_id: `${transactionRef}-CR`,
         credit_debit_indicator: 'Credit',
         status: 'Booked',
@@ -270,7 +305,7 @@ serve(async (req) => {
         merchant_details: {
           source_account_id,
           source_account_holder: sourceAccount.account_holder_name,
-          transfer_type: 'internal',
+          transfer_type: sourceAccount.institution_id === destAccount.institution_id ? 'internal' : 'interbank',
         },
       });
 
@@ -331,7 +366,7 @@ serve(async (req) => {
           _transaction_id: debitTxn?.id || null,
           _metadata: {
             source_account_id,
-            destination_account_id,
+            destination_account_id: destAccount.id,
             currency: txCurrency,
           },
         });
@@ -340,7 +375,7 @@ serve(async (req) => {
       console.error('Fee recording failed (non-blocking):', feeErr);
     }
 
-    console.log(`Transfer ${transactionRef} completed: ${transferAmount} ${txCurrency} from ${source_account_id} to ${destination_account_id}`);
+    console.log(`Transfer ${transactionRef} completed: ${transferAmount} ${txCurrency} from ${source_account_id} to ${destAccount.id}`);
 
     return new Response(JSON.stringify({
       success: true,
