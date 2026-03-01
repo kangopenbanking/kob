@@ -74,9 +74,13 @@ const CustomerFundWallet: React.FC = () => {
   };
 
   const handleSuccess = () => {
+    // Invalidate all balance and transaction queries to reflect the new payment
     queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
     queryClient.invalidateQueries({ queryKey: ['account-balances'] });
     queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+    queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
+    queryClient.invalidateQueries({ queryKey: ['customer-bill-payments'] });
+    // Navigate back after a short delay so user sees the success state
     setTimeout(() => navigate(-1), 2500);
   };
 

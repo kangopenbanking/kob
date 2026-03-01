@@ -44,7 +44,7 @@ export function useAccountBalances(accountIds: string[]) {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('account_balances')
-        .select('account_id, amount, currency, balance_type, credit_debit_indicator')
+        .select('id, account_id, amount, currency, balance_type, credit_debit_indicator')
         .in('account_id', accountIds)
         .eq('balance_type', 'ClosingAvailable');
       if (error) throw error;
