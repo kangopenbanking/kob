@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Bell, Eye, EyeOff, ArrowUpRight, ArrowDownLeft,
@@ -14,6 +14,27 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSpendingSummary } from '@/hooks/useCustomerData';
 import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
+
+/* ─── Animated Counter Hook ─── */
+function useAnimatedCounter(target: number, duration = 1200) {
+  const [value, setValue] = useState(0);
+  const prevTarget = useRef(0);
+  useEffect(() => {
+    if (target === prevTarget.current) return;
+    const start = prevTarget.current;
+    prevTarget.current = target;
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setValue(Math.round(start + (target - start) * eased));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, [target, duration]);
+  return value;
+}
 
 /* ─── Service Section Data (static config — NOT mock data) ─── */
 interface FeatureItem {
@@ -98,6 +119,7 @@ const CustomerHome: React.FC = () => {
   const totalBalance = accountCards.reduce((s: number, a: any) => s + a.balance, 0);
   const earnings = summary?.earnings ?? 0;
   const spending = summary?.spending ?? 0;
+  const animatedBalance = useAnimatedCounter(totalBalance);
 
   const go = (path: string) => navigate(`/app/${path}`);
   const isVisible = (f: FeatureItem) => !f.featureKey || tenant.features[f.featureKey as keyof typeof tenant.features] !== false;
@@ -107,103 +129,183 @@ const CustomerHome: React.FC = () => {
   const visibleSavings = savingsGoals.filter(isVisible);
   const visibleHealth = financialHealth.filter(isVisible);
 
+  // Quick action buttons for hero card
+  const heroActions = [
+    { label: 'Accounts', icon: Building2, path: 'linked-accounts', featureKey: 'bank' },
+    { label: 'Cash Out', icon: Banknote, path: 'cash-out', featureKey: 'cash_out' },
+    { label: 'Request', icon: ArrowDownLeft, path: 'request', featureKey: 'request' },
+    { label: 'Pay Links', icon: Link2, path: 'pay-links', featureKey: 'pay_links' },
+  ].filter(a => !a.featureKey || tenant.features[a.featureKey as keyof typeof tenant.features] !== false);
+
+  // Admin-configurable hero background
+  const heroBgStyle: React.CSSProperties = {
+    ...(tenant.heroBgImage ? {
+      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${tenant.heroBgImage})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    } : {}),
+    ...(tenant.heroBgColor && !tenant.heroBgImage ? { backgroundColor: tenant.heroBgColor } : {}),
+  };
+
   return (
     <div className="flex flex-col gap-5 pb-6">
-      {/* ─── Balance Hero Section ─── */}
-      <motion.div {...fadeUp} transition={{ duration: 0.35 }}>
-        <div className="bg-primary px-5 pt-5 pb-5 relative overflow-hidden">
-          <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-[hsl(0,0%,100%)]/5" />
-          <div className="absolute -left-6 bottom-0 h-24 w-24 rounded-full bg-[hsl(0,0%,100%)]/5" />
+      {/* ─── Hero Card Section ─── */}
+      <motion.div
+        initial={{ opacity: 0, y: 18 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div
+          className="relative overflow-hidden rounded-b-[28px] bg-primary shadow-[0_8px_32px_-8px_rgba(0,0,0,0.25)]"
+          style={heroBgStyle}
+        >
+          {/* Decorative circles */}
+          <div className="absolute -right-10 -top-10 h-36 w-36 rounded-full bg-[hsl(0,0%,100%)]/[0.06]" />
+          <div className="absolute -left-8 bottom-16 h-28 w-28 rounded-full bg-[hsl(0,0%,100%)]/[0.04]" />
+          <div className="absolute right-12 bottom-32 h-16 w-16 rounded-full bg-[hsl(0,0%,100%)]/[0.05]" />
 
-          {/* Top Bar */}
-          <div className="relative flex items-center justify-between mb-5">
-            <div className="flex items-center gap-3">
-              {tenant.logoUrl && (
-                <img src={tenant.logoUrl} alt={tenant.name} className="h-9 w-9 rounded-xl object-contain" />
-              )}
-              <div>
-                <p className="text-[10px] font-medium text-primary-foreground/60">Hello,</p>
-                <h2 className="text-lg font-bold text-primary-foreground">{tenant.name}</h2>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <button onClick={() => setBalanceVisible(!balanceVisible)}
-                className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/10">
-                {balanceVisible ? <Eye className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} /> : <EyeOff className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
-              </button>
-              <button onClick={() => go('alerts')} className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/10">
-                <Bell className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
-                {unreadCount > 0 && (
-                  <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">{unreadCount > 9 ? '9+' : unreadCount}</span>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* View-Only Banner */}
-          {isViewOnly && (
-            <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
-              className="relative flex items-center gap-3 rounded-2xl border border-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/10 p-3 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/15">
-                <Lock className="h-4 w-4 text-primary-foreground" strokeWidth={2} />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs font-bold text-primary-foreground">View-Only Mode</p>
-                <p className="text-[11px] text-primary-foreground/60">Link an account to unlock transactions</p>
-              </div>
-              <button onClick={() => go('onboarding')} className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
-            </motion.div>
-          )}
-
-          {/* Total Balance */}
-          <div className="relative text-center my-4">
-            <p className="text-[10px] font-medium uppercase tracking-widest text-primary-foreground/50 mb-1">Total Balance</p>
-            {acctLoading ? (
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
-            ) : (
-              <p className="text-4xl font-extrabold text-primary-foreground">
-                {isViewOnly ? '• • • • •' : balanceVisible ? `XAF ${totalBalance.toLocaleString()}` : '• • • • •'}
-              </p>
-            )}
-          </div>
-
-          {/* Period Toggle */}
-          <div className="relative flex items-center justify-center mb-4">
-            <div className="flex rounded-xl bg-[hsl(0,0%,100%)]/10 p-0.5">
-              {(['W', 'M', 'Y'] as const).map((p) => (
-                <button key={p} onClick={() => setPeriod(p)}
-                  className={`px-2.5 py-1 text-[10px] font-bold rounded-lg transition-colors ${period === p ? 'bg-primary-foreground text-primary' : 'text-primary-foreground/50'}`}>
-                  {p}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Account Cards from live data */}
-          {!isViewOnly && accountCards.length > 0 && (
-            <div className="relative grid grid-cols-3 gap-2">
-              {accountCards.slice(0, 3).map((acct: any, i: number) => {
-                const Icon = acctIcons[i % acctIcons.length];
-                return (
-                  <div key={i} className="flex flex-col items-center gap-1.5 rounded-2xl bg-[hsl(0,0%,100%)]/12 p-3">
-                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${acctColors[i % acctColors.length]}`}>
-                      <Icon className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
-                    </div>
-                    <p className="text-[10px] font-bold text-primary-foreground/80 truncate max-w-full">{acct.name}</p>
-                    <p className="text-xs font-bold text-primary-foreground">
-                      {balanceVisible ? acct.balance.toLocaleString() : '•••'}
-                    </p>
+          <div className="relative px-5 pt-5 pb-6">
+            {/* Top Bar */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                {tenant.logoUrl ? (
+                  <img src={tenant.logoUrl} alt={tenant.name} className="h-10 w-10 rounded-full object-contain ring-2 ring-[hsl(0,0%,100%)]/20" />
+                ) : (
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/15 ring-2 ring-[hsl(0,0%,100%)]/20">
+                    <Wallet className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
                   </div>
+                )}
+                <div>
+                  <p className="text-[10px] font-medium text-primary-foreground/50">Welcome back</p>
+                  <h2 className="text-base font-bold text-primary-foreground">{tenant.name}</h2>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setBalanceVisible(!balanceVisible)}
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/10 backdrop-blur-sm"
+                >
+                  {balanceVisible ? <Eye className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} /> : <EyeOff className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />}
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => go('alerts')}
+                  className="relative flex h-9 w-9 items-center justify-center rounded-full bg-[hsl(0,0%,100%)]/10 backdrop-blur-sm"
+                >
+                  <Bell className="h-4 w-4 text-primary-foreground" strokeWidth={1.5} />
+                  {unreadCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground">{unreadCount > 9 ? '9+' : unreadCount}</span>
+                  )}
+                </motion.button>
+              </div>
+            </div>
+
+            {/* View-Only Banner */}
+            {isViewOnly && (
+              <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }}
+                className="relative flex items-center gap-3 rounded-2xl border border-[hsl(0,0%,100%)]/20 bg-[hsl(0,0%,100%)]/10 backdrop-blur-sm p-3 mb-5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/15">
+                  <Lock className="h-4 w-4 text-primary-foreground" strokeWidth={2} />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-bold text-primary-foreground">View-Only Mode</p>
+                  <p className="text-[11px] text-primary-foreground/60">Link an account to unlock transactions</p>
+                </div>
+                <button onClick={() => go('onboarding')} className="rounded-xl bg-primary-foreground px-3.5 py-1.5 text-xs font-bold text-primary">Link</button>
+              </motion.div>
+            )}
+
+            {/* Main Balance */}
+            <div className="text-center mb-2">
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.2 }}
+                className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary-foreground/50 mb-1.5"
+              >
+                Getting funds
+              </motion.p>
+              {acctLoading ? (
+                <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
+              ) : (
+                <motion.p
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.3, duration: 0.4 }}
+                  className="text-[42px] font-extrabold leading-none text-primary-foreground tracking-tight"
+                >
+                  {isViewOnly || !balanceVisible ? '• • • • •' : `XAF ${animatedBalance.toLocaleString()}`}
+                </motion.p>
+              )}
+            </div>
+
+            {/* Financial Health subtitle */}
+            {!isViewOnly && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="flex items-center justify-center gap-4 mt-3 mb-5"
+              >
+                <div className="flex items-center gap-1.5">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(150,50%,45%)]/20">
+                    <TrendingUp className="h-3 w-3 text-[hsl(150,60%,55%)]" strokeWidth={2.5} />
+                  </div>
+                  <span className="text-[11px] font-semibold text-primary-foreground/70">{earnings.toLocaleString()}</span>
+                </div>
+                <div className="h-3 w-px bg-primary-foreground/20" />
+                <div className="flex items-center gap-1.5">
+                  <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[hsl(0,50%,55%)]/20">
+                    <TrendingDown className="h-3 w-3 text-[hsl(0,60%,65%)]" strokeWidth={2.5} />
+                  </div>
+                  <span className="text-[11px] font-semibold text-primary-foreground/70">{spending.toLocaleString()}</span>
+                </div>
+              </motion.div>
+            )}
+
+            {/* Pill-shaped Add Money button */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="flex justify-center mb-6"
+            >
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => go('fund')}
+                className="flex items-center gap-2 rounded-full bg-primary-foreground px-6 py-2.5 shadow-lg"
+              >
+                <Download className="h-4 w-4 text-primary" strokeWidth={2} />
+                <span className="text-sm font-bold text-primary">Add Money</span>
+              </motion.button>
+            </motion.div>
+
+            {/* Quick Action Circles */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="flex items-center justify-around"
+            >
+              {heroActions.map((action) => {
+                const Icon = action.icon;
+                return (
+                  <motion.button
+                    key={action.path}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => go(action.path)}
+                    className="flex flex-col items-center gap-1.5"
+                  >
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground shadow-md">
+                      <Icon className="h-5 w-5 text-background" strokeWidth={1.5} />
+                    </div>
+                    <span className="text-[10px] font-semibold text-primary-foreground/80">{action.label}</span>
+                  </motion.button>
                 );
               })}
-            </div>
-          )}
-
-          {!isViewOnly && accountCards.length === 0 && !acctLoading && (
-            <div className="relative text-center py-4">
-              <p className="text-xs text-primary-foreground/50">No accounts linked yet</p>
-            </div>
-          )}
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 
