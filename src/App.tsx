@@ -310,8 +310,6 @@ import BankCreditScore from "./pages/banking-app/BankCreditScore";
 import BankSettings from "./pages/banking-app/BankSettings";
 import BankAlerts from "./pages/banking-app/BankAlerts";
 import BankHelp from "./pages/banking-app/BankHelp";
-import BankPiggyBank from "./pages/banking-app/BankPiggyBank";
-import BankNjangi from "./pages/banking-app/BankNjangi";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 import { FeatureGate } from "./components/pwa/FeatureGate";
 import Apps from "./pages/Apps";
@@ -702,8 +700,6 @@ function App() {
               <Route path="more/credit" element={<FeatureGate featureKey="credit_score"><BankCreditScore /></FeatureGate>} />
               <Route path="more/settings" element={<BankSettings />} />
               <Route path="more/alerts" element={<BankAlerts />} />
-              <Route path="more/piggybank" element={<BankPiggyBank />} />
-              <Route path="more/njangi" element={<BankNjangi />} />
               <Route path="more/help" element={<BankHelp />} />
             </Route>
 
