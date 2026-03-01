@@ -200,7 +200,7 @@ const LinkedAccountRequests: React.FC = () => {
             <DialogDescription>
               {reviewAction === 'approved'
                 ? 'Approving will activate this linked account for the customer.'
-                : "Rejecting will deny the customer's account linking request."}
+                : 'Rejecting will deny the customer account linking request.'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
