@@ -29,12 +29,14 @@ const BankSendMoney: React.FC = () => {
 
   const executeSend = () => {
     if (!sourceAccount) return;
+    const cleanRecipient = recipient.replace(/[\s\-]/g, '');
     sendTransfer.mutate({
       source_account_id: sourceAccount.id,
-      destination_account_id: recipient.replace(/[\s\-]/g, ''),
+      destination_account_id: cleanRecipient,
       amount: Number(amount),
       currency: 'XAF',
       description: `Transfer to ${recipient}`,
+      identifier_type: identifierType === 'rib' ? 'DOMESTIC_RIB' : identifierType === 'iban' ? 'IBAN' : 'LOCAL_BANK',
     }, {
       onSuccess: () => navigate(`/bank/${institutionId}/home`),
     });

@@ -6,18 +6,20 @@ const corsHeaders = {
 // Cameroon bank directory for enrichment
 const CM_BANKS: Record<string, { name: string; swift_bic: string }> = {
   '10005': { name: 'Afriland First Bank', swift_bic: 'AFRIACMCXXX' },
-  '10009': { name: 'Atlantic Bank Cameroon', swift_bic: 'ATCRCMCMXXX' },
-  '10017': { name: 'Ecobank Cameroon', swift_bic: 'ABORACMCXXX' },
-  '10023': { name: 'Standard Chartered Bank', swift_bic: 'SCBLCMCXXXX' },
-  '10025': { name: 'Citibank Cameroon', swift_bic: 'CITICMCXXXX' },
-  '10029': { name: 'BICEC (Banque Internationale du Cameroun)', swift_bic: 'BICECMCXXXX' },
+  '10009': { name: 'Atlantic Bank Cameroon (Banque Atlantique)', swift_bic: 'ATCRCMCMXXX' },
+  '10017': { name: 'Ecobank Cameroon', swift_bic: 'ECOCCMCXXXX' },
+  '10023': { name: 'Standard Chartered Bank Cameroon', swift_bic: 'SCBLCMCXXXX' },
+  '10025': { name: 'Citibank N.A. Cameroon', swift_bic: 'CITICMCXXXX' },
+  '10029': { name: 'BICEC (Banque Internationale du Cameroun pour l\'Épargne et le Crédit)', swift_bic: 'BICECMCXXXX' },
   '10033': { name: 'Société Générale Cameroun', swift_bic: 'SGCMCMCXXXX' },
-  '10038': { name: 'UBA Cameroon', swift_bic: 'ABORACMCXXX' },
-  '10039': { name: 'NFC Bank', swift_bic: 'NFBKCMCXXXX' },
+  '10038': { name: 'United Bank for Africa (UBA) Cameroon', swift_bic: 'UNAFCMCXXXX' },
+  '10039': { name: 'NFC Bank (National Financial Credit)', swift_bic: 'NFBKCMCXXXX' },
   '10041': { name: 'CBC (Commercial Bank of Cameroon)', swift_bic: 'CBCRCMCXXXX' },
   '10050': { name: 'BGFI Bank Cameroon', swift_bic: 'BGFICMCXXXX' },
-  '10055': { name: 'CCA Bank', swift_bic: 'CCAICMCXXXX' },
+  '10055': { name: 'CCA Bank (Crédit Communautaire d\'Afrique)', swift_bic: 'CCAICMCXXXX' },
   '10060': { name: 'National Financial Credit Bank', swift_bic: 'NFCBCMCXXXX' },
+  '10065': { name: 'Banque Camerounaise des PME (BC-PME)', swift_bic: 'BCPMCMCXXXX' },
+  '10070': { name: 'UBC (Union Bank of Cameroon)', swift_bic: 'UBCMCMCXXXX' },
 };
 
 Deno.serve(async (req) => {
