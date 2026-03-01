@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PWATopBar } from '@/components/pwa/PWATopBar';
-import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2, Wallet, Users, Home } from 'lucide-react';
+import { Eye, EyeOff, Send, QrCode, ArrowDownLeft, Smartphone, ChevronRight, PiggyBank, Landmark, BarChart3, Loader2, Wallet } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -96,24 +96,6 @@ const BankHome: React.FC = () => {
       value: totalSavings > 0 ? `${(totalSavings / 1000).toFixed(0)}K` : '0',
       label: 'Savings',
       textClass: 'text-[hsl(var(--bank-mint-fg))]',
-    },
-    {
-      key: 'piggybank',
-      onClick: () => navigate(`/bank/${institutionId}/more/piggybank`),
-      className: 'bg-[hsl(var(--bank-teal))]',
-      icon: <Home className="h-7 w-7 text-white" strokeWidth={1.5} />,
-      value: '🐷',
-      label: 'Piggy',
-      textClass: 'text-white',
-    },
-    {
-      key: 'njangi',
-      onClick: () => navigate(`/bank/${institutionId}/more/njangi`),
-      className: 'bg-[hsl(var(--bank-violet))]',
-      icon: <Users className="h-7 w-7 text-white" strokeWidth={1.5} />,
-      value: '🤝',
-      label: 'Njangi',
-      textClass: 'text-white',
     },
     features.loans && {
       key: 'loans',
