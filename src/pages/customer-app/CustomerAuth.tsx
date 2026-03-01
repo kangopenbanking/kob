@@ -20,6 +20,8 @@ const CustomerAuth: React.FC = () => {
   const [pin, setPin] = useState('');
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
+  const [pinLocked, setPinLocked] = useState(false);
+  const [pinRemaining, setPinRemaining] = useState<number | null>(null);
   const [branding] = useState<{ name: string; logoUrl: string | null }>({ name: 'Kang', logoUrl: null });
 
   const { step: otpStep, loading: otpLoading, error: otpError, sendOTP, verifyOTP, reset: resetOTP } = useFirebasePhoneAuth();
@@ -95,6 +97,10 @@ const CustomerAuth: React.FC = () => {
     } catch (err: any) {
       const msg = err.message || 'Login failed';
       setPinError(msg);
+      // Check for lock/attempts info in the error response
+      if (msg.includes('locked')) {
+        setPinLocked(true);
+      }
       toast.error(msg);
       setPin('');
     } finally {
@@ -104,7 +110,7 @@ const CustomerAuth: React.FC = () => {
 
   const handleBack = () => {
     if (mode === 'otp') { resetOTP(); setMode('phone'); }
-    else if (mode === 'pin') { setMode('phone'); setPin(''); setPinError(null); }
+    else if (mode === 'pin') { setMode('phone'); setPin(''); setPinError(null); setPinLocked(false); setPinRemaining(null); }
     else if (mode === 'phone') { setMode('welcome'); }
     else { navigate('/app'); }
   };

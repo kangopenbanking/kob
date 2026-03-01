@@ -8,6 +8,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 
@@ -29,6 +30,7 @@ const CustomerCashOut: React.FC = () => {
   const [selectedAccount, setSelectedAccount] = useState<any>(null);
   const [step, setStep] = useState<'dest' | 'amount' | 'confirm' | 'success'>('dest');
   const [processing, setProcessing] = useState(false);
+  const [showPin, setShowPin] = useState(false);
 
   // Get user's Kang accounts for balance check
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
@@ -330,7 +332,7 @@ const CustomerCashOut: React.FC = () => {
               </div>
             </div>
 
-            <Button onClick={handleWithdraw} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
+            <Button onClick={() => setShowPin(true)} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
                 <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
               ) : (
@@ -340,6 +342,8 @@ const CustomerCashOut: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleWithdraw} />
     </div>
   );
 };

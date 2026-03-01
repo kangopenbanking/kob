@@ -9,6 +9,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { supabase } from '@/integrations/supabase/client';
 import { useQueryClient } from '@tanstack/react-query';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
@@ -28,6 +29,7 @@ const CustomerTransfer: React.FC = () => {
   const [note, setNote] = useState('');
   const [sending, setSending] = useState(false);
   const [selectedAccountIdx, setSelectedAccountIdx] = useState(0);
+  const [showPin, setShowPin] = useState(false);
   const amountRef = useRef<HTMLInputElement>(null);
 
   const totalBalance = accounts.reduce((sum: number, acc: any) => {
@@ -190,7 +192,7 @@ const CustomerTransfer: React.FC = () => {
             </div>
 
             <div className="mt-auto space-y-3 pt-4">
-              <Button className="w-full rounded-2xl h-12 text-sm font-bold" disabled={sending} onClick={handleSend}>
+              <Button className="w-full rounded-2xl h-12 text-sm font-bold" disabled={sending} onClick={() => setShowPin(true)}>
                 {sending ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" /> Sending...
@@ -358,6 +360,8 @@ const CustomerTransfer: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleSend} />
     </div>
   );
 };
