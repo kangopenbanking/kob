@@ -1,210 +1,165 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft, Shield, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts } from '@/hooks/useCustomerData';
-
-const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
-
-const iconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
-  bank_account: { icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },
-  momo_mtn: { icon: Smartphone, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
-  momo_orange: { icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
-  paypal: { icon: Wallet, color: 'bg-[hsl(210,70%,90%)]', iconColor: 'text-[hsl(210,70%,50%)]' },
-  bank_card: { icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
-};
+import { FundingResult } from '@/components/funding/FundingResult';
+import { cn } from '@/lib/utils';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
+const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
+
+const paymentMethods = [
+  { value: 'mobile_money', label: 'Mobile Money', icon: Smartphone, desc: 'MTN, Orange' },
+  { value: 'card', label: 'Card', icon: CreditCard, desc: 'Visa, Mastercard' },
+  { value: 'paypal', label: 'PayPal', icon: Globe, desc: 'PayPal account' },
+  { value: 'bank_transfer', label: 'Bank', icon: Building2, desc: 'Wire transfer' },
+] as const;
 
 const CustomerFundWallet: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState('');
-  const [selectedAccount, setSelectedAccount] = useState<any>(null);
-  const [step, setStep] = useState<'source' | 'amount' | 'confirm' | 'success'>('source');
+  const [method, setMethod] = useState('mobile_money');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [step, setStep] = useState<'method' | 'amount' | 'processing' | 'result'>('method');
   const [processing, setProcessing] = useState(false);
+  const [fundingResult, setFundingResult] = useState<any>(null);
 
-  // Get user's Kang accounts for crediting
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
+  const primaryAccount = kangAccounts[0];
 
-  const { data: linkedAccounts = [], isLoading } = useQuery({
-    queryKey: ['customer-linked-accounts', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('customer_linked_accounts')
-        .select('*')
-        .eq('user_id', user!.id)
-        .eq('is_active', true)
-        .order('is_primary', { ascending: false });
-      if (error) throw error;
-      return data || [];
-    },
-  });
+  const feePercent = method === 'card' ? 0.035 : method === 'paypal' ? 0.035 : method === 'bank_transfer' ? 0.025 : 0.025;
+  const numAmount = Number(amount);
+  const fee = numAmount > 0 ? Math.round(numAmount * feePercent) : 0;
 
-  const getIcon = (type: string) => iconMap[type] || iconMap.bank_account;
+  const handleSubmit = async () => {
+    if (!numAmount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
+    if (method === 'mobile_money' && !phone) { toast.error('Phone number is required'); return; }
+    if ((method === 'card' || method === 'paypal') && !email) { toast.error('Email is required'); return; }
+    if (!primaryAccount?.id) { toast.error('No wallet account found. Please contact support.'); return; }
 
-  const handleConfirm = () => {
-    if (!amount || Number(amount) <= 0) { toast.error('Enter a valid amount'); return; }
-    setStep('confirm');
-  };
-
-  const handleDeposit = async () => {
     setProcessing(true);
     try {
-      const numAmount = Number(amount);
-      const primaryAccount = kangAccounts[0];
-
-      // 1. Create a deposit transaction record
-      const { error: txError } = await supabase.from('transactions').insert({
-        user_id: user!.id,
-        institution_id: KANG_PLATFORM_ID,
-        account_id: primaryAccount?.id || null,
-        transaction_type: 'deposit',
-        amount: numAmount,
-        currency: 'XAF',
-        status: 'completed',
-        credit_debit_indicator: 'Credit',
-        transaction_information: `Deposit from ${selectedAccount?.provider_name || selectedAccount?.account_type} ···${selectedAccount?.last4 || ''}`,
-        booking_datetime: new Date().toISOString(),
-        value_datetime: new Date().toISOString(),
-        metadata: {
-          source_linked_account_id: selectedAccount?.id,
-          source_type: selectedAccount?.account_type,
-          source_provider: selectedAccount?.provider_name,
-          fee: 0,
+      const { data, error } = await supabase.functions.invoke('gateway-create-funding-intent', {
+        body: {
+          amount: numAmount,
+          currency: 'XAF',
+          method,
+          funding_scope: 'end_user',
+          account_id: primaryAccount.id,
+          customer: { phone, email: email || '' },
+          return_url: window.location.href,
         },
       });
-      if (txError) throw txError;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.message || data.error);
 
-      // 2. Update account balance if account exists
-      if (primaryAccount?.id) {
-        const { data: currentBal } = await supabase
-          .from('account_balances')
-          .select('*')
-          .eq('account_id', primaryAccount.id)
-          .order('balance_datetime', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        const newAmount = (currentBal?.amount ?? 0) + numAmount;
-
-        if (currentBal) {
-          await supabase.from('account_balances')
-            .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
-            .eq('id', currentBal.id);
-        } else {
-          await supabase.from('account_balances').insert({
-            account_id: primaryAccount.id,
-            amount: newAmount,
-            balance_type: 'ClosingAvailable',
-            credit_debit_indicator: 'Credit',
-            currency: 'XAF',
-            balance_datetime: new Date().toISOString(),
-          });
-        }
-      }
-
-      // 3. Invalidate caches
-      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
-      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
-      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
-
-      setStep('success');
-      toast.success(`XAF ${numAmount.toLocaleString()} deposited to your wallet`);
-      setTimeout(() => navigate(-1), 2500);
+      setFundingResult(data);
+      setStep('result');
+      toast.success('Payment initiated successfully');
     } catch (err: any) {
-      toast.error(err.message || 'Deposit failed. Please try again.');
+      toast.error(err.message || 'Failed to initiate payment');
     } finally {
       setProcessing(false);
     }
   };
 
+  const handleSuccess = () => {
+    queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
+    queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+    queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+    setTimeout(() => navigate(-1), 2500);
+  };
+
+  const goBack = () => {
+    if (step === 'amount') setStep('method');
+    else if (step === 'result') { setStep('method'); setFundingResult(null); }
+    else navigate(-1);
+  };
+
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
-        <button onClick={() => {
-          if (step === 'amount') { setStep('source'); setSelectedAccount(null); }
-          else if (step === 'confirm') setStep('amount');
-          else navigate(-1);
-        }}>
+        <button onClick={goBack}>
           <ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} />
         </button>
         <h1 className="text-xl font-bold text-foreground">Add Money</h1>
       </div>
 
       <AnimatePresence mode="wait">
-        {step === 'success' ? (
-          <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center gap-4 py-16">
-            <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(150,40%,90%)]">
-              <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
-            </div>
-            <p className="text-lg font-bold text-foreground">Deposit Successful!</p>
-            <p className="text-sm text-muted-foreground">XAF {Number(amount).toLocaleString()} added to your wallet</p>
-            <p className="text-xs text-[hsl(150,40%,35%)] font-semibold">No fees charged ✓</p>
+        {step === 'result' && fundingResult ? (
+          <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+            <FundingResult result={fundingResult} fmt={fmt} onSuccess={handleSuccess} />
           </motion.div>
-        ) : step === 'source' ? (
-          <motion.div key="source" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
-            {/* Free deposit banner */}
-            <div className="flex items-start gap-3 rounded-2xl bg-[hsl(150,40%,90%)] p-4">
-              <ArrowDownLeft className="h-5 w-5 text-[hsl(150,40%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
+        ) : step === 'method' ? (
+          <motion.div key="method" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
+            {/* Info banner */}
+            <div className="flex items-start gap-3 rounded-2xl bg-primary/10 p-4">
+              <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" strokeWidth={1.5} />
               <div>
-                <p className="text-xs font-bold text-foreground">Free Deposits</p>
-                <p className="text-[11px] text-muted-foreground">Adding money from your linked accounts is always free. No hidden charges.</p>
+                <p className="text-xs font-bold text-foreground">Secure Payments</p>
+                <p className="text-[11px] text-muted-foreground">All payments are processed securely via Stripe, Flutterwave, or PayPal.</p>
               </div>
             </div>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Select Source Account</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Choose Payment Method</p>
 
-            {isLoading ? (
-              <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : linkedAccounts.length === 0 ? (
-              <div className="flex flex-col items-center gap-3 py-12">
-                <p className="text-sm font-semibold text-foreground">No linked accounts</p>
-                <p className="text-xs text-muted-foreground text-center">Link an account first to add money to your wallet.</p>
-                <Button onClick={() => navigate('/app/linked-accounts')} className="rounded-2xl mt-2">Link Account</Button>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {linkedAccounts.map((acc: any) => {
-                  const { icon: Icon, color, iconColor } = getIcon(acc.account_type);
-                  return (
-                    <button key={acc.id} onClick={() => { setSelectedAccount(acc); setStep('amount'); }}
-                      className="flex w-full items-center gap-3 rounded-3xl border-2 border-border bg-card p-4 text-left transition-all hover:border-primary active:scale-[0.98]">
-                      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${color}`}>
-                        <Icon className={`h-5 w-5 ${iconColor}`} strokeWidth={1.5} />
-                      </div>
-                      <div className="flex-1">
-                        <p className="text-sm font-bold text-foreground">{acc.account_name || acc.account_type}</p>
-                        <p className="text-[11px] text-muted-foreground">{acc.provider_name} {acc.last4 ? `•••• ${acc.last4}` : ''}</p>
-                      </div>
-                      <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" strokeWidth={1.5} />
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <div className="grid grid-cols-2 gap-3">
+              {paymentMethods.map((m) => {
+                const Icon = m.icon;
+                const selected = method === m.value;
+                return (
+                  <button
+                    key={m.value}
+                    onClick={() => setMethod(m.value)}
+                    className={cn(
+                      'flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all',
+                      selected
+                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
+                        : 'border-border bg-card hover:border-primary/40'
+                    )}
+                  >
+                    <div className={cn(
+                      'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+                      selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                    )}>
+                      <Icon className="h-5 w-5" />
+                    </div>
+                    <span className={cn('text-xs font-bold', selected ? 'text-primary' : 'text-foreground')}>{m.label}</span>
+                    <span className="text-[10px] text-muted-foreground">{m.desc}</span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <Button onClick={() => setStep('amount')} className="w-full rounded-2xl h-12 text-sm font-bold">
+              Continue
+            </Button>
           </motion.div>
         ) : step === 'amount' ? (
           <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
-            {/* Source display */}
-            {selectedAccount && (() => {
-              const { icon: Icon, color, iconColor } = getIcon(selectedAccount.account_type);
+            {/* Selected method */}
+            {(() => {
+              const m = paymentMethods.find(p => p.value === method)!;
+              const Icon = m.icon;
               return (
                 <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
-                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
-                    <Icon className={`h-5 w-5 ${iconColor}`} strokeWidth={1.5} />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                    <Icon className="h-5 w-5" strokeWidth={1.5} />
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-foreground">From: {selectedAccount.account_name}</p>
-                    <p className="text-[10px] text-muted-foreground">{selectedAccount.provider_name} {selectedAccount.last4 ? `•••• ${selectedAccount.last4}` : ''}</p>
+                    <p className="text-xs font-bold text-foreground">Via: {m.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{m.desc}</p>
                   </div>
                 </div>
               );
@@ -231,52 +186,52 @@ const CustomerFundWallet: React.FC = () => {
               ))}
             </div>
 
-            {/* Fee notice */}
-            <div className="rounded-2xl bg-[hsl(150,40%,90%)] p-3 text-center">
-              <p className="text-xs font-bold text-[hsl(150,40%,35%)]">No fee applies ✓</p>
-              <p className="text-[11px] text-muted-foreground">Deposits into your Kang wallet are always free</p>
-            </div>
+            {/* Conditional fields */}
+            {method === 'mobile_money' && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Phone Number</Label>
+                <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11 rounded-xl" />
+              </div>
+            )}
+            {(method === 'card' || method === 'paypal') && (
+              <div className="space-y-1.5">
+                <Label className="text-xs font-bold">Email</Label>
+                <Input type="email" placeholder="your@email.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11 rounded-xl" />
+              </div>
+            )}
 
-            <Button onClick={handleConfirm} disabled={!amount || Number(amount) <= 0} className="w-full rounded-2xl h-12 text-sm font-bold">
-              Continue
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div key="confirm" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
-            <p className="text-center text-sm font-semibold text-muted-foreground">Confirm Deposit</p>
+            {/* Fee summary */}
+            {numAmount > 0 && (
+              <div className="rounded-2xl bg-muted/50 p-4 space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-bold text-foreground">{fmt(numAmount)}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Fee ({(feePercent * 100).toFixed(1)}%)</span>
+                  <span className="font-bold text-foreground">{fmt(fee)}</span>
+                </div>
+                <div className="border-t border-border pt-2 flex justify-between text-sm">
+                  <span className="font-bold text-foreground">You receive</span>
+                  <span className="font-extrabold text-foreground">{fmt(numAmount - fee)}</span>
+                </div>
+              </div>
+            )}
 
-            <div className="rounded-3xl bg-card border-2 border-border p-5 space-y-4">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Amount</span>
-                <span className="font-bold text-foreground">XAF {Number(amount).toLocaleString()}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Fee</span>
-                <span className="font-bold text-[hsl(150,40%,35%)]">Free</span>
-              </div>
-              <div className="border-t border-border pt-3 flex justify-between text-sm">
-                <span className="text-muted-foreground">From</span>
-                <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">To</span>
-                <span className="font-bold text-foreground">Kang Wallet</span>
-              </div>
-              <div className="border-t border-border pt-3 flex justify-between text-base">
-                <span className="font-bold text-foreground">You receive</span>
-                <span className="font-extrabold text-foreground">XAF {Number(amount).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <Button onClick={handleDeposit} disabled={processing} className="w-full rounded-2xl h-12 text-sm font-bold">
+            <Button onClick={handleSubmit} disabled={processing || !numAmount || numAmount <= 0}
+              className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
                 <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
               ) : (
-                'Confirm Deposit'
+                `Pay ${numAmount > 0 ? fmt(numAmount) : ''}`
               )}
             </Button>
+
+            <p className="flex items-center justify-center gap-1.5 text-[10px] text-muted-foreground">
+              <Shield className="h-3 w-3" /> End-to-end encrypted
+            </p>
           </motion.div>
-        )}
+        ) : null}
       </AnimatePresence>
     </div>
   );
