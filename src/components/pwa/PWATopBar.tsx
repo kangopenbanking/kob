@@ -13,7 +13,7 @@ export const PWATopBar: React.FC<PWATopBarProps> = ({ userName }) => {
   const tenant = useTenant();
   const navigate = useNavigate();
   const { institutionId } = useParams();
-  const { unreadCount } = useNotifications(institutionId);
+  const { unreadCount } = useNotifications(institutionId, true);
 
   // Register user with OneSignal for this institution
   useOneSignal(institutionId);

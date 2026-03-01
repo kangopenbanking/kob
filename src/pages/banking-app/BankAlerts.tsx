@@ -39,7 +39,7 @@ const filterOptions: { key: FilterType; label: string }[] = [
 const BankAlerts: React.FC = () => {
   const navigate = useNavigate();
   const { institutionId } = useParams();
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications(institutionId);
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications(institutionId, true);
   const [filter, setFilter] = useState<FilterType>('all');
 
   const filteredNotifications = filter === 'all'
