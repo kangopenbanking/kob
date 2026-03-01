@@ -58,10 +58,10 @@ const moneyMovement: FeatureItem[] = [
 ];
 
 const paymentsBills: FeatureItem[] = [
-  { label: 'Bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', borderColor: 'border-[hsl(25,60%,60%)]', featureKey: 'bills' },
-  { label: 'Invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', borderColor: 'border-[hsl(50,60%,55%)]', featureKey: 'invoices' },
-  { label: 'Split Bills', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,60%)]', featureKey: 'split_bills' },
-  { label: 'Recurring', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'recurring' },
+  { label: 'Bills', description: 'Pay utility & service bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', borderColor: 'border-[hsl(25,60%,60%)]', featureKey: 'bills' },
+  { label: 'Invoices', description: 'Manage & pay invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', borderColor: 'border-[hsl(50,60%,55%)]', featureKey: 'invoices' },
+  { label: 'Split Bills', description: 'Share costs with friends', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,60%)]', featureKey: 'split_bills' },
+  { label: 'Recurring', description: 'Auto-pay subscriptions', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'recurring' },
 ];
 
 const savingsGoals: FeatureItem[] = [
@@ -264,21 +264,29 @@ const CustomerHome: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Pill-shaped Add Money button */}
+            {/* Period Toggle */}
             <motion.div
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45 }}
               className="flex justify-center mb-6"
             >
-              <motion.button
-                whileTap={{ scale: 0.95 }}
-                onClick={() => go('fund')}
-                className="flex items-center gap-2 rounded-full bg-primary-foreground px-6 py-2.5 shadow-lg"
-              >
-                <Download className="h-4 w-4 text-primary" strokeWidth={2} />
-                <span className="text-sm font-bold text-primary">Add Money</span>
-              </motion.button>
+              <div className="flex rounded-full bg-[hsl(0,0%,100%)]/10 p-1 backdrop-blur-sm">
+                {(['W', 'M', 'Y'] as const).map((p) => (
+                  <motion.button
+                    key={p}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setPeriod(p)}
+                    className={`rounded-full px-5 py-1.5 text-xs font-bold transition-all ${
+                      period === p
+                        ? 'bg-primary-foreground text-primary shadow-md'
+                        : 'text-primary-foreground/60'
+                    }`}
+                  >
+                    {p === 'W' ? 'Week' : p === 'M' ? 'Month' : 'Year'}
+                  </motion.button>
+                ))}
+              </div>
             </motion.div>
 
             {/* Quick Action Circles */}
@@ -349,14 +357,17 @@ const CustomerHome: React.FC = () => {
       {visiblePayments.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Payments & Bills</p>
-          <div className="flex gap-2.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="grid grid-cols-2 gap-3">
             {visiblePayments.map((item) => (
               <button key={item.path} onClick={() => go(item.path)}
-                className={`flex min-w-[80px] flex-col items-center gap-2 rounded-2xl ${item.color} p-3 border ${item.borderColor}`}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-background/50">
-                  <item.icon className={`h-4 w-4 ${item.iconColor}`} strokeWidth={1.5} />
+                className={`flex items-center gap-3 rounded-2xl ${item.color} p-4 border-2 ${item.borderColor}`}>
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/50">
+                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
                 </div>
-                <p className="text-[10px] font-bold text-foreground">{item.label}</p>
+                <div className="text-left">
+                  <p className="text-xs font-bold text-foreground">{item.label}</p>
+                  <p className="text-[10px] text-muted-foreground">{item.description}</p>
+                </div>
               </button>
             ))}
           </div>
