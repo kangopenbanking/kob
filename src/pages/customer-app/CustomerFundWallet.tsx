@@ -17,10 +17,10 @@ const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
 
 const paymentMethods = [
-  { value: 'mobile_money', label: 'Mobile Money', icon: Smartphone, desc: 'MTN, Orange' },
-  { value: 'card', label: 'Card', icon: CreditCard, desc: 'Visa, Mastercard' },
-  { value: 'paypal', label: 'PayPal', icon: Globe, desc: 'PayPal account' },
-  { value: 'bank_transfer', label: 'Bank', icon: Building2, desc: 'Wire transfer' },
+  { value: 'mobile_money', label: 'Mobile Money', icon: Smartphone, desc: 'MTN, Orange', fadedBg: 'bg-[hsl(45,80%,95%)]', activeBg: 'bg-[hsl(45,80%,55%)]', activeBorder: 'border-[hsl(45,80%,55%)]', activeText: 'text-[hsl(45,80%,25%)]' },
+  { value: 'card', label: 'Card', icon: CreditCard, desc: 'Visa, Mastercard', fadedBg: 'bg-[hsl(220,80%,95%)]', activeBg: 'bg-[hsl(220,80%,55%)]', activeBorder: 'border-[hsl(220,80%,55%)]', activeText: 'text-[hsl(220,80%,25%)]' },
+  { value: 'paypal', label: 'PayPal', icon: Globe, desc: 'PayPal account', fadedBg: 'bg-[hsl(200,80%,95%)]', activeBg: 'bg-[hsl(200,80%,50%)]', activeBorder: 'border-[hsl(200,80%,50%)]', activeText: 'text-[hsl(200,80%,20%)]' },
+  { value: 'bank_transfer', label: 'Bank', icon: Building2, desc: 'Wire transfer', fadedBg: 'bg-[hsl(150,60%,95%)]', activeBg: 'bg-[hsl(150,60%,45%)]', activeBorder: 'border-[hsl(150,60%,45%)]', activeText: 'text-[hsl(150,60%,20%)]' },
 ] as const;
 
 interface BankOption {
@@ -221,17 +221,17 @@ const CustomerFundWallet: React.FC = () => {
                     className={cn(
                       'flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all',
                       selected
-                        ? 'border-primary bg-primary/5 ring-2 ring-primary/20'
-                        : 'border-border bg-card hover:border-primary/40'
+                        ? `${m.activeBorder} ${m.fadedBg} ring-2 ring-current/20 shadow-md scale-[1.02]`
+                        : `border-transparent ${m.fadedBg} opacity-70 hover:opacity-100`
                     )}
                   >
                     <div className={cn(
                       'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
-                      selected ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                      selected ? `${m.activeBg} text-white` : 'bg-white/60 text-muted-foreground'
                     )}>
                       <Icon className="h-5 w-5" />
                     </div>
-                    <span className={cn('text-xs font-bold', selected ? 'text-primary' : 'text-foreground')}>{m.label}</span>
+                    <span className={cn('text-xs', selected ? `font-extrabold ${m.activeText}` : 'font-medium text-foreground')}>{m.label}</span>
                     <span className="text-[10px] text-muted-foreground">{m.desc}</span>
                   </button>
                 );
