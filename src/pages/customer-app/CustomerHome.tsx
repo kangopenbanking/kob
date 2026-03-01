@@ -166,9 +166,15 @@ const CustomerHome: React.FC = () => {
                 loop
                 muted
                 playsInline
-                className="absolute inset-0 h-full w-full object-cover"
+                preload="auto"
+                className="absolute inset-0 h-full w-full object-cover scale-105"
+                style={{ minHeight: '100%', minWidth: '100%' }}
+                onCanPlay={(e) => {
+                  const vid = e.currentTarget;
+                  if (vid.paused) vid.play().catch(() => {});
+                }}
               />
-              <div className="absolute inset-0 bg-gradient-to-b from-black/15 to-black/35" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/20 to-black/40" />
             </>
           )}
           {/* Decorative circles */}
