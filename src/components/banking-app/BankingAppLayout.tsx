@@ -4,11 +4,22 @@ import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { BottomNavigation } from '@/components/pwa/BottomNavigation';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
+import { useEffect, useState } from 'react';
 
 export const BankingAppLayout: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const basePath = `/bank/${institutionId}`;
   const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string>();
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id));
+  }, []);
+
+  // Auto-refresh balances & transactions in realtime
+  useRealtimeBalanceSync(userId);
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
