@@ -45,6 +45,8 @@ interface CustomerTenantBranding {
   cardColors: CardColors;
   supportPhone: string;
   supportEmail: string;
+  heroBgColor: string;
+  heroBgImage: string | null;
 }
 
 const defaultFeatures: CustomerAppFeatures = {
@@ -93,6 +95,8 @@ const defaultBranding: CustomerTenantBranding = {
   cardColors: {},
   supportPhone: '',
   supportEmail: '',
+  heroBgColor: '',
+  heroBgImage: null,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
@@ -134,6 +138,9 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const supportPhone: string = customerConfig.support_phone || appConfig.support_phone || '';
       const supportEmail: string = customerConfig.support_email || appConfig.support_email || '';
 
+      const heroBgColor: string = customerConfig.hero_bg_color || '';
+      const heroBgImage: string | null = customerConfig.hero_bg_image || null;
+
       setBranding({
         id: inst.id,
         name: inst.institution_name || 'Kang',
@@ -149,6 +156,8 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         cardColors,
         supportPhone,
         supportEmail,
+        heroBgColor,
+        heroBgImage,
       });
     };
 
