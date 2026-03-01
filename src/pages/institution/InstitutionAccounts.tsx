@@ -12,9 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { RefreshCw, Wallet, TrendingUp, Plus, MoreHorizontal, Eye, Ban, Power } from "lucide-react";
+import { RefreshCw, Wallet, TrendingUp, Plus, MoreHorizontal, Eye, Ban, Power, ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function InstitutionAccounts() {
   const navigate = useNavigate();
@@ -27,6 +28,12 @@ export default function InstitutionAccounts() {
   const [detailAccount, setDetailAccount] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [txLoading, setTxLoading] = useState(false);
+  const [tellerOpen, setTellerOpen] = useState(false);
+  const [tellerAccount, setTellerAccount] = useState<any>(null);
+  const [tellerOp, setTellerOp] = useState<'deposit' | 'withdraw'>('deposit');
+  const [tellerAmount, setTellerAmount] = useState('');
+  const [tellerDesc, setTellerDesc] = useState('');
+  const [tellerSaving, setTellerSaving] = useState(false);
   const [form, setForm] = useState({
     account_holder_name: "", account_type: "Personal" as "Personal" | "Business",
     account_subtype: "CurrentAccount" as any, currency: "XAF",
@@ -109,6 +116,47 @@ export default function InstitutionAccounts() {
     } catch (e: any) { toast({ title: "Error", description: e.message, variant: "destructive" }); }
   };
 
+  const openTellerOp = (account: any, op: 'deposit' | 'withdraw') => {
+    setTellerAccount(account);
+    setTellerOp(op);
+    setTellerAmount('');
+    setTellerDesc('');
+    setTellerOpen(true);
+  };
+
+  const handleTellerTransaction = async () => {
+    if (!tellerAccount || !tellerAmount || !institutionId) return;
+    const amt = parseFloat(tellerAmount);
+    if (isNaN(amt) || amt <= 0) {
+      toast({ title: "Invalid amount", variant: "destructive" });
+      return;
+    }
+    setTellerSaving(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('teller-transaction', {
+        body: {
+          account_id: tellerAccount.id,
+          amount: amt,
+          operation: tellerOp,
+          description: tellerDesc || undefined,
+          institution_id: institutionId,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast({
+        title: `${tellerOp === 'deposit' ? 'Deposit' : 'Withdrawal'} Successful`,
+        description: `${data.currency} ${amt.toLocaleString()} — New balance: ${data.balance_after?.toLocaleString()} ${data.currency}`,
+      });
+      setTellerOpen(false);
+      loadData();
+    } catch (e: any) {
+      toast({ title: "Transaction failed", description: e.message, variant: "destructive" });
+    } finally {
+      setTellerSaving(false);
+    }
+  };
+
   const viewTransactions = async (account: any) => {
     setDetailAccount(account);
     setTxLoading(true);
@@ -147,6 +195,12 @@ export default function InstitutionAccounts() {
                 <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-7 w-7"><MoreHorizontal className="h-3.5 w-3.5" /></Button></DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => viewTransactions(account)}><Eye className="h-3.5 w-3.5 mr-2" />View Transactions</DropdownMenuItem>
+                  {account.is_active && (
+                    <>
+                      <DropdownMenuItem onClick={() => openTellerOp(account, 'deposit')}><ArrowDownLeft className="h-3.5 w-3.5 mr-2" />Deposit</DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => openTellerOp(account, 'withdraw')}><ArrowUpRight className="h-3.5 w-3.5 mr-2" />Withdraw</DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => toggleActive(account)}>{account.is_active ? <><Ban className="h-3.5 w-3.5 mr-2" />Freeze</> : <><Power className="h-3.5 w-3.5 mr-2" />Activate</>}</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -253,6 +307,60 @@ export default function InstitutionAccounts() {
                   </TableRow>
                 ))}</TableBody>
               </Table>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Teller Deposit/Withdraw Dialog */}
+      <Dialog open={tellerOpen} onOpenChange={o => { if (!o) setTellerOpen(false); }}>
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {tellerOp === 'deposit' ? <ArrowDownLeft className="h-5 w-5 text-emerald-600" /> : <ArrowUpRight className="h-5 w-5 text-red-500" />}
+              {tellerOp === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds'}
+            </DialogTitle>
+          </DialogHeader>
+          {tellerAccount && (
+            <div className="space-y-4 py-2">
+              <div className="rounded-lg border border-border p-3 bg-muted/50">
+                <p className="text-sm font-medium">{tellerAccount.account_holder_name}</p>
+                <p className="text-xs text-muted-foreground font-mono">{tellerAccount.account_id}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Current balance: <span className="font-semibold">{(getBalance(tellerAccount.id) ?? 0).toLocaleString()} {tellerAccount.currency}</span>
+                </p>
+              </div>
+              <div className="space-y-2">
+                <Label>Amount ({tellerAccount.currency}) *</Label>
+                <Input
+                  type="number"
+                  min="1"
+                  step="any"
+                  placeholder="0.00"
+                  value={tellerAmount}
+                  onChange={e => setTellerAmount(e.target.value)}
+                  autoFocus
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Description (optional)</Label>
+                <Textarea
+                  placeholder={`Teller ${tellerOp} description...`}
+                  value={tellerDesc}
+                  onChange={e => setTellerDesc(e.target.value)}
+                  rows={2}
+                />
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setTellerOpen(false)}>Cancel</Button>
+                <Button
+                  onClick={handleTellerTransaction}
+                  disabled={tellerSaving || !tellerAmount || parseFloat(tellerAmount) <= 0}
+                  className={tellerOp === 'deposit' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'}
+                >
+                  {tellerSaving ? 'Processing...' : tellerOp === 'deposit' ? 'Confirm Deposit' : 'Confirm Withdrawal'}
+                </Button>
+              </DialogFooter>
             </div>
           )}
         </DialogContent>
