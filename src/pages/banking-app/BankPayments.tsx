@@ -36,13 +36,7 @@ const BankPayments: React.FC = () => {
     color: quickSendColors[i % quickSendColors.length],
   }));
 
-  // Fallback if no beneficiaries
-  const displayContacts = contacts.length > 0 ? contacts : [
-    { name: 'Jean M.', initials: 'JM', color: quickSendColors[0] },
-    { name: 'Marie K.', initials: 'MK', color: quickSendColors[1] },
-    { name: 'Paul A.', initials: 'PA', color: quickSendColors[2] },
-    { name: 'Aisha B.', initials: 'AB', color: quickSendColors[3] },
-  ];
+  const displayContacts = contacts;
 
   return (
     <div className="flex flex-col px-4 py-6">
@@ -50,19 +44,21 @@ const BankPayments: React.FC = () => {
       <p className="mb-6 text-sm font-medium text-muted-foreground">Send, receive, and pay bills</p>
 
       {/* Recent Contacts */}
-      <div className="mb-6">
-        <h3 className="mb-3 text-base font-bold text-foreground">Quick Send</h3>
-        <div className="flex gap-4">
-          {displayContacts.map((contact) => (
-            <button key={contact.name} className="flex flex-col items-center gap-1.5">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-full ${contact.color}`}>
-                <span className="text-sm font-bold text-white">{contact.initials}</span>
-              </div>
-              <span className="text-xs font-semibold text-muted-foreground">{contact.name}</span>
-            </button>
-          ))}
+      {displayContacts.length > 0 && (
+        <div className="mb-6">
+          <h3 className="mb-3 text-base font-bold text-foreground">Quick Send</h3>
+          <div className="flex gap-4">
+            {displayContacts.map((contact) => (
+              <button key={contact.name} className="flex flex-col items-center gap-1.5">
+                <div className={`flex h-14 w-14 items-center justify-center rounded-full ${contact.color}`}>
+                  <span className="text-sm font-bold text-white">{contact.initials}</span>
+                </div>
+                <span className="text-xs font-semibold text-muted-foreground">{contact.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Payment Options */}
       <div className="flex flex-col gap-3">
