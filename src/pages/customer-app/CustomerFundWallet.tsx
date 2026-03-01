@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft, Shield, Globe, Search, ChevronRight } from 'lucide-react';
+import { useNavigate, Link } from 'react-router-dom';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft, Shield, Globe, Search, ChevronRight, AlertCircle, LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,12 +16,35 @@ import { cn } from '@/lib/utils';
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
 
-const paymentMethods = [
-  { value: 'mobile_money', label: 'Mobile Money', icon: Smartphone, desc: 'MTN, Orange', fadedBg: 'bg-[hsl(45,80%,95%)]', activeBg: 'bg-[hsl(45,80%,55%)]', activeBorder: 'border-[hsl(45,80%,55%)]', activeText: 'text-[hsl(45,80%,25%)]' },
-  { value: 'card', label: 'Card', icon: CreditCard, desc: 'Visa, Mastercard', fadedBg: 'bg-[hsl(220,80%,95%)]', activeBg: 'bg-[hsl(220,80%,55%)]', activeBorder: 'border-[hsl(220,80%,55%)]', activeText: 'text-[hsl(220,80%,25%)]' },
-  { value: 'paypal', label: 'PayPal', icon: Globe, desc: 'PayPal account', fadedBg: 'bg-[hsl(200,80%,95%)]', activeBg: 'bg-[hsl(200,80%,50%)]', activeBorder: 'border-[hsl(200,80%,50%)]', activeText: 'text-[hsl(200,80%,20%)]' },
-  { value: 'bank_transfer', label: 'Bank', icon: Building2, desc: 'Wire transfer', fadedBg: 'bg-[hsl(150,60%,95%)]', activeBg: 'bg-[hsl(150,60%,45%)]', activeBorder: 'border-[hsl(150,60%,45%)]', activeText: 'text-[hsl(150,60%,20%)]' },
-] as const;
+const providerTypeToMethod = (providerType: string): string => {
+  switch (providerType) {
+    case 'mobile_money': return 'mobile_money';
+    case 'card': return 'card';
+    case 'paypal': return 'paypal';
+    case 'bank': return 'bank_transfer';
+    default: return 'bank_transfer';
+  }
+};
+
+const providerTypeIcon = (providerType: string) => {
+  switch (providerType) {
+    case 'mobile_money': return Smartphone;
+    case 'card': return CreditCard;
+    case 'paypal': return Globe;
+    case 'bank': return Building2;
+    default: return Building2;
+  }
+};
+
+const providerTypeColors = (providerType: string, selected: boolean) => {
+  const colors: Record<string, { faded: string; active: string; activeBorder: string; activeText: string }> = {
+    mobile_money: { faded: 'bg-[hsl(45,80%,95%)]', active: 'bg-[hsl(45,80%,55%)]', activeBorder: 'border-[hsl(45,80%,55%)]', activeText: 'text-[hsl(45,80%,25%)]' },
+    card: { faded: 'bg-[hsl(220,80%,95%)]', active: 'bg-[hsl(220,80%,55%)]', activeBorder: 'border-[hsl(220,80%,55%)]', activeText: 'text-[hsl(220,80%,25%)]' },
+    paypal: { faded: 'bg-[hsl(200,80%,95%)]', active: 'bg-[hsl(200,80%,50%)]', activeBorder: 'border-[hsl(200,80%,50%)]', activeText: 'text-[hsl(200,80%,20%)]' },
+    bank: { faded: 'bg-[hsl(150,60%,95%)]', active: 'bg-[hsl(150,60%,45%)]', activeBorder: 'border-[hsl(150,60%,45%)]', activeText: 'text-[hsl(150,60%,20%)]' },
+  };
+  return colors[providerType] || colors.bank;
+};
 
 interface BankOption {
   code: string;
@@ -34,14 +57,14 @@ const CustomerFundWallet: React.FC = () => {
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
   const [amount, setAmount] = useState('');
-  const [method, setMethod] = useState('mobile_money');
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
-  const [step, setStep] = useState<'method' | 'bank_select' | 'amount' | 'processing' | 'result'>('method');
+  const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'processing' | 'result'>('source');
   const [processing, setProcessing] = useState(false);
   const [fundingResult, setFundingResult] = useState<any>(null);
 
-  // Bank selection state
+  // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
   const [banksLoading, setBanksLoading] = useState(false);
   const [selectedBank, setSelectedBank] = useState<BankOption | null>(null);
@@ -49,17 +72,35 @@ const CustomerFundWallet: React.FC = () => {
 
   const { account: primaryAccount, loading: accountLoading } = useEnsureWalletAccount(user?.id);
 
+  // Fetch user's active linked accounts
+  const { data: linkedAccounts = [], isLoading: accountsLoading } = useQuery({
+    queryKey: ['customer-linked-accounts', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('customer_linked_accounts')
+        .select('*')
+        .eq('user_id', user!.id)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const selectedAccount = linkedAccounts.find((a: any) => a.id === selectedAccountId);
+  const method = selectedAccount ? providerTypeToMethod(selectedAccount.provider_type) : 'mobile_money';
+
   const feePercent = method === 'card' ? 0.035 : method === 'paypal' ? 0.035 : method === 'bank_transfer' ? 0.025 : 0.025;
   const numAmount = Number(amount);
   const fee = numAmount > 0 ? Math.round(numAmount * feePercent) : 0;
 
-  // Fetch banks from both KOB institutions and Flutterwave
+  // Fetch banks for bank_transfer method
   const fetchBanks = useCallback(async () => {
     setBanksLoading(true);
     const allBanks: BankOption[] = [];
 
     try {
-      // 1. Fetch KOB-connected institutions (banks/FIs on the platform)
       const { data: kobInstitutions } = await supabase
         .from('institutions' as any)
         .select('id, institution_name, institution_type, swift_bic_code')
@@ -68,11 +109,7 @@ const CustomerFundWallet: React.FC = () => {
 
       if (kobInstitutions?.length) {
         kobInstitutions.forEach((inst: any) => {
-          allBanks.push({
-            code: inst.swift_bic_code || inst.id,
-            name: `${inst.institution_name}`,
-            source: 'kob',
-          });
+          allBanks.push({ code: inst.swift_bic_code || inst.id, name: inst.institution_name, source: 'kob' });
         });
       }
     } catch (err) {
@@ -80,23 +117,14 @@ const CustomerFundWallet: React.FC = () => {
     }
 
     try {
-      // 2. Fetch Flutterwave banks for Cameroon
       const { data: fwData, error: fwError } = await supabase.functions.invoke('flutterwave-list-banks', {
         body: { country: 'CM' },
       });
-
       if (!fwError && fwData?.banks?.length) {
         fwData.banks.forEach((bank: any) => {
-          // Avoid duplicates with KOB banks by checking name similarity
-          const isDuplicate = allBanks.some(
-            (b) => b.name.toLowerCase().includes(bank.name?.toLowerCase()?.slice(0, 10))
-          );
+          const isDuplicate = allBanks.some(b => b.name.toLowerCase().includes(bank.name?.toLowerCase()?.slice(0, 10)));
           if (!isDuplicate) {
-            allBanks.push({
-              code: bank.code,
-              name: bank.name,
-              source: 'flutterwave',
-            });
+            allBanks.push({ code: bank.code, name: bank.name, source: 'flutterwave' });
           }
         });
       }
@@ -108,8 +136,10 @@ const CustomerFundWallet: React.FC = () => {
     setBanksLoading(false);
   }, []);
 
-  const handleMethodContinue = () => {
-    if (method === 'bank_transfer') {
+  const handleSourceContinue = () => {
+    if (!selectedAccountId) { toast.error('Select a linked account'); return; }
+    const derivedMethod = providerTypeToMethod(selectedAccount?.provider_type);
+    if (derivedMethod === 'bank_transfer') {
       fetchBanks();
       setStep('bank_select');
     } else {
@@ -138,7 +168,14 @@ const CustomerFundWallet: React.FC = () => {
           method,
           funding_scope: 'end_user',
           account_id: primaryAccount.id,
-          customer: { phone, email: email || '' },
+          linked_account_id: selectedAccountId,
+          linked_account_ref: selectedAccount ? {
+            id: selectedAccount.id,
+            provider_type: selectedAccount.provider_type,
+            provider_name: selectedAccount.provider_name,
+            last4: selectedAccount.last4,
+          } : undefined,
+          customer: { phone: phone || selectedAccount?.account_number, email: email || '' },
           return_url: window.location.href,
           ...(method === 'bank_transfer' && selectedBank ? {
             bank_code: selectedBank.code,
@@ -170,18 +207,16 @@ const CustomerFundWallet: React.FC = () => {
   };
 
   const goBack = () => {
-    if (step === 'bank_select') setStep('method');
+    if (step === 'bank_select') setStep('source');
     else if (step === 'amount') {
       if (method === 'bank_transfer') { setStep('bank_select'); setSelectedBank(null); }
-      else setStep('method');
+      else setStep('source');
     }
-    else if (step === 'result') { setStep('method'); setFundingResult(null); setSelectedBank(null); }
+    else if (step === 'result') { setStep('source'); setFundingResult(null); setSelectedBank(null); }
     else navigate(-1);
   };
 
-  const filteredBanks = banks.filter(b =>
-    b.name.toLowerCase().includes(bankSearch.toLowerCase())
-  );
+  const filteredBanks = banks.filter(b => b.name.toLowerCase().includes(bankSearch.toLowerCase()));
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -197,50 +232,89 @@ const CustomerFundWallet: React.FC = () => {
           <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <FundingResult result={fundingResult} fmt={fmt} onSuccess={handleSuccess} />
           </motion.div>
-        ) : step === 'method' ? (
-          <motion.div key="method" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
+        ) : step === 'source' ? (
+          <motion.div key="source" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
             {/* Info banner */}
             <div className="flex items-start gap-3 rounded-2xl bg-primary/10 p-4">
               <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" strokeWidth={1.5} />
               <div>
-                <p className="text-xs font-bold text-foreground">Secure Payments</p>
-                <p className="text-[11px] text-muted-foreground">All payments are processed securely via Stripe, Flutterwave, or PayPal.</p>
+                <p className="text-xs font-bold text-foreground">Fund from Linked Accounts</p>
+                <p className="text-[11px] text-muted-foreground">Select one of your linked accounts as the funding source. All payments are processed securely.</p>
               </div>
             </div>
 
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Choose Payment Method</p>
+            {accountsLoading ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : linkedAccounts.length === 0 ? (
+              /* No linked accounts — prompt to link */
+              <div className="flex flex-col items-center gap-4 py-10 text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                  <LinkIcon className="h-8 w-8 text-muted-foreground" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-foreground">No Linked Accounts</p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+                    You need at least one linked account (bank, mobile money, card, or PayPal) to add funds to your wallet.
+                  </p>
+                </div>
+                <Button asChild className="rounded-2xl">
+                  <Link to="/app/linked-accounts">
+                    <LinkIcon className="h-4 w-4 mr-2" /> Link an Account
+                  </Link>
+                </Button>
+              </div>
+            ) : (
+              <>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Choose Funding Source</p>
 
-            <div className="grid grid-cols-2 gap-3">
-              {paymentMethods.map((m) => {
-                const Icon = m.icon;
-                const selected = method === m.value;
-                return (
-                  <button
-                    key={m.value}
-                    onClick={() => setMethod(m.value)}
-                    className={cn(
-                      'flex flex-col items-center gap-2 rounded-2xl border-2 p-4 transition-all',
-                      selected
-                        ? `${m.activeBorder} ${m.fadedBg} ring-2 ring-current/20 shadow-md scale-[1.02]`
-                        : `border-transparent ${m.fadedBg} opacity-70 hover:opacity-100`
-                    )}
-                  >
-                    <div className={cn(
-                      'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
-                      selected ? `${m.activeBg} text-white` : 'bg-white/60 text-muted-foreground'
-                    )}>
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <span className={cn('text-xs', selected ? `font-extrabold ${m.activeText}` : 'font-medium text-foreground')}>{m.label}</span>
-                    <span className="text-[10px] text-muted-foreground">{m.desc}</span>
-                  </button>
-                );
-              })}
-            </div>
+                <div className="space-y-2">
+                  {linkedAccounts.map((acc: any) => {
+                    const Icon = providerTypeIcon(acc.provider_type);
+                    const colors = providerTypeColors(acc.provider_type, selectedAccountId === acc.id);
+                    const selected = selectedAccountId === acc.id;
+                    return (
+                      <button
+                        key={acc.id}
+                        onClick={() => setSelectedAccountId(acc.id)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-2xl border-2 p-4 transition-all text-left',
+                          selected
+                            ? `${colors.activeBorder} ${colors.faded} ring-2 ring-current/20 shadow-md scale-[1.01]`
+                            : `border-transparent ${colors.faded} opacity-70 hover:opacity-100`
+                        )}
+                      >
+                        <div className={cn(
+                          'flex h-10 w-10 items-center justify-center rounded-full transition-colors',
+                          selected ? `${colors.active} text-white` : 'bg-white/60 text-muted-foreground'
+                        )}>
+                          <Icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <span className={cn('text-sm', selected ? `font-extrabold ${colors.activeText}` : 'font-medium text-foreground')}>
+                            {acc.account_name || acc.provider_name}
+                          </span>
+                          <p className="text-[10px] text-muted-foreground">
+                            {acc.provider_name} {acc.last4 ? `•••• ${acc.last4}` : ''}
+                          </p>
+                        </div>
+                        {acc.is_primary && (
+                          <span className="text-[9px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Primary</span>
+                        )}
+                        {selected && (
+                          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
 
-            <Button onClick={handleMethodContinue} className="w-full rounded-2xl h-12 text-sm font-bold">
-              Continue
-            </Button>
+                <Button onClick={handleSourceContinue} disabled={!selectedAccountId} className="w-full rounded-2xl h-12 text-sm font-bold">
+                  Continue
+                </Button>
+              </>
+            )}
           </motion.div>
         ) : step === 'bank_select' ? (
           <motion.div key="bank_select" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-4">
@@ -254,23 +328,16 @@ const CustomerFundWallet: React.FC = () => {
               </div>
             </div>
 
-            {/* Search */}
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search banks..."
-                value={bankSearch}
-                onChange={(e) => setBankSearch(e.target.value)}
-                className="h-11 rounded-xl pl-9"
-              />
+              <Input placeholder="Search banks..." value={bankSearch} onChange={(e) => setBankSearch(e.target.value)} className="h-11 rounded-xl pl-9" />
             </div>
 
-            {/* Bank list */}
             <div className="flex flex-col gap-1.5 max-h-[50vh] overflow-y-auto">
               {banksLoading ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-3">
                   <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                  <p className="text-xs text-muted-foreground">Fetching banks from KOB & Flutterwave...</p>
+                  <p className="text-xs text-muted-foreground">Fetching banks...</p>
                 </div>
               ) : filteredBanks.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-10 gap-2">
@@ -279,23 +346,14 @@ const CustomerFundWallet: React.FC = () => {
                 </div>
               ) : (
                 <>
-                  {/* KOB Partner Banks */}
                   {filteredBanks.some(b => b.source === 'kob') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">
-                      🏦 KOB Partner Banks
-                    </p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-primary mt-2 mb-1 px-1">🏦 KOB Partner Banks</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'kob').map((bank) => (
-                    <button
-                      key={`kob-${bank.code}`}
-                      onClick={() => handleBankSelect(bank)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
-                        selectedBank?.code === bank.code
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                          : 'border-border bg-card hover:border-primary/30'
-                      )}
-                    >
+                    <button key={`kob-${bank.code}`} onClick={() => handleBankSelect(bank)}
+                      className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
+                        selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
+                      )}>
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10">
                         <Building2 className="h-4 w-4 text-primary" />
                       </div>
@@ -307,23 +365,14 @@ const CustomerFundWallet: React.FC = () => {
                     </button>
                   ))}
 
-                  {/* Flutterwave Banks */}
                   {filteredBanks.some(b => b.source === 'flutterwave') && (
-                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">
-                      🌍 Other Banks via Flutterwave
-                    </p>
+                    <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mt-3 mb-1 px-1">🌍 Other Banks via Flutterwave</p>
                   )}
                   {filteredBanks.filter(b => b.source === 'flutterwave').map((bank) => (
-                    <button
-                      key={`fw-${bank.code}`}
-                      onClick={() => handleBankSelect(bank)}
-                      className={cn(
-                        'flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
-                        selectedBank?.code === bank.code
-                          ? 'border-primary bg-primary/5 ring-1 ring-primary/20'
-                          : 'border-border bg-card hover:border-primary/30'
-                      )}
-                    >
+                    <button key={`fw-${bank.code}`} onClick={() => handleBankSelect(bank)}
+                      className={cn('flex items-center gap-3 rounded-xl border p-3 transition-all text-left',
+                        selectedBank?.code === bank.code ? 'border-primary bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:border-primary/30'
+                      )}>
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                       </div>
@@ -344,28 +393,22 @@ const CustomerFundWallet: React.FC = () => {
           </motion.div>
         ) : step === 'amount' ? (
           <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
-            {/* Selected method */}
-            {(() => {
-              const m = paymentMethods.find(p => p.value === method)!;
-              const Icon = m.icon;
+            {/* Selected source account */}
+            {selectedAccount && (() => {
+              const Icon = providerTypeIcon(selectedAccount.provider_type);
               return (
                 <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Icon className="h-5 w-5" strokeWidth={1.5} />
                   </div>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground">Via: {m.label}</p>
+                    <p className="text-xs font-bold text-foreground">From: {selectedAccount.account_name || selectedAccount.provider_name}</p>
                     <p className="text-[10px] text-muted-foreground">
-                      {method === 'bank_transfer' && selectedBank
-                        ? `${selectedBank.name} (${selectedBank.source === 'kob' ? 'KOB Network' : 'Flutterwave'})`
-                        : m.desc}
+                      {selectedAccount.provider_name} {selectedAccount.last4 ? `•••• ${selectedAccount.last4}` : ''}
+                      {method === 'bank_transfer' && selectedBank ? ` → ${selectedBank.name}` : ''}
                     </p>
                   </div>
-                  {method === 'bank_transfer' && selectedBank && (
-                    <button onClick={() => setStep('bank_select')} className="text-[10px] font-bold text-primary">
-                      Change
-                    </button>
-                  )}
+                  <button onClick={() => setStep('source')} className="text-[10px] font-bold text-primary">Change</button>
                 </div>
               );
             })()}
@@ -395,7 +438,7 @@ const CustomerFundWallet: React.FC = () => {
             {method === 'mobile_money' && (
               <div className="space-y-1.5">
                 <Label className="text-xs font-bold">Phone Number</Label>
-                <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11 rounded-xl" />
+                <Input placeholder="237677123456" value={phone || selectedAccount?.account_number || ''} onChange={e => setPhone(e.target.value)} className="h-11 rounded-xl" />
               </div>
             )}
             {(method === 'card' || method === 'paypal') && (

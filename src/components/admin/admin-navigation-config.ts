@@ -77,6 +77,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Banking Apps", path: "/admin/banking-apps", icon: CreditCard },
       { title: "Customer Apps", path: "/admin/customer-apps", icon: Smartphone },
       { title: "User Management", path: "/admin/users", icon: Users },
+      { title: "Linked Account Requests", path: "/admin/linked-account-requests", icon: ArrowLeftRight },
       { title: "Branch Management", path: "/admin/branches", icon: Building2 },
       { title: "API Clients", path: "/admin/api-clients", icon: Key },
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },

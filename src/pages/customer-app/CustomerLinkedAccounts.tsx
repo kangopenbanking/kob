@@ -1,16 +1,19 @@
 import React, { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, Globe } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, Plus, Trash2, CheckCircle2, AlertCircle, Loader2, Globe, Clock, ShieldAlert } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+
+const MAX_LINKED_ACCOUNTS = 2;
 
 // Cameroon bank directory (synced with directory-banks-cm edge function)
 const CM_BANKS = [
@@ -142,6 +145,7 @@ const CustomerLinkedAccounts: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [validationMsg, setValidationMsg] = useState<{ text: string; isError: boolean } | null>(null);
 
+  // Fetch active linked accounts
   const { data: linkedAccounts = [], isLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
     enabled: !!user?.id,
@@ -156,6 +160,48 @@ const CustomerLinkedAccounts: React.FC = () => {
       return data || [];
     },
   });
+
+  // Check if user has any previously removed accounts (triggers approval workflow)
+  const { data: hasRemovals = false } = useQuery({
+    queryKey: ['customer-has-removals', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('customer_linked_accounts')
+        .select('id')
+        .eq('user_id', user!.id)
+        .eq('status', 'removed')
+        .limit(1);
+      if (error) throw error;
+      return (data?.length || 0) > 0;
+    },
+  });
+
+  // Fetch pending change requests
+  const { data: pendingRequests = [] } = useQuery({
+    queryKey: ['linked-account-requests', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('linked_account_change_requests')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
+
+  const atLimit = linkedAccounts.length >= MAX_LINKED_ACCOUNTS;
+  const pendingCount = pendingRequests.filter((r: any) => r.status === 'pending').length;
+
+  const handleOpenAdd = () => {
+    if (atLimit) {
+      toast.error(`Maximum ${MAX_LINKED_ACCOUNTS} linked accounts reached. Remove an existing account first.`);
+      return;
+    }
+    setShowAdd(true);
+  };
 
   const handleAccountNumberChange = useCallback((value: string) => {
     if (!selectedType) return;
@@ -199,7 +245,7 @@ const CustomerLinkedAccounts: React.FC = () => {
 
     // Validate required fields
     for (const f of selectedType.fields) {
-      if (f.key === 'bank_code') continue; // handled by select
+      if (f.key === 'bank_code') continue;
       if (!formData[f.key]?.trim()) { toast.error(`Enter ${f.label.toLowerCase()}`); return; }
     }
 
@@ -223,11 +269,9 @@ const CustomerLinkedAccounts: React.FC = () => {
       const rawNumber = (formData.account_number || '').replace(/[\s\-]/g, '');
       const last4 = rawNumber.slice(-4);
       const bank = CM_BANKS.find(b => b.code === formData.bank_code);
-
       const accountType = selectedType.key === 'bank_iban' ? 'bank_account' : selectedType.key;
 
-      const { error } = await (supabase as any).from('customer_linked_accounts').insert({
-        user_id: user.id,
+      const accountData = {
         account_type: accountType,
         account_name: formData.account_name || null,
         account_number: rawNumber,
@@ -235,8 +279,6 @@ const CustomerLinkedAccounts: React.FC = () => {
         provider_type: selectedType.providerType,
         last4,
         is_primary: linkedAccounts.length === 0,
-        is_active: true,
-        status: 'active',
         metadata: selectedType.key === 'bank_account' ? {
           identifier_type: 'DOMESTIC_RIB',
           rib_bank_code: rawNumber.substring(0, 5),
@@ -250,10 +292,32 @@ const CustomerLinkedAccounts: React.FC = () => {
           country: rawNumber.substring(0, 2),
           rail: 'INTERNATIONAL',
         } : undefined,
-      });
-      if (error) throw error;
-      toast.success(`${selectedType.label} linked successfully`);
-      queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
+      };
+
+      // If user has previously removed accounts, require admin approval
+      if (hasRemovals) {
+        const { error } = await (supabase as any).from('linked_account_change_requests').insert({
+          user_id: user.id,
+          request_type: 'add_after_removal',
+          requested_account_data: accountData,
+          status: 'pending',
+        });
+        if (error) throw error;
+        toast.success('Account linking request submitted for admin approval');
+        queryClient.invalidateQueries({ queryKey: ['linked-account-requests'] });
+      } else {
+        // Direct insert (no prior removals)
+        const { error } = await (supabase as any).from('customer_linked_accounts').insert({
+          user_id: user.id,
+          ...accountData,
+          is_active: true,
+          status: 'active',
+        });
+        if (error) throw error;
+        toast.success(`${selectedType.label} linked successfully`);
+        queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
+      }
+
       setShowAdd(false);
       setSelectedType(null);
       setFormData({});
@@ -268,11 +332,19 @@ const CustomerLinkedAccounts: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
+      // Soft-delete: mark as removed with timestamp and increment removal_count
       await (supabase as any).from('customer_linked_accounts')
-        .update({ is_active: false, status: 'removed' })
+        .update({ is_active: false, status: 'removed', removed_at: new Date().toISOString() })
         .eq('id', deleteId);
-      toast.success('Account removed');
+      
+      // Increment removal_count via raw update
+      await (supabase as any).rpc('increment_removal_count' as any, { row_id: deleteId }).catch(() => {
+        // Fallback: just proceed — the removed_at flag is enough
+      });
+
+      toast.success('Account removed. Future account additions will require admin approval.');
       queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-has-removals'] });
     } catch { toast.error('Failed to remove'); }
     setDeleteId(null);
   };
@@ -346,23 +418,84 @@ const CustomerLinkedAccounts: React.FC = () => {
           </button>
           <h1 className="text-xl font-bold text-foreground">Linked Accounts</h1>
         </div>
-        <button onClick={() => setShowAdd(true)}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
-          <Plus className="h-4 w-4 text-primary-foreground" strokeWidth={2} />
+        <button
+          onClick={handleOpenAdd}
+          disabled={atLimit}
+          className={`flex h-9 w-9 items-center justify-center rounded-xl ${atLimit ? 'bg-muted cursor-not-allowed' : 'bg-primary'}`}
+        >
+          <Plus className={`h-4 w-4 ${atLimit ? 'text-muted-foreground' : 'text-primary-foreground'}`} strokeWidth={2} />
         </button>
       </div>
 
-      {/* Info Banner */}
+      {/* Account limit banner */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
         className="flex items-start gap-3 rounded-2xl bg-[hsl(210,80%,93%)] p-4">
         <CheckCircle2 className="h-5 w-5 text-[hsl(210,60%,45%)] mt-0.5 shrink-0" strokeWidth={1.5} />
         <div>
-          <p className="text-xs font-bold text-foreground">Free deposits, low-cost withdrawals</p>
+          <p className="text-xs font-bold text-foreground">
+            {linkedAccounts.length}/{MAX_LINKED_ACCOUNTS} accounts linked
+          </p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
-            Adding money from your linked accounts is always free. Withdrawing back has a small admin-managed fee.
+            {atLimit
+              ? 'Maximum reached. Remove an account to add a new one. Re-linking requires admin approval.'
+              : 'Free deposits from linked accounts. Low-cost withdrawals.'}
           </p>
         </div>
       </motion.div>
+
+      {/* Admin approval warning if user has prior removals */}
+      {hasRemovals && !atLimit && (
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 rounded-2xl bg-[hsl(40,90%,92%)] p-4">
+          <ShieldAlert className="h-5 w-5 text-[hsl(40,80%,40%)] mt-0.5 shrink-0" strokeWidth={1.5} />
+          <div>
+            <p className="text-xs font-bold text-foreground">Admin Approval Required</p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Since you previously removed an account, new additions require admin review before activation.
+            </p>
+          </div>
+        </motion.div>
+      )}
+
+      {/* Pending requests section */}
+      {pendingRequests.length > 0 && (
+        <div className="space-y-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pending Requests</p>
+          {pendingRequests.map((req: any) => {
+            const data = req.requested_account_data;
+            const config = getIconForType(data?.account_type || 'bank_account');
+            const Icon = config.icon;
+            const statusColor = req.status === 'pending' ? 'bg-[hsl(40,90%,92%)] text-[hsl(40,80%,35%)]'
+              : req.status === 'approved' ? 'bg-[hsl(150,50%,90%)] text-[hsl(150,50%,30%)]'
+              : 'bg-destructive/10 text-destructive';
+            return (
+              <motion.div key={req.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between rounded-2xl border border-dashed border-border bg-card p-4">
+                <div className="flex items-center gap-3">
+                  <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${config.color}`}>
+                    <Icon className={`h-5 w-5 ${config.iconColor}`} strokeWidth={1.5} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{data?.account_name || data?.account_type}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {data?.provider_name} •••• {data?.last4}
+                    </p>
+                  </div>
+                </div>
+                <Badge className={`text-[9px] ${statusColor} border-0`}>
+                  {req.status === 'pending' && <Clock className="h-3 w-3 mr-1" />}
+                  {req.status.charAt(0).toUpperCase() + req.status.slice(1)}
+                </Badge>
+              </motion.div>
+            );
+          })}
+          {pendingCount > 0 && (
+            <p className="text-[10px] text-muted-foreground text-center">
+              {pendingCount} request{pendingCount > 1 ? 's' : ''} awaiting admin review
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Account List */}
       {isLoading ? (
@@ -374,7 +507,7 @@ const CustomerLinkedAccounts: React.FC = () => {
           </div>
           <p className="text-sm font-semibold text-foreground">No linked accounts</p>
           <p className="text-xs text-muted-foreground text-center max-w-xs">Link a bank account, mobile money, PayPal, or card to deposit and withdraw funds.</p>
-          <Button onClick={() => setShowAdd(true)} className="rounded-2xl mt-2"><Plus className="h-4 w-4 mr-1" /> Link Account</Button>
+          <Button onClick={handleOpenAdd} className="rounded-2xl mt-2"><Plus className="h-4 w-4 mr-1" /> Link Account</Button>
         </div>
       ) : (
         <div className="space-y-3">
@@ -425,9 +558,18 @@ const CustomerLinkedAccounts: React.FC = () => {
           <DialogHeader>
             <DialogTitle>{selectedType ? `Link ${selectedType.label}` : 'Link an Account'}</DialogTitle>
             <DialogDescription>
-              {selectedType ? `Enter your ${selectedType.label} details below` : 'Select the type of account to link'}
+              {hasRemovals
+                ? 'This request will be sent to an admin for approval before activation.'
+                : selectedType ? `Enter your ${selectedType.label} details below` : 'Select the type of account to link'}
             </DialogDescription>
           </DialogHeader>
+
+          {hasRemovals && (
+            <div className="flex items-center gap-2 rounded-xl bg-[hsl(40,90%,92%)] p-3">
+              <ShieldAlert className="h-4 w-4 text-[hsl(40,80%,40%)] shrink-0" />
+              <p className="text-[11px] text-[hsl(40,80%,30%)]">Admin approval required — your request will be reviewed.</p>
+            </div>
+          )}
 
           <AnimatePresence mode="wait">
             {!selectedType ? (
@@ -454,7 +596,7 @@ const CustomerLinkedAccounts: React.FC = () => {
                 {selectedType.fields.map(f => renderField(f))}
                 <Button onClick={handleAddAccount} disabled={saving} className="w-full rounded-2xl h-12">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                  Link {selectedType.label}
+                  {hasRemovals ? 'Submit for Approval' : `Link ${selectedType.label}`}
                 </Button>
               </motion.div>
             )}
@@ -467,7 +609,9 @@ const CustomerLinkedAccounts: React.FC = () => {
         <AlertDialogContent className="rounded-3xl">
           <AlertDialogHeader>
             <AlertDialogTitle>Remove Account?</AlertDialogTitle>
-            <AlertDialogDescription>This account will be unlinked from your wallet. You can re-add it anytime.</AlertDialogDescription>
+            <AlertDialogDescription>
+              This account will be unlinked from your wallet. <strong>Important:</strong> After removing an account, any future account additions will require admin approval.
+            </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="rounded-xl">Cancel</AlertDialogCancel>
