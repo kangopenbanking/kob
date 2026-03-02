@@ -68,6 +68,12 @@ interface CustomerAppConfig {
     paypal: boolean;
     agent: boolean;
   };
+  cashout_limits: {
+    min_amount: number;
+    max_amount: number;
+    daily_limit: number;
+    quick_amounts: number[];
+  };
   rewards_config: RewardsConfig;
   hero_bg_color: string;
   hero_bg_image: string;
@@ -121,6 +127,7 @@ const defaultConfig: CustomerAppConfig = {
   support_phone: '',
   support_email: '',
   cashout_methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true },
+  cashout_limits: { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: [5000, 10000, 25000, 50000, 100000] },
   rewards_config: defaultRewardsConfig,
   hero_bg_color: '',
   hero_bg_image: '',
@@ -744,6 +751,39 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
           </CardContent>
         </Card>
 
+        {/* Cash Out Limits */}
+        <Card>
+          <CardHeader><CardTitle className="text-base">Cash Out Limits</CardTitle><CardDescription>Set withdrawal limits (0 = no limit). All limits are enforced on the frontend.</CardDescription></CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <Label className="text-xs">Min Amount (XAF)</Label>
+                <Input type="number" value={config.cashout_limits?.min_amount || 0}
+                  onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, min_amount: Number(e.target.value) || 0 } }))} />
+                <p className="text-[10px] text-muted-foreground mt-1">0 = no minimum</p>
+              </div>
+              <div>
+                <Label className="text-xs">Max Amount (XAF)</Label>
+                <Input type="number" value={config.cashout_limits?.max_amount || 0}
+                  onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, max_amount: Number(e.target.value) || 0 } }))} />
+                <p className="text-[10px] text-muted-foreground mt-1">0 = no maximum</p>
+              </div>
+              <div>
+                <Label className="text-xs">Daily Limit (XAF)</Label>
+                <Input type="number" value={config.cashout_limits?.daily_limit || 0}
+                  onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, daily_limit: Number(e.target.value) || 0 } }))} />
+                <p className="text-[10px] text-muted-foreground mt-1">0 = unlimited</p>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Quick Amounts (comma-separated)</Label>
+              <Input value={(config.cashout_limits?.quick_amounts || [5000, 10000, 25000, 50000, 100000]).join(', ')}
+                onChange={e => setConfig(prev => ({ ...prev, cashout_limits: { ...prev.cashout_limits, quick_amounts: e.target.value.split(',').map(v => Number(v.trim())).filter(v => v > 0) } }))} />
+              <p className="text-[10px] text-muted-foreground mt-1">Shortcut amounts shown to users</p>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Rewards Configuration */}
         <Card>
           <CardHeader><CardTitle className="text-base flex items-center gap-2"><Gift className="h-4 w-4" /> Rewards Configuration</CardTitle><CardDescription>Manage cashback thresholds, referral bonuses, and coupons</CardDescription></CardHeader>
@@ -1282,6 +1322,7 @@ export default function CustomerAppManagement() {
           walkthrough_config: raw.walkthrough_config || { skip_enabled: true },
           card_colors: raw.card_colors || {},
           cashout_methods: { ...defaultConfig.cashout_methods, ...(raw.cashout_methods || {}) },
+          cashout_limits: { ...defaultConfig.cashout_limits, ...(raw.cashout_limits || {}) },
           rewards_config: { ...defaultRewardsConfig, ...(raw.rewards_config || {}) },
           typography_config: { ...defaultConfig.typography_config, ...(raw.typography_config || {}), sections: { ...defaultConfig.typography_config.sections, ...(raw.typography_config?.sections || {}) } },
         }
