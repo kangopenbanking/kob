@@ -67,6 +67,7 @@ interface CustomerTenantBranding {
   supportEmail: string;
   heroBgColor: string;
   heroBgImage: string | null;
+  heroMediaType: 'image' | 'video' | '';
   heroActionColors: HeroActionColors;
   typographyConfig: TypographyConfig;
 }
@@ -133,6 +134,7 @@ const defaultBranding: CustomerTenantBranding = {
   supportEmail: '',
   heroBgColor: '',
   heroBgImage: null,
+  heroMediaType: '',
   heroActionColors: defaultHeroActionColors,
   typographyConfig: defaultTypographyConfig,
 };
@@ -178,6 +180,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
 
       const heroBgColor: string = customerConfig.hero_bg_color || '';
       const heroBgImage: string | null = customerConfig.hero_bg_image || null;
+      const heroMediaType: 'image' | 'video' | '' = customerConfig.hero_media_type || '';
       const heroActionColors: HeroActionColors = { ...defaultHeroActionColors, ...(customerConfig.hero_action_colors || {}) };
       const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
 
@@ -198,6 +201,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         supportEmail,
         heroBgColor,
         heroBgImage,
+        heroMediaType,
         heroActionColors,
         typographyConfig,
       });

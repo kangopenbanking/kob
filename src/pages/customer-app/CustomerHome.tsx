@@ -136,7 +136,7 @@ const CustomerHome: React.FC = () => {
   ].filter(a => !a.featureKey || tenant.features[a.featureKey as keyof typeof tenant.features] !== false);
 
   // Admin-configurable hero background
-  const isHeroVideo = tenant.heroBgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(tenant.heroBgImage) : false;
+  const isHeroVideo = tenant.heroMediaType === 'video' || (tenant.heroBgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(tenant.heroBgImage) : false);
   const heroBgStyle: React.CSSProperties = {
     ...(tenant.heroBgImage && !isHeroVideo ? {
       backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${tenant.heroBgImage})`,
