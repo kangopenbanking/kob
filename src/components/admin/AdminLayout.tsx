@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Outlet, useLocation, Link } from "react-router-dom";
+import { SessionGuard } from "@/components/auth/SessionGuard";
 import { Button } from "@/components/ui/button";
 import { Menu, Shield } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
@@ -34,6 +35,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
+    <SessionGuard logoutPath="/auth" appName="KOB Admin">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r" collapsible="icon">
@@ -93,5 +95,6 @@ export function AdminLayout({ children }: AdminLayoutProps) {
         </div>
       </div>
     </SidebarProvider>
+    </SessionGuard>
   );
 }

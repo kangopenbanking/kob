@@ -7,6 +7,8 @@ import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
+import { CustomerAppAuthGuard } from '@/components/auth/CustomerAppAuthGuard';
+import { SessionGuard } from '@/components/auth/SessionGuard';
 
 export const CustomerAppLayout: React.FC = () => {
   const basePath = '/app';
@@ -25,15 +27,19 @@ export const CustomerAppLayout: React.FC = () => {
   }, [queryClient]);
 
   return (
-    <CustomerTenantProvider>
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
-        <PullToRefresh onRefresh={handleRefresh}>
-          <div className="flex-1 pb-20">
-            <Outlet />
+    <CustomerAppAuthGuard>
+      <SessionGuard logoutPath="/app/auth" appName="Kang">
+        <CustomerTenantProvider>
+          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
+            <PullToRefresh onRefresh={handleRefresh}>
+              <div className="flex-1 pb-20">
+                <Outlet />
+              </div>
+            </PullToRefresh>
+            <CustomerBottomNav basePath={basePath} />
           </div>
-        </PullToRefresh>
-        <CustomerBottomNav basePath={basePath} />
-      </div>
-    </CustomerTenantProvider>
+        </CustomerTenantProvider>
+      </SessionGuard>
+    </CustomerAppAuthGuard>
   );
 };

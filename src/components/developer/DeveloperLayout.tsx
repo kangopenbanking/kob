@@ -1,5 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { SessionGuard } from "@/components/auth/SessionGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
@@ -162,6 +163,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
   const isActivePath = (path: string) => location.pathname === path;
 
   return (
+    <SessionGuard logoutPath="/auth" appName="Developer Portal">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r">
@@ -238,5 +240,6 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
         </div>
       </div>
     </SidebarProvider>
+    </SessionGuard>
   );
 }
