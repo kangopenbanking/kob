@@ -71,6 +71,12 @@ interface CustomerAppConfig {
   rewards_config: RewardsConfig;
   hero_bg_color: string;
   hero_bg_image: string;
+  hero_action_colors: {
+    accounts: string;
+    cash_out: string;
+    request: string;
+    pay_links: string;
+  };
 }
 
 type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'upcoming_bills' | 'spending_stats' | 'recent_activities';
@@ -104,6 +110,12 @@ const defaultConfig: CustomerAppConfig = {
   rewards_config: defaultRewardsConfig,
   hero_bg_color: '',
   hero_bg_image: '',
+  hero_action_colors: {
+    accounts: '#ffffff',
+    cash_out: '#ffffff',
+    request: '#ffffff',
+    pay_links: '#ffffff',
+  },
 };
 
 // ─── Hooks ───
@@ -893,7 +905,10 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
   useEffect(() => {
     setBgColor(appConfig.hero_bg_color || '');
     setBgImage(appConfig.hero_bg_image || '');
+    setActionColors(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
   }, [appConfig]);
+
+  const [actionColors, setActionColors] = useState(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -901,7 +916,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
       const currentAppConfig = (inst as any)?.app_config || {};
       const customerConfig = currentAppConfig.customer_app_config || {};
       const { error } = await (supabase as any).from("institutions").update({
-        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, hero_bg_color: bgColor, hero_bg_image: bgImage } }
+        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, hero_bg_color: bgColor, hero_bg_image: bgImage, hero_action_colors: actionColors } }
       }).eq("id", institutionId);
       if (error) throw error;
     },
@@ -1000,6 +1015,38 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
                 <span>{uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}</span>
               </Button>
             </label>
+          </div>
+        </div>
+
+        {/* Hero Action Icon Background Colors */}
+        <div className="space-y-3">
+          <Label>Action Button Icon Backgrounds</Label>
+          <p className="text-xs text-muted-foreground">Set the background color of hero action circles (Accounts, Cash Out, Request, Pay Links).</p>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { key: 'accounts', label: 'Accounts' },
+              { key: 'cash_out', label: 'Cash Out' },
+              { key: 'request', label: 'Request' },
+              { key: 'pay_links', label: 'Pay Links' },
+            ] as const).map(({ key, label }) => (
+              <div key={key} className="flex items-center gap-2">
+                <input
+                  type="color"
+                  value={actionColors[key] || '#ffffff'}
+                  onChange={e => setActionColors(prev => ({ ...prev, [key]: e.target.value }))}
+                  className="h-8 w-8 rounded border cursor-pointer"
+                />
+                <div className="flex-1">
+                  <Label className="text-xs">{label}</Label>
+                  <Input
+                    value={actionColors[key] || '#ffffff'}
+                    onChange={e => setActionColors(prev => ({ ...prev, [key]: e.target.value }))}
+                    className="h-7 text-xs mt-0.5"
+                    placeholder="#ffffff"
+                  />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 

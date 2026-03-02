@@ -30,6 +30,13 @@ export type CustomerSectionKey =
   | 'spending_stats'
   | 'recent_activities';
 
+export interface HeroActionColors {
+  accounts: string;
+  cash_out: string;
+  request: string;
+  pay_links: string;
+}
+
 interface CustomerTenantBranding {
   id: string;
   name: string;
@@ -47,6 +54,7 @@ interface CustomerTenantBranding {
   supportEmail: string;
   heroBgColor: string;
   heroBgImage: string | null;
+  heroActionColors: HeroActionColors;
 }
 
 const defaultFeatures: CustomerAppFeatures = {
@@ -80,6 +88,13 @@ const defaultSectionOrder: CustomerSectionKey[] = [
 // Kang platform ID — the main institution that owns the unified Customer App
 const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
 
+const defaultHeroActionColors: HeroActionColors = {
+  accounts: '#ffffff',
+  cash_out: '#ffffff',
+  request: '#ffffff',
+  pay_links: '#ffffff',
+};
+
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
   name: 'Kang',
@@ -97,6 +112,7 @@ const defaultBranding: CustomerTenantBranding = {
   supportEmail: '',
   heroBgColor: '',
   heroBgImage: null,
+  heroActionColors: defaultHeroActionColors,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
@@ -140,6 +156,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
 
       const heroBgColor: string = customerConfig.hero_bg_color || '';
       const heroBgImage: string | null = customerConfig.hero_bg_image || null;
+      const heroActionColors: HeroActionColors = { ...defaultHeroActionColors, ...(customerConfig.hero_action_colors || {}) };
 
       setBranding({
         id: inst.id,
@@ -158,6 +175,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         supportEmail,
         heroBgColor,
         heroBgImage,
+        heroActionColors,
       });
     };
 
