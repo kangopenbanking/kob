@@ -64,10 +64,12 @@ serve(async (req) => {
           await supabase.from('transactions').insert({
             account_id: accountId, amount: charge.amount, currency: charge.currency,
             credit_debit_indicator: 'Credit', status: 'Booked',
-            booking_date_time: new Date().toISOString(),
-            value_date_time: new Date().toISOString(),
+            institution_id: '00000000-0000-0000-0000-000000000000',
+            transaction_type: 'deposit',
+            booking_datetime: new Date().toISOString(),
+            value_datetime: new Date().toISOString(),
             transaction_information: `Account funding completed - ${charge.tx_ref}`,
-            transaction_reference: charge.tx_ref, user_id: userId,
+            merchant_details: { transaction_ref: charge.tx_ref }, user_id: userId,
           }).then(() => {}).catch(() => {});
           await supabase.from('audit_logs').insert({
             action_type: 'gateway_fund_account_completed', entity_type: 'account', entity_id: accountId,

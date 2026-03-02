@@ -85,10 +85,12 @@ serve(async (req) => {
     await supabase.from('transactions').insert({
       account_id, amount: totalDebit, currency: account.currency,
       credit_debit_indicator: 'Debit', status: 'Pending',
-      booking_date_time: new Date().toISOString(),
-      value_date_time: new Date().toISOString(),
+      institution_id: account.institution_id || '00000000-0000-0000-0000-000000000000',
+      transaction_type: 'withdrawal',
+      booking_datetime: new Date().toISOString(),
+      value_datetime: new Date().toISOString(),
       transaction_information: `Withdrawal to bank ${beneficiary_name} - ${txRef}`,
-      transaction_reference: txRef, user_id: user.id,
+      merchant_details: { transaction_ref: txRef }, user_id: user.id,
     }).then(() => {}).catch(() => {});
 
     // Initiate Flutterwave payout

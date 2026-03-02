@@ -40,6 +40,38 @@ const CustomerCashOut: React.FC = () => {
   const primaryBalance = primaryAccount ? balances.find((b: any) => b.account_id === primaryAccount.id) : null;
   const walletBalance = (primaryBalance?.amount as number) ?? 0;
 
+  // Fetch admin cashout_methods config from institution app_config
+  const { data: cashoutConfig } = useQuery({
+    queryKey: ['cashout-methods-config', KANG_PLATFORM_ID],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from('institutions')
+        .select('app_config')
+        .eq('id', KANG_PLATFORM_ID)
+        .maybeSingle();
+      if (error || !data) return { bank_transfer: true, mobile_money: true, paypal: true, agent: true } as Record<string, boolean>;
+      try {
+        const appConfig = data?.app_config || {};
+        const customerConfig = appConfig?.customer_app_config || {};
+        return (customerConfig?.cashout_methods || { bank_transfer: true, mobile_money: true, paypal: true, agent: true }) as Record<string, boolean>;
+      } catch {
+        return { bank_transfer: true, mobile_money: true, paypal: true, agent: true } as Record<string, boolean>;
+      }
+    },
+  });
+
+  // Map account_type to cashout method key
+  const accountTypeToCashoutMethod = (accountType: string): string | null => {
+    switch (accountType) {
+      case 'bank_account': return 'bank_transfer';
+      case 'momo_mtn':
+      case 'momo_orange': return 'mobile_money';
+      case 'paypal': return 'paypal';
+      case 'bank_card': return 'bank_transfer';
+      default: return null;
+    }
+  };
+
   // Fetch linked accounts
   const { data: linkedAccounts = [], isLoading: acctLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
@@ -54,6 +86,13 @@ const CustomerCashOut: React.FC = () => {
       if (error) throw error;
       return data || [];
     },
+  });
+
+  // Filter linked accounts by admin-enabled cashout methods
+  const filteredAccounts = linkedAccounts.filter((acc: any) => {
+    const method = accountTypeToCashoutMethod(acc.account_type);
+    if (!method) return true; // show unknown types by default
+    return cashoutConfig?.[method] !== false;
   });
 
   // Fetch withdrawal fee structure from admin
@@ -208,20 +247,26 @@ const CustomerCashOut: React.FC = () => {
 
             {acctLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : linkedAccounts.length === 0 ? (
+            ) : filteredAccounts.length === 0 ? (
               <div className="flex flex-col items-center gap-3 py-12">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                   <Banknote className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
                 </div>
-                <p className="text-sm font-semibold text-foreground">No linked accounts</p>
-                <p className="text-xs text-muted-foreground text-center">Link an account first to withdraw funds.</p>
+                <p className="text-sm font-semibold text-foreground">
+                  {linkedAccounts.length > 0 ? 'No enabled withdrawal methods' : 'No linked accounts'}
+                </p>
+                <p className="text-xs text-muted-foreground text-center">
+                  {linkedAccounts.length > 0 
+                    ? 'Your linked account types are currently disabled for withdrawals by the platform.'
+                    : 'Link an account first to withdraw funds.'}
+                </p>
                 <Button onClick={() => navigate('/app/linked-accounts')} className="rounded-2xl mt-2">
                   <Plus className="h-4 w-4 mr-1" /> Link Account
                 </Button>
               </div>
             ) : (
               <div className="space-y-2">
-                {linkedAccounts.map((acc: any) => {
+                {filteredAccounts.map((acc: any) => {
                   const { icon: Icon, color, iconColor } = getIcon(acc.account_type);
                   return (
                     <button key={acc.id} onClick={() => { setSelectedAccount(acc); setStep('amount'); }}

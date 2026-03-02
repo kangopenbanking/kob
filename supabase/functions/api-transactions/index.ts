@@ -57,11 +57,11 @@ serve(async (req) => {
     }
 
     if (fromDate) {
-      query = query.gte('booking_date', fromDate);
+      query = query.gte('booking_datetime', fromDate);
     }
 
     if (toDate) {
-      query = query.lte('booking_date', toDate);
+      query = query.lte('booking_datetime', toDate);
     }
 
     if (status) {
@@ -77,7 +77,7 @@ serve(async (req) => {
     const to = from + limit - 1;
 
     query = query
-      .order('booking_date', { ascending: false })
+      .order('booking_datetime', { ascending: false })
       .range(from, to);
 
     const { data: transactions, error: txnError, count } = await query;

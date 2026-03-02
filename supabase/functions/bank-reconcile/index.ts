@@ -75,8 +75,8 @@ serve(async (req) => {
     const { data: systemTransactions } = await supabase
       .from('transactions')
       .select('*')
-      .gte('booking_date', `${reconciliation_date}T00:00:00Z`)
-      .lte('booking_date', `${reconciliation_date}T23:59:59Z`);
+      .gte('booking_datetime', `${reconciliation_date}T00:00:00Z`)
+      .lte('booking_datetime', `${reconciliation_date}T23:59:59Z`);
 
     const totalBankTxn = bankStatements?.reduce((sum, stmt) => sum + (stmt.transaction_count || 0), 0) || 0;
     const totalSystemTxn = systemTransactions?.length || 0;
@@ -186,7 +186,7 @@ function performReconciliation(bankStatements: any[], systemTransactions: any[])
       for (const sysTxn of systemTransactions || []) {
         if (matchedSystemIds.has(sysTxn.id)) continue;
 
-        const sysDate = new Date(sysTxn.booking_date);
+        const sysDate = new Date(sysTxn.booking_datetime);
         const sysAmount = parseFloat(sysTxn.amount || 0);
         
         // Check if within 24 hours and amount matches
