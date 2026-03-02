@@ -55,10 +55,10 @@ const moneyMovement: FeatureItem[] = [
 ];
 
 const paymentsBills: FeatureItem[] = [
-  { label: 'Bills', description: 'Pay utility & service bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', borderColor: 'border-[hsl(25,60%,60%)]', featureKey: 'bills' },
-  { label: 'Invoices', description: 'Manage & pay invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', borderColor: 'border-[hsl(50,60%,55%)]', featureKey: 'invoices' },
-  { label: 'Split Bills', description: 'Share costs with friends', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-[hsl(340,50%,60%)]', featureKey: 'split_bills' },
-  { label: 'Recurring', description: 'Auto-pay subscriptions', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'recurring' },
+  { label: 'Bills', description: 'Pay utility & service bills', icon: Receipt, path: 'bills', color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]', borderColor: 'border-transparent', featureKey: 'bills' },
+  { label: 'Invoices', description: 'Manage & pay invoices', icon: FileText, path: 'invoices', color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]', borderColor: 'border-transparent', featureKey: 'invoices' },
+  { label: 'Split Bills', description: 'Share costs with friends', icon: Users, path: 'split-bills', color: 'bg-[hsl(340,60%,92%)]', iconColor: 'text-[hsl(340,50%,40%)]', borderColor: 'border-transparent', featureKey: 'split_bills' },
+  { label: 'Recurring', description: 'Auto-pay subscriptions', icon: RefreshCw, path: 'recurring', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-transparent', featureKey: 'recurring' },
 ];
 
 const savingsGoals: FeatureItem[] = [
