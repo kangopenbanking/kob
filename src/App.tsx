@@ -75,6 +75,7 @@ import Certificates from "./pages/guides/Certificates";
 import Admin from "./pages/Admin";
 import Developer from "./pages/Developer";
 import Auth from "./pages/Auth";
+import MandatoryPinSetup from "./pages/MandatoryPinSetup";
 import ProfileSettings from "./pages/ProfileSettings";
 import TPPRegistration from "./pages/TPPRegistration";
 import ComplianceDashboard from "./pages/ComplianceDashboard";
@@ -677,6 +678,7 @@ function App() {
             <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             {/* Banking App redirects for legacy /banking-app paths */}
             <Route path="/banking-app/*" element={<Navigate to="/apps" replace />} />
             {/* Banking App PWA Routes */}

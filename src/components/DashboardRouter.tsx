@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
-
+import { useMandatoryPin } from "@/hooks/useMandatoryPin";
 interface UserRoleState {
   isLoading: boolean;
   isAdmin: boolean;
@@ -14,6 +14,7 @@ interface UserRoleState {
 
 export function DashboardRouter() {
   const navigate = useNavigate();
+  const { isLoading: pinLoading, requiresPinSetup } = useMandatoryPin();
   const [roleState, setRoleState] = useState<UserRoleState>({
     isLoading: true,
     isAdmin: false,
@@ -22,8 +23,13 @@ export function DashboardRouter() {
   });
 
   useEffect(() => {
+    if (pinLoading) return;
+    if (requiresPinSetup) {
+      navigate("/setup-pin", { replace: true });
+      return;
+    }
     checkUserRoleAndRedirect();
-  }, []);
+  }, [pinLoading, requiresPinSetup]);
 
   const checkUserRoleAndRedirect = async () => {
     try {
