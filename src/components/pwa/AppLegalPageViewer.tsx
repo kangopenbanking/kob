@@ -8,9 +8,10 @@ import ReactMarkdown from 'react-markdown';
 interface AppLegalPageViewerProps {
   slug: string;
   backPath?: string;
+  onBack?: () => void;
 }
 
-const AppLegalPageViewer: React.FC<AppLegalPageViewerProps> = ({ slug, backPath }) => {
+const AppLegalPageViewer: React.FC<AppLegalPageViewerProps> = ({ slug, backPath, onBack }) => {
   const navigate = useNavigate();
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
