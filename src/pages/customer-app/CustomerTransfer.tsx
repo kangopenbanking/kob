@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,7 +32,73 @@ const CustomerTransfer: React.FC = () => {
   const [selectedAccountIdx, setSelectedAccountIdx] = useState(0);
   const [showPin, setShowPin] = useState(false);
   const [transferResult, setTransferResult] = useState<any>(null);
+  const [nameSuggestions, setNameSuggestions] = useState<any[]>([]);
+  const [nameSearching, setNameSearching] = useState(false);
+  const [selectedRecipientName, setSelectedRecipientName] = useState('');
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const nameDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const amountRef = useRef<HTMLInputElement>(null);
+
+  // Debounced name search
+  const searchByName = useCallback(async (query: string) => {
+    if (query.length < 2 || !user) {
+      setNameSuggestions([]);
+      return;
+    }
+    setNameSearching(true);
+    try {
+      // Search profiles by full_name
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, phone_number')
+        .ilike('full_name', `%${query}%`)
+        .neq('id', user.id)
+        .limit(5);
+
+      if (profiles && profiles.length > 0) {
+        // Get accounts for these users
+        const userIds = profiles.map(p => p.id);
+        const { data: accts } = await supabase
+          .from('accounts')
+          .select('id, account_holder_name, user_id')
+          .in('user_id', userIds)
+          .eq('is_active', true);
+
+        const suggestions = profiles
+          .filter(p => accts?.some(a => a.user_id === p.id))
+          .map(p => ({
+            userId: p.id,
+            name: p.full_name,
+            phone: p.phone_number,
+            accountId: accts?.find(a => a.user_id === p.id)?.id,
+          }));
+        setNameSuggestions(suggestions);
+      } else {
+        // Also search accounts.account_holder_name
+        const { data: holderAccts } = await supabase
+          .from('accounts')
+          .select('id, account_holder_name, user_id')
+          .ilike('account_holder_name', `%${query}%`)
+          .neq('user_id', user.id)
+          .eq('is_active', true)
+          .limit(5);
+
+        setNameSuggestions(
+          (holderAccts || []).map(a => ({
+            userId: a.user_id,
+            name: a.account_holder_name,
+            phone: null,
+            accountId: a.id,
+          }))
+        );
+      }
+      setShowSuggestions(true);
+    } catch (err) {
+      console.error('Name search error:', err);
+    } finally {
+      setNameSearching(false);
+    }
+  }, [user]);
 
   const selectedAccount = accounts[selectedAccountIdx] as any;
   const selectedBalance = selectedAccount
@@ -62,6 +128,13 @@ const CustomerTransfer: React.FC = () => {
     if (recipientType === 'rib') setRecipient(formatRibDisplay(raw));
     else if (recipientType === 'iban') setRecipient(formatIbanDisplay(raw));
     else setRecipient(raw);
+
+    // For name type: clear selected state and trigger debounced search
+    if (recipientType === 'name') {
+      setSelectedRecipientName('');
+      if (nameDebounceRef.current) clearTimeout(nameDebounceRef.current);
+      nameDebounceRef.current = setTimeout(() => searchByName(raw), 300);
+    }
   };
 
   const getRecipientValidation = (): { valid: boolean; hint: string } => {
@@ -72,7 +145,7 @@ const CustomerTransfer: React.FC = () => {
       case 'iban':
         return { valid: /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/i.test(clean) && clean.length >= 15, hint: clean.length > 0 ? `${clean.length} characters` : 'e.g. CM21 10005 00100 ...' };
       case 'name':
-        return { valid: clean.length >= 2, hint: clean.length > 0 ? '' : "Enter recipient's full name" };
+        return { valid: !!selectedRecipientName, hint: selectedRecipientName ? `Sending to ${selectedRecipientName}` : "Type a name to search" };
       default:
         return { valid: clean.length > 0, hint: '' };
     }
@@ -147,6 +220,9 @@ const CustomerTransfer: React.FC = () => {
     setRecipient('');
     setNote('');
     setTransferResult(null);
+    setSelectedRecipientName('');
+    setNameSuggestions([]);
+    setShowSuggestions(false);
   };
 
   const recipientTypes: { key: RecipientType; label: string; icon: React.ElementType }[] = [
@@ -326,7 +402,7 @@ const CustomerTransfer: React.FC = () => {
               {/* Type Toggle */}
               <div className="grid grid-cols-5 gap-1.5">
                 {recipientTypes.map(({ key, label, icon: Icon }) => (
-                  <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); }}
+                  <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setNameSuggestions([]); setShowSuggestions(false); }}
                     className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all ${
                       recipientType === key ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
                     }`}>
@@ -339,42 +415,103 @@ const CustomerTransfer: React.FC = () => {
               {/* Recipient Input */}
               <div className="relative">
                 {recipientType === 'phone' ? (
-                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
                 ) : recipientType === 'name' ? (
-                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
                 ) : recipientType === 'rib' ? (
-                  <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
                 ) : recipientType === 'iban' ? (
-                  <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  <Globe className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
                 ) : (
-                  <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground z-10" strokeWidth={1.5} />
                 )}
-                <Input
-                  type={recipientType === 'phone' ? 'tel' : 'text'}
-                  value={recipient}
-                  onChange={handleRecipientChange}
-                  placeholder={
-                    recipientType === 'phone' ? '+237 6XX XXX XXX'
-                    : recipientType === 'name' ? 'John Doe'
-                    : recipientType === 'rib' ? '10005-00100-01234567890-23'
-                    : recipientType === 'iban' ? 'CM21 1000 5001 0001 2345 6789 023'
-                    : 'Enter account ID'
-                  }
-                  className={`h-12 rounded-2xl pl-10 text-sm ${recipientType === 'rib' || recipientType === 'iban' ? 'font-mono tracking-wider' : ''}`}
-                />
-                {recipient && (
+
+                {/* Name type: show selected badge or search input */}
+                {recipientType === 'name' && selectedRecipientName ? (
+                  <div className="flex items-center h-12 rounded-2xl pl-10 pr-3 bg-card border border-border">
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10">
+                        <User className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+                      </div>
+                      <span className="text-sm font-semibold text-foreground">{selectedRecipientName}</span>
+                    </div>
+                    <button onClick={() => { setSelectedRecipientName(''); setRecipient(''); setNameSuggestions([]); }}>
+                      <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                    </button>
+                  </div>
+                ) : (
+                  <Input
+                    type={recipientType === 'phone' ? 'tel' : 'text'}
+                    value={recipient}
+                    onChange={handleRecipientChange}
+                    onFocus={() => { if (recipientType === 'name' && nameSuggestions.length > 0) setShowSuggestions(true); }}
+                    onBlur={() => { setTimeout(() => setShowSuggestions(false), 200); }}
+                    placeholder={
+                      recipientType === 'phone' ? '+237 6XX XXX XXX'
+                      : recipientType === 'name' ? 'Search by name...'
+                      : recipientType === 'rib' ? '10005-00100-01234567890-23'
+                      : recipientType === 'iban' ? 'CM21 1000 5001 0001 2345 6789 023'
+                      : 'Enter account ID'
+                    }
+                    className={`h-12 rounded-2xl pl-10 text-sm ${recipientType === 'rib' || recipientType === 'iban' ? 'font-mono tracking-wider' : ''}`}
+                  />
+                )}
+
+                {/* Name search loading indicator */}
+                {recipientType === 'name' && nameSearching && !selectedRecipientName && (
+                  <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+
+                {/* Clear button for non-name types */}
+                {recipient && recipientType !== 'name' && (
                   <button onClick={() => setRecipient('')} className="absolute right-3.5 top-1/2 -translate-y-1/2">
                     <X className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   </button>
                 )}
+
+                {/* Name suggestions dropdown */}
+                {recipientType === 'name' && showSuggestions && nameSuggestions.length > 0 && !selectedRecipientName && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl border border-border bg-card shadow-lg overflow-hidden">
+                    {nameSuggestions.map((s, i) => (
+                      <button
+                        key={s.userId + i}
+                        className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/50 transition-colors text-left"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setRecipient(s.name);
+                          setSelectedRecipientName(s.name);
+                          setShowSuggestions(false);
+                        }}
+                      >
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 shrink-0">
+                          <User className="h-4 w-4 text-primary" strokeWidth={1.5} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{s.name}</p>
+                          {s.phone && (
+                            <p className="text-[10px] text-muted-foreground">{s.phone}</p>
+                          )}
+                        </div>
+                        <CheckCircle2 className="h-4 w-4 text-muted-foreground/30 shrink-0" strokeWidth={1.5} />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* No results message */}
+                {recipientType === 'name' && showSuggestions && nameSuggestions.length === 0 && !nameSearching && recipient.length >= 2 && !selectedRecipientName && (
+                  <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl border border-border bg-card shadow-lg p-4">
+                    <p className="text-xs text-muted-foreground text-center">No users found matching "{recipient}"</p>
+                  </div>
+                )}
               </div>
 
               {/* Validation hint for RIB/IBAN */}
-              {(recipientType === 'rib' || recipientType === 'iban') && recipient && (
+              {((recipientType === 'rib' || recipientType === 'iban') && recipient) || (recipientType === 'name' && selectedRecipientName) ? (
                 <p className={`text-[10px] ${validation.valid ? 'text-[hsl(150,60%,40%)]' : 'text-muted-foreground'}`}>
                   {validation.hint}
                 </p>
-              )}
+              ) : null}
             </div>
 
             {/* Source Account */}
