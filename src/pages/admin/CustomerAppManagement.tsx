@@ -963,7 +963,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
     onError: () => toast.error("Failed to save hero section"),
   });
 
-  const MAX_VIDEO_SIZE_MB = 50;
+  const MAX_VIDEO_SIZE_MB = 300;
 
   const handleMediaUpload = async (file: File) => {
     // Validate video file size
