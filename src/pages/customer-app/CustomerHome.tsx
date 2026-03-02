@@ -322,7 +322,7 @@ const CustomerHome: React.FC = () => {
                     onClick={() => go(action.path)}
                     className="flex flex-col items-center gap-1.5"
                   >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full shadow-md" style={{ backgroundColor: action.bgColor || '#ffffff' }}>
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full shadow-md" style={{ backgroundColor: action.bgColor || '#ffffff', opacity: 0.7 }}>
                       <Icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
                     </div>
                     <span className="text-[10px] font-semibold text-primary-foreground/80">{action.label}</span>
