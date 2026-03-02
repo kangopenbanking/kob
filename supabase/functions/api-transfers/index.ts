@@ -144,6 +144,52 @@ serve(async (req) => {
       destAccount = data;
     }
 
+    // Tier 3b: Try phone number lookup via profiles table
+    if (!destAccount) {
+      // Normalize phone: strip spaces, dashes; ensure starts with + or digits
+      const cleanPhone = destination_account_id.replace(/[\s\-\(\)]/g, '');
+      // Try multiple phone formats
+      const phoneVariants = [cleanPhone];
+      // If starts with country code without +, add +
+      if (/^\d{10,15}$/.test(cleanPhone)) {
+        phoneVariants.push(`+${cleanPhone}`);
+      }
+      // If starts with +237, also try without +
+      if (cleanPhone.startsWith('+')) {
+        phoneVariants.push(cleanPhone.substring(1));
+      }
+      // Also try with +237 prefix for local numbers (6XXXXXXXX)
+      if (/^6\d{8}$/.test(cleanPhone)) {
+        phoneVariants.push(`+237${cleanPhone}`);
+        phoneVariants.push(`237${cleanPhone}`);
+      }
+
+      for (const phoneVar of phoneVariants) {
+        if (destAccount) break;
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('phone_number', phoneVar)
+          .maybeSingle();
+
+        if (profile && profile.id !== user.id) {
+          // Find the recipient's primary account
+          const { data: recipientAccount } = await supabase
+            .from('accounts')
+            .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+            .eq('user_id', profile.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (recipientAccount) {
+            destAccount = recipientAccount;
+          }
+        }
+      }
+    }
+
     // Tier 4: Try by DOMESTIC_RIB identification_value
     if (!destAccount) {
       const cleanValue = destination_account_id.replace(/[\s\-]/g, '');
