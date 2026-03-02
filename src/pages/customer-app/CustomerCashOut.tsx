@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Users } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Users, Clock, Mail, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -146,6 +146,30 @@ const CustomerCashOut: React.FC = () => {
   const netAmount = Math.max(numAmount - fee, 0);
   const isOverBalance = numAmount > walletBalance;
 
+  const getProcessingTime = (destType: string): string => {
+    switch (destType) {
+      case 'bank_card': return '5–10 business days';
+      case 'bank_account': return '1–3 business days';
+      case 'momo_mtn':
+      case 'momo_orange': return 'Instant – 30 minutes';
+      case 'paypal': return '1–2 business days';
+      case 'agent': return 'Collect at agent location';
+      default: return '1–3 business days';
+    }
+  };
+
+  const getProcessingDescription = (destType: string): string => {
+    switch (destType) {
+      case 'bank_card': return 'Refund processed via Stripe to your original card. Processing depends on your bank.';
+      case 'bank_account': return 'Transfer sent to your bank account via our payment partner.';
+      case 'momo_mtn':
+      case 'momo_orange': return 'Funds sent directly to your mobile money wallet.';
+      case 'paypal': return 'PayPal payout initiated to your linked email address.';
+      case 'agent': return 'Present your withdrawal code at any authorized agent.';
+      default: return 'Your withdrawal is being processed.';
+    }
+  };
+
   const getIcon = (type: string) => iconMap[type] || iconMap.bank_account;
 
   const handleConfirm = () => {
@@ -182,13 +206,115 @@ const CustomerCashOut: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['account-balances'] });
       queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-spending-summary'] });
 
       setStep('success');
-      const statusMsg = result.status === 'completed' ? 'completed' : 'is being processed';
-      toast.success(`XAF ${netAmount.toLocaleString()} withdrawal ${statusMsg}`);
-      setTimeout(() => navigate(-1), 2500);
+
+      const processingTime = getProcessingTime(destinationType);
+      const isInstant = result.status === 'completed';
+
+      // Professional toast with processing time
+      toast.success(
+        isInstant
+          ? `Withdrawal complete! XAF ${netAmount.toLocaleString()} sent to ${selectedAccount?.account_name || destinationType}.`
+          : `Withdrawal initiated! XAF ${netAmount.toLocaleString()} is on its way.`,
+        {
+          description: isInstant
+            ? 'Funds have been delivered successfully.'
+            : `Estimated processing: ${processingTime}. You'll receive a confirmation email shortly.`,
+          duration: 6000,
+        }
+      );
+
+      // Send in-app notification
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        await supabase.from('app_notifications').insert({
+          user_id: currentUser.id,
+          type: 'info',
+          title: isInstant ? 'Withdrawal Complete' : 'Withdrawal Processing',
+          message: isInstant
+            ? `XAF ${netAmount.toLocaleString()} has been sent to ${selectedAccount?.account_name || destinationType}.`
+            : `XAF ${netAmount.toLocaleString()} withdrawal to ${selectedAccount?.account_name || destinationType} is being processed. Expected: ${processingTime}.`,
+          icon: 'cash_out',
+          metadata: {
+            tx_ref: result.tx_ref,
+            amount: numAmount,
+            net_amount: netAmount,
+            fee: fee,
+            destination: selectedAccount?.account_name || destinationType,
+            processing_time: processingTime,
+            status: result.status,
+          },
+        });
+      }
+
+      // Send confirmation email (non-blocking)
+      supabase.functions.invoke('send-communication', {
+        body: {
+          type: 'email',
+          recipient: currentUser?.email,
+          subject: isInstant ? '✅ Withdrawal Complete' : '⏳ Withdrawal Processing – Kang',
+          body: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="display: inline-flex; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 50%; background: ${isInstant ? '#dcfce7' : '#fef3c7'}; margin-bottom: 12px;">
+                  <span style="font-size: 24px;">${isInstant ? '✅' : '⏳'}</span>
+                </div>
+                <h1 style="font-size: 20px; font-weight: 700; color: #1a1a1a; margin: 0;">
+                  ${isInstant ? 'Withdrawal Complete' : 'Withdrawal Processing'}
+                </h1>
+              </div>
+              
+              <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Amount</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 14px;">XAF ${numAmount.toLocaleString()}</td>
+                  </tr>
+                  ${fee > 0 ? `<tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Fee</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; color: #ef4444; font-size: 14px;">- XAF ${fee.toLocaleString()}</td>
+                  </tr>` : ''}
+                  <tr style="border-top: 1px solid #e5e7eb;">
+                    <td style="padding: 12px 0 8px; color: #1a1a1a; font-weight: 700; font-size: 15px;">You Receive</td>
+                    <td style="padding: 12px 0 8px; text-align: right; font-weight: 800; font-size: 15px; color: #1a1a1a;">XAF ${netAmount.toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Destination</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 14px;">${selectedAccount?.account_name || destinationType}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Reference</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 13px; font-family: monospace;">${result.tx_ref}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; color: #6b7280; font-size: 14px;">Processing Time</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: 600; font-size: 14px;">${processingTime}</td>
+                  </tr>
+                </table>
+              </div>
+              
+              <p style="color: #6b7280; font-size: 13px; text-align: center; margin-top: 20px;">
+                ${isInstant
+                  ? 'Your funds have been delivered. No further action needed.'
+                  : `Your withdrawal is being processed and should arrive within ${processingTime}. We'll notify you when it's complete.`
+                }
+              </p>
+              <p style="color: #9ca3af; font-size: 11px; text-align: center; margin-top: 16px;">
+                If you did not initiate this withdrawal, please contact support immediately.
+              </p>
+            </div>
+          `,
+        },
+      }).catch(err => console.error('Withdrawal email failed:', err));
+
+      setTimeout(() => navigate(-1), 4000);
     } catch (err: any) {
-      toast.error(err.message || 'Withdrawal failed. Please try again.');
+      toast.error(err.message || 'Withdrawal failed. Please try again.', {
+        description: 'Your balance has been restored. No funds were deducted.',
+        duration: 5000,
+      });
     } finally {
       setProcessing(false);
     }
@@ -219,15 +345,47 @@ const CustomerCashOut: React.FC = () => {
       <AnimatePresence mode="wait">
         {step === 'success' ? (
           <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center gap-4 py-16">
+            className="flex flex-col items-center gap-5 py-12">
             <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(150,40%,90%)]">
               <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
             </div>
-            <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
-            <p className="text-sm text-muted-foreground">
-              XAF {netAmount.toLocaleString()} to {selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}
-            </p>
-            {fee > 0 && <p className="text-xs text-muted-foreground">Fee: XAF {fee.toLocaleString()}</p>}
+            <div className="text-center">
+              <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
+              <p className="text-sm text-muted-foreground mt-1">
+                XAF {netAmount.toLocaleString()} to {selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}
+              </p>
+              {fee > 0 && <p className="text-xs text-muted-foreground mt-0.5">Fee: XAF {fee.toLocaleString()}</p>}
+            </div>
+
+            {/* Processing time card */}
+            <div className="w-full rounded-2xl bg-card border border-border p-4 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(210,80%,93%)]">
+                  <Clock className="h-5 w-5 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-foreground">Estimated Processing</p>
+                  <p className="text-sm font-extrabold text-primary">
+                    {getProcessingTime(selectedAccount?._isAgent ? 'agent' : selectedAccount?.account_type)}
+                  </p>
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                {getProcessingDescription(selectedAccount?._isAgent ? 'agent' : selectedAccount?.account_type)}
+              </p>
+            </div>
+
+            {/* Confirmation notices */}
+            <div className="w-full space-y-2">
+              <div className="flex items-center gap-2 rounded-xl bg-[hsl(150,30%,94%)] px-3 py-2.5">
+                <Mail className="h-4 w-4 text-[hsl(150,40%,35%)] shrink-0" strokeWidth={1.5} />
+                <p className="text-[11px] text-[hsl(150,30%,25%)]">A confirmation email has been sent to your inbox.</p>
+              </div>
+              <div className="flex items-center gap-2 rounded-xl bg-[hsl(210,30%,94%)] px-3 py-2.5">
+                <Bell className="h-4 w-4 text-[hsl(210,50%,45%)] shrink-0" strokeWidth={1.5} />
+                <p className="text-[11px] text-[hsl(210,30%,25%)]">You'll be notified when the transfer is complete.</p>
+              </div>
+            </div>
           </motion.div>
         ) : step === 'dest' ? (
           <motion.div key="dest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
