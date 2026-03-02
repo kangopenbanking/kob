@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Users, Plus, X, CheckCircle2, Percent, DollarSign, ChevronDown, Send, AlertCircle } from 'lucide-react';
+import { ArrowLeft, Users, Plus, X, CheckCircle2, Percent, DollarSign, ChevronDown, Send, AlertCircle, Receipt, UserPlus, Coins, Bell } from 'lucide-react';
+import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -160,6 +161,17 @@ const CustomerSplitBills: React.FC = () => {
           <Plus className="mr-1 h-3.5 w-3.5" strokeWidth={2} /> New Split
         </Button>
       </div>
+
+      {/* How It Works Flow */}
+      <HowItWorksFlow
+        title="How Split Bills Works"
+        steps={[
+          { icon: Receipt, title: 'Add a Bill', description: 'Enter the bill title, total amount, and choose how to split — equal, custom amounts, or percentages.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
+          { icon: UserPlus, title: 'Add Participants', description: 'Add friends by name and phone. Your share is auto-calculated as the remainder.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
+          { icon: Send, title: 'Send Split Request', description: 'Everyone gets notified of their share. Track who has paid in real-time.', color: 'hsl(270,60%,92%)', iconColor: 'hsl(270,50%,45%)' },
+          { icon: Bell, title: 'Remind & Settle', description: 'Send reminders to unpaid participants. Once everyone pays, the bill is settled.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
+        ] as FlowStep[]}
+      />
 
       {/* Create Form */}
       <AnimatePresence>

@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, CircleDollarSign, Users, Calendar, Plus, ChevronRight, X,
-  Loader2, Banknote, AlertCircle, CheckCircle2, Clock, UserPlus, Trophy
+  Loader2, Banknote, AlertCircle, CheckCircle2, Clock, UserPlus, Trophy, Repeat, ShieldCheck, Gift
 } from 'lucide-react';
+import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -412,6 +413,18 @@ const CustomerNjangi: React.FC = () => {
         <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
         <h1 className="text-xl font-bold text-foreground">Njangi</h1>
       </div>
+
+      {/* How It Works Flow */}
+      <HowItWorksFlow
+        title="How Njangi Works"
+        steps={[
+          { icon: Plus, title: 'Create or Join a Circle', description: 'Start your own savings circle or join one using a Group ID shared by the creator.', color: 'hsl(270,60%,92%)', iconColor: 'hsl(270,50%,45%)' },
+          { icon: Users, title: 'Invite Members', description: 'Share your Group ID with friends and family. Set contribution amounts and frequency.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
+          { icon: Repeat, title: 'Contribute Each Cycle', description: 'Members contribute a fixed amount each cycle. Late payments incur interest fees.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
+          { icon: Gift, title: 'Receive Your Payout', description: 'Each cycle, one member receives the full pot. The rotation continues until everyone benefits.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
+          { icon: ShieldCheck, title: 'Build Your Credit', description: 'On-time contributions boost your credit score. Your participation is reported automatically.', color: 'hsl(340,60%,92%)', iconColor: 'hsl(340,50%,45%)' },
+        ] as FlowStep[]}
+      />
 
       {/* Summary */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
