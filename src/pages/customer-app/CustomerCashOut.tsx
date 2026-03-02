@@ -20,7 +20,7 @@ const iconMap: Record<string, { icon: React.ElementType; color: string; iconColo
   bank_card: { icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
 };
 
-const quickAmounts = [5000, 10000, 25000, 50000, 100000];
+const defaultQuickAmounts = [5000, 10000, 25000, 50000, 100000];
 
 const CustomerCashOut: React.FC = () => {
   const navigate = useNavigate();
@@ -40,25 +40,31 @@ const CustomerCashOut: React.FC = () => {
   const primaryBalance = primaryAccount ? balances.find((b: any) => b.account_id === primaryAccount.id) : null;
   const walletBalance = (primaryBalance?.amount as number) ?? 0;
 
-  // Fetch admin cashout_methods config from institution app_config
+  // Fetch admin cashout config (methods + limits)
   const { data: cashoutConfig } = useQuery({
-    queryKey: ['cashout-methods-config', KANG_PLATFORM_ID],
+    queryKey: ['cashout-config', KANG_PLATFORM_ID],
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('institutions')
         .select('app_config')
         .eq('id', KANG_PLATFORM_ID)
         .maybeSingle();
-      if (error || !data) return { bank_transfer: true, mobile_money: true, paypal: true, agent: true } as Record<string, boolean>;
+      if (error || !data) return { methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true }, limits: { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: defaultQuickAmounts } };
       try {
-        const appConfig = data?.app_config || {};
-        const customerConfig = appConfig?.customer_app_config || {};
-        return (customerConfig?.cashout_methods || { bank_transfer: true, mobile_money: true, paypal: true, agent: true }) as Record<string, boolean>;
+        const raw = data?.app_config?.customer_app_config || {};
+        return {
+          methods: raw.cashout_methods || { bank_transfer: true, mobile_money: true, paypal: true, agent: true },
+          limits: { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: defaultQuickAmounts, ...(raw.cashout_limits || {}) },
+        };
       } catch {
-        return { bank_transfer: true, mobile_money: true, paypal: true, agent: true } as Record<string, boolean>;
+        return { methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true }, limits: { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: defaultQuickAmounts } };
       }
     },
   });
+
+  const cashoutMethods = cashoutConfig?.methods || { bank_transfer: true, mobile_money: true, paypal: true, agent: true };
+  const cashoutLimits = cashoutConfig?.limits || { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: defaultQuickAmounts };
+  const quickAmounts = cashoutLimits.quick_amounts?.length ? cashoutLimits.quick_amounts : defaultQuickAmounts;
 
   // Map account_type to cashout method key
   const accountTypeToCashoutMethod = (accountType: string): string | null => {
@@ -91,8 +97,8 @@ const CustomerCashOut: React.FC = () => {
   // Filter linked accounts by admin-enabled cashout methods
   const filteredAccounts = linkedAccounts.filter((acc: any) => {
     const method = accountTypeToCashoutMethod(acc.account_type);
-    if (!method) return true; // show unknown types by default
-    return cashoutConfig?.[method] !== false;
+    if (!method) return true;
+    return cashoutMethods?.[method] !== false;
   });
 
   // Fetch withdrawal fee structure from admin
@@ -140,6 +146,8 @@ const CustomerCashOut: React.FC = () => {
     if (!amount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
     if (numAmount <= fee) { toast.error('Amount must be greater than the fee'); return; }
     if (isOverBalance) { toast.error('Insufficient wallet balance'); return; }
+    if (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal is XAF ${cashoutLimits.min_amount.toLocaleString()}`); return; }
+    if (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount) { toast.error(`Maximum withdrawal is XAF ${cashoutLimits.max_amount.toLocaleString()}`); return; }
     setStep('confirm');
   };
 
@@ -315,6 +323,13 @@ const CustomerCashOut: React.FC = () => {
               <p className={`text-xs ${isOverBalance ? 'text-[hsl(0,70%,75%)]' : 'text-[hsl(0,0%,100%)]/40'}`}>
                 {isOverBalance ? 'Insufficient balance' : `Available: XAF ${walletBalance.toLocaleString()}`}
               </p>
+              {(cashoutLimits.min_amount > 0 || cashoutLimits.max_amount > 0) && (
+                <p className="text-[10px] text-[hsl(0,0%,100%)]/40 mt-1">
+                  {cashoutLimits.min_amount > 0 ? `Min: XAF ${cashoutLimits.min_amount.toLocaleString()}` : ''}
+                  {cashoutLimits.min_amount > 0 && cashoutLimits.max_amount > 0 ? ' · ' : ''}
+                  {cashoutLimits.max_amount > 0 ? `Max: XAF ${cashoutLimits.max_amount.toLocaleString()}` : ''}
+                </p>
+              )}
             </div>
 
             {/* Quick amounts */}
@@ -346,7 +361,7 @@ const CustomerCashOut: React.FC = () => {
               </motion.div>
             )}
 
-            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || numAmount <= fee || isOverBalance} className="w-full rounded-2xl h-12 text-sm font-bold">
+            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || numAmount <= fee || isOverBalance || (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) || (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount)} className="w-full rounded-2xl h-12 text-sm font-bold">
               Continue
             </Button>
           </motion.div>
