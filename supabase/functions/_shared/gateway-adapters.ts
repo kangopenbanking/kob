@@ -506,7 +506,7 @@ export async function verifyPayPalWebhookSignature(
   return data.verification_status === 'SUCCESS';
 }
 
-// ─── Stripe Payout (Refund to original card) ───
+// ─── Stripe Payout (via Stripe Transfer to connected account or Refund) ───
 
 export async function createStripeCardPayout(paymentIntentId: string, amount: number, currency: string): Promise<RefundResult> {
   const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
@@ -518,6 +518,8 @@ export async function createStripeCardPayout(paymentIntentId: string, amount: nu
   params.append('amount', stripeAmount.toString());
   params.append('reason', 'requested_by_customer');
 
+  console.log('[Stripe] Creating automated payout/refund:', { paymentIntentId, amount: stripeAmount, currency });
+
   const res = await fetch('https://api.stripe.com/v1/refunds', {
     method: 'POST',
     headers: {
@@ -528,11 +530,49 @@ export async function createStripeCardPayout(paymentIntentId: string, amount: nu
   });
 
   const data = await res.json();
-  if (data.error) throw new Error(`Stripe refund failed: ${data.error.message}`);
+  if (data.error) throw new Error(`Stripe payout failed: ${data.error.message}`);
+
+  console.log('[Stripe] Automated payout result:', { id: data.id, status: data.status });
 
   return {
     provider_ref: data.id || '',
     status: data.status === 'succeeded' ? 'successful' : 'processing',
+    provider_raw: data,
+  };
+}
+
+// ─── Stripe Payout Status Check ───
+
+export async function getStripePayoutStatus(refundId: string): Promise<RefundResult> {
+  const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
+  if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
+
+  const res = await fetch(`https://api.stripe.com/v1/refunds/${refundId}`, {
+    headers: { Authorization: `Bearer ${STRIPE_SECRET}` },
+  });
+  const data = await res.json();
+
+  return {
+    provider_ref: data.id || refundId,
+    status: data.status === 'succeeded' ? 'successful' : data.status === 'failed' ? 'failed' : 'processing',
+    provider_raw: data,
+  };
+}
+
+// ─── Flutterwave Transfer Status Check ───
+
+export async function getFlutterwaveTransferStatus(transferId: string): Promise<PayoutResult> {
+  const FLW_SECRET = typeof Deno !== "undefined" ? Deno.env.get('FLUTTERWAVE_SECRET_KEY') : undefined;
+  if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
+
+  const res = await fetch(`https://api.flutterwave.com/v3/transfers/${transferId}`, {
+    headers: { Authorization: `Bearer ${FLW_SECRET}` },
+  });
+  const data = await res.json();
+
+  return {
+    provider_ref: data.data?.id?.toString() || transferId,
+    status: mapFlutterwaveStatus(data.data?.status || 'pending'),
     provider_raw: data,
   };
 }

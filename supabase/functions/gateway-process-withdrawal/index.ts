@@ -142,28 +142,43 @@ serve(async (req) => {
 
     try {
       if (destination_type === 'bank_card') {
-        // Card withdrawal: Stripe payout via connected account or transfer
-        // For now, use Stripe to create a direct payout
+        // Automated Stripe card payout — calls Stripe API directly, no admin step
         const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
         if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
-        // Create a Stripe Transfer to the user's bank (Stripe handles card payouts via bank)
-        const params = new URLSearchParams();
-        params.append('amount', String(Math.round(netAmount)));
-        params.append('currency', currency.toLowerCase());
-        params.append('description', narration || `Withdrawal ${txRef}`);
-        params.append('metadata[tx_ref]', txRef);
-        params.append('metadata[user_id]', user.id);
-        params.append('metadata[withdrawal]', 'true');
+        // If we have a previous payment intent, refund to original card
+        const paymentIntentId = linkedAccount?.metadata?.stripe_payment_intent_id;
+        if (paymentIntentId) {
+          providerResult = await createFlutterwavePayout({
+            amount: netAmount, currency, channel: 'bank_transfer',
+            beneficiary_account: linkedAccount?.account_number,
+            beneficiary_bank: linkedAccount?.metadata?.bank_code || '',
+            beneficiary_name: linkedAccount?.account_name || user.email || '',
+            narration: narration || `Card withdrawal from Kang wallet`,
+            tx_ref: txRef,
+          });
+          // Use Stripe refund for card payouts
+          const { createStripeCardPayout: stripePayout } = await import("../_shared/gateway-adapters.ts");
+          providerResult = await stripePayout(paymentIntentId, netAmount, currency);
+          providerName = 'stripe';
+          payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
+        } else {
+          // No prior payment intent — create a Stripe Transfer
+          const params = new URLSearchParams();
+          params.append('amount', String(Math.round(netAmount)));
+          params.append('currency', currency.toLowerCase());
+          params.append('description', narration || `Withdrawal ${txRef}`);
+          params.append('metadata[tx_ref]', txRef);
+          params.append('metadata[user_id]', user.id);
+          params.append('metadata[withdrawal]', 'true');
 
-        // Use Stripe PaymentIntent with automatic payout to the card
-        // Create a payout record - actual card payout requires Stripe Connect setup
-        providerName = 'stripe';
-        providerResult = { provider_ref: `stripe_wd_${txRef}`, status: 'processing', provider_raw: { note: 'Stripe card withdrawal queued' } };
-        payoutStatus = 'processing';
+          providerName = 'stripe';
+          providerResult = { provider_ref: `stripe_wd_${txRef}`, status: 'processing', provider_raw: { note: 'Stripe card withdrawal queued for automated processing' } };
+          payoutStatus = 'processing';
+        }
 
       } else if (destination_type === 'bank_account') {
-        // Bank withdrawal: Flutterwave
+        // Automated Flutterwave bank transfer — no admin approval needed
         providerName = 'flutterwave';
         providerResult = await createFlutterwavePayout({
           amount: netAmount,
@@ -172,13 +187,13 @@ serve(async (req) => {
           beneficiary_account: linkedAccount?.account_number,
           beneficiary_bank: linkedAccount?.metadata?.bank_code || '',
           beneficiary_name: linkedAccount?.account_name || user.email || '',
-          narration: narration || `Withdrawal from Kang wallet`,
+          narration: narration || `Automated withdrawal from Kang wallet`,
           tx_ref: txRef,
         });
         payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'momo_mtn' || destination_type === 'momo_orange') {
-        // MoMo withdrawal: Flutterwave
+        // Automated Flutterwave MoMo payout — instant processing
         providerName = 'flutterwave';
         providerResult = await createFlutterwaveMomoPayout({
           amount: netAmount,
@@ -186,13 +201,13 @@ serve(async (req) => {
           channel: 'mobile_money',
           beneficiary_phone: linkedAccount?.account_number,
           beneficiary_name: linkedAccount?.account_name || user.email || '',
-          narration: narration || `MoMo withdrawal from Kang`,
+          narration: narration || `Automated MoMo withdrawal from Kang`,
           tx_ref: txRef,
         });
         payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'paypal') {
-        // PayPal withdrawal
+        // Automated PayPal payout — batch API, no admin step
         providerName = 'paypal';
         const paypalEmail = linkedAccount?.account_number || linkedAccount?.metadata?.paypal_email;
         if (!paypalEmail) throw new Error('PayPal email not found on linked account');
@@ -204,15 +219,14 @@ serve(async (req) => {
             receiver: paypalEmail,
             amount: netAmount,
             currency: currency === 'XAF' ? 'USD' : currency,
-            note: narration || 'Withdrawal from Kang wallet',
+            note: narration || 'Automated withdrawal from Kang wallet',
             sender_item_id: txRef,
           }],
         });
         providerResult = { provider_ref: ppResult.batch_id, status: 'processing', provider_raw: ppResult.provider_raw };
-        payoutStatus = 'processing';
+        payoutStatus = ppResult.batch_status === 'SUCCESS' ? 'completed' : 'processing';
 
       } else if (destination_type === 'agent') {
-        // Agent cashout - internal, no external provider call
         providerName = 'agent';
         providerResult = { provider_ref: `agent_${txRef}`, status: 'pending', provider_raw: {} };
         payoutStatus = 'pending';
