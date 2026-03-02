@@ -77,6 +77,20 @@ interface CustomerAppConfig {
     request: string;
     pay_links: string;
   };
+  typography_config: TypographyConfig;
+}
+
+interface SectionTypography {
+  font_size_multiplier: number;
+  heading_color: string;
+  body_color: string;
+}
+
+interface TypographyConfig {
+  global_font_size_multiplier: number;
+  global_heading_color: string;
+  global_body_color: string;
+  sections: Record<string, SectionTypography>;
 }
 
 type CustomerSectionKey = 'balance_card' | 'quick_actions' | 'media_banner' | 'upcoming_bills' | 'spending_stats' | 'recent_activities';
@@ -115,6 +129,12 @@ const defaultConfig: CustomerAppConfig = {
     cash_out: '#ffffff',
     request: '#ffffff',
     pay_links: '#ffffff',
+  },
+  typography_config: {
+    global_font_size_multiplier: 1.3,
+    global_heading_color: '#000000',
+    global_body_color: '#000000',
+    sections: {},
   },
 };
 
@@ -1059,6 +1079,129 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
   );
 }
 
+const TYPOGRAPHY_SECTIONS = [
+  { key: 'hero', label: 'Hero Section' },
+  { key: 'money_movement', label: 'Money Movement' },
+  { key: 'payments_bills', label: 'Payments & Bills' },
+  { key: 'savings_goals', label: 'Savings & Goals' },
+  { key: 'financial_health', label: 'Financial Health' },
+  { key: 'recent_activities', label: 'Recent Activities' },
+  { key: 'bottom_nav', label: 'Bottom Navigation' },
+] as const;
+
+// ─── Typography Panel ───
+function TypographyPanel({ institutionId, appConfig }: { institutionId: string; appConfig: CustomerAppConfig }) {
+  const queryClient = useQueryClient();
+  const [typoConfig, setTypoConfig] = useState<TypographyConfig>(appConfig.typography_config || defaultConfig.typography_config);
+
+  useEffect(() => {
+    setTypoConfig(appConfig.typography_config || defaultConfig.typography_config);
+  }, [appConfig]);
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const { data: inst } = await supabase.from("institutions").select("app_config").eq("id", institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const customerConfig = currentAppConfig.customer_app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, typography_config: typoConfig } }
+      }).eq("id", institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-customer"] });
+      toast.success("Typography settings saved");
+    },
+    onError: () => toast.error("Failed to save typography"),
+  });
+
+  const updateSection = (key: string, field: keyof SectionTypography, value: string | number) => {
+    setTypoConfig(prev => ({
+      ...prev,
+      sections: {
+        ...prev.sections,
+        [key]: { ...(prev.sections[key] || { font_size_multiplier: 1, heading_color: '#000000', body_color: '#000000' }), [field]: value },
+      },
+    }));
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2"><Palette className="h-5 w-5" /> Typography & Colors</CardTitle>
+        <CardDescription>Control font sizes and text colors across the Consumer & Banking apps</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Global Settings */}
+        <div className="space-y-4 rounded-xl border p-4">
+          <h4 className="text-sm font-bold">Global Defaults</h4>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <Label className="text-xs">Font Size Multiplier</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <Input
+                  type="number" step="0.1" min="0.5" max="3"
+                  value={typoConfig.global_font_size_multiplier}
+                  onChange={e => setTypoConfig(prev => ({ ...prev, global_font_size_multiplier: parseFloat(e.target.value) || 1 }))}
+                  className="h-8"
+                />
+                <span className="text-xs text-muted-foreground whitespace-nowrap">{typoConfig.global_font_size_multiplier}x</span>
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Heading Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={typoConfig.global_heading_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_heading_color: e.target.value }))} className="h-8 w-8 rounded border cursor-pointer" />
+                <Input value={typoConfig.global_heading_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_heading_color: e.target.value }))} className="h-8 text-xs" />
+              </div>
+            </div>
+            <div>
+              <Label className="text-xs">Body Text Color</Label>
+              <div className="flex items-center gap-2 mt-1">
+                <input type="color" value={typoConfig.global_body_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_body_color: e.target.value }))} className="h-8 w-8 rounded border cursor-pointer" />
+                <Input value={typoConfig.global_body_color} onChange={e => setTypoConfig(prev => ({ ...prev, global_body_color: e.target.value }))} className="h-8 text-xs" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Per-Section Overrides */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-bold">Per-Section Overrides</h4>
+          <p className="text-xs text-muted-foreground">Override global settings for specific sections. Leave blank to use global defaults.</p>
+          <div className="space-y-2">
+            {TYPOGRAPHY_SECTIONS.map(({ key, label }) => {
+              const sec = typoConfig.sections[key] || { font_size_multiplier: 0, heading_color: '', body_color: '' };
+              return (
+                <div key={key} className="grid grid-cols-4 gap-3 items-center rounded-lg border p-3">
+                  <span className="text-xs font-semibold">{label}</span>
+                  <div className="flex items-center gap-1">
+                    <Input type="number" step="0.1" min="0" max="3" placeholder="Global" value={sec.font_size_multiplier || ''} onChange={e => updateSection(key, 'font_size_multiplier', parseFloat(e.target.value) || 0)} className="h-7 text-xs" />
+                    <span className="text-[10px] text-muted-foreground">x</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <input type="color" value={sec.heading_color || typoConfig.global_heading_color} onChange={e => updateSection(key, 'heading_color', e.target.value)} className="h-6 w-6 rounded border cursor-pointer shrink-0" />
+                    <Input value={sec.heading_color || ''} onChange={e => updateSection(key, 'heading_color', e.target.value)} placeholder="Global" className="h-7 text-xs" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <input type="color" value={sec.body_color || typoConfig.global_body_color} onChange={e => updateSection(key, 'body_color', e.target.value)} className="h-6 w-6 rounded border cursor-pointer shrink-0" />
+                    <Input value={sec.body_color || ''} onChange={e => updateSection(key, 'body_color', e.target.value)} placeholder="Global" className="h-7 text-xs" />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} className="w-full">
+          {saveMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Typography Settings
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 // ─── Main Component ───
 export default function CustomerAppManagement() {
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
@@ -1095,6 +1238,7 @@ export default function CustomerAppManagement() {
           card_colors: raw.card_colors || {},
           cashout_methods: { ...defaultConfig.cashout_methods, ...(raw.cashout_methods || {}) },
           rewards_config: { ...defaultRewardsConfig, ...(raw.rewards_config || {}) },
+          typography_config: { ...defaultConfig.typography_config, ...(raw.typography_config || {}), sections: { ...defaultConfig.typography_config.sections, ...(raw.typography_config?.sections || {}) } },
         }
       : defaultConfig;
   })();
@@ -1224,6 +1368,7 @@ export default function CustomerAppManagement() {
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
                   <TabsTrigger value="hero" className="gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Hero Section</TabsTrigger>
+                  <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Typography</TabsTrigger>
                 </TabsList>
 
                 {/* Linked Accounts Tab */}
@@ -1483,6 +1628,11 @@ export default function CustomerAppManagement() {
                 {/* Hero Section Tab */}
                 <TabsContent value="hero">
                   <HeroSectionPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+                {/* Typography Tab */}
+                <TabsContent value="typography">
+                  <TypographyPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
               </Tabs>
             </>

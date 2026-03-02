@@ -37,6 +37,19 @@ export interface HeroActionColors {
   pay_links: string;
 }
 
+export interface SectionTypography {
+  font_size_multiplier: number;
+  heading_color: string;
+  body_color: string;
+}
+
+export interface TypographyConfig {
+  global_font_size_multiplier: number;
+  global_heading_color: string;
+  global_body_color: string;
+  sections: Record<string, SectionTypography>;
+}
+
 interface CustomerTenantBranding {
   id: string;
   name: string;
@@ -55,6 +68,7 @@ interface CustomerTenantBranding {
   heroBgColor: string;
   heroBgImage: string | null;
   heroActionColors: HeroActionColors;
+  typographyConfig: TypographyConfig;
 }
 
 const defaultFeatures: CustomerAppFeatures = {
@@ -95,6 +109,13 @@ const defaultHeroActionColors: HeroActionColors = {
   pay_links: '#ffffff',
 };
 
+const defaultTypographyConfig: TypographyConfig = {
+  global_font_size_multiplier: 1.3,
+  global_heading_color: '#000000',
+  global_body_color: '#000000',
+  sections: {},
+};
+
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
   name: 'Kang',
@@ -113,6 +134,7 @@ const defaultBranding: CustomerTenantBranding = {
   heroBgColor: '',
   heroBgImage: null,
   heroActionColors: defaultHeroActionColors,
+  typographyConfig: defaultTypographyConfig,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
@@ -157,6 +179,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const heroBgColor: string = customerConfig.hero_bg_color || '';
       const heroBgImage: string | null = customerConfig.hero_bg_image || null;
       const heroActionColors: HeroActionColors = { ...defaultHeroActionColors, ...(customerConfig.hero_action_colors || {}) };
+      const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
 
       setBranding({
         id: inst.id,
@@ -176,6 +199,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         heroBgColor,
         heroBgImage,
         heroActionColors,
+        typographyConfig,
       });
     };
 
