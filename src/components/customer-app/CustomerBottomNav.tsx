@@ -1,13 +1,17 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Home, Clock, ScanLine, CreditCard, MoreHorizontal } from 'lucide-react';
+import { ScanLine } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import homeIcon from '@/assets/nav-icons/home.png';
+import activitiesIcon from '@/assets/nav-icons/activities.png';
+import cardIcon from '@/assets/nav-icons/card.png';
+import moreIcon from '@/assets/nav-icons/more.png';
 
 interface NavItem {
   label: string;
-  icon: React.ElementType;
-  path: string;
+  iconSrc?: string;
   isCenter?: boolean;
+  path: string;
 }
 
 interface CustomerBottomNavProps {
@@ -19,11 +23,11 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
   const navigate = useNavigate();
 
   const items: NavItem[] = [
-    { label: 'Home', icon: Home, path: `${basePath}/home` },
-    { label: 'Activity', icon: Clock, path: `${basePath}/activity` },
-    { label: 'Scan', icon: ScanLine, path: `${basePath}/scan`, isCenter: true },
-    { label: 'Cards', icon: CreditCard, path: `${basePath}/cards` },
-    { label: 'More', icon: MoreHorizontal, path: `${basePath}/more` },
+    { label: 'Home', iconSrc: homeIcon, path: `${basePath}/home` },
+    { label: 'Activity', iconSrc: activitiesIcon, path: `${basePath}/activity` },
+    { label: 'Scan', isCenter: true, path: `${basePath}/scan` },
+    { label: 'Cards', iconSrc: cardIcon, path: `${basePath}/cards` },
+    { label: 'More', iconSrc: moreIcon, path: `${basePath}/more` },
   ];
 
   const isActive = (path: string) =>
@@ -34,21 +38,17 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
       <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
         {items.map((item) => {
           const active = isActive(item.path);
-          const Icon = item.icon;
 
           if (item.isCenter) {
             return (
               <button
                 key={item.path}
                 onClick={() => navigate(item.path)}
-                className="flex flex-col items-center justify-center gap-1 -mt-6"
+                className="flex flex-col items-center justify-center -mt-6"
               >
                 <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-lg">
-                  <Icon className="h-6 w-6 text-primary-foreground" strokeWidth={2} />
+                  <ScanLine className="h-6 w-6 text-primary-foreground" strokeWidth={2} />
                 </div>
-                <span className="text-[10px] font-bold text-primary">
-                  {item.label}
-                </span>
               </button>
             );
           }
@@ -58,17 +58,15 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'flex flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-colors',
-                active ? 'text-primary' : 'text-muted-foreground'
+                'flex flex-1 flex-col items-center justify-center py-1.5 transition-opacity',
+                active ? 'opacity-100' : 'opacity-40'
               )}
             >
-              <Icon
-                className="h-5 w-5"
-                strokeWidth={active ? 2 : 1.5}
+              <img
+                src={item.iconSrc}
+                alt={item.label}
+                className="h-6 w-6"
               />
-              <span className={cn('text-[11px]', active ? 'font-bold' : 'font-medium')}>
-                {item.label}
-              </span>
             </button>
           );
         })}
