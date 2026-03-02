@@ -920,15 +920,22 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
   const [bgImage, setBgImage] = useState(appConfig.hero_bg_image || '');
   const [uploading, setUploading] = useState(false);
 
-  const isVideo = bgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(bgImage) : false;
+  const [isVideo, setIsVideo] = useState(false);
+  const [actionColors, setActionColors] = useState(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
+  const [mediaType, setMediaType] = useState<'image' | 'video' | ''>('');
+
+  // Detect if URL is a video — check extension OR stored media type
+  useEffect(() => {
+    const extensionMatch = bgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(bgImage) : false;
+    setIsVideo(extensionMatch || mediaType === 'video');
+  }, [bgImage, mediaType]);
 
   useEffect(() => {
     setBgColor(appConfig.hero_bg_color || '');
     setBgImage(appConfig.hero_bg_image || '');
+    setMediaType((appConfig as any).hero_media_type || '');
     setActionColors(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
   }, [appConfig]);
-
-  const [actionColors, setActionColors] = useState(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -936,7 +943,16 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
       const currentAppConfig = (inst as any)?.app_config || {};
       const customerConfig = currentAppConfig.customer_app_config || {};
       const { error } = await (supabase as any).from("institutions").update({
-        app_config: { ...currentAppConfig, customer_app_config: { ...customerConfig, hero_bg_color: bgColor, hero_bg_image: bgImage, hero_action_colors: actionColors } }
+        app_config: {
+          ...currentAppConfig,
+          customer_app_config: {
+            ...customerConfig,
+            hero_bg_color: bgColor,
+            hero_bg_image: bgImage,
+            hero_media_type: mediaType,
+            hero_action_colors: actionColors,
+          },
+        },
       }).eq("id", institutionId);
       if (error) throw error;
     },
@@ -947,17 +963,32 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
     onError: () => toast.error("Failed to save hero section"),
   });
 
+  const MAX_VIDEO_SIZE_MB = 50;
+
   const handleMediaUpload = async (file: File) => {
+    // Validate video file size
+    if (file.type.startsWith('video/') && file.size > MAX_VIDEO_SIZE_MB * 1024 * 1024) {
+      toast.error(`Video must be under ${MAX_VIDEO_SIZE_MB}MB. Your file is ${(file.size / (1024 * 1024)).toFixed(1)}MB.`);
+      return;
+    }
+
     setUploading(true);
     try {
-      const ext = file.name.split('.').pop();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'mp4';
       const fileName = `hero-bg-${institutionId}-${Date.now()}.${ext}`;
-      const { error: uploadError } = await supabase.storage.from('institution-assets').upload(fileName, file, { upsert: true });
+      const { error: uploadError } = await supabase.storage.from('institution-assets').upload(fileName, file, {
+        upsert: true,
+        contentType: file.type,
+        cacheControl: '3600',
+      });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('institution-assets').getPublicUrl(fileName);
       setBgImage(urlData.publicUrl);
-      toast.success(`${file.type.startsWith('video/') ? 'Video' : 'Image'} uploaded`);
+      const uploadedIsVideo = file.type.startsWith('video/');
+      setMediaType(uploadedIsVideo ? 'video' : 'image');
+      toast.success(`${uploadedIsVideo ? 'Video' : 'Image'} uploaded successfully`);
     } catch (err: any) {
+      console.error('Hero media upload error:', err);
       toast.error(err.message || 'Upload failed');
     } finally {
       setUploading(false);
@@ -1014,15 +1045,15 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
         {/* Background Image / Video */}
         <div className="space-y-2">
           <Label>Background Image or Video</Label>
-          <p className="text-xs text-muted-foreground">Upload an image (JPG, PNG, WebP) or video (MP4, WebM). Overrides the color when set.</p>
+          <p className="text-xs text-muted-foreground">Upload an image (JPG, PNG, WebP) or video (MP4, WebM, max {MAX_VIDEO_SIZE_MB}MB). Overrides the color when set.</p>
           {bgImage && (
             <div className="relative w-full max-w-sm rounded-lg border overflow-hidden bg-muted">
               {isVideo ? (
-                <video src={bgImage} autoPlay loop muted playsInline className="w-full h-32 object-cover" />
+                <video src={bgImage} autoPlay loop muted playsInline className="w-full h-32 object-cover" crossOrigin="anonymous" />
               ) : (
                 <img src={bgImage} alt="Hero background" className="w-full h-32 object-cover" />
               )}
-              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => setBgImage('')}>
+              <Button variant="destructive" size="sm" className="absolute top-2 right-2" onClick={() => { setBgImage(''); setMediaType(''); }}>
                 <Trash2 className="h-3 w-3 mr-1" /> Remove
               </Button>
             </div>
@@ -1036,6 +1067,20 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
               </Button>
             </label>
           </div>
+          {bgImage && (
+            <div className="flex items-center gap-2 pt-1">
+              <Label className="text-xs">Media type:</Label>
+              <select
+                value={mediaType || (isVideo ? 'video' : 'image')}
+                onChange={e => setMediaType(e.target.value as 'image' | 'video')}
+                className="text-xs border rounded px-2 py-1 bg-background"
+              >
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+              </select>
+              <p className="text-xs text-muted-foreground">Set this if using a URL that doesn't end in .mp4/.webm</p>
+            </div>
+          )}
         </div>
 
         {/* Hero Action Icon Background Colors */}
