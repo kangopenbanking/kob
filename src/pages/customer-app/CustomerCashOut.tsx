@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, AlertCircle, Banknote, Plus } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -18,6 +18,7 @@ const iconMap: Record<string, { icon: React.ElementType; color: string; iconColo
   momo_orange: { icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
   paypal: { icon: Wallet, color: 'bg-[hsl(210,70%,90%)]', iconColor: 'text-[hsl(210,70%,50%)]' },
   bank_card: { icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
+  agent: { icon: Users, color: 'bg-[hsl(140,50%,90%)]', iconColor: 'text-[hsl(140,50%,35%)]' },
 };
 
 const defaultQuickAmounts = [5000, 10000, 25000, 50000, 100000];
@@ -32,7 +33,6 @@ const CustomerCashOut: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [showPin, setShowPin] = useState(false);
 
-  // Get user's Kang accounts for balance check
   const { data: kangAccounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = kangAccounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
@@ -66,7 +66,6 @@ const CustomerCashOut: React.FC = () => {
   const cashoutLimits = cashoutConfig?.limits || { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: defaultQuickAmounts };
   const quickAmounts = cashoutLimits.quick_amounts?.length ? cashoutLimits.quick_amounts : defaultQuickAmounts;
 
-  // Map account_type to cashout method key
   const accountTypeToCashoutMethod = (accountType: string): string | null => {
     switch (accountType) {
       case 'bank_account': return 'bank_transfer';
@@ -135,6 +134,20 @@ const CustomerCashOut: React.FC = () => {
     return Math.round(fee);
   };
 
+  const getFeeDescription = (): string | null => {
+    if (!feeStructure) return null;
+    const fs = feeStructure as any;
+    if (fs.fee_model === 'percentage') {
+      const parts = [`${fs.percentage_rate}% per withdrawal`];
+      if (fs.min_fee_amount) parts.push(`min XAF ${fs.min_fee_amount.toLocaleString()}`);
+      if (fs.max_fee_amount) parts.push(`max XAF ${fs.max_fee_amount.toLocaleString()}`);
+      return parts.join(' · ');
+    }
+    if (fs.fee_model === 'fixed') return `Flat fee of XAF ${(fs.fixed_amount || 0).toLocaleString()}`;
+    if (fs.fee_model === 'hybrid') return `XAF ${(fs.fixed_amount || 0).toLocaleString()} + ${fs.percentage_rate}%`;
+    return 'Fee applies per platform schedule';
+  };
+
   const numAmount = Number(amount) || 0;
   const fee = calculateFee(numAmount);
   const netAmount = Math.max(numAmount - fee, 0);
@@ -144,7 +157,7 @@ const CustomerCashOut: React.FC = () => {
 
   const handleConfirm = () => {
     if (!amount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
-    if (numAmount <= fee) { toast.error('Amount must be greater than the fee'); return; }
+    if (fee > 0 && numAmount <= fee) { toast.error('Amount must be greater than the fee'); return; }
     if (isOverBalance) { toast.error('Insufficient wallet balance'); return; }
     if (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal is XAF ${cashoutLimits.min_amount.toLocaleString()}`); return; }
     if (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount) { toast.error(`Maximum withdrawal is XAF ${cashoutLimits.max_amount.toLocaleString()}`); return; }
@@ -154,7 +167,7 @@ const CustomerCashOut: React.FC = () => {
   const handleWithdraw = async () => {
     setProcessing(true);
     try {
-      // 1. Create withdrawal transaction
+      const isAgentCashout = selectedAccount?._isAgent;
       const { error: txError } = await supabase.from('transactions').insert({
         user_id: user!.id,
         institution_id: KANG_PLATFORM_ID,
@@ -162,22 +175,23 @@ const CustomerCashOut: React.FC = () => {
         transaction_type: 'withdrawal',
         amount: numAmount,
         currency: 'XAF',
-        status: 'completed',
+        status: isAgentCashout ? 'Pending' : 'completed',
         credit_debit_indicator: 'Debit',
-        transaction_information: `Withdrawal to ${selectedAccount?.provider_name || selectedAccount?.account_type} ···${selectedAccount?.last4 || ''}`,
+        transaction_information: isAgentCashout
+          ? `Agent cash out - awaiting agent confirmation`
+          : `Withdrawal to ${selectedAccount?.provider_name || selectedAccount?.account_type} ···${selectedAccount?.last4 || ''}`,
         booking_datetime: new Date().toISOString(),
         value_datetime: new Date().toISOString(),
         metadata: {
-          destination_linked_account_id: selectedAccount?.id,
-          destination_type: selectedAccount?.account_type,
-          destination_provider: selectedAccount?.provider_name,
+          destination_linked_account_id: isAgentCashout ? null : selectedAccount?.id,
+          destination_type: isAgentCashout ? 'agent' : selectedAccount?.account_type,
+          destination_provider: isAgentCashout ? 'Agent' : selectedAccount?.provider_name,
           fee_amount: fee,
           net_amount: netAmount,
         },
       });
       if (txError) throw txError;
 
-      // 2. Deduct from wallet balance
       if (primaryAccount?.id && primaryBalance) {
         const newAmount = Math.max(walletBalance - numAmount, 0);
         await supabase.from('account_balances')
@@ -185,7 +199,6 @@ const CustomerCashOut: React.FC = () => {
           .eq('id', (primaryBalance as any).id);
       }
 
-      // 3. Invalidate caches
       queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['account-balances'] });
       queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
@@ -206,6 +219,14 @@ const CustomerCashOut: React.FC = () => {
     else navigate(-1);
   };
 
+  // Build the list of enabled admin cashout method cards (standalone options not tied to linked accounts)
+  const standaloneMethodCards: { key: string; label: string; description: string; iconKey: string }[] = [];
+  if (cashoutMethods.agent) {
+    standaloneMethodCards.push({ key: 'agent', label: 'Agent Cash Out', description: 'Withdraw via a nearby agent', iconKey: 'agent' });
+  }
+
+  const feeDesc = getFeeDescription();
+
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
       <div className="flex items-center gap-3">
@@ -223,27 +244,23 @@ const CustomerCashOut: React.FC = () => {
               <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
             </div>
             <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
-            <p className="text-sm text-muted-foreground">XAF {netAmount.toLocaleString()} to {selectedAccount?.account_name}</p>
-            <p className="text-xs text-muted-foreground">Fee: XAF {fee.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground">
+              XAF {netAmount.toLocaleString()} to {selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}
+            </p>
+            {fee > 0 && <p className="text-xs text-muted-foreground">Fee: XAF {fee.toLocaleString()}</p>}
           </motion.div>
         ) : step === 'dest' ? (
           <motion.div key="dest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
-            {/* Fee notice */}
-            <div className="flex items-start gap-3 rounded-2xl bg-[hsl(45,70%,90%)] p-4">
-              <AlertCircle className="h-5 w-5 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
-              <div>
-                <p className="text-xs font-bold text-foreground">Withdrawal Fee Applies</p>
-                <p className="text-[11px] text-muted-foreground">
-                  {feeStructure ? (
-                    (feeStructure as any).fee_model === 'percentage'
-                      ? `${(feeStructure as any).percentage_rate}% fee (min XAF ${((feeStructure as any).min_fee_amount || 0).toLocaleString()}, max XAF ${((feeStructure as any).max_fee_amount || 0).toLocaleString()})`
-                      : (feeStructure as any).fee_model === 'fixed'
-                        ? `Flat fee of XAF ${((feeStructure as any).fixed_amount || 0).toLocaleString()}`
-                        : 'Fee applies per admin schedule'
-                  ) : 'Fee schedule loading...'}
-                </p>
+            {/* Dynamic fee notice - only show when fees exist */}
+            {feeDesc && (
+              <div className="flex items-start gap-3 rounded-2xl bg-[hsl(45,70%,90%)] p-4">
+                <Banknote className="h-5 w-5 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
+                <div>
+                  <p className="text-xs font-bold text-foreground">Withdrawal Fee</p>
+                  <p className="text-[11px] text-muted-foreground">{feeDesc}</p>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Wallet balance */}
             <div className="rounded-2xl bg-card border border-border p-4">
@@ -255,7 +272,7 @@ const CustomerCashOut: React.FC = () => {
 
             {acctLoading ? (
               <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-            ) : filteredAccounts.length === 0 ? (
+            ) : (filteredAccounts.length === 0 && standaloneMethodCards.length === 0) ? (
               <div className="flex flex-col items-center gap-3 py-12">
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
                   <Banknote className="h-7 w-7 text-muted-foreground" strokeWidth={1.5} />
@@ -264,7 +281,7 @@ const CustomerCashOut: React.FC = () => {
                   {linkedAccounts.length > 0 ? 'No enabled withdrawal methods' : 'No linked accounts'}
                 </p>
                 <p className="text-xs text-muted-foreground text-center">
-                  {linkedAccounts.length > 0 
+                  {linkedAccounts.length > 0
                     ? 'Your linked account types are currently disabled for withdrawals by the platform.'
                     : 'Link an account first to withdraw funds.'}
                 </p>
@@ -274,6 +291,7 @@ const CustomerCashOut: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-2">
+                {/* Linked account options */}
                 {filteredAccounts.map((acc: any) => {
                   const { icon: Icon, color, iconColor } = getIcon(acc.account_type);
                   return (
@@ -290,6 +308,27 @@ const CustomerCashOut: React.FC = () => {
                     </button>
                   );
                 })}
+
+                {/* Standalone admin-enabled methods (Agent, etc.) */}
+                {standaloneMethodCards.map((method) => {
+                  const { icon: Icon, color, iconColor } = getIcon(method.iconKey);
+                  return (
+                    <button key={method.key} onClick={() => {
+                      setSelectedAccount({ _isAgent: true, account_name: method.label, account_type: method.key, provider_name: 'Agent Network' });
+                      setStep('amount');
+                    }}
+                      className="flex w-full items-center gap-3 rounded-3xl border-2 border-border bg-card p-4 text-left transition-all hover:border-primary active:scale-[0.98]">
+                      <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${color}`}>
+                        <Icon className={`h-5 w-5 ${iconColor}`} strokeWidth={1.5} />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-foreground">{method.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{method.description}</p>
+                      </div>
+                      <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" strokeWidth={1.5} />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </motion.div>
@@ -297,7 +336,8 @@ const CustomerCashOut: React.FC = () => {
           <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
             {/* Destination display */}
             {selectedAccount && (() => {
-              const { icon: Icon, color, iconColor } = getIcon(selectedAccount.account_type);
+              const iconKey = selectedAccount._isAgent ? 'agent' : selectedAccount.account_type;
+              const { icon: Icon, color, iconColor } = getIcon(iconKey);
               return (
                 <div className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
                   <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${color}`}>
@@ -334,7 +374,7 @@ const CustomerCashOut: React.FC = () => {
 
             {/* Quick amounts */}
             <div className="flex gap-2 flex-wrap">
-              {quickAmounts.map(a => (
+              {quickAmounts.map((a: number) => (
                 <button key={a} onClick={() => setAmount(String(a))}
                   className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-colors ${amount === String(a) ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
                   {a.toLocaleString()}
@@ -350,10 +390,12 @@ const CustomerCashOut: React.FC = () => {
                   <span className="text-muted-foreground">Amount</span>
                   <span className="font-semibold text-foreground">XAF {numAmount.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Fee</span>
-                  <span className="font-semibold text-destructive">- XAF {fee.toLocaleString()}</span>
-                </div>
+                {fee > 0 && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-muted-foreground">Fee</span>
+                    <span className="font-semibold text-destructive">- XAF {fee.toLocaleString()}</span>
+                  </div>
+                )}
                 <div className="border-t border-border pt-2 flex justify-between text-sm">
                   <span className="font-bold text-foreground">You receive</span>
                   <span className="font-extrabold text-foreground">XAF {netAmount.toLocaleString()}</span>
@@ -361,7 +403,7 @@ const CustomerCashOut: React.FC = () => {
               </motion.div>
             )}
 
-            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || numAmount <= fee || isOverBalance || (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) || (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount)} className="w-full rounded-2xl h-12 text-sm font-bold">
+            <Button onClick={handleConfirm} disabled={!amount || numAmount <= 0 || (fee > 0 && numAmount <= fee) || isOverBalance || (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) || (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount)} className="w-full rounded-2xl h-12 text-sm font-bold">
               Continue
             </Button>
           </motion.div>
@@ -374,13 +416,15 @@ const CustomerCashOut: React.FC = () => {
                 <span className="text-muted-foreground">Withdrawal Amount</span>
                 <span className="font-bold text-foreground">XAF {numAmount.toLocaleString()}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Fee ({feeStructure ? `${(feeStructure as any).percentage_rate || 0}%` : ''})</span>
-                <span className="font-bold text-destructive">- XAF {fee.toLocaleString()}</span>
-              </div>
+              {fee > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Fee{feeStructure ? ` (${(feeStructure as any).fee_model === 'percentage' ? `${(feeStructure as any).percentage_rate}%` : (feeStructure as any).fee_model === 'fixed' ? 'flat' : 'hybrid'})` : ''}</span>
+                  <span className="font-bold text-destructive">- XAF {fee.toLocaleString()}</span>
+                </div>
+              )}
               <div className="border-t border-border pt-3 flex justify-between text-sm">
                 <span className="text-muted-foreground">To</span>
-                <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
+                <span className="font-bold text-foreground">{selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{selectedAccount?.provider_name}</span>
