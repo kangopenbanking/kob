@@ -5394,7 +5394,7 @@ export type Database = {
           fee_amount: number | null
           id: string
           idempotency_key: string | null
-          merchant_id: string
+          merchant_id: string | null
           metadata: Json | null
           narration: string | null
           provider: string
@@ -5418,7 +5418,7 @@ export type Database = {
           fee_amount?: number | null
           id?: string
           idempotency_key?: string | null
-          merchant_id: string
+          merchant_id?: string | null
           metadata?: Json | null
           narration?: string | null
           provider: string
@@ -5442,7 +5442,7 @@ export type Database = {
           fee_amount?: number | null
           id?: string
           idempotency_key?: string | null
-          merchant_id?: string
+          merchant_id?: string | null
           metadata?: Json | null
           narration?: string | null
           provider?: string

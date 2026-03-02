@@ -146,24 +146,16 @@ serve(async (req) => {
         const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
         if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
+        providerName = 'stripe';
+
         // If we have a previous payment intent, refund to original card
         const paymentIntentId = linkedAccount?.metadata?.stripe_payment_intent_id;
         if (paymentIntentId) {
-          providerResult = await createFlutterwavePayout({
-            amount: netAmount, currency, channel: 'bank_transfer',
-            beneficiary_account: linkedAccount?.account_number,
-            beneficiary_bank: linkedAccount?.metadata?.bank_code || '',
-            beneficiary_name: linkedAccount?.account_name || user.email || '',
-            narration: narration || `Card withdrawal from Kang wallet`,
-            tx_ref: txRef,
-          });
-          // Use Stripe refund for card payouts
           const { createStripeCardPayout: stripePayout } = await import("../_shared/gateway-adapters.ts");
           providerResult = await stripePayout(paymentIntentId, netAmount, currency);
-          providerName = 'stripe';
           payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
         } else {
-          // No prior payment intent — create a Stripe Transfer
+          // No prior payment intent — create a Stripe Payout via the Transfers API
           const params = new URLSearchParams();
           params.append('amount', String(Math.round(netAmount)));
           params.append('currency', currency.toLowerCase());
@@ -172,9 +164,28 @@ serve(async (req) => {
           params.append('metadata[user_id]', user.id);
           params.append('metadata[withdrawal]', 'true');
 
-          providerName = 'stripe';
-          providerResult = { provider_ref: `stripe_wd_${txRef}`, status: 'processing', provider_raw: { note: 'Stripe card withdrawal queued for automated processing' } };
-          payoutStatus = 'processing';
+          console.log('[Stripe] Creating card payout transfer:', { amount: netAmount, currency, txRef });
+
+          const res = await fetch('https://api.stripe.com/v1/payouts', {
+            method: 'POST',
+            headers: {
+              Authorization: `Bearer ${STRIPE_SECRET}`,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: params.toString(),
+          });
+
+          const data = await res.json();
+          if (data.error) throw new Error(`Stripe payout failed: ${data.error.message}`);
+
+          console.log('[Stripe] Card payout result:', { id: data.id, status: data.status });
+
+          providerResult = {
+            provider_ref: data.id || '',
+            status: data.status === 'paid' ? 'successful' : 'processing',
+            provider_raw: data,
+          };
+          payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
         }
 
       } else if (destination_type === 'bank_account') {

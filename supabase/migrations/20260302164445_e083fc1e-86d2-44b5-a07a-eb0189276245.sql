@@ -1,0 +1,1 @@
+ALTER TABLE public.gateway_payouts ALTER COLUMN merchant_id DROP NOT NULL;
