@@ -1,36 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, User, Lock, Fingerprint, ShieldCheck, Bell, Globe, DollarSign, Info, FileText, LogOut, ChevronRight, Mail, Scale } from 'lucide-react';
-import { motion } from 'framer-motion';
+import {
+  ArrowLeft, User, Lock, Fingerprint, ShieldCheck, Bell, Globe, DollarSign,
+  Info, FileText, LogOut, ChevronRight, Mail, Scale, Moon, KeyRound, Save,
+  Check, Loader2, Phone, Trash2, HelpCircle
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Switch } from '@/components/ui/switch';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import AppLegalPagesList from '@/components/pwa/AppLegalPagesList';
 import AppLegalPageViewer from '@/components/pwa/AppLegalPageViewer';
 
+type SettingsSection = null | 'personal' | 'security' | 'notifications' | 'language' | 'legal' | 'legal-view' | 'about';
+
 const CustomerSettings: React.FC = () => {
   const navigate = useNavigate();
+  const [activeSection, setActiveSection] = useState<SettingsSection>(null);
   const [legalSlug, setLegalSlug] = useState('');
-  const [showLegalList, setShowLegalList] = useState(false);
-  const [showLegalPage, setShowLegalPage] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Profile
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
-  const [editingProfile, setEditingProfile] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Security
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPin, setNewPin] = useState('');
+  const [confirmPin, setConfirmPin] = useState('');
+  const [showPinDialog, setShowPinDialog] = useState(false);
   const [biometric, setBiometric] = useState(true);
   const [twoFA, setTwoFA] = useState(false);
-  const [notifications, setNotifications] = useState(true);
-  const [language, setLanguage] = useState('English');
-  const [loading, setLoading] = useState(true);
 
-  // Load profile from backend
+  // Notifications
+  const [pushEnabled, setPushEnabled] = useState(true);
+  const [emailNotifs, setEmailNotifs] = useState(true);
+  const [smsNotifs, setSmsNotifs] = useState(false);
+  const [txAlerts, setTxAlerts] = useState(true);
+  const [promoAlerts, setPromoAlerts] = useState(false);
+
+  // Language
+  const [language, setLanguage] = useState('en');
+  const [currency, setCurrency] = useState('XAF');
+
+  // Dark mode
+  const [darkMode, setDarkMode] = useState(false);
+
   useEffect(() => {
     const loadProfile = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { setLoading(false); return; }
-
       setEmail(user.email || '');
 
       const { data: profile } = await supabase
@@ -46,144 +74,472 @@ const CustomerSettings: React.FC = () => {
       } else {
         setName(user.user_metadata?.full_name || '');
       }
+
+      // Load preferences
+      const { data: prefsRaw } = await supabase
+        .from('user_preferences')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const prefs = prefsRaw as any;
+      if (prefs) {
+        setLanguage(prefs.language || 'en');
+        setCurrency(prefs.default_currency || 'XAF');
+        setPushEnabled(prefs.push_notifications ?? true);
+        setEmailNotifs(prefs.email_notifications ?? true);
+        setSmsNotifs(prefs.sms_notifications ?? false);
+        setTxAlerts(prefs.transaction_alerts ?? true);
+      }
+
+      setDarkMode(document.documentElement.classList.contains('dark'));
       setLoading(false);
     };
     loadProfile();
   }, []);
 
-  const handleSaveProfile = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ full_name: name, phone_number: phone } as any)
-      .eq('id', user.id);
-
-    if (error) {
-      toast.error('Failed to update profile');
-    } else {
-      setEditingProfile(false);
+  const handleSavePersonal = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await supabase.auth.updateUser({ data: { full_name: name, phone } });
+      if (error) throw error;
+      await supabase.from('profiles').update({ full_name: name, phone_number: phone } as any).eq('id', user.id);
       toast.success('Profile updated');
-    }
+      setActiveSection(null);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to update');
+    } finally { setSaving(false); }
   };
 
-  const handleChangePin = () => toast.info('PIN change flow would open here');
+  const handleChangePassword = async () => {
+    if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
+    if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      toast.success('Password updated');
+      setNewPassword(''); setConfirmPassword('');
+      setActiveSection(null);
+    } catch (err: any) { toast.error(err.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleSetPin = async () => {
+    if (newPin.length !== 6) { toast.error('PIN must be 6 digits'); return; }
+    if (newPin !== confirmPin) { toast.error('PINs do not match'); return; }
+    setSaving(true);
+    try {
+      const { error } = await supabase.functions.invoke('pin-code-set', { body: { pin_code: newPin } });
+      if (error) throw error;
+      toast.success('PIN set successfully');
+      setNewPin(''); setConfirmPin('');
+      setShowPinDialog(false);
+    } catch (err: any) { toast.error(err.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleSaveNotifications = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await (supabase.from('user_preferences') as any).upsert({
+        user_id: user.id, push_notifications: pushEnabled, email_notifications: emailNotifs,
+        sms_notifications: smsNotifs, transaction_alerts: txAlerts, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+      toast.success('Notification preferences saved');
+      setActiveSection(null);
+    } catch (err: any) { toast.error(err.message); }
+    finally { setSaving(false); }
+  };
+
+  const handleSaveLanguage = async () => {
+    setSaving(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { error } = await (supabase.from('user_preferences') as any).upsert({
+        user_id: user.id, language, default_currency: currency, updated_at: new Date().toISOString(),
+      }, { onConflict: 'user_id' });
+      if (error) throw error;
+      toast.success('Language & region saved');
+      setActiveSection(null);
+    } catch (err: any) { toast.error(err.message); }
+    finally { setSaving(false); }
+  };
+
+  const toggleDarkMode = () => {
+    const html = document.documentElement;
+    const newDark = !html.classList.contains('dark');
+    html.classList.toggle('dark', newDark);
+    setDarkMode(newDark);
+    localStorage.setItem('theme', newDark ? 'dark' : 'light');
+    toast.success(newDark ? 'Dark mode enabled' : 'Light mode enabled');
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out');
     navigate('/');
   };
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-1">
-      <h2 className="mb-1 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h2>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card">{children}</div>
-    </motion.div>
-  );
-
-  const Row = ({ icon, label, right, onClick, destructive }: { icon: React.ReactNode; label: string; right?: React.ReactNode; onClick?: () => void; destructive?: boolean }) => (
-    <button onClick={onClick} className="flex w-full items-center justify-between border-b border-border/50 px-4 py-3.5 last:border-0">
-      <div className="flex items-center gap-3">
-        <span className={destructive ? 'text-destructive' : 'text-muted-foreground'}>{icon}</span>
-        <span className={`text-sm font-medium ${destructive ? 'text-destructive' : 'text-foreground'}`}>{label}</span>
-      </div>
-      {right || (!destructive && <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />)}
-    </button>
-  );
-
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
 
+  const settingsItems = [
+    { id: 'personal' as const, icon: User, label: 'Personal Information', description: name || email, color: 'bg-[hsl(210,60%,92%)]', iconColor: 'text-[hsl(210,60%,40%)]' },
+    { id: 'security' as const, icon: Lock, label: 'Security', description: 'Password, PIN, biometrics', color: 'bg-[hsl(0,65%,93%)]', iconColor: 'text-[hsl(0,60%,45%)]' },
+    { id: 'notifications' as const, icon: Bell, label: 'Notifications', description: 'Push, email, SMS alerts', color: 'bg-[hsl(45,80%,90%)]', iconColor: 'text-[hsl(35,70%,40%)]' },
+    { id: 'language' as const, icon: Globe, label: 'Language & Region', description: `${language === 'en' ? 'English' : 'Français'} · ${currency}`, color: 'bg-[hsl(150,45%,90%)]', iconColor: 'text-[hsl(150,50%,35%)]' },
+    { id: 'legal' as const, icon: FileText, label: 'Legal & Policies', description: 'Terms, Privacy, KYC, AML', color: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,45%)]' },
+    { id: 'about' as const, icon: Info, label: 'About', description: 'App version & info', color: 'bg-[hsl(200,30%,92%)]', iconColor: 'text-[hsl(200,30%,40%)]' },
+  ];
+
+  const BackButton = ({ onBack }: { onBack: () => void }) => (
+    <button onClick={onBack} className="mb-4 flex items-center gap-1.5 text-sm font-semibold text-primary">
+      <ArrowLeft className="h-4 w-4" strokeWidth={2} /> Back
+    </button>
+  );
+
+  const SectionTitle = ({ title, subtitle }: { title: string; subtitle?: string }) => (
+    <div className="mb-5">
+      <h2 className="text-lg font-bold text-foreground">{title}</h2>
+      {subtitle && <p className="text-xs text-muted-foreground mt-0.5">{subtitle}</p>}
+    </div>
+  );
+
+  const SettingCard = ({ children }: { children: React.ReactNode }) => (
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">{children}</div>
+  );
+
+  const SettingRow = ({ icon, label, description, right, onClick, destructive }: {
+    icon: React.ReactNode; label: string; description?: string; right?: React.ReactNode; onClick?: () => void; destructive?: boolean;
+  }) => (
+    <button onClick={onClick} className="flex w-full items-center justify-between border-b border-border/40 px-4 py-3.5 last:border-0 text-left transition-colors active:bg-muted/30">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <span className={destructive ? 'text-destructive' : 'text-muted-foreground'}>{icon}</span>
+        <div className="flex-1 min-w-0">
+          <p className={`text-sm font-medium ${destructive ? 'text-destructive' : 'text-foreground'}`}>{label}</p>
+          {description && <p className="text-[11px] text-muted-foreground truncate">{description}</p>}
+        </div>
+      </div>
+      {right || (!destructive && <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" strokeWidth={1.5} />)}
+    </button>
+  );
+
   return (
-    <div className="flex flex-col gap-5 p-5 pb-28">
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
+    <div className="flex flex-col p-5 pb-28">
+      {/* Header */}
+      <div className="flex items-center gap-3 mb-5">
+        <button onClick={() => activeSection ? setActiveSection(null) : navigate(-1)}>
+          <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
+        </button>
         <h1 className="text-xl font-bold text-foreground">Settings</h1>
       </div>
 
-      <Section title="Profile">
-        {editingProfile ? (
-          <div className="flex flex-col gap-3 p-4">
-            <Input value={name} onChange={e => setName(e.target.value)} placeholder="Full Name" className="rounded-xl border-border" />
-            <Input value={email} disabled placeholder="Email" className="rounded-xl border-border opacity-60" />
-            <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="Phone" className="rounded-xl border-border" />
-            <div className="flex gap-2">
-              <Button onClick={handleSaveProfile} className="flex-1 rounded-xl">Save</Button>
-              <Button variant="outline" onClick={() => setEditingProfile(false)} className="rounded-xl">Cancel</Button>
-            </div>
-          </div>
-        ) : (
-          <>
-            <Row icon={<User className="h-5 w-5" strokeWidth={1.5} />} label={name || 'Set your name'} onClick={() => setEditingProfile(true)} />
-            <Row icon={<Mail className="h-5 w-5" strokeWidth={1.5} />} label={email || 'No email'} onClick={() => setEditingProfile(true)} />
-            <Row icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label={phone || 'Add phone number'} onClick={() => setEditingProfile(true)} />
-          </>
-        )}
-      </Section>
-
-      <Section title="Security">
-        <Row icon={<Lock className="h-5 w-5" strokeWidth={1.5} />} label="Change PIN" onClick={handleChangePin} />
-        <Row icon={<Fingerprint className="h-5 w-5" strokeWidth={1.5} />} label="Biometric Login"
-          right={<Switch checked={biometric} onCheckedChange={v => { setBiometric(v); toast.success(v ? 'Biometric enabled' : 'Biometric disabled'); }} />} />
-        <Row icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />} label="Two-Factor Auth"
-          right={<Switch checked={twoFA} onCheckedChange={v => { setTwoFA(v); toast.success(v ? '2FA enabled' : '2FA disabled'); }} />} />
-      </Section>
-
-      <Section title="Preferences">
-        <Row icon={<Bell className="h-5 w-5" strokeWidth={1.5} />} label="Push Notifications"
-          right={<Switch checked={notifications} onCheckedChange={v => { setNotifications(v); toast.success(v ? 'Notifications on' : 'Notifications off'); }} />} />
-        <Row icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label={`Language: ${language}`}
-          right={
-            <select value={language} onChange={e => { setLanguage(e.target.value); toast.success(`Language set to ${e.target.value}`); }}
-              className="h-8 rounded-lg border border-border bg-background px-2 text-xs text-foreground" onClick={e => e.stopPropagation()}>
-              <option>English</option><option>Français</option>
-            </select>
-          } />
-        <Row icon={<DollarSign className="h-5 w-5" strokeWidth={1.5} />} label="Currency: XAF" />
-      </Section>
-
-      <Section title="Legal & Policies">
-        <Row icon={<Scale className="h-5 w-5" strokeWidth={1.5} />} label="Legal & Policies" onClick={() => setShowLegalList(true)} />
-      </Section>
-
-      <Section title="App">
-        <Row icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label="App Version 2.1.0" right={<span />} />
-        <Row icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
-      </Section>
-
-      {/* Legal pages list overlay */}
-      {showLegalList && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
-          <div className="p-5">
-            <div className="flex items-center gap-3 mb-4">
-              <button onClick={() => setShowLegalList(false)}>
-                <ArrowLeft className="h-5 w-5 text-foreground" strokeWidth={1.5} />
+      <AnimatePresence mode="wait">
+        {/* Main Menu */}
+        {activeSection === null && (
+          <motion.div key="main" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col gap-5">
+            {/* User avatar card */}
+            <div className="flex items-center gap-3 rounded-2xl border border-border bg-card p-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                <User className="h-6 w-6 text-primary" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{name || 'Set your name'}</p>
+                <p className="text-xs text-muted-foreground truncate">{email}</p>
+              </div>
+              <button onClick={() => setActiveSection('personal')}>
+                <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
               </button>
-              <h1 className="text-lg font-bold text-foreground">Legal & Policies</h1>
             </div>
-            <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setShowLegalList(false); setShowLegalPage(true); }} />
-          </div>
-        </motion.div>
-      )}
 
-      {/* Legal page viewer overlay */}
-      {showLegalPage && legalSlug && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="fixed inset-0 z-50 bg-background overflow-y-auto">
-          <AppLegalPageViewer slug={legalSlug} backPath="" />
-          <button
-            onClick={() => { setShowLegalPage(false); setShowLegalList(true); }}
-            className="fixed top-5 left-5 z-60 flex items-center gap-1 text-sm font-semibold text-primary"
-          >
-            <ArrowLeft className="h-4 w-4" /> Back
-          </button>
-        </motion.div>
-      )}
+            {/* Settings list */}
+            <div className="flex flex-col gap-1.5">
+              {settingsItems.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <motion.button
+                    key={item.id}
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.04 }}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => setActiveSection(item.id)}
+                    className="flex items-center justify-between rounded-2xl px-3 py-3 text-left transition-colors active:bg-muted/30"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`flex h-10 w-10 items-center justify-center rounded-xl ${item.color}`}>
+                        <Icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">{item.label}</p>
+                        <p className="text-[11px] text-muted-foreground">{item.description}</p>
+                      </div>
+                    </div>
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                  </motion.button>
+                );
+              })}
+            </div>
+
+            {/* Dark mode toggle */}
+            <SettingCard>
+              <SettingRow
+                icon={<Moon className="h-5 w-5" strokeWidth={1.5} />}
+                label="Dark Mode"
+                description={darkMode ? 'On' : 'Off'}
+                right={<Switch checked={darkMode} onCheckedChange={toggleDarkMode} />}
+              />
+            </SettingCard>
+
+            {/* Help & Logout */}
+            <SettingCard>
+              <SettingRow icon={<HelpCircle className="h-5 w-5" strokeWidth={1.5} />} label="Help & Support" onClick={() => navigate('/app/help')} />
+              <SettingRow icon={<LogOut className="h-5 w-5" strokeWidth={1.5} />} label="Log Out" onClick={handleLogout} destructive />
+            </SettingCard>
+
+            <p className="text-center text-[10px] text-muted-foreground mt-2">
+              Kang Open Banking · v2.1.0
+            </p>
+          </motion.div>
+        )}
+
+        {/* Personal Information */}
+        {activeSection === 'personal' && (
+          <motion.div key="personal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
+            <BackButton onBack={() => setActiveSection(null)} />
+            <SectionTitle title="Personal Information" subtitle="Update your profile details" />
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground">Full Name</Label>
+              <Input value={name} onChange={e => setName(e.target.value)} placeholder="Your full name" className="rounded-xl" />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground">Email</Label>
+              <Input value={email} disabled className="rounded-xl bg-muted opacity-60" />
+              <p className="text-[11px] text-muted-foreground">Email cannot be changed here</p>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground">Phone Number</Label>
+              <Input value={phone} onChange={e => setPhone(e.target.value)} placeholder="+237 6XX XXX XXX" className="rounded-xl" />
+            </div>
+            <Button onClick={handleSavePersonal} disabled={saving} className="mt-2 gap-2 rounded-xl">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Security */}
+        {activeSection === 'security' && (
+          <motion.div key="security" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
+            <BackButton onBack={() => setActiveSection(null)} />
+            <SectionTitle title="Security" subtitle="Manage your account security" />
+
+            <SettingCard>
+              <SettingRow
+                icon={<Fingerprint className="h-5 w-5" strokeWidth={1.5} />}
+                label="Biometric Login"
+                description="Use fingerprint or Face ID"
+                right={<Switch checked={biometric} onCheckedChange={v => { setBiometric(v); toast.success(v ? 'Biometric enabled' : 'Biometric disabled'); }} />}
+              />
+              <SettingRow
+                icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />}
+                label="Two-Factor Auth"
+                description="Extra layer of security"
+                right={<Switch checked={twoFA} onCheckedChange={v => { setTwoFA(v); toast.success(v ? '2FA enabled' : '2FA disabled'); }} />}
+              />
+            </SettingCard>
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <h3 className="mb-3 text-sm font-bold text-foreground">Change Password</h3>
+              <div className="flex flex-col gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs">New Password</Label>
+                  <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min. 8 characters" className="rounded-xl" />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs">Confirm Password</Label>
+                  <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} className="rounded-xl" />
+                </div>
+                <Button onClick={handleChangePassword} disabled={saving || !newPassword} size="sm" variant="outline" className="gap-2 rounded-xl">
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Lock className="h-4 w-4" />}
+                  Update Password
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground">Transaction PIN</h3>
+                  <p className="text-[11px] text-muted-foreground">6-digit PIN for payments</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowPinDialog(true)} className="gap-1.5 rounded-xl">
+                  <KeyRound className="h-4 w-4" /> Set PIN
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Notifications */}
+        {activeSection === 'notifications' && (
+          <motion.div key="notifications" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
+            <BackButton onBack={() => setActiveSection(null)} />
+            <SectionTitle title="Notifications" subtitle="Choose what alerts you receive" />
+
+            <SettingCard>
+              {[
+                { label: 'Push Notifications', desc: 'Receive push alerts on your device', checked: pushEnabled, set: setPushEnabled },
+                { label: 'Email Notifications', desc: 'Receive email alerts', checked: emailNotifs, set: setEmailNotifs },
+                { label: 'SMS Notifications', desc: 'Receive SMS alerts', checked: smsNotifs, set: setSmsNotifs },
+                { label: 'Transaction Alerts', desc: 'Get notified on every transaction', checked: txAlerts, set: setTxAlerts },
+                { label: 'Promotions', desc: 'Offers & product updates', checked: promoAlerts, set: setPromoAlerts },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center justify-between border-b border-border/40 px-4 py-3.5 last:border-0">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">{item.label}</p>
+                    <p className="text-[11px] text-muted-foreground">{item.desc}</p>
+                  </div>
+                  <Switch checked={item.checked} onCheckedChange={item.set} />
+                </div>
+              ))}
+            </SettingCard>
+
+            <Button onClick={handleSaveNotifications} disabled={saving} className="gap-2 rounded-xl">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {saving ? 'Saving...' : 'Save Preferences'}
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Language & Region */}
+        {activeSection === 'language' && (
+          <motion.div key="language" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
+            <BackButton onBack={() => setActiveSection(null)} />
+            <SectionTitle title="Language & Region" subtitle="Set your preferred language and currency" />
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground">Language</Label>
+              <Select value={language} onValueChange={setLanguage}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="fr">Français</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground">Default Currency</Label>
+              <Select value={currency} onValueChange={setCurrency}>
+                <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="XAF">XAF (CFA Franc)</SelectItem>
+                  <SelectItem value="EUR">EUR (Euro)</SelectItem>
+                  <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                  <SelectItem value="GBP">GBP (British Pound)</SelectItem>
+                  <SelectItem value="NGN">NGN (Nigerian Naira)</SelectItem>
+                  <SelectItem value="GHS">GHS (Ghanaian Cedi)</SelectItem>
+                  <SelectItem value="KES">KES (Kenyan Shilling)</SelectItem>
+                  <SelectItem value="ZAR">ZAR (South African Rand)</SelectItem>
+                  <SelectItem value="CAD">CAD (Canadian Dollar)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <Button onClick={handleSaveLanguage} disabled={saving} className="mt-2 gap-2 rounded-xl">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
+              {saving ? 'Saving...' : 'Save'}
+            </Button>
+          </motion.div>
+        )}
+
+        {/* Legal & Policies */}
+        {activeSection === 'legal' && (
+          <motion.div key="legal" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-2">
+            <BackButton onBack={() => setActiveSection(null)} />
+            <SectionTitle title="Legal & Policies" subtitle="Terms, privacy, compliance documents" />
+            <AppLegalPagesList onSelect={(slug) => { setLegalSlug(slug); setActiveSection('legal-view'); }} />
+          </motion.div>
+        )}
+
+        {/* Legal page viewer */}
+        {activeSection === 'legal-view' && legalSlug && (
+          <motion.div key="legal-view" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
+            <BackButton onBack={() => setActiveSection('legal')} />
+            <AppLegalPageViewer slug={legalSlug} />
+          </motion.div>
+        )}
+
+        {/* About */}
+        {activeSection === 'about' && (
+          <motion.div key="about" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex flex-col gap-4">
+            <BackButton onBack={() => setActiveSection(null)} />
+            <SectionTitle title="About" subtitle="App information" />
+
+            <SettingCard>
+              <SettingRow icon={<Info className="h-5 w-5" strokeWidth={1.5} />} label="App Version" description="2.1.0" right={<span className="text-xs text-muted-foreground">Latest</span>} />
+              <SettingRow icon={<Globe className="h-5 w-5" strokeWidth={1.5} />} label="Platform" description="Kang Open Banking" right={<span />} />
+              <SettingRow icon={<ShieldCheck className="h-5 w-5" strokeWidth={1.5} />} label="Compliance" description="COBAC · PCI-DSS · ISO 27001" right={<span />} />
+            </SettingCard>
+
+            <div className="rounded-2xl border border-border bg-card p-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Kang Open Banking (KOB) is a product of Kang Consultancy Co Ltd, registered under the Canada Business Corporations Act (CBCA) (Reg. No. 1381210-3) with offices in Port Dover, ON, Canada. In Cameroon, registered under Reg. No. RCBDA2021B000451, regulated by the Ministry of Small and Medium-Sized Enterprises.
+              </p>
+            </div>
+
+            <p className="text-center text-[10px] text-muted-foreground mt-2">
+              © 2026 Kang Open Banking. All rights reserved.
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* PIN Dialog */}
+      <Dialog open={showPinDialog} onOpenChange={setShowPinDialog}>
+        <DialogContent className="max-w-sm rounded-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-center">Set Transaction PIN</DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col items-center gap-4 py-4">
+            <p className="text-sm text-muted-foreground text-center">Enter a 6-digit PIN for securing transactions</p>
+            <div className="space-y-3">
+              <div>
+                <Label className="text-xs text-muted-foreground">New PIN</Label>
+                <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                  <InputOTPGroup>
+                    {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <div>
+                <Label className="text-xs text-muted-foreground">Confirm PIN</Label>
+                <InputOTP maxLength={6} value={confirmPin} onChange={setConfirmPin}>
+                  <InputOTPGroup>
+                    {[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+            </div>
+            <Button onClick={handleSetPin} disabled={saving} className="w-full gap-2 rounded-xl">
+              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+              {saving ? 'Setting...' : 'Set PIN'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

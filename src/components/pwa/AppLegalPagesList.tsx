@@ -18,6 +18,10 @@ const iconMap: Record<string, React.ElementType> = {
   'contact-us': Phone,
   'acceptable-use': Scale,
   'data-retention': FileText,
+  'sla': FileText,
+  'aml-policy': Shield,
+  'dispute-policy': Scale,
+  'data-protection-framework': Shield,
 };
 
 interface AppLegalPagesListProps {
