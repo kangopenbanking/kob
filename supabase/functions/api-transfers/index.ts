@@ -36,7 +36,7 @@ serve(async (req) => {
       });
     }
 
-    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id } = await req.json();
+    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type } = await req.json();
 
     // Validate required fields
     if (!source_account_id || !destination_account_id || !amount) {
@@ -178,6 +178,48 @@ serve(async (req) => {
             .from('accounts')
             .select('id, account_holder_name, user_id, institution_id, identification_scheme')
             .eq('user_id', profile.id)
+            .eq('is_active', true)
+            .order('created_at', { ascending: true })
+            .limit(1)
+            .maybeSingle();
+
+          if (recipientAccount) {
+            destAccount = recipientAccount;
+          }
+        }
+      }
+    }
+
+    // Tier 3c: Try by name lookup via profiles or accounts table
+    if (!destAccount && identifier_type === 'NAME') {
+      const searchName = destination_account_id.trim();
+      // Try account_holder_name on accounts table (case-insensitive)
+      const { data: nameAccounts } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+        .ilike('account_holder_name', searchName)
+        .eq('is_active', true)
+        .neq('user_id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+      if (nameAccounts) {
+        destAccount = nameAccounts;
+      } else {
+        // Try profiles.full_name
+        const { data: nameProfiles } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('full_name', searchName)
+          .neq('id', user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (nameProfiles) {
+          const { data: recipientAccount } = await supabase
+            .from('accounts')
+            .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+            .eq('user_id', nameProfiles.id)
             .eq('is_active', true)
             .order('created_at', { ascending: true })
             .limit(1)

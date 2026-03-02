@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard } from 'lucide-react';
+import { ArrowLeft, Send, CheckCircle2, Loader2, Wallet, Clock, X, Phone, Hash, Globe, CreditCard, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +13,7 @@ import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
 
-type RecipientType = 'phone' | 'account' | 'rib' | 'iban';
+type RecipientType = 'phone' | 'account' | 'name' | 'rib' | 'iban';
 
 const CustomerTransfer: React.FC = () => {
   const navigate = useNavigate();
@@ -71,6 +71,8 @@ const CustomerTransfer: React.FC = () => {
         return { valid: /^\d{23}$/.test(clean), hint: clean.length > 0 ? `${clean.length}/23 digits` : 'Enter 23-digit RIB number' };
       case 'iban':
         return { valid: /^[A-Z]{2}\d{2}[A-Z0-9]{11,30}$/i.test(clean) && clean.length >= 15, hint: clean.length > 0 ? `${clean.length} characters` : 'e.g. CM21 10005 00100 ...' };
+      case 'name':
+        return { valid: clean.length >= 2, hint: clean.length > 0 ? '' : "Enter recipient's full name" };
       default:
         return { valid: clean.length > 0, hint: '' };
     }
@@ -82,6 +84,7 @@ const CustomerTransfer: React.FC = () => {
     switch (recipientType) {
       case 'rib': return 'DOMESTIC_RIB';
       case 'iban': return 'IBAN';
+      case 'name': return 'NAME';
       default: return 'LOCAL_BANK';
     }
   };
@@ -90,6 +93,7 @@ const CustomerTransfer: React.FC = () => {
     switch (recipientType) {
       case 'rib': return 'Domestic Interbank';
       case 'iban': return 'International';
+      case 'name': return 'Internal';
       default: return 'Internal';
     }
   };
@@ -147,6 +151,7 @@ const CustomerTransfer: React.FC = () => {
 
   const recipientTypes: { key: RecipientType; label: string; icon: React.ElementType }[] = [
     { key: 'phone', label: 'Phone', icon: Phone },
+    { key: 'name', label: 'Name', icon: User },
     { key: 'account', label: 'Account', icon: Hash },
     { key: 'rib', label: 'RIB', icon: CreditCard },
     { key: 'iban', label: 'IBAN', icon: Globe },
@@ -319,7 +324,7 @@ const CustomerTransfer: React.FC = () => {
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Recipient</p>
 
               {/* Type Toggle */}
-              <div className="grid grid-cols-4 gap-1.5">
+              <div className="grid grid-cols-5 gap-1.5">
                 {recipientTypes.map(({ key, label, icon: Icon }) => (
                   <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); }}
                     className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all ${
@@ -335,6 +340,8 @@ const CustomerTransfer: React.FC = () => {
               <div className="relative">
                 {recipientType === 'phone' ? (
                   <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                ) : recipientType === 'name' ? (
+                  <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                 ) : recipientType === 'rib' ? (
                   <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                 ) : recipientType === 'iban' ? (
@@ -348,6 +355,7 @@ const CustomerTransfer: React.FC = () => {
                   onChange={handleRecipientChange}
                   placeholder={
                     recipientType === 'phone' ? '+237 6XX XXX XXX'
+                    : recipientType === 'name' ? 'John Doe'
                     : recipientType === 'rib' ? '10005-00100-01234567890-23'
                     : recipientType === 'iban' ? 'CM21 1000 5001 0001 2345 6789 023'
                     : 'Enter account ID'
