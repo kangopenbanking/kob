@@ -159,7 +159,22 @@ const validateCameroonPhone = (phone: string): boolean => {
 
 const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-/* ─── Visual Card Component ─── */
+/* ─── Delete Button ─── */
+const CardDeleteBtn = ({ onClick }: { onClick: () => void }) => (
+  <button onClick={onClick}
+    className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm hover:bg-white/25 transition-colors">
+    <Trash2 className="h-4 w-4 text-white/90" strokeWidth={1.5} />
+  </button>
+);
+
+const CardDeleteBtnDark = ({ onClick }: { onClick: () => void }) => (
+  <button onClick={onClick}
+    className="flex h-8 w-8 items-center justify-center rounded-xl bg-foreground/5 hover:bg-destructive/10 transition-colors">
+    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" strokeWidth={1.5} />
+  </button>
+);
+
+/* ─── Bank Card (Visa/MC) ─── */
 const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
   const meta = acc.metadata as any;
   const network = meta?.card_network || acc.provider_name || 'Card';
@@ -169,27 +184,18 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
       className="relative overflow-hidden rounded-3xl" style={{ aspectRatio: '1.586/1' }}>
-      {/* Card background image */}
       <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
-      {/* Overlay for readability */}
       <div className="absolute inset-0 bg-black/10" />
-      {/* Card content */}
       <div className="relative z-10 flex flex-col justify-between h-full p-5">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">Linked Card</p>
             <p className="text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
           </div>
-          <button onClick={onDelete}
-            className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm hover:bg-white/25 transition-colors">
-            <Trash2 className="h-4 w-4 text-white/90" strokeWidth={1.5} />
-          </button>
+          <CardDeleteBtn onClick={onDelete} />
         </div>
-
         <div className="space-y-3">
-          <p className="font-mono text-lg text-white tracking-[0.2em]">
-            •••• •••• •••• {acc.last4 || '••••'}
-          </p>
+          <p className="font-mono text-lg text-white tracking-[0.2em]">•••• •••• •••• {acc.last4 || '••••'}</p>
           <div className="flex items-end justify-between">
             <div className="flex gap-6">
               <div>
@@ -211,45 +217,209 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
   );
 };
 
-/* ─── Standard Account Row ─── */
-const LinkedAccountRow = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
-  const config = getIconForType(acc.account_type);
-  const Icon = config.icon;
+/* ─── Bank Account (RIB) Card ─── */
+const LinkedBankCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
   const meta = acc.metadata as any;
-  const identifierBadge = meta?.identifier_type === 'DOMESTIC_RIB' ? 'RIB' : meta?.identifier_type === 'IBAN' ? 'IBAN' : null;
+  const bankCode = meta?.rib_bank_code || '';
+  const branchCode = meta?.rib_branch_code || '';
+  const isIban = meta?.identifier_type === 'IBAN';
 
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-      className="flex items-center justify-between rounded-3xl border-2 border-border bg-card p-4">
-      <div className="flex items-center gap-3">
-        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.color}`}>
-          <Icon className={`h-5 w-5 ${config.iconColor}`} strokeWidth={1.5} />
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5">
-            <p className="text-sm font-bold text-foreground">{acc.account_name || config.label}</p>
-            {identifierBadge && (
-              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                identifierBadge === 'RIB' ? 'bg-[hsl(210,80%,93%)] text-[hsl(210,60%,45%)]' : 'bg-[hsl(270,50%,92%)] text-[hsl(270,50%,45%)]'
-              }`}>{identifierBadge}</span>
-            )}
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-3xl border-2 border-[hsl(220,40%,80%)]"
+      style={{ aspectRatio: '1.586/1', background: 'linear-gradient(145deg, hsl(220,45%,18%), hsl(220,40%,28%))' }}>
+      {/* Decorative circles */}
+      <div className="absolute -right-6 -top-6 h-28 w-28 rounded-full border border-white/5" />
+      <div className="absolute -right-2 -top-2 h-16 w-16 rounded-full border border-white/8" />
+      <div className="absolute left-4 bottom-4 h-10 w-10 rounded-full bg-white/3" />
+
+      <div className="relative z-10 flex flex-col justify-between h-full p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+              <Building2 className="h-4.5 w-4.5 text-white/80" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium text-white/50 uppercase tracking-wider">{isIban ? 'International Account' : 'Bank Account'}</p>
+              <p className="text-sm font-bold text-white">{acc.account_name || 'Account Holder'}</p>
+            </div>
           </div>
-          <p className="text-[11px] text-muted-foreground">
-            {acc.provider_name || config.label} {acc.last4 ? `•••• ${acc.last4}` : ''}
-          </p>
+          <CardDeleteBtn onClick={onDelete} />
         </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {acc.is_primary && (
-          <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Primary</span>
-        )}
-        <button onClick={onDelete}
-          className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted hover:bg-destructive/10 transition-colors">
-          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" strokeWidth={1.5} />
-        </button>
+
+        <div className="space-y-3">
+          {!isIban && bankCode && (
+            <div className="flex gap-4">
+              <div>
+                <p className="text-[9px] font-medium text-white/40 uppercase">Bank</p>
+                <p className="text-xs font-semibold text-white font-mono">{bankCode}</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-medium text-white/40 uppercase">Branch</p>
+                <p className="text-xs font-semibold text-white font-mono">{branchCode}</p>
+              </div>
+            </div>
+          )}
+          <div className="flex items-end justify-between">
+            <div>
+              <p className="text-[9px] font-medium text-white/40 uppercase">{isIban ? 'IBAN' : 'RIB'}</p>
+              <p className="font-mono text-base text-white tracking-[0.12em]">•••• •••• {acc.last4 || '••••'}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              {acc.is_primary && (
+                <span className="rounded-lg bg-white/15 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+              )}
+              <span className="rounded-lg bg-[hsl(210,80%,60%)]/20 px-2 py-0.5 text-[9px] font-bold text-[hsl(210,80%,75%)] uppercase">
+                {isIban ? 'IBAN' : 'RIB'}
+              </span>
+            </div>
+          </div>
+          <p className="text-[11px] text-white/50">{acc.provider_name}</p>
+        </div>
       </div>
     </motion.div>
   );
+};
+
+/* ─── MTN MoMo Card ─── */
+const LinkedMomoMtnCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => (
+  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+    className="relative overflow-hidden rounded-3xl border-2 border-[hsl(48,90%,60%)]"
+    style={{ aspectRatio: '1.586/1', background: 'linear-gradient(145deg, hsl(48,95%,50%), hsl(45,90%,42%))' }}>
+    {/* Pattern */}
+    <div className="absolute right-3 top-3 h-24 w-24 rounded-full bg-white/8" />
+    <div className="absolute right-8 top-8 h-14 w-14 rounded-full bg-white/6" />
+    <div className="absolute -left-4 -bottom-4 h-20 w-20 rounded-full bg-black/5" />
+
+    <div className="relative z-10 flex flex-col justify-between h-full p-5">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/10">
+            <Smartphone className="h-4.5 w-4.5 text-black/70" strokeWidth={1.5} />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-black/40 uppercase tracking-wider">MTN Mobile Money</p>
+            <p className="text-sm font-bold text-black/80">{acc.account_name || 'MoMo User'}</p>
+          </div>
+        </div>
+        <button onClick={onDelete}
+          className="flex h-8 w-8 items-center justify-center rounded-xl bg-black/8 hover:bg-black/15 transition-colors">
+          <Trash2 className="h-4 w-4 text-black/50" strokeWidth={1.5} />
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        <div>
+          <p className="text-[9px] font-medium text-black/35 uppercase">Phone Number</p>
+          <p className="font-mono text-lg text-black/80 tracking-[0.1em]">•••• •••• {acc.last4 || '••••'}</p>
+        </div>
+        <div className="flex items-end justify-between">
+          <span className="rounded-lg bg-black/8 px-2.5 py-1 text-[10px] font-extrabold text-black/60 uppercase tracking-wider">MTN MoMo</span>
+          {acc.is_primary && (
+            <span className="rounded-lg bg-black/10 px-2.5 py-1 text-[10px] font-bold text-black/60">Primary</span>
+          )}
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+/* ─── Orange Money Card ─── */
+const LinkedOrangeCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => (
+  <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+    className="relative overflow-hidden rounded-3xl border-2 border-[hsl(25,85%,55%)]"
+    style={{ aspectRatio: '1.586/1', background: 'linear-gradient(145deg, hsl(25,90%,55%), hsl(20,85%,45%))' }}>
+    <div className="absolute -right-4 -top-4 h-28 w-28 rounded-full bg-white/8" />
+    <div className="absolute right-6 top-6 h-12 w-12 rounded-full bg-white/6" />
+    <div className="absolute left-6 bottom-6 h-8 w-8 rounded-full bg-black/5" />
+
+    <div className="relative z-10 flex flex-col justify-between h-full p-5">
+      <div className="flex items-start justify-between">
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15">
+            <Smartphone className="h-4.5 w-4.5 text-white/80" strokeWidth={1.5} />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Orange Money</p>
+            <p className="text-sm font-bold text-white">{acc.account_name || 'Orange User'}</p>
+          </div>
+        </div>
+        <CardDeleteBtn onClick={onDelete} />
+      </div>
+
+      <div className="space-y-2">
+        <div>
+          <p className="text-[9px] font-medium text-white/40 uppercase">Phone Number</p>
+          <p className="font-mono text-lg text-white tracking-[0.1em]">•••• •••• {acc.last4 || '••••'}</p>
+        </div>
+        <div className="flex items-end justify-between">
+          <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-extrabold text-white/80 uppercase tracking-wider">Orange Money</span>
+          {acc.is_primary && (
+            <span className="rounded-lg bg-white/20 px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+          )}
+        </div>
+      </div>
+    </div>
+  </motion.div>
+);
+
+/* ─── PayPal Card ─── */
+const LinkedPaypalCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const email = (acc.metadata as any)?.email || '';
+  const maskedEmail = email ? `${email.substring(0, 3)}•••@${email.split('@')[1] || ''}` : `•••• ${acc.last4}`;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-3xl border-2 border-[hsl(210,80%,65%)]"
+      style={{ aspectRatio: '1.586/1', background: 'linear-gradient(145deg, hsl(210,85%,30%), hsl(215,80%,22%))' }}>
+      <div className="absolute -right-6 -bottom-6 h-32 w-32 rounded-full bg-[hsl(210,80%,50%)]/10" />
+      <div className="absolute right-4 top-4 h-20 w-20 rounded-full border border-white/5" />
+
+      <div className="relative z-10 flex flex-col justify-between h-full p-5">
+        <div className="flex items-start justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10">
+              <Wallet className="h-4.5 w-4.5 text-[hsl(210,80%,70%)]" strokeWidth={1.5} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-[hsl(210,60%,70%)] uppercase tracking-wider">PayPal</p>
+              <p className="text-sm font-bold text-white">{acc.account_name || 'PayPal User'}</p>
+            </div>
+          </div>
+          <CardDeleteBtn onClick={onDelete} />
+        </div>
+
+        <div className="space-y-2">
+          <div>
+            <p className="text-[9px] font-medium text-white/40 uppercase">Email</p>
+            <p className="text-sm font-semibold text-white/90">{maskedEmail}</p>
+          </div>
+          <div className="flex items-end justify-between">
+            <span className="rounded-lg bg-[hsl(210,80%,50%)]/20 px-2.5 py-1 text-[10px] font-extrabold text-[hsl(210,80%,75%)] uppercase tracking-wider">PayPal</span>
+            {acc.is_primary && (
+              <span className="rounded-lg bg-white/15 px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─── Unified Account Card Renderer ─── */
+const LinkedAccountCard = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const type = acc.account_type;
+  const meta = acc.metadata as any;
+
+  if (type === 'bank_card') return <LinkedCardVisual acc={acc} onDelete={onDelete} />;
+  if (type === 'bank_account' && meta?.identifier_type !== 'IBAN') return <LinkedBankCard acc={acc} onDelete={onDelete} />;
+  if (type === 'bank_account' && meta?.identifier_type === 'IBAN') return <LinkedBankCard acc={acc} onDelete={onDelete} />;
+  if (type === 'momo_mtn') return <LinkedMomoMtnCard acc={acc} onDelete={onDelete} />;
+  if (type === 'momo_orange') return <LinkedOrangeCard acc={acc} onDelete={onDelete} />;
+  if (type === 'paypal') return <LinkedPaypalCard acc={acc} onDelete={onDelete} />;
+
+  // Fallback for unknown types
+  return <LinkedBankCard acc={acc} onDelete={onDelete} />;
 };
 
 /* ─── Main Component ─── */
@@ -695,9 +865,8 @@ const CustomerLinkedAccounts: React.FC = () => {
     );
   };
 
-  // Separate cards from other account types for visual treatment
-  const cardAccounts = linkedAccounts.filter((a: any) => a.account_type === 'bank_card');
-  const otherAccounts = linkedAccounts.filter((a: any) => a.account_type !== 'bank_card');
+
+
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -801,27 +970,9 @@ const CustomerLinkedAccounts: React.FC = () => {
         </div>
       ) : (
         <div className="space-y-4">
-          {/* Card accounts displayed as visual cards */}
-          {cardAccounts.length > 0 && (
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cards</p>
-              {cardAccounts.map((acc: any) => (
-                <LinkedCardVisual key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
-              ))}
-            </div>
-          )}
-
-          {/* Other accounts as rows */}
-          {otherAccounts.length > 0 && (
-            <div className="space-y-3">
-              {cardAccounts.length > 0 && (
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Accounts</p>
-              )}
-              {otherAccounts.map((acc: any) => (
-                <LinkedAccountRow key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
-              ))}
-            </div>
-          )}
+          {linkedAccounts.map((acc: any) => (
+            <LinkedAccountCard key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
+          ))}
         </div>
       )}
 
