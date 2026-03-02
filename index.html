@@ -41,13 +41,9 @@
     <script>
       window.OneSignalDeferred = window.OneSignalDeferred || [];
       OneSignalDeferred.push(async function(OneSignal) {
-        try {
-          await OneSignal.init({
-            appId: "9638b372-516d-46e8-ab42-8f23f35eeb20",
-          });
-        } catch (e) {
-          console.warn('[OneSignal] Init skipped:', e.message || e);
-        }
+        await OneSignal.init({
+          appId: "9638b372-516d-46e8-ab42-8f23f35eeb20",
+        });
       });
     </script>
     

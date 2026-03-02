@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -358,16 +357,6 @@ const queryClient = new QueryClient({
 });
 
 function App() {
-  // Global safety net for uncaught promise rejections (prevents blank screens)
-  useEffect(() => {
-    const handler = (event: PromiseRejectionEvent) => {
-      console.error('Unhandled rejection caught globally:', event.reason);
-      event.preventDefault();
-    };
-    window.addEventListener('unhandledrejection', handler);
-    return () => window.removeEventListener('unhandledrejection', handler);
-  }, []);
-
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
