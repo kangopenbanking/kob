@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Zap, Droplets, Wifi, Tv, Phone, Shield, ChevronRight, CheckCircle2, Clock } from 'lucide-react';
+import { ArrowLeft, Search, Zap, Droplets, Wifi, Tv, Phone, Shield, ChevronRight, CheckCircle2, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useQueryClient } from '@tanstack/react-query';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
 interface BillCategory {
   id: string;
@@ -34,8 +39,16 @@ interface RecentBill {
 
 const recentBills: RecentBill[] = [];
 
+const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+
 const CustomerBills: React.FC = () => {
   const navigate = useNavigate();
+  const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
+  const { data: accounts = [] } = useCustomerAccounts(user?.id);
+  const accountIds = accounts.map((a: any) => a.id);
+  const { data: balances = [] } = useAccountBalances(accountIds);
+
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
   const [selectedBiller, setSelectedBiller] = useState<string | null>(null);
@@ -43,29 +56,77 @@ const CustomerBills: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [paying, setPaying] = useState(false);
   const [paid, setPaid] = useState(false);
+  const [showPin, setShowPin] = useState(false);
+
+  const primaryAccount = accounts[0] as any;
+  const primaryBalance = primaryAccount ? balances.find((b: any) => b.account_id === primaryAccount.id) : null;
+  const walletBalance = (primaryBalance?.amount as number) ?? 0;
+  const amountNum = Number(amount) || 0;
 
   const filteredCategories = search
     ? categories.filter(c => c.name.toLowerCase().includes(search.toLowerCase()) || c.billers.some(b => b.toLowerCase().includes(search.toLowerCase())))
     : categories;
 
-  const handlePay = () => {
-    if (!accountNumber || !amount) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+  const handlePayRequest = () => {
+    if (!accountNumber || !amount) { toast.error('Please fill in all fields'); return; }
+    if (amountNum <= 0) { toast.error('Enter a valid amount'); return; }
+    if (amountNum > walletBalance) { toast.error('Insufficient balance'); return; }
+    setShowPin(true);
+  };
+
+  const handlePay = async () => {
     setPaying(true);
-    setTimeout(() => {
-      setPaying(false);
+    try {
+      // 1. Create bill payment transaction
+      const { error: txError } = await supabase.from('transactions').insert({
+        user_id: user!.id,
+        institution_id: KANG_PLATFORM_ID,
+        account_id: primaryAccount?.id || null,
+        transaction_type: 'bill_payment',
+        amount: amountNum,
+        currency: 'XAF',
+        status: 'completed',
+        credit_debit_indicator: 'Debit',
+        transaction_information: `${selectedBiller} - ${selectedCategory?.name} bill (Acct: ${accountNumber})`,
+        booking_datetime: new Date().toISOString(),
+        value_datetime: new Date().toISOString(),
+        metadata: {
+          biller: selectedBiller,
+          category: selectedCategory?.id,
+          meter_account: accountNumber,
+        },
+      });
+      if (txError) throw txError;
+
+      // 2. Deduct from wallet balance
+      if (primaryAccount?.id && primaryBalance) {
+        const newAmount = Math.max(walletBalance - amountNum, 0);
+        await supabase.from('account_balances')
+          .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
+          .eq('id', (primaryBalance as any).id);
+      }
+
+      // 3. Invalidate caches
+      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-bill-payments'] });
+      queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
+
       setPaid(true);
-      toast.success(`Payment of ${Number(amount).toLocaleString()} XAF to ${selectedBiller} successful`);
+      toast.success(`Payment of ${amountNum.toLocaleString()} XAF to ${selectedBiller} successful`);
       setTimeout(() => {
         setPaid(false);
         setSelectedBiller(null);
         setSelectedCategory(null);
         setAccountNumber('');
         setAmount('');
-      }, 2000);
-    }, 1500);
+      }, 2500);
+    } catch (err: any) {
+      toast.error(err.message || 'Bill payment failed');
+    } finally {
+      setPaying(false);
+    }
   };
 
   const handleBack = () => {
@@ -161,9 +222,9 @@ const CustomerBills: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                <Button onClick={handlePay} disabled={paying} className="h-12 rounded-2xl text-base font-semibold">
+                <Button onClick={handlePayRequest} disabled={paying} className="h-12 rounded-2xl text-base font-semibold">
                   {paying ? (
-                    <span className="flex items-center gap-2"><Clock className="h-4 w-4 animate-spin" strokeWidth={1.5} />Processing...</span>
+                    <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" strokeWidth={1.5} />Processing...</span>
                   ) : 'Pay Now'}
                 </Button>
               </>
@@ -171,6 +232,8 @@ const CustomerBills: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handlePay} />
     </div>
   );
 };
