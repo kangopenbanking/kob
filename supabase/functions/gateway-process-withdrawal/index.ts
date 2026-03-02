@@ -142,51 +142,39 @@ serve(async (req) => {
 
     try {
       if (destination_type === 'bank_card') {
-        // Automated Stripe card payout — calls Stripe API directly, no admin step
+        // Stripe card withdrawal — refund to the original card that funded the wallet
         const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
         if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
         providerName = 'stripe';
 
-        // If we have a previous payment intent, refund to original card
-        const paymentIntentId = linkedAccount?.metadata?.stripe_payment_intent_id;
-        if (paymentIntentId) {
-          const { createStripeCardPayout: stripePayout } = await import("../_shared/gateway-adapters.ts");
-          providerResult = await stripePayout(paymentIntentId, netAmount, currency);
-          payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
-        } else {
-          // No prior payment intent — create a Stripe Payout via the Transfers API
-          const params = new URLSearchParams();
-          params.append('amount', String(Math.round(netAmount)));
-          params.append('currency', currency.toLowerCase());
-          params.append('description', narration || `Withdrawal ${txRef}`);
-          params.append('metadata[tx_ref]', txRef);
-          params.append('metadata[user_id]', user.id);
-          params.append('metadata[withdrawal]', 'true');
+        // Look for a payment intent on the linked account first
+        let paymentIntentId = linkedAccount?.metadata?.stripe_payment_intent_id;
 
-          console.log('[Stripe] Creating card payout transfer:', { amount: netAmount, currency, txRef });
+        // If not on linked account, find the most recent successful Stripe funding transaction for this user
+        if (!paymentIntentId) {
+          const { data: recentFunding } = await supabase
+            .from('funding_intents')
+            .select('provider_reference')
+            .eq('user_id', user.id)
+            .eq('provider', 'stripe')
+            .eq('status', 'succeeded')
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-          const res = await fetch('https://api.stripe.com/v1/payouts', {
-            method: 'POST',
-            headers: {
-              Authorization: `Bearer ${STRIPE_SECRET}`,
-              'Content-Type': 'application/x-www-form-urlencoded',
-            },
-            body: params.toString(),
-          });
-
-          const data = await res.json();
-          if (data.error) throw new Error(`Stripe payout failed: ${data.error.message}`);
-
-          console.log('[Stripe] Card payout result:', { id: data.id, status: data.status });
-
-          providerResult = {
-            provider_ref: data.id || '',
-            status: data.status === 'paid' ? 'successful' : 'processing',
-            provider_raw: data,
-          };
-          payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
+          paymentIntentId = recentFunding?.provider_reference;
         }
+
+        if (!paymentIntentId) {
+          throw new Error('No prior card deposit found. Card withdrawals require a previous Stripe card payment to refund against. Please use a different withdrawal method.');
+        }
+
+        console.log('[Stripe] Refunding to original card via payment intent:', paymentIntentId, { amount: netAmount, txRef });
+
+        const { createStripeCardPayout: stripePayout } = await import("../_shared/gateway-adapters.ts");
+        providerResult = await stripePayout(paymentIntentId, netAmount, currency);
+        payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'bank_account') {
         // Automated Flutterwave bank transfer — no admin approval needed
