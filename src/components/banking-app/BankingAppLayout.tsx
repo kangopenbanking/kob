@@ -31,7 +31,7 @@ export const BankingAppLayout: React.FC = () => {
     <BankingAppAuthGuard>
       <SessionGuard logoutPath={`/bank/${institutionId}/auth`} appName="Banking">
         <TenantProvider>
-          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text">
+          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text" style={{ '--pwa-font-multiplier': 0.7 } as React.CSSProperties}>
             <PullToRefresh onRefresh={handleRefresh}>
               <div className="flex-1 pb-16">
                 <Outlet />
