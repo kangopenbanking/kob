@@ -40,7 +40,7 @@ const CustomerCashOut: React.FC = () => {
   const primaryBalance = primaryAccount ? balances.find((b: any) => b.account_id === primaryAccount.id) : null;
   const walletBalance = (primaryBalance?.amount as number) ?? 0;
 
-  // Fetch admin cashout config (methods + limits)
+  // Fetch admin cashout config
   const { data: cashoutConfig } = useQuery({
     queryKey: ['cashout-config', KANG_PLATFORM_ID],
     queryFn: async () => {
@@ -77,7 +77,6 @@ const CustomerCashOut: React.FC = () => {
     }
   };
 
-  // Fetch linked accounts
   const { data: linkedAccounts = [], isLoading: acctLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
     enabled: !!user?.id,
@@ -93,14 +92,12 @@ const CustomerCashOut: React.FC = () => {
     },
   });
 
-  // Filter linked accounts by admin-enabled cashout methods
   const filteredAccounts = linkedAccounts.filter((acc: any) => {
     const method = accountTypeToCashoutMethod(acc.account_type);
     if (!method) return true;
     return cashoutMethods?.[method] !== false;
   });
 
-  // Fetch withdrawal fee structure from admin
   const { data: feeStructure } = useQuery({
     queryKey: ['withdrawal-fee', KANG_PLATFORM_ID],
     queryFn: async () => {
@@ -122,13 +119,9 @@ const CustomerCashOut: React.FC = () => {
     if (!feeStructure || amt <= 0) return 0;
     const fs = feeStructure as any;
     let fee = 0;
-    if (fs.fee_model === 'fixed') {
-      fee = fs.fixed_amount || 0;
-    } else if (fs.fee_model === 'percentage') {
-      fee = (amt * (fs.percentage_rate || 0)) / 100;
-    } else if (fs.fee_model === 'hybrid') {
-      fee = (fs.fixed_amount || 0) + (amt * (fs.percentage_rate || 0)) / 100;
-    }
+    if (fs.fee_model === 'fixed') fee = fs.fixed_amount || 0;
+    else if (fs.fee_model === 'percentage') fee = (amt * (fs.percentage_rate || 0)) / 100;
+    else if (fs.fee_model === 'hybrid') fee = (fs.fixed_amount || 0) + (amt * (fs.percentage_rate || 0)) / 100;
     if (fs.min_fee_amount && fee < fs.min_fee_amount) fee = fs.min_fee_amount;
     if (fs.max_fee_amount && fee > fs.max_fee_amount) fee = fs.max_fee_amount;
     return Math.round(fee);
@@ -168,43 +161,31 @@ const CustomerCashOut: React.FC = () => {
     setProcessing(true);
     try {
       const isAgentCashout = selectedAccount?._isAgent;
-      const { error: txError } = await supabase.from('transactions').insert({
-        user_id: user!.id,
-        institution_id: KANG_PLATFORM_ID,
-        account_id: primaryAccount?.id || null,
-        transaction_type: 'withdrawal',
-        amount: numAmount,
-        currency: 'XAF',
-        status: isAgentCashout ? 'Pending' : 'completed',
-        credit_debit_indicator: 'Debit',
-        transaction_information: isAgentCashout
-          ? `Agent cash out - awaiting agent confirmation`
-          : `Withdrawal to ${selectedAccount?.provider_name || selectedAccount?.account_type} ···${selectedAccount?.last4 || ''}`,
-        booking_datetime: new Date().toISOString(),
-        value_datetime: new Date().toISOString(),
-        metadata: {
-          destination_linked_account_id: isAgentCashout ? null : selectedAccount?.id,
-          destination_type: isAgentCashout ? 'agent' : selectedAccount?.account_type,
-          destination_provider: isAgentCashout ? 'Agent' : selectedAccount?.provider_name,
-          fee_amount: fee,
-          net_amount: netAmount,
+      const destinationType = isAgentCashout ? 'agent' : selectedAccount?.account_type;
+
+      // Call the unified withdrawal edge function
+      const { data: result, error } = await supabase.functions.invoke('gateway-process-withdrawal', {
+        body: {
+          amount: numAmount,
+          account_id: primaryAccount?.id,
+          destination_type: destinationType,
+          linked_account_id: isAgentCashout ? null : selectedAccount?.id,
+          currency: 'XAF',
+          narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
         },
       });
-      if (txError) throw txError;
 
-      if (primaryAccount?.id && primaryBalance) {
-        const newAmount = Math.max(walletBalance - numAmount, 0);
-        await supabase.from('account_balances')
-          .update({ amount: newAmount, balance_datetime: new Date().toISOString() })
-          .eq('id', (primaryBalance as any).id);
-      }
+      if (error) throw new Error(error.message || 'Withdrawal failed');
+      if (result?.error) throw new Error(result.message || result.error);
 
+      // Invalidate caches
       queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
       queryClient.invalidateQueries({ queryKey: ['account-balances'] });
       queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
 
       setStep('success');
-      toast.success(`XAF ${netAmount.toLocaleString()} withdrawal initiated`);
+      const statusMsg = result.status === 'completed' ? 'completed' : 'is being processed';
+      toast.success(`XAF ${netAmount.toLocaleString()} withdrawal ${statusMsg}`);
       setTimeout(() => navigate(-1), 2500);
     } catch (err: any) {
       toast.error(err.message || 'Withdrawal failed. Please try again.');
@@ -219,7 +200,6 @@ const CustomerCashOut: React.FC = () => {
     else navigate(-1);
   };
 
-  // Build the list of enabled admin cashout method cards (standalone options not tied to linked accounts)
   const standaloneMethodCards: { key: string; label: string; description: string; iconKey: string }[] = [];
   if (cashoutMethods.agent) {
     standaloneMethodCards.push({ key: 'agent', label: 'Agent Cash Out', description: 'Withdraw via a nearby agent', iconKey: 'agent' });
@@ -251,7 +231,6 @@ const CustomerCashOut: React.FC = () => {
           </motion.div>
         ) : step === 'dest' ? (
           <motion.div key="dest" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
-            {/* Dynamic fee notice - only show when fees exist */}
             {feeDesc && (
               <div className="flex items-start gap-3 rounded-2xl bg-[hsl(45,70%,90%)] p-4">
                 <Banknote className="h-5 w-5 text-[hsl(45,60%,35%)] mt-0.5 shrink-0" strokeWidth={1.5} />
@@ -262,7 +241,6 @@ const CustomerCashOut: React.FC = () => {
               </div>
             )}
 
-            {/* Wallet balance */}
             <div className="rounded-2xl bg-card border border-border p-4">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Wallet Balance</p>
               <p className="text-xl font-bold text-foreground mt-1">XAF {walletBalance.toLocaleString()}</p>
@@ -291,7 +269,6 @@ const CustomerCashOut: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Linked account options */}
                 {filteredAccounts.map((acc: any) => {
                   const { icon: Icon, color, iconColor } = getIcon(acc.account_type);
                   return (
@@ -309,7 +286,6 @@ const CustomerCashOut: React.FC = () => {
                   );
                 })}
 
-                {/* Standalone admin-enabled methods (Agent, etc.) */}
                 {standaloneMethodCards.map((method) => {
                   const { icon: Icon, color, iconColor } = getIcon(method.iconKey);
                   return (
@@ -334,7 +310,6 @@ const CustomerCashOut: React.FC = () => {
           </motion.div>
         ) : step === 'amount' ? (
           <motion.div key="amount" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="flex flex-col gap-5">
-            {/* Destination display */}
             {selectedAccount && (() => {
               const iconKey = selectedAccount._isAgent ? 'agent' : selectedAccount.account_type;
               const { icon: Icon, color, iconColor } = getIcon(iconKey);
@@ -351,7 +326,6 @@ const CustomerCashOut: React.FC = () => {
               );
             })()}
 
-            {/* Amount Input */}
             <div className="flex flex-col items-center gap-2 rounded-3xl bg-[hsl(25,60%,35%)] p-8">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-[hsl(0,0%,100%)]/60">Withdrawal Amount</p>
               <div className="flex items-baseline gap-1">
@@ -372,7 +346,6 @@ const CustomerCashOut: React.FC = () => {
               )}
             </div>
 
-            {/* Quick amounts */}
             <div className="flex gap-2 flex-wrap">
               {quickAmounts.map((a: number) => (
                 <button key={a} onClick={() => setAmount(String(a))}
@@ -382,7 +355,6 @@ const CustomerCashOut: React.FC = () => {
               ))}
             </div>
 
-            {/* Live fee calculation */}
             {numAmount > 0 && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                 className="rounded-2xl bg-card border border-border p-4 space-y-2">
