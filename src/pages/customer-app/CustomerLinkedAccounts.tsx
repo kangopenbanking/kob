@@ -187,12 +187,12 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
       <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-black/10" />
       <div className="relative z-10 flex flex-col justify-between h-full p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">Linked Card</p>
-            <p className="text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
-          </div>
+        <div className="flex items-start justify-end">
           <CardDeleteBtn onClick={onDelete} />
+        </div>
+        <div>
+          <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">Linked Card</p>
+          <p className="text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
         </div>
         <div className="space-y-3">
           <p className="font-mono text-lg text-white tracking-[0.2em]">•••• •••• •••• {acc.last4 || '••••'}</p>
