@@ -129,7 +129,7 @@ serve(async (req) => {
 
         const from = (page - 1) * limit;
         const { data, count, error } = await query
-          .order('booking_date', { ascending: false })
+          .order('booking_datetime', { ascending: false })
           .range(from, from + limit - 1);
 
         if (error) throw error;
@@ -174,9 +174,9 @@ serve(async (req) => {
         if (accountIds.length > 0) {
           const { data } = await supabase
             .from('transactions')
-            .select('amount, booking_date, credit_debit_indicator, status')
+            .select('amount, booking_datetime, credit_debit_indicator, status')
             .in('account_id', accountIds)
-            .gte('booking_date', startDate);
+            .gte('booking_datetime', startDate);
           transactions = data || [];
         }
 
@@ -193,7 +193,7 @@ serve(async (req) => {
         // Group by day
         const byDay: Record<string, { count: number; volume: number }> = {};
         transactions.forEach(t => {
-          const date = t.booking_date?.split('T')[0] || 'unknown';
+          const date = t.booking_datetime?.split('T')[0] || 'unknown';
           if (!byDay[date]) byDay[date] = { count: 0, volume: 0 };
           byDay[date].count++;
           byDay[date].volume += Number(t.amount);

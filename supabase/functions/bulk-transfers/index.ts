@@ -124,15 +124,18 @@ serve(async (req) => {
           .from('transactions')
           .insert({
             account_id: sourceAccount.id,
-            transaction_reference: transactionRef,
+            institution_id: sourceAccount.institution_id || '00000000-0000-0000-0000-000000000000',
+            user_id: user.id,
             amount: amount,
             currency: row.currency || 'XAF',
             credit_debit_indicator: 'Debit',
             status: 'Booked',
-            booking_date: new Date().toISOString(),
-            value_date: new Date().toISOString(),
+            transaction_type: 'Transfer',
+            booking_datetime: new Date().toISOString(),
+            value_datetime: new Date().toISOString(),
             transaction_information: row.description || `Bulk transfer to ${row.destination_account}`,
             merchant_details: {
+              transaction_ref: transactionRef,
               destination_account: row.destination_account,
             },
           });

@@ -158,14 +158,16 @@ async function processTransactionFile(fileData: any, fileType: string, supabase:
           .insert({
             user_id: userId,
             account_id: txn.account_id,
-            transaction_id: txn.transaction_id,
+            institution_id: txn.institution_id || '00000000-0000-0000-0000-000000000000',
             credit_debit_indicator: txn.credit_debit_indicator,
             status: txn.status || 'Booked',
-            booking_date: txn.booking_date,
-            value_date: txn.value_date,
+            transaction_type: txn.transaction_type || 'import',
+            booking_datetime: txn.booking_date,
+            value_datetime: txn.value_date,
             amount: txn.amount,
             currency: txn.currency || 'XAF',
-            transaction_information: txn.description
+            transaction_information: txn.description,
+            merchant_details: { transaction_ref: txn.transaction_id },
           });
 
         if (insertError) {
