@@ -580,3 +580,9 @@ verify_jwt = false
 
 [functions.gateway-confirm-funding]
 verify_jwt = false
+
+[functions.gateway-process-withdrawal]
+verify_jwt = false
+
+[functions.gateway-admin-reverse-withdrawal]
+verify_jwt = false

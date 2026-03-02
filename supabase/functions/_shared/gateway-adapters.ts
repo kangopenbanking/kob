@@ -506,6 +506,72 @@ export async function verifyPayPalWebhookSignature(
   return data.verification_status === 'SUCCESS';
 }
 
+// ─── Stripe Payout (Refund to original card) ───
+
+export async function createStripeCardPayout(paymentIntentId: string, amount: number, currency: string): Promise<RefundResult> {
+  const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
+  if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
+
+  const stripeAmount = toStripeAmount(amount, currency);
+  const params = new URLSearchParams();
+  params.append('payment_intent', paymentIntentId);
+  params.append('amount', stripeAmount.toString());
+  params.append('reason', 'requested_by_customer');
+
+  const res = await fetch('https://api.stripe.com/v1/refunds', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${STRIPE_SECRET}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
+  });
+
+  const data = await res.json();
+  if (data.error) throw new Error(`Stripe refund failed: ${data.error.message}`);
+
+  return {
+    provider_ref: data.id || '',
+    status: data.status === 'succeeded' ? 'successful' : 'processing',
+    provider_raw: data,
+  };
+}
+
+// ─── Flutterwave MoMo Payout ───
+
+export async function createFlutterwaveMomoPayout(req: PayoutRequest): Promise<PayoutResult> {
+  const FLW_SECRET = typeof Deno !== "undefined" ? Deno.env.get('FLUTTERWAVE_SECRET_KEY') : undefined;
+  if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
+
+  const body = {
+    account_bank: 'MPS',
+    account_number: req.beneficiary_phone,
+    amount: req.amount,
+    currency: req.currency,
+    narration: req.narration || `MoMo payout ${req.tx_ref}`,
+    reference: req.tx_ref,
+    beneficiary_name: req.beneficiary_name,
+  };
+
+  const res = await fetch('https://api.flutterwave.com/v3/transfers', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${FLW_SECRET}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+
+  const data = await res.json();
+  if (data.status === 'error') throw new Error(`Flutterwave MoMo payout failed: ${data.message}`);
+
+  return {
+    provider_ref: data.data?.id?.toString() || '',
+    status: mapFlutterwaveStatus(data.data?.status || 'pending'),
+    provider_raw: data,
+  };
+}
+
 // ─── Fee Calculation ───
 
 export function calculateGatewayFee(amount: number, channel: string): { fee: number; net: number } {
