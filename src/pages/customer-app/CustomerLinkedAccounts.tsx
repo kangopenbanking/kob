@@ -12,10 +12,10 @@ import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import kangCardBg from '@/assets/kangcard_visa.png';
 
 const MAX_LINKED_ACCOUNTS = 2;
 
-// Cameroon bank directory (synced with directory-banks-cm edge function)
 const CM_BANKS = [
   { code: '10005', name: 'Afriland First Bank', swift: 'AFRIACMCXXX' },
   { code: '10009', name: 'Atlantic Bank Cameroon', swift: 'ATCRCMCMXXX' },
@@ -34,6 +34,12 @@ const CM_BANKS = [
   { code: '10070', name: 'UBC', swift: 'UBCMCMCXXXX' },
 ];
 
+const CARD_NETWORKS = [
+  { value: 'visa', label: 'Visa' },
+  { value: 'mastercard', label: 'Mastercard' },
+  { value: 'amex', label: 'American Express' },
+];
+
 interface AccountTypeConfig {
   key: string;
   label: string;
@@ -42,7 +48,7 @@ interface AccountTypeConfig {
   color: string;
   iconColor: string;
   providerType: string;
-  fields: { key: string; label: string; placeholder: string; type?: string }[];
+  fields: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }[];
 }
 
 const accountTypes: AccountTypeConfig[] = [
@@ -89,11 +95,13 @@ const accountTypes: AccountTypeConfig[] = [
   },
   {
     key: 'bank_card', label: 'Bank Card', description: 'Link a debit or credit card',
-    icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]', providerType: 'card',
+    icon: CreditCard, color: 'bg-[hsl(225,70%,92%)]', iconColor: 'text-[hsl(225,60%,50%)]', providerType: 'card',
     fields: [
       { key: 'account_name', label: 'Cardholder Name', placeholder: 'Name on card' },
-      { key: 'account_number', label: 'Card Number', placeholder: '**** **** **** 1234' },
-      { key: 'provider_name', label: 'Card Network', placeholder: 'Visa / Mastercard' },
+      { key: 'account_number', label: 'Card Number', placeholder: '4242 4242 4242 4242' },
+      { key: 'card_network', label: 'Card Network', placeholder: 'Select network', fieldType: 'card_network' },
+      { key: 'card_exp_month', label: 'Expiry Month', placeholder: 'MM', fieldType: 'exp_month' },
+      { key: 'card_exp_year', label: 'Expiry Year', placeholder: 'YY', fieldType: 'exp_year' },
     ],
   },
 ];
@@ -103,7 +111,7 @@ const getIconForType = (type: string) => {
   return found || accountTypes[0];
 };
 
-// RIB formatting helper
+// Formatting helpers
 const formatRibInput = (value: string): string => {
   const digits = value.replace(/\D/g, '').substring(0, 23);
   if (digits.length <= 5) return digits;
@@ -112,13 +120,22 @@ const formatRibInput = (value: string): string => {
   return `${digits.substring(0, 5)}-${digits.substring(5, 10)}-${digits.substring(10, 21)}-${digits.substring(21)}`;
 };
 
-// IBAN formatting helper
 const formatIbanInput = (value: string): string => {
   const clean = value.replace(/\s/g, '').toUpperCase().substring(0, 34);
   return clean.match(/.{1,4}/g)?.join(' ') || clean;
 };
 
-// RIB MOD-97 key validation (client-side)
+const formatCardNumber = (value: string): string => {
+  const digits = value.replace(/\D/g, '').substring(0, 16);
+  return digits.match(/.{1,4}/g)?.join(' ') || digits;
+};
+
+const formatPhoneNumber = (value: string): string => {
+  let clean = value.replace(/[^\d+]/g, '');
+  if (!clean.startsWith('+')) clean = '+' + clean;
+  return clean.substring(0, 16);
+};
+
 const validateRibChecksum = (rib23: string): { valid: boolean; expectedKey: string } => {
   const bank = parseInt(rib23.substring(0, 5), 10);
   const branch = parseInt(rib23.substring(5, 10), 10);
@@ -134,6 +151,108 @@ const validateRibChecksum = (rib23: string): { valid: boolean; expectedKey: stri
   return { valid: actualKey === expectedKey, expectedKey };
 };
 
+const validateCameroonPhone = (phone: string): boolean => {
+  const clean = phone.replace(/\D/g, '');
+  // Must be 237 + 9 digits, starting with 6
+  return /^237[67]\d{8}$/.test(clean) || /^[67]\d{8}$/.test(clean);
+};
+
+const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+/* ─── Visual Card Component ─── */
+const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const meta = acc.metadata as any;
+  const network = meta?.card_network || acc.provider_name || 'Card';
+  const expMonth = meta?.card_exp_month ? String(meta.card_exp_month).padStart(2, '0') : '••';
+  const expYear = meta?.card_exp_year ? String(meta.card_exp_year).slice(-2) : '••';
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden rounded-3xl" style={{ aspectRatio: '1.586/1' }}>
+      {/* Card background image */}
+      <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+      {/* Overlay for readability */}
+      <div className="absolute inset-0 bg-black/10" />
+      {/* Card content */}
+      <div className="relative z-10 flex flex-col justify-between h-full p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">Linked Card</p>
+            <p className="text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
+          </div>
+          <button onClick={onDelete}
+            className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm hover:bg-white/25 transition-colors">
+            <Trash2 className="h-4 w-4 text-white/90" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        <div className="space-y-3">
+          <p className="font-mono text-lg text-white tracking-[0.2em]">
+            •••• •••• •••• {acc.last4 || '••••'}
+          </p>
+          <div className="flex items-end justify-between">
+            <div className="flex gap-6">
+              <div>
+                <p className="text-[9px] font-medium text-white/60 uppercase">Expires</p>
+                <p className="text-sm font-semibold text-white font-mono">{expMonth}/{expYear}</p>
+              </div>
+              <div>
+                <p className="text-[9px] font-medium text-white/60 uppercase">Network</p>
+                <p className="text-sm font-semibold text-white capitalize">{network}</p>
+              </div>
+            </div>
+            {acc.is_primary && (
+              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─── Standard Account Row ─── */
+const LinkedAccountRow = ({ acc, onDelete }: { acc: any; onDelete: () => void }) => {
+  const config = getIconForType(acc.account_type);
+  const Icon = config.icon;
+  const meta = acc.metadata as any;
+  const identifierBadge = meta?.identifier_type === 'DOMESTIC_RIB' ? 'RIB' : meta?.identifier_type === 'IBAN' ? 'IBAN' : null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+      className="flex items-center justify-between rounded-3xl border-2 border-border bg-card p-4">
+      <div className="flex items-center gap-3">
+        <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.color}`}>
+          <Icon className={`h-5 w-5 ${config.iconColor}`} strokeWidth={1.5} />
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <p className="text-sm font-bold text-foreground">{acc.account_name || config.label}</p>
+            {identifierBadge && (
+              <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
+                identifierBadge === 'RIB' ? 'bg-[hsl(210,80%,93%)] text-[hsl(210,60%,45%)]' : 'bg-[hsl(270,50%,92%)] text-[hsl(270,50%,45%)]'
+              }`}>{identifierBadge}</span>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            {acc.provider_name || config.label} {acc.last4 ? `•••• ${acc.last4}` : ''}
+          </p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        {acc.is_primary && (
+          <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Primary</span>
+        )}
+        <button onClick={onDelete}
+          className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted hover:bg-destructive/10 transition-colors">
+          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" strokeWidth={1.5} />
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
+/* ─── Main Component ─── */
 const CustomerLinkedAccounts: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
@@ -145,7 +264,6 @@ const CustomerLinkedAccounts: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [validationMsg, setValidationMsg] = useState<{ text: string; isError: boolean } | null>(null);
 
-  // Fetch active linked accounts
   const { data: linkedAccounts = [], isLoading } = useQuery({
     queryKey: ['customer-linked-accounts', user?.id],
     enabled: !!user?.id,
@@ -161,7 +279,6 @@ const CustomerLinkedAccounts: React.FC = () => {
     },
   });
 
-  // Check if user has any previously removed accounts (triggers approval workflow)
   const { data: hasRemovals = false } = useQuery({
     queryKey: ['customer-has-removals', user?.id],
     enabled: !!user?.id,
@@ -177,7 +294,6 @@ const CustomerLinkedAccounts: React.FC = () => {
     },
   });
 
-  // Fetch pending change requests
   const { data: pendingRequests = [] } = useQuery({
     queryKey: ['linked-account-requests', user?.id],
     enabled: !!user?.id,
@@ -235,21 +351,44 @@ const CustomerLinkedAccounts: React.FC = () => {
       } else if (clean.length > 0) {
         setValidationMsg({ text: `${clean.length} characters (min 15)`, isError: false });
       }
+    } else if (selectedType.key === 'bank_card') {
+      const formatted = formatCardNumber(value);
+      setFormData(prev => ({ ...prev, account_number: formatted }));
+      const digits = formatted.replace(/\D/g, '');
+      if (digits.length === 16) {
+        setValidationMsg({ text: '✓ Valid card number length', isError: false });
+      } else if (digits.length > 0) {
+        setValidationMsg({ text: `${digits.length}/16 digits`, isError: false });
+      }
     } else {
       setFormData(prev => ({ ...prev, account_number: value }));
     }
   }, [selectedType, formData.bank_code]);
+
+  const handlePhoneChange = useCallback((value: string) => {
+    const formatted = formatPhoneNumber(value);
+    setFormData(prev => ({ ...prev, account_number: formatted }));
+    setValidationMsg(null);
+    const clean = formatted.replace(/\D/g, '');
+    if (clean.length >= 9) {
+      if (validateCameroonPhone(clean)) {
+        setValidationMsg({ text: '✓ Valid Cameroon phone number', isError: false });
+      } else {
+        setValidationMsg({ text: 'Enter a valid Cameroon phone (e.g. +237 6XX XXX XXX)', isError: true });
+      }
+    }
+  }, []);
 
   const handleAddAccount = async () => {
     if (!selectedType || !user) return;
 
     // Validate required fields
     for (const f of selectedType.fields) {
-      if (f.key === 'bank_code') continue;
+      if (f.key === 'bank_code' || f.fieldType === 'exp_month' || f.fieldType === 'exp_year' || f.fieldType === 'card_network') continue;
       if (!formData[f.key]?.trim()) { toast.error(`Enter ${f.label.toLowerCase()}`); return; }
     }
 
-    // Extra validation for RIB
+    // RIB validation
     if (selectedType.key === 'bank_account') {
       const digits = (formData.account_number || '').replace(/\D/g, '');
       if (digits.length !== 23) { toast.error('RIB must be exactly 23 digits'); return; }
@@ -258,10 +397,36 @@ const CustomerLinkedAccounts: React.FC = () => {
       if (!formData.bank_code) { toast.error('Please select your bank'); return; }
     }
 
-    // Extra validation for IBAN
+    // IBAN validation
     if (selectedType.key === 'bank_iban') {
       const clean = (formData.account_number || '').replace(/\s/g, '');
       if (clean.length < 15) { toast.error('IBAN too short'); return; }
+    }
+
+    // Card validation
+    if (selectedType.key === 'bank_card') {
+      const digits = (formData.account_number || '').replace(/\D/g, '');
+      if (digits.length < 13 || digits.length > 19) { toast.error('Enter a valid card number (13-19 digits)'); return; }
+      if (!formData.card_network) { toast.error('Select a card network'); return; }
+      if (!formData.card_exp_month || !formData.card_exp_year) { toast.error('Enter card expiry date'); return; }
+      const month = parseInt(formData.card_exp_month, 10);
+      if (month < 1 || month > 12) { toast.error('Invalid expiry month'); return; }
+      const yearNum = parseInt(formData.card_exp_year, 10);
+      const fullYear = yearNum < 100 ? 2000 + yearNum : yearNum;
+      const now = new Date();
+      const expDate = new Date(fullYear, month);
+      if (expDate <= now) { toast.error('Card has expired'); return; }
+    }
+
+    // MoMo phone validation
+    if (selectedType.key === 'momo_mtn' || selectedType.key === 'momo_orange') {
+      const phone = (formData.account_number || '').replace(/\D/g, '');
+      if (!validateCameroonPhone(phone)) { toast.error('Enter a valid Cameroon phone number'); return; }
+    }
+
+    // PayPal email validation
+    if (selectedType.key === 'paypal') {
+      if (!validateEmail(formData.account_number || '')) { toast.error('Enter a valid email address'); return; }
     }
 
     setSaving(true);
@@ -271,15 +436,9 @@ const CustomerLinkedAccounts: React.FC = () => {
       const bank = CM_BANKS.find(b => b.code === formData.bank_code);
       const accountType = selectedType.key === 'bank_iban' ? 'bank_account' : selectedType.key;
 
-      const accountData = {
-        account_type: accountType,
-        account_name: formData.account_name || null,
-        account_number: rawNumber,
-        provider_name: bank?.name || formData.provider_name || selectedType.label,
-        provider_type: selectedType.providerType,
-        last4,
-        is_primary: linkedAccounts.length === 0,
-        metadata: selectedType.key === 'bank_account' ? {
+      let metadata: any = undefined;
+      if (selectedType.key === 'bank_account') {
+        metadata = {
           identifier_type: 'DOMESTIC_RIB',
           rib_bank_code: rawNumber.substring(0, 5),
           rib_branch_code: rawNumber.substring(5, 10),
@@ -287,14 +446,46 @@ const CustomerLinkedAccounts: React.FC = () => {
           rib_key: rawNumber.substring(21, 23),
           swift_bic: bank?.swift,
           rail: 'DOMESTIC',
-        } : selectedType.key === 'bank_iban' ? {
+        };
+      } else if (selectedType.key === 'bank_iban') {
+        metadata = {
           identifier_type: 'IBAN',
           country: rawNumber.substring(0, 2),
           rail: 'INTERNATIONAL',
-        } : undefined,
+        };
+      } else if (selectedType.key === 'bank_card') {
+        metadata = {
+          card_network: formData.card_network,
+          card_exp_month: parseInt(formData.card_exp_month, 10),
+          card_exp_year: parseInt(formData.card_exp_year, 10) < 100
+            ? 2000 + parseInt(formData.card_exp_year, 10)
+            : parseInt(formData.card_exp_year, 10),
+          card_type: 'debit',
+        };
+      } else if (selectedType.key === 'momo_mtn' || selectedType.key === 'momo_orange') {
+        metadata = {
+          provider: selectedType.key === 'momo_mtn' ? 'MTN' : 'Orange',
+          phone_country: 'CM',
+        };
+      } else if (selectedType.key === 'paypal') {
+        metadata = {
+          email: rawNumber,
+        };
+      }
+
+      const networkLabel = CARD_NETWORKS.find(n => n.value === formData.card_network)?.label;
+
+      const accountData = {
+        account_type: accountType,
+        account_name: formData.account_name || null,
+        account_number: selectedType.key === 'bank_card' ? last4 : rawNumber, // Cards: only store last4
+        provider_name: bank?.name || networkLabel || formData.provider_name || selectedType.label,
+        provider_type: selectedType.providerType,
+        last4,
+        is_primary: linkedAccounts.length === 0,
+        metadata,
       };
 
-      // If user has previously removed accounts, require admin approval
       if (hasRemovals) {
         const { error } = await (supabase as any).from('linked_account_change_requests').insert({
           user_id: user.id,
@@ -306,7 +497,6 @@ const CustomerLinkedAccounts: React.FC = () => {
         toast.success('Account linking request submitted for admin approval');
         queryClient.invalidateQueries({ queryKey: ['linked-account-requests'] });
       } else {
-        // Direct insert (no prior removals)
         const { error } = await (supabase as any).from('customer_linked_accounts').insert({
           user_id: user.id,
           ...accountData,
@@ -332,15 +522,11 @@ const CustomerLinkedAccounts: React.FC = () => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      // Soft-delete: mark as removed with timestamp and increment removal_count
       await (supabase as any).from('customer_linked_accounts')
         .update({ is_active: false, status: 'removed', removed_at: new Date().toISOString() })
         .eq('id', deleteId);
       
-      // Increment removal_count via raw update
-      await (supabase as any).rpc('increment_removal_count' as any, { row_id: deleteId }).catch(() => {
-        // Fallback: just proceed — the removed_at flag is enough
-      });
+      await (supabase as any).rpc('increment_removal_count' as any, { row_id: deleteId }).catch(() => {});
 
       toast.success('Account removed. Future account additions will require admin approval.');
       queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
@@ -349,7 +535,8 @@ const CustomerLinkedAccounts: React.FC = () => {
     setDeleteId(null);
   };
 
-  const renderField = (f: { key: string; label: string; placeholder: string; type?: string }) => {
+  const renderField = (f: { key: string; label: string; placeholder: string; type?: string; fieldType?: string }) => {
+    // Bank selector
     if (f.key === 'bank_code' && selectedType?.key === 'bank_account') {
       return (
         <div key={f.key} className="space-y-1">
@@ -360,9 +547,7 @@ const CustomerLinkedAccounts: React.FC = () => {
             </SelectTrigger>
             <SelectContent>
               {CM_BANKS.map(b => (
-                <SelectItem key={b.code} value={b.code}>
-                  {b.name} ({b.code})
-                </SelectItem>
+                <SelectItem key={b.code} value={b.code}>{b.name} ({b.code})</SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -370,6 +555,65 @@ const CustomerLinkedAccounts: React.FC = () => {
       );
     }
 
+    // Card network selector
+    if (f.fieldType === 'card_network') {
+      return (
+        <div key={f.key} className="space-y-1">
+          <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
+          <Select value={formData.card_network || ''} onValueChange={(v) => setFormData({ ...formData, card_network: v })}>
+            <SelectTrigger className="rounded-xl">
+              <SelectValue placeholder="Select network" />
+            </SelectTrigger>
+            <SelectContent>
+              {CARD_NETWORKS.map(n => (
+                <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      );
+    }
+
+    // Expiry month/year as inline row
+    if (f.fieldType === 'exp_month') {
+      return (
+        <div key="expiry_row" className="grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-muted-foreground">Month</label>
+            <Select value={formData.card_exp_month || ''} onValueChange={(v) => setFormData({ ...formData, card_exp_month: v })}>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="MM" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 12 }, (_, i) => {
+                  const m = String(i + 1).padStart(2, '0');
+                  return <SelectItem key={m} value={m}>{m}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[11px] font-semibold text-muted-foreground">Year</label>
+            <Select value={formData.card_exp_year || ''} onValueChange={(v) => setFormData({ ...formData, card_exp_year: v })}>
+              <SelectTrigger className="rounded-xl">
+                <SelectValue placeholder="YY" />
+              </SelectTrigger>
+              <SelectContent>
+                {Array.from({ length: 10 }, (_, i) => {
+                  const y = new Date().getFullYear() + i;
+                  return <SelectItem key={y} value={String(y).slice(-2)}>{String(y).slice(-2)}</SelectItem>;
+                })}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      );
+    }
+
+    // Skip standalone exp_year render (handled in exp_month block above)
+    if (f.fieldType === 'exp_year') return null;
+
+    // RIB / IBAN formatted inputs
     if (f.key === 'account_number' && (selectedType?.key === 'bank_account' || selectedType?.key === 'bank_iban')) {
       return (
         <div key={f.key} className="space-y-1">
@@ -382,13 +626,55 @@ const CustomerLinkedAccounts: React.FC = () => {
             className="rounded-xl font-mono tracking-wider"
           />
           {validationMsg && (
-            <p className={`text-[11px] ${validationMsg.isError ? 'text-destructive' : 'text-green-600'}`}>
+            <p className={`text-[11px] ${validationMsg.isError ? 'text-destructive' : 'text-[hsl(150,50%,35%)]'}`}>
               {validationMsg.text}
             </p>
           )}
           {selectedType?.key === 'bank_account' && (
-            <p className="text-[10px] text-muted-foreground">
-              Format: Bank (5) - Branch (5) - Account (11) - Key (2)
+            <p className="text-[10px] text-muted-foreground">Format: Bank (5) - Branch (5) - Account (11) - Key (2)</p>
+          )}
+        </div>
+      );
+    }
+
+    // Card number formatted input
+    if (f.key === 'account_number' && selectedType?.key === 'bank_card') {
+      return (
+        <div key={f.key} className="space-y-1">
+          <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
+          <Input
+            type="text"
+            inputMode="numeric"
+            value={formData.account_number || ''}
+            onChange={e => handleAccountNumberChange(e.target.value)}
+            placeholder={f.placeholder}
+            className="rounded-xl font-mono tracking-[0.15em]"
+            maxLength={19}
+          />
+          {validationMsg && (
+            <p className={`text-[11px] ${validationMsg.isError ? 'text-destructive' : 'text-[hsl(150,50%,35%)]'}`}>
+              {validationMsg.text}
+            </p>
+          )}
+        </div>
+      );
+    }
+
+    // Phone number for MoMo
+    if (f.key === 'account_number' && (selectedType?.key === 'momo_mtn' || selectedType?.key === 'momo_orange')) {
+      return (
+        <div key={f.key} className="space-y-1">
+          <label className="text-[11px] font-semibold text-muted-foreground">{f.label}</label>
+          <Input
+            type="tel"
+            value={formData.account_number || ''}
+            onChange={e => handlePhoneChange(e.target.value)}
+            placeholder={f.placeholder}
+            className="rounded-xl font-mono"
+          />
+          {validationMsg && (
+            <p className={`text-[11px] ${validationMsg.isError ? 'text-destructive' : 'text-[hsl(150,50%,35%)]'}`}>
+              {validationMsg.text}
             </p>
           )}
         </div>
@@ -408,6 +694,10 @@ const CustomerLinkedAccounts: React.FC = () => {
       </div>
     );
   };
+
+  // Separate cards from other account types for visual treatment
+  const cardAccounts = linkedAccounts.filter((a: any) => a.account_type === 'bank_card');
+  const otherAccounts = linkedAccounts.filter((a: any) => a.account_type !== 'bank_card');
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
@@ -443,7 +733,7 @@ const CustomerLinkedAccounts: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* Admin approval warning if user has prior removals */}
+      {/* Admin approval warning */}
       {hasRemovals && !atLimit && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
           className="flex items-start gap-3 rounded-2xl bg-[hsl(40,90%,92%)] p-4">
@@ -457,7 +747,7 @@ const CustomerLinkedAccounts: React.FC = () => {
         </motion.div>
       )}
 
-      {/* Pending requests section */}
+      {/* Pending requests */}
       {pendingRequests.length > 0 && (
         <div className="space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Pending Requests</p>
@@ -510,45 +800,28 @@ const CustomerLinkedAccounts: React.FC = () => {
           <Button onClick={handleOpenAdd} className="rounded-2xl mt-2"><Plus className="h-4 w-4 mr-1" /> Link Account</Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {linkedAccounts.map((acc: any) => {
-            const config = getIconForType(acc.account_type);
-            const Icon = config.icon;
-            const meta = acc.metadata as any;
-            const identifierBadge = meta?.identifier_type === 'DOMESTIC_RIB' ? 'RIB' : meta?.identifier_type === 'IBAN' ? 'IBAN' : null;
-            return (
-              <motion.div key={acc.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between rounded-3xl border-2 border-border bg-card p-4">
-                <div className="flex items-center gap-3">
-                  <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${config.color}`}>
-                    <Icon className={`h-5 w-5 ${config.iconColor}`} strokeWidth={1.5} />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-sm font-bold text-foreground">{acc.account_name || config.label}</p>
-                      {identifierBadge && (
-                        <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded-full ${
-                          identifierBadge === 'RIB' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                        }`}>{identifierBadge}</span>
-                      )}
-                    </div>
-                    <p className="text-[11px] text-muted-foreground">
-                      {acc.provider_name || config.label} {acc.last4 ? `•••• ${acc.last4}` : ''}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  {acc.is_primary && (
-                    <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">Primary</span>
-                  )}
-                  <button onClick={() => setDeleteId(acc.id)}
-                    className="flex h-8 w-8 items-center justify-center rounded-xl bg-muted hover:bg-destructive/10">
-                    <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" strokeWidth={1.5} />
-                  </button>
-                </div>
-              </motion.div>
-            );
-          })}
+        <div className="space-y-4">
+          {/* Card accounts displayed as visual cards */}
+          {cardAccounts.length > 0 && (
+            <div className="space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cards</p>
+              {cardAccounts.map((acc: any) => (
+                <LinkedCardVisual key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
+              ))}
+            </div>
+          )}
+
+          {/* Other accounts as rows */}
+          {otherAccounts.length > 0 && (
+            <div className="space-y-3">
+              {cardAccounts.length > 0 && (
+                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Accounts</p>
+              )}
+              {otherAccounts.map((acc: any) => (
+                <LinkedAccountRow key={acc.id} acc={acc} onDelete={() => setDeleteId(acc.id)} />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -593,6 +866,35 @@ const CustomerLinkedAccounts: React.FC = () => {
                   className="text-xs text-primary font-semibold flex items-center gap-1">
                   <ArrowLeft className="h-3 w-3" /> Back to account types
                 </button>
+
+                {/* Card preview when filling card details */}
+                {selectedType.key === 'bank_card' && (formData.account_number || formData.account_name) && (
+                  <div className="relative overflow-hidden rounded-2xl" style={{ aspectRatio: '1.586/1' }}>
+                    <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/10" />
+                    <div className="relative z-10 flex flex-col justify-between h-full p-4">
+                      <p className="text-[10px] text-white/70 uppercase tracking-wider font-medium">Preview</p>
+                      <div className="space-y-2">
+                        <p className="font-mono text-base text-white tracking-[0.15em]">
+                          {formData.account_number || '•••• •••• •••• ••••'}
+                        </p>
+                        <div className="flex justify-between items-end">
+                          <div>
+                            <p className="text-[9px] text-white/60 uppercase">Cardholder</p>
+                            <p className="text-xs font-semibold text-white">{formData.account_name || '—'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[9px] text-white/60 uppercase">Expires</p>
+                            <p className="text-xs font-semibold text-white font-mono">
+                              {formData.card_exp_month || '••'}/{formData.card_exp_year || '••'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {selectedType.fields.map(f => renderField(f))}
                 <Button onClick={handleAddAccount} disabled={saving} className="w-full rounded-2xl h-12">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
