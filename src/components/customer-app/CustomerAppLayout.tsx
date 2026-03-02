@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { Outlet } from 'react-router-dom';
-import { CustomerTenantProvider } from './CustomerTenantProvider';
+import { CustomerTenantProvider, useCustomerTenant } from './CustomerTenantProvider';
 import { CustomerBottomNav } from './CustomerBottomNav';
 import { useOneSignal } from '@/hooks/useOneSignal';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
@@ -10,15 +10,13 @@ import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
 import { CustomerAppAuthGuard } from '@/components/auth/CustomerAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 
-export const CustomerAppLayout: React.FC = () => {
+const CustomerAppInner: React.FC = () => {
   const basePath = '/app';
   const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
+  const tenant = useCustomerTenant();
 
-  // Register user with OneSignal for push notifications (platform-level)
   useOneSignal(undefined);
-
-  // Auto-refresh balances & transactions in realtime
   useRealtimeBalanceSync(user?.id);
 
   const handleRefresh = useCallback(async () => {
@@ -26,18 +24,34 @@ export const CustomerAppLayout: React.FC = () => {
     await new Promise((r) => setTimeout(r, 500));
   }, [queryClient]);
 
+  const typo = tenant.typographyConfig;
+  const multiplier = typo.global_font_size_multiplier || 1;
+
+  return (
+    <div
+      className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text"
+      style={{
+        '--pwa-font-multiplier': multiplier,
+        '--pwa-heading-color': typo.global_heading_color || '#000000',
+        '--pwa-body-color': typo.global_body_color || '#000000',
+      } as React.CSSProperties}
+    >
+      <PullToRefresh onRefresh={handleRefresh}>
+        <div className="flex-1 pb-20">
+          <Outlet />
+        </div>
+      </PullToRefresh>
+      <CustomerBottomNav basePath={basePath} />
+    </div>
+  );
+};
+
+export const CustomerAppLayout: React.FC = () => {
   return (
     <CustomerAppAuthGuard>
       <SessionGuard logoutPath="/app/auth" appName="Kang">
         <CustomerTenantProvider>
-          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text">
-            <PullToRefresh onRefresh={handleRefresh}>
-              <div className="flex-1 pb-20">
-                <Outlet />
-              </div>
-            </PullToRefresh>
-            <CustomerBottomNav basePath={basePath} />
-          </div>
+          <CustomerAppInner />
         </CustomerTenantProvider>
       </SessionGuard>
     </CustomerAppAuthGuard>
