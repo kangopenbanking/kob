@@ -362,3 +362,24 @@ All colors MUST be HSL.
     transform: none;
   }
 }
+
+/* ─── PWA Large Text Mode (Consumer & Banking Apps) ─── */
+/* Override default foreground to pure black for readability */
+.pwa-large-text {
+  --foreground: 0 0% 0%;
+  --card-foreground: 0 0% 0%;
+}
+
+/* Scale all font sizes 2x inside PWA apps */
+.pwa-large-text .text-\[9px\] { font-size: 18px !important; }
+.pwa-large-text .text-\[10px\] { font-size: 20px !important; }
+.pwa-large-text .text-\[11px\] { font-size: 22px !important; }
+.pwa-large-text .text-\[12px\] { font-size: 24px !important; }
+.pwa-large-text .text-xs { font-size: 1.5rem !important; line-height: 2rem !important; }
+.pwa-large-text .text-sm { font-size: 1.75rem !important; line-height: 2.25rem !important; }
+.pwa-large-text .text-base { font-size: 2rem !important; line-height: 2.5rem !important; }
+.pwa-large-text .text-lg { font-size: 2.25rem !important; line-height: 2.75rem !important; }
+.pwa-large-text .text-xl { font-size: 2.5rem !important; line-height: 3rem !important; }
+.pwa-large-text .text-2xl { font-size: 3rem !important; line-height: 3.5rem !important; }
+.pwa-large-text .text-3xl { font-size: 3.75rem !important; line-height: 4.25rem !important; }
+.pwa-large-text .text-\[42px\] { font-size: 84px !important; }

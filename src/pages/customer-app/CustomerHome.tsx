@@ -127,11 +127,12 @@ const CustomerHome: React.FC = () => {
   const visibleHealth = financialHealth.filter(isVisible);
 
   // Quick action buttons for hero card
+  const actionColors = tenant.heroActionColors;
   const heroActions = [
-    { label: 'Accounts', icon: Building2, path: 'linked-accounts', featureKey: 'bank', iconColor: 'text-[hsl(225,60%,65%)]' },
-    { label: 'Cash Out', icon: Banknote, path: 'cash-out', featureKey: 'cash_out', iconColor: 'text-[hsl(45,70%,55%)]' },
-    { label: 'Request', icon: ArrowDownLeft, path: 'request', featureKey: 'request', iconColor: 'text-[hsl(340,60%,65%)]' },
-    { label: 'Pay Links', icon: Link2, path: 'pay-links', featureKey: 'pay_links', iconColor: 'text-[hsl(180,50%,55%)]' },
+    { label: 'Accounts', icon: Building2, path: 'linked-accounts', featureKey: 'bank', iconColor: 'text-[hsl(225,60%,65%)]', bgColor: actionColors.accounts },
+    { label: 'Cash Out', icon: Banknote, path: 'cash-out', featureKey: 'cash_out', iconColor: 'text-[hsl(45,70%,55%)]', bgColor: actionColors.cash_out },
+    { label: 'Request', icon: ArrowDownLeft, path: 'request', featureKey: 'request', iconColor: 'text-[hsl(340,60%,65%)]', bgColor: actionColors.request },
+    { label: 'Pay Links', icon: Link2, path: 'pay-links', featureKey: 'pay_links', iconColor: 'text-[hsl(180,50%,55%)]', bgColor: actionColors.pay_links },
   ].filter(a => !a.featureKey || tenant.features[a.featureKey as keyof typeof tenant.features] !== false);
 
   // Admin-configurable hero background
@@ -321,7 +322,7 @@ const CustomerHome: React.FC = () => {
                     onClick={() => go(action.path)}
                     className="flex flex-col items-center gap-1.5"
                   >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full bg-foreground shadow-md">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full shadow-md" style={{ backgroundColor: action.bgColor || '#ffffff' }}>
                       <Icon className={`h-6 w-6 ${action.iconColor}`} strokeWidth={1.5} />
                     </div>
                     <span className="text-[10px] font-semibold text-primary-foreground/80">{action.label}</span>

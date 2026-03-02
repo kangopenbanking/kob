@@ -30,7 +30,7 @@ export const CustomerAppLayout: React.FC = () => {
     <CustomerAppAuthGuard>
       <SessionGuard logoutPath="/app/auth" appName="Kang">
         <CustomerTenantProvider>
-          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
+          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text">
             <PullToRefresh onRefresh={handleRefresh}>
               <div className="flex-1 pb-20">
                 <Outlet />
