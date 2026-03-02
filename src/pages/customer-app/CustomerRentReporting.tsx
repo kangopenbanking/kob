@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Home, TrendingUp, CheckCircle2, Loader2, Plus, Calendar, Banknote, AlertCircle, HelpCircle, Info, Shield, Clock, Star } from 'lucide-react';
+import { ArrowLeft, Home, TrendingUp, CheckCircle2, Loader2, Plus, Calendar, Banknote, AlertCircle, HelpCircle, Info, Shield, Clock, Star, FileText, BadgeCheck } from 'lucide-react';
+import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerTransactions, useCustomerCreditScore } from '@/hooks/useCustomerData';
@@ -18,7 +19,7 @@ const CustomerRentReporting: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const [showSetup, setShowSetup] = useState(false);
-  const [showHowItWorks, setShowHowItWorks] = useState(false);
+  
   const [rentAmount, setRentAmount] = useState('');
   const [landlordName, setLandlordName] = useState('');
   const [frequency, setFrequency] = useState('monthly');
@@ -103,39 +104,18 @@ const CustomerRentReporting: React.FC = () => {
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
           <h1 className="text-xl font-bold text-foreground">Rent Reporting</h1>
         </div>
-        <button onClick={() => setShowHowItWorks(true)} className="flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1.5 text-[11px] font-semibold text-primary">
-          <HelpCircle className="h-3.5 w-3.5" /> How it works
-        </button>
       </div>
 
-      {/* How It Works Dialog */}
-      <Dialog open={showHowItWorks} onOpenChange={setShowHowItWorks}>
-        <DialogContent className="rounded-3xl max-w-sm mx-auto p-6">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="text-lg font-bold text-foreground">How Rent Reporting Works</DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground">Build credit by reporting your on-time rent payments</DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            {[
-              { icon: Plus, title: '1. Create a Rent Plan', desc: 'Enter your landlord name, monthly rent amount, and payment frequency. You will receive a unique KRENTS reference code.' },
-              { icon: Banknote, title: '2. Make Payments', desc: 'When you pay rent, record it against your plan using your unique KRENTS code. Each payment is tracked and timestamped.' },
-              { icon: Shield, title: '3. Build Your Credit', desc: 'Each on-time rent payment earns you +5 to +10 credit score points. Late payments may reduce your score. Consistency is key.' },
-              { icon: Star, title: '4. Your KRENTS Code', desc: 'Your unique reference (e.g. KRENTS4821) ties all your rent payments together for credit bureau reporting and score calculation.' },
-            ].map((step, i) => (
-              <div key={i} className="flex gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                  <step.icon className="h-4 w-4 text-primary" strokeWidth={1.5} />
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-foreground">{step.title}</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">{step.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-          <Button onClick={() => setShowHowItWorks(false)} className="w-full rounded-2xl h-11 mt-3">Got it</Button>
-        </DialogContent>
-      </Dialog>
+      {/* How It Works Flow Guide */}
+      <HowItWorksFlow
+        title="How Rent Reporting Works"
+        steps={[
+          { icon: Plus, title: 'Create a Rent Plan', description: 'Enter your landlord name, monthly rent amount, and payment frequency. You\'ll get a unique KRENTS reference code.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
+          { icon: Banknote, title: 'Make Payments', description: 'Pay rent and record it against your plan using your unique KRENTS code. Each payment is tracked and timestamped.', color: 'hsl(150,40%,90%)', iconColor: 'hsl(150,40%,35%)' },
+          { icon: Shield, title: 'Build Your Credit', description: 'Each on-time payment earns +5 to +10 credit score points. Late payments may reduce your score. Consistency is key.', color: 'hsl(270,60%,92%)', iconColor: 'hsl(270,50%,45%)' },
+          { icon: BadgeCheck, title: 'Your KRENTS Code', description: 'Your unique reference (e.g. KRENTS4821) ties all payments together for credit bureau reporting and score calculation.', color: 'hsl(45,70%,90%)', iconColor: 'hsl(45,60%,35%)' },
+        ] as FlowStep[]}
+      />
 
       {isLoading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
