@@ -26,7 +26,7 @@ export function SettlementManagement() {
         .from('institutions')
         .select('id, institution_name, use_kob_flutterwave, settlement_frequency, minimum_settlement_amount, settlement_bank_account')
         .eq('use_kob_flutterwave', true)
-        .eq('is_active', true);
+        .eq('status', 'approved');
 
       if (instResponse.error) throw instResponse.error;
       setInstitutions(instResponse.data || []);
