@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { SessionGuard } from "@/components/auth/SessionGuard";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { Button } from "@/components/ui/button";
 import { 
@@ -82,6 +83,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
+    <SessionGuard logoutPath="/auth" appName="Kang Dashboard">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r" collapsible="icon">
@@ -140,5 +142,6 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </div>
       </div>
     </SidebarProvider>
+    </SessionGuard>
   );
 }

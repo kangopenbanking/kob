@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { SessionGuard } from "@/components/auth/SessionGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Store } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
@@ -21,6 +22,7 @@ export function MerchantLayout() {
   };
 
   return (
+    <SessionGuard logoutPath="/auth" appName="Merchant Portal">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-muted/30">
         <Sidebar className="border-r border-border/60">
@@ -94,5 +96,6 @@ export function MerchantLayout() {
         </div>
       </div>
     </SidebarProvider>
+    </SessionGuard>
   );
 }

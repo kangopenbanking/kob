@@ -7,6 +7,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
 import { useEffect, useState } from 'react';
+import { BankingAppAuthGuard } from '@/components/auth/BankingAppAuthGuard';
+import { SessionGuard } from '@/components/auth/SessionGuard';
 
 export const BankingAppLayout: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
@@ -27,15 +29,19 @@ export const BankingAppLayout: React.FC = () => {
   }, [queryClient]);
 
   return (
-    <TenantProvider>
-      <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
-        <PullToRefresh onRefresh={handleRefresh}>
-          <div className="flex-1 pb-16">
-            <Outlet />
+    <BankingAppAuthGuard>
+      <SessionGuard logoutPath={`/bank/${institutionId}/auth`} appName="Banking">
+        <TenantProvider>
+          <div className="mx-auto flex min-h-screen max-w-lg flex-col bg-background">
+            <PullToRefresh onRefresh={handleRefresh}>
+              <div className="flex-1 pb-16">
+                <Outlet />
+              </div>
+            </PullToRefresh>
+            <BottomNavigation basePath={basePath} />
           </div>
-        </PullToRefresh>
-        <BottomNavigation basePath={basePath} />
-      </div>
-    </TenantProvider>
+        </TenantProvider>
+      </SessionGuard>
+    </BankingAppAuthGuard>
   );
 };
