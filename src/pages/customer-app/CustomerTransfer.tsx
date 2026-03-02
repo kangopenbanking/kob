@@ -401,15 +401,25 @@ const CustomerTransfer: React.FC = () => {
 
               {/* Type Toggle */}
               <div className="grid grid-cols-5 gap-1.5">
-                {recipientTypes.map(({ key, label, icon: Icon }) => (
-                  <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setNameSuggestions([]); setShowSuggestions(false); }}
-                    className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all ${
-                      recipientType === key ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground'
-                    }`}>
-                    <Icon className="h-3.5 w-3.5" strokeWidth={1.5} />
-                    {label}
-                  </button>
-                ))}
+                {recipientTypes.map(({ key, label, icon: Icon }) => {
+                  const colorMap: Record<string, { active: string; inactive: string }> = {
+                    phone: { active: 'bg-[#1B2B5E] text-white', inactive: 'bg-[#D4E4F7] text-[#1B2B5E]' },
+                    account: { active: 'bg-[#2D7A5F] text-white', inactive: 'bg-[#D5EDE2] text-[#2D7A5F]' },
+                    rib: { active: 'bg-[#C46A5A] text-white', inactive: 'bg-[#F4B8B8] text-[#C46A5A]' },
+                    iban: { active: 'bg-[#8B6914] text-white', inactive: 'bg-[#F5E6D0] text-[#8B6914]' },
+                    name: { active: 'bg-[#6B4FA0] text-white', inactive: 'bg-[#E8DEF8] text-[#6B4FA0]' },
+                  };
+                  const colors = colorMap[key] || { active: 'bg-foreground text-background', inactive: 'bg-muted text-muted-foreground' };
+                  return (
+                    <button key={key} onClick={() => { setRecipientType(key); setRecipient(''); setSelectedRecipientName(''); setNameSuggestions([]); setShowSuggestions(false); }}
+                      className={`flex flex-col items-center justify-center gap-1 rounded-xl py-2 text-[10px] font-bold transition-all border-2 ${
+                        recipientType === key ? `${colors.active} border-transparent` : `${colors.inactive} border-transparent`
+                      }`}>
+                      <Icon className="h-3.5 w-3.5" strokeWidth={recipientType === key ? 2 : 1.5} />
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
 
               {/* Recipient Input */}
