@@ -41,6 +41,7 @@ function useAnimatedCounter(target: number, duration = 1200) {
 interface FeatureItem {
   label: string;
   description?: string;
+  subtitle?: string;
   icon: React.ElementType;
   path: string;
   color: string;
@@ -68,8 +69,8 @@ const savingsGoals: FeatureItem[] = [
 ];
 
 const financialHealth: FeatureItem[] = [
-  { label: 'Credit Score', description: 'View', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
-  { label: 'Rent Report', description: 'View', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
+  { label: 'Credit Score', description: 'Check', subtitle: 'Know your score today', icon: BarChart3, path: 'credit', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,55%)]', featureKey: 'credit_score' },
+  { label: 'Rent Report', description: 'Open', subtitle: 'Start a rent profile', icon: Home, path: 'rent-reporting', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,65%)]', featureKey: 'rent_reporting' },
 ];
 
 const fadeUp = { initial: { opacity: 0, y: 14 }, animate: { opacity: 1, y: 0 } };
@@ -440,8 +441,8 @@ const CustomerHome: React.FC = () => {
                   <item.icon className={`h-4.5 w-4.5 ${item.iconColor}`} strokeWidth={2} />
                 </div>
                 <p className="text-[10px] font-semibold uppercase tracking-wider ${item.iconColor}">{item.label}</p>
-                <p className="text-lg font-bold text-foreground">View</p>
-                <p className="text-[10px] font-medium text-muted-foreground">{item.description}</p>
+                <p className="text-lg font-bold text-foreground">{item.description || 'View'}</p>
+                <p className="text-[10px] font-medium text-muted-foreground">{item.subtitle || ''}</p>
               </button>
             ))}
           </div>
