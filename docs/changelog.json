@@ -1,5 +1,55 @@
 [
   {
+    "version": "2.3.0",
+    "date": "2026-03-02",
+    "title": "Fully Automated Payouts",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Automated Stripe Card Payouts",
+        "description": "Card withdrawals are now fully automated via Stripe Refunds/Transfers API with no admin approval required",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": ["automated-payouts-e2e.test.ts"]
+      },
+      {
+        "name": "Automated Flutterwave Payouts",
+        "description": "Bank transfer and MoMo payouts via Flutterwave are fully automated with instant provider API calls",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": ["automated-payouts-e2e.test.ts"]
+      },
+      {
+        "name": "Automated PayPal Payouts",
+        "description": "PayPal batch payouts are fully automated with OAuth2 token management and status tracking",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": ["automated-payouts-e2e.test.ts"]
+      },
+      {
+        "name": "Payout Webhook Handler",
+        "description": "Unified webhook endpoint receiving async status updates from Stripe, Flutterwave, and PayPal to auto-finalize payouts",
+        "endpoints_added": ["gateway-payout-webhook"],
+        "migrations": [],
+        "tests": ["automated-payouts-e2e.test.ts"]
+      },
+      {
+        "name": "Payout Status Poller",
+        "description": "Background poller (5-min cron) that checks all processing payouts, auto-finalizes completed ones, and auto-fails payouts older than 24 hours with balance reversal",
+        "endpoints_added": ["gateway-payout-status-poll"],
+        "migrations": [],
+        "tests": ["automated-payouts-e2e.test.ts"]
+      },
+      {
+        "name": "Auto-Reversal on Failure",
+        "description": "Failed payouts automatically reverse the wallet debit and create audit trail entries",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": ["automated-payouts-e2e.test.ts"]
+      }
+    ]
+  },
+  {
     "version": "2.2.0",
     "date": "2026-02-27",
     "title": "Loans & Savings ↔ Credit Score Linkage",

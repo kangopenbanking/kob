@@ -586,3 +586,9 @@ verify_jwt = false
 
 [functions.gateway-admin-reverse-withdrawal]
 verify_jwt = false
+
+[functions.gateway-payout-webhook]
+verify_jwt = false
+
+[functions.gateway-payout-status-poll]
+verify_jwt = false
