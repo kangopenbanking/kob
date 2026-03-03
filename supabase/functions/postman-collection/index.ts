@@ -911,6 +911,90 @@ Deno.serve(async (req) => {
           }),
         ],
       },
+
+      // ── OAuth Extensions ────────────────────────────────────────────
+      {
+        name: 'OAuth Extensions',
+        item: [
+          r('Revoke Token', 'POST', '/v1/oauth/revoke', {
+            bodyMode: 'urlencoded',
+            urlencoded: [
+              { key: 'token', value: '{{access_token}}' },
+              { key: 'token_type_hint', value: 'access_token' },
+              { key: 'client_id', value: 'YOUR_CLIENT_ID' },
+              { key: 'client_secret', value: 'YOUR_CLIENT_SECRET' },
+            ],
+            desc: 'Revoke an access or refresh token (RFC 7009)',
+          }),
+          r('UserInfo', 'GET', '/v1/oauth/userinfo', {
+            desc: 'OpenID Connect UserInfo endpoint — returns claims for the authenticated user',
+          }),
+        ],
+      },
+
+      // ── Consumer Tools ──────────────────────────────────────────────
+      {
+        name: 'Consumer Tools',
+        item: [
+          r('Create Piggy Bank', 'POST', '/v1/consumer/piggybank', {
+            body: { name: 'Emergency Fund', target_amount: 500000, currency: 'XAF', frequency: 'monthly', contribution_amount: 25000 },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Create a personal savings goal (Piggy Bank)',
+          }),
+          r('Pay Piggy Bank', 'POST', '/v1/consumer/piggybank/pay', {
+            body: { piggybank_id: 'PIGGYBANK_UUID', amount: 25000 },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Contribute to a savings goal. Impacts credit score positively.',
+          }),
+          r('Create Njangi Group', 'POST', '/v1/consumer/njangi', {
+            body: { name: 'Office Njangi', contribution_amount: 25000, currency: 'XAF', frequency: 'monthly', max_members: 10, payout_method: 'random' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Create a rotating savings circle (tontine)',
+          }),
+          r('Join Njangi Group', 'POST', '/v1/consumer/njangi/join', {
+            body: { group_id: 'GROUP_UUID' },
+          }),
+          r('Njangi Contribution', 'POST', '/v1/consumer/njangi/contribute', {
+            body: { group_id: 'GROUP_UUID', amount: 25000 },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Submit a contribution to the group pot',
+          }),
+          r('Njangi Payout', 'POST', '/v1/consumer/njangi/payout', {
+            body: { group_id: 'GROUP_UUID' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Disburse the accumulated pot to the next eligible member',
+          }),
+        ],
+      },
+
+      // ── Funding Intents ─────────────────────────────────────────────
+      {
+        name: 'Funding Intents',
+        item: [
+          r('Create Funding Intent', 'POST', '/v1/gateway/funding-intents', {
+            body: { amount: 50000, currency: 'XAF', source: 'stripe' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Funding Intents', 'GET', '/v1/gateway/funding-intents', {
+            query: [{ key: 'status', value: 'pending' }],
+          }),
+          r('Get Funding Intent', 'GET', '/v1/gateway/funding-intents/{{funding_intent_id}}'),
+          r('Cancel Funding Intent', 'POST', '/v1/gateway/funding-intents/{{funding_intent_id}}/cancel'),
+          r('Confirm Funding Intent', 'POST', '/v1/gateway/funding-intents/{{funding_intent_id}}/confirm'),
+        ],
+      },
+
+      // ── Teller Operations ───────────────────────────────────────────
+      {
+        name: 'Teller Operations',
+        item: [
+          r('Teller Transaction', 'POST', '/v1/teller/transaction', {
+            body: { account_id: '{{account_id}}', amount: 100000, transaction_type: 'deposit', narration: 'Cash deposit at branch', branch_id: '{{branch_id}}' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Process a cash deposit or withdrawal at a bank branch',
+          }),
+        ],
+      },
     ],
   };
 

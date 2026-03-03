@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -18,14 +17,13 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Real-time health checks for external services
     async function checkFlutterwaveHealth(): Promise<boolean> {
       try {
+        const secretKey = Deno.env.get('FLUTTERWAVE_SECRET_KEY');
+        if (!secretKey) return false;
         const response = await fetch('https://api.flutterwave.com/v3/banks/NG', {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${Deno.env.get('FLUTTERWAVE_SECRET_KEY')}`
-          },
+          headers: { 'Authorization': `Bearer ${secretKey}` },
           signal: AbortSignal.timeout(5000)
         });
         return response.ok;
@@ -38,27 +36,14 @@ serve(async (req) => {
       try {
         const baseUrl = Deno.env.get('CARDYFIE_BASE_URL');
         const apiKey = Deno.env.get('CARDYFIE_API_KEY');
-        console.log('Cardyfie health check - baseUrl:', baseUrl ? `${baseUrl.substring(0, 30)}...` : 'NOT SET');
-        console.log('Cardyfie health check - apiKey:', apiKey ? `${apiKey.substring(0, 8)}...` : 'NOT SET');
         if (!baseUrl || !apiKey) return false;
-        const url = `${baseUrl}/card/currencies`;
-        console.log('Cardyfie health check URL:', url);
-        const response = await fetch(url, {
+        const response = await fetch(`${baseUrl}/card/currencies`, {
           method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Accept': 'application/json',
-          },
+          headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' },
           signal: AbortSignal.timeout(5000)
         });
-        console.log('Cardyfie health check response:', response.status, response.statusText);
-        if (!response.ok) {
-          const body = await response.text();
-          console.log('Cardyfie error body:', body.substring(0, 500));
-        }
         return response.ok;
-      } catch (err) {
-        console.error('Cardyfie health check error:', err);
+      } catch {
         return false;
       }
     }
@@ -72,29 +57,61 @@ serve(async (req) => {
       }
     }
 
-    // Execute health checks in parallel
-    const [flutterwaveOk, cardyfieOk, dbOk] = await Promise.all([
+    async function checkOAuthHealth(): Promise<boolean> {
+      try {
+        const response = await fetch(`${supabaseUrl}/functions/v1/oidc-config`, {
+          method: 'GET',
+          signal: AbortSignal.timeout(5000)
+        });
+        return response.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    async function checkAispHealth(): Promise<boolean> {
+      try {
+        const { error } = await supabase.from('aisp_consents').select('count').limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    }
+
+    async function checkPispHealth(): Promise<boolean> {
+      try {
+        const { error } = await supabase.from('pisp_consents').select('count').limit(1);
+        return !error;
+      } catch {
+        return false;
+      }
+    }
+
+    const [flutterwaveOk, cardyfieOk, dbOk, oauthOk, aispOk, pispOk] = await Promise.all([
       checkFlutterwaveHealth(),
       checkCardyfieHealth(),
-      checkDatabaseHealth()
+      checkDatabaseHealth(),
+      checkOAuthHealth(),
+      checkAispHealth(),
+      checkPispHealth()
     ]);
 
-    const allServicesOk = flutterwaveOk && cardyfieOk && dbOk;
+    const allServicesOk = flutterwaveOk && cardyfieOk && dbOk && oauthOk && aispOk && pispOk;
 
     const health = {
       status: allServicesOk ? 'operational' : 'degraded',
       version: '1.0.0',
       timestamp: new Date().toISOString(),
       services: {
-        oauth: 'operational',
-        aisp: 'operational',
-        pisp: 'operational',
-        certificates: 'operational',
+        oauth: oauthOk ? 'operational' : 'degraded',
+        aisp: aispOk ? 'operational' : 'degraded',
+        pisp: pispOk ? 'operational' : 'degraded',
+        certificates: dbOk ? 'operational' : 'degraded',
         mobile_money: flutterwaveOk ? 'operational' : 'degraded',
         banking: flutterwaveOk ? 'operational' : 'degraded',
         credit_scoring: dbOk ? 'operational' : 'degraded',
         virtual_cards: cardyfieOk ? 'operational' : 'degraded',
-        webhooks: 'operational',
+        webhooks: dbOk ? 'operational' : 'degraded',
         database: dbOk ? 'operational' : 'degraded'
       },
       documentation: {
@@ -125,11 +142,10 @@ serve(async (req) => {
       headers: {
         ...corsHeaders,
         'Content-Type': 'application/json',
-        'Cache-Control': 'public, max-age=300', // 5 minutes
+        'Cache-Control': 'public, max-age=300',
       },
     });
   } catch (error) {
-    console.error('Health check error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     return new Response(
