@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
-const KANG_INSTITUTION_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
+const KANG_INSTITUTION_ID = KANG_PLATFORM_ID;
 
 /**
  * Ensures the current user has a Kang wallet account in the `accounts` table.

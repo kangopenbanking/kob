@@ -39,7 +39,7 @@ interface RecentBill {
 
 const recentBills: RecentBill[] = [];
 
-const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
 
 const CustomerBills: React.FC = () => {
   const navigate = useNavigate();

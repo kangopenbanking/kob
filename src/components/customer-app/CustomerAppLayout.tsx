@@ -49,7 +49,7 @@ const CustomerAppInner: React.FC = () => {
 export const CustomerAppLayout: React.FC = () => {
   return (
     <CustomerAppAuthGuard>
-      <SessionGuard logoutPath="/app/auth" appName="Kang">
+      <SessionGuard logoutPath="/app/auth" appName="Kang" appContext="customer">
         <CustomerTenantProvider>
           <CustomerAppInner />
         </CustomerTenantProvider>

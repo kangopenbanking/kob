@@ -11377,6 +11377,7 @@ export type Database = {
       }
       user_active_sessions: {
         Row: {
+          app_context: string
           created_at: string | null
           device_info: string | null
           id: string
@@ -11385,6 +11386,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          app_context?: string
           created_at?: string | null
           device_info?: string | null
           id?: string
@@ -11393,6 +11395,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          app_context?: string
           created_at?: string | null
           device_info?: string | null
           id?: string

@@ -16,6 +16,8 @@ interface Props {
   logoutPath?: string;
   /** App label shown in the popup */
   appName?: string;
+  /** App context for session isolation (e.g. 'customer', 'banking:institutionId') */
+  appContext?: string;
 }
 
 /**
@@ -27,6 +29,7 @@ export const SessionGuard: React.FC<Props> = ({
   children,
   logoutPath = '/auth',
   appName = 'Kang',
+  appContext = 'customer',
 }) => {
   const navigate = useNavigate();
   const [showWarning, setShowWarning] = useState(false);
@@ -47,7 +50,7 @@ export const SessionGuard: React.FC<Props> = ({
 
       const deviceInfo = `${navigator.userAgent.slice(0, 80)} | ${new Date().toISOString()}`;
       await supabase.functions.invoke('enforce-single-session', {
-        body: { session_id: sid, device_info: deviceInfo },
+        body: { session_id: sid, device_info: deviceInfo, app_context: appContext },
       });
     } catch (e) {
       console.error('Session registration error:', e);
@@ -78,6 +81,7 @@ export const SessionGuard: React.FC<Props> = ({
         .from('user_active_sessions')
         .select('session_id')
         .eq('user_id', user.id)
+        .eq('app_context', appContext)
         .order('last_active_at', { ascending: false })
         .limit(1);
 

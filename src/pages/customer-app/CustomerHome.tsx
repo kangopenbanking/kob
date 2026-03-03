@@ -91,7 +91,7 @@ const CustomerHome: React.FC = () => {
   const navigate = useNavigate();
   const tenant = useCustomerTenant();
   const { user } = useCustomerAuth();
-  const { unreadCount } = useNotifications();
+  const { unreadCount } = useNotifications(undefined, false, true);
   const [balanceVisible, setBalanceVisible] = useState(true);
   const [period, setPeriod] = useState<'W' | 'M' | 'Y'>('M');
 

@@ -10,7 +10,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
-const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
 
 const iconMap: Record<string, { icon: React.ElementType; color: string; iconColor: string }> = {
   bank_account: { icon: Building2, color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]' },

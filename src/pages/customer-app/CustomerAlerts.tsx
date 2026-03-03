@@ -40,7 +40,7 @@ const alertColor: Record<AlertType, string> = {
 
 const CustomerAlerts: React.FC = () => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead } = useNotifications(undefined, false, true);
   const [filter, setFilter] = useState<AlertType | 'all'>('all');
 
   const mapped = notifications.map(n => ({

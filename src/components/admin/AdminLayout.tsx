@@ -35,7 +35,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   };
 
   return (
-    <SessionGuard logoutPath="/auth" appName="KOB Admin">
+    <SessionGuard logoutPath="/auth" appName="KOB Admin" appContext="admin">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r" collapsible="icon">

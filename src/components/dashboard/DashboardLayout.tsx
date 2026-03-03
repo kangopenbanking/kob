@@ -83,7 +83,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   };
 
   return (
-    <SessionGuard logoutPath="/auth" appName="Kang Dashboard">
+    <SessionGuard logoutPath="/auth" appName="Kang Dashboard" appContext="dashboard">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r" collapsible="icon">

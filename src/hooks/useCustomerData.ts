@@ -127,16 +127,20 @@ export function useCardTransactions(userId?: string, limit = 10) {
 }
 
 // ─── Savings / Piggy Bank ───
-export function useCustomerSavings(userId?: string) {
+export function useCustomerSavings(userId?: string, institutionId?: string) {
   return useQuery({
-    queryKey: ['customer-savings', userId],
+    queryKey: ['customer-savings', userId, institutionId],
     enabled: !!userId,
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('savings_accounts')
         .select('id, account_name, current_balance, target_amount, savings_type, status, target_date')
         .eq('user_id', userId!)
-        .eq('status', 'active');
+        .eq('status', 'active') as any;
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
