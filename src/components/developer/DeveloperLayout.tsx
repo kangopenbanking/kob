@@ -163,7 +163,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
   const isActivePath = (path: string) => location.pathname === path;
 
   return (
-    <SessionGuard logoutPath="/auth" appName="Developer Portal">
+    <SessionGuard logoutPath="/auth" appName="Developer Portal" appContext="developer">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r">

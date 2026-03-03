@@ -100,8 +100,7 @@ const defaultSectionOrder: CustomerSectionKey[] = [
   'recent_activities',
 ];
 
-// Kang platform ID — the main institution that owns the unified Customer App
-const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
 
 const defaultHeroActionColors: HeroActionColors = {
   accounts: '#ffffff',

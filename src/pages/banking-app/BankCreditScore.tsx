@@ -12,6 +12,13 @@ function getScoreLabel(score: number): string {
   return 'Poor';
 }
 
+// Customer-only event types that should NOT appear in the Banking App
+const CUSTOMER_ONLY_PREFIXES = ['PIGGYBANK_', 'NJANGI_', 'RENT_'];
+
+function isCustomerOnlyEvent(type: string): boolean {
+  return CUSTOMER_ONLY_PREFIXES.some(prefix => type.startsWith(prefix));
+}
+
 function eventTypeLabel(type: string): string {
   const map: Record<string, string> = {
     LOAN_REPAYMENT_ON_TIME: 'On-time Payment',
@@ -21,15 +28,6 @@ function eventTypeLabel(type: string): string {
     SAVINGS_DEPOSIT: 'Savings Deposit',
     SAVINGS_WITHDRAWAL: 'Savings Withdrawal',
     LOAN_DEFAULTED: 'Loan Default',
-    PIGGYBANK_PAYMENT_ON_TIME: 'Piggy Bank On-time',
-    PIGGYBANK_PAYMENT_LATE: 'Piggy Bank Late',
-    PIGGYBANK_PAYMENT_MISSED: 'Piggy Bank Missed',
-    NJANGI_CONTRIBUTION_ON_TIME: 'Njangi On-time',
-    NJANGI_CONTRIBUTION_LATE: 'Njangi Late',
-    NJANGI_CONTRIBUTION_MISSED: 'Njangi Missed',
-    RENT_PAYMENT_ON_TIME: 'Rent On-time',
-    RENT_PAYMENT_LATE: 'Rent Late',
-    RENT_PAYMENT_MISSED: 'Rent Missed',
   };
   return map[type] || type.replace(/_/g, ' ');
 }
@@ -63,7 +61,7 @@ const BankCreditScore: React.FC = () => {
   const isEventSourced = creditData?.source === 'event_sourced';
 
   // Event-sourced factors from credit-score-engine
-  const eventFactors = isEventSourced && Array.isArray(apiFactors) ? apiFactors : null;
+  const eventFactors = isEventSourced && Array.isArray(apiFactors) ? apiFactors.filter((f: any) => !isCustomerOnlyEvent(f.event_type || '')) : null;
 
   // Legacy factors
   const legacyFactors = !isEventSourced && apiFactors ? [
@@ -74,7 +72,7 @@ const BankCreditScore: React.FC = () => {
   ] : null;
 
   const factors = legacyFactors || defaultFactors;
-  const recentEvents = creditData?.recent_events || [];
+  const recentEvents = (creditData?.recent_events || []).filter((e: any) => !isCustomerOnlyEvent(e.event_type || ''));
 
   const factorColors = [
     { color: 'bg-[hsl(var(--bank-mint))]', fg: 'text-[hsl(var(--bank-mint-fg))]' },
@@ -226,9 +224,6 @@ const BankCreditScore: React.FC = () => {
                     <span className="text-xs font-medium text-muted-foreground">
                       {event.event_type?.startsWith('LOAN_') ? 'Loan' :
                        event.event_type?.startsWith('SAVINGS_') ? 'Savings' :
-                       event.event_type?.startsWith('PIGGYBANK_') ? 'Piggy Bank' :
-                       event.event_type?.startsWith('NJANGI_') ? 'Njangi' :
-                       event.event_type?.startsWith('RENT_') ? 'Rent' :
                        event.source === 'loans_service' ? 'Loan' :
                        event.source === 'savings_service' ? 'Savings' : 'System'}
                     </span>

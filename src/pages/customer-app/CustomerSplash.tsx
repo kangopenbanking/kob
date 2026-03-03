@@ -56,14 +56,10 @@ const CustomerSplashInner: React.FC = () => {
   );
 };
 
-import { TenantProvider } from '@/components/pwa/TenantProvider';
-
 const CustomerSplash: React.FC = () => {
   return (
     <CustomerTenantProvider>
-      <TenantProvider>
-        <CustomerSplashInner />
-      </TenantProvider>
+      <CustomerSplashInner />
     </CustomerTenantProvider>
   );
 };

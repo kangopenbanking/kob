@@ -32,7 +32,8 @@ Deno.serve(async (req) => {
     }
 
     const userId = claimsData.user.id
-    const { session_id, device_info } = await req.json()
+    const { session_id, device_info, app_context } = await req.json()
+    const ctx = app_context || 'customer'
 
     if (!session_id) {
       return new Response(JSON.stringify({ error: 'session_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
@@ -41,11 +42,12 @@ Deno.serve(async (req) => {
     // Use service role client for admin operations
     const adminClient = createClient(supabaseUrl, serviceRoleKey)
 
-    // 1. Get all existing sessions for this user
+    // 1. Get all existing sessions for this user in the same app context
     const { data: existingSessions } = await adminClient
       .from('user_active_sessions')
       .select('id, session_id')
       .eq('user_id', userId)
+      .eq('app_context', ctx)
 
     // 2. Delete old sessions from the table
     if (existingSessions && existingSessions.length > 0) {
@@ -75,6 +77,7 @@ Deno.serve(async (req) => {
         session_id,
         device_info: device_info || null,
         last_active_at: new Date().toISOString(),
+        app_context: ctx,
       }, { onConflict: 'session_id' })
 
     if (insertError) {

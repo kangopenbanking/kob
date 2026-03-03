@@ -41,7 +41,7 @@ const BANKING_NOTIFICATION_ICONS = [
   'loan', 'savings', 'card', 'transfer', 'payment',
 ];
 
-export function useNotifications(institutionId?: string, bankingOnly = false) {
+export function useNotifications(institutionId?: string, bankingOnly = false, customerOnly = false) {
   const queryClient = useQueryClient();
   const [userId, setUserId] = useState<string | null>(null);
   const pusherRef = useRef<Pusher | null>(null);
@@ -55,7 +55,7 @@ export function useNotifications(institutionId?: string, bankingOnly = false) {
 
   // Fetch notifications from DB
   const { data: notifications = [], isLoading } = useQuery({
-    queryKey: ['app-notifications', userId, institutionId, bankingOnly],
+    queryKey: ['app-notifications', userId, institutionId, bankingOnly, customerOnly],
     enabled: !!userId,
     queryFn: async (): Promise<AppNotification[]> => {
       let query = supabase
@@ -74,6 +74,13 @@ export function useNotifications(institutionId?: string, bankingOnly = false) {
         query = query.in('icon', BANKING_NOTIFICATION_ICONS);
       }
 
+      // When customerOnly is true, exclude institution-scoped notifications
+      // (notifications from banking apps that have a non-null institution_id
+      // different from the Kang platform)
+      if (customerOnly) {
+        query = query.or('institution_id.is.null,institution_id.eq.f493095b-037a-40cf-82bc-3a3ab74550dd');
+      }
+
       const { data, error } = await query;
       if (error) throw error;
       return (data || []) as unknown as AppNotification[];
@@ -87,7 +94,7 @@ export function useNotifications(institutionId?: string, bankingOnly = false) {
     if (!userId) return;
 
     const invalidate = () => {
-      queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId, bankingOnly] });
+      queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId, bankingOnly, customerOnly] });
     };
 
     // Setup Pusher
@@ -130,7 +137,7 @@ export function useNotifications(institutionId?: string, bankingOnly = false) {
       }
       supabase.removeChannel(realtimeChannel);
     };
-  }, [userId, institutionId, bankingOnly, queryClient]);
+  }, [userId, institutionId, bankingOnly, customerOnly, queryClient]);
 
   // Mark as read
   const markAsRead = useCallback(async (notificationId: string) => {
@@ -138,8 +145,8 @@ export function useNotifications(institutionId?: string, bankingOnly = false) {
       .from('app_notifications')
       .update({ is_read: true } as any)
       .eq('id', notificationId);
-    queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId, bankingOnly] });
-  }, [userId, institutionId, bankingOnly, queryClient]);
+    queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId, bankingOnly, customerOnly] });
+  }, [userId, institutionId, bankingOnly, customerOnly, queryClient]);
 
   const markAllAsRead = useCallback(async () => {
     if (!userId) return;
@@ -152,8 +159,8 @@ export function useNotifications(institutionId?: string, bankingOnly = false) {
       query = query.eq('institution_id', institutionId);
     }
     await query;
-    queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId, bankingOnly] });
-  }, [userId, institutionId, bankingOnly, queryClient]);
+    queryClient.invalidateQueries({ queryKey: ['app-notifications', userId, institutionId, bankingOnly, customerOnly] });
+  }, [userId, institutionId, bankingOnly, customerOnly, queryClient]);
 
   return {
     notifications,
