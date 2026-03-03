@@ -1,21 +1,21 @@
 {
-  "name": "Kang Open Banking",
-  "short_name": "KOB",
-  "description": "Unified Banking API for Cameroon",
-  "start_url": "/",
+  "name": "Kang",
+  "short_name": "Kang",
+  "description": "Your money, your way",
+  "start_url": "/app",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#0EA5E9",
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/kob-logo.png",
+      "src": "/kang-app-logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/kob-logo.png",
+      "src": "/kang-app-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"

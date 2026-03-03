@@ -138,6 +138,26 @@ const InstitutionAppUrls: React.FC = () => {
         </Table>
       </div>
 
+      <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+        <div className="flex items-center gap-3">
+          <img src="/kang-app-logo.png" alt="Kang" className="h-8 w-8 rounded-md object-contain" />
+          <div>
+            <p className="text-sm font-semibold text-foreground">Kang Consumer App</p>
+            <code className="rounded bg-muted px-2 py-1 text-xs text-foreground">https://kangopenbanking.com/app</code>
+          </div>
+          <div className="ml-auto flex gap-2">
+            <Button variant="outline" size="icon" onClick={async () => { await navigator.clipboard.writeText('https://kangopenbanking.com/app'); toast.success('Kang app URL copied'); }} title="Copy URL">
+              <Copy className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" asChild title="Open Kang App">
+              <a href="https://kangopenbanking.com/app" target="_blank" rel="noopener noreferrer">
+                <ExternalLink className="h-4 w-4" />
+              </a>
+            </Button>
+          </div>
+        </div>
+      </div>
+
       <p className="text-xs text-muted-foreground">
         Showing {filtered.length} institution{filtered.length !== 1 ? 's' : ''}. Each URL launches the institution-branded PWA onboarding flow.
       </p>
