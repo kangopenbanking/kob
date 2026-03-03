@@ -1,83 +1,38 @@
 
-# KOB v1 API Full Audit — Execution Report
 
-## Status: ✅ Phases 1-3 Complete
+# Add Country Support for Turkey, Ghana, Rwanda, South Africa, Mali, Burkina Faso, Kenya, and UAE
 
----
+## Summary
 
-## What Was Fixed
+The country code list is duplicated across 5 files. Each needs the 8 new countries added. Additionally, a Cameroon-specific phone validator needs to be generalized.
 
-### Phase 1: Critical OIDC/JWKS Issues ✅
+## Changes
 
-1. **OIDC Discovery (`oidc-config`)** — All 6 issues fixed:
-   - ✅ Added `client_credentials` to `grant_types_supported`
-   - ✅ Removed `plain` from `code_challenge_methods_supported` (S256 only)
-   - ✅ Fixed `introspection_endpoint` → `.../functions/v1/oauth-introspect`
-   - ✅ Fixed `revocation_endpoint` → `.../functions/v1/oauth-revoke` (new endpoint created)
-   - ✅ Fixed `userinfo_endpoint` → `.../functions/v1/userinfo` (new endpoint created)
-   - ✅ Fixed `service_documentation` → `https://kangopenbanking.com/documentation`
+### 1. Create shared country codes constant (`src/lib/country-codes.ts`)
+Extract the duplicated `COUNTRY_CODES` into a single shared file. The new unified list will include all existing countries plus:
 
-2. **JWKS Endpoint** — ✅ Fixed:
-   - Auto-generates RSA 2048-bit key pair on first request if `signing_keys` table is empty
-   - Stores public (n, e) and private key components in database
-   - Now returns valid JWK set — verified live: `kid: kob-1772540249045`
+| Country | Code | Flag |
+|---------|------|------|
+| Turkey | +90 | 🇹🇷 |
+| Ghana | +233 | 🇬🇭 |
+| Rwanda | +250 | 🇷🇼 |
+| South Africa | +27 | 🇿🇦 |
+| Mali | +223 | 🇲🇱 |
+| Burkina Faso | +226 | 🇧🇫 |
+| Kenya | +254 | 🇰🇪 |
+| UAE | +971 | 🇦🇪 |
 
-3. **New Edge Functions Created:**
-   - ✅ `userinfo` — OpenID Connect UserInfo endpoint (RFC compliant)
-   - ✅ `oauth-revoke` — Token revocation endpoint (RFC 7009 compliant)
+### 2. Update 5 files to import from shared module
+Remove the local `COUNTRY_CODES` definition and import from `@/lib/country-codes` in:
+- `src/pages/Auth.tsx`
+- `src/pages/ProfileSettings.tsx`
+- `src/pages/customer-app/CustomerAuth.tsx`
+- `src/components/pwa/MobileAuthForm.tsx`
+- `src/components/pwa/AccountApplication.tsx`
 
-### Phase 2: OpenAPI Spec + Postman Collection ✅
+### 3. Generalize phone validation in `CustomerLinkedAccounts.tsx`
+The `validateCameroonPhone` function currently only validates Cameroon (+237) numbers. It will be updated to accept any international phone format matching the supported country codes.
 
-4. **OpenAPI Spec (`public-api-spec`)** — Added 15+ new paths:
-   - ✅ `/v1/oauth/revoke` — Token revocation
-   - ✅ `/v1/oauth/userinfo` — UserInfo endpoint
-   - ✅ `/v1/consumer/piggybank` — Create savings goal
-   - ✅ `/v1/consumer/piggybank/pay` — Piggy bank contribution
-   - ✅ `/v1/consumer/njangi` — Create Njangi group
-   - ✅ `/v1/consumer/njangi/join` — Join group
-   - ✅ `/v1/consumer/njangi/contribute` — Make contribution
-   - ✅ `/v1/consumer/njangi/payout` — Trigger payout
-   - ✅ `/v1/gateway/funding-intents` (POST + GET) — Create & list
-   - ✅ `/v1/gateway/funding-intents/{id}` — Get intent
-   - ✅ `/v1/gateway/funding-intents/{id}/cancel` — Cancel
-   - ✅ `/v1/gateway/funding-intents/{id}/confirm` — Confirm
-   - ✅ `/v1/teller/transaction` — Teller operations
-   - ✅ Added `Consumer Tools` tag to spec
-   - ✅ Added `contact` and `license` to spec info block
+### 4. Edge function compatibility
+The backend edge functions (`institution-register`, `phone-auth-send-otp`) already use the generic international format regex `^\+[1-9]\d{6,14}$`, so all new country phone numbers are already supported server-side. No backend changes needed.
 
-5. **Postman Collection (`postman-collection`)** — Added 4 new folders:
-   - ✅ OAuth Extensions (Revoke Token, UserInfo)
-   - ✅ Consumer Tools (Piggy Bank create/pay, Njangi create/join/contribute/payout)
-   - ✅ Funding Intents (create/list/get/cancel/confirm)
-   - ✅ Teller Operations (teller transaction)
-
-### Phase 3: API Health & Security ✅
-
-6. **`api-health` endpoint** — Hardened:
-   - ✅ Removed ALL console.log statements that leaked API key prefixes
-   - ✅ Added real health checks for OAuth (hits OIDC config endpoint)
-   - ✅ Added real health checks for AISP (queries aisp_consents table)
-   - ✅ Added real health checks for PISP (queries pisp_consents table)
-   - ✅ Certificates and webhooks now check DB connectivity instead of hardcoded "operational"
-
----
-
-## Updated Market Readiness Assessment
-
-| Domain | Before | After | Notes |
-|--------|--------|-------|-------|
-| OAuth 2.0 / OIDC | ❌ Not Ready | ✅ Ready | Discovery fixed, JWKS populated, revoke + userinfo created |
-| AISP | ✅ Ready | ✅ Ready | No changes needed |
-| PISP | ✅ Ready | ✅ Ready | No changes needed |
-| Payment Gateway | ⚠️ Partial | ✅ Ready | Funding intents + teller documented |
-| Credit Scoring | ✅ Ready | ✅ Ready | No changes needed |
-| Banking Operations | ✅ Ready | ✅ Ready | No changes needed |
-| Mobile Money | ✅ Ready | ✅ Ready | No changes needed |
-| Virtual Cards | ❌ Not Ready | ⚠️ Degraded | Cardyfie secrets exist but provider may be down — monitor |
-| ISO 20022 / SWIFT | ✅ Ready | ✅ Ready | No changes needed |
-| WooCommerce | ✅ Ready | ✅ Ready | No changes needed |
-| API Documentation | ❌ Not Ready | ✅ Ready | OpenAPI + Postman fully synced |
-| Multi-Tenancy Apps | ✅ Ready | ✅ Ready | Consumer tools now documented |
-| Security | ✅ Ready | ✅ Ready | API key leak in health endpoint fixed |
-
-**Overall Verdict: The API is now approximately 97% market-ready.** The only remaining concern is the Virtual Cards service (Cardyfie provider), which has valid secrets configured but may have an external provider issue. All other domains are production-ready.
