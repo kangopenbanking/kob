@@ -66,7 +66,7 @@
 - **Edge Functions**: Deploy automatically via Lovable Cloud on file write
 - **Database**: Managed by Lovable Cloud; migrations in `supabase/migrations/`
 - **Preview**: https://id-preview--342820e7-280a-44d3-88ce-2854c6d907ed.lovable.app
-- **Published**: https://kob.lovable.app
+- **Published**: https://kangopenbanking.com
 
 ---
 
