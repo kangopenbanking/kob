@@ -242,8 +242,10 @@ export default function HomepageHeroManager() {
                   <Label>Overlay Opacity: {Math.round((slide.overlay_opacity ?? 0.4) * 100)}%</Label>
                   <Slider
                     value={[(slide.overlay_opacity ?? 0.4) * 100]}
+                    min={0}
                     max={100}
                     step={5}
+                    onValueChange={(v) => setSlides(prev => prev.map(s => s.id === slide.id ? { ...s, overlay_opacity: v[0] / 100 } : s))}
                     onValueCommit={(v) => updateSlide(slide.id, { overlay_opacity: v[0] / 100 })}
                     className="mt-2"
                   />
