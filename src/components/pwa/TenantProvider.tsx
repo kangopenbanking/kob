@@ -77,6 +77,7 @@ interface TenantBranding {
   cardColors: CardColors;
   supportPhone: string;
   supportEmail: string;
+  fontSizeMultiplier: number;
 }
 
 const defaultFeatures: AppFeatures = {
@@ -113,6 +114,7 @@ const defaultBranding: TenantBranding = {
   cardColors: {},
   supportPhone: '',
   supportEmail: '',
+  fontSizeMultiplier: 0.7,
 };
 
 const TenantContext = createContext<TenantBranding>(defaultBranding);
@@ -177,6 +179,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         cardColors,
         supportPhone,
         supportEmail,
+        fontSizeMultiplier: typeof appConfig.font_size_multiplier === 'number' ? appConfig.font_size_multiplier : 0.7,
       });
     };
 
