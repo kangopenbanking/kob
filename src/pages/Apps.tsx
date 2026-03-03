@@ -155,9 +155,9 @@ export default function Apps() {
             </motion.p>
             <motion.h1 variants={fadeUp} custom={1} className="mx-auto max-w-3xl text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
               One Platform, Every{' '}
-              <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-green-400 bg-clip-text text-transparent">
+               <span className="text-blue-400">
                 Bank's Own App
-              </span>
+               </span>
             </motion.h1>
             <motion.p variants={fadeUp} custom={2} className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
               Each institution gets a fully branded PWA — same powerful codebase, unique identity.
@@ -169,7 +169,7 @@ export default function Apps() {
                   Launch Banking Demo <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="border-white/20 text-white hover:bg-white/5 rounded-xl px-8" asChild>
+              <Button size="lg" className="bg-slate-800 hover:bg-slate-700 text-white border border-white/10 rounded-xl px-8" asChild>
                 <Link to="/register">Register Institution</Link>
               </Button>
             </motion.div>
