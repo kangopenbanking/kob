@@ -69,6 +69,7 @@ interface CustomerTenantBranding {
   heroBgImage: string | null;
   heroMediaType: 'image' | 'video' | '';
   heroActionColors: HeroActionColors;
+  heroActionOpacity: number;
   typographyConfig: TypographyConfig;
 }
 
@@ -135,6 +136,7 @@ const defaultBranding: CustomerTenantBranding = {
   heroBgImage: null,
   heroMediaType: '',
   heroActionColors: defaultHeroActionColors,
+  heroActionOpacity: 0.8,
   typographyConfig: defaultTypographyConfig,
 };
 
@@ -181,6 +183,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const heroBgImage: string | null = customerConfig.hero_bg_image || null;
       const heroMediaType: 'image' | 'video' | '' = customerConfig.hero_media_type || '';
       const heroActionColors: HeroActionColors = { ...defaultHeroActionColors, ...(customerConfig.hero_action_colors || {}) };
+      const heroActionOpacity: number = customerConfig.hero_action_opacity ?? 0.8;
       const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
 
       setBranding({
@@ -202,6 +205,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
         heroBgImage,
         heroMediaType,
         heroActionColors,
+        heroActionOpacity,
         typographyConfig,
       });
     };
