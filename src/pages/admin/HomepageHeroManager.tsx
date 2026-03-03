@@ -25,6 +25,7 @@ interface HeroSlide {
   font_color: string | null;
   font_size: string | null;
   font_alignment: string | null;
+  subtitle_font_size: string | null;
   created_at: string;
 }
 
@@ -248,7 +249,7 @@ export default function HomepageHeroManager() {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-3 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <Label>Font Color</Label>
                     <div className="flex items-center gap-2 mt-1">
@@ -267,10 +268,27 @@ export default function HomepageHeroManager() {
                     </div>
                   </div>
                   <div>
-                    <Label>Font Size</Label>
+                    <Label>Title Size</Label>
                     <Select
                       value={slide.font_size || 'default'}
                       onValueChange={(v) => updateSlide(slide.id, { font_size: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                        <SelectItem value="xlarge">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Description Size</Label>
+                    <Select
+                      value={slide.subtitle_font_size || 'default'}
+                      onValueChange={(v) => updateSlide(slide.id, { subtitle_font_size: v })}
                     >
                       <SelectTrigger>
                         <SelectValue />
