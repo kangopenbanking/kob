@@ -2,7 +2,8 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import { Shield, TrendingUp, Bell, Target, Award, Users, ArrowRight, ChevronRight, Zap, PiggyBank, Home, BarChart3, CreditCard, Landmark, HandCoins, FileCheck, AlertTriangle, CheckCircle2, XCircle, Clock, Repeat, Search } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, useMotionValue, useTransform, animate } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
 import crediqHero from "@/assets/crediq-hero.jpg";
 import crediqCard from "@/assets/crediq-card.jpg";
 import crediqMobile from "@/assets/crediq-mobile.webp";
@@ -14,10 +15,10 @@ const fadeUp = {
 };
 
 const ecosystemItems = [
-  { icon: TrendingUp, label: "Loan Repayments", impact: "+5–15 pts", desc: "On-time payments boost your score" },
-  { icon: PiggyBank, label: "Piggy Bank Savings", impact: "+3–5 pts", desc: "Consistent saving habits rewarded" },
-  { icon: Users, label: "Njangi Contributions", impact: "+3–8 pts", desc: "Community savings build trust" },
-  { icon: Home, label: "Rent Reporting", impact: "+5–10 pts", desc: "Turn rent into credit history" },
+  { icon: TrendingUp, label: "Loan Repayments", impact: "+5–15 pts", desc: "On-time payments directly boost your score. Late payments reduce it.", detail: "35% of your total score weight", colorClass: "text-emerald-600", bgClass: "bg-emerald-500/5", borderClass: "border-emerald-500/20", iconBg: "bg-emerald-500/10" },
+  { icon: PiggyBank, label: "Piggy Bank Savings", impact: "+1–5 pts", desc: "Every deposit into personal or institutional savings plans is rewarded.", detail: "Capped at 10 pts/month", colorClass: "text-blue-600", bgClass: "bg-blue-500/5", borderClass: "border-blue-500/20", iconBg: "bg-blue-500/10" },
+  { icon: Users, label: "Njangi Contributions", impact: "+3–8 pts", desc: "On-time circle contributions build community trust and creditworthiness.", detail: "Late contributions cost −5 to −15", colorClass: "text-violet-600", bgClass: "bg-violet-500/5", borderClass: "border-violet-500/20", iconBg: "bg-violet-500/10" },
+  { icon: Home, label: "Rent Reporting", impact: "+5–10 pts", desc: "Turn your monthly rent into verifiable credit history via KRENTS codes.", detail: "Reported automatically each month", colorClass: "text-amber-600", bgClass: "bg-amber-500/5", borderClass: "border-amber-500/20", iconBg: "bg-amber-500/10" },
 ];
 
 const scoreWeights = [
@@ -30,6 +31,25 @@ const scoreWeights = [
 
 export default function CrediQ() {
   const navigate = useNavigate();
+  const [scoreCount, setScoreCount] = useState(0);
+  const targetScore = 742;
+  const scoreRef = useRef(false);
+
+  useEffect(() => {
+    if (scoreRef.current) return;
+    scoreRef.current = true;
+    let start = 0;
+    const duration = 2000;
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setScoreCount(Math.round(eased * targetScore));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, []);
 
   return (
     <Layout>
@@ -41,48 +61,105 @@ export default function CrediQ() {
             <div className="absolute inset-0 bg-foreground/60" />
           </div>
           <div className="relative container mx-auto px-4 py-28 md:py-40">
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              className="max-w-2xl space-y-6"
-            >
-              <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
-                <Shield className="h-4 w-4 text-white" strokeWidth={2} />
-                <span className="text-sm font-semibold text-white">Cameroon Credit Standard (CCS)</span>
+            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
+              <motion.div
+                initial="hidden"
+                animate="visible"
+                className="max-w-2xl space-y-6 flex-1"
+              >
+                <motion.div variants={fadeUp} custom={0} className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-2 backdrop-blur-sm">
+                  <Shield className="h-4 w-4 text-white" strokeWidth={2} />
+                  <span className="text-sm font-semibold text-white">Cameroon Credit Standard (CCS)</span>
+                </motion.div>
+
+                <motion.h1 variants={fadeUp} custom={1} className="text-4xl font-bold text-white sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">
+                  Know Your <br />CrediQ Score
+                </motion.h1>
+
+                <motion.p variants={fadeUp} custom={2} className="text-lg text-white/80 max-w-xl leading-relaxed">
+                  Your financial identity in Cameroon. A real-time credit score powered by your everyday activity—loans, savings, njangi, rent—opening doors to better opportunities.
+                </motion.p>
+
+                <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-3 pt-2">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/crediq/onboarding")}
+                    className="rounded-xl text-base px-8 gap-2"
+                  >
+                    Get Your Free Score <ArrowRight className="h-4 w-4" strokeWidth={2} />
+                  </Button>
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => navigate("/crediq/info")}
+                    className="rounded-xl text-base px-8 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
+                  >
+                    Learn More
+                  </Button>
+                </motion.div>
+
+                <motion.div variants={fadeUp} custom={4} className="flex items-center gap-6 pt-2 text-sm text-white/60">
+                  <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" strokeWidth={2} /> Bank-level security</span>
+                  <span className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" strokeWidth={2} /> 300–850 scale</span>
+                  <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5" strokeWidth={2} /> Free forever</span>
+                </motion.div>
               </motion.div>
 
-              <motion.h1 variants={fadeUp} custom={1} className="text-4xl font-bold text-white sm:text-5xl md:text-6xl lg:text-7xl leading-[1.08]">
-                Know Your <br />CrediQ Score
-              </motion.h1>
-
-              <motion.p variants={fadeUp} custom={2} className="text-lg text-white/80 max-w-xl leading-relaxed">
-                Your financial identity in Cameroon. A real-time credit score powered by your everyday activity—loans, savings, njangi, rent—opening doors to better opportunities.
-              </motion.p>
-
-              <motion.div variants={fadeUp} custom={3} className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Button
-                  size="lg"
-                  onClick={() => navigate("/crediq/onboarding")}
-                  className="rounded-xl text-base px-8 gap-2"
-                >
-                  Get Your Free Score <ArrowRight className="h-4 w-4" strokeWidth={2} />
-                </Button>
-                <Button
-                  size="lg"
-                  variant="outline"
-                  onClick={() => navigate("/crediq/info")}
-                  className="rounded-xl text-base px-8 border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
-                >
-                  Learn More
-                </Button>
+              {/* Donut Chart */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5, duration: 0.8, ease: "easeOut" }}
+                className="relative flex-shrink-0 hidden md:flex items-center justify-center"
+              >
+                <div className="relative w-[280px] h-[280px] lg:w-[320px] lg:h-[320px]">
+                  <svg viewBox="0 0 200 200" className="w-full h-full -rotate-90">
+                    {/* Background ring */}
+                    <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="18" />
+                    {/* Score segments */}
+                    {[
+                      { pct: 35, color: "hsl(150, 60%, 45%)", offset: 0 },
+                      { pct: 30, color: "hsl(210, 70%, 55%)", offset: 35 },
+                      { pct: 15, color: "hsl(270, 55%, 55%)", offset: 65 },
+                      { pct: 10, color: "hsl(40, 80%, 55%)", offset: 80 },
+                      { pct: 10, color: "hsl(0, 70%, 55%)", offset: 90 },
+                    ].map((seg, i) => {
+                      const circumference = 2 * Math.PI * 80;
+                      const segLength = (seg.pct / 100) * circumference;
+                      const segOffset = (seg.offset / 100) * circumference;
+                      return (
+                        <motion.circle
+                          key={i}
+                          cx="100" cy="100" r="80"
+                          fill="none"
+                          stroke={seg.color}
+                          strokeWidth="18"
+                          strokeLinecap="round"
+                          strokeDasharray={`${segLength - 4} ${circumference - segLength + 4}`}
+                          strokeDashoffset={-segOffset}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.8 + i * 0.15, duration: 0.5 }}
+                        />
+                      );
+                    })}
+                  </svg>
+                  {/* Center score */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center">
+                    <span className="text-5xl lg:text-6xl font-bold text-white tabular-nums">{scoreCount}</span>
+                    <span className="text-sm font-semibold text-emerald-400 mt-1">Very Good</span>
+                    <span className="text-xs text-white/50 mt-0.5">out of 850</span>
+                  </div>
+                </div>
+                {/* Legend */}
+                <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex gap-3 text-[10px] text-white/60 whitespace-nowrap">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: "hsl(150, 60%, 45%)" }} />Payment</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: "hsl(210, 70%, 55%)" }} />Utilization</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: "hsl(270, 55%, 55%)" }} />Age</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full" style={{ background: "hsl(40, 80%, 55%)" }} />Mix</span>
+                </div>
               </motion.div>
-
-              <motion.div variants={fadeUp} custom={4} className="flex items-center gap-6 pt-2 text-sm text-white/60">
-                <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" strokeWidth={2} /> Bank-level security</span>
-                <span className="flex items-center gap-1.5"><TrendingUp className="h-3.5 w-3.5" strokeWidth={2} /> 300–850 scale</span>
-                <span className="flex items-center gap-1.5"><Zap className="h-3.5 w-3.5" strokeWidth={2} /> Free forever</span>
-              </motion.div>
-            </motion.div>
+            </div>
           </div>
         </section>
 
@@ -151,14 +228,15 @@ export default function CrediQ() {
                     viewport={{ once: true }}
                     variants={fadeUp}
                     custom={i}
-                    className="rounded-2xl border border-border bg-background p-6 flex flex-col gap-3"
+                    className={`rounded-2xl border ${item.borderClass} ${item.bgClass} p-6 flex flex-col gap-3`}
                   >
-                    <div className="h-11 w-11 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <Icon className="h-5 w-5 text-primary" strokeWidth={2} />
+                    <div className={`h-11 w-11 rounded-xl ${item.iconBg} flex items-center justify-center`}>
+                      <Icon className={`h-5 w-5 ${item.colorClass}`} strokeWidth={2} />
                     </div>
                     <h3 className="font-semibold text-foreground">{item.label}</h3>
                     <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                    <span className="mt-auto text-sm font-bold text-primary">{item.impact}</span>
+                    <p className="text-xs text-muted-foreground/70 italic">{item.detail}</p>
+                    <span className={`mt-auto text-sm font-bold ${item.colorClass}`}>{item.impact}</span>
                   </motion.div>
                 );
               })}
