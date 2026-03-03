@@ -1,14 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Download, Smartphone, Wifi, WifiOff, Zap, Shield, Bell, ChevronRight, Check, X } from 'lucide-react';
+import { Download, ChevronRight, X, Share, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface PWAInstallPromptProps {
   onContinue: () => void;
+  /** App display name from admin config */
   appName?: string;
+  /** App logo from admin config */
   logoUrl?: string | null;
+  /** Accent/brand color from admin config */
   accentColor?: string;
-  appUrl?: string;
+  /** Short description or tagline from admin config */
+  tagline?: string;
+  /** Unique key to track install state per app (e.g. 'kang' or institutionId) */
+  appKey?: string;
+}
+
+const INSTALL_STORAGE_PREFIX = 'pwa_installed_';
+
+/** Check if the app is running in standalone / installed mode */
+function isStandaloneMode(): boolean {
+  return (
+    window.matchMedia('(display-mode: standalone)').matches ||
+    (window.navigator as any).standalone === true
+  );
+}
+
+/** Persist that the user has installed or dismissed the prompt */
+function markAsInstalled(appKey: string) {
+  try {
+    localStorage.setItem(`${INSTALL_STORAGE_PREFIX}${appKey}`, 'true');
+  } catch {}
+}
+
+/** Check if the user previously installed or dismissed */
+function wasInstalled(appKey: string): boolean {
+  try {
+    return localStorage.getItem(`${INSTALL_STORAGE_PREFIX}${appKey}`) === 'true';
+  } catch {
+    return false;
+  }
 }
 
 export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
@@ -16,211 +48,181 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   appName = 'App',
   logoUrl,
   accentColor,
-  appUrl,
+  tagline,
+  appKey = 'default',
 }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isInstalled, setIsInstalled] = useState(false);
   const [installing, setInstalling] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
 
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-  const isAndroid = /Android/.test(navigator.userAgent);
-  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
-    || (window.navigator as any).standalone === true;
+  const standalone = isStandaloneMode();
+  const alreadyInstalled = standalone || wasInstalled(appKey);
 
+  // If already installed or previously acknowledged, skip entirely
   useEffect(() => {
-    if (isStandalone) {
-      setIsInstalled(true);
-      return;
+    if (alreadyInstalled) {
+      onContinue();
     }
+  }, [alreadyInstalled, onContinue]);
 
+  // Capture beforeinstallprompt for Android/Chrome
+  useEffect(() => {
+    if (standalone) return;
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
     };
     window.addEventListener('beforeinstallprompt', handler);
 
-    const installed = () => setIsInstalled(true);
-    window.addEventListener('appinstalled', installed);
+    const onInstalled = () => {
+      markAsInstalled(appKey);
+      onContinue();
+    };
+    window.addEventListener('appinstalled', onInstalled);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
-      window.removeEventListener('appinstalled', installed);
+      window.removeEventListener('appinstalled', onInstalled);
     };
-  }, [isStandalone]);
+  }, [standalone, appKey, onContinue]);
 
-  const handleInstall = async () => {
+  const handleInstall = useCallback(async () => {
     if (deferredPrompt) {
       setInstalling(true);
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
-        setIsInstalled(true);
+        markAsInstalled(appKey);
+        onContinue();
       }
       setDeferredPrompt(null);
       setInstalling(false);
-    } else {
-      setShowInstructions(true);
+    } else if (isIOS) {
+      setShowIOSGuide(true);
     }
-  };
+  }, [deferredPrompt, appKey, isIOS, onContinue]);
 
-  const advantages = [
-    { icon: Zap, title: 'Lightning Fast', desc: 'Loads instantly, no app store delays' },
-    { icon: WifiOff, title: 'Works Offline', desc: 'Access your account even without internet' },
-    { icon: Shield, title: 'Secure & Private', desc: 'Same bank-grade security as web' },
-    { icon: Bell, title: 'Push Notifications', desc: 'Real-time alerts for transactions' },
-  ];
+  const handleSkip = useCallback(() => {
+    markAsInstalled(appKey);
+    onContinue();
+  }, [appKey, onContinue]);
 
-  const accentStyle = accentColor ? { backgroundColor: accentColor } : undefined;
+  const accentBg = accentColor || 'hsl(var(--primary))';
+  const accentStyle = { backgroundColor: accentBg };
 
-  if (isStandalone || isInstalled) {
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-6 py-12"
-      >
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
-          className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10"
-        >
-          <Check className="h-10 w-10 text-primary" />
-        </motion.div>
-        <h2 className="text-xl font-semibold text-foreground">App Installed!</h2>
-        <p className="text-center text-sm text-muted-foreground">
-          {appName} is ready on your device.
-        </p>
-        <Button onClick={onContinue} className="mt-4 w-full gap-2" size="lg" style={accentStyle}>
-          Continue <ChevronRight className="h-4 w-4" />
-        </Button>
-      </motion.div>
-    );
-  }
+  // Don't render while auto-skipping
+  if (alreadyInstalled) return null;
 
   return (
-    <div className="flex min-h-screen flex-col bg-background px-6 py-8">
-      {/* Skip */}
-      <div className="flex justify-end">
-        <Button variant="ghost" size="sm" onClick={onContinue} className="text-muted-foreground">
-          Skip for now
-        </Button>
-      </div>
-
-      {/* Hero */}
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-6">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mt-4 flex flex-col items-center gap-4"
+        initial={{ opacity: 0, scale: 0.95, y: 12 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: 'easeOut' }}
+        className="w-full max-w-sm rounded-3xl border border-border bg-card p-6 shadow-xl"
       >
-        {logoUrl ? (
-          <img src={logoUrl} alt={appName} className="h-16 w-16 rounded-2xl object-contain" />
-        ) : (
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-            <Smartphone className="h-8 w-8 text-primary" />
-          </div>
-        )}
-        <h1 className="text-center text-2xl font-bold tracking-tight text-foreground">
-          Install {appName}
-        </h1>
-        <p className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
-          Add {appName} to your home screen for the best experience — no app store needed.
-        </p>
-        {appUrl && (
-          <code className="mt-1 rounded bg-muted px-3 py-1.5 text-xs text-muted-foreground break-all">
-            {appUrl}
-          </code>
-        )}
-      </motion.div>
-
-      {/* Advantages */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="mt-8 space-y-3"
-      >
-        {advantages.map((item, i) => (
-          <motion.div
-            key={item.title}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.3 + i * 0.1 }}
-            className="flex items-center gap-4 rounded-2xl border border-border bg-card p-4"
+        {/* Close / Skip */}
+        <div className="flex justify-end -mt-1 -mr-1">
+          <button
+            onClick={handleSkip}
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted transition-colors"
+            aria-label="Skip installation"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-              <item.icon className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-foreground">{item.title}</p>
-              <p className="text-xs text-muted-foreground">{item.desc}</p>
-            </div>
-          </motion.div>
-        ))}
-      </motion.div>
+            <X className="h-4 w-4" />
+          </button>
+        </div>
 
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Install Instructions (iOS manual) */}
-      <AnimatePresence>
-        {showInstructions && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            className="mb-4 overflow-hidden rounded-2xl border border-border bg-card p-4"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-foreground">How to Install</p>
-              <button onClick={() => setShowInstructions(false)}>
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
+        {/* App identity */}
+        <div className="flex flex-col items-center text-center gap-3 mt-1">
+          {logoUrl ? (
+            <img
+              src={logoUrl}
+              alt={appName}
+              className="h-16 w-16 rounded-2xl object-contain shadow-md"
+            />
+          ) : (
+            <div
+              className="flex h-16 w-16 items-center justify-center rounded-2xl shadow-md"
+              style={accentStyle}
+            >
+              <Download className="h-7 w-7 text-white" />
             </div>
-            {isIOS ? (
-              <ol className="space-y-2 text-xs text-muted-foreground">
-                <li className="flex gap-2"><span className="font-bold text-foreground">1.</span> Tap the <strong>Share</strong> button (box with arrow) at the bottom of Safari</li>
-                <li className="flex gap-2"><span className="font-bold text-foreground">2.</span> Scroll down and tap <strong>"Add to Home Screen"</strong></li>
-                <li className="flex gap-2"><span className="font-bold text-foreground">3.</span> Tap <strong>"Add"</strong> to confirm</li>
-              </ol>
-            ) : (
-              <ol className="space-y-2 text-xs text-muted-foreground">
-                <li className="flex gap-2"><span className="font-bold text-foreground">1.</span> Tap the <strong>⋮ menu</strong> button in your browser</li>
-                <li className="flex gap-2"><span className="font-bold text-foreground">2.</span> Select <strong>"Add to Home Screen"</strong> or <strong>"Install App"</strong></li>
-                <li className="flex gap-2"><span className="font-bold text-foreground">3.</span> Tap <strong>"Install"</strong> to confirm</li>
-              </ol>
+          )}
+
+          <div className="space-y-1">
+            <h2 className="text-lg font-bold text-foreground">
+              Get {appName}
+            </h2>
+            {tagline && (
+              <p className="text-sm text-muted-foreground leading-snug max-w-[260px]">
+                {tagline}
+              </p>
             )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {!tagline && (
+              <p className="text-sm text-muted-foreground leading-snug max-w-[260px]">
+                Install on your device for quick access, offline support &amp; real-time alerts.
+              </p>
+            )}
+          </div>
+        </div>
 
-      {/* CTA */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6 }}
-        className="space-y-3 pb-4"
-      >
-        <Button
-          onClick={handleInstall}
-          className="w-full gap-2"
-          size="lg"
-          disabled={installing}
-          style={accentStyle}
-        >
-          <Download className="h-4 w-4" />
-          {installing ? 'Installing…' : deferredPrompt ? 'Install App' : 'How to Install'}
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onContinue}
-          className="w-full gap-2"
-          size="lg"
-        >
-          Continue in Browser
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        {/* iOS Instructions (slide-in) */}
+        <AnimatePresence>
+          {showIOSGuide && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="overflow-hidden"
+            >
+              <div className="mt-4 rounded-2xl bg-muted/60 p-4 space-y-3">
+                <p className="text-xs font-semibold text-foreground">Add to Home Screen</p>
+                <div className="flex items-start gap-3 text-xs text-muted-foreground">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Share className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <span>Tap the <strong>Share</strong> button at the bottom of Safari</span>
+                </div>
+                <div className="flex items-start gap-3 text-xs text-muted-foreground">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <Plus className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <span>Select <strong>"Add to Home Screen"</strong>, then tap <strong>Add</strong></span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Actions */}
+        <div className="mt-5 space-y-2.5">
+          <Button
+            onClick={handleInstall}
+            className="w-full gap-2 rounded-xl font-semibold"
+            size="lg"
+            disabled={installing}
+            style={accentStyle}
+          >
+            <Download className="h-4 w-4" />
+            {installing
+              ? 'Installing…'
+              : deferredPrompt
+                ? 'Install App'
+                : isIOS
+                  ? 'How to Install'
+                  : 'Install App'}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleSkip}
+            className="w-full text-muted-foreground hover:text-foreground rounded-xl"
+            size="sm"
+          >
+            Continue in browser
+            <ChevronRight className="h-3.5 w-3.5 ml-1" />
+          </Button>
+        </div>
       </motion.div>
     </div>
   );
