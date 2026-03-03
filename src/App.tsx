@@ -178,6 +178,7 @@ import EmailTemplates from "./pages/admin/EmailTemplates";
 import MerchantManagementAdmin from "./pages/admin/MerchantManagement";
 import AuthBrandingManager from "./pages/admin/AuthBrandingManager";
 import BankingAppManagement from "./pages/admin/BankingAppManagement";
+import InstitutionAppUrls from "./pages/admin/InstitutionAppUrls";
 import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
 import CrediQ from "./pages/CrediQ";
 import CrediQOnboarding from "./pages/CrediQOnboarding";
@@ -492,6 +493,7 @@ function App() {
               <Route path="auth-branding" element={<AuthBrandingManager />} />
               <Route path="banking-apps" element={<BankingAppManagement />} />
               <Route path="customer-apps" element={<CustomerAppManagement />} />
+              <Route path="institution-urls" element={<InstitutionAppUrls />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
