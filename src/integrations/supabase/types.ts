@@ -6000,6 +6000,54 @@ export type Database = {
           },
         ]
       }
+      homepage_hero_slides: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          cta_link: string | null
+          cta_text: string | null
+          id: string
+          is_active: boolean
+          media_type: string
+          media_url: string
+          overlay_opacity: number | null
+          sort_order: number
+          subtitle: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          id?: string
+          is_active?: boolean
+          media_type?: string
+          media_url: string
+          overlay_opacity?: number | null
+          sort_order?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          cta_link?: string | null
+          cta_text?: string | null
+          id?: string
+          is_active?: boolean
+          media_type?: string
+          media_url?: string
+          overlay_opacity?: number | null
+          sort_order?: number
+          subtitle?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       idempotency_keys: {
         Row: {
           client_id: string
