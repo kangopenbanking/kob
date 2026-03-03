@@ -1740,6 +1740,74 @@ paths['/v1/merchants/webhooks'] = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// OAUTH REVOCATION & USERINFO
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/oauth/revoke'] = {
+  post: { tags: ['OAuth'], summary: 'Revoke token', description: 'Revoke an access or refresh token (RFC 7009). Always returns 200.', operationId: 'oauthRevoke', security: [], requestBody: { required: true, content: { 'application/x-www-form-urlencoded': { schema: { type: 'object', required: ['token', 'client_id', 'client_secret'], properties: { token: { type: 'string' }, token_type_hint: { type: 'string', enum: ['access_token', 'refresh_token'] }, client_id: { type: 'string' }, client_secret: { type: 'string' } } } } } }, responses: { '200': { description: 'Token revoked (or was already invalid)' }, ...errorResponses } },
+};
+
+paths['/v1/oauth/userinfo'] = {
+  get: { tags: ['OAuth'], summary: 'Get user info', description: 'OpenID Connect UserInfo endpoint. Returns claims about the authenticated user based on the access token scope.', operationId: 'oauthUserInfo', security: [{ bearerAuth: [] }], responses: { '200': { description: 'User claims', content: { 'application/json': { schema: { type: 'object', properties: { sub: { type: 'string' }, name: { type: 'string' }, email: { type: 'string' }, phone_number: { type: 'string' }, updated_at: { type: 'integer' } } } } } }, '401': { description: 'Invalid or expired token' }, '403': { description: 'Token missing openid scope' } } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSUMER TOOLS — PIGGY BANK
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/consumer/piggybank'] = {
+  post: { tags: ['Consumer Tools'], summary: 'Create savings goal', description: 'Create a personal savings goal (Piggy Bank) with target amount and schedule.', operationId: 'piggybankCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['name', 'target_amount', 'currency'], properties: { name: { type: 'string', example: 'Emergency Fund' }, target_amount: { type: 'number', example: 500000 }, currency: { type: 'string', default: 'XAF' }, frequency: { type: 'string', enum: ['daily', 'weekly', 'monthly'] }, contribution_amount: { type: 'number', example: 10000 }, target_date: { type: 'string', format: 'date' } } } } } }, responses: { '201': { description: 'Piggy bank created' }, ...errorResponses } },
+};
+
+paths['/v1/consumer/piggybank/pay'] = {
+  post: { tags: ['Consumer Tools'], summary: 'Make piggy bank payment', description: 'Contribute to a savings goal. Impacts credit score positively (+3 to +10 points for on-time payments).', operationId: 'piggybankPay', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['piggybank_id', 'amount'], properties: { piggybank_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 10000 } } } } } }, responses: { '200': { description: 'Payment recorded' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CONSUMER TOOLS — NJANGI (GROUP SAVINGS)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/consumer/njangi'] = {
+  post: { tags: ['Consumer Tools'], summary: 'Create Njangi group', description: 'Create a rotating savings circle (Njangi/tontine) with contribution schedule and payout rules.', operationId: 'njangiCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['name', 'contribution_amount', 'frequency'], properties: { name: { type: 'string', example: 'Office Njangi' }, contribution_amount: { type: 'number', example: 25000 }, currency: { type: 'string', default: 'XAF' }, frequency: { type: 'string', enum: ['weekly', 'monthly'] }, max_members: { type: 'integer', example: 10 }, payout_method: { type: 'string', enum: ['random', 'sequential', 'manual'], default: 'random' } } } } } }, responses: { '201': { description: 'Njangi group created' }, ...errorResponses } },
+};
+
+paths['/v1/consumer/njangi/join'] = {
+  post: { tags: ['Consumer Tools'], summary: 'Join Njangi group', operationId: 'njangiJoin', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id'], properties: { group_id: { type: 'string', format: 'uuid' } } } } } }, responses: { '200': { description: 'Joined group' }, ...errorResponses } },
+};
+
+paths['/v1/consumer/njangi/contribute'] = {
+  post: { tags: ['Consumer Tools'], summary: 'Make Njangi contribution', description: 'Submit a contribution to the group pot. Late contributions are reported as negative credit events.', operationId: 'njangiContribute', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id', 'amount'], properties: { group_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 25000 } } } } } }, responses: { '200': { description: 'Contribution recorded' }, ...errorResponses } },
+};
+
+paths['/v1/consumer/njangi/payout'] = {
+  post: { tags: ['Consumer Tools'], summary: 'Trigger Njangi payout', description: 'Disburse the accumulated pot to the next eligible member.', operationId: 'njangiPayout', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['group_id'], properties: { group_id: { type: 'string', format: 'uuid' }, recipient_id: { type: 'string', format: 'uuid', description: 'Override random selection (manual mode only)' } } } } } }, responses: { '200': { description: 'Payout initiated' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// FUNDING INTENTS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/gateway/funding-intents'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create funding intent', description: 'Create an intent to fund a merchant or user account. Supports Stripe, PayPal, and mobile money sources.', operationId: 'gatewayCreateFundingIntent', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency', 'source'], properties: { amount: { type: 'number', example: 50000 }, currency: { type: 'string', default: 'XAF' }, source: { type: 'string', enum: ['stripe', 'paypal', 'mobile_money'] }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Funding intent created' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List funding intents', operationId: 'gatewayListFundingIntents', security: [{ bearerAuth: [] }], parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Funding intents list' }, ...errorResponses } },
+};
+
+paths['/v1/gateway/funding-intents/{intentId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get funding intent', operationId: 'gatewayGetFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding intent details' }, ...errorResponses } },
+};
+
+paths['/v1/gateway/funding-intents/{intentId}/cancel'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Cancel funding intent', operationId: 'gatewayCancelFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding intent cancelled' }, ...errorResponses } },
+};
+
+paths['/v1/gateway/funding-intents/{intentId}/confirm'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Confirm funding intent', description: 'Confirm a funding intent after provider payment succeeds.', operationId: 'gatewayConfirmFundingIntent', security: [{ bearerAuth: [] }], parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Funding confirmed and account credited' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TELLER OPERATIONS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/teller/transaction'] = {
+  post: { tags: ['Banking Operations'], summary: 'Teller transaction', description: 'Process a cash deposit or withdrawal at a bank branch by an authorized teller.', operationId: 'tellerTransaction', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['account_id', 'amount', 'transaction_type'], properties: { account_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 100000 }, currency: { type: 'string', default: 'XAF' }, transaction_type: { type: 'string', enum: ['deposit', 'withdrawal'] }, narration: { type: 'string' }, branch_id: { type: 'string', format: 'uuid' } } } } } }, responses: { '200': { description: 'Transaction processed' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -1799,6 +1867,7 @@ serve(async (req) => {
         { name: 'Payment Gateway', description: 'Unified payment gateway — charges, payouts, refunds, disputes, settlements, beneficiaries, preauthorization, virtual accounts, merchant wallets, OTP validation, bank/BVN verification, payment links, subscriptions, split payments, tokenization, reconciliation' },
         { name: 'Payment Facilitation', description: 'White-label payment processing — facilitated charges, settlement calculation and processing' },
         { name: 'Merchant Onboarding', description: 'Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks' },
+        { name: 'Consumer Tools', description: 'Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)' },
       ],
       components: {
         securitySchemes: {
