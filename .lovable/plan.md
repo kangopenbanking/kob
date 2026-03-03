@@ -1,42 +1,37 @@
 
 
-# Fix: Customer App Data Leaking Into Banking App
+# Plan: Institution PWA URL Directory & Admin Management Page
 
-## Root Cause
+## What We're Building
 
-The Kang Customer App and the Banking App at `/bank/f493095b-...` share the **same `institution_id`** (`KANG_PLATFORM_ID`). The Customer App auto-creates wallet accounts tagged with this institution ID (via `useEnsureWalletAccount`), and all Customer App transactions (funding, withdrawals, bill payments) are also tagged with it.
+1. **A new admin page** (`/admin/institution-urls`) that lists all registered banks/financial institutions with their unique PWA URLs in a searchable, copyable table.
 
-When a user opens the Banking App at this institution, `useBankAccounts()` and `useBankTransactions()` fetch everything with `institution_id = f493095b-...`, which includes all Customer App wallet data.
+2. **Each institution gets a unique URL** in the format: `https://kob.lovable.app/bank/{institutionId}` — this is already the routing pattern used by the Banking App splash/onboarding flow. The new page simply surfaces these URLs for admin visibility and management.
 
-## Fix Strategy
+3. **PWA Install Prompt enhancement** — the `PWAInstallPrompt` component will display the institution-specific URL so users know exactly what app link they're installing.
 
-Add a **`source` column** to the `accounts` table to distinguish between `customer_wallet` (Kang app) and `banking` (Banking app) accounts. Then filter by source in the appropriate hooks.
+4. **Admin navigation update** — add the new page to the admin sidebar under the "Management" section.
 
-However, the simpler and less invasive approach is to filter based on the existing `account_id` prefix pattern (`KANG-*`) which is already used by `useEnsureWalletAccount`:
+## Changes
 
-### Changes
+### 1. New Page: `src/pages/admin/InstitutionAppUrls.tsx`
+- Fetch all institutions from the `institutions` table (id, name, type, status, logo_url, primary_color)
+- Display a table with columns: Logo, Name, Type, Status, PWA URL, Actions (Copy URL, Open)
+- The PWA URL = `https://kob.lovable.app/bank/{institution.id}`
+- Search/filter by name
+- Copy-to-clipboard button for each URL
+- "Open" button to preview the PWA in a new tab
 
-1. **`src/hooks/useBankingData.ts` — `useBankAccounts()`**
-   - Add filter: `.not('account_id', 'like', 'KANG-%')` to exclude Customer App wallet accounts from Banking App views.
+### 2. Update `src/components/admin/admin-navigation-config.ts`
+- Add `{ title: "Institution App URLs", path: "/admin/institution-urls", icon: Link2 }` to the "Management" section
 
-2. **`src/hooks/useBankingData.ts` — `useBankTransactions()`**
-   - After fetching account IDs for the institution, exclude accounts where `account_id LIKE 'KANG-%'`.
-   - This ensures Customer App deposits, withdrawals, and bill payments don't appear in the Banking App transaction list.
+### 3. Update `src/App.tsx`
+- Add route: `<Route path="institution-urls" element={<InstitutionAppUrls />} />`
 
-3. **`src/hooks/useRealtimeBalanceSync.ts`**
-   - Add the same `KANG-` exclusion when building the `accountIds` list for realtime subscriptions, so Customer App balance changes don't trigger Banking App cache invalidations.
+### 4. Update `src/components/pwa/PWAInstallPrompt.tsx`
+- Accept optional `appUrl` prop
+- Display the institution-specific URL below the app name in the hero section so users see the link they're installing
 
-4. **`supabase/functions/_shared/funding-scope-creditor.ts`**
-   - Add `metadata.source: 'customer_app'` to transactions inserted by the funding flow, providing a secondary filter for future-proofing.
-
-### Why This Works
-- The `KANG-` prefix on `account_id` is deterministic and only set by `useEnsureWalletAccount` for Customer App wallets.
-- No database migration needed — it uses existing data patterns.
-- Banking App institutions that happen to share the Kang platform ID will correctly exclude consumer wallet data.
-- The Customer App hooks (`useCustomerData.ts`) remain unchanged since they should see all user accounts across institutions.
-
-### Files to Edit
-- `src/hooks/useBankingData.ts` (2 functions)
-- `src/hooks/useRealtimeBalanceSync.ts` (1 filter addition)
-- `supabase/functions/_shared/funding-scope-creditor.ts` (metadata tag)
+### 5. Update `src/pages/banking-app/BankSplash.tsx`
+- Pass `appUrl={window.location.origin + '/bank/' + institutionId}` to `PWAInstallPrompt`
 
