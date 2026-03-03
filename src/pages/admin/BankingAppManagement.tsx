@@ -17,7 +17,7 @@ import {
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ArrowDownLeft, ChevronRight, BarChart3, Monitor,
   Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
-  Calendar
+  Calendar, Type
 } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { format } from "date-fns";
@@ -50,6 +50,7 @@ interface AppConfig {
   card_colors: CardColors;
   support_phone: string;
   support_email: string;
+  font_size_multiplier: number;
 }
 
 const defaultSectionOrder: HomeSectionKey[] = [
@@ -67,6 +68,7 @@ const defaultAppConfig: AppConfig = {
   card_colors: {},
   support_phone: '',
   support_email: '',
+  font_size_multiplier: 0.7,
 };
 
 // ─── Hooks ───
@@ -1192,7 +1194,124 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
   );
 }
 
-// ─── Main Component ───
+// ─── Typography Panel ───
+function TypographyPanel({ institutionId, appConfig }: { institutionId: string; appConfig: AppConfig }) {
+  const queryClient = useQueryClient();
+  const [multiplier, setMultiplier] = useState(appConfig.font_size_multiplier);
+
+  useEffect(() => {
+    setMultiplier(appConfig.font_size_multiplier);
+  }, [appConfig.font_size_multiplier]);
+
+  const mutation = useMutation({
+    mutationFn: async (newMultiplier: number) => {
+      // Merge into existing app_config
+      const { data: inst } = await supabase
+        .from("institutions")
+        .select("app_config")
+        .eq("id", institutionId)
+        .single();
+      const currentConfig = (inst as any)?.app_config || {};
+      const { error } = await (supabase as any).from("institutions").update({
+        app_config: { ...currentConfig, font_size_multiplier: newMultiplier },
+      }).eq("id", institutionId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-banking"] });
+      toast.success("Font size saved");
+    },
+    onError: () => toast.error("Failed to save font size"),
+  });
+
+  const presets = [
+    { label: "Compact", value: 0.6 },
+    { label: "Small", value: 0.7 },
+    { label: "Default", value: 0.85 },
+    { label: "Medium", value: 1.0 },
+    { label: "Large", value: 1.2 },
+    { label: "Extra Large", value: 1.5 },
+  ];
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2"><Type className="h-4 w-4" /> Font Size Management</CardTitle>
+        <CardDescription>Control the global font size multiplier for this institution's banking app. Changes apply instantly for all users.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-6">
+        {/* Slider + value */}
+        <div className="space-y-3">
+          <Label className="text-sm font-semibold">Global Font Size Multiplier</Label>
+          <div className="flex items-center gap-4">
+            <input
+              type="range"
+              min="0.5"
+              max="2.0"
+              step="0.05"
+              value={multiplier}
+              onChange={(e) => setMultiplier(parseFloat(e.target.value))}
+              className="flex-1 h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+            />
+            <div className="flex items-center gap-2">
+              <Input
+                type="number"
+                step="0.05"
+                min="0.5"
+                max="2.0"
+                value={multiplier}
+                onChange={(e) => setMultiplier(parseFloat(e.target.value) || 0.7)}
+                className="h-9 w-20 text-center font-mono font-bold"
+              />
+              <span className="text-sm text-muted-foreground font-medium">×</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Preset buttons */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">Presets</Label>
+          <div className="flex flex-wrap gap-2">
+            {presets.map((p) => (
+              <Button
+                key={p.value}
+                variant={Math.abs(multiplier - p.value) < 0.01 ? "default" : "outline"}
+                size="sm"
+                onClick={() => setMultiplier(p.value)}
+                className="text-xs"
+              >
+                {p.label} ({p.value}×)
+              </Button>
+            ))}
+          </div>
+        </div>
+
+        {/* Live preview */}
+        <div className="space-y-2">
+          <Label className="text-sm font-semibold">Preview</Label>
+          <div className="rounded-xl border-2 border-dashed p-4 bg-muted/30 space-y-2">
+            <p style={{ fontSize: `calc(0.75rem * ${multiplier})` }} className="text-muted-foreground">text-xs: Account details</p>
+            <p style={{ fontSize: `calc(0.875rem * ${multiplier})` }}>text-sm: Transaction reference</p>
+            <p style={{ fontSize: `calc(1rem * ${multiplier})` }} className="font-medium">text-base: Account name</p>
+            <p style={{ fontSize: `calc(1.25rem * ${multiplier})` }} className="font-bold">text-xl: Section heading</p>
+            <p style={{ fontSize: `calc(1.5rem * ${multiplier})` }} className="font-bold">text-2xl: Page title</p>
+            <p style={{ fontSize: `calc(1.875rem * ${multiplier})` }} className="font-bold">text-3xl: Balance display</p>
+          </div>
+        </div>
+
+        <Button
+          onClick={() => mutation.mutate(multiplier)}
+          disabled={mutation.isPending}
+          className="w-full"
+        >
+          {mutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+          Save Font Size
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function BankingAppManagement() {
   const [selectedInstitution, setSelectedInstitution] = useState<string | null>(null);
   const [search, setSearch] = useState("");
@@ -1241,6 +1360,7 @@ export default function BankingAppManagement() {
           media_sections: raw.media_sections || [],
           walkthrough_config: raw.walkthrough_config || { skip_enabled: true },
           card_colors: raw.card_colors || {},
+          font_size_multiplier: typeof raw.font_size_multiplier === 'number' ? raw.font_size_multiplier : 0.7,
         }
       : defaultAppConfig;
   })();
@@ -1367,7 +1487,7 @@ export default function BankingAppManagement() {
                   <TabsTrigger value="cards" className="gap-1.5"><CreditCard className="h-3.5 w-3.5" /> Cards</TabsTrigger>
                   <TabsTrigger value="credit-scores" className="gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Credit Scores</TabsTrigger>
                   <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
-                  <TabsTrigger value="features" className="gap-1.5"><Settings2 className="h-3.5 w-3.5" /> Features</TabsTrigger>
+                  <TabsTrigger value="typography" className="gap-1.5"><Type className="h-3.5 w-3.5" /> Typography</TabsTrigger>
                   <TabsTrigger value="walkthrough" className="gap-1.5"><BookOpen className="h-3.5 w-3.5" /> Walkthrough</TabsTrigger>
                 </TabsList>
 
@@ -1642,6 +1762,10 @@ export default function BankingAppManagement() {
                   <FeatureConfigPanel key={selectedInstitution} institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
 
+                {/* Typography Tab */}
+                <TabsContent value="typography">
+                  <TypographyPanel key={selectedInstitution} institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
                 {/* Walkthrough Tab */}
                 <TabsContent value="walkthrough">
                   <WalkthroughManager
