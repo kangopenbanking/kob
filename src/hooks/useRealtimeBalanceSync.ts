@@ -22,7 +22,7 @@ export function useRealtimeBalanceSync(userId?: string, institutionId?: string) 
       // Get accounts scoped to this user (and institution if provided)
       let query = supabase
         .from('accounts')
-        .select('id')
+        .select('id, account_id')
         .eq('user_id', userId)
         .eq('is_active', true);
 
@@ -31,7 +31,12 @@ export function useRealtimeBalanceSync(userId?: string, institutionId?: string) 
       }
 
       const { data } = await query;
-      accountIds = (data || []).map((a) => a.id);
+      // Exclude Customer App wallet accounts (KANG- prefix) from banking realtime sync
+      accountIds = (data || [])
+        .filter((a) => !a.account_id?.startsWith('KANG-'))
+        .map((a) => a.id);
+
+      
 
       const channelName = institutionId
         ? `balance-sync-${userId}-${institutionId}`

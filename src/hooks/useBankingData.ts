@@ -25,6 +25,7 @@ export function useBankAccounts() {
         .select('*, account_balances(*)')
         .eq('user_id', user.id)
         .eq('is_active', true)
+        .not('account_id', 'like', 'KANG-%')
         .order('created_at', { ascending: false });
       
       if (institutionId) {
@@ -74,7 +75,8 @@ export function useBankTransactions(limit = 10) {
           .from('accounts')
           .select('id')
           .eq('user_id', user.id)
-          .eq('institution_id', institutionId);
+          .eq('institution_id', institutionId)
+          .not('account_id', 'like', 'KANG-%');
         accountIds = (accounts || []).map(a => a.id);
         if (accountIds.length === 0) return [];
       }
