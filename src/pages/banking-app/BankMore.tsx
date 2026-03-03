@@ -28,7 +28,7 @@ const BankMore: React.FC = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    navigate(`/bank/${institutionId}`);
+    navigate(`/bank/${institutionId}/auth`, { replace: true });
   };
 
   const renderItem = (item: typeof accountItems[0], i: number) => {

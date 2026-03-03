@@ -183,7 +183,7 @@ const CustomerSettings: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out');
-    navigate('/');
+    navigate('/app/auth', { replace: true });
   };
 
   if (loading) {

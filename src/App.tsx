@@ -12,6 +12,7 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { PWARouteGuard } from "@/components/pwa/PWARouteGuard";
 import Index from "./pages/Index";
 import Documentation from "./pages/Documentation";
 import Register from "./pages/Register";
@@ -365,6 +366,7 @@ function App() {
       <LanguageProvider>
         <BrowserRouter>
           <ScrollToTop />
+          <PWARouteGuard>
           <TooltipProvider>
             <Toaster />
             <Sonner />
@@ -750,6 +752,7 @@ function App() {
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
           </TooltipProvider>
+          </PWARouteGuard>
         </BrowserRouter>
         </LanguageProvider>
       </QueryClientProvider>
