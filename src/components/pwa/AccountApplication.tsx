@@ -17,13 +17,7 @@ interface AccountApplicationProps {
   onSkip?: () => void;
 }
 
-const COUNTRY_CODES = [
-  { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
-  { code: '+1', country: 'USA/Canada', flag: '🇺🇸' },
-  { code: '+33', country: 'France', flag: '🇫🇷' },
-  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-];
+import { COUNTRY_CODES } from '@/lib/country-codes';
 
 const STEPS = ['Personal', 'Contact', 'Account', 'Security', 'Review'];
 

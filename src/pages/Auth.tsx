@@ -19,17 +19,7 @@ type OTPType = 'login' | 'signup';
 type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
 type AuthMethod = 'standard' | 'firebase';
 
-// Country codes for international support
-const COUNTRY_CODES = [
-  { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
-  { code: '+1', country: 'USA/Canada', flag: '🇺🇸' },
-  { code: '+33', country: 'France', flag: '🇫🇷' },
-  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
-  { code: '+44', country: 'UK', flag: '🇬🇧' },
-  { code: '+49', country: 'Germany', flag: '🇩🇪' },
-  { code: '+86', country: 'China', flag: '🇨🇳' },
-  { code: '+91', country: 'India', flag: '🇮🇳' },
-];
+import { COUNTRY_CODES } from '@/lib/country-codes';
 
 // Validation schemas
 const phoneSchema = z.string().regex(/^\d{6,15}$/, 'Invalid phone number format');
