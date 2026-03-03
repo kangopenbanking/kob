@@ -5388,8 +5388,10 @@ export type Database = {
           beneficiary_name: string | null
           beneficiary_phone: string | null
           channel: string
+          compliance_check_id: string | null
           created_at: string
           currency: string
+          estimated_arrival_at: string | null
           failure_reason: string | null
           fee_amount: number | null
           id: string
@@ -5400,6 +5402,8 @@ export type Database = {
           provider: string
           provider_raw: Json | null
           provider_ref: string | null
+          rail_id: string | null
+          speed: string | null
           status: string
           tx_ref: string
           updated_at: string
@@ -5412,8 +5416,10 @@ export type Database = {
           beneficiary_name?: string | null
           beneficiary_phone?: string | null
           channel: string
+          compliance_check_id?: string | null
           created_at?: string
           currency?: string
+          estimated_arrival_at?: string | null
           failure_reason?: string | null
           fee_amount?: number | null
           id?: string
@@ -5424,6 +5430,8 @@ export type Database = {
           provider: string
           provider_raw?: Json | null
           provider_ref?: string | null
+          rail_id?: string | null
+          speed?: string | null
           status?: string
           tx_ref: string
           updated_at?: string
@@ -5436,8 +5444,10 @@ export type Database = {
           beneficiary_name?: string | null
           beneficiary_phone?: string | null
           channel?: string
+          compliance_check_id?: string | null
           created_at?: string
           currency?: string
+          estimated_arrival_at?: string | null
           failure_reason?: string | null
           fee_amount?: number | null
           id?: string
@@ -5448,6 +5458,8 @@ export type Database = {
           provider?: string
           provider_raw?: Json | null
           provider_ref?: string | null
+          rail_id?: string | null
+          speed?: string | null
           status?: string
           tx_ref?: string
           updated_at?: string
@@ -5465,6 +5477,13 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gateway_payouts_rail_id_fkey"
+            columns: ["rail_id"]
+            isOneToOne: false
+            referencedRelation: "payout_rails"
             referencedColumns: ["id"]
           },
         ]
@@ -8706,6 +8725,81 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_rails: {
+        Row: {
+          channel: string
+          created_at: string
+          destination_type: string
+          estimated_time_seconds: number | null
+          fee_currency: string
+          fee_fixed: number
+          fee_percentage: number
+          id: string
+          is_active: boolean
+          max_amount: number
+          metadata: Json | null
+          min_amount: number
+          operating_hours: Json | null
+          provider: string
+          rail_code: string
+          rail_name: string
+          requires_prefunding: boolean
+          risk_tier: string
+          speed: string
+          supported_countries: string[]
+          supported_currencies: string[]
+          updated_at: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string
+          destination_type: string
+          estimated_time_seconds?: number | null
+          fee_currency?: string
+          fee_fixed?: number
+          fee_percentage?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          metadata?: Json | null
+          min_amount?: number
+          operating_hours?: Json | null
+          provider: string
+          rail_code: string
+          rail_name: string
+          requires_prefunding?: boolean
+          risk_tier?: string
+          speed?: string
+          supported_countries?: string[]
+          supported_currencies?: string[]
+          updated_at?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          destination_type?: string
+          estimated_time_seconds?: number | null
+          fee_currency?: string
+          fee_fixed?: number
+          fee_percentage?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          metadata?: Json | null
+          min_amount?: number
+          operating_hours?: Json | null
+          provider?: string
+          rail_code?: string
+          rail_name?: string
+          requires_prefunding?: boolean
+          risk_tier?: string
+          speed?: string
+          supported_countries?: string[]
+          supported_currencies?: string[]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount: number
@@ -9360,6 +9454,93 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_to_card_transactions: {
+        Row: {
+          amount: number
+          card_last4: string | null
+          card_network: string | null
+          card_token: string | null
+          completed_at: string | null
+          compliance_decision: string | null
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          merchant_id: string | null
+          payout_id: string | null
+          provider: string
+          provider_raw: Json | null
+          provider_ref: string | null
+          risk_score: number | null
+          speed: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          card_last4?: string | null
+          card_network?: string | null
+          card_token?: string | null
+          completed_at?: string | null
+          compliance_decision?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          merchant_id?: string | null
+          payout_id?: string | null
+          provider: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          risk_score?: number | null
+          speed?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          card_last4?: string | null
+          card_network?: string | null
+          card_token?: string | null
+          completed_at?: string | null
+          compliance_decision?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          merchant_id?: string | null
+          payout_id?: string | null
+          provider?: string
+          provider_raw?: Json | null
+          provider_ref?: string | null
+          risk_score?: number | null
+          speed?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_to_card_transactions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "push_to_card_transactions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_payouts"
             referencedColumns: ["id"]
           },
         ]
@@ -11598,6 +11779,59 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treasury_float: {
+        Row: {
+          auto_replenish: boolean
+          available_balance: number
+          created_at: string
+          currency: string
+          id: string
+          last_replenished_at: string | null
+          low_balance_threshold: number
+          rail_id: string
+          reserved_balance: number
+          total_disbursed: number
+          total_funded: number
+          updated_at: string
+        }
+        Insert: {
+          auto_replenish?: boolean
+          available_balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          last_replenished_at?: string | null
+          low_balance_threshold?: number
+          rail_id: string
+          reserved_balance?: number
+          total_disbursed?: number
+          total_funded?: number
+          updated_at?: string
+        }
+        Update: {
+          auto_replenish?: boolean
+          available_balance?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          last_replenished_at?: string | null
+          low_balance_threshold?: number
+          rail_id?: string
+          reserved_balance?: number
+          total_disbursed?: number
+          total_funded?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasury_float_rail_id_fkey"
+            columns: ["rail_id"]
+            isOneToOne: false
+            referencedRelation: "payout_rails"
             referencedColumns: ["id"]
           },
         ]
