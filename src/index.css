@@ -390,3 +390,8 @@ All colors MUST be HSL.
 /* Admin-configurable heading & body colors */
 .pwa-large-text .text-foreground { color: var(--pwa-heading-color, hsl(0, 0%, 0%)) !important; }
 .pwa-large-text .text-muted-foreground { color: var(--pwa-body-color, hsl(0, 0%, 0%)) !important; }
+
+/* Sharper Lucide icons globally */
+.lucide {
+  stroke-width: 2 !important;
+}
