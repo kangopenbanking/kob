@@ -42,7 +42,7 @@ export const Navigation = () => {
                 <NavigationMenuContent>
                   <div className="grid w-[600px] gap-3 p-6">
                     <Link 
-                      to="/credit-score" 
+                      to="/crediq" 
                       className="group grid grid-cols-[48px_1fr] gap-4 rounded-lg border bg-card p-4 hover:bg-accent transition-colors"
                     >
                       <div className="flex h-12 w-12 items-center justify-center rounded-md border bg-background">
@@ -386,7 +386,7 @@ export const Navigation = () => {
               <div className="border-t pt-4">
                 <p className="text-xs font-semibold text-muted-foreground mb-3">CREDIT SCORE</p>
                 <div className="space-y-3 ml-2">
-                  <Link to="/credit-score" className="text-sm font-medium hover:text-primary transition-colors block">
+                  <Link to="/crediq" className="text-sm font-medium hover:text-primary transition-colors block">
                     My Credit Score
                   </Link>
                   <Link to="/credit-report" className="text-sm font-medium hover:text-primary transition-colors block">

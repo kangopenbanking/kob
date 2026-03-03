@@ -70,7 +70,7 @@ const developerItems: NavItem[] = [
 ];
 
 const resourceItems: NavItem[] = [
-  { label: "Credit Score", to: "/credit-score", icon: TrendingUp, desc: "Check your credit score" },
+  { label: "Credit Score", to: "/crediq", icon: TrendingUp, desc: "Check your credit score" },
   { label: "Pricing & Fees", to: "/pricing", icon: Landmark, desc: "Transparent pricing" },
   { label: "Integration Guide", to: "/integration-workflow", icon: BookOpen, desc: "Step-by-step setup" },
   { label: "API Status", to: "/status", icon: Activity, desc: "Real-time system status" },
