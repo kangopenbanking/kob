@@ -6084,6 +6084,104 @@ export type Database = {
         }
         Relationships: []
       }
+      institution_email_overrides: {
+        Row: {
+          created_at: string
+          custom_body_html: string | null
+          custom_subject: string | null
+          email_type_id: string
+          id: string
+          institution_id: string | null
+          is_enabled: boolean | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          custom_body_html?: string | null
+          custom_subject?: string | null
+          email_type_id: string
+          id?: string
+          institution_id?: string | null
+          is_enabled?: boolean | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          custom_body_html?: string | null
+          custom_subject?: string | null
+          email_type_id?: string
+          id?: string
+          institution_id?: string | null
+          is_enabled?: boolean | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_email_overrides_email_type_id_fkey"
+            columns: ["email_type_id"]
+            isOneToOne: false
+            referencedRelation: "managed_email_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_email_overrides_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      institution_email_settings: {
+        Row: {
+          created_at: string
+          footer_text: string | null
+          from_name: string | null
+          id: string
+          institution_id: string | null
+          is_global: boolean
+          logo_url: string | null
+          primary_color: string | null
+          reply_to_email: string | null
+          secondary_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          footer_text?: string | null
+          from_name?: string | null
+          id?: string
+          institution_id?: string | null
+          is_global?: boolean
+          logo_url?: string | null
+          primary_color?: string | null
+          reply_to_email?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          footer_text?: string | null
+          from_name?: string | null
+          id?: string
+          institution_id?: string | null
+          is_global?: boolean
+          logo_url?: string | null
+          primary_color?: string | null
+          reply_to_email?: string | null
+          secondary_color?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_email_settings_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: true
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_invoices: {
         Row: {
           admin_notes: string | null
@@ -7765,6 +7863,114 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      managed_email_logs: {
+        Row: {
+          created_at: string
+          email_type_id: string | null
+          error_message: string | null
+          id: string
+          institution_id: string | null
+          metadata: Json | null
+          recipient_email: string
+          recipient_user_id: string | null
+          sent_at: string | null
+          status: string
+          subject: string
+        }
+        Insert: {
+          created_at?: string
+          email_type_id?: string | null
+          error_message?: string | null
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          recipient_email: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject: string
+        }
+        Update: {
+          created_at?: string
+          email_type_id?: string | null
+          error_message?: string | null
+          id?: string
+          institution_id?: string | null
+          metadata?: Json | null
+          recipient_email?: string
+          recipient_user_id?: string | null
+          sent_at?: string | null
+          status?: string
+          subject?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "managed_email_logs_email_type_id_fkey"
+            columns: ["email_type_id"]
+            isOneToOne: false
+            referencedRelation: "managed_email_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "managed_email_logs_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      managed_email_types: {
+        Row: {
+          available_variables: Json | null
+          category: string
+          created_at: string
+          default_body_html: string
+          default_subject: string
+          description: string | null
+          email_key: string
+          id: string
+          is_active: boolean | null
+          is_system: boolean | null
+          name: string
+          sort_order: number | null
+          trigger_event: string | null
+          updated_at: string
+        }
+        Insert: {
+          available_variables?: Json | null
+          category: string
+          created_at?: string
+          default_body_html: string
+          default_subject: string
+          description?: string | null
+          email_key: string
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name: string
+          sort_order?: number | null
+          trigger_event?: string | null
+          updated_at?: string
+        }
+        Update: {
+          available_variables?: Json | null
+          category?: string
+          created_at?: string
+          default_body_html?: string
+          default_subject?: string
+          description?: string | null
+          email_key?: string
+          id?: string
+          is_active?: boolean | null
+          is_system?: boolean | null
+          name?: string
+          sort_order?: number | null
+          trigger_event?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       mfa_settings: {
         Row: {

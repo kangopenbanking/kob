@@ -84,6 +84,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Webhooks", path: "/admin/webhooks", icon: Webhook },
       { title: "Communications", path: "/admin/communications", icon: Mail },
       { title: "Email Templates", path: "/admin/email-templates", icon: FileCode },
+      { title: "Managed Emails", path: "/admin/managed-emails", icon: Mail },
       { title: "WooCommerce Plugin", path: "/admin/woocommerce-plugin", icon: ShoppingCart },
       { title: "Sandbox", path: "/admin/sandbox", icon: Database },
       { title: "Institution App URLs", path: "/admin/institution-urls", icon: Link2 },

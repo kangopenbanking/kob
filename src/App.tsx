@@ -175,6 +175,7 @@ import LinkedAccountRequests from "./pages/admin/LinkedAccountRequests";
 import ExchangeRateManagement from "./pages/admin/ExchangeRateManagement";
 import RevenueAnalytics from "./pages/admin/RevenueAnalytics";
 import EmailTemplates from "./pages/admin/EmailTemplates";
+import ManagedEmailAdmin from "./pages/admin/ManagedEmailAdmin";
 import MerchantManagementAdmin from "./pages/admin/MerchantManagement";
 import AuthBrandingManager from "./pages/admin/AuthBrandingManager";
 import BankingAppManagement from "./pages/admin/BankingAppManagement";
@@ -489,6 +490,7 @@ function App() {
               <Route path="exchange-rates" element={<ExchangeRateManagement />} />
               <Route path="revenue" element={<RevenueAnalytics />} />
               <Route path="email-templates" element={<EmailTemplates />} />
+              <Route path="managed-emails" element={<ManagedEmailAdmin />} />
               <Route path="merchants" element={<MerchantManagementAdmin />} />
               <Route path="auth-branding" element={<AuthBrandingManager />} />
               <Route path="banking-apps" element={<BankingAppManagement />} />
