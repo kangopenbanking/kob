@@ -22,6 +22,8 @@ interface HeroSlide {
   sort_order: number;
   is_active: boolean;
   overlay_opacity: number;
+  font_color: string | null;
+  font_size: string | null;
   created_at: string;
 }
 
@@ -235,14 +237,51 @@ export default function HomepageHeroManager() {
                 </div>
 
                 <div>
-                  <Label>Overlay Opacity: {Math.round((slide.overlay_opacity || 0.4) * 100)}%</Label>
+                  <Label>Overlay Opacity: {Math.round((slide.overlay_opacity ?? 0.4) * 100)}%</Label>
                   <Slider
-                    value={[slide.overlay_opacity * 100]}
+                    value={[(slide.overlay_opacity ?? 0.4) * 100]}
                     max={100}
                     step={5}
                     onValueCommit={(v) => updateSlide(slide.id, { overlay_opacity: v[0] / 100 })}
                     className="mt-2"
                   />
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Font Color</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={slide.font_color || '#ffffff'}
+                        onChange={(e) => updateSlide(slide.id, { font_color: e.target.value })}
+                        className="h-9 w-12 rounded border border-input cursor-pointer"
+                      />
+                      <Input
+                        value={slide.font_color || '#ffffff'}
+                        onChange={(e) => updateSlide(slide.id, { font_color: e.target.value })}
+                        placeholder="#ffffff"
+                        className="flex-1"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <Label>Font Size</Label>
+                    <Select
+                      value={slide.font_size || 'default'}
+                      onValueChange={(v) => updateSlide(slide.id, { font_size: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="small">Small</SelectItem>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="large">Large</SelectItem>
+                        <SelectItem value="xlarge">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </div>
             </div>

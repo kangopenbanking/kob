@@ -15,6 +15,8 @@ interface HeroSlide {
   cta_text: string | null;
   cta_link: string | null;
   overlay_opacity: number;
+  font_color: string | null;
+  font_size: string | null;
 }
 
 export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
@@ -78,8 +80,8 @@ export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
             />
           )}
           <div
-            className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"
-            style={{ opacity: slide.overlay_opacity }}
+            className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"
+            style={{ opacity: slide.overlay_opacity ?? 0.4 }}
           />
         </motion.div>
       </AnimatePresence>
@@ -96,12 +98,28 @@ export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
               transition={{ duration: 0.5 }}
             >
               {slide.title && (
-                <h1 className="text-4xl md:text-6xl font-bold mb-4 leading-tight text-foreground drop-shadow-md">
+                <h1
+                  className={`font-bold mb-4 leading-tight drop-shadow-md ${
+                    slide.font_size === 'small' ? 'text-2xl md:text-4xl' :
+                    slide.font_size === 'large' ? 'text-5xl md:text-7xl' :
+                    slide.font_size === 'xlarge' ? 'text-6xl md:text-8xl' :
+                    'text-4xl md:text-6xl'
+                  }`}
+                  style={{ color: slide.font_color || '#ffffff' }}
+                >
                   {slide.title}
                 </h1>
               )}
               {slide.subtitle && (
-                <p className="text-lg md:text-xl text-muted-foreground mb-8 leading-relaxed max-w-xl">
+                <p
+                  className={`mb-8 leading-relaxed max-w-xl ${
+                    slide.font_size === 'small' ? 'text-base md:text-lg' :
+                    slide.font_size === 'large' ? 'text-xl md:text-2xl' :
+                    slide.font_size === 'xlarge' ? 'text-2xl md:text-3xl' :
+                    'text-lg md:text-xl'
+                  }`}
+                  style={{ color: slide.font_color ? `${slide.font_color}cc` : '#ffffffcc' }}
+                >
                   {slide.subtitle}
                 </p>
               )}
