@@ -151,10 +151,10 @@ const validateRibChecksum = (rib23: string): { valid: boolean; expectedKey: stri
   return { valid: actualKey === expectedKey, expectedKey };
 };
 
-const validateCameroonPhone = (phone: string): boolean => {
+const validateInternationalPhone = (phone: string): boolean => {
   const clean = phone.replace(/\D/g, '');
-  // Must be 237 + 9 digits, starting with 6
-  return /^237[67]\d{8}$/.test(clean) || /^[67]\d{8}$/.test(clean);
+  // Accept international format: country code + local number (7-15 digits total)
+  return /^[1-9]\d{6,14}$/.test(clean);
 };
 
 const validateEmail = (email: string): boolean => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -543,10 +543,10 @@ const CustomerLinkedAccounts: React.FC = () => {
     setValidationMsg(null);
     const clean = formatted.replace(/\D/g, '');
     if (clean.length >= 9) {
-      if (validateCameroonPhone(clean)) {
-        setValidationMsg({ text: '✓ Valid Cameroon phone number', isError: false });
+      if (validateInternationalPhone(clean)) {
+        setValidationMsg({ text: '✓ Valid phone number', isError: false });
       } else {
-        setValidationMsg({ text: 'Enter a valid Cameroon phone (e.g. +237 6XX XXX XXX)', isError: true });
+        setValidationMsg({ text: 'Enter a valid phone number', isError: true });
       }
     }
   }, []);
@@ -593,7 +593,7 @@ const CustomerLinkedAccounts: React.FC = () => {
     // MoMo phone validation
     if (selectedType.key === 'momo_mtn' || selectedType.key === 'momo_orange') {
       const phone = (formData.account_number || '').replace(/\D/g, '');
-      if (!validateCameroonPhone(phone)) { toast.error('Enter a valid Cameroon phone number'); return; }
+      if (!validateInternationalPhone(phone)) { toast.error('Enter a valid phone number'); return; }
     }
 
     // PayPal email validation

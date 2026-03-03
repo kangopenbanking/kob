@@ -14,12 +14,7 @@ import { useQuery } from '@tanstack/react-query';
 import { formatErrorForToast, parseEdgeFunctionError } from '@/lib/error-handler';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
-const COUNTRY_CODES = [
-  { code: '+237', country: 'Cameroon', flag: '🇨🇲' },
-  { code: '+1', country: 'USA/Canada', flag: '🇺🇸' },
-  { code: '+33', country: 'France', flag: '🇫🇷' },
-  { code: '+234', country: 'Nigeria', flag: '🇳🇬' },
-];
+import { COUNTRY_CODES } from '@/lib/country-codes';
 
 export default function ProfileSettings() {
   const { toast } = useToast();
