@@ -49,9 +49,10 @@ const CustomerSplashInner: React.FC = () => {
   return (
     <PWAInstallPrompt
       onContinue={handleInstallComplete}
-      appName={tenant.name}
-      logoUrl={tenant.logoUrl}
+      appName="Kang"
+      logoUrl="/kang-app-logo.png"
       accentColor={tenant.walkthroughConfig?.accent_color}
+      appUrl="https://kangopenbanking.com/app"
     />
   );
 };
