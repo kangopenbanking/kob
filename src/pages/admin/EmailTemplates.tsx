@@ -1,4 +1,5 @@
 import { useState } from "react";
+import DOMPurify from "dompurify";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,7 +110,7 @@ export default function EmailTemplates() {
                                 <DialogTrigger asChild><Button size="sm" variant="ghost" onClick={() => setPreviewTemplate(template)}><Eye className="h-4 w-4" /></Button></DialogTrigger>
                                 <DialogContent className="max-w-2xl">
                                   <DialogHeader><DialogTitle>Preview: {template.name}</DialogTitle></DialogHeader>
-                                  <div className="border rounded-lg p-4 bg-background" dangerouslySetInnerHTML={{ __html: template.body_html }} />
+                                  <div className="border rounded-lg p-4 bg-background" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(template.body_html) }} />
                                 </DialogContent>
                               </Dialog>
                               <Dialog>

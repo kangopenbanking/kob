@@ -113,10 +113,9 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('Error authenticating API client:', error);
-    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('Error authenticating API client:', error instanceof Error ? error.message : error);
     return new Response(
-      JSON.stringify({ error: 'Authentication failed', details: message }),
+      JSON.stringify({ error: 'Authentication failed', message: 'Unable to complete request. Please contact support.' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
