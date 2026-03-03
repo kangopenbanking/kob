@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/Layout";
-import { Shield, TrendingUp, Bell, Target, Award, Users, ArrowRight, ChevronRight, Zap, PiggyBank, Home, BarChart3 } from "lucide-react";
+import { Shield, TrendingUp, Bell, Target, Award, Users, ArrowRight, ChevronRight, Zap, PiggyBank, Home, BarChart3, CreditCard, Landmark, HandCoins, FileCheck, AlertTriangle, CheckCircle2, XCircle, Clock, Repeat, Search } from "lucide-react";
 import { motion } from "framer-motion";
 import crediqHero from "@/assets/crediq-hero.jpg";
 import crediqCard from "@/assets/crediq-card.jpg";
@@ -164,6 +164,239 @@ export default function CrediQ() {
               })}
             </div>
           </div>
+        </section>
+
+        {/* ─── BUILD YOUR CREDIT: APP FEATURES ─── */}
+        <section className="container mx-auto px-4 py-24">
+          <div className="text-center mb-16">
+            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">Kang App Features</p>
+            <h2 className="text-3xl font-bold md:text-4xl mb-3">Build Your Credit With Every Action</h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Your everyday financial activities inside the Kang app directly impact your CrediQ score. Here's exactly how each feature contributes.
+            </p>
+          </div>
+
+          <div className="space-y-6 max-w-5xl mx-auto">
+            {/* Loan Repayments */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+              className="rounded-2xl border border-border bg-background p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Landmark className="h-7 w-7 text-primary" strokeWidth={1.8} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">Loan Repayments</h3>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Highest Impact</span>
+                  </div>
+                  <p className="text-muted-foreground mb-5 leading-relaxed">
+                    Your loan repayment behavior is the single biggest factor in your credit score. On-time payments build a strong history, while late or missed payments can significantly reduce your score.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">On-Time Payment</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+5 to +15</p>
+                      <p className="text-xs text-muted-foreground mt-1">Per successful installment</p>
+                    </div>
+                    <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Clock className="h-4 w-4 text-amber-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Late Payment</span>
+                      </div>
+                      <p className="text-2xl font-bold text-amber-600">−10 to −40</p>
+                      <p className="text-xs text-muted-foreground mt-1">After 3-day grace period</p>
+                    </div>
+                    <div className="rounded-xl bg-destructive/5 border border-destructive/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <XCircle className="h-4 w-4 text-destructive" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Missed Installment</span>
+                      </div>
+                      <p className="text-2xl font-bold text-destructive">−50</p>
+                      <p className="text-xs text-muted-foreground mt-1">Auto-detected daily</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Piggy Bank Savings */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+              className="rounded-2xl border border-border bg-background p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <PiggyBank className="h-7 w-7 text-primary" strokeWidth={1.8} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">Piggy Bank Savings</h3>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">Steady Growth</span>
+                  </div>
+                  <p className="text-muted-foreground mb-5 leading-relaxed">
+                    Build disciplined savings habits and earn credit points. Includes both personal goal-based plans and institutional savings products—every deposit counts toward your score.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">On-Time Plan Payment</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+3 to +5</p>
+                      <p className="text-xs text-muted-foreground mt-1">Per scheduled contribution</p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <TrendingUp className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Each Deposit</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+1 to +3</p>
+                      <p className="text-xs text-muted-foreground mt-1">Capped at 10 pts/month</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Njangi Contributions */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
+              className="rounded-2xl border border-border bg-background p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Users className="h-7 w-7 text-primary" strokeWidth={1.8} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">Njangi Circles</h3>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">Community Trust</span>
+                  </div>
+                  <p className="text-muted-foreground mb-5 leading-relaxed">
+                    Join group savings circles where members contribute to a rotating pot. Your consistency in contributing on time builds community trust and directly boosts your credit score.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">On-Time Contribution</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+3 to +8</p>
+                      <p className="text-xs text-muted-foreground mt-1">Per cycle contribution</p>
+                    </div>
+                    <div className="rounded-xl bg-amber-500/5 border border-amber-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <AlertTriangle className="h-4 w-4 text-amber-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Late Contribution</span>
+                      </div>
+                      <p className="text-2xl font-bold text-amber-600">−5 to −15</p>
+                      <p className="text-xs text-muted-foreground mt-1">Impacts group reliability</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Rent Reporting */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={3}
+              className="rounded-2xl border border-border bg-background p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Home className="h-7 w-7 text-primary" strokeWidth={1.8} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">Rent Reporting</h3>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Easy Wins</span>
+                  </div>
+                  <p className="text-muted-foreground mb-5 leading-relaxed">
+                    Turn your monthly rent into credit history. Set up a rent plan with a KRENTS reference code and every on-time payment is automatically reported to your CrediQ profile—no extra effort needed.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">On-Time Rent Payment</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+5 to +10</p>
+                      <p className="text-xs text-muted-foreground mt-1">Reported automatically</p>
+                    </div>
+                    <div className="rounded-xl bg-muted/60 border border-border p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileCheck className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">KRENTS Reference</span>
+                      </div>
+                      <p className="text-sm font-medium text-foreground mt-1">Each rent plan gets a unique code (e.g. KRENTS4821) for tracking</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* NjangiBox External Bureau */}
+            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={4}
+              className="rounded-2xl border border-border bg-background p-6 md:p-8">
+              <div className="flex flex-col md:flex-row gap-6">
+                <div className="flex-shrink-0">
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Search className="h-7 w-7 text-primary" strokeWidth={1.8} />
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-3 mb-2">
+                    <h3 className="text-xl font-bold text-foreground">NjangiBox — External Bureau Hub</h3>
+                    <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-muted text-muted-foreground">Advanced</span>
+                  </div>
+                  <p className="text-muted-foreground mb-5 leading-relaxed">
+                    Access external credit bureau reports blended with your CrediQ data (70% internal, 30% external). File disputes, compare scores side-by-side, and resolve discrepancies—all from within the app.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <CheckCircle2 className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Score Received</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+2</p>
+                      <p className="text-xs text-muted-foreground mt-1">Each bureau fetch</p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <FileCheck className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Dispute Filed</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+2</p>
+                      <p className="text-xs text-muted-foreground mt-1">Shows financial awareness</p>
+                    </div>
+                    <div className="rounded-xl bg-emerald-500/5 border border-emerald-500/10 p-4">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Award className="h-4 w-4 text-emerald-600" strokeWidth={2} />
+                        <span className="text-sm font-semibold text-foreground">Dispute Resolved</span>
+                      </div>
+                      <p className="text-2xl font-bold text-emerald-600">+5</p>
+                      <p className="text-xs text-muted-foreground mt-1">Successful resolution</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            className="mt-14 text-center">
+            <div className="inline-flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-4">
+              <Zap className="h-5 w-5 text-primary" strokeWidth={2} />
+              <p className="text-sm font-medium text-foreground">
+                <span className="font-bold">All events are immutable</span> — every credit action is permanently recorded for full traceability and reproducibility.
+              </p>
+            </div>
+          </motion.div>
         </section>
 
         {/* ─── HOW IT WORKS ─── */}
