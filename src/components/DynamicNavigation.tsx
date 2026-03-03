@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Menu, ChevronDown, Shield, BookOpen, Globe, BarChart3, Server, Code, LayoutDashboard, Landmark, Scale, FlaskConical, Activity, Smartphone } from "lucide-react";
+import { Menu, ChevronDown, Shield, BookOpen, Globe, BarChart3, Server, Code, LayoutDashboard, Landmark, Scale, FlaskConical, Activity, Smartphone, TrendingUp } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import {
   NavigationMenu,
@@ -70,6 +70,7 @@ const developerItems: NavItem[] = [
 ];
 
 const resourceItems: NavItem[] = [
+  { label: "Credit Score", to: "/credit-score", icon: TrendingUp, desc: "Check your credit score" },
   { label: "Pricing & Fees", to: "/pricing", icon: Landmark, desc: "Transparent pricing" },
   { label: "Integration Guide", to: "/integration-workflow", icon: BookOpen, desc: "Step-by-step setup" },
   { label: "API Status", to: "/status", icon: Activity, desc: "Real-time system status" },
