@@ -83,6 +83,7 @@ interface CustomerAppConfig {
     request: string;
     pay_links: string;
   };
+  hero_action_opacity: number;
   typography_config: TypographyConfig;
 }
 
@@ -137,6 +138,7 @@ const defaultConfig: CustomerAppConfig = {
     request: '#ffffff',
     pay_links: '#ffffff',
   },
+  hero_action_opacity: 0.8,
   typography_config: {
     global_font_size_multiplier: 1.3,
     global_heading_color: '#000000',
@@ -962,6 +964,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
 
   const [isVideo, setIsVideo] = useState(false);
   const [actionColors, setActionColors] = useState(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
+  const [actionOpacity, setActionOpacity] = useState(appConfig.hero_action_opacity ?? 0.8);
   const [mediaType, setMediaType] = useState<'image' | 'video' | ''>('');
 
   // Detect if URL is a video — check extension OR stored media type
@@ -975,6 +978,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
     setBgImage(appConfig.hero_bg_image || '');
     setMediaType((appConfig as any).hero_media_type || '');
     setActionColors(appConfig.hero_action_colors || { accounts: '#ffffff', cash_out: '#ffffff', request: '#ffffff', pay_links: '#ffffff' });
+    setActionOpacity(appConfig.hero_action_opacity ?? 0.8);
   }, [appConfig]);
 
   const saveMutation = useMutation({
@@ -991,6 +995,7 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
             hero_bg_image: bgImage,
             hero_media_type: mediaType,
             hero_action_colors: actionColors,
+            hero_action_opacity: actionOpacity,
           },
         },
       }).eq("id", institutionId);
@@ -1152,6 +1157,24 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Hero Action Button Opacity */}
+        <div className="space-y-3">
+          <Label>Action Button Opacity</Label>
+          <p className="text-xs text-muted-foreground">Control the background opacity of hero action circles (0% transparent – 100% solid).</p>
+          <div className="flex items-center gap-3">
+            <input
+              type="range"
+              min={0}
+              max={100}
+              step={5}
+              value={Math.round(actionOpacity * 100)}
+              onChange={e => setActionOpacity(Number(e.target.value) / 100)}
+              className="flex-1"
+            />
+            <span className="text-sm font-medium w-12 text-right">{Math.round(actionOpacity * 100)}%</span>
           </div>
         </div>
 
