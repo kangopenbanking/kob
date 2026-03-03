@@ -19,6 +19,7 @@ interface HeroSlide {
   font_size: string | null;
   font_alignment: string | null;
   subtitle_font_size: string | null;
+  subtitle_font_color: string | null;
 }
 
 export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
@@ -126,7 +127,7 @@ export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
                     (slide.subtitle_font_size || 'default') === 'xlarge' ? 'text-2xl md:text-3xl' :
                     'text-lg md:text-xl'
                   }`}
-                  style={{ color: slide.font_color ? `${slide.font_color}cc` : '#ffffffcc' }}
+                  style={{ color: slide.subtitle_font_color || (slide.font_color ? `${slide.font_color}cc` : '#ffffffcc') }}
                 >
                   {slide.subtitle}
                 </p>
