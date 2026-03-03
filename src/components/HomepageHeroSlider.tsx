@@ -17,6 +17,7 @@ interface HeroSlide {
   overlay_opacity: number;
   font_color: string | null;
   font_size: string | null;
+  font_alignment: string | null;
 }
 
 export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
@@ -87,7 +88,11 @@ export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
       </AnimatePresence>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-24 md:py-40 relative z-10">
+      <div className={`container mx-auto px-4 py-24 md:py-40 relative z-10 ${
+        slide.font_alignment === 'center' ? 'text-center flex justify-center' :
+        slide.font_alignment === 'right' ? 'text-right flex justify-end' :
+        'text-left'
+      }`}>
         <div className="max-w-2xl">
           <AnimatePresence mode="wait">
             <motion.div
