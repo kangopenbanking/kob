@@ -25,7 +25,8 @@ const BankSplashInner: React.FC = () => {
       appName={tenant.name}
       logoUrl={tenant.logoUrl}
       accentColor={tenant.walkthroughConfig?.accent_color}
-      appUrl={`${window.location.origin}/bank/${institutionId}`}
+      tagline={tenant.tagline || undefined}
+      appKey={`bank-${institutionId}`}
     />
   );
 };
