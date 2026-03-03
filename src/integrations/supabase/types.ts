@@ -4102,6 +4102,116 @@ export type Database = {
         }
         Relationships: []
       }
+      escrow_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string | null
+          escrow_wallet_id: string
+          id: string
+          metadata: Json | null
+          performed_by: string | null
+          reference: string | null
+          transaction_type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          escrow_wallet_id: string
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+          reference?: string | null
+          transaction_type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          escrow_wallet_id?: string
+          id?: string
+          metadata?: Json | null
+          performed_by?: string | null
+          reference?: string | null
+          transaction_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_transactions_escrow_wallet_id_fkey"
+            columns: ["escrow_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_wallets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      escrow_wallets: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          currency: string
+          escrow_label: string
+          held_amount: number
+          id: string
+          merchant_id: string
+          metadata: Json | null
+          parent_wallet_id: string
+          refunded_amount: number
+          released_amount: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          currency?: string
+          escrow_label: string
+          held_amount?: number
+          id?: string
+          merchant_id: string
+          metadata?: Json | null
+          parent_wallet_id: string
+          refunded_amount?: number
+          released_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          currency?: string
+          escrow_label?: string
+          held_amount?: number
+          id?: string
+          merchant_id?: string
+          metadata?: Json | null
+          parent_wallet_id?: string
+          refunded_amount?: number
+          released_amount?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "escrow_wallets_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "escrow_wallets_parent_wallet_id_fkey"
+            columns: ["parent_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exchange_rates_cache: {
         Row: {
           base_currency: string
@@ -9736,6 +9846,75 @@ export type Database = {
           },
         ]
       }
+      safeguarding_ledger: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          description: string
+          direction: string
+          entry_type: string
+          escrow_wallet_id: string | null
+          id: string
+          merchant_id: string | null
+          reconciled: boolean
+          reconciled_at: string | null
+          reconciled_by: string | null
+          reference_id: string | null
+          reference_type: string | null
+          running_balance: number
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          description: string
+          direction: string
+          entry_type: string
+          escrow_wallet_id?: string | null
+          id?: string
+          merchant_id?: string | null
+          reconciled?: boolean
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          running_balance?: number
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          description?: string
+          direction?: string
+          entry_type?: string
+          escrow_wallet_id?: string | null
+          id?: string
+          merchant_id?: string | null
+          reconciled?: boolean
+          reconciled_at?: string | null
+          reconciled_by?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          running_balance?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safeguarding_ledger_escrow_wallet_id_fkey"
+            columns: ["escrow_wallet_id"]
+            isOneToOne: false
+            referencedRelation: "escrow_wallets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safeguarding_ledger_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sanctions_screening: {
         Row: {
           created_at: string | null
@@ -10135,6 +10314,50 @@ export type Database = {
             columns: ["sandbox_account_id"]
             isOneToOne: false
             referencedRelation: "developer_sandbox_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sar_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          new_status: string | null
+          notes: string | null
+          performed_by: string
+          previous_status: string | null
+          sar_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          notes?: string | null
+          performed_by: string
+          previous_status?: string | null
+          sar_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          new_status?: string | null
+          notes?: string | null
+          performed_by?: string
+          previous_status?: string | null
+          sar_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sar_events_sar_id_fkey"
+            columns: ["sar_id"]
+            isOneToOne: false
+            referencedRelation: "suspicious_activity_reports"
             referencedColumns: ["id"]
           },
         ]
@@ -11110,6 +11333,113 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      suspicious_activity_reports: {
+        Row: {
+          activity_end_date: string | null
+          activity_start_date: string | null
+          activity_type: string
+          amount_involved: number | null
+          closed_at: string | null
+          closure_notes: string | null
+          created_at: string
+          currency: string | null
+          detailed_narrative: string | null
+          escalated_at: string | null
+          escalated_to: string | null
+          filed_at: string
+          filed_by: string
+          id: string
+          metadata: Json | null
+          regulatory_reference: string | null
+          report_number: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          risk_indicators: Json | null
+          severity: string
+          status: string
+          subject_merchant_id: string | null
+          subject_name: string
+          subject_type: string
+          subject_user_id: string | null
+          summary: string
+          supporting_evidence: Json | null
+          suspicious_transactions: Json | null
+          updated_at: string
+        }
+        Insert: {
+          activity_end_date?: string | null
+          activity_start_date?: string | null
+          activity_type: string
+          amount_involved?: number | null
+          closed_at?: string | null
+          closure_notes?: string | null
+          created_at?: string
+          currency?: string | null
+          detailed_narrative?: string | null
+          escalated_at?: string | null
+          escalated_to?: string | null
+          filed_at?: string
+          filed_by: string
+          id?: string
+          metadata?: Json | null
+          regulatory_reference?: string | null
+          report_number: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_indicators?: Json | null
+          severity?: string
+          status?: string
+          subject_merchant_id?: string | null
+          subject_name: string
+          subject_type: string
+          subject_user_id?: string | null
+          summary: string
+          supporting_evidence?: Json | null
+          suspicious_transactions?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          activity_end_date?: string | null
+          activity_start_date?: string | null
+          activity_type?: string
+          amount_involved?: number | null
+          closed_at?: string | null
+          closure_notes?: string | null
+          created_at?: string
+          currency?: string | null
+          detailed_narrative?: string | null
+          escalated_at?: string | null
+          escalated_to?: string | null
+          filed_at?: string
+          filed_by?: string
+          id?: string
+          metadata?: Json | null
+          regulatory_reference?: string | null
+          report_number?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          risk_indicators?: Json | null
+          severity?: string
+          status?: string
+          subject_merchant_id?: string | null
+          subject_name?: string
+          subject_type?: string
+          subject_user_id?: string | null
+          summary?: string
+          supporting_evidence?: Json | null
+          suspicious_transactions?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "suspicious_activity_reports_subject_merchant_id_fkey"
+            columns: ["subject_merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       swift_messages: {
         Row: {
