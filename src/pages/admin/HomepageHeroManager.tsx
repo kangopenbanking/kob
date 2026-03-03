@@ -26,6 +26,7 @@ interface HeroSlide {
   font_size: string | null;
   font_alignment: string | null;
   subtitle_font_size: string | null;
+  subtitle_font_color: string | null;
   created_at: string;
 }
 
@@ -251,7 +252,7 @@ export default function HomepageHeroManager() {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
                   <div>
                     <Label>Font Color</Label>
                     <div className="flex items-center gap-2 mt-1">
@@ -302,6 +303,23 @@ export default function HomepageHeroManager() {
                         <SelectItem value="xlarge">Extra Large</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                  <div>
+                    <Label>Description Color</Label>
+                    <div className="flex items-center gap-2 mt-1">
+                      <input
+                        type="color"
+                        value={slide.subtitle_font_color || slide.font_color || '#ffffff'}
+                        onChange={(e) => updateSlide(slide.id, { subtitle_font_color: e.target.value })}
+                        className="h-9 w-12 rounded border border-input cursor-pointer"
+                      />
+                      <Input
+                        value={slide.subtitle_font_color || ''}
+                        onChange={(e) => updateSlide(slide.id, { subtitle_font_color: e.target.value || null })}
+                        placeholder="Inherit from title"
+                        className="flex-1"
+                      />
+                    </div>
                   </div>
                   <div>
                     <Label>Alignment</Label>

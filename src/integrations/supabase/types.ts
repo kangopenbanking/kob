@@ -6016,6 +6016,7 @@ export type Database = {
           overlay_opacity: number | null
           sort_order: number
           subtitle: string | null
+          subtitle_font_color: string | null
           subtitle_font_size: string | null
           title: string | null
           updated_at: string
@@ -6035,6 +6036,7 @@ export type Database = {
           overlay_opacity?: number | null
           sort_order?: number
           subtitle?: string | null
+          subtitle_font_color?: string | null
           subtitle_font_size?: string | null
           title?: string | null
           updated_at?: string
@@ -6054,6 +6056,7 @@ export type Database = {
           overlay_opacity?: number | null
           sort_order?: number
           subtitle?: string | null
+          subtitle_font_color?: string | null
           subtitle_font_size?: string | null
           title?: string | null
           updated_at?: string
