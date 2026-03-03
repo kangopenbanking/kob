@@ -8,6 +8,7 @@ interface PWAInstallPromptProps {
   appName?: string;
   logoUrl?: string | null;
   accentColor?: string;
+  appUrl?: string;
 }
 
 export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
@@ -15,6 +16,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   appName = 'App',
   logoUrl,
   accentColor,
+  appUrl,
 }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstalled, setIsInstalled] = useState(false);
@@ -125,6 +127,11 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
         <p className="max-w-xs text-center text-sm leading-relaxed text-muted-foreground">
           Add {appName} to your home screen for the best experience — no app store needed.
         </p>
+        {appUrl && (
+          <code className="mt-1 rounded bg-muted px-3 py-1.5 text-xs text-muted-foreground break-all">
+            {appUrl}
+          </code>
+        )}
       </motion.div>
 
       {/* Advantages */}

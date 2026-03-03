@@ -26,6 +26,7 @@ import {
   BarChart3,
   FileCode,
   Store,
+  Link2,
   type LucideIcon,
 } from "lucide-react";
 
@@ -85,6 +86,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Email Templates", path: "/admin/email-templates", icon: FileCode },
       { title: "WooCommerce Plugin", path: "/admin/woocommerce-plugin", icon: ShoppingCart },
       { title: "Sandbox", path: "/admin/sandbox", icon: Database },
+      { title: "Institution App URLs", path: "/admin/institution-urls", icon: Link2 },
     ],
   },
   {
