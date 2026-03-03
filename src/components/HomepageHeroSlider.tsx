@@ -81,8 +81,10 @@ export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
             />
           )}
           <div
-            className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent"
-            style={{ opacity: slide.overlay_opacity ?? 0.4 }}
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(to right, rgba(0,0,0,${slide.overlay_opacity ?? 0.4}), rgba(0,0,0,${(slide.overlay_opacity ?? 0.4) * 0.6}), transparent)`
+            }}
           />
         </motion.div>
       </AnimatePresence>
