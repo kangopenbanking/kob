@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Copy, ExternalLink, Check, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
-const BASE_URL = 'https://kob.lovable.app';
+const BASE_URL = 'https://kangopenbanking.com';
 
 const InstitutionAppUrls: React.FC = () => {
   const [search, setSearch] = useState('');
