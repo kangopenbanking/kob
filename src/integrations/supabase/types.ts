@@ -10655,6 +10655,57 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_runs: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_log: Json | null
+          float_adjustments: Json | null
+          id: string
+          payouts_failed: number | null
+          payouts_processed: number | null
+          payouts_settled: number | null
+          run_type: string
+          started_at: string
+          status: string
+          summary: Json | null
+          total_fees_collected: number | null
+          total_settled_amount: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          float_adjustments?: Json | null
+          id?: string
+          payouts_failed?: number | null
+          payouts_processed?: number | null
+          payouts_settled?: number | null
+          run_type?: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          total_fees_collected?: number | null
+          total_settled_amount?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_log?: Json | null
+          float_adjustments?: Json | null
+          id?: string
+          payouts_failed?: number | null
+          payouts_processed?: number | null
+          payouts_settled?: number | null
+          run_type?: string
+          started_at?: string
+          status?: string
+          summary?: Json | null
+          total_fees_collected?: number | null
+          total_settled_amount?: number | null
+        }
+        Relationships: []
+      }
       settlement_transactions: {
         Row: {
           completed_at: string | null
@@ -11829,6 +11880,123 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "treasury_float_rail_id_fkey"
+            columns: ["rail_id"]
+            isOneToOne: false
+            referencedRelation: "payout_rails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treasury_float_alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          currency: string
+          current_balance: number
+          float_id: string
+          id: string
+          is_resolved: boolean
+          rail_id: string
+          resolved_at: string | null
+          threshold: number
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          currency?: string
+          current_balance: number
+          float_id: string
+          id?: string
+          is_resolved?: boolean
+          rail_id: string
+          resolved_at?: string | null
+          threshold: number
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          currency?: string
+          current_balance?: number
+          float_id?: string
+          id?: string
+          is_resolved?: boolean
+          rail_id?: string
+          resolved_at?: string | null
+          threshold?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasury_float_alerts_float_id_fkey"
+            columns: ["float_id"]
+            isOneToOne: false
+            referencedRelation: "treasury_float"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_float_alerts_rail_id_fkey"
+            columns: ["rail_id"]
+            isOneToOne: false
+            referencedRelation: "payout_rails"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      treasury_float_ledger: {
+        Row: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at: string
+          currency: string
+          entry_type: string
+          float_id: string
+          id: string
+          notes: string | null
+          performed_by: string | null
+          rail_id: string
+          reference_id: string | null
+          reference_type: string | null
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          balance_before: number
+          created_at?: string
+          currency?: string
+          entry_type: string
+          float_id: string
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          rail_id: string
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          balance_before?: number
+          created_at?: string
+          currency?: string
+          entry_type?: string
+          float_id?: string
+          id?: string
+          notes?: string | null
+          performed_by?: string | null
+          rail_id?: string
+          reference_id?: string | null
+          reference_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treasury_float_ledger_float_id_fkey"
+            columns: ["float_id"]
+            isOneToOne: false
+            referencedRelation: "treasury_float"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "treasury_float_ledger_rail_id_fkey"
             columns: ["rail_id"]
             isOneToOne: false
             referencedRelation: "payout_rails"
