@@ -186,29 +186,31 @@ const LinkedCardVisual = ({ acc, onDelete }: { acc: any; onDelete: () => void })
       className="relative overflow-hidden rounded-3xl" style={{ aspectRatio: '1.586/1' }}>
       <img src={kangCardBg} alt="" className="absolute inset-0 w-full h-full object-cover" />
       <div className="absolute inset-0 bg-black/10" />
-      <div className="relative z-10 flex flex-col justify-between h-full p-5">
+      <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5">
         <div className="flex items-start justify-end">
           <CardDeleteBtn onClick={onDelete} />
         </div>
         <div>
           <p className="text-[10px] font-medium text-white/70 uppercase tracking-wider">Linked Card</p>
-          <p className="text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
+          <p className="text-xs sm:text-sm font-bold text-white mt-0.5">{acc.account_name || 'Cardholder'}</p>
         </div>
-        <div className="space-y-3">
-          <p className="font-mono text-lg text-white tracking-[0.2em]">•••• •••• •••• {acc.last4 || '••••'}</p>
+        <div className="space-y-2 sm:space-y-3">
+          <p className="font-mono text-sm sm:text-lg text-white tracking-[0.08em] sm:tracking-[0.2em] whitespace-nowrap overflow-hidden">
+            •••• •••• •••• {acc.last4 || '••••'}
+          </p>
           <div className="flex items-end justify-between">
-            <div className="flex gap-6">
+            <div className="flex gap-4 sm:gap-6">
               <div>
-                <p className="text-[9px] font-medium text-white/60 uppercase">Expires</p>
-                <p className="text-sm font-semibold text-white font-mono">{expMonth}/{expYear}</p>
+                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">Expires</p>
+                <p className="text-xs sm:text-sm font-semibold text-white font-mono">{expMonth}/{expYear}</p>
               </div>
               <div>
-                <p className="text-[9px] font-medium text-white/60 uppercase">Network</p>
-                <p className="text-sm font-semibold text-white capitalize">{network}</p>
+                <p className="text-[8px] sm:text-[9px] font-medium text-white/60 uppercase">Network</p>
+                <p className="text-xs sm:text-sm font-semibold text-white capitalize">{network}</p>
               </div>
             </div>
             {acc.is_primary && (
-              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2.5 py-1 text-[10px] font-bold text-white">Primary</span>
+              <span className="rounded-lg bg-white/20 backdrop-blur-sm px-2 sm:px-2.5 py-0.5 sm:py-1 text-[9px] sm:text-[10px] font-bold text-white">Primary</span>
             )}
           </div>
         </div>
