@@ -6006,6 +6006,7 @@ export type Database = {
           created_by: string | null
           cta_link: string | null
           cta_text: string | null
+          font_alignment: string | null
           font_color: string | null
           font_size: string | null
           id: string
@@ -6023,6 +6024,7 @@ export type Database = {
           created_by?: string | null
           cta_link?: string | null
           cta_text?: string | null
+          font_alignment?: string | null
           font_color?: string | null
           font_size?: string | null
           id?: string
@@ -6040,6 +6042,7 @@ export type Database = {
           created_by?: string | null
           cta_link?: string | null
           cta_text?: string | null
+          font_alignment?: string | null
           font_color?: string | null
           font_size?: string | null
           id?: string

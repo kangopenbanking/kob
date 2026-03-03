@@ -24,6 +24,7 @@ interface HeroSlide {
   overlay_opacity: number;
   font_color: string | null;
   font_size: string | null;
+  font_alignment: string | null;
   created_at: string;
 }
 
@@ -247,7 +248,7 @@ export default function HomepageHeroManager() {
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid md:grid-cols-3 gap-4">
                   <div>
                     <Label>Font Color</Label>
                     <div className="flex items-center gap-2 mt-1">
@@ -279,6 +280,22 @@ export default function HomepageHeroManager() {
                         <SelectItem value="default">Default</SelectItem>
                         <SelectItem value="large">Large</SelectItem>
                         <SelectItem value="xlarge">Extra Large</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label>Alignment</Label>
+                    <Select
+                      value={slide.font_alignment || 'left'}
+                      onValueChange={(v) => updateSlide(slide.id, { font_alignment: v })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="left">Left</SelectItem>
+                        <SelectItem value="center">Center</SelectItem>
+                        <SelectItem value="right">Right</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
