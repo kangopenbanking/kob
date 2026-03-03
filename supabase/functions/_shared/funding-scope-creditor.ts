@@ -77,6 +77,7 @@ export async function creditFundingIntent(supabase: any, fundingIntent: any) {
         funding_reference: fundingIntent.reference,
         funding_scope: scope,
         method: fundingIntent.method,
+        source: 'customer_app',
       },
     });
 
