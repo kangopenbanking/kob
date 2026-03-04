@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Smartphone, Building2, Webhook, ArrowRight, Wallet, Shield, Zap, Activity } from "lucide-react";
+import { CreditCard, Smartphone, Building2, Webhook, ArrowRight, Wallet, Shield, Zap, Activity, Landmark } from "lucide-react";
 
 const integrations = [
   {
