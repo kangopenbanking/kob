@@ -186,22 +186,64 @@ const CustomerOnboarding: React.FC = () => {
 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  {selected === 'momo_orange' || selected === 'momo_mtn' ? 'Phone Number' : 'Account Number'}
+                  {selected === 'momo_orange' || selected === 'momo_mtn' ? 'Phone Number' : selected === 'card' ? 'Card Number' : 'Account Number'}
                 </p>
                 <Input
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder={selected === 'momo_orange' || selected === 'momo_mtn' ? '+237 6XX XXX XXX' : 'Enter account number'}
+                  placeholder={selected === 'momo_orange' || selected === 'momo_mtn' ? '+237 6XX XXX XXX' : selected === 'card' ? '4242 4242 4242 4242' : 'Enter account number'}
                   className="h-14 rounded-2xl text-base"
                 />
               </div>
 
+              {selected === 'card' && (
+                <>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Card Network</p>
+                    <Select value={cardNetwork} onValueChange={setCardNetwork}>
+                      <SelectTrigger className="h-14 rounded-2xl text-base">
+                        <SelectValue placeholder="Select network" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CARD_NETWORKS.map(n => (
+                          <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Exp Month</p>
+                      <Input
+                        value={cardExpMonth}
+                        onChange={(e) => setCardExpMonth(e.target.value.replace(/\D/g, '').substring(0, 2))}
+                        placeholder="MM"
+                        className="h-14 rounded-2xl text-base text-center"
+                        maxLength={2}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Exp Year</p>
+                      <Input
+                        value={cardExpYear}
+                        onChange={(e) => setCardExpYear(e.target.value.replace(/\D/g, '').substring(0, 2))}
+                        placeholder="YY"
+                        className="h-14 rounded-2xl text-base text-center"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Account Holder Name</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                  {selected === 'card' ? 'Cardholder Name' : 'Account Holder Name'}
+                </p>
                 <Input
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
-                  placeholder="Full name on account"
+                  placeholder={selected === 'card' ? 'Name on card' : 'Full name on account'}
                   className="h-14 rounded-2xl text-base"
                 />
               </div>
