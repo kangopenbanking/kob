@@ -521,6 +521,18 @@ const CustomerAuth: React.FC = () => {
                     <KeyRound className="h-4 w-4" strokeWidth={1.5} />
                     Forgot PIN? Use OTP instead
                   </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={async () => {
+                      setPin(''); setPinError(null);
+                      await sendOTP(fullPhone);
+                      setMode('reset-pin');
+                    }}
+                    className="w-full gap-2 text-sm text-destructive"
+                  >
+                    <Lock className="h-4 w-4" strokeWidth={1.5} />
+                    Reset My PIN
+                  </Button>
                   <Button variant="ghost" size="sm" onClick={() => { setMode('input'); setPin(''); setPinError(null); setPhoneNumber(''); }} className="gap-1.5 text-xs text-muted-foreground">
                     <ArrowLeft className="h-3 w-3" /> Change phone number
                   </Button>
