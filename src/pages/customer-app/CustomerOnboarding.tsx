@@ -42,6 +42,9 @@ const CustomerOnboarding: React.FC = () => {
   const [selected, setSelected] = useState<AccountType | null>(null);
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
+  const [cardNetwork, setCardNetwork] = useState('');
+  const [cardExpMonth, setCardExpMonth] = useState('');
+  const [cardExpYear, setCardExpYear] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
