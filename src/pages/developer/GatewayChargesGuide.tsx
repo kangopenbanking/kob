@@ -1,6 +1,10 @@
 import { SEO } from "@/components/SEO";
 import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { DocNavigation } from "@/components/developer/DocNavigation";
+import { Info } from "lucide-react";
 
 const GatewayChargesGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -11,7 +15,76 @@ const GatewayChargesGuide = () => (
       <p className="text-muted-foreground mt-2">Collect payments from customers via mobile_money, card, or bank_transfer channels through a single endpoint. Supports OTP validation, preauthorization (auth + capture), and configurable fee bearer. To fund a KOB user account directly, see <a href="/developer/gateway/funding" className="text-primary underline">Account Funding</a>.</p>
     </div>
 
-    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges" description="Create a new charge. Routes automatically to Flutterwave (MoMo) or Stripe (card) based on channel. Supports fee_bearer and capture_mode overrides."
+    {/* How It Works */}
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">How It Works</h2>
+      <p className="text-sm text-muted-foreground">
+        The Charges API is the primary collection endpoint. A single <code className="bg-muted px-1 rounded">POST /v1/gateway/charges</code> call accepts any payment channel — the gateway automatically routes to the correct provider (Flutterwave for MoMo/Bank, Stripe for Cards, Apple Pay, Google Pay).
+      </p>
+      <div className="bg-muted/50 rounded-lg p-4 border">
+        <h3 className="font-semibold mb-3">Charge Processing Pipeline</h3>
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          {["Create Charge", "Provider Routing", "Customer Authorization", "OTP/3DS Validation", "Webhook Confirmation", "Settlement"].map((step, i) => (
+            <span key={step}>
+              {i > 0 && <span className="mr-2">→</span>}
+              <span className="bg-primary/10 text-primary px-3 py-1 rounded-full font-medium inline-block">{step}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+
+    {/* Supported Channels */}
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Supported Channels</h2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Channel</TableHead>
+            <TableHead>Provider</TableHead>
+            <TableHead>Currencies</TableHead>
+            <TableHead>Auth Method</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[
+            { ch: "mobile_money", provider: "Flutterwave", currencies: "XAF, XOF", auth: "USSD Push / OTP" },
+            { ch: "card", provider: "Stripe", currencies: "XAF, USD, EUR, GBP", auth: "3D Secure / Direct" },
+            { ch: "bank_transfer", provider: "Flutterwave", currencies: "XAF, NGN", auth: "Redirect" },
+            { ch: "apple_pay", provider: "Stripe", currencies: "USD, EUR, GBP", auth: "Biometric" },
+            { ch: "google_pay", provider: "Stripe", currencies: "USD, EUR, GBP", auth: "Biometric" },
+            { ch: "ussd", provider: "Flutterwave", currencies: "XAF", auth: "USSD Dial" },
+          ].map(r => (
+            <TableRow key={r.ch}>
+              <TableCell><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{r.ch}</code></TableCell>
+              <TableCell className="text-sm">{r.provider}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">{r.currencies}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">{r.auth}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+
+    {/* Capture Modes */}
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Capture Modes</h2>
+      <div className="grid sm:grid-cols-2 gap-3">
+        <div className="border rounded-lg p-4">
+          <h4 className="font-medium text-sm">Auto Capture (Default)</h4>
+          <p className="text-xs text-muted-foreground mt-1">Funds are captured immediately upon authorization. Best for standard e-commerce.</p>
+        </div>
+        <div className="border rounded-lg p-4">
+          <h4 className="font-medium text-sm">Manual Capture (Preauthorization)</h4>
+          <p className="text-xs text-muted-foreground mt-1">Authorize a hold on the card, then capture later (full or partial). Ideal for hotel bookings, car rentals, or order-then-ship workflows. Void uncaptured holds within 7 days.</p>
+        </div>
+      </div>
+    </div>
+
+    {/* API Endpoints */}
+    <h2 className="text-xl font-semibold">API Reference</h2>
+
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges" description="Create a new charge. Routes automatically to Flutterwave (MoMo) or Stripe (card) based on channel."
       requestBody={JSON.stringify({ merchant_id: "mch_uuid", amount: 5000, currency: "XAF", channel: "mobile_money", customer_phone: "237677123456", tx_ref: "order_001", fee_bearer: "merchant", capture_mode: "auto", metadata: {} }, null, 2)}
       response={JSON.stringify({ id: "chg_uuid", merchant_id: "mch_uuid", amount: 5000, currency: "XAF", channel: "mobile_money", status: "processing", provider: "flutterwave", provider_ref: "FLW-1234", fee_amount: 200, net_amount: 4800, capture_mode: "auto", tx_ref: "order_001", created_at: "2026-02-22T10:00:00Z" }, null, 2)}
       parameters={[
@@ -27,7 +100,7 @@ const GatewayChargesGuide = () => (
       ]}
     />
 
-    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/validate" description="Submit an OTP to complete a pending charge that requires validation (common with mobile money)."
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/validate" description="Submit an OTP to complete a pending MoMo charge."
       requestBody={JSON.stringify({ charge_id: "chg_uuid", otp: "123456" }, null, 2)}
       response={JSON.stringify({ id: "chg_uuid", status: "successful", message: "Charge validated" }, null, 2)}
       parameters={[
@@ -37,7 +110,7 @@ const GatewayChargesGuide = () => (
       ]}
     />
 
-    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/preauth" description="Create a preauthorized charge — hold funds on a card without capturing. Uses Stripe PaymentIntent with capture_method=manual."
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/preauth" description="Create a preauthorized hold on a card (Stripe PaymentIntent with capture_method=manual)."
       requestBody={JSON.stringify({ merchant_id: "mch_uuid", amount: 50000, currency: "USD", customer_email: "john@example.com", tx_ref: "preauth_001" }, null, 2)}
       response={JSON.stringify({ id: "chg_uuid", status: "authorized", capture_mode: "manual", captured_amount: 0, client_secret: "pi_xxx_secret_yyy" }, null, 2)}
       parameters={[
@@ -57,14 +130,25 @@ const GatewayChargesGuide = () => (
       ]}
     />
 
-    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/void" description="Release an authorized hold without capturing any funds."
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/void" description="Release an authorized hold without capturing."
       response={JSON.stringify({ id: "chg_uuid", status: "voided" }, null, 2)}
       parameters={[
         { name: "chargeId", type: "uuid", required: true, description: "The authorized charge ID to void" },
       ]}
     />
 
-    <ApiEndpoint method="GET" endpoint="/v1/gateway/charges?id={chargeId}" description="Retrieve a charge by ID with latest provider status."
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/verify" description="Verify a charge by polling the provider for the latest status."
+      response={JSON.stringify({ id: "chg_uuid", status: "successful", provider: "flutterwave", provider_ref: "FLW-1234", verified_at: "2026-02-22T10:05:00Z" }, null, 2)}
+      parameters={[
+        { name: "chargeId", type: "uuid", required: true, description: "The charge ID to verify" },
+      ]}
+    />
+
+    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/cancel" description="Cancel a pending charge before provider processing."
+      response={JSON.stringify({ id: "chg_uuid", status: "cancelled", cancelled_at: "2026-02-22T10:02:00Z" }, null, 2)}
+    />
+
+    <ApiEndpoint method="GET" endpoint="/v1/gateway/charges?id={chargeId}" description="Retrieve a charge by ID."
       response={JSON.stringify({ id: "chg_uuid", status: "successful", amount: 5000, currency: "XAF", channel: "mobile_money", capture_mode: "auto" }, null, 2)}
     />
 
@@ -72,24 +156,98 @@ const GatewayChargesGuide = () => (
       response={JSON.stringify({ data: [], total: 0, limit: 50, offset: 0 }, null, 2)}
     />
 
-    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/verify" description="Verify a charge by polling the provider (Flutterwave or Stripe) for the latest status and syncing it to the gateway."
-      response={JSON.stringify({ id: "chg_uuid", status: "successful", provider: "flutterwave", provider_ref: "FLW-1234", amount: 5000, currency: "XAF", channel: "mobile_money", verified_at: "2026-02-22T10:05:00Z" }, null, 2)}
-      parameters={[
-        { name: "chargeId", type: "uuid", required: true, description: "The charge ID to verify against the provider" },
-      ]}
-    />
-
-    <ApiEndpoint method="POST" endpoint="/v1/gateway/charges/{chargeId}/cancel" description="Cancel a pending charge before it is processed by the provider."
-      response={JSON.stringify({ id: "chg_uuid", status: "cancelled", cancelled_at: "2026-02-22T10:02:00Z" }, null, 2)}
-    />
-
-    <ApiEndpoint method="GET" endpoint="/v1/gateway/fee-estimate?amount={amount}&channel={channel}&currency={currency}" description="Preview transaction fees and net amount before creating a charge."
+    <ApiEndpoint method="GET" endpoint="/v1/gateway/fee-estimate?amount={amount}&channel={channel}&currency={currency}" description="Preview fees before creating a charge."
       response={JSON.stringify({ amount: 5000, currency: "XAF", channel: "mobile_money", fee_amount: 200, net_amount: 4800, fee_percentage: "3%", fixed_fee: 50 }, null, 2)}
       parameters={[
         { name: "amount", type: "number", required: true, description: "Transaction amount" },
         { name: "channel", type: "string", required: true, description: "mobile_money | card | bank_transfer" },
         { name: "currency", type: "string", required: false, description: "ISO 4217 code, default XAF" },
       ]}
+    />
+
+    {/* Code Examples */}
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold">Code Examples</h2>
+      <div className="space-y-3">
+        <h3 className="font-medium text-sm">Mobile Money Charge (curl)</h3>
+        <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
+{`curl -X POST https://api.kangopenbanking.com/v1/gateway/charges \\
+  -H "Authorization: Bearer sk_live_..." \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "merchant_id": "mch_uuid",
+    "amount": 5000,
+    "currency": "XAF",
+    "channel": "mobile_money",
+    "customer_phone": "237677123456",
+    "tx_ref": "order_001"
+  }'`}
+        </pre>
+
+        <h3 className="font-medium text-sm">Preauthorize & Capture (Node.js)</h3>
+        <pre className="bg-muted rounded-lg p-4 text-xs overflow-x-auto">
+{`// Step 1: Create preauth
+const preauth = await fetch('/v1/gateway/charges/preauth', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer sk_live_...', 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    merchant_id: 'mch_uuid', amount: 50000, currency: 'USD',
+    customer_email: 'john@example.com', tx_ref: 'preauth_001'
+  })
+});
+const { client_secret } = await preauth.json();
+
+// Step 2: Confirm on frontend with Stripe.js
+// stripe.confirmCardPayment(client_secret)
+
+// Step 3: Capture (full or partial)
+await fetch('/v1/gateway/charges/chg_uuid/capture', {
+  method: 'POST',
+  headers: { 'Authorization': 'Bearer sk_live_...', 'Content-Type': 'application/json' },
+  body: JSON.stringify({ amount: 25000 }) // partial capture
+});`}
+        </pre>
+      </div>
+    </div>
+
+    {/* Webhook Events */}
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Webhook Events</h2>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Event</TableHead>
+            <TableHead>Description</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {[
+            { event: "charge.successful", desc: "Charge completed — funds collected from customer" },
+            { event: "charge.failed", desc: "Charge failed — insufficient funds, declined, or timeout" },
+            { event: "charge.authorized", desc: "Preauth hold placed — waiting for capture" },
+            { event: "charge.captured", desc: "Preauth captured — funds collected" },
+            { event: "charge.voided", desc: "Preauth voided — hold released without capture" },
+            { event: "charge.refunded", desc: "Charge was refunded (full or partial)" },
+          ].map(e => (
+            <TableRow key={e.event}>
+              <TableCell><code className="bg-muted px-1.5 py-0.5 rounded text-xs">{e.event}</code></TableCell>
+              <TableCell className="text-sm text-muted-foreground">{e.desc}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+
+    <Alert className="border-primary/30 bg-primary/5">
+      <Info className="h-4 w-4 text-primary" />
+      <AlertDescription className="text-sm">
+        <strong>Fee Bearer</strong> — Set <code className="bg-muted px-1 rounded">fee_bearer: "customer"</code> to pass transaction fees to the customer. The charge amount stays the same, but the customer is charged amount + fee. Default is <code className="bg-muted px-1 rounded">merchant</code>.
+      </AlertDescription>
+    </Alert>
+
+    <DocNavigation
+      previousPage={{ title: "Gateway Quickstart", path: "/developer/gateway/quickstart" }}
+      nextPage={{ title: "Refunds", path: "/developer/gateway/refunds" }}
     />
   </div>
 );
