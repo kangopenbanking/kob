@@ -45,6 +45,16 @@ const CustomerAuth: React.FC = () => {
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
 
+  // Reset PIN state
+  const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [resetPinLoading, setResetPinLoading] = useState(false);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
   // General loading
   const [loading, setLoading] = useState(false);
 
