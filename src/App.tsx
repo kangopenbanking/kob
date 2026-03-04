@@ -337,6 +337,7 @@ import Apps from "./pages/Apps";
 import { CustomerAppLayout } from "./components/customer-app/CustomerAppLayout";
 import CustomerSplash from "./pages/customer-app/CustomerSplash";
 import CustomerAuth from "./pages/customer-app/CustomerAuth";
+import ResetPassword from "./pages/ResetPassword";
 import CustomerOnboarding from "./pages/customer-app/CustomerOnboarding";
 import CustomerRegister from "./pages/customer-app/CustomerRegister";
 import CustomerHome from "./pages/customer-app/CustomerHome";
