@@ -517,6 +517,7 @@ function App() {
               <Route path="customer-apps" element={<CustomerAppManagement />} />
               <Route path="institution-urls" element={<InstitutionAppUrls />} />
               <Route path="homepage-hero" element={<HomepageHeroManager />} />
+              <Route path="access-roles" element={<AccessRoleManagement />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
