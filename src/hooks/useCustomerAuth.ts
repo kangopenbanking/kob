@@ -26,7 +26,7 @@ export function useCustomerAuth() {
       setIsAuthenticated(true);
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, phone_number, linked_account_type')
+        .select('id, full_name, phone_number, linked_account_type')
         .eq('id', session.user.id)
         .maybeSingle();
       if (profile) {
