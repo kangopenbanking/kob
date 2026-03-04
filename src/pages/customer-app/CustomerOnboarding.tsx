@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, Landmark, Smartphone, Wallet, Ban, ArrowLeft, Check, Loader2, AlertCircle } from 'lucide-react';
+import { Building2, Landmark, Smartphone, Wallet, Ban, ArrowLeft, Check, Loader2, AlertCircle, CreditCard } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-type AccountType = 'bank_account' | 'credit_union' | 'momo_orange' | 'momo_mtn' | 'none';
+type AccountType = 'bank_account' | 'credit_union' | 'momo_orange' | 'momo_mtn' | 'card' | 'none';
 
 interface AccountOption {
   id: AccountType;
@@ -17,9 +18,16 @@ interface AccountOption {
   color: string;
 }
 
+const CARD_NETWORKS = [
+  { value: 'visa', label: 'Visa' },
+  { value: 'mastercard', label: 'Mastercard' },
+  { value: 'amex', label: 'American Express' },
+];
+
 const accountOptions: AccountOption[] = [
   { id: 'bank_account', label: 'Bank Account', description: 'Link your existing bank account', icon: Building2, color: 'bg-[hsl(210,80%,93%)]' },
   { id: 'credit_union', label: 'Credit Union', description: 'Connect your credit union membership', icon: Landmark, color: 'bg-[hsl(150,40%,90%)]' },
+  { id: 'card', label: 'Credit / Debit Card', description: 'Link a Visa, Mastercard or Amex card', icon: CreditCard, color: 'bg-[hsl(225,70%,92%)]' },
   { id: 'momo_orange', label: 'Orange Money', description: 'Link your Orange Mobile Money', icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]' },
   { id: 'momo_mtn', label: 'MTN MoMo', description: 'Link your MTN Mobile Money', icon: Wallet, color: 'bg-[hsl(50,80%,90%)]' },
   { id: 'none', label: 'No Account', description: 'Browse in view-only mode', icon: Ban, color: 'bg-muted' },
@@ -34,6 +42,9 @@ const CustomerOnboarding: React.FC = () => {
   const [selected, setSelected] = useState<AccountType | null>(null);
   const [accountNumber, setAccountNumber] = useState('');
   const [accountName, setAccountName] = useState('');
+  const [cardNetwork, setCardNetwork] = useState('');
+  const [cardExpMonth, setCardExpMonth] = useState('');
+  const [cardExpYear, setCardExpYear] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -75,12 +86,27 @@ const CustomerOnboarding: React.FC = () => {
 
       // If not 'none', also insert into customer_linked_accounts
       if (selected !== 'none') {
+        const accountType = selected === 'card' ? 'bank_card' : selected;
+        const last4 = accountNumber.replace(/\D/g, '').slice(-4);
+        const metadata = selected === 'card' ? {
+          card_network: cardNetwork,
+          card_exp_month: parseInt(cardExpMonth, 10),
+          card_exp_year: parseInt(cardExpYear, 10) < 100 ? 2000 + parseInt(cardExpYear, 10) : parseInt(cardExpYear, 10),
+          card_type: 'debit',
+        } : undefined;
+
         await supabase.from('customer_linked_accounts' as any).insert({
           user_id: user.id,
-          account_type: selected,
-          account_number: accountNumber || null,
+          account_type: accountType,
+          account_number: selected === 'card' ? last4 : (accountNumber || null),
           account_name: accountName || null,
+          provider_name: selected === 'card' ? (CARD_NETWORKS.find(n => n.value === cardNetwork)?.label || 'Card') : undefined,
+          provider_type: selected === 'card' ? 'card' : (selected === 'momo_mtn' || selected === 'momo_orange' ? 'mobile_money' : 'bank'),
+          last4,
           is_primary: true,
+          is_active: true,
+          status: 'active',
+          metadata: metadata || undefined,
         } as any);
       }
 
@@ -100,6 +126,9 @@ const CustomerOnboarding: React.FC = () => {
       setStep('select');
       setAccountNumber('');
       setAccountName('');
+      setCardNetwork('');
+      setCardExpMonth('');
+      setCardExpYear('');
     } else {
       // Can't go back from select — maybe go to auth
       navigate('/app/auth');
@@ -175,22 +204,64 @@ const CustomerOnboarding: React.FC = () => {
 
               <div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
-                  {selected === 'momo_orange' || selected === 'momo_mtn' ? 'Phone Number' : 'Account Number'}
+                  {selected === 'momo_orange' || selected === 'momo_mtn' ? 'Phone Number' : selected === 'card' ? 'Card Number' : 'Account Number'}
                 </p>
                 <Input
                   value={accountNumber}
                   onChange={(e) => setAccountNumber(e.target.value)}
-                  placeholder={selected === 'momo_orange' || selected === 'momo_mtn' ? '+237 6XX XXX XXX' : 'Enter account number'}
+                  placeholder={selected === 'momo_orange' || selected === 'momo_mtn' ? '+237 6XX XXX XXX' : selected === 'card' ? '4242 4242 4242 4242' : 'Enter account number'}
                   className="h-14 rounded-2xl text-base"
                 />
               </div>
 
+              {selected === 'card' && (
+                <>
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Card Network</p>
+                    <Select value={cardNetwork} onValueChange={setCardNetwork}>
+                      <SelectTrigger className="h-14 rounded-2xl text-base">
+                        <SelectValue placeholder="Select network" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {CARD_NETWORKS.map(n => (
+                          <SelectItem key={n.value} value={n.value}>{n.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Exp Month</p>
+                      <Input
+                        value={cardExpMonth}
+                        onChange={(e) => setCardExpMonth(e.target.value.replace(/\D/g, '').substring(0, 2))}
+                        placeholder="MM"
+                        className="h-14 rounded-2xl text-base text-center"
+                        maxLength={2}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Exp Year</p>
+                      <Input
+                        value={cardExpYear}
+                        onChange={(e) => setCardExpYear(e.target.value.replace(/\D/g, '').substring(0, 2))}
+                        placeholder="YY"
+                        className="h-14 rounded-2xl text-base text-center"
+                        maxLength={2}
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+
               <div>
-                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">Account Holder Name</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-2">
+                  {selected === 'card' ? 'Cardholder Name' : 'Account Holder Name'}
+                </p>
                 <Input
                   value={accountName}
                   onChange={(e) => setAccountName(e.target.value)}
-                  placeholder="Full name on account"
+                  placeholder={selected === 'card' ? 'Name on card' : 'Full name on account'}
                   className="h-14 rounded-2xl text-base"
                 />
               </div>
@@ -218,7 +289,7 @@ const CustomerOnboarding: React.FC = () => {
         <div className="p-5">
           <Button
             onClick={step === 'select' ? handleContinue : handleSubmit}
-            disabled={!selected || loading || (step === 'details' && !accountNumber)}
+            disabled={!selected || loading || (step === 'details' && !accountNumber) || (step === 'details' && selected === 'card' && (!cardNetwork || !cardExpMonth || !cardExpYear))}
             className="h-14 w-full rounded-2xl text-base font-semibold"
             size="lg"
           >

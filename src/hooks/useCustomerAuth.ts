@@ -30,10 +30,28 @@ export function useCustomerAuth() {
         .maybeSingle();
       if (profile) {
         const p = profile as any;
+        
+        // Also check customer_linked_accounts for accounts added later
+        let hasLinkedAccounts = !!(p.linked_account_type && p.linked_account_type !== 'none');
+        if (!hasLinkedAccounts) {
+          const { data: linked } = await (supabase as any)
+            .from('customer_linked_accounts')
+            .select('id')
+            .eq('user_id', session.user.id)
+            .eq('is_active', true)
+            .limit(1);
+          hasLinkedAccounts = (linked?.length || 0) > 0;
+          
+          // Auto-update profile if they have linked accounts but profile says none
+          if (hasLinkedAccounts && (!p.linked_account_type || p.linked_account_type === 'none')) {
+            await supabase.from('profiles').update({ linked_account_type: 'linked' } as any).eq('id', session.user.id);
+          }
+        }
+        
         setUser({
           id: p.id,
-          linkedAccountType: p.linked_account_type || null,
-          isViewOnly: !p.linked_account_type || p.linked_account_type === 'none',
+          linkedAccountType: hasLinkedAccounts ? (p.linked_account_type || 'linked') : null,
+          isViewOnly: !hasLinkedAccounts,
           phoneNumber: p.phone_number || null,
         });
       }

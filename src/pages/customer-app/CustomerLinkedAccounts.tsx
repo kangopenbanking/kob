@@ -676,6 +676,10 @@ const CustomerLinkedAccounts: React.FC = () => {
           status: 'active',
         });
         if (error) throw error;
+        
+        // Update profile to remove view-only status
+        await supabase.from('profiles').update({ linked_account_type: accountData.account_type } as any).eq('id', user.id);
+        
         toast.success(`${selectedType.label} linked successfully`);
         queryClient.invalidateQueries({ queryKey: ['customer-linked-accounts'] });
       }
