@@ -261,10 +261,10 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
             <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">
-            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : 'Sign In'}
+            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : 'Sign In'}
           </h1>
           <p className="mt-1 text-sm text-primary-foreground/70">
-            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : `Access your ${tenant.name} account`}
+            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : step === 'email-sent' ? 'Almost there!' : `Access your ${tenant.name} account`}
           </p>
         </motion.div>
       </div>

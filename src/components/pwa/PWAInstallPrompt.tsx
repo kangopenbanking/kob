@@ -100,6 +100,10 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
       setInstalling(false);
     } else if (isIOS) {
       setShowIOSGuide(true);
+    } else {
+      // Browser doesn't support install prompt — skip gracefully
+      markAsInstalled(appKey);
+      onContinue();
     }
   }, [deferredPrompt, appKey, isIOS, onContinue]);
 
