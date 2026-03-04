@@ -1,594 +1,333 @@
 project_id = "ftwbtzbeqkqrdmxmyvvz"
 
-[functions.bank-transaction-webhook]
-verify_jwt = false
-
-[functions.health-alert-monitor]
-verify_jwt = false
-
-# Credit Score Enhancement Functions
-[functions.credit-score-tips]
-verify_jwt = true
-
-[functions.credit-score-simulate]
-verify_jwt = true
-
-[functions.test-data-generator]
-verify_jwt = true
-
-# API Documentation Edge Functions
-[functions.public-api-spec]
-verify_jwt = false
-
-[functions.postman-collection]
-verify_jwt = false
-
-[functions.openapi-json]
-verify_jwt = false
-
-# Phase 1 Edge Functions - FAPI 1.0 Advanced Implementation
-
-# Public endpoints (no JWT verification required)
-[functions.jwks-endpoint]
-verify_jwt = false
-
-[functions.oidc-config]
-verify_jwt = false
-
-# OAuth2 endpoints (handled by edge function logic)
-[functions.oauth-authorize]
-verify_jwt = false
-
-[functions.oauth-token]
-verify_jwt = false
-
-[functions.par-endpoint]
-verify_jwt = false
-
-[functions.dcr-register]
-verify_jwt = false
-
-# Phase 2 Edge Functions - Consent Management
-
-# AISP consent endpoints (require user authentication)
-[functions.aisp-create-consent]
-verify_jwt = false
-
-# PISP consent endpoints (require user authentication)
-[functions.pisp-create-consent]
-verify_jwt = false
-
-# Consent authorization and revocation
-[functions.consent-authorize]
-verify_jwt = false
-
-[functions.consent-revoke]
-verify_jwt = false
-
-# Phase 3 Edge Functions - AISP Resource Server
-
-# Account Information APIs
-[functions.aisp-accounts]
-verify_jwt = false
-
-[functions.aisp-balances]
-verify_jwt = false
-
-[functions.aisp-transactions]
-verify_jwt = false
-
-[functions.aisp-beneficiaries]
-verify_jwt = false
-
-[functions.aisp-standing-orders]
-verify_jwt = false
-
-[functions.aisp-direct-debits]
-verify_jwt = false
-
-# Phase 4 Edge Functions - PISP Resource Server
-
-# Payment Initiation APIs
-[functions.pisp-domestic-payment]
-verify_jwt = false
-
-[functions.pisp-payment-details]
-verify_jwt = false
-
-[functions.pisp-payment-submission]
-verify_jwt = false
-
-# Phase 6 Edge Functions - Webhooks & Analytics
-
-# Webhook Delivery System
-[functions.webhook-delivery]
-verify_jwt = false
-
-[functions.flutterwave-transfer-webhook]
-verify_jwt = false
-
-[functions.generate-bank-statement]
-verify_jwt = false
-
-[functions.mobile-money-to-bank]
-verify_jwt = false
-
-# Phase 8 Edge Functions - Production Readiness & Monitoring
-
-# System Health Check
-[functions.system-health-check]
-verify_jwt = false
-
-# Fee Management System Edge Functions
-
-# Invoice generation and management (admin only)
-[functions.generate-invoice]
-verify_jwt = true
-
-# Automated invoice email delivery
-[functions.send-invoice-email]
-verify_jwt = false
-
-# Automated billing cron job
-[functions.automated-billing-cron]
-verify_jwt = false
-
-# Automated settlement cron job
-[functions.automated-settlement-cron]
-verify_jwt = false
-
-# Settlement Management Functions
-
-# Settlement calculation (admin only)
-[functions.settlement-calculate]
-verify_jwt = true
-
-# Settlement processing (admin only)
-[functions.settlement-process]
-verify_jwt = true
-
-# SWIFT Message Processing Functions
-
-# MT103 parser
-[functions.swift-mt103-parser]
-verify_jwt = false
-
-# MT940 parser
-[functions.swift-mt940-parser]
-verify_jwt = false
-
-# MT103 generator
-[functions.swift-mt103-generator]
-verify_jwt = false
-
-# IBAN validator
-[functions.validate-iban]
-verify_jwt = false
-
-# BIC validator
-[functions.validate-bic]
-verify_jwt = false
-
-# RIB validator (Cameroon domestic)
-[functions.validate-rib]
-verify_jwt = false
-
-# Unified account identifier validator
-[functions.validate-account-identifier]
-verify_jwt = false
-
-# Cameroon bank directory
-[functions.directory-banks-cm]
-verify_jwt = false
-
-# Phase 1: Authentication & Security Functions
-
-[functions.phone-auth-send-otp]
-verify_jwt = false
-
-[functions.phone-auth-verify-otp]
-verify_jwt = false
-
-[functions.pin-code-set]
-verify_jwt = false
-
-[functions.pin-code-verify]
-verify_jwt = false
-
-[functions.password-reset-with-pin]
-verify_jwt = false
-
-[functions.captcha-generate]
-verify_jwt = false
-
-[functions.captcha-verify]
-verify_jwt = false
-
-[functions.sca-initiate]
-verify_jwt = false
-
-[functions.sca-verify]
-verify_jwt = false
-
-# Phase 2: API Endpoint Functions
-
-[functions.api-account-details]
-verify_jwt = false
-
-[functions.api-account-detail]
-verify_jwt = false
-
-[functions.api-bills]
-verify_jwt = false
-
-[functions.api-consents-list]
-verify_jwt = false
-
-[functions.api-transfers]
-verify_jwt = false
-
-[functions.api-transactions]
-verify_jwt = false
-
-[functions.api-verification]
-verify_jwt = false
-
-# Phase 3: Flutterwave Integration Functions
-
-[functions.flutterwave-list-banks]
-verify_jwt = false
-
-[functions.flutterwave-verify-bank]
-verify_jwt = false
-
-[functions.flutterwave-bank-transfer]
-verify_jwt = true
-
-# Phase 4: Mobile Money Functions
-
-[functions.mobile-money-charge]
-verify_jwt = true
-
-[functions.mobile-money-transfer]
-verify_jwt = false
-
-[functions.mobile-money-verify]
-verify_jwt = false
-
-# Phase 5: Stripe Payment Functions
-
-[functions.stripe-payment-intent]
-verify_jwt = true
-
-[functions.stripe-confirm-payment]
-verify_jwt = false
-
-[functions.stripe-save-card]
-verify_jwt = false
-
-# Phase 6: Banking Operations Functions
-
-[functions.bank-sync]
-verify_jwt = false
-
-[functions.bank-reconcile]
-verify_jwt = false
-
-[functions.bank-import-transactions]
-verify_jwt = false
-
-[functions.bulk-transfers]
-verify_jwt = true
-
-# Phase 7: Communication Functions
-
-[functions.send-communication]
-verify_jwt = true
-
-[functions.send-bulk-communication]
-verify_jwt = true
-
-# Phase 8: Monitoring & Compliance Functions
-
-[functions.transaction-monitor]
-verify_jwt = false
-
-[functions.sanctions-screen]
-verify_jwt = false
-
-# Phase 9: ISO20022 Message Processing Functions
-
-[functions.iso20022-pain001-parser]
-verify_jwt = false
-
-[functions.iso20022-camt053-parser]
-verify_jwt = false
-
-[functions.iso20022-pacs008-generator]
-verify_jwt = false
-
-[functions.iso20022-pacs002-generator]
-verify_jwt = false
-
-# Phase 10: OAuth & Security Functions
-
-[functions.oauth-introspect]
-verify_jwt = false
-
-# Phase 11: Data Management Functions
-
-[functions.data-export]
-verify_jwt = true
-
-[functions.kyc-submit]
-verify_jwt = false
-
-# Phase 12: Admin Functions
-
-[functions.admin-create-user]
-verify_jwt = true
-
-[functions.admin-create-client]
-verify_jwt = true
-
-[functions.admin-metrics]
-verify_jwt = true
-
-[functions.admin-sandbox-accounts]
-verify_jwt = true
-
-[functions.admin-system-config]
-verify_jwt = true
-
-[functions.admin-webhooks]
-verify_jwt = true
-
-[functions.admin-transaction-review]
-verify_jwt = true
-
-# Phase 13: mTLS Certificate Management (FAPI 1.0 Advanced)
-
-[functions.certificate-upload]
-verify_jwt = false
-
-[functions.certificate-list]
-verify_jwt = false
-
-[functions.certificate-revoke]
-verify_jwt = false
-
-# Phase 14: API Health & Monitoring
-
-[functions.api-health]
-verify_jwt = false
-
-# Phase 15: Certificate Monitoring & Alerts
-
-[functions.certificate-expiry-monitor]
-verify_jwt = false
-
-# Phase 16: Testing & Communication Functions
-
-[functions.test-all-templates]
-verify_jwt = true
-
-# Phase 17: GDPR Compliance & Data Retention
-
-[functions.gdpr-consent-retention]
-verify_jwt = false
-
-# Phase 18: CrediQ Functions
-
-[functions.crediq-health-check]
-verify_jwt = false
-
-[functions.crediq-generate-baseline-score]
-verify_jwt = false
-
-[functions.crediq-calculate-health-metrics]
-verify_jwt = false
-
-[functions.crediq-generate-action-plan]
-verify_jwt = false
-
-[functions.crediq-send-welcome-email]
-verify_jwt = false
-
-[functions.crediq-send-score-change-email]
-verify_jwt = false
-
-[functions.crediq-send-weekly-digest]
-verify_jwt = false
-
-[functions.crediq-send-monthly-report]
-verify_jwt = false
-
-[functions.crediq-send-goal-achieved-email]
-verify_jwt = false
-
-# Phase 19: Demo & Testing Functions
-
-[functions.api-demo-proxy]
-verify_jwt = false
-
-# PostiQ Address Verification Functions
-
-[functions.postiq-create-code]
-verify_jwt = true
-
-[functions.postiq-lookup-code]
-verify_jwt = true
-
-# WooCommerce Plugin Integration Functions
-
-[functions.woocommerce-register-merchant]
-verify_jwt = true
-
-[functions.woocommerce-payment-webhook]
-verify_jwt = false
-
-[functions.woocommerce-transaction-sync]
-verify_jwt = true
-
-[functions.woocommerce-validate-install]
-verify_jwt = false
-
-[functions.woocommerce-download-plugin]
-verify_jwt = false
-
-[functions.woocommerce-process-payment]
-verify_jwt = false
-
-# Institution API with role-based middleware
-[functions.institution-api]
-verify_jwt = true
-
-# Admin KYB Verification Functions
-[functions.admin-kyb-verify]
-verify_jwt = true
-
-[functions.admin-institution-approve]
-verify_jwt = true
-
-# Business KYC Submission
-[functions.business-kyc-submit]
-verify_jwt = true
-
-# Institution Registration
-[functions.institution-register]
-verify_jwt = true
-
-# Institution API Client Creation
-[functions.institution-create-client]
-verify_jwt = true
-
-# Gateway Payment Functions
-
-[functions.gateway-create-charge]
-verify_jwt = false
-
-[functions.gateway-create-payment-link]
-verify_jwt = false
-
-[functions.gateway-get-payment-link]
-verify_jwt = false
-
-[functions.gateway-list-payment-links]
-verify_jwt = false
-
-[functions.gateway-create-payment-plan]
-verify_jwt = false
-
-[functions.gateway-create-subscription]
-verify_jwt = false
-
-[functions.gateway-cancel-subscription]
-verify_jwt = false
-
-[functions.gateway-create-subaccount]
-verify_jwt = false
-
-[functions.gateway-list-subaccounts]
-verify_jwt = false
-
-[functions.gateway-create-customer]
-verify_jwt = false
-
-[functions.gateway-charge-token]
-verify_jwt = false
-
-[functions.gateway-get-charge-events]
-verify_jwt = false
-
-[functions.gateway-subscription-charge-cron]
-verify_jwt = false
-
-# Round 3: OTP Validation & Preauthorization
-[functions.gateway-validate-charge]
-verify_jwt = false
-
-[functions.gateway-preauth-charge]
-verify_jwt = false
-
-[functions.gateway-capture-charge]
-verify_jwt = false
-
-[functions.gateway-void-charge]
-verify_jwt = false
-
-# Round 3: Virtual Accounts
-[functions.gateway-create-virtual-account]
-verify_jwt = false
-
-[functions.gateway-list-virtual-accounts]
-verify_jwt = false
-
-[functions.gateway-get-virtual-account]
-verify_jwt = false
-
-# Round 3: Bank/BVN Verification
-[functions.gateway-verify-bank-account]
-verify_jwt = false
-
-[functions.gateway-resolve-bvn]
-verify_jwt = false
-
-# Round 3: Merchant Balance
-[functions.gateway-get-merchant-balance]
-verify_jwt = false
-
-# Account Funding & Withdrawal Functions
-[functions.gateway-fund-account]
-verify_jwt = false
-
-[functions.gateway-withdraw-to-bank]
-verify_jwt = false
-
-# PayPal Integration Functions
-[functions.gateway-create-paypal-payout]
-verify_jwt = false
-
-[functions.gateway-webhook-paypal]
-verify_jwt = false
-
-[functions.gateway-withdraw-to-paypal]
-verify_jwt = false
-
-# Firebase Phone Authentication
-[functions.firebase-phone-verify]
-verify_jwt = false
-
-# Single Session Enforcement
-[functions.enforce-single-session]
-verify_jwt = false
-
-# Funding Intents
-[functions.gateway-create-funding-intent]
-verify_jwt = false
-
-[functions.gateway-get-funding-intent]
-verify_jwt = false
-
-[functions.gateway-list-funding-intents]
-verify_jwt = false
-
-[functions.gateway-cancel-funding-intent]
-verify_jwt = false
-
-[functions.gateway-reconcile-funding]
-verify_jwt = false
-
-[functions.gateway-confirm-funding]
-verify_jwt = false
-
-[functions.gateway-process-withdrawal]
-verify_jwt = false
-
-[functions.gateway-admin-reverse-withdrawal]
-verify_jwt = false
-
-[functions.gateway-payout-webhook]
-verify_jwt = false
-
-[functions.gateway-payout-status-poll]
-verify_jwt = false
+[functions]
+  [functions.admin-create-client]
+    verify_jwt = true
+  [functions.admin-create-user]
+    verify_jwt = true
+  [functions.admin-institution-approve]
+    verify_jwt = true
+  [functions.admin-kyb-verify]
+    verify_jwt = true
+  [functions.admin-metrics]
+    verify_jwt = true
+  [functions.admin-sandbox-accounts]
+    verify_jwt = true
+  [functions.admin-system-config]
+    verify_jwt = true
+  [functions.admin-transaction-review]
+    verify_jwt = true
+  [functions.admin-webhooks]
+    verify_jwt = true
+  [functions.aisp-accounts]
+    verify_jwt = false
+  [functions.aisp-balances]
+    verify_jwt = false
+  [functions.aisp-beneficiaries]
+    verify_jwt = false
+  [functions.aisp-create-consent]
+    verify_jwt = false
+  [functions.aisp-direct-debits]
+    verify_jwt = false
+  [functions.aisp-standing-orders]
+    verify_jwt = false
+  [functions.aisp-transactions]
+    verify_jwt = false
+  [functions.api-account-detail]
+    verify_jwt = false
+  [functions.api-account-details]
+    verify_jwt = false
+  [functions.api-bills]
+    verify_jwt = false
+  [functions.api-consents-list]
+    verify_jwt = false
+  [functions.api-demo-proxy]
+    verify_jwt = false
+  [functions.api-health]
+    verify_jwt = false
+  [functions.api-transactions]
+    verify_jwt = false
+  [functions.api-transfers]
+    verify_jwt = false
+  [functions.api-verification]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.automated-billing-cron]
+    verify_jwt = false
+  [functions.automated-settlement-cron]
+    verify_jwt = false
+  [functions.bank-import-transactions]
+    verify_jwt = false
+  [functions.bank-reconcile]
+    verify_jwt = false
+  [functions.bank-sync]
+    verify_jwt = false
+  [functions.bank-transaction-webhook]
+    verify_jwt = false
+  [functions.bulk-transfers]
+    verify_jwt = true
+  [functions.business-kyc-submit]
+    verify_jwt = true
+  [functions.captcha-generate]
+    verify_jwt = false
+  [functions.captcha-verify]
+    verify_jwt = false
+  [functions.certificate-expiry-monitor]
+    verify_jwt = false
+  [functions.certificate-list]
+    verify_jwt = false
+  [functions.certificate-revoke]
+    verify_jwt = false
+  [functions.certificate-upload]
+    verify_jwt = false
+  [functions.consent-authorize]
+    verify_jwt = false
+  [functions.consent-revoke]
+    verify_jwt = false
+  [functions.crediq-calculate-health-metrics]
+    verify_jwt = false
+  [functions.crediq-generate-action-plan]
+    verify_jwt = false
+  [functions.crediq-generate-baseline-score]
+    verify_jwt = false
+  [functions.crediq-health-check]
+    verify_jwt = false
+  [functions.crediq-send-goal-achieved-email]
+    verify_jwt = false
+  [functions.crediq-send-monthly-report]
+    verify_jwt = false
+  [functions.crediq-send-score-change-email]
+    verify_jwt = false
+  [functions.crediq-send-weekly-digest]
+    verify_jwt = false
+  [functions.crediq-send-welcome-email]
+    verify_jwt = false
+  [functions.credit-score-simulate]
+    verify_jwt = true
+  [functions.credit-score-tips]
+    verify_jwt = true
+  [functions.data-export]
+    verify_jwt = true
+  [functions.dcr-register]
+    verify_jwt = false
+  [functions.directory-banks-cm]
+    verify_jwt = false
+  [functions.enforce-single-session]
+    verify_jwt = false
+  [functions.firebase-phone-verify]
+    verify_jwt = false
+  [functions.flutterwave-bank-transfer]
+    verify_jwt = true
+  [functions.flutterwave-list-banks]
+    verify_jwt = false
+  [functions.flutterwave-transfer-webhook]
+    verify_jwt = false
+  [functions.flutterwave-verify-bank]
+    verify_jwt = false
+  [functions.gateway-admin-reverse-withdrawal]
+    verify_jwt = false
+  [functions.gateway-cancel-funding-intent]
+    verify_jwt = false
+  [functions.gateway-cancel-subscription]
+    verify_jwt = false
+  [functions.gateway-capture-charge]
+    verify_jwt = false
+  [functions.gateway-charge-token]
+    verify_jwt = false
+  [functions.gateway-confirm-funding]
+    verify_jwt = false
+  [functions.gateway-create-charge]
+    verify_jwt = false
+  [functions.gateway-create-customer]
+    verify_jwt = false
+  [functions.gateway-create-funding-intent]
+    verify_jwt = false
+  [functions.gateway-create-payment-link]
+    verify_jwt = false
+  [functions.gateway-create-payment-plan]
+    verify_jwt = false
+  [functions.gateway-create-paypal-payout]
+    verify_jwt = false
+  [functions.gateway-create-subaccount]
+    verify_jwt = false
+  [functions.gateway-create-subscription]
+    verify_jwt = false
+  [functions.gateway-create-virtual-account]
+    verify_jwt = false
+  [functions.gateway-fund-account]
+    verify_jwt = false
+  [functions.gateway-get-charge-events]
+    verify_jwt = false
+  [functions.gateway-get-funding-intent]
+    verify_jwt = false
+  [functions.gateway-get-merchant-balance]
+    verify_jwt = false
+  [functions.gateway-get-payment-link]
+    verify_jwt = false
+  [functions.gateway-get-virtual-account]
+    verify_jwt = false
+  [functions.gateway-list-funding-intents]
+    verify_jwt = false
+  [functions.gateway-list-payment-links]
+    verify_jwt = false
+  [functions.gateway-list-subaccounts]
+    verify_jwt = false
+  [functions.gateway-list-virtual-accounts]
+    verify_jwt = false
+  [functions.gateway-payout-status-poll]
+    verify_jwt = false
+  [functions.gateway-payout-webhook]
+    verify_jwt = false
+  [functions.gateway-preauth-charge]
+    verify_jwt = false
+  [functions.gateway-process-withdrawal]
+    verify_jwt = false
+  [functions.gateway-reconcile-funding]
+    verify_jwt = false
+  [functions.gateway-resolve-bvn]
+    verify_jwt = false
+  [functions.gateway-subscription-charge-cron]
+    verify_jwt = false
+  [functions.gateway-validate-charge]
+    verify_jwt = false
+  [functions.gateway-verify-bank-account]
+    verify_jwt = false
+  [functions.gateway-void-charge]
+    verify_jwt = false
+  [functions.gateway-webhook-paypal]
+    verify_jwt = false
+  [functions.gateway-withdraw-to-bank]
+    verify_jwt = false
+  [functions.gateway-withdraw-to-paypal]
+    verify_jwt = false
+  [functions.gdpr-consent-retention]
+    verify_jwt = false
+  [functions.generate-bank-statement]
+    verify_jwt = false
+  [functions.generate-invoice]
+    verify_jwt = true
+  [functions.health-alert-monitor]
+    verify_jwt = false
+  [functions.institution-api]
+    verify_jwt = true
+  [functions.institution-create-client]
+    verify_jwt = true
+  [functions.institution-register]
+    verify_jwt = true
+  [functions.iso20022-camt053-parser]
+    verify_jwt = false
+  [functions.iso20022-pacs002-generator]
+    verify_jwt = false
+  [functions.iso20022-pacs008-generator]
+    verify_jwt = false
+  [functions.iso20022-pain001-parser]
+    verify_jwt = false
+  [functions.jwks-endpoint]
+    verify_jwt = false
+  [functions.kyc-submit]
+    verify_jwt = false
+  [functions.mobile-money-charge]
+    verify_jwt = true
+  [functions.mobile-money-to-bank]
+    verify_jwt = false
+  [functions.mobile-money-transfer]
+    verify_jwt = false
+  [functions.mobile-money-verify]
+    verify_jwt = false
+  [functions.oauth-authorize]
+    verify_jwt = false
+  [functions.oauth-introspect]
+    verify_jwt = false
+  [functions.oauth-token]
+    verify_jwt = false
+  [functions.oidc-config]
+    verify_jwt = false
+  [functions.openapi-json]
+    verify_jwt = false
+  [functions.par-endpoint]
+    verify_jwt = false
+  [functions.password-reset-with-pin]
+    verify_jwt = false
+  [functions.phone-auth-send-otp]
+    verify_jwt = false
+  [functions.phone-auth-verify-otp]
+    verify_jwt = false
+  [functions.pin-code-set]
+    verify_jwt = false
+  [functions.pin-code-verify]
+    verify_jwt = false
+  [functions.pisp-create-consent]
+    verify_jwt = false
+  [functions.pisp-domestic-payment]
+    verify_jwt = false
+  [functions.pisp-payment-details]
+    verify_jwt = false
+  [functions.pisp-payment-submission]
+    verify_jwt = false
+  [functions.postiq-create-code]
+    verify_jwt = true
+  [functions.postiq-lookup-code]
+    verify_jwt = true
+  [functions.postman-collection]
+    verify_jwt = false
+  [functions.public-api-spec]
+    verify_jwt = false
+  [functions.sanctions-screen]
+    verify_jwt = false
+  [functions.sca-initiate]
+    verify_jwt = false
+  [functions.sca-verify]
+    verify_jwt = false
+  [functions.send-bulk-communication]
+    verify_jwt = true
+  [functions.send-communication]
+    verify_jwt = true
+  [functions.send-invoice-email]
+    verify_jwt = false
+  [functions.settlement-calculate]
+    verify_jwt = true
+  [functions.settlement-process]
+    verify_jwt = true
+  [functions.stripe-confirm-payment]
+    verify_jwt = false
+  [functions.stripe-payment-intent]
+    verify_jwt = true
+  [functions.stripe-save-card]
+    verify_jwt = false
+  [functions.swift-mt103-generator]
+    verify_jwt = false
+  [functions.swift-mt103-parser]
+    verify_jwt = false
+  [functions.swift-mt940-parser]
+    verify_jwt = false
+  [functions.system-health-check]
+    verify_jwt = false
+  [functions.test-all-templates]
+    verify_jwt = true
+  [functions.test-data-generator]
+    verify_jwt = true
+  [functions.transaction-monitor]
+    verify_jwt = false
+  [functions.validate-account-identifier]
+    verify_jwt = false
+  [functions.validate-bic]
+    verify_jwt = false
+  [functions.validate-iban]
+    verify_jwt = false
+  [functions.validate-rib]
+    verify_jwt = false
+  [functions.webhook-delivery]
+    verify_jwt = false
+  [functions.woocommerce-download-plugin]
+    verify_jwt = false
+  [functions.woocommerce-payment-webhook]
+    verify_jwt = false
+  [functions.woocommerce-process-payment]
+    verify_jwt = false
+  [functions.woocommerce-register-merchant]
+    verify_jwt = true
+  [functions.woocommerce-transaction-sync]
+    verify_jwt = true
+  [functions.woocommerce-validate-install]
+    verify_jwt = false
