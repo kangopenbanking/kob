@@ -9691,6 +9691,146 @@ export type Database = {
         }
         Relationships: []
       }
+      reconciliation_mismatches: {
+        Row: {
+          created_at: string
+          details: Json | null
+          entity_id: string | null
+          entity_type: string
+          id: string
+          mismatch_type: string
+          platform_amount: number | null
+          platform_currency: string | null
+          platform_status: string | null
+          provider_amount: number | null
+          provider_currency: string | null
+          provider_ref: string | null
+          provider_status: string | null
+          resolution_action: string | null
+          resolution_notes: string | null
+          resolution_status: string
+          resolved_at: string | null
+          resolved_by: string | null
+          run_id: string
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          mismatch_type: string
+          platform_amount?: number | null
+          platform_currency?: string | null
+          platform_status?: string | null
+          provider_amount?: number | null
+          provider_currency?: string | null
+          provider_ref?: string | null
+          provider_status?: string | null
+          resolution_action?: string | null
+          resolution_notes?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          run_id: string
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          mismatch_type?: string
+          platform_amount?: number | null
+          platform_currency?: string | null
+          platform_status?: string | null
+          provider_amount?: number | null
+          provider_currency?: string | null
+          provider_ref?: string | null
+          provider_status?: string | null
+          resolution_action?: string | null
+          resolution_notes?: string | null
+          resolution_status?: string
+          resolved_at?: string | null
+          resolved_by?: string | null
+          run_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reconciliation_mismatches_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "reconciliation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reconciliation_runs: {
+        Row: {
+          amount_discrepancy: number | null
+          completed_at: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          initiated_by: string | null
+          matched_count: number | null
+          mismatched_count: number | null
+          missing_on_platform: number | null
+          missing_on_provider: number | null
+          period_end: string
+          period_start: string
+          provider: string | null
+          run_type: string
+          started_at: string | null
+          status: string
+          summary: Json | null
+          total_platform_records: number | null
+          total_provider_records: number | null
+        }
+        Insert: {
+          amount_discrepancy?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          initiated_by?: string | null
+          matched_count?: number | null
+          mismatched_count?: number | null
+          missing_on_platform?: number | null
+          missing_on_provider?: number | null
+          period_end: string
+          period_start: string
+          provider?: string | null
+          run_type: string
+          started_at?: string | null
+          status?: string
+          summary?: Json | null
+          total_platform_records?: number | null
+          total_provider_records?: number | null
+        }
+        Update: {
+          amount_discrepancy?: number | null
+          completed_at?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          initiated_by?: string | null
+          matched_count?: number | null
+          mismatched_count?: number | null
+          missing_on_platform?: number | null
+          missing_on_provider?: number | null
+          period_end?: string
+          period_start?: string
+          provider?: string | null
+          run_type?: string
+          started_at?: string | null
+          status?: string
+          summary?: Json | null
+          total_platform_records?: number | null
+          total_provider_records?: number | null
+        }
+        Relationships: []
+      }
       refresh_tokens: {
         Row: {
           access_token_id: string | null

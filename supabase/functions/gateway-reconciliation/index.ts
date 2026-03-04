@@ -6,158 +6,247 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+const json = (data: unknown, status = 200) =>
+  new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+
+const rfc7807 = (type: string, title: string, status: number, detail: string) =>
+  new Response(JSON.stringify({ type: `https://api.kangopenbanking.com/errors/${type}`, title, status, detail }), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!authHeader) return rfc7807('unauthorized', 'Unauthorized', 401, 'Missing Authorization header');
 
-    const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (!user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const { data: { user }, error: authErr } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
+    if (authErr || !user) return rfc7807('unauthorized', 'Unauthorized', 401, 'Invalid or expired token');
 
-    // Admin check
-    const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
-    const isAdmin = !!adminRole;
+    // Admin only
+    const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
+    const isAdmin = (roles || []).some((r: any) => r.role === 'admin');
+    if (!isAdmin) return rfc7807('forbidden', 'Forbidden', 403, 'Admin access required');
 
     const url = new URL(req.url);
-    const method = req.method;
-    const runId = url.searchParams.get('run_id');
-    const mismatchId = url.searchParams.get('mismatch_id');
-    const action = url.searchParams.get('action'); // resolve
 
-    // POST - Create reconciliation run
-    if (method === 'POST' && !action) {
-      if (!isAdmin) return new Response(JSON.stringify({ error: 'admin_only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    // ─── GET — List runs or get specific run with mismatches ───
+    if (req.method === 'GET') {
+      const runId = url.searchParams.get('run_id');
 
-      const body = await req.json();
-      const { merchant_id, provider, period_start, period_end } = body;
-      if (!period_start || !period_end) return new Response(JSON.stringify({ error: 'period_start and period_end required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-
-      // Create run
-      const { data: run, error: runErr } = await supabase.from('gateway_reconciliation_runs').insert({
-        merchant_id: merchant_id || null, provider: provider || null,
-        period_start, period_end, status: 'running', started_at: new Date().toISOString(),
-        initiated_by: user.id,
-      }).select().single();
-      if (runErr) throw runErr;
-
-      // Perform reconciliation: compare internal records with provider webhook inbox
-      let chargeQuery = supabase.from('gateway_charges').select('id, amount, status, provider, provider_ref, tx_ref, created_at')
-        .gte('created_at', period_start).lte('created_at', period_end);
-      if (merchant_id) chargeQuery = chargeQuery.eq('merchant_id', merchant_id);
-      if (provider) chargeQuery = chargeQuery.eq('provider', provider);
-      const { data: charges } = await chargeQuery;
-
-      let payoutQuery = supabase.from('gateway_payouts').select('id, amount, status, provider, provider_ref, tx_ref, created_at')
-        .gte('created_at', period_start).lte('created_at', period_end);
-      if (merchant_id) payoutQuery = payoutQuery.eq('merchant_id', merchant_id);
-      if (provider) payoutQuery = payoutQuery.eq('provider', provider);
-      const { data: payouts } = await payoutQuery;
-
-      // Get webhook inbox events for the period
-      const { data: webhookEvents } = await supabase.from('webhook_inbox').select('*')
-        .gte('created_at', period_start).lte('created_at', period_end);
-
-      const totalInternal = (charges?.length || 0) + (payouts?.length || 0);
-      const totalProvider = webhookEvents?.length || 0;
-      let matched = 0;
-      let mismatched = 0;
-      const mismatches: Array<Record<string, unknown>> = [];
-
-      // Check charges stuck in pending/processing
-      for (const charge of charges || []) {
-        if (['pending', 'processing'].includes(charge.status)) {
-          // Check if there's a webhook event for this charge
-          const hasEvent = webhookEvents?.some(e => {
-            const payload = e.payload as Record<string, unknown>;
-            const data = payload?.data as Record<string, unknown>;
-            return data?.tx_ref === charge.tx_ref || data?.flw_ref === charge.provider_ref;
-          });
-          if (hasEvent) {
-            mismatches.push({
-              run_id: run.id, object_type: 'charge', object_id: charge.id,
-              mismatch_type: 'status_mismatch',
-              internal_value: charge.status, provider_value: 'webhook_received_but_not_processed',
-            });
-            mismatched++;
-          } else {
-            matched++; // Genuinely pending
-          }
-        } else {
-          matched++;
-        }
-      }
-
-      // Check payouts stuck
-      for (const payout of payouts || []) {
-        if (['pending', 'processing'].includes(payout.status) && payout.provider_ref) {
-          mismatches.push({
-            run_id: run.id, object_type: 'payout', object_id: payout.id,
-            mismatch_type: 'status_mismatch',
-            internal_value: payout.status, provider_value: 'stuck_in_processing',
-          });
-          mismatched++;
-        } else {
-          matched++;
-        }
-      }
-
-      // Insert mismatches
-      if (mismatches.length > 0) {
-        await supabase.from('gateway_reconciliation_mismatches').insert(mismatches);
-      }
-
-      // Update run
-      await supabase.from('gateway_reconciliation_runs').update({
-        status: 'completed', finished_at: new Date().toISOString(),
-        total_internal: totalInternal, total_provider: totalProvider,
-        matched, mismatched,
-        summary: { charges_checked: charges?.length || 0, payouts_checked: payouts?.length || 0, webhook_events: totalProvider },
-      }).eq('id', run.id);
-
-      const { data: finalRun } = await supabase.from('gateway_reconciliation_runs').select('*').eq('id', run.id).single();
-
-      return new Response(JSON.stringify({ data: finalRun }), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    // POST - Resolve mismatch
-    if (method === 'POST' && action === 'resolve' && mismatchId) {
-      if (!isAdmin) return new Response(JSON.stringify({ error: 'admin_only' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      const body = await req.json();
-      const { resolution_notes } = body;
-
-      const { data, error } = await supabase.from('gateway_reconciliation_mismatches').update({
-        status: 'resolved', resolution_notes, resolved_by: user.id, resolved_at: new Date().toISOString(),
-      }).eq('id', mismatchId).select().single();
-      if (error) throw error;
-      return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    // GET - List runs or get run details or get mismatches
-    if (method === 'GET') {
-      if (runId && action === 'mismatches') {
-        const { data, error } = await supabase.from('gateway_reconciliation_mismatches')
-          .select('*').eq('run_id', runId).order('created_at', { ascending: false });
-        if (error) throw error;
-        return new Response(JSON.stringify({ data: data || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
       if (runId) {
-        const { data, error } = await supabase.from('gateway_reconciliation_runs').select('*').eq('id', runId).single();
-        if (error) throw error;
-        return new Response(JSON.stringify({ data }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        const { data: run } = await supabase
+          .from('reconciliation_runs').select('*').eq('id', runId).single();
+        if (!run) return rfc7807('not_found', 'Not Found', 404, 'Run not found');
+
+        const { data: mismatches } = await supabase
+          .from('reconciliation_mismatches').select('*')
+          .eq('run_id', runId).order('created_at', { ascending: false });
+
+        return json({ ...run, mismatches: mismatches || [] });
       }
+
       // List runs
-      const limit = parseInt(url.searchParams.get('limit') || '25');
-      const { data, error } = await supabase.from('gateway_reconciliation_runs')
-        .select('*').order('created_at', { ascending: false }).limit(limit);
-      if (error) throw error;
-      return new Response(JSON.stringify({ data: data || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      const page = parseInt(url.searchParams.get('page') || '1');
+      const limit = Math.min(parseInt(url.searchParams.get('limit') || '20'), 100);
+      const status = url.searchParams.get('status');
+      const runType = url.searchParams.get('run_type');
+
+      let query = supabase.from('reconciliation_runs').select('*', { count: 'exact' });
+      if (status) query = query.eq('status', status);
+      if (runType) query = query.eq('run_type', runType);
+
+      const { data, count, error } = await query
+        .order('created_at', { ascending: false })
+        .range((page - 1) * limit, page * limit - 1);
+
+      if (error) return rfc7807('query_error', 'Query Error', 500, error.message);
+
+      const { count: openCount } = await supabase
+        .from('reconciliation_mismatches').select('id', { count: 'exact' })
+        .eq('resolution_status', 'open');
+
+      return json({
+        runs: data, total: count, page, limit,
+        stats: { open_mismatches: openCount || 0 },
+      });
     }
 
-    return new Response(JSON.stringify({ error: 'method_not_allowed' }), { status: 405, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (req.method !== 'POST') return rfc7807('method_not_allowed', 'Method Not Allowed', 405, 'Only GET and POST');
+
+    const body = await req.json();
+    const { action } = body;
+
+    // ─── RUN — Start a new reconciliation run ───
+    if (action === 'run') {
+      const { run_type, provider, period_start, period_end } = body;
+
+      if (!run_type) return rfc7807('validation_error', 'Validation Error', 400, 'run_type required');
+      if (!period_start || !period_end) {
+        return rfc7807('validation_error', 'Validation Error', 400, 'period_start and period_end required');
+      }
+
+      const { data: run, error: createErr } = await supabase.from('reconciliation_runs').insert({
+        run_type, provider, period_start, period_end,
+        status: 'running', started_at: new Date().toISOString(), initiated_by: user.id,
+      }).select().single();
+
+      if (createErr) return rfc7807('create_failed', 'Create Failed', 500, createErr.message);
+
+      try {
+        let platformRecords: any[] = [];
+        const mismatches: any[] = [];
+        const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+        const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
+        // ── Charges ──
+        if (run_type === 'charges' || run_type === 'full') {
+          const { data: charges } = await supabase
+            .from('gateway_charges').select('id, status, amount, currency, provider_ref, provider, created_at')
+            .gte('created_at', period_start).lte('created_at', period_end);
+
+          const chargeRecords = charges || [];
+          platformRecords = [...platformRecords, ...chargeRecords];
+
+          for (const c of chargeRecords) {
+            if (c.status === 'pending' && c.created_at < twoHoursAgo) {
+              mismatches.push({
+                run_id: run.id, mismatch_type: 'status_mismatch', entity_type: 'charge',
+                entity_id: c.id, provider_ref: c.provider_ref, platform_status: c.status,
+                provider_status: 'unknown', platform_amount: c.amount, platform_currency: c.currency,
+                details: { reason: 'Charge stuck in pending >2h', provider: c.provider },
+              });
+            }
+          }
+        }
+
+        // ── Payouts ──
+        if (run_type === 'payouts' || run_type === 'full') {
+          const { data: payouts } = await supabase
+            .from('gateway_payouts').select('id, status, amount, currency, provider_ref, provider, created_at')
+            .gte('created_at', period_start).lte('created_at', period_end);
+
+          const payoutRecords = payouts || [];
+          platformRecords = [...platformRecords, ...payoutRecords];
+
+          for (const p of payoutRecords) {
+            if (['pending', 'processing'].includes(p.status) && p.created_at < oneHourAgo) {
+              mismatches.push({
+                run_id: run.id, mismatch_type: 'status_mismatch', entity_type: 'payout',
+                entity_id: p.id, provider_ref: p.provider_ref, platform_status: p.status,
+                provider_status: 'unknown', platform_amount: p.amount, platform_currency: p.currency,
+                details: { reason: 'Payout stuck in pending/processing >1h', provider: p.provider },
+              });
+            }
+          }
+        }
+
+        // ── Refunds ──
+        if (run_type === 'refunds' || run_type === 'full') {
+          const { data: refunds } = await supabase
+            .from('gateway_refunds').select('id, status, amount, currency, created_at')
+            .gte('created_at', period_start).lte('created_at', period_end);
+
+          const refundRecords = refunds || [];
+          platformRecords = [...platformRecords, ...refundRecords];
+
+          for (const r of refundRecords) {
+            if (r.status === 'pending' && r.created_at < twoHoursAgo) {
+              mismatches.push({
+                run_id: run.id, mismatch_type: 'status_mismatch', entity_type: 'refund',
+                entity_id: r.id, platform_status: r.status, provider_status: 'unknown',
+                platform_amount: r.amount, platform_currency: r.currency,
+                details: { reason: 'Refund stuck in pending >2h' },
+              });
+            }
+          }
+        }
+
+        if (mismatches.length > 0) {
+          await supabase.from('reconciliation_mismatches').insert(mismatches);
+        }
+
+        await supabase.from('reconciliation_runs').update({
+          status: 'completed', completed_at: new Date().toISOString(),
+          total_platform_records: platformRecords.length,
+          matched_count: platformRecords.length - mismatches.length,
+          mismatched_count: mismatches.length,
+          summary: {
+            run_type, period: { start: period_start, end: period_end },
+            mismatch_breakdown: mismatches.reduce((acc: any, m: any) => {
+              acc[m.mismatch_type] = (acc[m.mismatch_type] || 0) + 1; return acc;
+            }, {}),
+          },
+        }).eq('id', run.id);
+
+        return json({
+          run_id: run.id, status: 'completed',
+          total_records: platformRecords.length, mismatches_found: mismatches.length,
+          completed_at: new Date().toISOString(),
+        });
+
+      } catch (runErr: any) {
+        await supabase.from('reconciliation_runs').update({
+          status: 'failed', completed_at: new Date().toISOString(), error_message: runErr.message,
+        }).eq('id', run.id);
+        return rfc7807('run_failed', 'Reconciliation Failed', 500, runErr.message);
+      }
+    }
+
+    // ─── RESOLVE — Resolve a mismatch ───
+    if (action === 'resolve') {
+      const { mismatch_id, resolution_status, resolution_action, resolution_notes } = body;
+      if (!mismatch_id) return rfc7807('validation_error', 'Validation Error', 400, 'mismatch_id required');
+      if (!resolution_status) return rfc7807('validation_error', 'Validation Error', 400, 'resolution_status required');
+
+      const { data: mismatch } = await supabase
+        .from('reconciliation_mismatches').select('*').eq('id', mismatch_id).single();
+      if (!mismatch) return rfc7807('not_found', 'Not Found', 404, 'Mismatch not found');
+      if (mismatch.resolution_status === 'resolved') {
+        return rfc7807('already_resolved', 'Already Resolved', 409, 'Already resolved');
+      }
+
+      await supabase.from('reconciliation_mismatches').update({
+        resolution_status, resolution_action: resolution_action || null,
+        resolution_notes: resolution_notes || null, resolved_by: user.id,
+        resolved_at: new Date().toISOString(),
+      }).eq('id', mismatch_id);
+
+      await supabase.from('audit_logs').insert({
+        action_type: 'reconciliation_mismatch_resolved', entity_type: 'reconciliation_mismatch',
+        entity_id: mismatch_id, performed_by: user.id,
+        details: { resolution_status, resolution_action, entity_type: mismatch.entity_type, entity_id: mismatch.entity_id },
+      });
+
+      return json({ mismatch_id, resolution_status, resolved_at: new Date().toISOString() });
+    }
+
+    // ─── STATS — Dashboard statistics ───
+    if (action === 'stats') {
+      const { data: recentRuns } = await supabase
+        .from('reconciliation_runs').select('*').order('created_at', { ascending: false }).limit(5);
+
+      const { count: openCount } = await supabase
+        .from('reconciliation_mismatches').select('id', { count: 'exact' }).eq('resolution_status', 'open');
+
+      const { count: escalatedCount } = await supabase
+        .from('reconciliation_mismatches').select('id', { count: 'exact' }).eq('resolution_status', 'escalated');
+
+      const { count: totalRuns } = await supabase
+        .from('reconciliation_runs').select('id', { count: 'exact' });
+
+      return json({
+        total_runs: totalRuns || 0, open_mismatches: openCount || 0,
+        escalated_mismatches: escalatedCount || 0, recent_runs: recentRuns || [],
+      });
+    }
+
+    return rfc7807('invalid_action', 'Invalid Action', 400, `Unknown action: ${action}`);
+  } catch (err: any) {
+    console.error('[gateway-reconciliation] Error:', err);
+    return rfc7807('internal_error', 'Internal Server Error', 500, err.message || 'Unexpected error');
   }
 });
