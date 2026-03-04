@@ -91,7 +91,7 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
         document_back_url: documentBackUrl,
         selfie_url: selfieUrl,
         source_app: 'banking_app',
-        institution_id: tenant.institutionId || null,
+        institution_id: tenant.id || null,
         metadata: {
           date_of_birth: personalInfo.dateOfBirth,
           nationality: personalInfo.nationality,
