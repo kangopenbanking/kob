@@ -137,6 +137,40 @@ const CustomerRegister: React.FC = () => {
         address: address || null,
       } as any).eq('id', user.id);
 
+      // Upload KYC documents to storage and create kyc_verifications record
+      let documentFrontUrl: string | null = null;
+      let selfieUrl: string | null = null;
+
+      if (idPhoto) {
+        const idPath = `${user.id}/kyc/id-front-${Date.now()}.${idPhoto.name.split('.').pop()}`;
+        const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(idPath, idPhoto);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(idPath);
+          documentFrontUrl = urlData.publicUrl;
+        }
+      }
+
+      if (selfie) {
+        const selfiePath = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
+        const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(selfiePath, selfie);
+        if (!uploadErr) {
+          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(selfiePath);
+          selfieUrl = urlData.publicUrl;
+        }
+      }
+
+      // Insert KYC verification record (consumer app → no institution_id)
+      await supabase.from('kyc_verifications').insert({
+        user_id: user.id,
+        verification_type: 'identity',
+        status: 'pending',
+        document_type: 'national_id',
+        document_front_url: documentFrontUrl,
+        selfie_url: selfieUrl,
+        source_app: 'customer_app',
+        institution_id: null,
+      } as any);
+
       // Set PIN via edge function
       if (newPin) {
         const { data: pinData, error: pinError } = await supabase.functions.invoke('pin-code-set', {

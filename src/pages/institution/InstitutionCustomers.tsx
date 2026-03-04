@@ -49,7 +49,7 @@ export default function InstitutionCustomers() {
         });
         setCustomers(customerList);
 
-        const { data: kyc } = await supabase.from("kyc_verifications").select("*").in("user_id", userIds).order("created_at", { ascending: false }).limit(200);
+        const { data: kyc } = await supabase.from("kyc_verifications").select("*").in("user_id", userIds).eq("source_app", "banking_app").order("created_at", { ascending: false }).limit(200);
         setKycVerifications(kyc || []);
         const { data: cdd } = await supabase.from("customer_due_diligence").select("*").in("user_id", userIds).order("created_at", { ascending: false }).limit(200);
         setDueDiligence(cdd || []);
