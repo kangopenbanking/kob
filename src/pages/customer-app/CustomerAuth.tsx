@@ -197,10 +197,59 @@ const CustomerAuth: React.FC = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { toast.error('Please enter your email'); return; }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/app/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast.success('Password reset email sent!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send reset email');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) {
+      toast.error('Please enter a 6-digit PIN');
+      return;
+    }
+    if (newPin !== confirmNewPin) {
+      toast.error('PINs do not match');
+      return;
+    }
+    setResetPinLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pin-code-reset', {
+        body: { phone_number: fullPhone, new_pin_code: newPin },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success('PIN reset successfully! Please sign in.');
+        setNewPin('');
+        setConfirmNewPin('');
+        setMode('input');
+      } else {
+        throw new Error(data?.error || 'Failed to reset PIN');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to reset PIN');
+    } finally {
+      setResetPinLoading(false);
+    }
+  };
+
   const handleBack = () => {
     if (mode === 'otp') { resetOTP(); setMode('input'); }
     else if (mode === 'pin') { setMode('input'); setPin(''); setPinError(null); }
     else if (mode === 'input') { setMode('welcome'); }
+    else if (mode === 'forgot-password') { setMode('input'); setForgotSent(false); setForgotEmail(''); }
+    else if (mode === 'reset-pin') { setMode('pin'); setNewPin(''); setConfirmNewPin(''); }
     else { navigate('/app'); }
   };
 
