@@ -235,7 +235,7 @@ const CustomerOnboarding: React.FC = () => {
       navigate('/app/home', { replace: true });
     } catch (err: any) {
       setError(err.message || 'Failed to complete setup');
-      setStep('details');
+      setStep(selected === 'none' ? 'select' : 'details');
       toast.error(err.message || 'Setup failed');
     } finally {
       setLoading(false);
