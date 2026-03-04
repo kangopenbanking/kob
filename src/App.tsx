@@ -723,6 +723,7 @@ function App() {
             {/* Banking App PWA Routes */}
             <Route path="/bank/:institutionId" element={<BankSplash />} />
             <Route path="/bank/:institutionId/auth" element={<BankAuth />} />
+            <Route path="/bank/:institutionId/reset-password" element={<ResetPassword />} />
             <Route path="/bank/:institutionId/apply" element={<BankApply />} />
             <Route path="/bank/:institutionId/kyc" element={<BankingAppLayout />}><Route index element={<BankKYC />} /></Route>
             <Route path="/bank/:institutionId" element={<BankingAppLayout />}>
