@@ -336,7 +336,7 @@ export default function KYCVerificationReview() {
           {selectedKYC && (
             <div className="space-y-4">
               <div className="p-4 bg-muted/50 rounded-lg">
-                <p className="font-semibold text-sm">{selectedKYC.first_name} {selectedKYC.last_name}</p>
+                <p className="font-semibold text-sm">{getDisplayName(selectedKYC)}</p>
                 <p className="text-xs text-muted-foreground">{selectedKYC.document_type} • {selectedKYC.document_number}</p>
               </div>
               <div className="space-y-2">
