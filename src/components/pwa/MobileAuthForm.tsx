@@ -45,6 +45,16 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
   const [userHasPin, setUserHasPin] = useState(false);
   const [checkingPin, setCheckingPin] = useState(false);
 
+  // Reset PIN state
+  const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [resetPinLoading, setResetPinLoading] = useState(false);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+
   const fullPhone = `${countryCode}${phoneNumber}`;
 
   const handleCheckPin = async () => {
