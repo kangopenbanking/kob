@@ -562,6 +562,30 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                 </div>
               </motion.div>
             )}
+
+            {/* Email Sent Confirmation */}
+            {step === 'email-sent' && (
+              <motion.div key="email-sent" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5 py-6">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Mail className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Verification email sent to</p>
+                  <p className="text-sm font-bold text-primary">{form.email}</p>
+                  <p className="text-xs text-muted-foreground max-w-[260px]">
+                    Please check your inbox and click the verification link to activate your account. Check your spam folder if you don't see it.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => { setStep('email'); setMode('login'); }}
+                  className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
+                  variant="outline"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Sign In
+                </Button>
+              </motion.div>
+            )}
           </AnimatePresence>
         </motion.div>
 
