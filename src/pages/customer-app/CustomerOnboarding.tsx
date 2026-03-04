@@ -126,6 +126,9 @@ const CustomerOnboarding: React.FC = () => {
       setStep('select');
       setAccountNumber('');
       setAccountName('');
+      setCardNetwork('');
+      setCardExpMonth('');
+      setCardExpYear('');
     } else {
       // Can't go back from select — maybe go to auth
       navigate('/app/auth');
