@@ -5,22 +5,20 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function problem(status: number, title: string, detail: string) {
+  return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+}
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
-    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
-    // Call the check_api_key_expiration function
     const { error: checkError } = await supabase.rpc('check_api_key_expiration');
-
-    if (checkError) {
-      throw checkError;
-    }
+    if (checkError) throw checkError;
 
     console.log('API key expiration check completed');
 
@@ -30,9 +28,6 @@ Deno.serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error checking API key expiration:', error);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    );
+    return problem(500, 'Internal Server Error', error.message);
   }
 });
