@@ -37,11 +37,7 @@ export default function KYCVerification() {
     
     if (uploadError) throw uploadError;
     
-    const { data: { publicUrl } } = supabase.storage
-      .from('kyc-documents')
-      .getPublicUrl(fileName);
-    
-    return publicUrl;
+    return fileName; // Return storage path, not public URL
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

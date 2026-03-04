@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentPreviewLightbox } from "@/components/admin/DocumentPreviewLightbox";
+import { getKycDocumentUrl } from "@/lib/kyc-storage";
 import { Shield, FileText, CheckCircle, XCircle, Clock, Eye, Image as ImageIcon, Search, Users, Filter } from "lucide-react";
 import { format } from "date-fns";
 
@@ -24,6 +25,7 @@ export default function KYCVerificationReview() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -71,14 +73,30 @@ export default function KYCVerificationReview() {
     setReviewDialogOpen(true);
   };
 
+  const handleOpenDetail = async (kyc: any) => {
+    setSelectedKYC(kyc);
+    setDetailOpen(true);
+    // Resolve signed URLs for thumbnails
+    const urls: Record<string, string> = {};
+    for (const field of ['document_front_url', 'document_back_url', 'selfie_url'] as const) {
+      if (kyc[field]) {
+        const signed = await getKycDocumentUrl(kyc[field]);
+        if (signed) urls[field] = signed;
+      }
+    }
+    setResolvedThumbs(urls);
+  };
+
   const submitReview = () => {
     if (selectedKYC) {
       reviewMutation.mutate({ id: selectedKYC.id, status: reviewAction, notes: reviewNotes });
     }
   };
 
-  const openPreview = (url: string | null, label: string) => {
-    if (url) { setPreviewUrl(url); setPreviewLabel(label); }
+  const openPreview = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) { setPreviewUrl(signedUrl); setPreviewLabel(label); }
   };
 
   const getStatusBadge = (status: string) => {
@@ -168,7 +186,7 @@ export default function KYCVerificationReview() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedKYC(kyc); setDetailOpen(true); }}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDetail(kyc)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                       {kyc.status === "pending" && (
@@ -271,19 +289,22 @@ export default function KYCVerificationReview() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Uploaded Documents</p>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { url: selectedKYC.document_front_url, label: "ID Front" },
-                    { url: selectedKYC.document_back_url, label: "ID Back" },
-                    { url: selectedKYC.selfie_url, label: "Selfie" },
-                  ].map(doc => (
+                    { key: "document_front_url", label: "ID Front" },
+                    { key: "document_back_url", label: "ID Back" },
+                    { key: "selfie_url", label: "Selfie" },
+                  ].map(doc => {
+                    const storedPath = selectedKYC[doc.key];
+                    const thumbUrl = resolvedThumbs[doc.key];
+                    return (
                     <button
                       key={doc.label}
                       className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40"
-                      disabled={!doc.url}
-                      onClick={() => openPreview(doc.url, doc.label)}
+                      disabled={!storedPath}
+                      onClick={() => openPreview(storedPath, doc.label)}
                     >
-                      {doc.url ? (
+                      {thumbUrl ? (
                         <>
-                          <img src={doc.url} alt={doc.label} className="w-full h-full object-cover" />
+                          <img src={thumbUrl} alt={doc.label} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                             <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
@@ -297,7 +318,8 @@ export default function KYCVerificationReview() {
                         <span className="text-[10px] text-white font-medium">{doc.label}</span>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 

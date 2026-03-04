@@ -47,7 +47,7 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
-      // Upload documents to storage
+      // Upload documents to storage (store paths, not public URLs)
       let documentFrontUrl: string | null = null;
       let documentBackUrl: string | null = null;
       let selfieUrl: string | null = null;
@@ -55,28 +55,19 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
       if (idFront) {
         const path = `${user.id}/kyc/id-front-${Date.now()}.${idFront.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('kyc-documents').upload(path, idFront);
-        if (!error) {
-          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
-          documentFrontUrl = urlData.publicUrl;
-        }
+        if (!error) documentFrontUrl = path;
       }
 
       if (idBack) {
         const path = `${user.id}/kyc/id-back-${Date.now()}.${idBack.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('kyc-documents').upload(path, idBack);
-        if (!error) {
-          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
-          documentBackUrl = urlData.publicUrl;
-        }
+        if (!error) documentBackUrl = path;
       }
 
       if (selfie) {
         const path = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('kyc-documents').upload(path, selfie);
-        if (!error) {
-          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
-          selfieUrl = urlData.publicUrl;
-        }
+        if (!error) selfieUrl = path;
       }
 
       // Insert KYC verification record (banking app → with institution_id)

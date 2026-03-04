@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { toast } from "@/hooks/use-toast";
 import { DocumentPreviewLightbox } from "@/components/admin/DocumentPreviewLightbox";
+import { getKycDocumentUrl } from "@/lib/kyc-storage";
 import { Shield, FileText, CheckCircle, XCircle, Clock, Eye, Search, Users, UserPlus, Image as ImageIcon, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
@@ -27,6 +28,7 @@ export default function InstitutionKYCManagement() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
 
   const { data: kycSubmissions, isLoading, refetch } = useQuery({
     queryKey: ["fi-kyc-submissions"],
@@ -91,7 +93,11 @@ export default function InstitutionKYCManagement() {
 
   const handleReview = (kyc: any, action: "approved" | "rejected") => { setSelectedKYC(kyc); setReviewAction(action); setReviewDialogOpen(true); };
   const submitReview = () => { if (selectedKYC) reviewMutation.mutate({ id: selectedKYC.id, status: reviewAction, notes: reviewNotes }); };
-  const openPreview = (url: string | null, label: string) => { if (url) { setPreviewUrl(url); setPreviewLabel(label); } };
+  const openPreview = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) { setPreviewUrl(signedUrl); setPreviewLabel(label); }
+  };
 
   const getDisplayName = (kyc: any) => (kyc.profiles as any)?.full_name || `User ${kyc.user_id?.slice(0, 8)}`;
 
@@ -197,7 +203,14 @@ export default function InstitutionKYCManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedKYC(kyc); setDetailOpen(true); }}><Eye className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                              setSelectedKYC(kyc); setDetailOpen(true);
+                              const urls: Record<string, string> = {};
+                              for (const f of ['document_front_url', 'document_back_url', 'selfie_url'] as const) {
+                                if (kyc[f]) { const s = await getKycDocumentUrl(kyc[f]); if (s) urls[f] = s; }
+                              }
+                              setResolvedThumbs(urls);
+                            }}><Eye className="h-3.5 w-3.5" /></Button>
                             {kyc.status === "pending" && (
                               <>
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-fi-green hover:bg-fi-green/10" onClick={() => handleReview(kyc, "approved")}><CheckCircle className="h-3.5 w-3.5" /></Button>
@@ -261,14 +274,18 @@ export default function InstitutionKYCManagement() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Documents</p>
                 <div className="grid grid-cols-3 gap-3">
-                  {[{ url: selectedKYC.document_front_url, label: "ID Front" }, { url: selectedKYC.document_back_url, label: "ID Back" }, { url: selectedKYC.selfie_url, label: "Selfie" }].map(doc => (
-                    <button key={doc.label} className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40" disabled={!doc.url} onClick={() => openPreview(doc.url, doc.label)}>
-                      {doc.url ? (
-                        <><img src={doc.url} alt={doc.label} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center"><Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" /></div></>
+                  {[{ key: "document_front_url", label: "ID Front" }, { key: "document_back_url", label: "ID Back" }, { key: "selfie_url", label: "Selfie" }].map(doc => {
+                    const storedPath = selectedKYC[doc.key];
+                    const thumbUrl = resolvedThumbs[doc.key];
+                    return (
+                    <button key={doc.label} className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40" disabled={!storedPath} onClick={() => openPreview(storedPath, doc.label)}>
+                      {thumbUrl ? (
+                        <><img src={thumbUrl} alt={doc.label} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center"><Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" /></div></>
                       ) : (<div className="flex flex-col items-center justify-center h-full"><ImageIcon className="h-6 w-6 text-muted-foreground/20" /></div>)}
                       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5"><span className="text-[10px] text-white font-medium">{doc.label}</span></div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               {selectedKYC.status === "pending" && (
