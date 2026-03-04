@@ -242,6 +242,45 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { toast.error('Please enter your email'); return; }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast.success('Password reset email sent!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send reset email');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast.error('Please enter a 6-digit PIN'); return; }
+    if (newPin !== confirmNewPin) { toast.error('PINs do not match'); return; }
+    setResetPinLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pin-code-reset', {
+        body: { phone_number: fullPhone, new_pin_code: newPin },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        sounds.success();
+        toast.success('PIN reset successfully! Please sign in.');
+        setNewPin(''); setConfirmNewPin(''); setStep('phone');
+      } else { throw new Error(data?.error || 'Failed to reset PIN'); }
+    } catch (err: any) {
+      sounds.error();
+      toast.error(err.message || 'Failed to reset PIN');
+    } finally {
+      setResetPinLoading(false);
+    }
+  };
+
   // Auto-submit PIN when 6 digits entered
   useEffect(() => {
     if (step === 'pin' && pinCode.length === 6 && !pinLoading) {
