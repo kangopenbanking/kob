@@ -32,12 +32,28 @@ export default function KYCVerificationReview() {
   const { data: kycSubmissions, isLoading } = useQuery({
     queryKey: ["kyc-submissions-admin"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("kyc_verifications")
-        .select("*, profiles(full_name, email)")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
+      const allData: any[] = [];
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from("kyc_verifications")
+          .select("*, profiles(full_name, email)")
+          .order("created_at", { ascending: false })
+          .range(offset, offset + batchSize - 1);
+        if (error) throw error;
+        if (data && data.length > 0) {
+          allData.push(...data);
+          offset += batchSize;
+          hasMore = data.length === batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
+
+      return allData;
     },
   });
 
