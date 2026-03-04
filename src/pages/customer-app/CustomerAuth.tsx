@@ -261,6 +261,8 @@ const CustomerAuth: React.FC = () => {
       case 'otp': return 'Verify Code';
       case 'verifying': return 'Verifying...';
       case 'email-sent': return 'Check Your Email';
+      case 'forgot-password': return 'Reset Password';
+      case 'reset-pin': return 'Reset PIN';
     }
   };
 
