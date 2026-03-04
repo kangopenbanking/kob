@@ -74,13 +74,15 @@ export default function InstitutionKYCManagement() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase.from("kyc_verifications").update({ status, updated_at: new Date().toISOString(), rejection_reason: notes, verified_by: user?.id, verified_at: new Date().toISOString() }).eq("id", id);
+      const { data, error } = await supabase.functions.invoke("admin-kyc-review", {
+        body: { kyc_id: id, action: status, rejection_reason: notes || undefined },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["fi-kyc-submissions"] });
-      toast({ title: "KYC Review Complete", description: `Verification has been ${reviewAction}.` });
+      toast({ title: "KYC Review Complete", description: `Verification has been ${reviewAction}. Customer notified.` });
       setReviewDialogOpen(false);
       setDetailOpen(false);
       setSelectedKYC(null);

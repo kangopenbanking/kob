@@ -48,15 +48,15 @@ export default function KYCVerificationReview() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      const { error } = await supabase
-        .from("kyc_verifications")
-        .update({ status, updated_at: new Date().toISOString(), rejection_reason: notes })
-        .eq("id", id);
+      const { data, error } = await supabase.functions.invoke("admin-kyc-review", {
+        body: { kyc_id: id, action: status, rejection_reason: notes || undefined },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["kyc-submissions-admin"] });
-      toast({ title: "KYC Review Complete", description: `Submission has been ${reviewAction}.` });
+      toast({ title: "KYC Review Complete", description: `Submission has been ${reviewAction}. Notification sent to customer.` });
       setReviewDialogOpen(false);
       setDetailOpen(false);
       setSelectedKYC(null);
