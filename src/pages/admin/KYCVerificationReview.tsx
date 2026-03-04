@@ -73,6 +73,20 @@ export default function KYCVerificationReview() {
     setReviewDialogOpen(true);
   };
 
+  const handleOpenDetail = async (kyc: any) => {
+    setSelectedKYC(kyc);
+    setDetailOpen(true);
+    // Resolve signed URLs for thumbnails
+    const urls: Record<string, string> = {};
+    for (const field of ['document_front_url', 'document_back_url', 'selfie_url'] as const) {
+      if (kyc[field]) {
+        const signed = await getKycDocumentUrl(kyc[field]);
+        if (signed) urls[field] = signed;
+      }
+    }
+    setResolvedThumbs(urls);
+  };
+
   const submitReview = () => {
     if (selectedKYC) {
       reviewMutation.mutate({ id: selectedKYC.id, status: reviewAction, notes: reviewNotes });
