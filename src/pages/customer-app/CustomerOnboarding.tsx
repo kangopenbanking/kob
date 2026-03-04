@@ -86,12 +86,27 @@ const CustomerOnboarding: React.FC = () => {
 
       // If not 'none', also insert into customer_linked_accounts
       if (selected !== 'none') {
+        const accountType = selected === 'card' ? 'bank_card' : selected;
+        const last4 = accountNumber.replace(/\D/g, '').slice(-4);
+        const metadata = selected === 'card' ? {
+          card_network: cardNetwork,
+          card_exp_month: parseInt(cardExpMonth, 10),
+          card_exp_year: parseInt(cardExpYear, 10) < 100 ? 2000 + parseInt(cardExpYear, 10) : parseInt(cardExpYear, 10),
+          card_type: 'debit',
+        } : undefined;
+
         await supabase.from('customer_linked_accounts' as any).insert({
           user_id: user.id,
-          account_type: selected,
-          account_number: accountNumber || null,
+          account_type: accountType,
+          account_number: selected === 'card' ? last4 : (accountNumber || null),
           account_name: accountName || null,
+          provider_name: selected === 'card' ? (CARD_NETWORKS.find(n => n.value === cardNetwork)?.label || 'Card') : undefined,
+          provider_type: selected === 'card' ? 'card' : (selected === 'momo_mtn' || selected === 'momo_orange' ? 'mobile_money' : 'bank'),
+          last4,
           is_primary: true,
+          is_active: true,
+          status: 'active',
+          metadata: metadata || undefined,
         } as any);
       }
 
