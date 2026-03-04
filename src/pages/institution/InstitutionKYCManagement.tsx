@@ -284,7 +284,8 @@ export default function InstitutionKYCManagement() {
                       ) : (<div className="flex flex-col items-center justify-center h-full"><ImageIcon className="h-6 w-6 text-muted-foreground/20" /></div>)}
                       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5"><span className="text-[10px] text-white font-medium">{doc.label}</span></div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               {selectedKYC.status === "pending" && (
