@@ -595,6 +595,12 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                     {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
                     <ArrowRight className="h-4 w-4" strokeWidth={2} />
                   </Button>
+
+                  {mode === 'login' && (
+                    <Button type="button" variant="link" className="w-full text-sm text-primary" onClick={() => { setForgotEmail(form.email); setStep('forgot-password'); }}>
+                      Forgot Password?
+                    </Button>
+                  )}
                 </form>
 
                 <div className="mt-4 text-center">
