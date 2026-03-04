@@ -274,10 +274,13 @@ export default function InstitutionKYCManagement() {
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Documents</p>
                 <div className="grid grid-cols-3 gap-3">
-                  {[{ url: selectedKYC.document_front_url, label: "ID Front" }, { url: selectedKYC.document_back_url, label: "ID Back" }, { url: selectedKYC.selfie_url, label: "Selfie" }].map(doc => (
-                    <button key={doc.label} className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40" disabled={!doc.url} onClick={() => openPreview(doc.url, doc.label)}>
-                      {doc.url ? (
-                        <><img src={doc.url} alt={doc.label} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center"><Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" /></div></>
+                  {[{ key: "document_front_url", label: "ID Front" }, { key: "document_back_url", label: "ID Back" }, { key: "selfie_url", label: "Selfie" }].map(doc => {
+                    const storedPath = selectedKYC[doc.key];
+                    const thumbUrl = resolvedThumbs[doc.key];
+                    return (
+                    <button key={doc.label} className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40" disabled={!storedPath} onClick={() => openPreview(storedPath, doc.label)}>
+                      {thumbUrl ? (
+                        <><img src={thumbUrl} alt={doc.label} className="w-full h-full object-cover" /><div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center"><Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" /></div></>
                       ) : (<div className="flex flex-col items-center justify-center h-full"><ImageIcon className="h-6 w-6 text-muted-foreground/20" /></div>)}
                       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5"><span className="text-[10px] text-white font-medium">{doc.label}</span></div>
                     </button>
