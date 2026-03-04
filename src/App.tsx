@@ -422,6 +422,7 @@ function App() {
               <Route path="loans" element={<InstitutionLoans />} />
               <Route path="savings" element={<InstitutionSavings />} />
               <Route path="customers" element={<InstitutionCustomers />} />
+              <Route path="kyc" element={<InstitutionKYCManagement />} />
               <Route path="beneficiaries" element={<InstitutionBeneficiaries />} />
               <Route path="ledger" element={<InstitutionLedger />} />
               <Route path="audit" element={<InstitutionAudit />} />
