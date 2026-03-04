@@ -22,11 +22,12 @@ export default function KYCVerificationReview() {
   const queryClient = useQueryClient();
 
   const { data: kycSubmissions, isLoading } = useQuery({
-    queryKey: ["kyc-submissions"],
+    queryKey: ["kyc-submissions-admin"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("kyc_verifications")
         .select("*")
+        .is("institution_id", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];

@@ -7383,10 +7383,12 @@ export type Database = {
           document_type: string | null
           expiry_date: string | null
           id: string
+          institution_id: string | null
           metadata: Json | null
           rejection_reason: string | null
           risk_level: string | null
           selfie_url: string | null
+          source_app: string | null
           status: string
           updated_at: string | null
           user_id: string
@@ -7405,10 +7407,12 @@ export type Database = {
           document_type?: string | null
           expiry_date?: string | null
           id?: string
+          institution_id?: string | null
           metadata?: Json | null
           rejection_reason?: string | null
           risk_level?: string | null
           selfie_url?: string | null
+          source_app?: string | null
           status?: string
           updated_at?: string | null
           user_id: string
@@ -7427,10 +7431,12 @@ export type Database = {
           document_type?: string | null
           expiry_date?: string | null
           id?: string
+          institution_id?: string | null
           metadata?: Json | null
           rejection_reason?: string | null
           risk_level?: string | null
           selfie_url?: string | null
+          source_app?: string | null
           status?: string
           updated_at?: string | null
           user_id?: string
@@ -7439,7 +7445,15 @@ export type Database = {
           verified_at?: string | null
           verified_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "kyc_verifications_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       ledger_accounts: {
         Row: {

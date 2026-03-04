@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useTenant } from './TenantProvider';
 
 interface KYCOnboardingWizardProps {
   onComplete: () => void;
@@ -18,6 +20,7 @@ const steps = [
 ];
 
 export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComplete }) => {
+  const tenant = useTenant();
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const fileInputFront = useRef<HTMLInputElement>(null);
@@ -41,11 +44,66 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
   const handleSubmit = async () => {
     setLoading(true);
     try {
-      await new Promise((r) => setTimeout(r, 2000));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Upload documents to storage
+      let documentFrontUrl: string | null = null;
+      let documentBackUrl: string | null = null;
+      let selfieUrl: string | null = null;
+
+      if (idFront) {
+        const path = `${user.id}/kyc/id-front-${Date.now()}.${idFront.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from('kyc-documents').upload(path, idFront);
+        if (!error) {
+          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
+          documentFrontUrl = urlData.publicUrl;
+        }
+      }
+
+      if (idBack) {
+        const path = `${user.id}/kyc/id-back-${Date.now()}.${idBack.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from('kyc-documents').upload(path, idBack);
+        if (!error) {
+          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
+          documentBackUrl = urlData.publicUrl;
+        }
+      }
+
+      if (selfie) {
+        const path = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
+        const { error } = await supabase.storage.from('kyc-documents').upload(path, selfie);
+        if (!error) {
+          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(path);
+          selfieUrl = urlData.publicUrl;
+        }
+      }
+
+      // Insert KYC verification record (banking app → with institution_id)
+      const { error: insertErr } = await supabase.from('kyc_verifications').insert({
+        user_id: user.id,
+        verification_type: 'identity',
+        status: 'pending',
+        document_type: personalInfo.idType,
+        document_number: personalInfo.idNumber || null,
+        document_country: personalInfo.nationality || null,
+        document_front_url: documentFrontUrl,
+        document_back_url: documentBackUrl,
+        selfie_url: selfieUrl,
+        source_app: 'banking_app',
+        institution_id: tenant.id || null,
+        metadata: {
+          date_of_birth: personalInfo.dateOfBirth,
+          nationality: personalInfo.nationality,
+        },
+      } as any);
+
+      if (insertErr) throw insertErr;
+
       toast.success('KYC submitted for verification!');
       onComplete();
-    } catch {
-      toast.error('Failed to submit KYC');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit KYC');
     } finally {
       setLoading(false);
     }
