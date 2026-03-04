@@ -17,9 +17,16 @@ interface AccountOption {
   color: string;
 }
 
+const CARD_NETWORKS = [
+  { value: 'visa', label: 'Visa' },
+  { value: 'mastercard', label: 'Mastercard' },
+  { value: 'amex', label: 'American Express' },
+];
+
 const accountOptions: AccountOption[] = [
   { id: 'bank_account', label: 'Bank Account', description: 'Link your existing bank account', icon: Building2, color: 'bg-[hsl(210,80%,93%)]' },
   { id: 'credit_union', label: 'Credit Union', description: 'Connect your credit union membership', icon: Landmark, color: 'bg-[hsl(150,40%,90%)]' },
+  { id: 'card', label: 'Credit / Debit Card', description: 'Link a Visa, Mastercard or Amex card', icon: CreditCard, color: 'bg-[hsl(225,70%,92%)]' },
   { id: 'momo_orange', label: 'Orange Money', description: 'Link your Orange Mobile Money', icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]' },
   { id: 'momo_mtn', label: 'MTN MoMo', description: 'Link your MTN Mobile Money', icon: Wallet, color: 'bg-[hsl(50,80%,90%)]' },
   { id: 'none', label: 'No Account', description: 'Browse in view-only mode', icon: Ban, color: 'bg-muted' },
