@@ -18,7 +18,7 @@ import { API_CONFIG } from '@/config/api';
 
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying';
+type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
@@ -170,10 +170,10 @@ const CustomerAuth: React.FC = () => {
       if (intent === 'signup') {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: fullName }, emailRedirectTo: API_CONFIG.SITE_URL },
+          options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/app/auth` },
         });
         if (error) throw error;
-        toast.success('Account created! Check your email to verify.');
+        setMode('email-sent');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -201,6 +201,7 @@ const CustomerAuth: React.FC = () => {
       case 'pin': return 'Enter Your PIN';
       case 'otp': return 'Verify Code';
       case 'verifying': return 'Verifying...';
+      case 'email-sent': return 'Check Your Email';
     }
   };
 
@@ -211,6 +212,7 @@ const CustomerAuth: React.FC = () => {
       case 'pin': return `Logging in as ${countryCode} ${phoneNumber}`;
       case 'otp': return `Code sent to ${countryCode} ${phoneNumber}`;
       case 'verifying': return 'Please wait...';
+      case 'email-sent': return 'Almost there!';
     }
   };
 
@@ -490,6 +492,30 @@ const CustomerAuth: React.FC = () => {
                     Resend Code
                   </Button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Email Sent Confirmation */}
+            {mode === 'email-sent' && (
+              <motion.div key="email-sent" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5 py-6">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Mail className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Verification email sent to</p>
+                  <p className="text-sm font-bold text-primary">{email}</p>
+                  <p className="text-xs text-muted-foreground max-w-[260px]">
+                    Please check your inbox and click the verification link to activate your account. Check your spam folder if you don't see it.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => { setMode('input'); setIntent('signin'); }}
+                  className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
+                  variant="outline"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Sign In
+                </Button>
               </motion.div>
             )}
 

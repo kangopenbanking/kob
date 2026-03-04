@@ -17,7 +17,7 @@ import kangLogo from '@/assets/kang-logo.png';
 
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-type AuthStep = 'phone' | 'pin' | 'otp' | 'email';
+type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent';
 
 interface MobileAuthFormProps {
   onAuthSuccess: () => void;
@@ -213,10 +213,10 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         const { error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
-          options: { data: { full_name: form.fullName }, emailRedirectTo: API_CONFIG.SITE_URL },
+          options: { data: { full_name: form.fullName }, emailRedirectTo: `${window.location.origin}${window.location.pathname}` },
         });
         if (error) throw error;
-        toast.success('Account created! Please check your email to verify.');
+        setStep('email-sent');
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
         if (error) throw error;
@@ -261,10 +261,10 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
             <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">
-            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : 'Sign In'}
+            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : 'Sign In'}
           </h1>
           <p className="mt-1 text-sm text-primary-foreground/70">
-            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : `Access your ${tenant.name} account`}
+            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : step === 'email-sent' ? 'Almost there!' : `Access your ${tenant.name} account`}
           </p>
         </motion.div>
       </div>
@@ -560,6 +560,30 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                     Back to phone login
                   </Button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Email Sent Confirmation */}
+            {step === 'email-sent' && (
+              <motion.div key="email-sent" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5 py-6">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Mail className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+                <div className="text-center space-y-2">
+                  <p className="text-sm font-semibold text-foreground">Verification email sent to</p>
+                  <p className="text-sm font-bold text-primary">{form.email}</p>
+                  <p className="text-xs text-muted-foreground max-w-[260px]">
+                    Please check your inbox and click the verification link to activate your account. Check your spam folder if you don't see it.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => { setStep('email'); setMode('login'); }}
+                  className="w-full gap-2 rounded-xl py-5 text-sm font-semibold"
+                  variant="outline"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to Sign In
+                </Button>
               </motion.div>
             )}
           </AnimatePresence>

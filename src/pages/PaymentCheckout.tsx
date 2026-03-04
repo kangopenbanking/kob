@@ -294,7 +294,8 @@ export default function PaymentCheckout() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="mobile_money">Mobile Money (MTN/Orange)</SelectItem>
-                  <SelectItem value="card">Card Payment</SelectItem>
+                  <SelectItem value="card">Card Payment (Visa/Mastercard)</SelectItem>
+                  <SelectItem value="paypal">PayPal</SelectItem>
                   <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
                   <SelectItem value="ussd">USSD</SelectItem>
                 </SelectContent>
