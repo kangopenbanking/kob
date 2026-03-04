@@ -38,12 +38,24 @@ export default function BusinessKYCReview() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      const { error } = await supabase.from("business_kyc").update({ verification_status: status, updated_at: new Date().toISOString(), rejection_reason: notes }).eq("id", id);
+      // Get the institution_id linked to this KYB record
+      const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
+      let institutionId: string | null = null;
+      if (kybRecord) {
+        const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", kybRecord.user_id).maybeSingle();
+        institutionId = inst?.id || null;
+      }
+
+      const action = status === 'approved' ? 'approve' : 'reject';
+      const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
+        body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
+      });
       if (error) throw error;
+      if (data?.error) throw new Error(data.error);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["business-kyc-submissions"] });
-      toast({ title: "Business KYC Review Complete", description: `Submission has been ${reviewAction}.` });
+      toast({ title: "Business KYC Review Complete", description: `Submission has been ${reviewAction}. Notification sent.` });
       setReviewDialogOpen(false);
       setDetailOpen(false);
       setSelectedKYB(null);
