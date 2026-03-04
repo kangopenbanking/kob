@@ -289,19 +289,22 @@ export default function KYCVerificationReview() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Uploaded Documents</p>
                 <div className="grid grid-cols-3 gap-3">
                   {[
-                    { url: selectedKYC.document_front_url, label: "ID Front" },
-                    { url: selectedKYC.document_back_url, label: "ID Back" },
-                    { url: selectedKYC.selfie_url, label: "Selfie" },
-                  ].map(doc => (
+                    { key: "document_front_url", label: "ID Front" },
+                    { key: "document_back_url", label: "ID Back" },
+                    { key: "selfie_url", label: "Selfie" },
+                  ].map(doc => {
+                    const storedPath = selectedKYC[doc.key];
+                    const thumbUrl = resolvedThumbs[doc.key];
+                    return (
                     <button
                       key={doc.label}
                       className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40"
-                      disabled={!doc.url}
-                      onClick={() => openPreview(doc.url, doc.label)}
+                      disabled={!storedPath}
+                      onClick={() => openPreview(storedPath, doc.label)}
                     >
-                      {doc.url ? (
+                      {thumbUrl ? (
                         <>
-                          <img src={doc.url} alt={doc.label} className="w-full h-full object-cover" />
+                          <img src={thumbUrl} alt={doc.label} className="w-full h-full object-cover" />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                             <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                           </div>
