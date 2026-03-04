@@ -213,10 +213,10 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         const { error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
-          options: { data: { full_name: form.fullName }, emailRedirectTo: API_CONFIG.SITE_URL },
+          options: { data: { full_name: form.fullName }, emailRedirectTo: `${window.location.origin}${window.location.pathname}` },
         });
         if (error) throw error;
-        toast.success('Account created! Please check your email to verify.');
+        setStep('email-sent');
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
         if (error) throw error;
