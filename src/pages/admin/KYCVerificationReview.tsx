@@ -33,7 +33,6 @@ export default function KYCVerificationReview() {
       const { data, error } = await supabase
         .from("kyc_verifications")
         .select("*, profiles(full_name, email)")
-        .is("institution_id", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
