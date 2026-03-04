@@ -92,7 +92,7 @@ const GatewayPaymentLinksGuide = () => (
   }'
 
 # Response includes the shareable URL:
-# "url": "https://kob.lovable.app/pay/pay-m1abc-x9y2z3"`}
+# "url": "https://kangopenbanking.com/pay/pay-m1abc-x9y2z3"`}
       </pre>
     </div>
 
