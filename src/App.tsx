@@ -160,6 +160,7 @@ import InstitutionBranches from "./pages/institution/InstitutionBranches";
 import InstitutionLoans from "./pages/institution/InstitutionLoans";
 import InstitutionSavings from "./pages/institution/InstitutionSavings";
 import InstitutionCustomers from "./pages/institution/InstitutionCustomers";
+import InstitutionKYCManagement from "./pages/institution/InstitutionKYCManagement";
 import InstitutionBeneficiaries from "./pages/institution/InstitutionBeneficiaries";
 import InstitutionLedger from "./pages/institution/InstitutionLedger";
 import InstitutionAudit from "./pages/institution/InstitutionAudit";
@@ -219,6 +220,7 @@ import KYCVerificationReview from "./pages/admin/KYCVerificationReview";
 import BusinessKYCReview from "./pages/admin/BusinessKYCReview";
 import TPPRegistrationReview from "./pages/admin/TPPRegistrationReview";
 import InstitutionVerification from "./pages/admin/InstitutionVerification";
+import AccessRoleManagement from "./pages/admin/AccessRoleManagement";
 import BusinessKYBSubmission from "./pages/BusinessKYBSubmission";
 import ForDevelopers from "./pages/ForDevelopers";
 import ForMerchants from "./pages/ForMerchants";
@@ -420,6 +422,7 @@ function App() {
               <Route path="loans" element={<InstitutionLoans />} />
               <Route path="savings" element={<InstitutionSavings />} />
               <Route path="customers" element={<InstitutionCustomers />} />
+              <Route path="kyc" element={<InstitutionKYCManagement />} />
               <Route path="beneficiaries" element={<InstitutionBeneficiaries />} />
               <Route path="ledger" element={<InstitutionLedger />} />
               <Route path="audit" element={<InstitutionAudit />} />
@@ -516,6 +519,7 @@ function App() {
               <Route path="customer-apps" element={<CustomerAppManagement />} />
               <Route path="institution-urls" element={<InstitutionAppUrls />} />
               <Route path="homepage-hero" element={<HomepageHeroManager />} />
+              <Route path="access-roles" element={<AccessRoleManagement />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />

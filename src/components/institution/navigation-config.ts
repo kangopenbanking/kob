@@ -23,6 +23,7 @@ export const institutionNavigation = [
       { title: "Loans", path: "/fi-portal/loans", icon: Banknote, sectionKey: "loans" },
       { title: "Savings", path: "/fi-portal/savings", icon: PiggyBank, sectionKey: "savings" },
       { title: "Customers", path: "/fi-portal/customers", icon: UserCheck, sectionKey: "customers" },
+      { title: "KYC Verification", path: "/fi-portal/kyc", icon: Shield, sectionKey: "customers" },
     ]
   },
   {
