@@ -160,6 +160,7 @@ import InstitutionBranches from "./pages/institution/InstitutionBranches";
 import InstitutionLoans from "./pages/institution/InstitutionLoans";
 import InstitutionSavings from "./pages/institution/InstitutionSavings";
 import InstitutionCustomers from "./pages/institution/InstitutionCustomers";
+import InstitutionKYCManagement from "./pages/institution/InstitutionKYCManagement";
 import InstitutionBeneficiaries from "./pages/institution/InstitutionBeneficiaries";
 import InstitutionLedger from "./pages/institution/InstitutionLedger";
 import InstitutionAudit from "./pages/institution/InstitutionAudit";
