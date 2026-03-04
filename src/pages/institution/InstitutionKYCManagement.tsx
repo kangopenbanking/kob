@@ -92,7 +92,11 @@ export default function InstitutionKYCManagement() {
 
   const handleReview = (kyc: any, action: "approved" | "rejected") => { setSelectedKYC(kyc); setReviewAction(action); setReviewDialogOpen(true); };
   const submitReview = () => { if (selectedKYC) reviewMutation.mutate({ id: selectedKYC.id, status: reviewAction, notes: reviewNotes }); };
-  const openPreview = (url: string | null, label: string) => { if (url) { setPreviewUrl(url); setPreviewLabel(label); } };
+  const openPreview = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) { setPreviewUrl(signedUrl); setPreviewLabel(label); }
+  };
 
   const getDisplayName = (kyc: any) => (kyc.profiles as any)?.full_name || `User ${kyc.user_id?.slice(0, 8)}`;
 
