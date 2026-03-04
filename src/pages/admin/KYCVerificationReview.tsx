@@ -318,7 +318,8 @@ export default function KYCVerificationReview() {
                         <span className="text-[10px] text-white font-medium">{doc.label}</span>
                       </div>
                     </button>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
