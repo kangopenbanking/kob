@@ -100,14 +100,14 @@ export default function KYCVerificationReview() {
     let items = kycSubmissions?.filter((kyc) => kyc.status === status) || [];
     if (searchQuery) {
       items = items.filter(k =>
-        `${k.first_name} ${k.last_name} ${k.document_number}`.toLowerCase().includes(searchQuery.toLowerCase())
+        `${getDisplayName(k)} ${k.document_number}`.toLowerCase().includes(searchQuery.toLowerCase())
       );
     }
     return items;
   };
 
   const allFiltered = searchQuery
-    ? kycSubmissions?.filter(k => `${k.first_name} ${k.last_name} ${k.document_number}`.toLowerCase().includes(searchQuery.toLowerCase()))
+    ? kycSubmissions?.filter(k => `${getDisplayName(k)} ${k.document_number}`.toLowerCase().includes(searchQuery.toLowerCase()))
     : kycSubmissions;
 
   const stats = {
