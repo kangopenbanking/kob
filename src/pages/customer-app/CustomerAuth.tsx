@@ -18,7 +18,7 @@ import { API_CONFIG } from '@/config/api';
 
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying';
+type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
