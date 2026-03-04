@@ -748,6 +748,7 @@ function App() {
             {/* Customer App PWA Routes — unified (no institutionId) */}
             <Route path="/app" element={<CustomerSplash />} />
             <Route path="/app/auth" element={<CustomerAuth />} />
+            <Route path="/app/reset-password" element={<ResetPassword />} />
             <Route path="/app/register" element={<CustomerRegister />} />
             <Route path="/app/onboarding" element={<CustomerOnboarding />} />
             {/* Legacy redirect: old institution-scoped URLs */}
