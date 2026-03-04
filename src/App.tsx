@@ -718,6 +718,7 @@ function App() {
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
             <Route path="/banking-app/*" element={<Navigate to="/apps" replace />} />
             {/* Banking App PWA Routes */}
