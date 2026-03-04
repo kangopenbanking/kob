@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { DocumentPreviewLightbox } from "@/components/admin/DocumentPreviewLightbox";
+import { getKycDocumentUrl } from "@/lib/kyc-storage";
 import { Shield, FileText, CheckCircle, XCircle, Clock, Eye, Image as ImageIcon, Search, Users, Filter } from "lucide-react";
 import { format } from "date-fns";
 
