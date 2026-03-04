@@ -286,7 +286,7 @@ const CustomerOnboarding: React.FC = () => {
         <div className="p-5">
           <Button
             onClick={step === 'select' ? handleContinue : handleSubmit}
-            disabled={!selected || loading || (step === 'details' && !accountNumber)}
+            disabled={!selected || loading || (step === 'details' && !accountNumber) || (step === 'details' && selected === 'card' && (!cardNetwork || !cardExpMonth || !cardExpYear))}
             className="h-14 w-full rounded-2xl text-base font-semibold"
             size="lg"
           >
