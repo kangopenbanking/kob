@@ -203,7 +203,14 @@ export default function InstitutionKYCManagement() {
                         </TableCell>
                         <TableCell>
                           <div className="flex gap-1">
-                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedKYC(kyc); setDetailOpen(true); }}><Eye className="h-3.5 w-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={async () => {
+                              setSelectedKYC(kyc); setDetailOpen(true);
+                              const urls: Record<string, string> = {};
+                              for (const f of ['document_front_url', 'document_back_url', 'selfie_url'] as const) {
+                                if (kyc[f]) { const s = await getKycDocumentUrl(kyc[f]); if (s) urls[f] = s; }
+                              }
+                              setResolvedThumbs(urls);
+                            }}><Eye className="h-3.5 w-3.5" /></Button>
                             {kyc.status === "pending" && (
                               <>
                                 <Button variant="ghost" size="icon" className="h-7 w-7 text-fi-green hover:bg-fi-green/10" onClick={() => handleReview(kyc, "approved")}><CheckCircle className="h-3.5 w-3.5" /></Button>
