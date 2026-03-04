@@ -260,7 +260,7 @@ export default function KYCVerificationReview() {
           {selectedKYC && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-4 p-4 bg-muted/50 rounded-lg">
-                <div><p className="text-xs text-muted-foreground">Full Name</p><p className="text-sm font-medium">{selectedKYC.first_name} {selectedKYC.last_name}</p></div>
+                <div><p className="text-xs text-muted-foreground">Full Name</p><p className="text-sm font-medium">{getDisplayName(selectedKYC)}</p></div>
                 <div><p className="text-xs text-muted-foreground">Document Type</p><p className="text-sm capitalize">{selectedKYC.document_type?.replace(/_/g, " ")}</p></div>
                 <div><p className="text-xs text-muted-foreground">Document Number</p><p className="text-sm font-mono">{selectedKYC.document_number}</p></div>
                 <div><p className="text-xs text-muted-foreground">Status</p>{getStatusBadge(selectedKYC.status)}</div>
