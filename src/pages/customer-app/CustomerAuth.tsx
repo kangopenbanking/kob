@@ -170,10 +170,10 @@ const CustomerAuth: React.FC = () => {
       if (intent === 'signup') {
         const { error } = await supabase.auth.signUp({
           email, password,
-          options: { data: { full_name: fullName }, emailRedirectTo: API_CONFIG.SITE_URL },
+          options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/app/auth` },
         });
         if (error) throw error;
-        toast.success('Account created! Check your email to verify.');
+        setMode('email-sent');
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
