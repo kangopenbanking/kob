@@ -3,6 +3,8 @@ import { ApiEndpoint } from "@/components/developer/ApiEndpoint";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DocNavigation } from "@/components/developer/DocNavigation";
 
 const GatewayPayoutsGuide = () => (
   <div className="max-w-4xl mx-auto space-y-8 p-6">
@@ -11,6 +13,51 @@ const GatewayPayoutsGuide = () => (
       <Badge variant="outline" className="mb-2">Payment Gateway</Badge>
       <h1 className="text-3xl font-bold">Payouts API</h1>
       <p className="text-muted-foreground mt-2">Disburse funds to beneficiaries via bank transfer, mobile money, or PayPal. All payouts are <strong>fully automated</strong> — no admin approval required. For user account withdrawals to external banks, see the <a href="/developer/gateway/funding" className="text-primary underline">Account Funding & Withdrawals</a> guide.</p>
+    </div>
+
+    {/* Payout Options Comparison */}
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Payout Options Comparison</h2>
+      <p className="text-sm text-muted-foreground">KOB offers three payout tiers. Choose the right one for your speed and cost requirements.</p>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Option</TableHead>
+              <TableHead>Speed</TableHead>
+              <TableHead>Channels</TableHead>
+              <TableHead>Fee Range</TableHead>
+              <TableHead>Prefunding</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Standard Payouts</TableCell>
+              <TableCell className="text-sm text-muted-foreground">1–2 business days</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Bank, MoMo, PayPal</TableCell>
+              <TableCell className="text-sm text-muted-foreground">0.25%–0.5%</TableCell>
+              <TableCell className="text-sm text-muted-foreground">No</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium"><a href="/developer/gateway/instant-payouts" className="text-primary underline">Instant Payouts</a></TableCell>
+              <TableCell className="text-sm text-muted-foreground">Seconds to 30 min</TableCell>
+              <TableCell className="text-sm text-muted-foreground">MoMo, Bank (RTGS)</TableCell>
+              <TableCell className="text-sm text-muted-foreground">0.5%–1.0%</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Yes (<a href="/developer/gateway/treasury" className="text-primary underline">Treasury</a>)</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium"><a href="/developer/gateway/instant-payouts" className="text-primary underline">Push-to-Card</a></TableCell>
+              <TableCell className="text-sm text-muted-foreground">&lt; 30 minutes</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Visa Direct, Mastercard Send</TableCell>
+              <TableCell className="text-sm text-muted-foreground">1.0%</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Yes (<a href="/developer/gateway/treasury" className="text-primary underline">Treasury</a>)</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+
+    <div>
     </div>
 
     <Alert className="border-primary/30 bg-primary/5">
@@ -83,6 +130,11 @@ const GatewayPayoutsGuide = () => (
     </div>
 
     <p className="text-sm text-muted-foreground">For full PayPal integration details including withdrawals and webhooks, see the <a href="/developer/gateway/paypal" className="text-primary underline">PayPal Integration Guide</a>.</p>
+
+    <DocNavigation
+      previousPage={{ title: "Merchant Wallet", path: "/developer/gateway/merchant-wallet" }}
+      nextPage={{ title: "Instant Payouts", path: "/developer/gateway/instant-payouts" }}
+    />
   </div>
 );
 
