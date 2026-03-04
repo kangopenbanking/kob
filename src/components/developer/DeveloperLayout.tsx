@@ -1,8 +1,7 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
-import { SessionGuard } from "@/components/auth/SessionGuard";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal } from "lucide-react";
+import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale } from "lucide-react";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,6 +35,9 @@ const navSections = [
     icon: BookOpen,
     items: [
       { title: "Authentication", path: "/developer/getting-started/authentication" },
+      { title: "Error Codes", path: "/developer/api/error-codes" },
+      { title: "Rate Limits", path: "/developer/api/rate-limits" },
+      { title: "Idempotency", path: "/developer/api/idempotency" },
       { title: "Webhooks", path: "/developer/api/webhooks" },
       { title: "Risk & Audit Logs", path: "/developer/api/risk-audit" },
       { title: "Sandbox & Testing", path: "/developer/sandbox" },
@@ -60,6 +62,7 @@ const navSections = [
     icon: Wallet,
     items: [
       { title: "Payouts", path: "/developer/gateway/payouts" },
+      { title: "Instant Payouts", path: "/developer/gateway/instant-payouts" },
       { title: "Funding Intents", path: "/developer/gateway/funding-intents" },
       { title: "Account Funding (Legacy)", path: "/developer/gateway/funding" },
       { title: "Split Payments", path: "/developer/gateway/split-payments" },
@@ -71,6 +74,15 @@ const navSections = [
     ],
   },
   {
+    title: "Wallets & Escrow",
+    icon: Wallet,
+    items: [
+      { title: "Wallets API", path: "/developer/gateway/wallets" },
+      { title: "Escrow API", path: "/developer/gateway/escrow" },
+      { title: "Treasury", path: "/developer/gateway/treasury" },
+    ],
+  },
+  {
     title: "Disputes & Reporting",
     icon: FileText,
     items: [
@@ -79,6 +91,15 @@ const navSections = [
       { title: "Tokenization", path: "/developer/gateway/tokenization" },
       { title: "Transaction Exports", path: "/developer/api/exports" },
       { title: "Settlement Reports", path: "/developer/api/settlements" },
+      { title: "Webhooks v2", path: "/developer/gateway/webhooks-v2" },
+    ],
+  },
+  {
+    title: "Compliance & Security",
+    icon: Scale,
+    items: [
+      { title: "Compliance Screening", path: "/developer/gateway/compliance" },
+      { title: "SLA Monitoring", path: "/developer/gateway/sla" },
     ],
   },
   {
@@ -104,6 +125,17 @@ const navSections = [
       { title: "Code Examples", path: "/developer/examples" },
       { title: "Data Generator", path: "/developer/sandbox/data-generator" },
       { title: "Webhook Testing", path: "/developer/sandbox/webhook-testing" },
+      { title: "Payout Simulation", path: "/developer/sandbox/payout-simulation" },
+    ],
+  },
+  {
+    title: "Reference",
+    icon: Activity,
+    items: [
+      { title: "Supported Currencies", path: "/developer/api/currencies" },
+      { title: "Supported Countries", path: "/developer/api/countries" },
+      { title: "Testing Guide", path: "/developer/api/testing" },
+      { title: "API Status", path: "/developer/status" },
     ],
   },
   {
@@ -163,7 +195,6 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
   const isActivePath = (path: string) => location.pathname === path;
 
   return (
-    <SessionGuard logoutPath="/auth" appName="Developer Portal" appContext="developer">
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <Sidebar className="border-r">
@@ -215,6 +246,7 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
               <Link to="/developer/getting-started" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Documentation</Link>
               <Link to="/developer/api-explorer" className="text-sm text-muted-foreground hover:text-foreground transition-colors">API Reference</Link>
               <Link to="/developer/changelog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Changelog</Link>
+              <Link to="/developer/status" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Status</Link>
             </nav>
             <div className="flex-1" />
             <div className="flex items-center gap-2">
@@ -240,6 +272,5 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
         </div>
       </div>
     </SidebarProvider>
-    </SessionGuard>
   );
 }

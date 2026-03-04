@@ -68,6 +68,21 @@ import FundingIntentsGuide from "./pages/developer/FundingIntentsGuide";
 import PayPalIntegrationGuide from "./pages/developer/PayPalIntegrationGuide";
 import GatewayMerchantWalletGuide from "./pages/developer/GatewayMerchantWalletGuide";
 import GatewayVerificationGuide from "./pages/developer/GatewayVerificationGuide";
+import WalletsGuide from "./pages/developer/WalletsGuide";
+import EscrowGuide from "./pages/developer/EscrowGuide";
+import ComplianceScreeningGuide from "./pages/developer/ComplianceScreeningGuide";
+import InstantPayoutsGuide from "./pages/developer/InstantPayoutsGuide";
+import TreasuryGuide from "./pages/developer/TreasuryGuide";
+import WebhooksV2Guide from "./pages/developer/WebhooksV2Guide";
+import SandboxPayoutSimGuide from "./pages/developer/SandboxPayoutSimGuide";
+import SLAMonitorGuide from "./pages/developer/SLAMonitorGuide";
+import ErrorCodesReference from "./pages/developer/ErrorCodesReference";
+import RateLimitsGuide from "./pages/developer/RateLimitsGuide";
+import IdempotencyGuide from "./pages/developer/IdempotencyGuide";
+import SupportedCurrenciesPage from "./pages/developer/SupportedCurrenciesPage";
+import SupportedCountriesPage from "./pages/developer/SupportedCountriesPage";
+import ApiStatusPage from "./pages/developer/ApiStatusPage";
+import TestingGuide from "./pages/developer/TestingGuide";
 import AISP from "./pages/guides/AISP";
 import PISP from "./pages/guides/PISP";
 import Security from "./pages/guides/Security";
@@ -546,6 +561,21 @@ function App() {
               <Route path="gateway/verification" element={<GatewayVerificationGuide />} />
               <Route path="gateway/funding" element={<GatewayFundingGuide />} />
               <Route path="gateway/funding-intents" element={<FundingIntentsGuide />} />
+              <Route path="gateway/wallets" element={<WalletsGuide />} />
+              <Route path="gateway/escrow" element={<EscrowGuide />} />
+              <Route path="gateway/compliance" element={<ComplianceScreeningGuide />} />
+              <Route path="gateway/instant-payouts" element={<InstantPayoutsGuide />} />
+              <Route path="gateway/treasury" element={<TreasuryGuide />} />
+              <Route path="gateway/webhooks-v2" element={<WebhooksV2Guide />} />
+              <Route path="gateway/sla" element={<SLAMonitorGuide />} />
+              <Route path="sandbox/payout-simulation" element={<SandboxPayoutSimGuide />} />
+              <Route path="api/error-codes" element={<ErrorCodesReference />} />
+              <Route path="api/rate-limits" element={<RateLimitsGuide />} />
+              <Route path="api/idempotency" element={<IdempotencyGuide />} />
+              <Route path="api/currencies" element={<SupportedCurrenciesPage />} />
+              <Route path="api/countries" element={<SupportedCountriesPage />} />
+              <Route path="api/testing" element={<TestingGuide />} />
+              <Route path="status" element={<ApiStatusPage />} />
               <Route path="gateway/paypal" element={<PayPalIntegrationGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
               <Route path="console" element={<ApiConsole />} />

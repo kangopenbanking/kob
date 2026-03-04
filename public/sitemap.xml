@@ -41,7 +41,7 @@
   </url>
   <url>
     <loc>https://kangopenbanking.com/developer</loc>
-    <lastmod>2025-01-24</lastmod>
+    <lastmod>2026-03-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
@@ -70,7 +70,7 @@
     <priority>0.95</priority>
   </url>
   
-  <!-- Credit API Documentation - NEW -->
+  <!-- Credit API Documentation -->
   <url>
     <loc>https://kangopenbanking.com/credit-api-documentation</loc>
     <lastmod>2025-11-05</lastmod>
@@ -116,7 +116,101 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- No-Code Integration Guides - High Priority -->
+  <!-- NEW: Phase 4-7 Public Documentation Pages -->
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/wallets</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/escrow</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/compliance</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/instant-payouts</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/treasury</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/webhooks-v2</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/gateway/sla</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/sandbox/payout-simulation</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- NEW: Reference & Standards Pages -->
+  <url>
+    <loc>https://kangopenbanking.com/developer/api/error-codes</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/api/rate-limits</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/api/idempotency</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/api/currencies</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/api/countries</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/api/testing</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
+    <loc>https://kangopenbanking.com/developer/status</loc>
+    <lastmod>2026-03-04</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <!-- No-Code Integration Guides -->
   <url>
     <loc>https://kangopenbanking.com/integrations</loc>
     <lastmod>2025-11-05</lastmod>
@@ -174,10 +268,10 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- API Specifications (for discovery tools) -->
+  <!-- API Specifications -->
   <url>
     <loc>https://api.kangopenbanking.com/functions/v1/public-api-spec</loc>
-    <lastmod>2025-11-05</lastmod>
+    <lastmod>2026-03-04</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>

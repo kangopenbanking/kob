@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CreditCard, Smartphone, Building2, Webhook, ArrowRight } from "lucide-react";
+import { CreditCard, Smartphone, Building2, Webhook, ArrowRight, Wallet, Shield, Zap, Activity } from "lucide-react";
 
 const integrations = [
   {
@@ -27,6 +27,30 @@ const integrations = [
     title: "Webhooks & Events",
     description: "Real-time event notifications for payment status, consent, and settlement updates.",
     link: "/developer/api/webhooks",
+  },
+  {
+    icon: Wallet,
+    title: "Wallets & Escrow",
+    description: "Custodial wallets with three-state balances and escrow holds for marketplaces.",
+    link: "/developer/gateway/wallets",
+  },
+  {
+    icon: Shield,
+    title: "Compliance Screening",
+    description: "Pre-payout AML/sanctions screening, PEP checks, and velocity limits.",
+    link: "/developer/gateway/compliance",
+  },
+  {
+    icon: Zap,
+    title: "Instant Payouts",
+    description: "Send payouts instantly via bank, mobile money, or push-to-card (Visa Direct).",
+    link: "/developer/gateway/instant-payouts",
+  },
+  {
+    icon: Activity,
+    title: "API Status & SLA",
+    description: "Real-time uptime metrics, latency percentiles, and incident tracking.",
+    link: "/developer/status",
   },
 ];
 
