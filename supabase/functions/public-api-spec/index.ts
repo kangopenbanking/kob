@@ -1809,6 +1809,172 @@ paths['/v1/teller/transaction'] = {
 
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════════════════
+// WALLETS (Phase 6)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/wallets'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create custodial wallet', operationId: 'walletCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['currency'], properties: { currency: { type: 'string', default: 'XAF' }, label: { type: 'string' }, metadata: { type: 'object' } } } } } }, responses: { '201': { description: 'Wallet created' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List wallets', operationId: 'walletList', security: [{ bearerAuth: [] }], parameters: [...paginationParams], responses: { '200': { description: 'Wallets list' }, ...errorResponses } },
+};
+
+paths['/v1/wallets/{walletId}'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get wallet balance', operationId: 'walletGet', security: [{ bearerAuth: [] }], parameters: [{ name: 'walletId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Wallet with Available, Pending, Ledger balances' }, ...errorResponses } },
+};
+
+paths['/v1/wallets/{walletId}/credit'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Credit wallet', operationId: 'walletCredit', security: [{ bearerAuth: [] }], parameters: [{ name: 'walletId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'number' }, currency: { type: 'string' }, description: { type: 'string' } } } } } }, responses: { '200': { description: 'Wallet credited' }, ...errorResponses } },
+};
+
+paths['/v1/wallets/{walletId}/debit'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Debit wallet', operationId: 'walletDebit', security: [{ bearerAuth: [] }], parameters: [{ name: 'walletId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount', 'currency'], properties: { amount: { type: 'number' }, currency: { type: 'string' }, description: { type: 'string' } } } } } }, responses: { '200': { description: 'Wallet debited' }, ...errorResponses } },
+};
+
+paths['/v1/wallets/{walletId}/freeze'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Freeze/unfreeze wallet', operationId: 'walletFreeze', security: [{ bearerAuth: [] }], parameters: [{ name: 'walletId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action'], properties: { action: { type: 'string', enum: ['freeze', 'unfreeze'] }, reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Wallet frozen/unfrozen' }, ...errorResponses } },
+};
+
+paths['/v1/wallets/{walletId}/statement'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Wallet statement', operationId: 'walletStatement', security: [{ bearerAuth: [] }], parameters: [{ name: 'walletId', in: 'path', required: true, schema: { type: 'string' } }, { name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }, ...paginationParams], responses: { '200': { description: 'Wallet transaction history' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ESCROW (Phase 4)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/escrow'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Create escrow hold', operationId: 'escrowCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'currency'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number' }, currency: { type: 'string', default: 'XAF' }, description: { type: 'string' }, release_conditions: { type: 'object' }, expires_at: { type: 'string', format: 'date-time' } } } } } }, responses: { '201': { description: 'Escrow created' }, ...errorResponses } },
+  get: { tags: ['Payment Gateway'], summary: 'List escrow holds', operationId: 'escrowList', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'status', in: 'query', schema: { type: 'string', enum: ['active', 'released', 'refunded', 'frozen', 'expired'] } }, ...paginationParams], responses: { '200': { description: 'Escrow holds' }, ...errorResponses } },
+};
+
+paths['/v1/escrow/{escrowId}/fund'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Fund escrow', operationId: 'escrowFund', security: [{ bearerAuth: [] }], parameters: [{ name: 'escrowId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['amount'], properties: { amount: { type: 'number' }, source_wallet_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Escrow funded' }, ...errorResponses } },
+};
+
+paths['/v1/escrow/{escrowId}/release'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Release escrow', operationId: 'escrowRelease', security: [{ bearerAuth: [] }], parameters: [{ name: 'escrowId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { amount: { type: 'number', description: 'Partial release amount (omit for full)' }, recipient_wallet_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Escrow released' }, ...errorResponses } },
+};
+
+paths['/v1/escrow/{escrowId}/refund'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Refund escrow', operationId: 'escrowRefund', security: [{ bearerAuth: [] }], parameters: [{ name: 'escrowId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Escrow refunded' }, ...errorResponses } },
+};
+
+paths['/v1/escrow/{escrowId}/freeze'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Freeze escrow', operationId: 'escrowFreeze', security: [{ bearerAuth: [] }], parameters: [{ name: 'escrowId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action'], properties: { action: { type: 'string', enum: ['freeze', 'unfreeze'] }, reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Escrow frozen/unfrozen' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// COMPLIANCE (Phase 4 & 6)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/compliance/screen'] = {
+  post: { tags: ['KYC & Compliance'], summary: 'Pre-payout compliance screen', description: 'Evaluate transaction against KYC risk scores, sanctions, PEP status, and velocity limits. Returns approve/review/deny.', operationId: 'complianceScreen', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['user_id', 'amount', 'currency'], properties: { user_id: { type: 'string', format: 'uuid' }, amount: { type: 'number' }, currency: { type: 'string' }, destination_type: { type: 'string' }, destination_country: { type: 'string' } } } } } }, responses: { '200': { description: 'Screening decision', content: { 'application/json': { schema: { type: 'object', properties: { decision: { type: 'string', enum: ['approve', 'review', 'deny'] }, risk_score: { type: 'integer' }, checks: { type: 'object' } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/compliance/sar'] = {
+  post: { tags: ['KYC & Compliance'], summary: 'File SAR', description: 'File a Suspicious Activity Report.', operationId: 'sarFile', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['subject_user_id', 'activity_type', 'description'], properties: { subject_user_id: { type: 'string', format: 'uuid' }, activity_type: { type: 'string' }, description: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string' } } } } } }, responses: { '201': { description: 'SAR filed' }, ...errorResponses } },
+  get: { tags: ['KYC & Compliance'], summary: 'List SARs', operationId: 'sarList', security: [{ bearerAuth: [] }], parameters: [{ name: 'status', in: 'query', schema: { type: 'string', enum: ['draft', 'filed', 'under_review', 'escalated', 'submitted', 'closed'] } }, ...paginationParams], responses: { '200': { description: 'SAR list' }, ...errorResponses } },
+};
+
+paths['/v1/compliance/sar/{sarId}/review'] = {
+  post: { tags: ['KYC & Compliance'], summary: 'Review SAR', operationId: 'sarReview', security: [{ bearerAuth: [] }], parameters: [{ name: 'sarId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['action'], properties: { action: { type: 'string', enum: ['approve', 'escalate', 'close', 'request_info'] }, notes: { type: 'string' } } } } } }, responses: { '200': { description: 'SAR reviewed' }, ...errorResponses } },
+};
+
+paths['/v1/compliance/sar/{sarId}/submit'] = {
+  post: { tags: ['KYC & Compliance'], summary: 'Submit SAR to regulator', operationId: 'sarSubmit', security: [{ bearerAuth: [] }], parameters: [{ name: 'sarId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], responses: { '200': { description: 'SAR submitted' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SAFEGUARDING (Phase 4)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/safeguarding/reconcile'] = {
+  post: { tags: ['KYC & Compliance'], summary: 'Run safeguarding reconciliation', description: 'Reconcile total e-money liabilities against actual wallet and escrow balances.', operationId: 'safeguardingReconcile', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Reconciliation result with discrepancy details' }, ...errorResponses } },
+};
+
+paths['/v1/safeguarding/snapshots'] = {
+  get: { tags: ['KYC & Compliance'], summary: 'List safeguarding snapshots', operationId: 'safeguardingSnapshots', security: [{ bearerAuth: [] }], parameters: [{ name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }, ...paginationParams], responses: { '200': { description: 'Daily safeguarding snapshots' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INSTANT PAYOUTS & PAYOUT RAILS (Phase 6)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/payouts/instant'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Instant payout', description: 'Route payout through fastest available rail (MoMo instant, bank express, Visa Direct).', operationId: 'payoutInstant', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'currency', 'channel'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number' }, currency: { type: 'string' }, channel: { type: 'string', enum: ['momo_instant', 'bank_express', 'visa_direct'] }, beneficiary_phone: { type: 'string' }, beneficiary_account: { type: 'string' }, beneficiary_name: { type: 'string' } } } } } }, responses: { '201': { description: 'Instant payout initiated' }, ...errorResponses } },
+};
+
+paths['/v1/payouts/push-to-card'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Push-to-card payout', description: 'Visa Direct card push disbursement.', operationId: 'payoutPushToCard', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'amount', 'currency', 'card_number'], properties: { merchant_id: { type: 'string', format: 'uuid' }, amount: { type: 'number' }, currency: { type: 'string' }, card_number: { type: 'string' }, card_holder_name: { type: 'string' } } } } } }, responses: { '201': { description: 'Push-to-card initiated' }, ...errorResponses } },
+};
+
+paths['/v1/payouts/rails'] = {
+  get: { tags: ['Payment Gateway'], summary: 'List available payout rails', description: 'Returns available rails by country and currency with estimated delivery times.', operationId: 'payoutRails', security: [{ bearerAuth: [] }], parameters: [{ name: 'country', in: 'query', schema: { type: 'string' } }, { name: 'currency', in: 'query', schema: { type: 'string' } }], responses: { '200': { description: 'Available payout rails with speeds and fees' }, ...errorResponses } },
+};
+
+paths['/v1/payouts/{payoutId}/cancel'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Cancel pending payout', operationId: 'payoutCancel', security: [{ bearerAuth: [] }], parameters: [{ name: 'payoutId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Payout cancelled and funds returned to wallet' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// TREASURY (Phase 6)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/treasury/float'] = {
+  get: { tags: ['Payment Gateway'], summary: 'Get treasury float balance', description: 'Current float balances across all provider accounts.', operationId: 'treasuryFloat', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Float balances by provider and currency' }, ...errorResponses } },
+};
+
+paths['/v1/treasury/replenish'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Replenish treasury float', operationId: 'treasuryReplenish', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['provider', 'amount', 'currency'], properties: { provider: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string' } } } } } }, responses: { '200': { description: 'Replenishment initiated' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SLA MONITORING (Phase 7)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/sla/metrics'] = {
+  get: { tags: ['Monitoring'], summary: 'SLA metrics', description: 'Uptime percentages, latency percentiles (p50/p95/p99), and error rates.', operationId: 'slaMetrics', security: [{ bearerAuth: [] }], parameters: [{ name: 'from', in: 'query', schema: { type: 'string', format: 'date' } }, { name: 'to', in: 'query', schema: { type: 'string', format: 'date' } }], responses: { '200': { description: 'SLA metric data' }, ...errorResponses } },
+  post: { tags: ['Monitoring'], summary: 'Record SLA metric', operationId: 'slaMetricRecord', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['service_name'], properties: { service_name: { type: 'string' }, uptime_pct: { type: 'number' }, p50_ms: { type: 'number' }, p95_ms: { type: 'number' }, p99_ms: { type: 'number' }, error_rate: { type: 'number' } } } } } }, responses: { '201': { description: 'Metric recorded' }, ...errorResponses } },
+};
+
+paths['/v1/sla/incidents'] = {
+  get: { tags: ['Monitoring'], summary: 'List incidents', operationId: 'slaIncidentList', security: [{ bearerAuth: [] }], parameters: [{ name: 'status', in: 'query', schema: { type: 'string', enum: ['open', 'investigating', 'resolved'] } }, ...paginationParams], responses: { '200': { description: 'Incident list' }, ...errorResponses } },
+  post: { tags: ['Monitoring'], summary: 'Create incident', operationId: 'slaIncidentCreate', security: [{ bearerAuth: [] }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['title', 'severity'], properties: { title: { type: 'string' }, description: { type: 'string' }, severity: { type: 'string', enum: ['low', 'medium', 'high', 'critical'] }, affected_services: { type: 'array', items: { type: 'string' } } } } } } }, responses: { '201': { description: 'Incident created' }, ...errorResponses } },
+};
+
+paths['/v1/sla/incidents/{incidentId}'] = {
+  patch: { tags: ['Monitoring'], summary: 'Update incident', operationId: 'slaIncidentUpdate', security: [{ bearerAuth: [] }], parameters: [{ name: 'incidentId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { status: { type: 'string', enum: ['investigating', 'resolved'] }, resolution_notes: { type: 'string' } } } } } }, responses: { '200': { description: 'Incident updated' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// WEBHOOKS V2 (Phase 7)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/webhooks/v2/endpoints'] = {
+  post: { tags: ['Webhooks'], summary: 'Register webhook endpoint (v2)', description: 'Register a new webhook endpoint with event filtering and unique signing secret.', operationId: 'webhookV2Create', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['merchant_id', 'url', 'events'], properties: { merchant_id: { type: 'string', format: 'uuid' }, url: { type: 'string', format: 'uri' }, events: { type: 'array', items: { type: 'string' } }, description: { type: 'string' } } } } } }, responses: { '201': { description: 'Endpoint created with signing secret (shown once)', content: { 'application/json': { schema: { type: 'object', properties: { id: { type: 'string' }, url: { type: 'string' }, secret: { type: 'string', description: 'whsec_... — shown only on creation' }, events: { type: 'array', items: { type: 'string' } } } } } } }, ...errorResponses } },
+  get: { tags: ['Webhooks'], summary: 'List webhook endpoints (v2)', operationId: 'webhookV2List', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Webhook endpoints' }, ...errorResponses } },
+};
+
+paths['/v1/webhooks/v2/endpoints/{endpointId}'] = {
+  patch: { tags: ['Webhooks'], summary: 'Update webhook endpoint', operationId: 'webhookV2Update', security: [{ bearerAuth: [] }], parameters: [{ name: 'endpointId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { url: { type: 'string' }, events: { type: 'array', items: { type: 'string' } }, is_active: { type: 'boolean' } } } } } }, responses: { '200': { description: 'Endpoint updated' }, ...errorResponses } },
+  delete: { tags: ['Webhooks'], summary: 'Delete webhook endpoint', operationId: 'webhookV2Delete', security: [{ bearerAuth: [] }], parameters: [{ name: 'endpointId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '204': { description: 'Endpoint deleted' }, ...errorResponses } },
+};
+
+paths['/v1/webhooks/v2/deliveries'] = {
+  get: { tags: ['Webhooks'], summary: 'List webhook deliveries', description: 'View delivery attempts and retry history.', operationId: 'webhookV2Deliveries', security: [{ bearerAuth: [] }], parameters: [{ name: 'endpoint_id', in: 'query', schema: { type: 'string' } }, { name: 'status', in: 'query', schema: { type: 'string', enum: ['pending', 'delivered', 'failed'] } }, ...paginationParams], responses: { '200': { description: 'Delivery logs' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SANDBOX SIMULATION (Phase 7)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/sandbox/payout-sim'] = {
+  post: { tags: ['Sandbox'], summary: 'Simulate payout scenario', description: 'Run a payout through a pre-seeded sandbox scenario (e.g. insufficient_funds, network_timeout, reversed_after_success).', operationId: 'sandboxPayoutSim', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['scenario', 'amount', 'currency'], properties: { scenario: { type: 'string', enum: ['instant_success', 'delayed_success', 'insufficient_funds', 'network_timeout', 'compliance_hold', 'reversed_after_success', 'partial_failure'] }, amount: { type: 'number' }, currency: { type: 'string' }, merchant_id: { type: 'string', format: 'uuid' }, webhook_url: { type: 'string', format: 'uri' } } } } } }, responses: { '200': { description: 'Simulation result with timeline and webhook callbacks' }, ...errorResponses } },
+  get: { tags: ['Sandbox'], summary: 'List sandbox scenarios', operationId: 'sandboxScenarioList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Available sandbox payout scenarios' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// RECONCILIATION MISMATCHES (Phase 5)
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/reconciliation/mismatches'] = {
+  get: { tags: ['Payment Gateway'], summary: 'List reconciliation mismatches', operationId: 'reconciliationMismatches', security: [{ bearerAuth: [] }], parameters: [{ name: 'merchant_id', in: 'query', schema: { type: 'string' } }, { name: 'status', in: 'query', schema: { type: 'string', enum: ['open', 'resolved', 'ignored'] } }, ...paginationParams], responses: { '200': { description: 'Mismatch list' }, ...errorResponses } },
+};
+
+paths['/v1/reconciliation/mismatches/{mismatchId}/resolve'] = {
+  post: { tags: ['Payment Gateway'], summary: 'Resolve mismatch', operationId: 'reconciliationResolve', security: [{ bearerAuth: [] }], parameters: [{ name: 'mismatchId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['resolution'], properties: { resolution: { type: 'string', enum: ['adjust_ledger', 'adjust_provider', 'ignore'] }, notes: { type: 'string' } } } } } }, responses: { '200': { description: 'Mismatch resolved' }, ...errorResponses } },
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -1819,9 +1985,9 @@ serve(async (req) => {
       openapi: '3.1.0',
       info: {
         title: 'Kang Open Banking API',
-        version: '2.9.0',
+        version: '3.4.0',
         summary: 'Unified Open Banking API for Cameroon',
-        description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
+        description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
         contact: {
           name: 'Kang Open Banking Support',
           email: 'support@kangopenbanking.com',

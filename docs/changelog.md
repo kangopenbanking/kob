@@ -1,5 +1,59 @@
 # Changelog
 
+## [3.4.0] - 2026-03-04 — End-to-End Audit, Bug Fixes & Full Documentation
+
+### Fixed
+- **Flutterwave Webhook Auto-Credit Bug**: `gateway-webhook-flutterwave` now upserts `ClosingAvailable` balance (was inserting orphan `InterimAvailable` rows). Customer App users now see funds immediately.
+- **Flutterwave Webhook institution_id**: Dynamically reads `institution_id` from the account record instead of hardcoding `00000000-...`.
+- **Withdrawal Balance Query**: `gateway-process-withdrawal` now filters by `credit_debit_indicator = 'Credit'`, preventing incorrect balance reads from debit rows.
+- **Frontend Fee Mismatch**: `CustomerFundWallet.tsx` now fetches real-time fee estimates from `gateway-fee-estimate` instead of hardcoded percentages.
+- **Payout Reversal Fix**: Failed withdrawal reversals in Flutterwave webhook now upsert `ClosingAvailable` instead of inserting `InterimAvailable`.
+
+### Changed
+- **OpenAPI Spec v3.4.0**: Added ~30 missing endpoint paths covering Phases 4-7 (Wallets, Escrow, Compliance, SAR, Safeguarding, Instant Payouts, SLA, Webhooks v2, Sandbox Sim).
+- **API Version**: Bumped from `2.9.0` to `3.4.0`.
+
+## [3.3.0] - 2026-03-04 — Phase 7: RFC 7807 Retrofit, Sandbox Sim, SLA Monitor, Webhooks v2
+
+### Added
+- **RFC 7807 Legacy Retrofit**: Retrofitted 5 legacy edge functions (`gateway-report-fees`, `gateway-report-settlements`, `gateway-report-transactions`, `gateway-merchant-keys`, `api-key-expiration-notifier`) to return `application/problem+json` error responses.
+- **Payout Sandbox Simulation**: `gateway-sandbox-payout-sim` with 7 pre-seeded scenarios (instant_success, delayed_success, insufficient_funds, network_timeout, compliance_hold, reversed_after_success, partial_failure) with automated timeline generation and webhook callbacks.
+- **SLA Monitoring API**: `gateway-sla-monitor` providing programmatic uptime percentages, latency percentiles (p50/p95/p99), and incident CRUD.
+- **Webhook Delivery v2**: `gateway-webhook-endpoints` and `gateway-webhook-deliver-v2` — multi-endpoint per merchant, per-endpoint HMAC-SHA256 signing secrets, event filtering, 7-retry exponential backoff.
+
+### Database
+- `gateway_webhook_endpoints`, `gateway_webhook_deliveries_v2`, `sla_metrics`, `sla_incidents`, `sandbox_payout_scenarios` tables with RLS.
+
+## [3.2.0] - 2026-03-03 — Phase 6: Wallet API, Compliance Screening, Instant Payouts
+
+### Added
+- **Custodial Wallet API** (`gateway-wallets`): `/v1/wallets/*` — create, credit, debit, freeze, statement with three-state balance model (Available, Pending, Ledger) and Idempotency-Key enforcement.
+- **Compliance Screening** (`gateway-compliance-screen`): Inline pre-payout AML/sanctions/PEP/velocity checks returning approve/review/deny decisions.
+- **Instant Payouts** (`gateway-instant-payout`): Multi-rail routing (MoMo instant, bank express, Visa Direct).
+- **Push-to-Card** (`gateway-push-to-card`): Visa Direct card push disbursements.
+- **Payout Rails** (`gateway-payout-rails`): List available payout rails by country/currency.
+- **Cancel Payout** (`gateway-cancel-payout`): Cancel pending payouts before provider submission.
+- **Treasury Float** (`gateway-treasury`): Float balance monitoring and replenishment triggers.
+- **RFC 7807 Error Standard**: All new Phase 6 functions use `application/problem+json`.
+
+## [3.1.0] - 2026-03-02 — Phase 5: Merchant Lifecycle, KYB Review, Settlement Accounts, Reconciliation
+
+### Added
+- **Merchant Lifecycle** (`gateway-merchant-lifecycle`): Full DRAFT → SUBMITTED → ACTIVE → SUSPENDED state machine with audit trail.
+- **KYB Review** (`gateway-kyb-review`): Admin KYB document review with approve/reject/request_info actions.
+- **Settlement Accounts** (`gateway-settlement-accounts`): Merchant settlement bank account management with verification.
+- **Reconciliation Engine** (`gateway-reconciliation`): Automated provider-vs-ledger matching with mismatch detection and resolution workflows.
+
+## [3.0.0] - 2026-03-01 — Phase 4: Escrow, Safeguarding, SAR
+
+### Added
+- **Escrow Sub-Wallets** (`gateway-escrow-wallets`): Full lifecycle — create, fund, release, refund, freeze escrow holds for marketplace transactions and multi-stage settlements.
+- **Safeguarding Ledger** (`gateway-safeguarding-ledger`): E-money reconciliation tracking total liabilities against wallet and escrow balances with daily snapshots.
+- **Suspicious Activity Reports** (`gateway-sar`): SAR management system — file, review, escalate, submit reports with immutable event history and analytics dashboard.
+
+### Database
+- `escrow_wallets`, `escrow_transactions`, `safeguarding_snapshots`, `suspicious_activity_reports`, `sar_events` tables with RLS and admin-only policies.
+
 ## [2.4.0] - 2026-02-27 — Piggy Bank, Njangi & Rent Credit Integration
 
 ### Added

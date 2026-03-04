@@ -76,6 +76,7 @@ serve(async (req) => {
       .from('account_balances')
       .select('*')
       .eq('account_id', account_id)
+      .eq('credit_debit_indicator', 'Credit')
       .in('balance_type', ['ClosingAvailable', 'InterimAvailable'])
       .order('balance_datetime', { ascending: false })
       .limit(1)

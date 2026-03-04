@@ -1,158 +1,243 @@
-# KOB Platform -- Comprehensive End-to-End Audit & Fix Plan
 
-## Executive Summary
 
-After a thorough review of 250+ edge functions, the 1,936-line OpenAPI spec, all multi-tenant apps (Customer, Banking, Merchant, FI Portal, Admin, Developer), and the complete database schema, I have identified the following categories of issues:
+# KOB Payment Infrastructure — Deep Technical & Product Capability Audit
 
 ---
 
-## 1. CRITICAL BUGS IDENTIFIED
+## CLASSIFICATION
 
-### 1A. Flutterwave Webhook Auto-Credit Bug (gateway-webhook-flutterwave)
-
-**Problem**: When a Flutterwave charge succeeds for `fund_account` flows, the webhook handler at line 58 **inserts a new `InterimAvailable` balance row** instead of **upserting/adding to the existing `ClosingAvailable` balance**. This creates a dangling balance record that the Customer App does not read (the app queries `ClosingAvailable`), so the user never sees their funds.
-
-**Fix**: Change the webhook handler to match the pattern in `funding-scope-creditor.ts` -- upsert `ClosingAvailable` balance by checking for existing record and adding to it.
-
-### 1B. Flutterwave Webhook institution_id Hardcode
-
-**Problem**: Line 67 hardcodes `institution_id: '00000000-0000-0000-0000-000000000000'` for fund_account transaction records. This zero-UUID does not match the Kang platform ID (`f493095b-037a-40cf-82bc-3a3ab74550dd`), causing multi-tenancy data leaks and orphaned records.
-
-**Fix**: Use `KANG_PLATFORM_ID` or the account's `institution_id`.
-
-### 1C. CustomerFundWallet Fee Mismatch
-
-**Problem**: The frontend `CustomerFundWallet.tsx` (line 94) calculates fees with hardcoded percentages (3.5% card, 2.5% bank) but the backend `gateway-create-funding-intent` uses `calculateScopedFee()` which calls `calculateGatewayFee()` with different rates (3.5%+100 XAF card, 2%+75 XAF bank). The user sees one fee, gets charged another.
-
-**Fix**: Align frontend to fetch fee estimate from `gateway-fee-estimate` endpoint instead of hardcoding.
-
-### 1D. CustomerCashOut Missing `is_active` Filter on Balance Query
-
-**Problem**: `gateway-process-withdrawal` at line 79 queries `account_balances` using `.in('balance_type', ['ClosingAvailable', 'InterimAvailable'])` but does not filter by `credit_debit_indicator = 'Credit'`. This could return debit balance rows and show incorrect available balance, causing failed or over-debited withdrawals.
-
-**Fix**: Add `.eq('credit_debit_indicator', 'Credit')` to the balance query.
+**KOB is Category B: Wallet support with programmatic outbound payouts, but NO instant payout rails (no Visa Direct, Mastercard Send, or real-time bank push).**
 
 ---
 
-## 2. OPENAPI SPEC -- MISSING PHASE 4-7 ENDPOINTS
+## SECTION A — WALLET / STORED VALUE
 
-The `public-api-spec` is missing documentation for all Phase 4-7 edge functions (deployed but not public):
+### Current State: IMPLEMENTED (85%)
 
+KOB has a functional custodial wallet system:
 
-| Missing Namespace               | Endpoints                                | Edge Function                      |
-| ------------------------------- | ---------------------------------------- | ---------------------------------- |
-| `/v1/wallets/*`                 | create, credit, debit, freeze, statement | `gateway-wallets`                  |
-| `/v1/escrow/*`                  | create, fund, release, refund, freeze    | `gateway-escrow-wallets`           |
-| `/v1/compliance/screen`         | pre-payout AML/sanctions check           | `gateway-compliance-screen`        |
-| `/v1/compliance/sar`            | file, review, escalate, submit SAR       | `gateway-sar`                      |
-| `/v1/safeguarding/*`            | reconcile, snapshot                      | `gateway-safeguarding-ledger`      |
-| `/v1/payouts/instant`           | instant rail routing                     | `gateway-instant-payout`           |
-| `/v1/payouts/push-to-card`      | Visa Direct push                         | `gateway-push-to-card`             |
-| `/v1/payouts/rails`             | list available rails                     | `gateway-payout-rails`             |
-| `/v1/payouts/cancel`            | cancel pending payout                    | `gateway-cancel-payout`            |
-| `/v1/treasury/*`                | float balance, replenish                 | `gateway-treasury`                 |
-| `/v1/sla/*`                     | metrics, incidents                       | `gateway-sla-monitor`              |
-| `/v1/webhooks/v2/endpoints`     | multi-endpoint management                | `gateway-webhook-endpoints`        |
-| `/v1/sandbox/payout-sim`        | payout scenario testing                  | `gateway-sandbox-payout-sim`       |
-| `/v1/reconciliation/mismatches` | mismatch resolution                      | `gateway-reconciliation` (partial) |
+| Capability | Status | Implementation |
+|---|---|---|
+| User wallet accounts | Yes | `accounts` table + `account_balances` (ClosingAvailable/InterimAvailable) |
+| Ledger-based balance tracking | Yes | `account_balances` with credit/debit indicators, datetime tracking |
+| Programmatic credit | Yes | `funding-scope-creditor.ts` upserts balances; `gateway-fund-account` credits via charges |
+| Programmatic debit | Yes | `gateway-process-withdrawal` debits balance atomically with rollback |
+| Sub-accounts / Escrow | Partial | `gateway_merchant_wallets` (3-balance model: available/pending/ledger) per merchant per currency; no formal escrow API |
+| Segregated fund structure | Not implemented | No dedicated safeguarding ledger or trust account segregation |
+| Transaction history | Yes | `transactions` table with full metadata, per-account filtering |
 
+### Missing: Dedicated Wallet REST API Surface
 
-**Total: ~30 new path entries needed in `public-api-spec/index.ts**`
+KOB has the underlying infrastructure but lacks a **formal `/v1/wallets/*` namespace**. Currently wallet operations are scattered across `gateway-fund-account`, `gateway-process-withdrawal`, and direct balance queries. Required new endpoints:
 
----
+```text
+POST   /v1/wallets                      — Create wallet (maps to account creation)
+GET    /v1/wallets/{id}                  — Get wallet with balances
+POST   /v1/wallets/{id}/credit           — Programmatic credit (wraps funding-scope-creditor)
+POST   /v1/wallets/{id}/debit            — Programmatic debit (wraps withdrawal logic)
+GET    /v1/wallets/{id}/transactions     — Transaction history for wallet
+GET    /v1/wallets/{id}/statement        — Generate statement (wraps generate-bank-statement)
+POST   /v1/wallets/{id}/freeze           — Freeze/unfreeze wallet (compliance)
+```
 
-## 3. CHANGELOG UPDATE
+**Required additions:**
+- Idempotency-Key header support (already pattern exists in `gateway-fund-account`)
+- Webhook events: `wallet.credited`, `wallet.debited`, `wallet.frozen`
+- Escrow sub-wallet creation for marketplace holds
 
-The changelog (`docs/changelog.md`) stops at v2.4.0. Phases 4-7 (escrow, safeguarding, SAR, wallets, compliance, instant payouts, treasury, SLA, webhooks v2, sandbox sim, merchant lifecycle, KYB review, settlement accounts, reconciliation, RFC 7807 retrofit) are all undocumented.
-
-**Required**: Add versions 3.0.0 through 3.4.0 covering all four phases.
-
----
-
-## 4. MULTI-TENANT APP TESTING FIXES
-
-### 4A. Merchant Portal
-
-- Merchant lifecycle status transitions (DRAFT -> SUBMITTED -> ACTIVE) need frontend integration with `gateway-merchant-lifecycle`
-- KYB review workflow needs merchant-side status tracking UI update
-
-### 4B. Customer App (Add Money Flow)
-
-- Fee display must call backend `gateway-fee-estimate` instead of hardcoded percentages
-- Bank transfer instructions should display the KOB partner bank RIB from the funding intent response
-
-### 4C. Customer App (Cash Out Flow)
-
-- Balance query needs `credit_debit_indicator` filter fix (bug 1D above)
-- Card withdrawal messaging should clarify Stripe refund limitations
+**Effort**: 1 new edge function (multi-method router), ~200 lines. No DB migration needed — uses existing `accounts` + `account_balances` tables.
 
 ---
 
-## 5. IMPLEMENTATION PLAN (6 Tasks)
+## SECTION B — OUTBOUND PAYOUTS
 
-### Task 1: Fix Flutterwave Webhook Balance Credit Bug
+### Current State: IMPLEMENTED (90%)
 
-- File: `supabase/functions/gateway-webhook-flutterwave/index.ts`
-- Change lines 58-73: Replace `INSERT InterimAvailable` with upsert pattern matching `funding-scope-creditor.ts` (query existing `ClosingAvailable` row, update if exists, insert if not)
-- Fix institution_id from `'00000000...'` to import from account record
+KOB has a comprehensive outbound payout system:
 
-### Task 2: Fix Withdrawal Balance Query
+| Capability | Status | Provider |
+|---|---|---|
+| Payouts to bank accounts | Yes | Flutterwave `/v3/transfers` |
+| Payouts to mobile money (MoMo) | Yes | Flutterwave MPS (MTN/Orange) |
+| Payouts to debit cards | Partial | Stripe Refund-based (requires prior card deposit) |
+| Payouts to PayPal | Yes | PayPal Batch Payouts API |
+| Batch payouts | Yes | `gateway-create-payout-batch` (up to 15k items via PayPal) |
+| Merchant-initiated payouts | Yes | `gateway-create-payout` (merchant wallet debit) |
+| Consumer-initiated withdrawals | Yes | `gateway-process-withdrawal` (account balance debit) |
+| Payout status polling | Yes | `gateway-payout-status-poll` |
+| Async webhook updates | Yes | `gateway-payout-webhook` (Stripe/Flutterwave/PayPal) |
+| Failed payout reversal | Yes | Automatic balance restoration on failure |
+| Admin manual reversal | Yes | `gateway-admin-reverse-withdrawal` |
+| Retry mechanism | Yes | `gateway-retry-payout` |
+| Daily payout limits | Yes | Per-merchant `daily_payout_limit` enforcement |
+| Idempotency | Yes | `idempotency-key` header on `gateway-create-payout` |
 
-- File: `supabase/functions/gateway-process-withdrawal/index.ts`  
-- Add `.eq('credit_debit_indicator', 'Credit')` to balance query at line 79
+### Missing / Gaps
 
-### Task 3: Fix Frontend Fee Mismatch
+1. **True push-to-card payouts**: Current card withdrawal is a Stripe Refund against a prior PaymentIntent. This is NOT a true payout — it requires a prior deposit, has refund-window limitations (180 days), and doesn't support arbitrary card destinations. For true instant card payouts, KOB needs Visa Direct / Mastercard Send integration.
 
-- File: `src/pages/customer-app/CustomerFundWallet.tsx`
-- Replace hardcoded fee percentages (line 94) with a call to `gateway-fee-estimate` or use the fee from the funding intent response
+2. **Instant vs Standard payout parameter**: No `speed` parameter (`instant` | `standard`) on payout endpoints. All payouts use the provider's default speed.
 
-### Task 4: Add All Phase 4-7 Endpoints to OpenAPI Spec
+3. **Formal `/v1/payouts/cancel` endpoint**: Cancellation is not exposed as a standalone API. Only failed payouts can be retried.
 
-- File: `supabase/functions/public-api-spec/index.ts`
-- Add ~30 new path entries for wallets, escrow, compliance, SAR, safeguarding, instant payouts, push-to-card, rails, treasury, cancel payout, SLA, webhooks v2, sandbox payout sim
-- Add corresponding schema definitions (EscrowWallet, SARReport, SLAMetric, etc.)
+4. **Payout to arbitrary bank account** (non-linked): Currently requires a `linked_account_id` for consumer withdrawals. Merchant payouts accept direct beneficiary details but consumer withdrawals do not.
 
-### Task 5: Update Changelog
+### Required Endpoint Additions
 
-- File: `docs/changelog.md`
-- Add v3.0.0 (Phase 4: Escrow, Safeguarding, SAR)
-- Add v3.1.0 (Phase 5: Merchant Lifecycle, KYB Review, Settlement Accounts, Reconciliation)
-- Add v3.2.0 (Phase 6: Wallet API, Compliance Screening, Instant Payouts, RFC 7807)
-- Add v3.3.0 (Phase 7: RFC 7807 Retrofit, Sandbox Payout Sim, SLA Monitor, Webhooks v2)
-
-### Task 6: Deploy and Verify
-
-- Redeploy `gateway-webhook-flutterwave`, `gateway-process-withdrawal`
-- Redeploy `public-api-spec` with full documentation
-- Verify OpenAPI spec serves correctly via curl
+```text
+POST   /v1/payouts/{id}/cancel          — Cancel pending payout before provider submission
+PATCH  /v1/payouts                      — Add `speed: 'instant' | 'standard'` parameter
+POST   /v1/payouts/card                 — True push-to-card (requires Visa Direct integration)
+```
 
 ---
 
-## 6. CURRENT SYSTEM COMPLETENESS SCORECARD
+## SECTION C — INSTANT RAILS SUPPORT
 
+### Current State: NOT IMPLEMENTED
 
-| Domain                             | Status                            | Score |
-| ---------------------------------- | --------------------------------- | ----- |
-| Payment Gateway (Charges)          | Production-ready                  | 95%   |
-| Payment Gateway (Payouts)          | Production-ready (standard rails) | 90%   |
-| Instant Payouts (Visa Direct etc.) | Edge functions deployed, not live | 70%   |
-| Wallet REST API                    | Deployed, not documented          | 85%   |
-| Escrow Sub-wallets                 | Deployed, not documented          | 85%   |
-| Compliance Screening               | Deployed, not documented          | 90%   |
-| Merchant Lifecycle                 | Deployed, partially documented    | 90%   |
-| Reconciliation                     | Deployed, partially documented    | 85%   |
-| SLA Monitoring                     | Deployed, not documented          | 80%   |
-| Webhooks v2                        | Deployed, not documented          | 85%   |
-| Customer App (Fund/CashOut)        | **Has bugs** (1A, 1C, 1D)         | 70%   |
-| OpenAPI Documentation              | **Missing 30+ endpoints**         | 60%   |
-| Changelog                          | **4 phases undocumented**         | 40%   |
-| RFC 7807 Error Standard            | Retrofitted across all functions  | 95%   |
-| Multi-tenancy & RLS                | Enforced across all tables        | 95%   |
+| Rail | Status |
+|---|---|
+| Visa Direct | Not integrated |
+| Mastercard Send | Not integrated |
+| SEPA Instant / FPS / RTP | Not integrated |
+| CEMAC real-time clearing (SYSTAC) | Not integrated |
+| 24/7 settlement processing | No — relies on provider business hours |
+| Push-to-card | Not available (Stripe refund ≠ push-to-card) |
+| Prefunding / liquidity pool | Not implemented |
 
+### Required Architecture for Instant Payouts
 
-**Overall Platform Readiness: 82%** -- Fixing the 4 bugs and adding documentation brings this to **95%+**.  
-  
-Here are the API Documents for the payment gateway middleware that powers the Kang Open Banking v1 API for further support and enhancement and fixes  
-[https://docs.stripe.com/api](https://docs.stripe.com/api)  
-[https://developer.flutterwave.com/docs/getting-started](https://developer.flutterwave.com/docs/getting-started)  
-[https://developer.flutterwave.com/reference/customers_list](https://developer.flutterwave.com/reference/customers_list)
+```text
+┌─────────────────────────────────────────────┐
+│            KOB Instant Payout Engine         │
+├─────────────────────────────────────────────┤
+│  1. Prefunding Pool (Float Management)       │
+│     - Dedicated settlement account per rail  │
+│     - Real-time float monitoring API         │
+│     - Auto-replenishment triggers            │
+├─────────────────────────────────────────────┤
+│  2. Rail Router                              │
+│     - Visa Direct (card payouts)             │
+│     - Flutterwave Instant (MoMo already ~OK) │
+│     - CEMAC RTGS / SYSTAC (bank-to-bank)    │
+│     - Fallback: standard ACH-equivalent     │
+├─────────────────────────────────────────────┤
+│  3. Risk & Fraud Layer                       │
+│     - Pre-payout risk scoring                │
+│     - Velocity checks (existing)             │
+│     - Amount limits per rail per user tier   │
+│     - ML anomaly detection (ai-anomaly exists)│
+├─────────────────────────────────────────────┤
+│  4. Liquidity Management API                 │
+│     GET  /v1/treasury/float-balance          │
+│     POST /v1/treasury/replenish              │
+│     GET  /v1/treasury/utilization            │
+└─────────────────────────────────────────────┘
+```
+
+**Required new endpoints:**
+
+```text
+POST   /v1/payouts/instant              — Instant payout (auto-routes to fastest rail)
+GET    /v1/payouts/rails                — List available rails + current speed + fees
+POST   /v1/payouts/card/push            — Visa Direct push-to-card
+GET    /v1/treasury/float               — Float balance per rail (admin)
+POST   /v1/risk/pre-check               — Pre-payout risk assessment
+```
+
+**Estimated effort**: 3-5 new edge functions + Visa Direct API integration + prefunding account infrastructure. This is the largest gap.
+
+---
+
+## SECTION D — LICENSING & COMPLIANCE
+
+### Current State: PARTIAL
+
+| Capability | Status |
+|---|---|
+| KYC verification | Yes — `kyc-submit`, `kyc_verifications` table, document upload |
+| KYB (merchant) | Yes — `gateway-merchant-kyb` (submit/review workflow) |
+| AML sanctions screening | Yes — `sanctions-screen` edge function |
+| Transaction monitoring | Yes — `transaction-monitor` + `ai-anomaly-detection` |
+| CDD (Customer Due Diligence) | Yes — `customer_due_diligence` table, PEP checks, risk scoring |
+| Risk scoring | Yes — `calculate_kyc_risk_score` DB function |
+| Data retention | Yes — 7-year COBAC compliance policy |
+| License type | Unclear — no EMI/MTL documentation found in codebase |
+
+### Missing
+
+1. **Formal EMI or Money Transmitter license documentation**: The platform operates as a wallet/payment processor but the licensing basis is not codified in the API. This is a business/legal gap, not a technical one.
+
+2. **Real-time transaction screening for outbound payouts**: `transaction-monitor` exists but it's not inline (pre-payout). Payouts execute first, monitor after.
+
+3. **Required compliance endpoints** (partially exist):
+
+```text
+POST   /v1/compliance/payout-screen     — Pre-payout AML/sanctions check (MISSING)
+GET    /v1/compliance/user-risk/{id}     — User risk profile (exists via calculate_kyc_risk_score)
+POST   /v1/compliance/sar               — Suspicious Activity Report submission (MISSING)
+```
+
+---
+
+## SECTION E — TECHNICAL READINESS
+
+### Current State: PRODUCTION-GRADE (85%)
+
+| Feature | Status | Details |
+|---|---|---|
+| Idempotency-Key | Yes | Supported on charges, payouts, funding intents via header + DB dedup |
+| Webhook system | Mature | HMAC-SHA256 signing, 7-retry exponential backoff, delivery logging, 24 event types |
+| Rate limiting | Yes | DB-backed (`check_rate_limit` RPC), per-provider webhook limits, per-user API limits |
+| Error format | Partial | Consistent `{error, message}` but NOT RFC 7807 `problem+json` everywhere |
+| Sandbox simulation | Yes | `sandbox-*` functions for data generation, API key creation, webhook testing |
+| API versioning | Yes | `/v1/` prefix on all endpoints |
+| OpenAPI spec | Yes | `public-api-spec` (OpenAPI 3.1.0, 245+ endpoints documented) |
+| Postman collection | Yes | `postman-collection` auto-generated |
+
+### Missing
+
+1. **RFC 7807 error responses** are not consistently used (some functions return `{error, message}`, not `{type, title, status, detail}`)
+2. **SLA guarantees** are not programmatically documented (only operational: 15-min critical response)
+3. **Payout sandbox simulation** — sandbox exists for charges but payout simulation with realistic delays is not confirmed
+
+---
+
+## COMPLETE GAP SUMMARY
+
+### To compete with Stripe-style instant payouts, KOB needs:
+
+| # | Gap | Priority | Effort |
+|---|---|---|---|
+| 1 | **Visa Direct integration** (true push-to-card) | CRITICAL | 1 edge function + Visa API onboarding |
+| 2 | **Formal `/v1/wallets/*` REST namespace** | HIGH | 1 edge function (router) |
+| 3 | **Instant payout rail router** with `speed` parameter | HIGH | 1 edge function + rail selection logic |
+| 4 | **Prefunding / float management API** | HIGH | 1 edge function + treasury tables |
+| 5 | **Pre-payout compliance screening** (inline) | HIGH | 1 edge function |
+| 6 | **Payout cancellation endpoint** | MEDIUM | Add to existing payout function |
+| 7 | **RFC 7807 error standardization** | MEDIUM | Update all edge functions |
+| 8 | **Escrow / hold sub-wallets** | MEDIUM | 1 migration + 1 function |
+| 9 | **Safeguarded fund segregation ledger** | MEDIUM | 1 migration |
+| 10 | **SAR submission endpoint** | LOW | 1 edge function |
+
+---
+
+## FINAL ANSWERS
+
+| Question | Answer |
+|---|---|
+| Can KOB support instant wallet-to-bank withdrawals? | **Partially** — Flutterwave MoMo is near-instant; bank transfers are T+1 to T+3. No real-time bank rail (RTGS/SYSTAC) integration. |
+| Can KOB support instant wallet-to-card withdrawals? | **No** — Current implementation uses Stripe Refunds (requires prior deposit, 5-10 day processing). True push-to-card requires Visa Direct/Mastercard Send. |
+| Can KOB support 24/7 real-time payout infrastructure? | **No** — Dependent on provider business hours. No prefunding pool, no instant rail router, no 24/7 settlement engine. |
+| Production readiness for high-risk instant payout fintech? | **Not yet.** The wallet + standard payout infrastructure is solid (~90%), but instant rails, prefunding, and inline compliance screening are required before production deployment for an instant payout platform. |
+
+### Recommended Upgrade Roadmap
+
+```text
+Phase 1 (4-6 weeks): Wallet API namespace + inline compliance screening + payout cancel
+Phase 2 (6-10 weeks): Visa Direct integration + instant rail router + speed parameter
+Phase 3 (4-6 weeks): Prefunding/treasury API + float monitoring + 24/7 settlement cron
+Phase 4 (2-4 weeks): Escrow sub-wallets + safeguarding ledger + SAR endpoint
+```
+
