@@ -31,7 +31,7 @@ const integrations = [
   {
     icon: Wallet,
     title: "Wallets & Escrow",
-    description: "Custodial wallets with three-state balances and escrow holds for marketplaces.",
+    description: "Full custodial wallet infrastructure with programmatic credit/debit, three-state balance model, and escrow holds for marketplaces.",
     link: "/developer/gateway/wallets",
   },
   {
@@ -43,8 +43,14 @@ const integrations = [
   {
     icon: Zap,
     title: "Instant Payouts",
-    description: "Send payouts instantly via bank, mobile money, or push-to-card (Visa Direct).",
+    description: "Visa Direct, Mastercard Send, MoMo instant, and bank transfer with intelligent rail routing and treasury-backed prefunding.",
     link: "/developer/gateway/instant-payouts",
+  },
+  {
+    icon: Landmark,
+    title: "Treasury & Float",
+    description: "Prefunded float pools powering instant rails — real-time utilization monitoring and auto-replenishment.",
+    link: "/developer/gateway/treasury",
   },
   {
     icon: Activity,
