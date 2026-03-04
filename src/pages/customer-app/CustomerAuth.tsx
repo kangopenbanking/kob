@@ -605,7 +605,101 @@ const CustomerAuth: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Verifying */}
+            {/* Forgot Password */}
+            {mode === 'forgot-password' && (
+              <motion.div key="forgot-password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+
+                {forgotSent ? (
+                  <div className="text-center space-y-3 w-full">
+                    <p className="text-sm font-semibold text-foreground">Reset link sent!</p>
+                    <p className="text-sm font-bold text-primary">{forgotEmail}</p>
+                    <p className="text-xs text-muted-foreground max-w-[260px] mx-auto">
+                      Check your email and click the link to reset your password. Check spam if you don't see it.
+                    </p>
+                    <Button onClick={() => { setMode('input'); setForgotSent(false); }} variant="outline" className="w-full gap-2 rounded-xl py-5 mt-4">
+                      <ArrowLeft className="h-4 w-4" /> Back to Sign In
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-full space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+                        <Input
+                          type="email"
+                          placeholder="you@example.com"
+                          value={forgotEmail}
+                          onChange={e => setForgotEmail(e.target.value)}
+                          className="rounded-xl border-border/60 pl-10"
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail} className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20" size="lg">
+                      {forgotLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Send Reset Link <ArrowRight className="h-4 w-4" /></>}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setMode('input')} className="w-full gap-1.5 text-xs text-muted-foreground">
+                      <ArrowLeft className="h-3 w-3" /> Back to Sign In
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Reset PIN */}
+            {mode === 'reset-pin' && (
+              <motion.div key="reset-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <KeyRound className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">First, verify your OTP above</p>
+                  <p className="text-xs text-muted-foreground mt-1">Then enter your new 6-digit PIN below</p>
+                </div>
+
+                <div className="w-full space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">New PIN</Label>
+                    <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                      <InputOTPGroup className="gap-2 justify-center">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="h-12 w-10 rounded-xl border-border/60 text-lg font-bold shadow-sm" />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Confirm New PIN</Label>
+                    <InputOTP maxLength={6} value={confirmNewPin} onChange={setConfirmNewPin}>
+                      <InputOTPGroup className="gap-2 justify-center">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="h-12 w-10 rounded-xl border-border/60 text-lg font-bold shadow-sm" />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button
+                    onClick={handleResetPin}
+                    disabled={resetPinLoading || newPin.length !== 6 || confirmNewPin.length !== 6}
+                    className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20"
+                    size="lg"
+                  >
+                    {resetPinLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Reset PIN <ArrowRight className="h-4 w-4" /></>}
+                  </Button>
+
+                  <Button variant="ghost" size="sm" onClick={() => { setMode('input'); setNewPin(''); setConfirmNewPin(''); }} className="w-full gap-1.5 text-xs text-muted-foreground">
+                    <ArrowLeft className="h-3 w-3" /> Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
             {mode === 'verifying' && (
               <motion.div key="verifying" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-12">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
