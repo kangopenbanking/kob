@@ -75,6 +75,7 @@ export const adminNavigation: AdminNavSection[] = [
   {
     title: "Management",
     items: [
+      { title: "Access & Roles", path: "/admin/access-roles", icon: Key },
       { title: "Banking Apps", path: "/admin/banking-apps", icon: CreditCard },
       { title: "Customer Apps", path: "/admin/customer-apps", icon: Smartphone },
       { title: "User Management", path: "/admin/users", icon: Users },
