@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Building2, Landmark, Smartphone, Wallet, Ban, ArrowLeft, Check, Loader2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { Building2, Landmark, Smartphone, Wallet, Ban, ArrowLeft, Check, Loader2, AlertCircle, CreditCard } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 
 type AccountType = 'bank_account' | 'credit_union' | 'momo_orange' | 'momo_mtn' | 'none';
