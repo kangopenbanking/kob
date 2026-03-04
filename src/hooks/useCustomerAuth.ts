@@ -51,6 +51,7 @@ export function useCustomerAuth() {
         
         setUser({
           id: p.id,
+          fullName: p.full_name || null,
           linkedAccountType: hasLinkedAccounts ? (p.linked_account_type || 'linked') : null,
           isViewOnly: !hasLinkedAccounts,
           phoneNumber: p.phone_number || null,
