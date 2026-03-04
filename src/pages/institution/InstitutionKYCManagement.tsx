@@ -33,13 +33,37 @@ export default function InstitutionKYCManagement() {
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
+
+      // Check if user is institution owner
       const { data: institution } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-      if (!institution) return [];
-      
+      // Also check if user is staff assigned to an institution
+      let institutionId = institution?.id;
+      if (!institutionId) {
+        const { data: staffAssignment } = await supabase
+          .from("staff_assignments")
+          .select("institution_id")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .maybeSingle();
+        institutionId = staffAssignment?.institution_id;
+      }
+      if (!institutionId) return [];
+
+      // Get user IDs of customers who have accounts at this institution
+      const { data: accountUsers } = await supabase
+        .from("accounts")
+        .select("user_id")
+        .eq("institution_id", institutionId)
+        .eq("is_active", true);
+
+      const customerUserIds = [...new Set((accountUsers || []).map(a => a.user_id))];
+      if (customerUserIds.length === 0) return [];
+
+      // Fetch KYC for those customers only
       const { data, error } = await supabase
         .from("kyc_verifications")
         .select("*, profiles(full_name, email, phone_number)")
-        .eq("institution_id", institution.id)
+        .in("user_id", customerUserIds)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
