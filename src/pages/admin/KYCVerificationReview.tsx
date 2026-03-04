@@ -148,7 +148,7 @@ export default function KYCVerificationReview() {
                 <TableRow key={kyc.id} className="group">
                   <TableCell>
                     <div>
-                      <p className="font-medium text-sm">{kyc.first_name} {kyc.last_name}</p>
+                      <p className="font-medium text-sm">{getDisplayName(kyc)}</p>
                       <p className="text-xs text-muted-foreground font-mono">{kyc.user_id?.slice(0, 8)}…</p>
                     </div>
                   </TableCell>
