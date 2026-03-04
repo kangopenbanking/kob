@@ -17,7 +17,7 @@ import kangLogo from '@/assets/kang-logo.png';
 
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent';
+type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin';
 
 interface MobileAuthFormProps {
   onAuthSuccess: () => void;
@@ -44,6 +44,16 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
   const [pinError, setPinError] = useState<string | null>(null);
   const [userHasPin, setUserHasPin] = useState(false);
   const [checkingPin, setCheckingPin] = useState(false);
+
+  // Reset PIN state
+  const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [resetPinLoading, setResetPinLoading] = useState(false);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   const fullPhone = `${countryCode}${phoneNumber}`;
 
@@ -232,6 +242,45 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { toast.error('Please enter your email'); return; }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast.success('Password reset email sent!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send reset email');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast.error('Please enter a 6-digit PIN'); return; }
+    if (newPin !== confirmNewPin) { toast.error('PINs do not match'); return; }
+    setResetPinLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pin-code-reset', {
+        body: { phone_number: fullPhone, new_pin_code: newPin },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        sounds.success();
+        toast.success('PIN reset successfully! Please sign in.');
+        setNewPin(''); setConfirmNewPin(''); setStep('phone');
+      } else { throw new Error(data?.error || 'Failed to reset PIN'); }
+    } catch (err: any) {
+      sounds.error();
+      toast.error(err.message || 'Failed to reset PIN');
+    } finally {
+      setResetPinLoading(false);
+    }
+  };
+
   // Auto-submit PIN when 6 digits entered
   useEffect(() => {
     if (step === 'pin' && pinCode.length === 6 && !pinLoading) {
@@ -261,10 +310,10 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
             <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">
-            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : 'Sign In'}
+            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-pin' ? 'Reset PIN' : 'Sign In'}
           </h1>
           <p className="mt-1 text-sm text-primary-foreground/70">
-            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : step === 'email-sent' ? 'Almost there!' : `Access your ${tenant.name} account`}
+            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : step === 'email-sent' ? 'Almost there!' : step === 'forgot-password' ? 'Enter your email to receive a reset link' : step === 'reset-pin' ? 'Set a new 6-digit PIN' : `Access your ${tenant.name} account`}
           </p>
         </motion.div>
       </div>
@@ -546,6 +595,12 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                     {loading ? 'Please wait...' : mode === 'login' ? 'Sign In' : 'Create Account'}
                     <ArrowRight className="h-4 w-4" strokeWidth={2} />
                   </Button>
+
+                  {mode === 'login' && (
+                    <Button type="button" variant="link" className="w-full text-sm text-primary" onClick={() => { setForgotEmail(form.email); setStep('forgot-password'); }}>
+                      Forgot Password?
+                    </Button>
+                  )}
                 </form>
 
                 <div className="mt-4 text-center">
@@ -584,6 +639,82 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                   <ArrowLeft className="h-4 w-4" />
                   Back to Sign In
                 </Button>
+              </motion.div>
+            )}
+
+            {/* Forgot Password */}
+            {step === 'forgot-password' && (
+              <motion.div key="forgot-password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+                {forgotSent ? (
+                  <div className="text-center space-y-3 w-full">
+                    <p className="text-sm font-semibold text-foreground">Reset link sent!</p>
+                    <p className="text-sm font-bold text-primary">{forgotEmail}</p>
+                    <p className="text-xs text-muted-foreground max-w-[260px] mx-auto">Check your email and click the link to reset your password.</p>
+                    <Button onClick={() => { setStep('email'); setForgotSent(false); }} variant="outline" className="w-full gap-2 rounded-xl py-5 mt-4">
+                      <ArrowLeft className="h-4 w-4" /> Back to Sign In
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-full space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+                        <Input type="email" placeholder="you@example.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} className="rounded-xl border-border/60 pl-10" />
+                      </div>
+                    </div>
+                    <Button onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail} className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20" size="lg">
+                      {forgotLoading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="h-5 w-5 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" /> : <>Send Reset Link <ArrowRight className="h-4 w-4" /></>}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setStep('email')} className="w-full gap-1.5 text-xs text-muted-foreground">
+                      <ArrowLeft className="h-3 w-3" /> Back to Sign In
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Reset PIN */}
+            {step === 'reset-pin' && (
+              <motion.div key="reset-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <KeyRound className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">Set a new 6-digit PIN</p>
+                  <p className="text-xs text-muted-foreground mt-1">Identity verified via OTP</p>
+                </div>
+                <div className="w-full space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">New PIN</Label>
+                    <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                      <InputOTPGroup className="gap-2 justify-center">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="h-12 w-10 rounded-xl border-border/60 text-lg font-bold shadow-sm" />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Confirm New PIN</Label>
+                    <InputOTP maxLength={6} value={confirmNewPin} onChange={setConfirmNewPin}>
+                      <InputOTPGroup className="gap-2 justify-center">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="h-12 w-10 rounded-xl border-border/60 text-lg font-bold shadow-sm" />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <Button onClick={handleResetPin} disabled={resetPinLoading || newPin.length !== 6 || confirmNewPin.length !== 6} className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20" size="lg">
+                    {resetPinLoading ? <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1 }} className="h-5 w-5 rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" /> : <>Reset PIN <ArrowRight className="h-4 w-4" /></>}
+                  </Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setStep('phone'); setNewPin(''); setConfirmNewPin(''); }} className="w-full gap-1.5 text-xs text-muted-foreground">
+                    <ArrowLeft className="h-3 w-3" /> Cancel
+                  </Button>
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

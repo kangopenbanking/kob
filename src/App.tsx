@@ -337,6 +337,7 @@ import Apps from "./pages/Apps";
 import { CustomerAppLayout } from "./components/customer-app/CustomerAppLayout";
 import CustomerSplash from "./pages/customer-app/CustomerSplash";
 import CustomerAuth from "./pages/customer-app/CustomerAuth";
+import ResetPassword from "./pages/ResetPassword";
 import CustomerOnboarding from "./pages/customer-app/CustomerOnboarding";
 import CustomerRegister from "./pages/customer-app/CustomerRegister";
 import CustomerHome from "./pages/customer-app/CustomerHome";
@@ -717,11 +718,13 @@ function App() {
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
             <Route path="/banking-app/*" element={<Navigate to="/apps" replace />} />
             {/* Banking App PWA Routes */}
             <Route path="/bank/:institutionId" element={<BankSplash />} />
             <Route path="/bank/:institutionId/auth" element={<BankAuth />} />
+            <Route path="/bank/:institutionId/reset-password" element={<ResetPassword />} />
             <Route path="/bank/:institutionId/apply" element={<BankApply />} />
             <Route path="/bank/:institutionId/kyc" element={<BankingAppLayout />}><Route index element={<BankKYC />} /></Route>
             <Route path="/bank/:institutionId" element={<BankingAppLayout />}>
@@ -748,6 +751,7 @@ function App() {
             {/* Customer App PWA Routes — unified (no institutionId) */}
             <Route path="/app" element={<CustomerSplash />} />
             <Route path="/app/auth" element={<CustomerAuth />} />
+            <Route path="/app/reset-password" element={<ResetPassword />} />
             <Route path="/app/register" element={<CustomerRegister />} />
             <Route path="/app/onboarding" element={<CustomerOnboarding />} />
             {/* Legacy redirect: old institution-scoped URLs */}

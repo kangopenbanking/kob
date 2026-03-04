@@ -18,7 +18,7 @@ import { API_CONFIG } from '@/config/api';
 
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent';
+type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
@@ -44,6 +44,16 @@ const CustomerAuth: React.FC = () => {
   const [pin, setPin] = useState('');
   const [pinLoading, setPinLoading] = useState(false);
   const [pinError, setPinError] = useState<string | null>(null);
+
+  // Reset PIN state
+  const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [resetPinLoading, setResetPinLoading] = useState(false);
+
+  // Forgot password state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
 
   // General loading
   const [loading, setLoading] = useState(false);
@@ -187,10 +197,59 @@ const CustomerAuth: React.FC = () => {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { toast.error('Please enter your email'); return; }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/app/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast.success('Password reset email sent!');
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send reset email');
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleResetPin = async () => {
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) {
+      toast.error('Please enter a 6-digit PIN');
+      return;
+    }
+    if (newPin !== confirmNewPin) {
+      toast.error('PINs do not match');
+      return;
+    }
+    setResetPinLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pin-code-reset', {
+        body: { phone_number: fullPhone, new_pin_code: newPin },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        toast.success('PIN reset successfully! Please sign in.');
+        setNewPin('');
+        setConfirmNewPin('');
+        setMode('input');
+      } else {
+        throw new Error(data?.error || 'Failed to reset PIN');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to reset PIN');
+    } finally {
+      setResetPinLoading(false);
+    }
+  };
+
   const handleBack = () => {
     if (mode === 'otp') { resetOTP(); setMode('input'); }
     else if (mode === 'pin') { setMode('input'); setPin(''); setPinError(null); }
     else if (mode === 'input') { setMode('welcome'); }
+    else if (mode === 'forgot-password') { setMode('input'); setForgotSent(false); setForgotEmail(''); }
+    else if (mode === 'reset-pin') { setMode('pin'); setNewPin(''); setConfirmNewPin(''); }
     else { navigate('/app'); }
   };
 
@@ -202,6 +261,8 @@ const CustomerAuth: React.FC = () => {
       case 'otp': return 'Verify Code';
       case 'verifying': return 'Verifying...';
       case 'email-sent': return 'Check Your Email';
+      case 'forgot-password': return 'Reset Password';
+      case 'reset-pin': return 'Reset PIN';
     }
   };
 
@@ -213,6 +274,8 @@ const CustomerAuth: React.FC = () => {
       case 'otp': return `Code sent to ${countryCode} ${phoneNumber}`;
       case 'verifying': return 'Please wait...';
       case 'email-sent': return 'Almost there!';
+      case 'forgot-password': return 'Enter your email to receive a reset link';
+      case 'reset-pin': return 'Set a new 6-digit PIN';
     }
   };
 
@@ -394,6 +457,17 @@ const CustomerAuth: React.FC = () => {
                             <>{intent === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight className="h-4 w-4" strokeWidth={2} /></>
                           )}
                         </Button>
+
+                        {intent === 'signin' && (
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="w-full text-sm text-primary"
+                            onClick={() => { setForgotEmail(email); setMode('forgot-password'); }}
+                          >
+                            Forgot Password?
+                          </Button>
+                        )}
                       </form>
                     </motion.div>
                   )}
@@ -446,6 +520,18 @@ const CustomerAuth: React.FC = () => {
                   >
                     <KeyRound className="h-4 w-4" strokeWidth={1.5} />
                     Forgot PIN? Use OTP instead
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={async () => {
+                      setPin(''); setPinError(null);
+                      await sendOTP(fullPhone);
+                      setMode('reset-pin');
+                    }}
+                    className="w-full gap-2 text-sm text-destructive"
+                  >
+                    <Lock className="h-4 w-4" strokeWidth={1.5} />
+                    Reset My PIN
                   </Button>
                   <Button variant="ghost" size="sm" onClick={() => { setMode('input'); setPin(''); setPinError(null); setPhoneNumber(''); }} className="gap-1.5 text-xs text-muted-foreground">
                     <ArrowLeft className="h-3 w-3" /> Change phone number
@@ -519,7 +605,101 @@ const CustomerAuth: React.FC = () => {
               </motion.div>
             )}
 
-            {/* Verifying */}
+            {/* Forgot Password */}
+            {mode === 'forgot-password' && (
+              <motion.div key="forgot-password" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <Lock className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+
+                {forgotSent ? (
+                  <div className="text-center space-y-3 w-full">
+                    <p className="text-sm font-semibold text-foreground">Reset link sent!</p>
+                    <p className="text-sm font-bold text-primary">{forgotEmail}</p>
+                    <p className="text-xs text-muted-foreground max-w-[260px] mx-auto">
+                      Check your email and click the link to reset your password. Check spam if you don't see it.
+                    </p>
+                    <Button onClick={() => { setMode('input'); setForgotSent(false); }} variant="outline" className="w-full gap-2 rounded-xl py-5 mt-4">
+                      <ArrowLeft className="h-4 w-4" /> Back to Sign In
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="w-full space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-sm font-medium">Email Address</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" strokeWidth={1.5} />
+                        <Input
+                          type="email"
+                          placeholder="you@example.com"
+                          value={forgotEmail}
+                          onChange={e => setForgotEmail(e.target.value)}
+                          className="rounded-xl border-border/60 pl-10"
+                        />
+                      </div>
+                    </div>
+                    <Button onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail} className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20" size="lg">
+                      {forgotLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Send Reset Link <ArrowRight className="h-4 w-4" /></>}
+                    </Button>
+                    <Button variant="ghost" size="sm" onClick={() => setMode('input')} className="w-full gap-1.5 text-xs text-muted-foreground">
+                      <ArrowLeft className="h-3 w-3" /> Back to Sign In
+                    </Button>
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* Reset PIN */}
+            {mode === 'reset-pin' && (
+              <motion.div key="reset-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }} className="flex flex-col items-center gap-5">
+                <div className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10">
+                  <KeyRound className="h-10 w-10 text-primary" strokeWidth={1.2} />
+                </div>
+
+                <div className="text-center">
+                  <p className="text-sm font-medium text-foreground">First, verify your OTP above</p>
+                  <p className="text-xs text-muted-foreground mt-1">Then enter your new 6-digit PIN below</p>
+                </div>
+
+                <div className="w-full space-y-4">
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">New PIN</Label>
+                    <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                      <InputOTPGroup className="gap-2 justify-center">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="h-12 w-10 rounded-xl border-border/60 text-lg font-bold shadow-sm" />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Confirm New PIN</Label>
+                    <InputOTP maxLength={6} value={confirmNewPin} onChange={setConfirmNewPin}>
+                      <InputOTPGroup className="gap-2 justify-center">
+                        {[0, 1, 2, 3, 4, 5].map(i => (
+                          <InputOTPSlot key={i} index={i} className="h-12 w-10 rounded-xl border-border/60 text-lg font-bold shadow-sm" />
+                        ))}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+
+                  <Button
+                    onClick={handleResetPin}
+                    disabled={resetPinLoading || newPin.length !== 6 || confirmNewPin.length !== 6}
+                    className="w-full gap-2 rounded-xl py-6 text-base font-semibold shadow-md shadow-primary/20"
+                    size="lg"
+                  >
+                    {resetPinLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Reset PIN <ArrowRight className="h-4 w-4" /></>}
+                  </Button>
+
+                  <Button variant="ghost" size="sm" onClick={() => { setMode('input'); setNewPin(''); setConfirmNewPin(''); }} className="w-full gap-1.5 text-xs text-muted-foreground">
+                    <ArrowLeft className="h-3 w-3" /> Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            )}
+
             {mode === 'verifying' && (
               <motion.div key="verifying" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-12">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
