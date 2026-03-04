@@ -17,7 +17,7 @@ import kangLogo from '@/assets/kang-logo.png';
 
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-type AuthStep = 'phone' | 'pin' | 'otp' | 'email';
+type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent';
 
 interface MobileAuthFormProps {
   onAuthSuccess: () => void;
