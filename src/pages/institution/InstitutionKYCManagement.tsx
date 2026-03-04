@@ -28,6 +28,7 @@ export default function InstitutionKYCManagement() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
 
   const { data: kycSubmissions, isLoading, refetch } = useQuery({
     queryKey: ["fi-kyc-submissions"],
