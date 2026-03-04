@@ -52,7 +52,7 @@ const GatewayPaymentLinksGuide = () => (
 
     <ApiEndpoint method="POST" endpoint="/v1/gateway/payment-links" description="Create a new payment link with a unique slug."
       requestBody={JSON.stringify({ merchant_id: "mch_uuid", title: "Invoice #1234", amount: 25000, currency: "XAF", description: "Payment for consulting services", redirect_url: "https://yoursite.com/thanks", max_uses: 1, expires_at: "2026-03-31T23:59:59Z", custom_fields: [], metadata: {} }, null, 2)}
-      response={JSON.stringify({ id: "pl_uuid", merchant_id: "mch_uuid", title: "Invoice #1234", slug: "pay-m1abc-x9y2z3", amount: 25000, currency: "XAF", status: "active", use_count: 0, max_uses: 1, url: "https://kob.lovable.app/pay/pay-m1abc-x9y2z3", redirect_url: "https://yoursite.com/thanks", expires_at: "2026-03-31T23:59:59Z", created_at: "2026-02-21T12:00:00Z" }, null, 2)}
+      response={JSON.stringify({ id: "pl_uuid", merchant_id: "mch_uuid", title: "Invoice #1234", slug: "pay-m1abc-x9y2z3", amount: 25000, currency: "XAF", status: "active", use_count: 0, max_uses: 1, url: "https://kangopenbanking.com/pay/pay-m1abc-x9y2z3", redirect_url: "https://yoursite.com/thanks", expires_at: "2026-03-31T23:59:59Z", created_at: "2026-02-21T12:00:00Z" }, null, 2)}
       parameters={[
         { name: "merchant_id", type: "uuid", required: true, description: "Your merchant ID" },
         { name: "title", type: "string", required: true, description: "Payment link title shown to customer" },
