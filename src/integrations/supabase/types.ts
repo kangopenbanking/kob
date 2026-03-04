@@ -6076,6 +6076,112 @@ export type Database = {
           },
         ]
       }
+      gateway_webhook_deliveries_v2: {
+        Row: {
+          attempt: number
+          created_at: string
+          delivered_at: string | null
+          endpoint_id: string
+          event_type: string
+          id: string
+          max_attempts: number
+          merchant_id: string
+          next_retry_at: string | null
+          payload: Json
+          response_body: string | null
+          response_status: number | null
+          status: string
+        }
+        Insert: {
+          attempt?: number
+          created_at?: string
+          delivered_at?: string | null
+          endpoint_id: string
+          event_type: string
+          id?: string
+          max_attempts?: number
+          merchant_id: string
+          next_retry_at?: string | null
+          payload: Json
+          response_body?: string | null
+          response_status?: number | null
+          status?: string
+        }
+        Update: {
+          attempt?: number
+          created_at?: string
+          delivered_at?: string | null
+          endpoint_id?: string
+          event_type?: string
+          id?: string
+          max_attempts?: number
+          merchant_id?: string
+          next_retry_at?: string | null
+          payload?: Json
+          response_body?: string | null
+          response_status?: number | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_webhook_deliveries_v2_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_webhook_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gateway_webhook_endpoints: {
+        Row: {
+          created_at: string
+          description: string | null
+          events: string[]
+          id: string
+          is_active: boolean
+          merchant_id: string
+          metadata: Json | null
+          secret: string
+          secret_hash: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          merchant_id: string
+          metadata?: Json | null
+          secret: string
+          secret_hash?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          events?: string[]
+          id?: string
+          is_active?: boolean
+          merchant_id?: string
+          metadata?: Json | null
+          secret?: string
+          secret_hash?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_webhook_endpoints_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_webhook_events: {
         Row: {
           attempts: number | null
@@ -10305,6 +10411,42 @@ export type Database = {
           },
         ]
       }
+      sandbox_payout_scenarios: {
+        Row: {
+          created_at: string
+          delay_seconds: number
+          description: string | null
+          failure_reason: string | null
+          id: string
+          is_active: boolean
+          scenario_name: string
+          simulated_status: string
+          trigger_webhook: boolean
+        }
+        Insert: {
+          created_at?: string
+          delay_seconds?: number
+          description?: string | null
+          failure_reason?: string | null
+          id?: string
+          is_active?: boolean
+          scenario_name: string
+          simulated_status?: string
+          trigger_webhook?: boolean
+        }
+        Update: {
+          created_at?: string
+          delay_seconds?: number
+          description?: string | null
+          failure_reason?: string | null
+          id?: string
+          is_active?: boolean
+          scenario_name?: string
+          simulated_status?: string
+          trigger_webhook?: boolean
+        }
+        Relationships: []
+      }
       sandbox_rate_limit_tracker: {
         Row: {
           api_key_id: string
@@ -11179,6 +11321,87 @@ export type Database = {
           private_key?: string
           rotated_at?: string | null
           use?: string
+        }
+        Relationships: []
+      }
+      sla_incidents: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          resolution_notes: string | null
+          resolved_at: string | null
+          service_name: string
+          severity: string
+          started_at: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          service_name: string
+          severity?: string
+          started_at?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          resolution_notes?: string | null
+          resolved_at?: string | null
+          service_name?: string
+          severity?: string
+          started_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      sla_metrics: {
+        Row: {
+          check_type: string
+          checked_at: string
+          error_message: string | null
+          id: string
+          metadata: Json | null
+          response_time_ms: number | null
+          service_name: string
+          status: string
+          success: boolean
+        }
+        Insert: {
+          check_type?: string
+          checked_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number | null
+          service_name: string
+          status?: string
+          success?: boolean
+        }
+        Update: {
+          check_type?: string
+          checked_at?: string
+          error_message?: string | null
+          id?: string
+          metadata?: Json | null
+          response_time_ms?: number | null
+          service_name?: string
+          status?: string
+          success?: boolean
         }
         Relationships: []
       }

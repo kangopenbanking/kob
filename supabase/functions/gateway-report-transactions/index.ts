@@ -6,42 +6,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function problem(status: number, title: string, detail: string) {
+  return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!authHeader) return problem(401, 'Unauthorized', 'Missing Authorization header');
 
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (!user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!user) return problem(401, 'Unauthorized', 'Invalid or expired token');
 
     const url = new URL(req.url);
     const merchantId = url.searchParams.get('merchant_id');
     const from = url.searchParams.get('from');
     const to = url.searchParams.get('to');
-    const format = url.searchParams.get('format') || 'json'; // json or csv
+    const format = url.searchParams.get('format') || 'json';
 
     const { data: merchants } = await supabase.from('gateway_merchants').select('id').eq('user_id', user.id);
     const merchantIds = merchants?.map(m => m.id) || [];
-    if (merchantIds.length === 0) return new Response(JSON.stringify({ data: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (merchantIds.length === 0) {
+      return new Response(JSON.stringify({ data: [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     const targetIds = merchantId && merchantIds.includes(merchantId) ? [merchantId] : merchantIds;
 
-    // Charges
     let chargesQ = supabase.from('gateway_charges').select('id, merchant_id, amount, currency, channel, status, fee_amount, net_amount, tx_ref, created_at').in('merchant_id', targetIds);
     if (from) chargesQ = chargesQ.gte('created_at', from);
     if (to) chargesQ = chargesQ.lte('created_at', to);
     const { data: charges } = await chargesQ.order('created_at', { ascending: false }).limit(500);
 
-    // Payouts
     let payoutsQ = supabase.from('gateway_payouts').select('id, merchant_id, amount, currency, channel, status, fee_amount, tx_ref, created_at').in('merchant_id', targetIds);
     if (from) payoutsQ = payoutsQ.gte('created_at', from);
     if (to) payoutsQ = payoutsQ.lte('created_at', to);
     const { data: payouts } = await payoutsQ.order('created_at', { ascending: false }).limit(500);
 
-    // Refunds
     let refundsQ = supabase.from('gateway_refunds').select('id, merchant_id, charge_id, amount, currency, status, created_at').in('merchant_id', targetIds);
     if (from) refundsQ = refundsQ.gte('created_at', from);
     if (to) refundsQ = refundsQ.lte('created_at', to);
@@ -67,6 +72,6 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ summary, charges, payouts, refunds }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return problem(500, 'Internal Server Error', err.message);
   }
 });

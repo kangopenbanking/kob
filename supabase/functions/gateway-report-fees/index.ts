@@ -6,22 +6,27 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+function problem(status: number, title: string, detail: string) {
+  return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
     const authHeader = req.headers.get('Authorization');
-    if (!authHeader) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!authHeader) return problem(401, 'Unauthorized', 'Missing Authorization header');
 
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
-    if (!user) return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (!user) return problem(401, 'Unauthorized', 'Invalid or expired token');
 
     const url = new URL(req.url);
     const merchantId = url.searchParams.get('merchant_id');
     const from = url.searchParams.get('from');
     const to = url.searchParams.get('to');
-    const groupBy = url.searchParams.get('group_by') || 'day'; // day, week, month
 
     // Verify access
     const { data: adminRole } = await supabase.from('user_roles').select('role').eq('user_id', user.id).eq('role', 'admin').maybeSingle();
@@ -29,10 +34,9 @@ serve(async (req) => {
 
     if (merchantId && !isAdmin) {
       const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchantId).eq('user_id', user.id).single();
-      if (!merchant) return new Response(JSON.stringify({ error: 'forbidden' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      if (!merchant) return problem(403, 'Forbidden', 'Not authorized for this merchant');
     }
 
-    // Query charges for fee data
     let query = supabase.from('gateway_charges').select('merchant_id, amount, fee_amount, net_amount, channel, currency, status, created_at')
       .eq('status', 'successful');
     if (merchantId) query = query.eq('merchant_id', merchantId);
@@ -43,7 +47,6 @@ serve(async (req) => {
     const { data: charges, error } = await query;
     if (error) throw error;
 
-    // Aggregate
     const summary = {
       total_charges: charges?.length || 0,
       total_volume: 0,
@@ -73,6 +76,6 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ data: summary }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    return problem(500, 'Internal Server Error', err.message);
   }
 });
