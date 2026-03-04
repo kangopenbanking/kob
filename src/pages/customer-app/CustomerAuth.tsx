@@ -201,6 +201,7 @@ const CustomerAuth: React.FC = () => {
       case 'pin': return 'Enter Your PIN';
       case 'otp': return 'Verify Code';
       case 'verifying': return 'Verifying...';
+      case 'email-sent': return 'Check Your Email';
     }
   };
 
@@ -211,6 +212,7 @@ const CustomerAuth: React.FC = () => {
       case 'pin': return `Logging in as ${countryCode} ${phoneNumber}`;
       case 'otp': return `Code sent to ${countryCode} ${phoneNumber}`;
       case 'verifying': return 'Please wait...';
+      case 'email-sent': return 'Almost there!';
     }
   };
 
