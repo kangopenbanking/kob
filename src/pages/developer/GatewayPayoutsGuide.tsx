@@ -15,6 +15,51 @@ const GatewayPayoutsGuide = () => (
       <p className="text-muted-foreground mt-2">Disburse funds to beneficiaries via bank transfer, mobile money, or PayPal. All payouts are <strong>fully automated</strong> — no admin approval required. For user account withdrawals to external banks, see the <a href="/developer/gateway/funding" className="text-primary underline">Account Funding & Withdrawals</a> guide.</p>
     </div>
 
+    {/* Payout Options Comparison */}
+    <div className="space-y-3">
+      <h2 className="text-xl font-semibold">Payout Options Comparison</h2>
+      <p className="text-sm text-muted-foreground">KOB offers three payout tiers. Choose the right one for your speed and cost requirements.</p>
+      <div className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Option</TableHead>
+              <TableHead>Speed</TableHead>
+              <TableHead>Channels</TableHead>
+              <TableHead>Fee Range</TableHead>
+              <TableHead>Prefunding</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-medium">Standard Payouts</TableCell>
+              <TableCell className="text-sm text-muted-foreground">1–2 business days</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Bank, MoMo, PayPal</TableCell>
+              <TableCell className="text-sm text-muted-foreground">0.25%–0.5%</TableCell>
+              <TableCell className="text-sm text-muted-foreground">No</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium"><a href="/developer/gateway/instant-payouts" className="text-primary underline">Instant Payouts</a></TableCell>
+              <TableCell className="text-sm text-muted-foreground">Seconds to 30 min</TableCell>
+              <TableCell className="text-sm text-muted-foreground">MoMo, Bank (RTGS)</TableCell>
+              <TableCell className="text-sm text-muted-foreground">0.5%–1.0%</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Yes (<a href="/developer/gateway/treasury" className="text-primary underline">Treasury</a>)</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-medium"><a href="/developer/gateway/instant-payouts" className="text-primary underline">Push-to-Card</a></TableCell>
+              <TableCell className="text-sm text-muted-foreground">&lt; 30 minutes</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Visa Direct, Mastercard Send</TableCell>
+              <TableCell className="text-sm text-muted-foreground">1.0%</TableCell>
+              <TableCell className="text-sm text-muted-foreground">Yes (<a href="/developer/gateway/treasury" className="text-primary underline">Treasury</a>)</TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </div>
+    </div>
+
+    <div>
+    </div>
+
     <Alert className="border-primary/30 bg-primary/5">
       <CheckCircle className="h-4 w-4 text-primary" />
       <AlertDescription>
