@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface CustomerProfile {
   id: string;
+  fullName: string | null;
   linkedAccountType: string | null;
   isViewOnly: boolean;
   phoneNumber: string | null;
