@@ -195,7 +195,7 @@ const CustomerHome: React.FC = () => {
                 )}
                 <div>
                   <p className="text-[10px] font-medium text-primary-foreground/50">Welcome back</p>
-                  <h2 className="text-base font-bold text-primary-foreground">{tenant.name}</h2>
+                  <h2 className="text-base font-bold text-primary-foreground">{user?.fullName || tenant.name}</h2>
                 </div>
               </div>
               <div className="flex items-center gap-2">

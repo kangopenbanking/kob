@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 export interface CustomerProfile {
   id: string;
+  fullName: string | null;
   linkedAccountType: string | null;
   isViewOnly: boolean;
   phoneNumber: string | null;
@@ -25,7 +26,7 @@ export function useCustomerAuth() {
       setIsAuthenticated(true);
       const { data: profile } = await supabase
         .from('profiles')
-        .select('id, phone_number, linked_account_type')
+        .select('id, full_name, phone_number, linked_account_type')
         .eq('id', session.user.id)
         .maybeSingle();
       if (profile) {
@@ -50,6 +51,7 @@ export function useCustomerAuth() {
         
         setUser({
           id: p.id,
+          fullName: p.full_name || null,
           linkedAccountType: hasLinkedAccounts ? (p.linked_account_type || 'linked') : null,
           isViewOnly: !hasLinkedAccounts,
           phoneNumber: p.phone_number || null,
