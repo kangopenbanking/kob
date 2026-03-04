@@ -457,6 +457,17 @@ const CustomerAuth: React.FC = () => {
                             <>{intent === 'signin' ? 'Sign In' : 'Create Account'} <ArrowRight className="h-4 w-4" strokeWidth={2} /></>
                           )}
                         </Button>
+
+                        {intent === 'signin' && (
+                          <Button
+                            type="button"
+                            variant="link"
+                            className="w-full text-sm text-primary"
+                            onClick={() => { setForgotEmail(email); setMode('forgot-password'); }}
+                          >
+                            Forgot Password?
+                          </Button>
+                        )}
                       </form>
                     </motion.div>
                   )}
