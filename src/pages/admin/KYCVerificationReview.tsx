@@ -32,13 +32,18 @@ export default function KYCVerificationReview() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("kyc_verifications")
-        .select("*")
+        .select("*, profiles(full_name, email)")
         .is("institution_id", null)
         .order("created_at", { ascending: false });
       if (error) throw error;
       return data || [];
     },
   });
+
+  const getDisplayName = (kyc: any) => {
+    const profile = kyc.profiles as any;
+    return profile?.full_name || `User ${kyc.user_id?.slice(0, 8)}`;
+  };
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
