@@ -50,30 +50,57 @@ serve(async (req) => {
           provider_raw: payload,
         }).eq('id', charge.id);
 
-        // ─── Auto-credit account for fund_account charges ───
+        // ─── Auto-credit account for fund_account charges (FIXED: upsert ClosingAvailable) ───
         if (newStatus === 'successful' && charge.metadata?.fund_account && charge.metadata?.account_id) {
           const accountId = charge.metadata.account_id;
           const userId = charge.metadata.user_id;
-          // Credit the user's KOB account
-          await supabase.from('account_balances').insert({
-            account_id: accountId, balance_type: 'InterimAvailable',
-            amount: charge.amount, currency: charge.currency,
-            credit_debit_indicator: 'Credit',
-            balance_datetime: new Date().toISOString(),
-          });
+          const creditAmount = charge.amount;
+          const now = new Date().toISOString();
+
+          // Fetch account to get correct institution_id
+          const { data: acctRecord } = await supabase
+            .from('accounts').select('institution_id').eq('id', accountId).maybeSingle();
+          const institutionId = acctRecord?.institution_id || 'f493095b-037a-40cf-82bc-3a3ab74550dd';
+
+          // Upsert ClosingAvailable balance (matches funding-scope-creditor.ts pattern)
+          const { data: existingBalance } = await supabase
+            .from('account_balances')
+            .select('id, amount')
+            .eq('account_id', accountId)
+            .eq('balance_type', 'ClosingAvailable')
+            .eq('credit_debit_indicator', 'Credit')
+            .maybeSingle();
+
+          if (existingBalance) {
+            await supabase.from('account_balances').update({
+              amount: existingBalance.amount + creditAmount,
+              balance_datetime: now,
+            }).eq('id', existingBalance.id);
+          } else {
+            await supabase.from('account_balances').insert({
+              account_id: accountId,
+              balance_type: 'ClosingAvailable',
+              amount: creditAmount,
+              currency: charge.currency,
+              credit_debit_indicator: 'Credit',
+              balance_datetime: now,
+            });
+          }
+
           await supabase.from('transactions').insert({
-            account_id: accountId, amount: charge.amount, currency: charge.currency,
+            account_id: accountId, amount: creditAmount, currency: charge.currency,
             credit_debit_indicator: 'Credit', status: 'Booked',
-            institution_id: '00000000-0000-0000-0000-000000000000',
+            institution_id: institutionId,
             transaction_type: 'deposit',
-            booking_datetime: new Date().toISOString(),
-            value_datetime: new Date().toISOString(),
+            booking_datetime: now,
+            value_datetime: now,
             transaction_information: `Account funding completed - ${charge.tx_ref}`,
             merchant_details: { transaction_ref: charge.tx_ref }, user_id: userId,
           }).then(() => {}).catch(() => {});
+
           await supabase.from('audit_logs').insert({
             action_type: 'gateway_fund_account_completed', entity_type: 'account', entity_id: accountId,
-            performed_by: userId, details: { amount: charge.amount, tx_ref: charge.tx_ref, provider_ref: charge.provider_ref },
+            performed_by: userId, details: { amount: creditAmount, tx_ref: charge.tx_ref, provider_ref: charge.provider_ref },
           }).then(() => {}).catch(() => {});
         }
 
@@ -133,20 +160,37 @@ serve(async (req) => {
         const mappedStatus = newStatus === 'successful' ? 'completed' : newStatus;
         await supabase.from('gateway_payouts').update({ status: mappedStatus, provider_raw: payload }).eq('id', payout.id);
 
-        // ─── Handle withdraw-to-bank payout completion/failure ───
+        // ─── Handle withdraw-to-bank payout completion/failure (FIXED: upsert ClosingAvailable) ───
         if (payout.metadata?.withdraw_to_bank && payout.metadata?.account_id) {
           const accountId = payout.metadata.account_id;
           const userId = payout.metadata.user_id;
 
           if (newStatus === 'failed') {
-            // Reverse the debit — credit back to user's account
+            // Reverse the debit — credit back to user's ClosingAvailable balance
             const totalDebited = payout.amount + (payout.fee_amount || 0);
-            await supabase.from('account_balances').insert({
-              account_id: accountId, balance_type: 'InterimAvailable',
-              amount: totalDebited, currency: payout.currency,
-              credit_debit_indicator: 'Credit',
-              balance_datetime: new Date().toISOString(),
-            });
+
+            const { data: existingBal } = await supabase
+              .from('account_balances')
+              .select('id, amount')
+              .eq('account_id', accountId)
+              .eq('balance_type', 'ClosingAvailable')
+              .eq('credit_debit_indicator', 'Credit')
+              .maybeSingle();
+
+            if (existingBal) {
+              await supabase.from('account_balances').update({
+                amount: existingBal.amount + totalDebited,
+                balance_datetime: new Date().toISOString(),
+              }).eq('id', existingBal.id);
+            } else {
+              await supabase.from('account_balances').insert({
+                account_id: accountId, balance_type: 'ClosingAvailable',
+                amount: totalDebited, currency: payout.currency,
+                credit_debit_indicator: 'Credit',
+                balance_datetime: new Date().toISOString(),
+              });
+            }
+
             await supabase.from('audit_logs').insert({
               action_type: 'gateway_withdraw_failed_reversed', entity_type: 'account', entity_id: accountId,
               performed_by: userId, details: { amount: payout.amount, tx_ref: payout.tx_ref },

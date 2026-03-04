@@ -91,9 +91,29 @@ const CustomerFundWallet: React.FC = () => {
   const selectedAccount = linkedAccounts.find((a: any) => a.id === selectedAccountId);
   const method = selectedAccount ? providerTypeToMethod(selectedAccount.provider_type) : 'mobile_money';
 
-  const feePercent = method === 'card' ? 0.035 : method === 'paypal' ? 0.035 : method === 'bank_transfer' ? 0.025 : 0.025;
   const numAmount = Number(amount);
-  const fee = numAmount > 0 ? Math.round(numAmount * feePercent) : 0;
+
+  // Fetch real-time fee estimate from backend instead of hardcoding
+  const { data: feeEstimate } = useQuery({
+    queryKey: ['fee-estimate', method, numAmount],
+    enabled: numAmount > 0 && !!method,
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('gateway-fee-estimate', {
+        body: null,
+        headers: {},
+      });
+      // Use query params approach since the function reads from URL search params
+      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-fee-estimate?amount=${numAmount}&channel=${method}&currency=XAF`;
+      const resp = await fetch(url, {
+        headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
+      });
+      if (!resp.ok) return null;
+      return resp.json();
+    },
+    staleTime: 10000,
+  });
+
+  const fee = feeEstimate?.fee_amount ?? (numAmount > 0 ? Math.round(numAmount * 0.03) : 0);
 
   // Fetch banks for bank_transfer method
   const fetchBanks = useCallback(async () => {
