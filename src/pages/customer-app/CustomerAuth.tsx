@@ -274,6 +274,8 @@ const CustomerAuth: React.FC = () => {
       case 'otp': return `Code sent to ${countryCode} ${phoneNumber}`;
       case 'verifying': return 'Please wait...';
       case 'email-sent': return 'Almost there!';
+      case 'forgot-password': return 'Enter your email to receive a reset link';
+      case 'reset-pin': return 'Set a new 6-digit PIN';
     }
   };
 
