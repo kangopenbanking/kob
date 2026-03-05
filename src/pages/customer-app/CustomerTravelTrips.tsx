@@ -82,16 +82,26 @@ const CustomerTravelTrips: React.FC = () => {
           <>
             {/* Route cards */}
             <div className="grid grid-cols-2 gap-2">
-              {routes.map((route, i) => (
+              {routes.map((route, i) => {
+                const colors = [
+                  'from-[hsl(217,91%,55%)] to-[hsl(217,91%,45%)]',
+                  'from-[hsl(150,60%,40%)] to-[hsl(160,55%,32%)]',
+                  'from-[hsl(38,92%,50%)] to-[hsl(28,88%,45%)]',
+                  'from-[hsl(258,80%,58%)] to-[hsl(268,75%,48%)]',
+                  'from-[hsl(172,66%,40%)] to-[hsl(182,60%,32%)]',
+                  'from-[hsl(347,77%,50%)] to-[hsl(340,72%,42%)]',
+                ];
+                const color = colors[i % colors.length];
+                return (
                 <motion.div key={route.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border bg-card p-3 shadow-sm">
+                  className={`rounded-xl bg-gradient-to-br ${color} p-3 shadow-md`}>
                   <div className="flex items-center gap-1.5 mb-1">
-                    <RouteIcon className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-[11px] font-bold text-foreground truncate">{route.origin}</span>
+                    <RouteIcon className="h-3.5 w-3.5 text-white/80" />
+                    <span className="text-[11px] font-bold text-white truncate">{route.origin}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[11px] text-muted-foreground truncate">{route.destination}</span>
+                    <MapPin className="h-3.5 w-3.5 text-white/60" />
+                    <span className="text-[11px] text-white/70 truncate">{route.destination}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground">
