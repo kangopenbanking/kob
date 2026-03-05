@@ -37,6 +37,12 @@ import crediqHeroBg from "@/assets/crediq-hero-bg.png";
 import banksKob from "@/assets/banks-kob.jpg";
 import developerKang from "@/assets/developer-kang.png";
 import merchantsKob from "@/assets/merchants-kob.webp";
+import paymentVisa from "@/assets/payment-visa.png";
+import paymentMastercard from "@/assets/payment-mastercard.png";
+import paymentMtn from "@/assets/payment-mtn.png";
+import paymentPaypal from "@/assets/payment-paypal.png";
+import paymentOrange from "@/assets/payment-orange.png";
+import paymentBank from "@/assets/payment-bank.png";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
 import { ProductTour } from "@/components/ProductTour";
 import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
@@ -93,6 +99,18 @@ const Index = () => {
           <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-background to-transparent"></div>
         </section>
       } />
+
+      {/* Payment Systems Marquee */}
+      <section className="py-8 bg-background overflow-hidden border-b border-border/40">
+        <div className="relative">
+          <div className="flex animate-[marquee_20s_linear_infinite] gap-16 items-center w-max">
+            {[paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank,
+              paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank].map((logo, i) => (
+              <img key={i} src={logo} alt="Payment partner" className="h-12 md:h-14 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" />
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* Portal Access Section */}
       <section className="py-20 bg-muted/30">
