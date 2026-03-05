@@ -1918,8 +1918,8 @@ export const translations = {
     connected: "Connecté",
     offline: "Hors ligne",
     online: "En ligne",
-    syncInProgress: "Synchronisation en cours",
-    syncComplete: "Synchronisation terminée",
+    dataSyncInProgress: "Synchronisation en cours",
+    dataSyncComplete: "Synchronisation terminée",
     upToDate: "À jour",
 
     // Staff Portal
