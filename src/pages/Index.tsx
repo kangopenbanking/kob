@@ -551,8 +551,8 @@ const Index = () => {
               </div>
               <CodeImageFlipCard
                 endpoint="POST /v1/loans/apply"
-                image={apiLoansPreview}
                 imageAlt="Loan & Credit Scoring Dashboard"
+                previewContent={<CreditScorePreview />}
                 code={`{
   "loan": {
     "id": "loan_789",
