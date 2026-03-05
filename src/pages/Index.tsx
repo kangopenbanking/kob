@@ -100,6 +100,18 @@ const Index = () => {
         </section>
       } />
 
+      {/* Payment Systems Marquee */}
+      <section className="py-8 bg-background overflow-hidden border-b border-border/40">
+        <div className="relative">
+          <div className="flex animate-[marquee_20s_linear_infinite] gap-16 items-center w-max">
+            {[paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank,
+              paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank].map((logo, i) => (
+              <img key={i} src={logo} alt="Payment partner" className="h-12 md:h-14 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" />
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* Portal Access Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
