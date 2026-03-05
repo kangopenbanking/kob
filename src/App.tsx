@@ -319,6 +319,8 @@ import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
 import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
 import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
+import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
+import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
@@ -326,6 +328,7 @@ import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies"
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
 import CustomerTravelBooking from "./pages/customer-app/CustomerTravelBooking";
 import CustomerTravelTicket from "./pages/customer-app/CustomerTravelTicket";
+import CustomerTravelHistory from "./pages/customer-app/CustomerTravelHistory";
 import BankSplash from "./pages/banking-app/BankSplash";
 import BankAuth from "./pages/banking-app/BankAuth";
 import BankApply from "./pages/banking-app/BankApply";
