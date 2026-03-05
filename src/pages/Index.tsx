@@ -283,9 +283,9 @@ const Index = () => {
                 {/* Right - Stacked Cards */}
                 <div className="relative flex items-center justify-center min-h-[420px]">
                   {[
-                    { label: "Customer App", subtitle: "Personal Banking", desc: "Send money, pay bills, manage accounts — all from your phone.", icon: Users, color: "hsl(24 95% 53%)", features: ["Mobile Payments", "Bill Pay", "Account Management"], rotate: 6, z: 1, x: 16, y: 8 },
-                    { label: "Merchant App", subtitle: "Business Tools", desc: "Accept payments, track sales, manage inventory in real-time.", icon: Store, color: "hsl(142 76% 36%)", features: ["POS Integration", "Sales Analytics", "Inventory Sync"], rotate: 3, z: 2, x: 8, y: 4 },
-                    { label: "Banking App", subtitle: "Core Operations", desc: "Full banking operations — accounts, loans, KYC, and compliance.", icon: Building2, color: "hsl(217 91% 35%)", features: ["Account Ops", "Loan Management", "KYC & Compliance"], rotate: 0, z: 3, x: 0, y: 0 },
+                    { label: "Customer App", subtitle: "Personal Banking", desc: "Send money, pay bills, manage accounts — all from your phone.", icon: Users, color: "hsl(24 95% 53%)", bg: ecoBankingOps, features: ["Mobile Payments", "Bill Pay", "Account Management"], rotate: 6, z: 1, x: 16, y: 8 },
+                    { label: "Merchant App", subtitle: "Business Tools", desc: "Accept payments, track sales, manage inventory in real-time.", icon: Store, color: "hsl(142 76% 36%)", bg: ecoFintechSolutions, features: ["POS Integration", "Sales Analytics", "Inventory Sync"], rotate: 3, z: 2, x: 8, y: 4 },
+                    { label: "Banking App", subtitle: "Core Operations", desc: "Full banking operations — accounts, loans, KYC, and compliance.", icon: Building2, color: "hsl(217 91% 35%)", bg: ecoHomeCover, features: ["Account Ops", "Loan Management", "KYC & Compliance"], rotate: 0, z: 3, x: 0, y: 0 },
                   ].map((app, i) => (
                     <motion.div
                       key={app.label}
@@ -302,39 +302,38 @@ const Index = () => {
                       transition={{ type: "spring", stiffness: 280, damping: 20 }}
                     >
                       <div
-                        className="w-[260px] h-[380px] rounded-3xl p-6 text-white flex flex-col shadow-2xl border border-white/10"
+                        className="w-[260px] h-[380px] rounded-3xl text-white flex flex-col shadow-2xl border border-white/10 overflow-hidden relative"
                         style={{
-                          backgroundColor: "hsl(220 20% 12%)",
                           boxShadow: `0 25px 60px -15px ${app.color.replace(')', ' / 0.3)')}`,
                         }}
                       >
-                        {/* Card Header */}
-                        <div className="mb-6">
-                          <h4 className="text-2xl font-bold tracking-tight">{app.label}</h4>
-                          <p className="text-sm text-white/50 mt-1">{app.subtitle}</p>
+                        {/* Background Image */}
+                        <div className="absolute inset-0">
+                          <img src={app.bg} alt={app.label} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-black/20" />
                         </div>
 
-                        {/* Card Body */}
-                        <div className="rounded-2xl p-4 flex-1 border border-white/10" style={{ backgroundColor: "hsl(220 18% 16%)" }}>
-                          <p className="text-xs text-white/60 mb-4 leading-relaxed">{app.desc}</p>
-                          <div className="space-y-2">
-                            {app.features.map((feat) => (
-                              <div key={feat} className="flex items-center gap-2 text-xs text-white/70">
-                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: app.color }} />
-                                {feat}
-                              </div>
-                            ))}
+                        {/* Content */}
+                        <div className="relative z-10 p-6 flex flex-col h-full">
+                          {/* Card Header */}
+                          <div className="mb-auto">
+                            <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ backgroundColor: app.color }}>
+                              <app.icon className="h-5 w-5 text-white" strokeWidth={2} />
+                            </div>
+                            <h4 className="text-2xl font-bold tracking-tight">{app.label}</h4>
+                            <p className="text-sm text-white/60 mt-1">{app.subtitle}</p>
                           </div>
-                        </div>
 
-                        {/* Card Footer */}
-                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
-                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: app.color }}>
-                            <app.icon className="h-4 w-4 text-white" strokeWidth={2} />
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-white/80">{app.label}</p>
-                            <p className="text-[10px] text-white/40">Edited 2 minutes ago</p>
+                          {/* Card Bottom */}
+                          <div className="mt-auto">
+                            <p className="text-xs text-white/70 mb-3 leading-relaxed">{app.desc}</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {app.features.map((feat) => (
+                                <span key={feat} className="text-[10px] px-2 py-1 rounded-full bg-white/10 text-white/80 backdrop-blur-sm">
+                                  {feat}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
