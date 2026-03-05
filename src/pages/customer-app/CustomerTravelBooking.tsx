@@ -216,7 +216,8 @@ const CustomerTravelBooking: React.FC = () => {
                     onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value } }))} />
                 </div>
               </div>
-            ))}
+              );
+            })}
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-11 rounded-xl">Back</Button>
               <Button onClick={() => setStep('confirm')} className="flex-1 h-11 rounded-xl">Review Booking</Button>
