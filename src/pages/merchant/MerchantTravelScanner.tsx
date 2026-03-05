@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { QrCode, Loader2, CheckCircle, XCircle, AlertTriangle, User, MapPin, Calendar, Clock } from 'lucide-react';
+import { QrCode, Loader2, CheckCircle, XCircle, AlertTriangle, User, MapPin, Calendar, Clock, Camera } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
