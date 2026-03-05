@@ -99,8 +99,8 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
       
       {/* Accent glow */}
       <div
-        className="absolute top-20 h-[500px] w-[500px] rounded-full blur-[150px] opacity-[0.07]"
-        style={{ backgroundColor: app.accent, left: index % 2 === 0 ? '-10%' : 'auto', right: index % 2 !== 0 ? '-10%' : 'auto' }}
+        className="absolute top-20 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full blur-[150px] opacity-[0.07]"
+        style={{ backgroundColor: app.accent }}
       />
 
       <div className="container relative z-10 mx-auto px-4">
