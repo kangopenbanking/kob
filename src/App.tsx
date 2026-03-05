@@ -472,8 +472,8 @@ function App() {
               <Route path="profile" element={<MerchantProfile />} />
               <Route path="analytics" element={<MerchantAnalytics />} />
               <Route path="travel-services" element={<MerchantTravelServices />} />
-              <Route path="travel-routes" element={<div className="p-6"><h1 className="text-2xl font-bold">Routes & Trips</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
-              <Route path="travel-seating" element={<div className="p-6"><h1 className="text-2xl font-bold">Seating Plans</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
+              <Route path="travel-routes" element={<MerchantTravelRoutes />} />
+              <Route path="travel-seating" element={<MerchantTravelSeating />} />
               <Route path="travel-timetable" element={<div className="p-6"><h1 className="text-2xl font-bold">Timetable</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
               <Route path="travel-bookings" element={<div className="p-6"><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
               <Route path="travel-scanner" element={<div className="p-6"><h1 className="text-2xl font-bold">Ticket Scanner</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
