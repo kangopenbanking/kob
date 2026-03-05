@@ -111,6 +111,7 @@ export default function TranslationManager() {
   const [formDefaultValue, setFormDefaultValue] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formContext, setFormContext] = useState("");
+  const [formFrenchValue, setFormFrenchValue] = useState("");
 
   // Inline editing
   const [editingTranslation, setEditingTranslation] = useState<{
