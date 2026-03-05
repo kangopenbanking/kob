@@ -314,6 +314,13 @@ import MerchantProfile from "./pages/merchant/MerchantProfile";
 import MerchantAnalytics from "./pages/merchant/MerchantAnalytics";
 import MerchantRegister from "./pages/merchant/MerchantRegister";
 import MerchantTravelServices from "./pages/merchant/MerchantTravelServices";
+import MerchantTravelSeating from "./pages/merchant/MerchantTravelSeating";
+import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
+import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
+import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
+import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
+import CustomerTravelBooking from "./pages/customer-app/CustomerTravelBooking";
+import CustomerTravelTicket from "./pages/customer-app/CustomerTravelTicket";
 import BankSplash from "./pages/banking-app/BankSplash";
 import BankAuth from "./pages/banking-app/BankAuth";
 import BankApply from "./pages/banking-app/BankApply";
@@ -465,8 +472,8 @@ function App() {
               <Route path="profile" element={<MerchantProfile />} />
               <Route path="analytics" element={<MerchantAnalytics />} />
               <Route path="travel-services" element={<MerchantTravelServices />} />
-              <Route path="travel-routes" element={<div className="p-6"><h1 className="text-2xl font-bold">Routes & Trips</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
-              <Route path="travel-seating" element={<div className="p-6"><h1 className="text-2xl font-bold">Seating Plans</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
+              <Route path="travel-routes" element={<MerchantTravelRoutes />} />
+              <Route path="travel-seating" element={<MerchantTravelSeating />} />
               <Route path="travel-timetable" element={<div className="p-6"><h1 className="text-2xl font-bold">Timetable</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
               <Route path="travel-bookings" element={<div className="p-6"><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
               <Route path="travel-scanner" element={<div className="p-6"><h1 className="text-2xl font-bold">Ticket Scanner</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
@@ -797,6 +804,11 @@ function App() {
               <Route path="help" element={<CustomerHelp />} />
               <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />
               <Route path="fund" element={<CustomerFundWallet />} />
+              <Route path="travel" element={<CustomerTravelCategories />} />
+              <Route path="travel/:category" element={<CustomerTravelAgencies />} />
+              <Route path="travel/:category/:serviceId" element={<CustomerTravelTrips />} />
+              <Route path="travel/:category/:serviceId/trips/:tripId" element={<CustomerTravelBooking />} />
+              <Route path="travel/ticket/:bookingId" element={<CustomerTravelTicket />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
