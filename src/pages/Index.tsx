@@ -47,6 +47,7 @@ import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
 import { ProductTour } from "@/components/ProductTour";
 import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
 import { motion } from "framer-motion";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 const Index = () => {
   return (
