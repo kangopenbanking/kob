@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { translations, Language, TranslationKey } from './translations';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -6,15 +6,82 @@ interface LanguageContextType {
   language: Language;
   setLanguage: (lang: Language) => void;
   t: (key: TranslationKey) => string;
+  isLoadingTranslations: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+// Batch queue for auto-registering missing keys
+let pendingKeys: { key: string; default_value: string; category: string }[] = [];
+let flushTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function queueKeyForRegistration(key: string, defaultValue: string) {
+  // Determine category from key prefix
+  const category = key.includes('.') ? key.split('.')[0] : 'general';
+  if (pendingKeys.some(p => p.key === key)) return;
+  pendingKeys.push({ key, default_value: defaultValue, category });
+
+  if (flushTimeout) clearTimeout(flushTimeout);
+  flushTimeout = setTimeout(flushPendingKeys, 3000);
+}
+
+async function flushPendingKeys() {
+  if (pendingKeys.length === 0) return;
+  const batch = [...pendingKeys];
+  pendingKeys = [];
+
+  try {
+    await supabase.functions.invoke('register-translation-strings', {
+      body: { strings: batch },
+    });
+  } catch (e) {
+    console.warn('Failed to register translation keys:', e);
+    // Re-queue failed keys
+    pendingKeys.push(...batch);
+  }
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<Language>('en');
+  const [dbTranslations, setDbTranslations] = useState<Record<string, string>>({});
+  const [isLoadingTranslations, setIsLoadingTranslations] = useState(true);
+  const registeredKeysRef = useRef<Set<string>>(new Set());
+
+  // Load translations from DB
+  const loadDbTranslations = useCallback(async (lang: Language) => {
+    try {
+      const { data, error } = await supabase
+        .from('translation_values')
+        .select('value, string_id, translation_strings!inner(string_key)')
+        .eq('language', lang);
+
+      if (error) {
+        console.warn('Failed to load DB translations:', error);
+        return;
+      }
+
+      const map: Record<string, string> = {};
+      const keys = new Set<string>();
+      if (data) {
+        for (const row of data) {
+          const key = (row as any).translation_strings?.string_key;
+          if (key) {
+            map[key] = row.value;
+            keys.add(key);
+          }
+        }
+      }
+      setDbTranslations(map);
+      registeredKeysRef.current = keys;
+    } catch (e) {
+      console.warn('Error loading translations:', e);
+    } finally {
+      setIsLoadingTranslations(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Load language from user preferences
+    // Load language preference
     const loadLanguage = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -23,27 +90,30 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
           .select('language')
           .eq('user_id', user.id)
           .maybeSingle();
-        
         if (data?.language) {
           setLanguageState(data.language as Language);
+          await loadDbTranslations(data.language as Language);
+          return;
         }
       } else {
-        // Load from localStorage for non-authenticated users
         const stored = localStorage.getItem('language') as Language;
         if (stored && (stored === 'en' || stored === 'fr')) {
           setLanguageState(stored);
+          await loadDbTranslations(stored);
+          return;
         }
       }
+      await loadDbTranslations('en');
     };
 
     loadLanguage();
-  }, []);
+  }, [loadDbTranslations]);
 
   const setLanguage = async (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
+    loadDbTranslations(lang);
 
-    // Save to database if user is authenticated
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {
       await supabase
@@ -52,12 +122,34 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const t = (key: TranslationKey): string => {
-    return translations[language][key] || translations.en[key];
-  };
+  const t = useCallback((key: TranslationKey): string => {
+    // 1. Try DB translation first
+    if (dbTranslations[key]) {
+      return dbTranslations[key];
+    }
+
+    // 2. Fallback to static translations
+    const staticValue = translations[language]?.[key] || translations.en[key];
+
+    // 3. Auto-register if not in DB yet
+    if (!registeredKeysRef.current.has(key) && staticValue) {
+      registeredKeysRef.current.add(key); // prevent duplicate queuing
+      queueKeyForRegistration(key, translations.en[key] || staticValue);
+    }
+
+    return staticValue || key;
+  }, [language, dbTranslations]);
+
+  // Flush pending keys on unmount
+  useEffect(() => {
+    return () => {
+      if (flushTimeout) clearTimeout(flushTimeout);
+      flushPendingKeys();
+    };
+  }, []);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage, t, isLoadingTranslations }}>
       {children}
     </LanguageContext.Provider>
   );

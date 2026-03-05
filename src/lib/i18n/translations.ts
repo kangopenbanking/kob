@@ -10,26 +10,26 @@ export const translations = {
     fiPortal: "FI Portal",
     signIn: "Sign In",
     signOut: "Sign Out",
-    
+
     // Hero
     heroTitle: "Unified Banking API for Cameroon",
     heroSubtitle: "Connect to multiple banks with a single, secure API. Purpose-built for Cameroon's financial ecosystem with full XAF support.",
     getStarted: "Get Started",
     viewDocs: "View Documentation",
-    
+
     // Features
     features: "Features",
     forBanks: "For Banks",
     forDevelopers: "For Developers",
     compliance: "Compliance",
     security: "Security",
-    
+
     // API
     apiDocumentation: "API Documentation",
     authentication: "Authentication",
     endpoints: "Endpoints",
     examples: "Examples",
-    
+
     // Admin
     adminPanel: "Admin Panel",
     clients: "Clients",
@@ -37,14 +37,14 @@ export const translations = {
     audit: "Audit Logs",
     metrics: "Metrics",
     reports: "Reports",
-    
+
     // FI Portal
     fiDashboard: "FI Dashboard",
     transactions: "Transactions",
     analytics: "Analytics",
     apiUsage: "API Usage",
     accounts: "Accounts",
-    
+
     // Common
     save: "Save",
     cancel: "Cancel",
@@ -57,7 +57,29 @@ export const translations = {
     loading: "Loading...",
     error: "Error",
     success: "Success",
-    
+    submit: "Submit",
+    back: "Back",
+    next: "Next",
+    confirm: "Confirm",
+    close: "Close",
+    yes: "Yes",
+    no: "No",
+    or: "Or",
+    and: "And",
+    all: "All",
+    none: "None",
+    select: "Select",
+    upload: "Upload",
+    download: "Download",
+    refresh: "Refresh",
+    retry: "Retry",
+    viewAll: "View All",
+    showMore: "Show More",
+    showLess: "Show Less",
+    noResults: "No results found",
+    required: "Required",
+    optional: "Optional",
+
     // Footer
     footerTagline: "Powering the future of banking in Cameroon",
     quickLinks: "Quick Links",
@@ -65,6 +87,165 @@ export const translations = {
     privacy: "Privacy Policy",
     terms: "Terms of Service",
     cookies: "Cookie Policy",
+
+    // Auth
+    email: "Email",
+    password: "Password",
+    confirmPassword: "Confirm Password",
+    forgotPassword: "Forgot Password?",
+    resetPassword: "Reset Password",
+    createAccount: "Create Account",
+    alreadyHaveAccount: "Already have an account?",
+    dontHaveAccount: "Don't have an account?",
+    signUp: "Sign Up",
+    verifyEmail: "Verify your email",
+    resendVerification: "Resend verification email",
+
+    // Profile
+    profile: "Profile",
+    settings: "Settings",
+    notifications: "Notifications",
+    preferences: "Preferences",
+    personalInfo: "Personal Information",
+    firstName: "First Name",
+    lastName: "Last Name",
+    phoneNumber: "Phone Number",
+    address: "Address",
+    city: "City",
+    country: "Country",
+    dateOfBirth: "Date of Birth",
+
+    // CrediQ
+    creditScore: "Credit Score",
+    creditReport: "Credit Report",
+    creditHistory: "Credit History",
+    creditGoals: "Credit Goals",
+    improvementTips: "Improvement Tips",
+    scoreFactors: "Score Factors",
+    paymentHistory: "Payment History",
+    creditUtilization: "Credit Utilization",
+    accountAge: "Account Age",
+    creditMix: "Credit Mix",
+    newInquiries: "New Inquiries",
+
+    // CrediQ Onboarding
+    onboardingTitle: "Welcome to CrediQ",
+    onboardingSubtitle: "Let's set up your credit profile",
+    personalDetails: "Personal Details",
+    financialInfo: "Financial Information",
+    employmentInfo: "Employment Information",
+    incomeDetails: "Income Details",
+    monthlyIncome: "Monthly Income",
+    employer: "Employer",
+    jobTitle: "Job Title",
+    employmentStatus: "Employment Status",
+    employed: "Employed",
+    selfEmployed: "Self-Employed",
+    unemployed: "Unemployed",
+    student: "Student",
+    retired: "Retired",
+    yearsEmployed: "Years Employed",
+
+    // Customer App
+    transfer: "Transfer",
+    sendMoney: "Send Money",
+    receiveMoney: "Receive Money",
+    payBills: "Pay Bills",
+    topUp: "Top Up",
+    balance: "Balance",
+    recentTransactions: "Recent Transactions",
+    transactionHistory: "Transaction History",
+    amount: "Amount",
+    recipient: "Recipient",
+    sender: "Sender",
+    status: "Status",
+    pending: "Pending",
+    completed: "Completed",
+    failed: "Failed",
+    processing: "Processing",
+
+    // Customer Help
+    helpSupport: "Help & Support",
+    faq: "Frequently Asked Questions",
+    contactUs: "Contact Us",
+    liveChat: "Live Chat",
+    callUs: "Call Us",
+    emailUs: "Email Us",
+    reportProblem: "Report a Problem",
+    submitReport: "Submit Report",
+    subject: "Subject",
+    description: "Description",
+    termsOfService: "Terms of Service",
+    privacyPolicy: "Privacy Policy",
+    communityForum: "Community Forum",
+
+    // Investor Pages
+    investors: "Investors",
+    infrastructureMaturity: "Infrastructure Maturity",
+    complianceStatus: "Compliance Status",
+    overallScore: "Overall Infrastructure Maturity Score",
+    implemented: "Implemented",
+    frameworkReady: "Framework Ready",
+    expansionPhase: "Expansion Phase",
+    production: "Production",
+
+    // Admin Translation Management
+    translationManager: "Translation Manager",
+    totalStrings: "Total Strings",
+    translatedStrings: "Translated",
+    autoTranslated: "Auto-translated",
+    translateAll: "Translate All to French",
+    translating: "Translating...",
+    addNew: "Add New",
+    category: "Category",
+    defaultValue: "Default Value",
+    frenchTranslation: "French Translation",
+    actions: "Actions",
+    clickToEdit: "Click to edit",
+    notTranslated: "Not translated",
+
+    // Notifications & Toasts
+    savedSuccessfully: "Saved successfully",
+    deletedSuccessfully: "Deleted successfully",
+    errorOccurred: "An error occurred",
+    pleaseWait: "Please wait...",
+    sessionExpired: "Session expired. Please sign in again.",
+    networkError: "Network error. Please check your connection.",
+    unauthorized: "You are not authorized to perform this action.",
+    
+    // Mobile Money
+    mobileMoney: "Mobile Money",
+    mobileMoneyTransfer: "Mobile Money Transfer",
+    enterPhoneNumber: "Enter phone number",
+    selectProvider: "Select provider",
+    transferComplete: "Transfer complete",
+    transferFailed: "Transfer failed",
+
+    // Bank Transfers
+    bankTransfer: "Bank Transfer",
+    accountNumber: "Account Number",
+    bankName: "Bank Name",
+    swiftCode: "SWIFT Code",
+    routingNumber: "Routing Number",
+    beneficiaryName: "Beneficiary Name",
+
+    // KYC
+    identityVerification: "Identity Verification",
+    documentUpload: "Document Upload",
+    verificationPending: "Verification Pending",
+    verificationApproved: "Verification Approved",
+    verificationRejected: "Verification Rejected",
+    uploadId: "Upload ID Document",
+    uploadSelfie: "Upload Selfie",
+    uploadProofOfAddress: "Upload Proof of Address",
+
+    // Dashboard Widgets
+    totalBalance: "Total Balance",
+    monthlySpending: "Monthly Spending",
+    savingsGoal: "Savings Goal",
+    upcomingBills: "Upcoming Bills",
+    accountOverview: "Account Overview",
+    quickActions: "Quick Actions",
   },
   fr: {
     // Navigation
@@ -77,26 +258,26 @@ export const translations = {
     fiPortal: "Portail IF",
     signIn: "Se connecter",
     signOut: "Se déconnecter",
-    
+
     // Hero
     heroTitle: "API Bancaire Unifiée pour le Cameroun",
     heroSubtitle: "Connectez-vous à plusieurs banques avec une seule API sécurisée. Conçue pour l'écosystème financier du Cameroun avec support complet XAF.",
     getStarted: "Commencer",
     viewDocs: "Voir la Documentation",
-    
+
     // Features
     features: "Fonctionnalités",
     forBanks: "Pour les Banques",
     forDevelopers: "Pour les Développeurs",
     compliance: "Conformité",
     security: "Sécurité",
-    
+
     // API
     apiDocumentation: "Documentation API",
     authentication: "Authentification",
     endpoints: "Points de terminaison",
     examples: "Exemples",
-    
+
     // Admin
     adminPanel: "Panneau d'Administration",
     clients: "Clients",
@@ -104,14 +285,14 @@ export const translations = {
     audit: "Journaux d'Audit",
     metrics: "Métriques",
     reports: "Rapports",
-    
+
     // FI Portal
     fiDashboard: "Tableau de Bord IF",
     transactions: "Transactions",
     analytics: "Analytique",
     apiUsage: "Utilisation API",
     accounts: "Comptes",
-    
+
     // Common
     save: "Enregistrer",
     cancel: "Annuler",
@@ -124,7 +305,29 @@ export const translations = {
     loading: "Chargement...",
     error: "Erreur",
     success: "Succès",
-    
+    submit: "Soumettre",
+    back: "Retour",
+    next: "Suivant",
+    confirm: "Confirmer",
+    close: "Fermer",
+    yes: "Oui",
+    no: "Non",
+    or: "Ou",
+    and: "Et",
+    all: "Tout",
+    none: "Aucun",
+    select: "Sélectionner",
+    upload: "Télécharger",
+    download: "Télécharger",
+    refresh: "Actualiser",
+    retry: "Réessayer",
+    viewAll: "Voir Tout",
+    showMore: "Voir Plus",
+    showLess: "Voir Moins",
+    noResults: "Aucun résultat trouvé",
+    required: "Obligatoire",
+    optional: "Facultatif",
+
     // Footer
     footerTagline: "Propulsant l'avenir de la banque au Cameroun",
     quickLinks: "Liens Rapides",
@@ -132,6 +335,165 @@ export const translations = {
     privacy: "Politique de Confidentialité",
     terms: "Conditions d'Utilisation",
     cookies: "Politique des Cookies",
+
+    // Auth
+    email: "E-mail",
+    password: "Mot de passe",
+    confirmPassword: "Confirmer le mot de passe",
+    forgotPassword: "Mot de passe oublié ?",
+    resetPassword: "Réinitialiser le mot de passe",
+    createAccount: "Créer un compte",
+    alreadyHaveAccount: "Vous avez déjà un compte ?",
+    dontHaveAccount: "Vous n'avez pas de compte ?",
+    signUp: "S'inscrire",
+    verifyEmail: "Vérifiez votre e-mail",
+    resendVerification: "Renvoyer l'e-mail de vérification",
+
+    // Profile
+    profile: "Profil",
+    settings: "Paramètres",
+    notifications: "Notifications",
+    preferences: "Préférences",
+    personalInfo: "Informations Personnelles",
+    firstName: "Prénom",
+    lastName: "Nom de famille",
+    phoneNumber: "Numéro de téléphone",
+    address: "Adresse",
+    city: "Ville",
+    country: "Pays",
+    dateOfBirth: "Date de naissance",
+
+    // CrediQ
+    creditScore: "Score de Crédit",
+    creditReport: "Rapport de Crédit",
+    creditHistory: "Historique de Crédit",
+    creditGoals: "Objectifs de Crédit",
+    improvementTips: "Conseils d'Amélioration",
+    scoreFactors: "Facteurs du Score",
+    paymentHistory: "Historique des Paiements",
+    creditUtilization: "Utilisation du Crédit",
+    accountAge: "Ancienneté du Compte",
+    creditMix: "Mix de Crédit",
+    newInquiries: "Nouvelles Demandes",
+
+    // CrediQ Onboarding
+    onboardingTitle: "Bienvenue sur CrediQ",
+    onboardingSubtitle: "Configurons votre profil de crédit",
+    personalDetails: "Détails Personnels",
+    financialInfo: "Informations Financières",
+    employmentInfo: "Informations sur l'Emploi",
+    incomeDetails: "Détails des Revenus",
+    monthlyIncome: "Revenu Mensuel",
+    employer: "Employeur",
+    jobTitle: "Titre du Poste",
+    employmentStatus: "Statut d'Emploi",
+    employed: "Employé",
+    selfEmployed: "Travailleur Indépendant",
+    unemployed: "Sans emploi",
+    student: "Étudiant",
+    retired: "Retraité",
+    yearsEmployed: "Années d'Emploi",
+
+    // Customer App
+    transfer: "Transfert",
+    sendMoney: "Envoyer de l'argent",
+    receiveMoney: "Recevoir de l'argent",
+    payBills: "Payer les factures",
+    topUp: "Recharger",
+    balance: "Solde",
+    recentTransactions: "Transactions Récentes",
+    transactionHistory: "Historique des Transactions",
+    amount: "Montant",
+    recipient: "Destinataire",
+    sender: "Expéditeur",
+    status: "Statut",
+    pending: "En attente",
+    completed: "Terminé",
+    failed: "Échoué",
+    processing: "En cours",
+
+    // Customer Help
+    helpSupport: "Aide & Support",
+    faq: "Questions Fréquemment Posées",
+    contactUs: "Nous Contacter",
+    liveChat: "Chat en Direct",
+    callUs: "Appelez-nous",
+    emailUs: "Envoyez-nous un e-mail",
+    reportProblem: "Signaler un Problème",
+    submitReport: "Soumettre le Rapport",
+    subject: "Sujet",
+    description: "Description",
+    termsOfService: "Conditions d'Utilisation",
+    privacyPolicy: "Politique de Confidentialité",
+    communityForum: "Forum Communautaire",
+
+    // Investor Pages
+    investors: "Investisseurs",
+    infrastructureMaturity: "Maturité de l'Infrastructure",
+    complianceStatus: "Statut de Conformité",
+    overallScore: "Score Global de Maturité de l'Infrastructure",
+    implemented: "Implémenté",
+    frameworkReady: "Cadre Prêt",
+    expansionPhase: "Phase d'Expansion",
+    production: "Production",
+
+    // Admin Translation Management
+    translationManager: "Gestionnaire de Traductions",
+    totalStrings: "Total des Chaînes",
+    translatedStrings: "Traduites",
+    autoTranslated: "Auto-traduites",
+    translateAll: "Tout Traduire en Français",
+    translating: "Traduction en cours...",
+    addNew: "Ajouter",
+    category: "Catégorie",
+    defaultValue: "Valeur par Défaut",
+    frenchTranslation: "Traduction Française",
+    actions: "Actions",
+    clickToEdit: "Cliquer pour modifier",
+    notTranslated: "Non traduit",
+
+    // Notifications & Toasts
+    savedSuccessfully: "Enregistré avec succès",
+    deletedSuccessfully: "Supprimé avec succès",
+    errorOccurred: "Une erreur est survenue",
+    pleaseWait: "Veuillez patienter...",
+    sessionExpired: "Session expirée. Veuillez vous reconnecter.",
+    networkError: "Erreur réseau. Veuillez vérifier votre connexion.",
+    unauthorized: "Vous n'êtes pas autorisé à effectuer cette action.",
+
+    // Mobile Money
+    mobileMoney: "Mobile Money",
+    mobileMoneyTransfer: "Transfert Mobile Money",
+    enterPhoneNumber: "Entrez le numéro de téléphone",
+    selectProvider: "Sélectionner le fournisseur",
+    transferComplete: "Transfert terminé",
+    transferFailed: "Transfert échoué",
+
+    // Bank Transfers
+    bankTransfer: "Virement Bancaire",
+    accountNumber: "Numéro de Compte",
+    bankName: "Nom de la Banque",
+    swiftCode: "Code SWIFT",
+    routingNumber: "Numéro de Routage",
+    beneficiaryName: "Nom du Bénéficiaire",
+
+    // KYC
+    identityVerification: "Vérification d'Identité",
+    documentUpload: "Téléchargement de Document",
+    verificationPending: "Vérification en Attente",
+    verificationApproved: "Vérification Approuvée",
+    verificationRejected: "Vérification Rejetée",
+    uploadId: "Télécharger une Pièce d'Identité",
+    uploadSelfie: "Télécharger un Selfie",
+    uploadProofOfAddress: "Télécharger un Justificatif de Domicile",
+
+    // Dashboard Widgets
+    totalBalance: "Solde Total",
+    monthlySpending: "Dépenses Mensuelles",
+    savingsGoal: "Objectif d'Épargne",
+    upcomingBills: "Factures à Venir",
+    accountOverview: "Aperçu du Compte",
+    quickActions: "Actions Rapides",
   }
 } as const;
 
