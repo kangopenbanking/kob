@@ -268,6 +268,7 @@ serve(async (req) => {
     }
 
     if (!destAccount) {
+      console.error('Destination not found for:', { destination_account_id, identifier_type, cleaned: destination_account_id?.replace?.(/[\s\-]/g, '') });
       return new Response(JSON.stringify({ error: 'Destination account not found. Try an account number, ID, phone number, RIB, or IBAN.' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
