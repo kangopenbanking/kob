@@ -126,6 +126,52 @@ const MerchantTravelServices: React.FC = () => {
 
   const activeTypes = services.map(s => s.service_type);
 
+  const seedDemoData = async () => {
+    if (!merchantId) return;
+    setSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-seed-demo-data', {
+        body: { merchant_id: merchantId },
+      });
+      if (error) throw error;
+      toast.success(`Demo data seeded! Services: ${data.services}, Routes: ${data.routes}, Plans: ${data.seating_plans}, Trips: ${data.trips}, Timetables: ${data.timetables}`);
+      fetchMerchantAndServices();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to seed data');
+    }
+    setSeeding(false);
+  };
+
+  const resetDemoData = async () => {
+    if (!merchantId || !confirm('Delete ALL your travel data (services, routes, trips, bookings)?')) return;
+    setResetting(true);
+    const svcIds = services.map(s => s.id);
+    if (svcIds.length > 0) {
+      const { data: routeData } = await supabase.from('travel_routes').select('id').in('service_id', svcIds);
+      const routeIds = (routeData || []).map((r: any) => r.id);
+      if (routeIds.length > 0) {
+        const { data: tripData } = await supabase.from('travel_trips').select('id').in('route_id', routeIds);
+        const tripIds = (tripData || []).map((t: any) => t.id);
+        if (tripIds.length > 0) {
+          const { data: bookingData } = await supabase.from('travel_bookings').select('id').in('trip_id', tripIds);
+          const bookingIds = (bookingData || []).map((b: any) => b.id);
+          if (bookingIds.length > 0) {
+            await supabase.from('travel_tickets').delete().in('booking_id', bookingIds);
+            await supabase.from('travel_bookings').delete().in('id', bookingIds);
+          }
+          await supabase.from('travel_trips').delete().in('id', tripIds);
+        }
+        await supabase.from('travel_timetables').delete().in('route_id', routeIds);
+        await supabase.from('travel_routes').delete().in('id', routeIds);
+      }
+      await supabase.from('travel_seating_plans').delete().in('service_id', svcIds);
+      await supabase.from('travel_services').delete().in('id', svcIds);
+    }
+    toast.success('All travel data reset');
+    fetchMerchantAndServices();
+    setResetting(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
