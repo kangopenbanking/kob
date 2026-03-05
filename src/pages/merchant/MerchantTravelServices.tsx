@@ -47,6 +47,8 @@ const MerchantTravelServices: React.FC = () => {
   const [setupName, setSetupName] = useState('');
   const [setupDesc, setSetupDesc] = useState('');
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     fetchMerchantAndServices();
