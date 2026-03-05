@@ -280,7 +280,7 @@ const CustomerTravelTicket: React.FC = () => {
               </div>
             </div>
 
-            <div className="h-2" style={{ backgroundColor: theme.color }} />
+            <div className="h-2" style={{ backgroundImage: `repeating-linear-gradient(to right, ${theme.color} 0px, ${theme.color} 6px, transparent 6px, transparent 12px)` }} />
           </motion.div>
         )}
 

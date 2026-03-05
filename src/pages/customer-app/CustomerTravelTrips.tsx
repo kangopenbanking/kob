@@ -371,7 +371,7 @@ const CustomerTravelTrips: React.FC = () => {
                         className="group w-full rounded-2xl bg-white shadow-sm hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden text-left">
                         <div className="flex">
                           {/* Themed left border */}
-                          <div className="w-1.5 shrink-0" style={{ backgroundColor: theme.color }} />
+                          <div className="w-1.5 shrink-0" style={{ backgroundImage: `repeating-linear-gradient(to bottom, ${theme.color} 0px, ${theme.color} 4px, transparent 4px, transparent 8px)` }} />
 
                           <div className="flex-1 py-4 px-4">
                             <div className="flex items-start justify-between gap-2 mb-3">
