@@ -6,53 +6,40 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, Plus, Save, Trash2, RotateCcw, Armchair, X } from 'lucide-react';
+import { Loader2, Plus, Save, Trash2, RotateCcw, Armchair, Grid3X3, Users } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 type CellType = 'seat' | 'aisle' | 'blocked';
 
-interface LayoutCell {
-  row: number;
-  col: number;
-  seat_label: string;
-  type: CellType;
-}
-
-interface SeatingPlan {
-  id: string;
-  plan_name: string;
-  rows: number;
-  columns: number;
-  layout: LayoutCell[];
-  total_seats: number;
-  service_id: string;
-}
-
-interface TravelService {
-  id: string;
-  display_name: string;
-  service_type: string;
-}
+interface LayoutCell { row: number; col: number; seat_label: string; type: CellType; }
+interface SeatingPlan { id: string; plan_name: string; rows: number; columns: number; layout: LayoutCell[]; total_seats: number; service_id: string; }
+interface TravelService { id: string; display_name: string; service_type: string; }
 
 const typeColors: Record<CellType, string> = {
-  seat: 'bg-[hsl(150,40%,45%)] text-white hover:bg-[hsl(150,40%,35%)]',
-  aisle: 'bg-muted text-muted-foreground hover:bg-muted/80',
-  blocked: 'bg-destructive/20 text-destructive hover:bg-destructive/30',
+  seat: 'bg-secondary/20 text-secondary border border-secondary/30 hover:bg-secondary/30',
+  aisle: 'bg-muted/50 text-muted-foreground hover:bg-muted/70 border border-transparent',
+  blocked: 'bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20',
 };
 
-const typeLabels: Record<CellType, string> = {
-  seat: '💺 Seat',
-  aisle: '⬜ Aisle',
-  blocked: '🚫 Blocked',
-};
+const COACH_PRESETS = [
+  { label: 'Mini Bus (15 seats)', rows: 5, cols: 3, totalSeats: 15, aisleCol: 1 },
+  { label: 'Standard Bus (30 seats)', rows: 10, cols: 4, totalSeats: 30, aisleCol: 2 },
+  { label: 'Coach (50 seats)', rows: 13, cols: 5, totalSeats: 50, aisleCol: 2 },
+  { label: 'Large Coach (70 seats)', rows: 14, cols: 5, totalSeats: 70, aisleCol: -1 },
+  { label: 'Tour Van (8 seats)', rows: 3, cols: 3, totalSeats: 8, aisleCol: -1 },
+  { label: 'Custom', rows: 0, cols: 0, totalSeats: 0, aisleCol: -1 },
+];
 
-function generateLayout(rows: number, cols: number): LayoutCell[] {
+function generateLayout(rows: number, cols: number, aisleCol: number = -1): LayoutCell[] {
   const cells: LayoutCell[] = [];
+  let seatNum = 1;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      const seatLabel = `${r + 1}${String.fromCharCode(65 + c)}`;
-      cells.push({ row: r, col: c, seat_label: seatLabel, type: 'seat' });
+      const isAisle = c === aisleCol;
+      const seatLabel = isAisle ? '' : `${seatNum}`;
+      if (!isAisle) seatNum++;
+      cells.push({ row: r, col: c, seat_label: isAisle ? `A${r}` : seatLabel, type: isAisle ? 'aisle' : 'seat' });
     }
   }
   return cells;
@@ -62,7 +49,6 @@ const MerchantTravelSeating: React.FC = () => {
   const [services, setServices] = useState<TravelService[]>([]);
   const [plans, setPlans] = useState<SeatingPlan[]>([]);
   const [loading, setLoading] = useState(true);
-  const [merchantId, setMerchantId] = useState<string | null>(null);
 
   // Editor state
   const [editorOpen, setEditorOpen] = useState(false);
@@ -71,26 +57,19 @@ const MerchantTravelSeating: React.FC = () => {
   const [serviceId, setServiceId] = useState('');
   const [rows, setRows] = useState(10);
   const [cols, setCols] = useState(4);
+  const [targetSeats, setTargetSeats] = useState(30);
   const [layout, setLayout] = useState<LayoutCell[]>([]);
   const [paintMode, setPaintMode] = useState<CellType>('seat');
   const [saving, setSaving] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState('');
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-
-    const { data: merchant } = await supabase
-      .from('gateway_merchants')
-      .select('id')
-      .eq('user_id', user.id)
-      .maybeSingle();
-
+    const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('user_id', user.id).maybeSingle();
     if (!merchant) { setLoading(false); return; }
-    setMerchantId(merchant.id);
 
     const [svcRes, planRes] = await Promise.all([
       supabase.from('travel_services').select('id, display_name, service_type').eq('merchant_id', merchant.id),
@@ -98,32 +77,33 @@ const MerchantTravelSeating: React.FC = () => {
         (await supabase.from('travel_services').select('id').eq('merchant_id', merchant.id)).data?.map((s: any) => s.id) || []
       ),
     ]);
-
     setServices((svcRes.data as any[]) || []);
     setPlans((planRes.data as any[]) || []);
     setLoading(false);
   };
 
+  const applyPreset = (presetLabel: string) => {
+    setSelectedPreset(presetLabel);
+    const preset = COACH_PRESETS.find(p => p.label === presetLabel);
+    if (!preset || preset.label === 'Custom') return;
+    setRows(preset.rows);
+    setCols(preset.cols);
+    setTargetSeats(preset.totalSeats);
+    setLayout(generateLayout(preset.rows, preset.cols, preset.aisleCol));
+  };
+
   const openNewPlan = () => {
-    setEditingPlan(null);
-    setPlanName('');
-    setServiceId(services[0]?.id || '');
-    setRows(10);
-    setCols(4);
-    setLayout(generateLayout(10, 4));
-    setPaintMode('seat');
-    setEditorOpen(true);
+    setEditingPlan(null); setPlanName(''); setServiceId(services[0]?.id || '');
+    setRows(10); setCols(4); setTargetSeats(30); setSelectedPreset('');
+    setLayout(generateLayout(10, 4, 2)); setPaintMode('seat'); setEditorOpen(true);
   };
 
   const openEditPlan = (plan: SeatingPlan) => {
-    setEditingPlan(plan);
-    setPlanName(plan.plan_name);
-    setServiceId(plan.service_id);
-    setRows(plan.rows);
-    setCols(plan.columns);
+    setEditingPlan(plan); setPlanName(plan.plan_name); setServiceId(plan.service_id);
+    setRows(plan.rows); setCols(plan.columns); setSelectedPreset('');
+    setTargetSeats(plan.total_seats);
     setLayout(Array.isArray(plan.layout) ? plan.layout as LayoutCell[] : []);
-    setPaintMode('seat');
-    setEditorOpen(true);
+    setPaintMode('seat'); setEditorOpen(true);
   };
 
   const regenerateGrid = useCallback(() => {
@@ -139,35 +119,14 @@ const MerchantTravelSeating: React.FC = () => {
   const totalSeats = layout.filter(c => c.type === 'seat').length;
 
   const handleSave = async () => {
-    if (!serviceId || !planName.trim()) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+    if (!serviceId || !planName.trim()) { toast.error('Please fill in all fields'); return; }
     setSaving(true);
-
-    const payload = {
-      service_id: serviceId,
-      plan_name: planName.trim(),
-      rows,
-      columns: cols,
-      layout: layout as any,
-      total_seats: totalSeats,
-    };
-
+    const payload = { service_id: serviceId, plan_name: planName.trim(), rows, columns: cols, layout: layout as any, total_seats: totalSeats };
     let error;
-    if (editingPlan) {
-      ({ error } = await supabase.from('travel_seating_plans').update(payload as any).eq('id', editingPlan.id));
-    } else {
-      ({ error } = await supabase.from('travel_seating_plans').insert(payload as any));
-    }
-
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success(editingPlan ? 'Seating plan updated!' : 'Seating plan created!');
-      setEditorOpen(false);
-      fetchData();
-    }
+    if (editingPlan) { ({ error } = await supabase.from('travel_seating_plans').update(payload as any).eq('id', editingPlan.id)); }
+    else { ({ error } = await supabase.from('travel_seating_plans').insert(payload as any)); }
+    if (error) toast.error(error.message);
+    else { toast.success(editingPlan ? 'Plan updated!' : 'Plan created!'); setEditorOpen(false); fetchData(); }
     setSaving(false);
   };
 
@@ -177,9 +136,7 @@ const MerchantTravelSeating: React.FC = () => {
     else { toast.success('Plan deleted'); fetchData(); }
   };
 
-  if (loading) {
-    return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
-  }
+  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>;
 
   if (services.length === 0) {
     return (
@@ -199,16 +156,36 @@ const MerchantTravelSeating: React.FC = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Seating Plans</h1>
-          <p className="text-muted-foreground">Design flexible seat layouts for your vehicles</p>
+          <p className="text-muted-foreground">Design coach layouts with rows, columns & seat counts</p>
         </div>
         <Button onClick={openNewPlan}><Plus className="mr-2 h-4 w-4" /> New Plan</Button>
       </div>
 
-      {/* Existing Plans */}
+      {/* Summary stats */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10"><Grid3X3 className="h-5 w-5 text-primary" /></div>
+            <div><p className="text-2xl font-bold">{plans.length}</p><p className="text-[11px] text-muted-foreground">Total Plans</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary/10"><Armchair className="h-5 w-5 text-secondary" /></div>
+            <div><p className="text-2xl font-bold">{plans.reduce((sum, p) => sum + p.total_seats, 0)}</p><p className="text-[11px] text-muted-foreground">Total Seats</p></div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10"><Users className="h-5 w-5 text-accent" /></div>
+            <div><p className="text-2xl font-bold">{services.length}</p><p className="text-[11px] text-muted-foreground">Services</p></div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Plans grid */}
       {plans.length === 0 ? (
-        <Card><CardContent className="py-10 text-center">
-          <p className="text-muted-foreground">No seating plans yet. Create your first one!</p>
-        </CardContent></Card>
+        <Card><CardContent className="py-10 text-center"><p className="text-muted-foreground">No seating plans yet. Create your first one!</p></CardContent></Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {plans.map((plan) => {
@@ -221,17 +198,12 @@ const MerchantTravelSeating: React.FC = () => {
                     <CardTitle className="text-base">{plan.plan_name}</CardTitle>
                     <Badge variant="secondary">{plan.total_seats} seats</Badge>
                   </div>
-                  <CardDescription>{svc?.display_name || 'Unknown service'} · {plan.rows}×{plan.columns} grid</CardDescription>
+                  <CardDescription>{svc?.display_name || 'Unknown'} · {plan.rows}×{plan.columns} grid</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {/* Mini preview */}
-                  <div className="flex flex-wrap gap-0.5 rounded-lg bg-muted/50 p-2" style={{ maxWidth: plan.columns * 16 + 16 }}>
+                  <div className="grid gap-0.5 rounded-lg bg-muted/30 p-2" style={{ gridTemplateColumns: `repeat(${plan.columns}, 1fr)`, maxWidth: plan.columns * 14 + 16 }}>
                     {planLayout.map((cell, i) => (
-                      <div
-                        key={i}
-                        className={`h-3 w-3 rounded-sm ${cell.type === 'seat' ? 'bg-[hsl(150,40%,45%)]' : cell.type === 'aisle' ? 'bg-transparent' : 'bg-destructive/30'}`}
-                        style={{ marginLeft: cell.col === 0 && cell.row > 0 ? 0 : undefined }}
-                      />
+                      <div key={i} className={`h-2.5 w-2.5 rounded-sm ${cell.type === 'seat' ? 'bg-secondary/60' : cell.type === 'aisle' ? 'bg-transparent' : 'bg-destructive/30'}`} />
                     ))}
                   </div>
                   <div className="mt-3 flex gap-2">
@@ -249,83 +221,98 @@ const MerchantTravelSeating: React.FC = () => {
 
       {/* Editor Dialog */}
       <Dialog open={editorOpen} onOpenChange={setEditorOpen}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-5xl max-h-[92vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editingPlan ? 'Edit' : 'Create'} Seating Plan</DialogTitle>
           </DialogHeader>
 
-          <div className="space-y-6">
-            {/* Config */}
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <div className="space-y-2">
-                <Label>Plan Name</Label>
-                <Input placeholder="e.g. 70-seater Coach" value={planName} onChange={(e) => setPlanName(e.target.value)} />
-              </div>
-              <div className="space-y-2">
-                <Label>Service</Label>
-                <Select value={serviceId} onValueChange={setServiceId}>
-                  <SelectTrigger><SelectValue placeholder="Select service" /></SelectTrigger>
-                  <SelectContent>
-                    {services.map(s => <SelectItem key={s.id} value={s.id}>{s.display_name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Rows</Label>
-                <Input type="number" min={1} max={50} value={rows} onChange={(e) => setRows(Number(e.target.value))} />
-              </div>
-              <div className="space-y-2">
-                <Label>Columns</Label>
-                <Input type="number" min={1} max={10} value={cols} onChange={(e) => setCols(Number(e.target.value))} />
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button variant="outline" size="sm" onClick={regenerateGrid}>
-                <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Regenerate Grid
-              </Button>
-              <div className="flex items-center gap-1 rounded-lg border p-1">
-                {(['seat', 'aisle', 'blocked'] as CellType[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => setPaintMode(mode)}
-                    className={`rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${paintMode === mode ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                  >
-                    {typeLabels[mode]}
+          <div className="space-y-5">
+            {/* Coach preset selector */}
+            <div>
+              <Label className="text-[12px] font-semibold uppercase tracking-wider text-muted-foreground mb-2 block">Coach Preset</Label>
+              <div className="flex flex-wrap gap-2">
+                {COACH_PRESETS.map(p => (
+                  <button key={p.label} onClick={() => applyPreset(p.label)}
+                    className={`rounded-lg border px-3 py-2 text-[12px] font-medium transition-colors ${selectedPreset === p.label ? 'border-primary bg-primary/10 text-primary' : 'border-border hover:bg-muted'}`}>
+                    {p.label}
                   </button>
                 ))}
               </div>
-              <Badge variant="outline" className="ml-auto">{totalSeats} bookable seats</Badge>
+            </div>
+
+            {/* Config row */}
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-5">
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Plan Name</Label>
+                <Input placeholder="e.g. 70-Seater Coach" value={planName} onChange={(e) => setPlanName(e.target.value)} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Service</Label>
+                <Select value={serviceId} onValueChange={setServiceId}>
+                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
+                  <SelectContent>{services.map(s => <SelectItem key={s.id} value={s.id}>{s.display_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Rows</Label>
+                <Input type="number" min={1} max={50} value={rows} onChange={(e) => setRows(Number(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Columns</Label>
+                <Input type="number" min={1} max={10} value={cols} onChange={(e) => setCols(Number(e.target.value))} />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-[12px]">Target Seats</Label>
+                <Input type="number" min={1} max={200} value={targetSeats} onChange={(e) => setTargetSeats(Number(e.target.value))} />
+              </div>
+            </div>
+
+            {/* Toolbar */}
+            <div className="flex flex-wrap items-center gap-3">
+              <Button variant="outline" size="sm" onClick={regenerateGrid}>
+                <RotateCcw className="mr-1.5 h-3.5 w-3.5" /> Regenerate Grid
+              </Button>
+              <div className="flex items-center gap-0.5 rounded-lg border p-0.5">
+                {(['seat', 'aisle', 'blocked'] as CellType[]).map((mode) => (
+                  <button key={mode} onClick={() => setPaintMode(mode)}
+                    className={`rounded-md px-3 py-1.5 text-[11px] font-semibold transition-colors ${paintMode === mode ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-muted'}`}>
+                    {mode === 'seat' ? '💺 Seat' : mode === 'aisle' ? '⬜ Aisle' : '🚫 Blocked'}
+                  </button>
+                ))}
+              </div>
+              <div className="ml-auto flex items-center gap-3">
+                <Badge variant={totalSeats === targetSeats ? 'default' : 'outline'}
+                  className={totalSeats === targetSeats ? 'bg-secondary text-secondary-foreground' : totalSeats > targetSeats ? 'border-destructive text-destructive' : ''}>
+                  {totalSeats}/{targetSeats} seats
+                </Badge>
+                {totalSeats !== targetSeats && (
+                  <span className="text-[11px] text-muted-foreground">
+                    {totalSeats < targetSeats ? `${targetSeats - totalSeats} more needed` : `${totalSeats - targetSeats} over target`}
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Grid Editor */}
-            <div className="rounded-xl border bg-muted/30 p-4 overflow-x-auto">
-              <div className="flex flex-col items-center gap-1 min-w-fit">
+            <div className="rounded-xl border bg-muted/20 p-4 overflow-x-auto">
+              <div className="flex flex-col items-center gap-0.5 min-w-fit">
                 {/* Column headers */}
-                <div className="flex gap-1">
+                <div className="flex gap-0.5">
                   <div className="flex h-8 w-8 items-center justify-center" />
                   {Array.from({ length: cols }, (_, c) => (
-                    <div key={c} className="flex h-8 w-10 items-center justify-center text-[10px] font-bold text-muted-foreground">
-                      {String.fromCharCode(65 + c)}
-                    </div>
+                    <div key={c} className="flex h-8 w-10 items-center justify-center text-[10px] font-bold text-muted-foreground">{String.fromCharCode(65 + c)}</div>
                   ))}
                 </div>
-                {/* Rows */}
                 {Array.from({ length: rows }, (_, r) => (
-                  <div key={r} className="flex gap-1">
-                    <div className="flex h-10 w-8 items-center justify-center text-xs font-bold text-muted-foreground">
-                      {r + 1}
-                    </div>
+                  <div key={r} className="flex gap-0.5">
+                    <div className="flex h-10 w-8 items-center justify-center text-[10px] font-bold text-muted-foreground">{r + 1}</div>
                     {Array.from({ length: cols }, (_, c) => {
                       const cell = layout.find(l => l.row === r && l.col === c);
                       const cellType = cell?.type || 'seat';
                       return (
-                        <button
-                          key={c}
-                          onClick={() => toggleCell(r, c)}
-                          className={`flex h-10 w-10 items-center justify-center rounded-lg text-[10px] font-bold transition-all ${typeColors[cellType]}`}
-                          title={`${cell?.seat_label || ''} (${cellType})`}
-                        >
+                        <button key={c} onClick={() => toggleCell(r, c)}
+                          className={`flex h-10 w-10 items-center justify-center rounded-lg text-[9px] font-bold transition-all ${typeColors[cellType]}`}
+                          title={`Row ${r + 1}, Col ${String.fromCharCode(65 + c)} (${cellType})`}>
                           {cellType === 'seat' ? cell?.seat_label || '' : cellType === 'aisle' ? '' : '×'}
                         </button>
                       );
@@ -334,20 +321,10 @@ const MerchantTravelSeating: React.FC = () => {
                 ))}
               </div>
 
-              {/* Legend */}
-              <div className="mt-4 flex items-center justify-center gap-4">
-                <div className="flex items-center gap-1.5">
-                  <div className="h-4 w-4 rounded bg-[hsl(150,40%,45%)]" />
-                  <span className="text-xs text-muted-foreground">Seat</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-4 w-4 rounded bg-muted border" />
-                  <span className="text-xs text-muted-foreground">Aisle</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <div className="h-4 w-4 rounded bg-destructive/30" />
-                  <span className="text-xs text-muted-foreground">Blocked</span>
-                </div>
+              <div className="mt-4 flex items-center justify-center gap-5 text-[11px]">
+                <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded bg-secondary/20 border border-secondary/30" /> Seat</span>
+                <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded bg-muted/50 border" /> Aisle</span>
+                <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded bg-destructive/10 border border-destructive/20" /> Blocked</span>
               </div>
             </div>
 
