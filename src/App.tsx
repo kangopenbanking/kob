@@ -821,6 +821,7 @@ function App() {
               <Route path="travel/:category/:serviceId" element={<CustomerTravelTrips />} />
               <Route path="travel/:category/:serviceId/trips/:tripId" element={<CustomerTravelBooking />} />
               <Route path="travel/ticket/:bookingId" element={<CustomerTravelTicket />} />
+              <Route path="travel/history" element={<CustomerTravelHistory />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
