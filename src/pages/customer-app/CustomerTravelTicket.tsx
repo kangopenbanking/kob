@@ -210,25 +210,25 @@ const CustomerTravelTicket: React.FC = () => {
             <div className="bg-gradient-to-r from-[hsl(150,55%,30%)] via-[hsl(155,50%,35%)] to-[hsl(45,90%,50%)] h-2" />
 
             {/* Route header */}
-            <div className="px-6 pt-5 pb-3">
+            <div className="px-4 sm:px-6 pt-5 pb-3">
               {route && (
-                <div className="flex items-center justify-between">
-                  <div className="text-center flex-1">
+                <div className="flex items-center justify-between gap-1 min-w-0">
+                  <div className="text-center flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">From</p>
-                    <p className="text-xl font-black text-foreground">{route.origin}</p>
+                    <p className="text-base sm:text-xl font-black text-foreground truncate">{route.origin}</p>
                   </div>
-                  <div className="flex flex-col items-center px-4">
-                    <div className="flex items-center gap-1">
+                  <div className="flex flex-col items-center shrink-0 px-1 sm:px-4">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                       <div className="h-2 w-2 rounded-full bg-[hsl(150,55%,35%)]" />
-                      <div className="h-[2px] w-12 bg-gradient-to-r from-[hsl(150,55%,35%)] to-[hsl(45,90%,50%)]" />
-                      <Bus className="h-4 w-4 text-[hsl(45,90%,45%)]" />
-                      <div className="h-[2px] w-12 bg-gradient-to-r from-[hsl(45,90%,50%)] to-[hsl(150,55%,35%)]" />
+                      <div className="h-[2px] w-6 sm:w-12 bg-gradient-to-r from-[hsl(150,55%,35%)] to-[hsl(45,90%,50%)]" />
+                      <Bus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[hsl(45,90%,45%)] shrink-0" />
+                      <div className="h-[2px] w-6 sm:w-12 bg-gradient-to-r from-[hsl(45,90%,50%)] to-[hsl(150,55%,35%)]" />
                       <div className="h-2 w-2 rounded-full bg-[hsl(150,55%,35%)]" />
                     </div>
                   </div>
-                  <div className="text-center flex-1">
+                  <div className="text-center flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">To</p>
-                    <p className="text-xl font-black text-foreground">{route.destination}</p>
+                    <p className="text-base sm:text-xl font-black text-foreground truncate">{route.destination}</p>
                   </div>
                 </div>
               )}
