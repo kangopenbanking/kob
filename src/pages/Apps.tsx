@@ -99,12 +99,12 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
       
       {/* Accent glow */}
       <div
-        className="absolute top-20 h-[500px] w-[500px] rounded-full blur-[150px] opacity-[0.07]"
-        style={{ backgroundColor: app.accent, left: index % 2 === 0 ? '-10%' : 'auto', right: index % 2 !== 0 ? '-10%' : 'auto' }}
+        className="absolute top-20 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full blur-[150px] opacity-[0.07]"
+        style={{ backgroundColor: app.accent }}
       />
 
       <div className="container relative z-10 mx-auto px-4">
-        <div className={`flex flex-col items-center gap-16 lg:gap-24 ${index % 2 !== 0 ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+        <div className="flex flex-col items-center gap-16 lg:gap-20">
           
           {/* Phone mockup */}
           <motion.div
@@ -166,9 +166,9 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
           {/* Content */}
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
-            className="flex-1 max-w-xl"
+            className="flex-1 max-w-xl text-center"
           >
-            <motion.div variants={fadeUp} custom={0} className="flex items-center gap-3 mb-5">
+            <motion.div variants={fadeUp} custom={0} className="flex items-center justify-center gap-3 mb-5">
               <div className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ backgroundColor: app.accent + '20', color: app.accent }}>
                 {app.phase}
               </div>
@@ -194,7 +194,7 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
             </motion.p>
 
             {/* Feature list — clean checklist style */}
-            <motion.div variants={fadeUp} custom={3} className="grid grid-cols-2 gap-x-6 gap-y-3 mb-10">
+            <motion.div variants={fadeUp} custom={3} className="grid grid-cols-2 gap-x-6 gap-y-3 mb-10 text-left mx-auto max-w-md">
               {app.features.map((f) => (
                 <div key={f.label} className="flex items-center gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: app.accent + '20' }}>
