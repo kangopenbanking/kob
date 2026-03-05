@@ -40,6 +40,7 @@ interface TravelService {
 }
 
 const MerchantTravelServices: React.FC = () => {
+  const navigate = useNavigate();
   const [services, setServices] = useState<TravelService[]>([]);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<string | null>(null);
