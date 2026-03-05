@@ -70,7 +70,7 @@ const CustomerTravelAgencies: React.FC = () => {
         </div>
       </div>
 
-      <div className="space-y-3 px-4 -mt-4 pb-24">
+      <div className="relative z-10 space-y-3 px-4 -mt-4 pb-24">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : agencies.length === 0 ? (

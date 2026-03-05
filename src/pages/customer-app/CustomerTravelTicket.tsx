@@ -82,7 +82,7 @@ const CustomerTravelTicket: React.FC = () => {
         </div>
       </div>
 
-      <div className="px-4 -mt-3 pb-24 space-y-4">
+      <div className="relative z-10 px-4 -mt-3 pb-24 space-y-4">
         {/* Ticket selector */}
         {tickets.length > 1 && (
           <div className="flex gap-2 justify-center">

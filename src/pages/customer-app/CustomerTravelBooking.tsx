@@ -133,7 +133,7 @@ const CustomerTravelBooking: React.FC = () => {
         </div>
       </div>
 
-      <div className="px-4 py-4 pb-32 space-y-5 -mt-2">
+      <div className="relative z-10 px-4 py-4 pb-32 space-y-5 -mt-2">
         {/* Step 1: Seat Selection */}
         {step === 'seats' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
