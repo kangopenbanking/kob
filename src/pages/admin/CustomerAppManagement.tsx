@@ -85,6 +85,13 @@ interface CustomerAppConfig {
   };
   hero_action_opacity: number;
   typography_config: TypographyConfig;
+  travel_card_config: {
+    bg_image: string;
+    overlay_opacity: number;
+    button_text: string;
+    button_bg_color: string;
+    button_size: 'sm' | 'md' | 'lg';
+  };
 }
 
 interface SectionTypography {
