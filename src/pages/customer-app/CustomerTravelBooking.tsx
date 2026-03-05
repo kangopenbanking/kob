@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, Plane, User } from 'lucide-react';
+import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, Plane, User, Bus, UserCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -120,7 +120,7 @@ const CustomerTravelBooking: React.FC = () => {
     if (tickErr) { toast.error(tickErr.message); setBooking(false); return; }
 
     await supabase.from('travel_trips').update({ available_seats: Math.max(0, (trip?.available_seats || 0) - selectedSeats.length) } as any).eq('id', tripId || '');
-    toast.success('Booking confirmed! 🎉');
+    toast.success('Booking confirmed!');
     navigate(`/app/travel/ticket/${(bookingData as any).id}`);
     setBooking(false);
   };
@@ -187,7 +187,7 @@ const CustomerTravelBooking: React.FC = () => {
               <div className="rounded-2xl border bg-card p-4 shadow-sm overflow-x-auto">
                 {/* Bus front indicator */}
                 <div className="flex justify-center mb-3">
-                  <div className="rounded-full bg-muted px-4 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">🚌 Front</div>
+                  <div className="rounded-full bg-muted px-4 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Bus className="h-3 w-3" /> Front</div>
                 </div>
                 <div className="flex flex-col items-center gap-1.5 min-w-fit">
                   <div className="flex gap-1.5">
@@ -210,7 +210,7 @@ const CustomerTravelBooking: React.FC = () => {
                           <button key={c} onClick={() => toggleSeat(cell.seat_label)} disabled={isBooked}
                             className={`flex h-10 w-10 items-center justify-center rounded-xl text-[10px] font-bold transition-all ${getSeatColor(cell)}`}>
                             {isBooked ? (
-                              <span>{gender === 'female' ? '♀' : '♂'}</span>
+                              <span className="text-[9px]">{gender === 'female' ? 'F' : 'M'}</span>
                             ) : isSelected ? (
                               <Check className="h-4 w-4" />
                             ) : (
@@ -226,8 +226,8 @@ const CustomerTravelBooking: React.FC = () => {
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(150,50%,95%)] border border-[hsl(150,40%,80%)]" /> Available</span>
                   <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-primary" /> Selected</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(217,70%,88%)] border border-[hsl(217,60%,75%)]" /> <span>♂ Male</span></span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(330,70%,88%)] border border-[hsl(330,60%,75%)]" /> <span>♀ Female</span></span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(217,70%,88%)] border border-[hsl(217,60%,75%)]" /> <span>M Male</span></span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(330,70%,88%)] border border-[hsl(330,60%,75%)]" /> <span>F Female</span></span>
                 </div>
               </div>
             ) : (
@@ -266,10 +266,10 @@ const CustomerTravelBooking: React.FC = () => {
 
             {selectedSeats.map((seat, idx) => {
               const seatThemes = [
-                { accent: 'hsl(217,91%,55%)', bgFrom: 'hsl(217,80%,97%)', bgTo: 'hsl(217,60%,99%)', border: 'hsl(217,70%,88%)', icon: '🔵' },
-                { accent: 'hsl(150,60%,40%)', bgFrom: 'hsl(150,50%,96%)', bgTo: 'hsl(150,40%,99%)', icon: '🟢', border: 'hsl(150,50%,85%)' },
-                { accent: 'hsl(38,92%,50%)', bgFrom: 'hsl(38,80%,96%)', bgTo: 'hsl(38,60%,99%)', icon: '🟠', border: 'hsl(38,70%,85%)' },
-                { accent: 'hsl(258,80%,58%)', bgFrom: 'hsl(258,60%,97%)', bgTo: 'hsl(258,50%,99%)', icon: '🟣', border: 'hsl(258,60%,88%)' },
+                { accent: 'hsl(217,91%,55%)', bgFrom: 'hsl(217,80%,97%)', bgTo: 'hsl(217,60%,99%)', border: 'hsl(217,70%,88%)' },
+                { accent: 'hsl(150,60%,40%)', bgFrom: 'hsl(150,50%,96%)', bgTo: 'hsl(150,40%,99%)', border: 'hsl(150,50%,85%)' },
+                { accent: 'hsl(38,92%,50%)', bgFrom: 'hsl(38,80%,96%)', bgTo: 'hsl(38,60%,99%)', border: 'hsl(38,70%,85%)' },
+                { accent: 'hsl(258,80%,58%)', bgFrom: 'hsl(258,60%,97%)', bgTo: 'hsl(258,50%,99%)', border: 'hsl(258,60%,88%)' },
               ];
               const theme = seatThemes[idx % seatThemes.length];
               const p = passengers[seat] || { name: '', phone: '', gender: 'male' as Gender };
@@ -346,7 +346,7 @@ const CustomerTravelBooking: React.FC = () => {
                           }`}
                         >
                           <RadioGroupItem value="male" id={`male-${seat}`} className="sr-only" />
-                          <span className="text-lg">♂</span> Male
+                          <UserCircle className="h-4 w-4 text-[hsl(217,70%,50%)]" /> Male
                         </label>
                         <label
                           htmlFor={`female-${seat}`}
@@ -357,7 +357,7 @@ const CustomerTravelBooking: React.FC = () => {
                           }`}
                         >
                           <RadioGroupItem value="female" id={`female-${seat}`} className="sr-only" />
-                          <span className="text-lg">♀</span> Female
+                          <UserCircle className="h-4 w-4 text-[hsl(330,70%,50%)]" /> Female
                         </label>
                       </RadioGroup>
                     </div>
@@ -409,7 +409,7 @@ const CustomerTravelBooking: React.FC = () => {
                       <div className="h-2.5 w-2.5 rounded-full border-2 border-primary" />
                       <div className="flex-1 border-t-2 border-dashed border-primary/40 mx-1" />
                       <div className="rounded-full bg-primary/10 px-2.5 py-1">
-                        <span className="text-[9px] font-bold text-primary">🚌</span>
+                        <span className="text-[9px] font-bold text-primary"><Bus className="h-3 w-3" /></span>
                       </div>
                       <div className="flex-1 border-t-2 border-dashed border-primary/40 mx-1" />
                       <div className="h-2.5 w-2.5 rounded-full bg-primary" />
@@ -440,7 +440,7 @@ const CustomerTravelBooking: React.FC = () => {
                       <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold ${
                         p?.gender === 'female' ? 'bg-[hsl(330,70%,92%)] text-[hsl(330,70%,40%)]' : 'bg-[hsl(217,70%,92%)] text-[hsl(217,70%,40%)]'
                       }`}>
-                        {p?.gender === 'female' ? '♀' : '♂'}
+                        {p?.gender === 'female' ? 'F' : 'M'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{p?.name || 'Passenger'}</p>

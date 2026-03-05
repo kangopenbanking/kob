@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MapPin, Clock, Calendar, Users, Loader2, ArrowRight, Route as RouteIcon, Ticket, Star, Bus, Shield, ChevronRight, SlidersHorizontal, ArrowUpDown, X } from 'lucide-react';
+import { ChevronLeft, MapPin, Clock, Calendar, Users, Loader2, ArrowRight, Route as RouteIcon, Ticket, Star, Bus, Shield, ChevronRight, SlidersHorizontal, ArrowUpDown, X, CheckCircle, Sunrise, Sun, Moon, Timer } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -178,8 +178,8 @@ const CustomerTravelTrips: React.FC = () => {
               <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Trips</p>
             </div>
             <div className="flex-1 rounded-xl bg-white/8 backdrop-blur-sm border border-white/5 p-2.5 text-center">
-              <p className="text-lg font-black text-[hsl(150,60%,55%)]">✓</p>
-              <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Verified</p>
+              <CheckCircle className="h-5 w-5 text-[hsl(150,60%,55%)] mx-auto" />
+              <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider mt-0.5">Verified</p>
             </div>
           </div>
 
@@ -252,14 +252,14 @@ const CustomerTravelTrips: React.FC = () => {
                 </div>
                 <div className="flex gap-2">
                   {([
-                    { key: 'all' as TimeFilter, label: 'Any Time', icon: '🕐' },
-                    { key: 'morning' as TimeFilter, label: 'Morning', icon: '🌅' },
-                    { key: 'afternoon' as TimeFilter, label: 'Afternoon', icon: '☀️' },
-                    { key: 'evening' as TimeFilter, label: 'Evening', icon: '🌙' },
+                    { key: 'all' as TimeFilter, label: 'Any Time', Icon: Timer },
+                    { key: 'morning' as TimeFilter, label: 'Morning', Icon: Sunrise },
+                    { key: 'afternoon' as TimeFilter, label: 'Afternoon', Icon: Sun },
+                    { key: 'evening' as TimeFilter, label: 'Evening', Icon: Moon },
                   ]).map(t => (
                     <button key={t.key} onClick={() => setTimeFilter(t.key)}
                       className={`flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-bold transition-all border ${timeFilter === t.key ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'bg-muted/30 border-border/30 text-muted-foreground hover:bg-muted/50'}`}>
-                      <span className="text-base">{t.icon}</span>
+                      <t.Icon className={`h-4 w-4 ${timeFilter === t.key ? 'text-primary' : 'text-muted-foreground/60'}`} />
                       {t.label}
                     </button>
                   ))}
