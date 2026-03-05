@@ -41,6 +41,7 @@ import {
   AlertCircle,
   Globe,
   Filter,
+  ScanSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
