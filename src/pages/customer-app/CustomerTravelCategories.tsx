@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bus, Compass, Plane, Train, ChevronLeft, ArrowRight, MapPin, Star, Shield, Lock, Ticket, Clock, CheckCircle2 } from 'lucide-react';
+import { Bus, Compass, Plane, Train, ChevronLeft, ArrowRight, MapPin, Star, Shield, Lock, Ticket, Clock, CheckCircle2, History } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const categories = [
