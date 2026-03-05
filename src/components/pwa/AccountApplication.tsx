@@ -22,6 +22,7 @@ import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 const STEPS = ['Personal', 'Contact', 'Account', 'Security', 'Review'];
 
 export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComplete, onSkip }) => {
+  const { data: supportedCountries = [] } = useSupportedCountries('banking');
   const tenant = useTenant();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
