@@ -85,6 +85,10 @@ const CustomerTravelCategories: React.FC = () => {
               <ChevronLeft className="h-5 w-5 text-white" />
             </button>
             <div className="flex-1" />
+            <button onClick={() => navigate('/app/travel/history')} className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 active:bg-white/20 transition-colors mr-2">
+              <History className="h-3.5 w-3.5 text-white/80" />
+              <span className="text-[11px] font-semibold text-white/80">My Bookings</span>
+            </button>
             <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5">
               <Shield className="h-3.5 w-3.5 text-[#ffbe0b]" />
               <span className="text-[11px] font-semibold text-white/80">Verified Agencies</span>
