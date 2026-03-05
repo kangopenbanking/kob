@@ -191,6 +191,9 @@ const MerchantTravelServices: React.FC = () => {
         </div>
         {merchantId && (
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/merchant/travel-guide')}>
+              <BookOpen className="mr-2 h-4 w-4" /> Training Guide
+            </Button>
             <Button variant="outline" onClick={seedDemoData} disabled={seeding}>
               {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
               Seed Demo Data
