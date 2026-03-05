@@ -250,7 +250,7 @@ const CustomerTravelTicket: React.FC = () => {
             <TicketDivider />
 
             {/* QR + Passenger section */}
-            <div className="px-6 py-4 flex gap-5 items-start">
+            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center sm:items-start">
               <QRCodeDisplay value={currentTicket.qr_code} />
               <div className="flex-1 space-y-3 pt-1">
                 <div>
