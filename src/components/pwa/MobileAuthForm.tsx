@@ -356,8 +356,8 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {COUNTRY_CODES.map(cc => (
-                          <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                        {supportedCountries.map(cc => (
+                          <SelectItem key={`${cc.dial_code}-${cc.code}`} value={cc.dial_code}>{cc.flag} {cc.dial_code}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
