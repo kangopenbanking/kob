@@ -461,11 +461,34 @@ const CustomerTravelBooking: React.FC = () => {
                     <p className="text-sm font-black text-gray-700">Economy</p>
                   </div>
                 </div>
+
+                {/* Promo Code Input */}
+                <div className="pt-3 border-t border-gray-100">
+                  <p className="text-[10px] text-gray-400 uppercase font-semibold mb-2">Promo Code</p>
+                  <div className="flex gap-2">
+                    <input placeholder="Enter code" className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono uppercase"
+                      value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} />
+                    <button onClick={applyPromoCode} className="rounded-lg px-3 py-2 text-xs font-bold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
+                      Apply
+                    </button>
+                  </div>
+                  {bestDiscount && (
+                    <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5">
+                      <Tag className="h-3 w-3 text-emerald-600" />
+                      <span className="text-[11px] font-semibold text-emerald-700">{bestDiscount.discount_name}: -{bestDiscount.discount_type === 'percentage' ? `${bestDiscount.discount_value}%` : `${bestDiscount.discount_value} XAF`}</span>
+                      <span className="ml-auto text-[11px] font-bold text-emerald-800">-{discountAmount.toLocaleString()} {trip.currency}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: theme.color }}>
-                <span className="text-sm font-semibold" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
+                <div>
+                  <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
+                  {discountAmount > 0 && <span className="text-[10px] line-through" style={{ color: theme.fg, opacity: 0.4 }}>{basePrice.toLocaleString()} {trip.currency}</span>}
+                </div>
                 <span className="text-xl font-black" style={{ color: theme.fg }}>{totalPrice.toLocaleString()} {trip.currency}</span>
+              </div>
               </div>
             </div>
 
