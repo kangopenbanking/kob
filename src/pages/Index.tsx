@@ -140,6 +140,7 @@ const Index = () => {
               </p>
             </div>
 
+            <ScrollReveal direction="left">
             {/* Portal 1 - Banking Ops - Image Left */}
             <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-16">
               <div className="rounded-2xl overflow-hidden shadow-xl aspect-[4/3]">
