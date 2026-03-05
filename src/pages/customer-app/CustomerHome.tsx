@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
 import rentKobImage from '@/assets/rent-kob.png';
+import travelCardBg from '@/assets/travel-card-bg.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
