@@ -79,7 +79,12 @@ const MerchantTravelBookings: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">View all customer bookings for your travel services</p></div>
-        <Button variant="outline" onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/merchant/travel-counter-booking')}>
+            <ShoppingCart className="mr-2 h-4 w-4" /> Counter Booking
+          </Button>
+          <Button variant="outline" onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
