@@ -321,6 +321,7 @@ import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
 import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
 import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
+import MerchantTravelDiscounts from "./pages/merchant/MerchantTravelDiscounts";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
