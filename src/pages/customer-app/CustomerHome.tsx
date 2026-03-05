@@ -480,6 +480,37 @@ const CustomerHome: React.FC = () => {
         </motion.div>
       )}
 
+      {/* ─── Transport & Tourism ─── */}
+      <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.14 }}>
+        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Transport & Tourism</p>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { key: 'bus', label: 'Bus Travel', icon: Bus, bg: 'bg-[hsl(48,90%,52%)]', text: 'text-[hsl(0,0%,10%)]', active: true },
+            { key: 'tours', label: 'Tours', icon: Compass, bg: 'bg-[hsl(187,100%,42%)]', text: 'text-white', active: true },
+            { key: 'airlines', label: 'Airlines', icon: Plane, bg: 'bg-[hsl(0,65%,51%)]', text: 'text-white', active: false },
+            { key: 'trains', label: 'Trains', icon: Train, bg: 'bg-[hsl(0,0%,13%)]', text: 'text-white', active: false },
+          ].map((cat) => {
+            const CatIcon = cat.icon;
+            return (
+              <button
+                key={cat.key}
+                onClick={() => cat.active && go(`travel/${cat.key}`)}
+                disabled={!cat.active}
+                className={`relative flex flex-col items-center gap-2 rounded-3xl ${cat.bg} p-5 transition-transform active:scale-95 ${!cat.active ? 'opacity-50' : ''}`}
+              >
+                {!cat.active && (
+                  <span className="absolute right-2 top-2 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80">Soon</span>
+                )}
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
+                  <CatIcon className={`h-6 w-6 ${cat.text}`} strokeWidth={1.5} />
+                </div>
+                <p className={`text-sm font-bold ${cat.text}`}>{cat.label}</p>
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
+
       {/* Earnings & Spending cards hidden — data shown in hero section */}
 
       {/* ─── Media Banner ─── */}
