@@ -82,25 +82,36 @@ const CustomerTravelTrips: React.FC = () => {
           <>
             {/* Route cards */}
             <div className="grid grid-cols-2 gap-2">
-              {routes.map((route, i) => (
+              {routes.map((route, i) => {
+                const colors = [
+                  'from-[hsl(217,91%,55%)] to-[hsl(217,91%,45%)]',
+                  'from-[hsl(150,60%,40%)] to-[hsl(160,55%,32%)]',
+                  'from-[hsl(38,92%,50%)] to-[hsl(28,88%,45%)]',
+                  'from-[hsl(258,80%,58%)] to-[hsl(268,75%,48%)]',
+                  'from-[hsl(172,66%,40%)] to-[hsl(182,60%,32%)]',
+                  'from-[hsl(347,77%,50%)] to-[hsl(340,72%,42%)]',
+                ];
+                const color = colors[i % colors.length];
+                return (
                 <motion.div key={route.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border bg-card p-3 shadow-sm">
+                  className={`rounded-xl bg-gradient-to-br ${color} p-3 shadow-md`}>
                   <div className="flex items-center gap-1.5 mb-1">
-                    <RouteIcon className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-[11px] font-bold text-foreground truncate">{route.origin}</span>
+                    <RouteIcon className="h-3.5 w-3.5 text-white/80" />
+                    <span className="text-[11px] font-bold text-white truncate">{route.origin}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[11px] text-muted-foreground truncate">{route.destination}</span>
+                    <MapPin className="h-3.5 w-3.5 text-white/60" />
+                    <span className="text-[11px] text-white/70 truncate">{route.destination}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[10px] text-white/60">
                       {route.estimated_duration_minutes ? `${Math.floor(route.estimated_duration_minutes / 60)}h${route.estimated_duration_minutes % 60 > 0 ? ` ${route.estimated_duration_minutes % 60}m` : ''}` : '—'}
                     </span>
-                    <Badge variant="outline" className="text-[9px] h-5">{trips.filter(t => t.route_id === route.id).length} trips</Badge>
+                    <Badge className="text-[9px] h-5 border-0 bg-white/20 text-white">{trips.filter(t => t.route_id === route.id).length} trips</Badge>
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Trips */}
@@ -118,15 +129,22 @@ const CustomerTravelTrips: React.FC = () => {
                   {filteredTrips.map((trip, i) => {
                     const route = routes.find(r => r.id === trip.route_id);
                     const seatsLow = trip.available_seats <= 5;
+                    const tripColors = [
+                      { timeBg: 'bg-[hsl(217,91%,55%)]', timeText: 'text-white' },
+                      { timeBg: 'bg-[hsl(150,60%,40%)]', timeText: 'text-white' },
+                      { timeBg: 'bg-[hsl(38,92%,50%)]', timeText: 'text-white' },
+                      { timeBg: 'bg-[hsl(258,80%,58%)]', timeText: 'text-white' },
+                    ];
+                    const tc = tripColors[i % tripColors.length];
                     return (
                       <motion.button key={trip.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                         onClick={() => navigate(`/app/travel/${category}/${serviceId}/trips/${trip.id}`)}
                         className="group flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
                       >
                         {/* Time block */}
-                        <div className="flex flex-col items-center rounded-xl bg-primary/10 px-3 py-2">
-                          <span className="text-lg font-black text-primary">{format(new Date(trip.departure_at), 'HH:mm')}</span>
-                          <span className="text-[10px] font-medium text-primary/70">{format(new Date(trip.departure_at), 'dd MMM')}</span>
+                        <div className={`flex flex-col items-center rounded-xl ${tc.timeBg} px-3 py-2 shadow-md`}>
+                          <span className={`text-lg font-black ${tc.timeText}`}>{format(new Date(trip.departure_at), 'HH:mm')}</span>
+                          <span className={`text-[10px] font-medium ${tc.timeText}/70`}>{format(new Date(trip.departure_at), 'dd MMM')}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-foreground text-[15px]">{route?.origin} → {route?.destination}</p>

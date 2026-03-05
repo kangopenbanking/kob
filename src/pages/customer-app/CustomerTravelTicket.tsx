@@ -98,7 +98,7 @@ const CustomerTravelTicket: React.FC = () => {
         {/* QR Ticket card */}
         {currentTicket && (
           <motion.div key={currentTicket.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border bg-card p-6 shadow-sm text-center space-y-4">
+            className="rounded-2xl border bg-gradient-to-b from-card to-[hsl(150,50%,25%/0.04)] p-6 shadow-md text-center space-y-4">
             <QRCodeDisplay value={currentTicket.qr_code} />
             <div className="space-y-2 text-left">
               <div className="flex items-center gap-2">
@@ -113,7 +113,7 @@ const CustomerTravelTicket: React.FC = () => {
         )}
 
         {/* Journey details */}
-        <div className="rounded-2xl border bg-card p-5 space-y-3 shadow-sm">
+        <div className="rounded-2xl border bg-card p-5 space-y-3 shadow-sm border-l-4 border-l-[hsl(150,60%,40%)]">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Journey Details</p>
           {route && (
             <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">{route.origin} → {route.destination}</span></div>
@@ -126,7 +126,7 @@ const CustomerTravelTicket: React.FC = () => {
           )}
           <div className="border-t border-border pt-3 flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Total Paid</span>
-            <span className="text-lg font-black">{booking.total_amount?.toLocaleString()} {booking.currency}</span>
+            <span className="text-lg font-black text-[hsl(150,60%,30%)]">{booking.total_amount?.toLocaleString()} {booking.currency}</span>
           </div>
         </div>
 

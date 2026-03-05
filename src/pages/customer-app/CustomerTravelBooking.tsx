@@ -160,8 +160,8 @@ const CustomerTravelBooking: React.FC = () => {
                           <button key={c} onClick={() => toggleSeat(cell.seat_label)} disabled={isBooked}
                             className={`flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-bold transition-all ${
                               isBooked ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                              : isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-md'
-                              : 'bg-secondary/15 text-secondary hover:bg-secondary/25'
+                              : isSelected ? 'bg-primary text-primary-foreground scale-110 shadow-lg ring-2 ring-primary/30'
+                              : 'bg-[hsl(150,60%,40%/0.15)] text-[hsl(150,60%,30%)] hover:bg-[hsl(150,60%,40%/0.3)] border border-[hsl(150,60%,40%/0.3)]'
                             }`}>
                             {isBooked ? '×' : isSelected ? <Check className="h-4 w-4" /> : cell.seat_label}
                           </button>
@@ -170,8 +170,8 @@ const CustomerTravelBooking: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-secondary/15 border" /> Available</span>
+              <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-[hsl(150,60%,40%)]" /> Available</span>
                   <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-primary" /> Selected</span>
                   <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-muted" /> Taken</span>
                 </div>
@@ -189,7 +189,7 @@ const CustomerTravelBooking: React.FC = () => {
               </div>
             )}
             {selectedSeats.length > 0 && (
-              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl" onClick={() => setStep('details')}>
+              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl bg-gradient-to-r from-primary to-[hsl(217,91%,50%)] shadow-lg" onClick={() => setStep('details')}>
                 <Users className="mr-2 h-4 w-4" /> Continue · {selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''} · {totalPrice.toLocaleString()} {trip.currency}
               </Button>
             )}
@@ -200,8 +200,10 @@ const CustomerTravelBooking: React.FC = () => {
         {step === 'details' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Passenger Details</p>
-            {selectedSeats.map((seat) => (
-              <div key={seat} className="rounded-2xl border bg-card p-4 space-y-3 shadow-sm">
+            {selectedSeats.map((seat, idx) => {
+              const seatColors = ['border-l-[hsl(217,91%,55%)]', 'border-l-[hsl(150,60%,40%)]', 'border-l-[hsl(38,92%,50%)]', 'border-l-[hsl(258,80%,58%)]'];
+              return (
+              <div key={seat} className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm border-l-4 ${seatColors[idx % seatColors.length]}`}>
                 <Badge variant="outline" className="text-[11px]">Seat {seat}</Badge>
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Full Name *</Label>
@@ -214,7 +216,8 @@ const CustomerTravelBooking: React.FC = () => {
                     onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value } }))} />
                 </div>
               </div>
-            ))}
+              );
+            })}
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-11 rounded-xl">Back</Button>
               <Button onClick={() => setStep('confirm')} className="flex-1 h-11 rounded-xl">Review Booking</Button>
@@ -226,19 +229,19 @@ const CustomerTravelBooking: React.FC = () => {
         {step === 'confirm' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Booking Summary</p>
-            <div className="rounded-2xl border bg-card p-5 space-y-3 shadow-sm">
+            <div className="rounded-2xl border bg-gradient-to-br from-card to-[hsl(217,91%,35%/0.03)] p-5 space-y-3 shadow-sm">
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Route</span><span className="font-semibold">{route?.origin} → {route?.destination}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Departure</span><span className="font-semibold">{format(new Date(trip.departure_at), 'dd MMM yyyy, HH:mm')}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Seats</span><span className="font-semibold">{selectedSeats.join(', ')}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Passengers</span><span className="font-semibold">{selectedSeats.length}</span></div>
               <div className="border-t border-border pt-3 flex justify-between items-center">
                 <span className="font-bold">Total</span>
-                <span className="text-xl font-black">{totalPrice.toLocaleString()} {trip.currency}</span>
+                <span className="text-xl font-black text-primary">{totalPrice.toLocaleString()} {trip.currency}</span>
               </div>
             </div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back</Button>
-              <Button onClick={handleBook} disabled={booking} className="flex-1 h-12 rounded-xl text-[15px] font-bold">
+              <Button onClick={handleBook} disabled={booking} className="flex-1 h-12 rounded-xl text-[15px] font-bold bg-gradient-to-r from-[hsl(150,60%,40%)] to-[hsl(160,55%,35%)] hover:from-[hsl(150,60%,35%)] hover:to-[hsl(160,55%,30%)] shadow-lg">
                 {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                 Pay & Confirm
               </Button>
