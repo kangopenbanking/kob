@@ -93,134 +93,158 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
   ];
 
   const sectionImages = [kfsSendImg, kfsReceiveImg, kfs3secImg];
-  // index 0: image right, 1: image left, 2: image right
-  const imageOnRight = index % 2 === 0;
 
   return (
-    <>
-      <section className={`relative py-28 overflow-hidden bg-gradient-to-b ${sectionBgs[index]}`}>
-        {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-[0.03]" style={{
-          backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
-          backgroundSize: '60px 60px',
-        }} />
-        
-        {/* Accent glow */}
-        <div
-          className="absolute top-20 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full blur-[150px] opacity-[0.07]"
-          style={{ backgroundColor: app.accent }}
-        />
+    <section className={`relative py-28 overflow-hidden bg-gradient-to-b ${sectionBgs[index]}`}>
+      {/* Subtle grid pattern */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: 'linear-gradient(rgba(255,255,255,.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.1) 1px, transparent 1px)',
+        backgroundSize: '60px 60px',
+      }} />
+      
+      {/* Accent glow */}
+      <div
+        className="absolute top-20 left-1/2 -translate-x-1/2 h-[500px] w-[500px] rounded-full blur-[150px] opacity-[0.07]"
+        style={{ backgroundColor: app.accent }}
+      />
 
-        <div className="container relative z-10 mx-auto px-4">
-          <div className={`flex flex-col items-center gap-12 lg:gap-20 ${imageOnRight ? 'lg:flex-row' : 'lg:flex-row-reverse'}`}>
-            
-            {/* Content side */}
-            <motion.div
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
-              className="flex-1 max-w-xl text-center lg:text-left"
-            >
-              <motion.div variants={fadeUp} custom={0} className="flex items-center justify-center lg:justify-start gap-3 mb-5">
-                <div className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ backgroundColor: app.accent + '20', color: app.accent }}>
-                  {app.phase}
-                </div>
-                <Badge
-                  className={`text-[10px] rounded-full px-3 py-1 border font-semibold ${
-                    app.status === 'live'
-                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                      : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                  }`}
-                >
-                  {app.status === 'live' ? '● Live' : '○ Coming Soon'}
-                </Badge>
-              </motion.div>
-
-              <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-bold text-white mb-2 tracking-tight">
-                {app.title}
-              </motion.h2>
-              <motion.p variants={fadeUp} custom={1.5} className="text-lg font-medium mb-4" style={{ color: app.accent }}>
-                {app.subtitle}
-              </motion.p>
-              <motion.p variants={fadeUp} custom={2} className="text-slate-400 text-base mb-10 leading-relaxed">
-                {app.description}
-              </motion.p>
-
-              <motion.div variants={fadeUp} custom={3} className="grid grid-cols-2 gap-x-6 gap-y-3 mb-10 text-left mx-auto lg:mx-0 max-w-md">
-                {app.features.map((f) => (
-                  <div key={f.label} className="flex items-center gap-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: app.accent + '20' }}>
-                      <Check className="h-3.5 w-3.5" style={{ color: app.accent }} strokeWidth={2.5} />
-                    </div>
-                    <span className="text-sm text-slate-300">{f.label}</span>
-                  </div>
-                ))}
-              </motion.div>
-
-              <motion.div variants={fadeUp} custom={4}>
-                {app.status === 'live' && app.link ? (
-                  <Button size="lg" className="rounded-full px-8 text-white shadow-lg" style={{ backgroundColor: app.accent }} asChild>
-                    <Link to={app.link}>
-                      Launch Demo <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                ) : (
-                  <Button size="lg" className="rounded-full px-8 bg-white/5 text-slate-400 border border-white/10" disabled>
-                    Coming Soon
-                  </Button>
-                )}
-              </motion.div>
-            </motion.div>
-
-            {/* Image side */}
-            <motion.div
-              initial={{ opacity: 0, x: imageOnRight ? 80 : -80, scale: 0.9 }}
-              whileInView={{ opacity: 1, x: 0, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-              className="flex-shrink-0 relative"
-            >
-              <div className="relative w-64 sm:w-72 lg:w-80">
-                {/* Glow behind image */}
-                <div className="absolute inset-0 -z-10 rounded-[2.5rem] blur-3xl opacity-25" style={{ backgroundColor: app.accent }} />
-                {/* Decorative ring */}
-                <motion.div 
-                  className="absolute -inset-4 rounded-[3rem] border opacity-20"
-                  style={{ borderColor: app.accent + '40' }}
-                  animate={{ scale: [1, 1.02, 1] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                />
-                <motion.img
-                  src={sectionImages[index]}
-                  alt={`${app.title} showcase`}
-                  className="w-full h-auto rounded-[2.5rem] shadow-2xl"
-                  whileHover={{ scale: 1.03, y: -8 }}
-                  transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-                />
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Arrow connector between sections */}
-      {index < 2 && (
-        <div className={`relative py-8 bg-gradient-to-b ${sectionBgs[index]} flex justify-center`}>
+      <div className="container relative z-10 mx-auto px-4">
+        <div className="flex flex-col items-center gap-16 lg:gap-20">
+          
+          {/* Phone mockup + uploaded image side by side */}
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.9, y: 40 }}
+            whileInView={{ opacity: 1, scale: 1, y: 0 }}
             viewport={{ once: true }}
-            animate={{ y: [0, 8, 0] }}
-            transition={{ y: { duration: 1.5, repeat: Infinity, ease: 'easeInOut' }, opacity: { duration: 0.5 } }}
-            className="flex flex-col items-center gap-2"
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center gap-6 sm:gap-10"
           >
-            <div className="h-12 w-px" style={{ background: `linear-gradient(to bottom, ${app.accent}60, transparent)` }} />
-            <div className="h-10 w-10 rounded-full border flex items-center justify-center" style={{ borderColor: app.accent + '40', backgroundColor: app.accent + '10' }}>
-              <ArrowDown className="h-5 w-5" style={{ color: app.accent }} />
+            {/* Phone mockup */}
+            <div className="relative">
+              <div className="absolute -inset-6 rounded-[3.5rem] border opacity-20" style={{ borderColor: app.accent + '40' }} />
+              <div className="relative mx-auto w-52 sm:w-60">
+                <div className="relative aspect-[9/17] rounded-[2.5rem] border-2 bg-gradient-to-b from-slate-800 to-slate-950 p-2.5 shadow-2xl" style={{ borderColor: app.accent + '30' }}>
+                  <div className="absolute left-1/2 top-2 z-10 h-1.5 w-14 -translate-x-1/2 rounded-full bg-white/10" />
+                  <div className="flex h-full flex-col rounded-[2rem] bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
+                    <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                      <span className="text-[9px] font-medium text-white/50">9:41</span>
+                      <div className="flex gap-1">
+                        <div className="h-1.5 w-3 rounded-sm bg-white/30" />
+                        <div className="h-1.5 w-1.5 rounded-sm bg-white/30" />
+                        <div className="h-1.5 w-3 rounded-sm bg-white/30" />
+                      </div>
+                    </div>
+                    <div className="px-5 pt-2 pb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="h-8 w-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: app.accent + '30' }}>
+                          <Smartphone className="h-4 w-4" style={{ color: app.accent }} />
+                        </div>
+                        <div>
+                          <p className="text-[11px] font-semibold text-white">{app.title}</p>
+                          <p className="text-[8px] text-white/40">Phase {app.phase}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex-1 px-4 pb-4 space-y-1.5">
+                      {app.features.map((f, fi) => (
+                        <motion.div
+                          key={f.label}
+                          initial={{ opacity: 0, x: -10 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.3 + fi * 0.08 }}
+                          className="flex items-center gap-2 rounded-lg px-3 py-2"
+                          style={{ backgroundColor: app.accent + '10' }}
+                        >
+                          <f.icon className="h-3.5 w-3.5 shrink-0" style={{ color: app.accent }} strokeWidth={1.8} />
+                          <span className="text-[10px] font-medium text-white/80">{f.label}</span>
+                        </motion.div>
+                      ))}
+                    </div>
+                    <div className="mx-auto mb-3 h-1 w-24 rounded-full bg-white/20" />
+                  </div>
+                </div>
+                <div className="absolute inset-0 -z-10 rounded-[3rem] blur-3xl opacity-20" style={{ backgroundColor: app.accent }} />
+              </div>
             </div>
-            <div className="h-12 w-px" style={{ background: `linear-gradient(to bottom, transparent, ${apps[index + 1].accent}60)` }} />
+
+            {/* Uploaded image */}
+            <motion.div
+              initial={{ opacity: 0, x: 40 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="relative w-52 sm:w-60"
+            >
+              <div className="absolute inset-0 -z-10 rounded-[2.5rem] blur-3xl opacity-20" style={{ backgroundColor: app.accent }} />
+              <motion.img
+                src={sectionImages[index]}
+                alt={`${app.title} showcase`}
+                className="w-full h-auto rounded-[2.5rem] shadow-2xl"
+                whileHover={{ scale: 1.03, y: -6 }}
+                transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+              />
+            </motion.div>
+          </motion.div>
+
+          {/* Content */}
+          <motion.div
+            initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
+            className="flex-1 max-w-xl text-center"
+          >
+            <motion.div variants={fadeUp} custom={0} className="flex items-center justify-center gap-3 mb-5">
+              <div className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ backgroundColor: app.accent + '20', color: app.accent }}>
+                {app.phase}
+              </div>
+              <Badge
+                className={`text-[10px] rounded-full px-3 py-1 border font-semibold ${
+                  app.status === 'live'
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                    : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                }`}
+              >
+                {app.status === 'live' ? '● Live' : '○ Coming Soon'}
+              </Badge>
+            </motion.div>
+
+            <motion.h2 variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-bold text-white mb-2 tracking-tight">
+              {app.title}
+            </motion.h2>
+            <motion.p variants={fadeUp} custom={1.5} className="text-lg font-medium mb-4" style={{ color: app.accent }}>
+              {app.subtitle}
+            </motion.p>
+            <motion.p variants={fadeUp} custom={2} className="text-slate-400 text-base mb-10 leading-relaxed">
+              {app.description}
+            </motion.p>
+
+            <motion.div variants={fadeUp} custom={3} className="grid grid-cols-2 gap-x-6 gap-y-3 mb-10 text-left mx-auto max-w-md">
+              {app.features.map((f) => (
+                <div key={f.label} className="flex items-center gap-3">
+                  <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: app.accent + '20' }}>
+                    <Check className="h-3.5 w-3.5" style={{ color: app.accent }} strokeWidth={2.5} />
+                  </div>
+                  <span className="text-sm text-slate-300">{f.label}</span>
+                </div>
+              ))}
+            </motion.div>
+
+            <motion.div variants={fadeUp} custom={4}>
+              {app.status === 'live' && app.link ? (
+                <Button size="lg" className="rounded-full px-8 text-white shadow-lg" style={{ backgroundColor: app.accent }} asChild>
+                  <Link to={app.link}>
+                    Launch Demo <ArrowRight className="ml-2 h-4 w-4" />
+                  </Link>
+                </Button>
+              ) : (
+                <Button size="lg" className="rounded-full px-8 bg-white/5 text-slate-400 border border-white/10" disabled>
+                  Coming Soon
+                </Button>
+              )}
+            </motion.div>
           </motion.div>
         </div>
-      )}
-    </>
+      </div>
+    </section>
   );
 }
 
