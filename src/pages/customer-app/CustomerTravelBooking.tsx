@@ -34,6 +34,9 @@ const CustomerTravelBooking: React.FC = () => {
   const [passengers, setPassengers] = useState<Record<string, { name: string; phone: string; gender: Gender }>>({});
   const [booking, setBooking] = useState(false);
   const [step, setStep] = useState<'seats' | 'details' | 'confirm'>('seats');
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [autoDiscounts, setAutoDiscounts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
