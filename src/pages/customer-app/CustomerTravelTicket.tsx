@@ -7,12 +7,19 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import jsPDF from 'jspdf';
 import { getTheme } from '@/lib/travel-theme';
+import { QRCodeSVG } from 'qrcode.react';
 
-const QRCodeDisplay: React.FC<{ value: string }> = ({ value }) => (
+const QRCodeDisplay: React.FC<{ value: string; themeColor?: string }> = ({ value, themeColor = '#1a1a1a' }) => (
   <div className="flex flex-col items-center gap-1">
-    <div className="rounded-xl bg-white p-2.5 shadow-inner border border-gray-100">
-      <img src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(value)}&bgcolor=ffffff&color=1a1a1a&margin=2`}
-        alt="QR Code" className="h-36 w-36 rounded-lg" />
+    <div className="rounded-xl bg-white p-3 shadow-inner border border-gray-100">
+      <QRCodeSVG
+        value={value}
+        size={144}
+        level="H"
+        marginSize={1}
+        fgColor={themeColor}
+        bgColor="#ffffff"
+      />
     </div>
     <p className="text-[9px] font-mono text-gray-400">Scan at boarding gate</p>
   </div>
@@ -240,7 +247,7 @@ const CustomerTravelTicket: React.FC = () => {
             </div>
 
             <div className="px-5 py-4 flex flex-col sm:flex-row gap-4 items-center sm:items-start">
-              <QRCodeDisplay value={currentTicket.qr_code} />
+              <QRCodeDisplay value={currentTicket.qr_code} themeColor={theme.color === '#ffbe0b' ? '#92400e' : theme.color} />
               <div className="flex-1 space-y-3 pt-1">
                 <div>
                   <p className="text-[9px] font-semibold uppercase tracking-widest text-gray-400">Passenger</p>
