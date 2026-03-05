@@ -542,6 +542,7 @@ function App() {
               <Route path="access-roles" element={<AccessRoleManagement />} />
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
               <Route path="translations" element={<TranslationManager />} />
+              <Route path="travel-management" element={<AdminTravelManagement />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />

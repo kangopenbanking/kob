@@ -118,6 +118,12 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Transport & Tourism",
+    items: [
+      { title: "Travel Management", path: "/admin/travel-management", icon: Activity },
+    ],
+  },
+  {
     title: "Configuration",
     items: [
       { title: "System Config", path: "/admin/system-config", icon: Settings },
