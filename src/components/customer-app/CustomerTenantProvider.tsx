@@ -155,6 +155,7 @@ const defaultBranding: CustomerTenantBranding = {
   heroActionColors: defaultHeroActionColors,
   heroActionOpacity: 0.8,
   typographyConfig: defaultTypographyConfig,
+  travelCardConfig: defaultTravelCardConfig,
 };
 
 const CustomerTenantContext = createContext<CustomerTenantBranding>(defaultBranding);
