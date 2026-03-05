@@ -178,8 +178,8 @@ const CustomerTravelTrips: React.FC = () => {
               <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Trips</p>
             </div>
             <div className="flex-1 rounded-xl bg-white/8 backdrop-blur-sm border border-white/5 p-2.5 text-center">
-              <p className="text-lg font-black text-[hsl(150,60%,55%)]">✓</p>
-              <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider">Verified</p>
+              <CheckCircle className="h-5 w-5 text-[hsl(150,60%,55%)] mx-auto" />
+              <p className="text-[9px] font-semibold text-white/40 uppercase tracking-wider mt-0.5">Verified</p>
             </div>
           </div>
 
