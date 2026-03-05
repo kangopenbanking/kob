@@ -409,7 +409,7 @@ const CustomerTravelBooking: React.FC = () => {
                       <div className="h-2.5 w-2.5 rounded-full border-2 border-primary" />
                       <div className="flex-1 border-t-2 border-dashed border-primary/40 mx-1" />
                       <div className="rounded-full bg-primary/10 px-2.5 py-1">
-                        <span className="text-[9px] font-bold text-primary">🚌</span>
+                        <span className="text-[9px] font-bold text-primary"><Bus className="h-3 w-3" /></span>
                       </div>
                       <div className="flex-1 border-t-2 border-dashed border-primary/40 mx-1" />
                       <div className="h-2.5 w-2.5 rounded-full bg-primary" />
