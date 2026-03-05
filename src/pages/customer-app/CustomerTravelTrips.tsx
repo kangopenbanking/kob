@@ -259,7 +259,7 @@ const CustomerTravelTrips: React.FC = () => {
                   ]).map(t => (
                     <button key={t.key} onClick={() => setTimeFilter(t.key)}
                       className={`flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-bold transition-all border ${timeFilter === t.key ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'bg-muted/30 border-border/30 text-muted-foreground hover:bg-muted/50'}`}>
-                      <span className="text-base">{t.icon}</span>
+                      <t.Icon className={`h-4 w-4 ${timeFilter === t.key ? 'text-primary' : 'text-muted-foreground/60'}`} />
                       {t.label}
                     </button>
                   ))}
