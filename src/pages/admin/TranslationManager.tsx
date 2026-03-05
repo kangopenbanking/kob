@@ -111,6 +111,7 @@ export default function TranslationManager() {
   const [formDefaultValue, setFormDefaultValue] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formContext, setFormContext] = useState("");
+  const [formFrenchValue, setFormFrenchValue] = useState("");
 
   // Inline editing
   const [editingTranslation, setEditingTranslation] = useState<{
@@ -200,6 +201,30 @@ export default function TranslationManager() {
       if (error) {
         toast({ title: "Error", description: error.message, variant: "destructive" });
         return;
+      }
+    }
+
+    // Save French translation if provided
+    if (formFrenchValue.trim()) {
+      const targetId = editingString?.id;
+      if (targetId) {
+        await supabase.from("translation_values").upsert(
+          { string_id: targetId, language: "fr", value: formFrenchValue.trim(), is_auto_translated: false },
+          { onConflict: "string_id,language" }
+        );
+      } else {
+        // For new strings, fetch the newly created string id
+        const { data: newStr } = await supabase
+          .from("translation_strings")
+          .select("id")
+          .eq("string_key", formKey)
+          .maybeSingle();
+        if (newStr) {
+          await supabase.from("translation_values").upsert(
+            { string_id: newStr.id, language: "fr", value: formFrenchValue.trim(), is_auto_translated: false },
+            { onConflict: "string_id,language" }
+          );
+        }
       }
     }
 
@@ -396,6 +421,7 @@ export default function TranslationManager() {
     setFormDefaultValue("");
     setFormDescription("");
     setFormContext("");
+    setFormFrenchValue("");
   };
 
   const openEdit = (str: TranslationString) => {
@@ -405,6 +431,8 @@ export default function TranslationManager() {
     setFormDefaultValue(str.default_value);
     setFormDescription(str.description || "");
     setFormContext(str.context || "");
+    const existingFr = getTranslation(str.id, "fr");
+    setFormFrenchValue(existingFr?.value || "");
     setShowAddDialog(true);
   };
 
@@ -515,6 +543,14 @@ export default function TranslationManager() {
                     placeholder="e.g. button label, page title"
                     value={formContext}
                     onChange={(e) => setFormContext(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <Label>French Translation</Label>
+                  <Textarea
+                    placeholder="Traduction française"
+                    value={formFrenchValue}
+                    onChange={(e) => setFormFrenchValue(e.target.value)}
                   />
                 </div>
                 <Button onClick={handleSaveString} className="w-full">
