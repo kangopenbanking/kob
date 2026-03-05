@@ -276,7 +276,7 @@ const CustomerTravelTrips: React.FC = () => {
                       transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedRoute(isActive ? null : route.id)}
                       className={`shrink-0 snap-start w-[220px] rounded-2xl p-4 text-left shadow-lg transition-all relative overflow-hidden ${isActive ? 'ring-2 scale-[1.02]' : 'hover:scale-[1.01]'}`}
-                      style={{ backgroundColor: theme.color, ringColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.2)' }}>
+                      style={{ backgroundColor: theme.color }}>
                       {isUserBooked && (
                         <div className="absolute top-2.5 right-2.5">
                           <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider" style={{ backgroundColor: overlayBg, color: theme.fg }}>
