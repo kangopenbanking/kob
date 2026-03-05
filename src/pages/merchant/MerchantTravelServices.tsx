@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2, BookOpen } from 'lucide-react';
+import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2, BookOpen, Tag } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
