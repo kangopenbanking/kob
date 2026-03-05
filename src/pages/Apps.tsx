@@ -3,10 +3,13 @@ import { Link } from 'react-router-dom';
 import {
   Building2, Palette, Smartphone, Wallet, CreditCard, History,
   ShieldCheck, Send, Store, Users, QrCode, BarChart3, Receipt,
-  Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check
+  Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check, ArrowDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import kfsSendImg from '@/assets/kfs-send.png';
+import kfsReceiveImg from '@/assets/kfs-receive.png';
+import kfs3secImg from '@/assets/kfs-3sec.png';
 
 /* ── Animations ── */
 const fadeUp = {
