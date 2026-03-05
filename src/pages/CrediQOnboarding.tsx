@@ -268,7 +268,7 @@ export default function CrediQOnboarding() {
   };
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 py-12">
         <div className="container max-w-2xl mx-auto px-4">
           <div className="mb-8">
