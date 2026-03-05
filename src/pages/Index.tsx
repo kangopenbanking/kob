@@ -48,6 +48,11 @@ import { ProductTour } from "@/components/ProductTour";
 import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { CodeImageFlipCard } from "@/components/CodeImageFlipCard";
+import apiAccountsPreview from "@/assets/api-accounts-preview.jpg";
+import apiPaymentsPreview from "@/assets/api-payments-preview.jpg";
+import apiLoansPreview from "@/assets/api-loans-preview.jpg";
+import apiSavingsPreview from "@/assets/api-savings-preview.jpg";
 
 const Index = () => {
   return (
@@ -385,15 +390,11 @@ const Index = () => {
                   </Link>
                 </div>
               </div>
-              <div className="bg-card border rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                  <div className="w-3 h-3 rounded-full bg-accent"></div>
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-xs text-muted-foreground ml-2 font-mono">GET /v1/accounts</span>
-                </div>
-                <pre className="text-xs md:text-sm text-muted-foreground font-mono overflow-x-auto whitespace-pre-wrap">
-{`{
+              <CodeImageFlipCard
+                endpoint="GET /v1/accounts"
+                image={apiAccountsPreview}
+                imageAlt="Banking Account Aggregation Dashboard"
+                code={`{
   "accounts": [{
     "id": "acc_cm_123",
     "institution": "Afriland First Bank",
@@ -411,8 +412,7 @@ const Index = () => {
     }
   }]
 }`}
-                </pre>
-              </div>
+              />
             </div>
           </div>
           </ScrollReveal>
@@ -421,15 +421,12 @@ const Index = () => {
           <ScrollReveal direction="right">
           <div className="mb-24 max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="bg-card border rounded-2xl p-6 shadow-lg md:order-1">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                  <div className="w-3 h-3 rounded-full bg-accent"></div>
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-xs text-muted-foreground ml-2 font-mono">POST /v1/payments</span>
-                </div>
-                <pre className="text-xs md:text-sm text-muted-foreground font-mono overflow-x-auto whitespace-pre-wrap">
-{`{
+              <div className="md:order-1">
+              <CodeImageFlipCard
+                endpoint="POST /v1/payments"
+                image={apiPaymentsPreview}
+                imageAlt="Mobile Money Payment Processing"
+                code={`{
   "payment": {
     "id": "pay_momo_456",
     "method": "mobile_money",
@@ -445,7 +442,7 @@ const Index = () => {
     }
   }
 }`}
-                </pre>
+              />
               </div>
               <div className="space-y-6 md:order-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
@@ -555,15 +552,11 @@ const Index = () => {
                   </Link>
                 </div>
               </div>
-              <div className="bg-card border rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                  <div className="w-3 h-3 rounded-full bg-accent"></div>
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-xs text-muted-foreground ml-2 font-mono">POST /v1/loans/apply</span>
-                </div>
-                <pre className="text-xs md:text-sm text-muted-foreground font-mono overflow-x-auto whitespace-pre-wrap">
-{`{
+              <CodeImageFlipCard
+                endpoint="POST /v1/loans/apply"
+                image={apiLoansPreview}
+                imageAlt="Loan & Credit Scoring Dashboard"
+                code={`{
   "loan": {
     "id": "loan_789",
     "applicant": "Jean-Paul Nkomo",
@@ -577,8 +570,7 @@ const Index = () => {
     "decision_time_ms": 1200
   }
 }`}
-                </pre>
-              </div>
+              />
             </div>
           </div>
           </ScrollReveal>
@@ -587,15 +579,12 @@ const Index = () => {
           <ScrollReveal direction="right">
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="bg-card border rounded-2xl p-6 shadow-lg md:order-1">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                  <div className="w-3 h-3 rounded-full bg-accent"></div>
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-xs text-muted-foreground ml-2 font-mono">POST /v1/savings/goals</span>
-                </div>
-                <pre className="text-xs md:text-sm text-muted-foreground font-mono overflow-x-auto whitespace-pre-wrap">
-{`{
+              <div className="md:order-1">
+              <CodeImageFlipCard
+                endpoint="POST /v1/savings/goals"
+                image={apiSavingsPreview}
+                imageAlt="Smart Savings Goal Tracker"
+                code={`{
   "savings_goal": {
     "id": "sav_101",
     "name": "Emergency Fund",
@@ -610,7 +599,7 @@ const Index = () => {
     "next_debit": "2025-03-01"
   }
 }`}
-                </pre>
+              />
               </div>
               <div className="space-y-6 md:order-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
