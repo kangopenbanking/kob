@@ -1,243 +1,270 @@
 
 
-# KOB Payment Infrastructure — Deep Technical & Product Capability Audit
+# Transport & Tourism — Ticket Booking Platform
+
+## Summary
+Add a full Transport & Tourism vertical to the KOB ecosystem, enabling merchants to register as travel agencies (Bus, Tours, Airlines, Trains) and manage trips, routes, seating plans, and bookings. Customers discover agencies via the Customer App, browse schedules, select seats, pay from their wallet, and receive QR-validated e-tickets. Phase 1 covers Bus Travel and Tours; Airlines and Trains are registered but marked "Coming Soon."
 
 ---
 
-## CLASSIFICATION
+## Architecture Overview
 
-**KOB is Category B: Wallet support with programmatic outbound payouts, but NO instant payout rails (no Visa Direct, Mastercard Send, or real-time bank push).**
+```text
+┌─────────────────────────────────────┐
+│         MERCHANT PORTAL             │
+│  /merchant/travel-services          │
+│  ├── Service Setup (Bus/Tours/...)  │
+│  ├── Route & Trip Manager           │
+│  ├── Seating Plan Designer          │
+│  ├── Timetable / Schedule           │
+│  ├── Bookings & Passengers          │
+│  └── QR Ticket Scanner (validate)   │
+└──────────────┬──────────────────────┘
+               │ Supabase Tables + RLS
+┌──────────────▼──────────────────────┐
+│          DATABASE LAYER             │
+│  travel_services                    │
+│  travel_routes                      │
+│  travel_trips                       │
+│  travel_seating_plans               │
+│  travel_seats                       │
+│  travel_bookings                    │
+│  travel_tickets                     │
+│  travel_passengers                  │
+└──────────────┬──────────────────────┘
+               │
+┌──────────────▼──────────────────────┐
+│         CUSTOMER APP                │
+│  /app/travel                        │
+│  ├── Category selector (Bus/Tours)  │
+│  ├── Agency listing                 │
+│  ├── Route & schedule browser       │
+│  ├── Seat selector (dynamic grid)   │
+│  ├── Wallet payment checkout        │
+│  └── E-Ticket with QR code         │
+└─────────────────────────────────────┘
+```
 
 ---
 
-## SECTION A — WALLET / STORED VALUE
+## Phase 1: Database Schema (8 new tables)
 
-### Current State: IMPLEMENTED (85%)
+### 1. `travel_services`
+Links a merchant to a transport category.
 
-KOB has a functional custodial wallet system:
-
-| Capability | Status | Implementation |
+| Column | Type | Notes |
 |---|---|---|
-| User wallet accounts | Yes | `accounts` table + `account_balances` (ClosingAvailable/InterimAvailable) |
-| Ledger-based balance tracking | Yes | `account_balances` with credit/debit indicators, datetime tracking |
-| Programmatic credit | Yes | `funding-scope-creditor.ts` upserts balances; `gateway-fund-account` credits via charges |
-| Programmatic debit | Yes | `gateway-process-withdrawal` debits balance atomically with rollback |
-| Sub-accounts / Escrow | Partial | `gateway_merchant_wallets` (3-balance model: available/pending/ledger) per merchant per currency; no formal escrow API |
-| Segregated fund structure | Not implemented | No dedicated safeguarding ledger or trust account segregation |
-| Transaction history | Yes | `transactions` table with full metadata, per-account filtering |
+| id | UUID PK | |
+| merchant_id | UUID FK → gateway_merchants | |
+| service_type | TEXT | `bus`, `tours`, `airlines`, `trains` |
+| display_name | TEXT | Agency brand name |
+| description | TEXT | |
+| logo_url | TEXT | |
+| theme_color | TEXT | e.g. `#F5C518` for bus |
+| is_active | BOOLEAN | default true |
+| metadata | JSONB | Flexible config |
+| created_at / updated_at | TIMESTAMPTZ | |
 
-### Missing: Dedicated Wallet REST API Surface
+Unique: `(merchant_id, service_type)`
 
-KOB has the underlying infrastructure but lacks a **formal `/v1/wallets/*` namespace**. Currently wallet operations are scattered across `gateway-fund-account`, `gateway-process-withdrawal`, and direct balance queries. Required new endpoints:
+### 2. `travel_routes`
+Origin → Destination corridors.
 
-```text
-POST   /v1/wallets                      — Create wallet (maps to account creation)
-GET    /v1/wallets/{id}                  — Get wallet with balances
-POST   /v1/wallets/{id}/credit           — Programmatic credit (wraps funding-scope-creditor)
-POST   /v1/wallets/{id}/debit            — Programmatic debit (wraps withdrawal logic)
-GET    /v1/wallets/{id}/transactions     — Transaction history for wallet
-GET    /v1/wallets/{id}/statement        — Generate statement (wraps generate-bank-statement)
-POST   /v1/wallets/{id}/freeze           — Freeze/unfreeze wallet (compliance)
-```
-
-**Required additions:**
-- Idempotency-Key header support (already pattern exists in `gateway-fund-account`)
-- Webhook events: `wallet.credited`, `wallet.debited`, `wallet.frozen`
-- Escrow sub-wallet creation for marketplace holds
-
-**Effort**: 1 new edge function (multi-method router), ~200 lines. No DB migration needed — uses existing `accounts` + `account_balances` tables.
-
----
-
-## SECTION B — OUTBOUND PAYOUTS
-
-### Current State: IMPLEMENTED (90%)
-
-KOB has a comprehensive outbound payout system:
-
-| Capability | Status | Provider |
+| Column | Type | Notes |
 |---|---|---|
-| Payouts to bank accounts | Yes | Flutterwave `/v3/transfers` |
-| Payouts to mobile money (MoMo) | Yes | Flutterwave MPS (MTN/Orange) |
-| Payouts to debit cards | Partial | Stripe Refund-based (requires prior card deposit) |
-| Payouts to PayPal | Yes | PayPal Batch Payouts API |
-| Batch payouts | Yes | `gateway-create-payout-batch` (up to 15k items via PayPal) |
-| Merchant-initiated payouts | Yes | `gateway-create-payout` (merchant wallet debit) |
-| Consumer-initiated withdrawals | Yes | `gateway-process-withdrawal` (account balance debit) |
-| Payout status polling | Yes | `gateway-payout-status-poll` |
-| Async webhook updates | Yes | `gateway-payout-webhook` (Stripe/Flutterwave/PayPal) |
-| Failed payout reversal | Yes | Automatic balance restoration on failure |
-| Admin manual reversal | Yes | `gateway-admin-reverse-withdrawal` |
-| Retry mechanism | Yes | `gateway-retry-payout` |
-| Daily payout limits | Yes | Per-merchant `daily_payout_limit` enforcement |
-| Idempotency | Yes | `idempotency-key` header on `gateway-create-payout` |
+| id | UUID PK | |
+| service_id | UUID FK → travel_services | |
+| origin | TEXT | City/location name |
+| destination | TEXT | |
+| distance_km | NUMERIC | |
+| estimated_duration_minutes | INT | |
+| is_active | BOOLEAN | |
 
-### Missing / Gaps
+### 3. `travel_seating_plans`
+Flexible seat layout templates (supports any pattern).
 
-1. **True push-to-card payouts**: Current card withdrawal is a Stripe Refund against a prior PaymentIntent. This is NOT a true payout — it requires a prior deposit, has refund-window limitations (180 days), and doesn't support arbitrary card destinations. For true instant card payouts, KOB needs Visa Direct / Mastercard Send integration.
-
-2. **Instant vs Standard payout parameter**: No `speed` parameter (`instant` | `standard`) on payout endpoints. All payouts use the provider's default speed.
-
-3. **Formal `/v1/payouts/cancel` endpoint**: Cancellation is not exposed as a standalone API. Only failed payouts can be retried.
-
-4. **Payout to arbitrary bank account** (non-linked): Currently requires a `linked_account_id` for consumer withdrawals. Merchant payouts accept direct beneficiary details but consumer withdrawals do not.
-
-### Required Endpoint Additions
-
-```text
-POST   /v1/payouts/{id}/cancel          — Cancel pending payout before provider submission
-PATCH  /v1/payouts                      — Add `speed: 'instant' | 'standard'` parameter
-POST   /v1/payouts/card                 — True push-to-card (requires Visa Direct integration)
-```
-
----
-
-## SECTION C — INSTANT RAILS SUPPORT
-
-### Current State: NOT IMPLEMENTED
-
-| Rail | Status |
-|---|---|
-| Visa Direct | Not integrated |
-| Mastercard Send | Not integrated |
-| SEPA Instant / FPS / RTP | Not integrated |
-| CEMAC real-time clearing (SYSTAC) | Not integrated |
-| 24/7 settlement processing | No — relies on provider business hours |
-| Push-to-card | Not available (Stripe refund ≠ push-to-card) |
-| Prefunding / liquidity pool | Not implemented |
-
-### Required Architecture for Instant Payouts
-
-```text
-┌─────────────────────────────────────────────┐
-│            KOB Instant Payout Engine         │
-├─────────────────────────────────────────────┤
-│  1. Prefunding Pool (Float Management)       │
-│     - Dedicated settlement account per rail  │
-│     - Real-time float monitoring API         │
-│     - Auto-replenishment triggers            │
-├─────────────────────────────────────────────┤
-│  2. Rail Router                              │
-│     - Visa Direct (card payouts)             │
-│     - Flutterwave Instant (MoMo already ~OK) │
-│     - CEMAC RTGS / SYSTAC (bank-to-bank)    │
-│     - Fallback: standard ACH-equivalent     │
-├─────────────────────────────────────────────┤
-│  3. Risk & Fraud Layer                       │
-│     - Pre-payout risk scoring                │
-│     - Velocity checks (existing)             │
-│     - Amount limits per rail per user tier   │
-│     - ML anomaly detection (ai-anomaly exists)│
-├─────────────────────────────────────────────┤
-│  4. Liquidity Management API                 │
-│     GET  /v1/treasury/float-balance          │
-│     POST /v1/treasury/replenish              │
-│     GET  /v1/treasury/utilization            │
-└─────────────────────────────────────────────┘
-```
-
-**Required new endpoints:**
-
-```text
-POST   /v1/payouts/instant              — Instant payout (auto-routes to fastest rail)
-GET    /v1/payouts/rails                — List available rails + current speed + fees
-POST   /v1/payouts/card/push            — Visa Direct push-to-card
-GET    /v1/treasury/float               — Float balance per rail (admin)
-POST   /v1/risk/pre-check               — Pre-payout risk assessment
-```
-
-**Estimated effort**: 3-5 new edge functions + Visa Direct API integration + prefunding account infrastructure. This is the largest gap.
-
----
-
-## SECTION D — LICENSING & COMPLIANCE
-
-### Current State: PARTIAL
-
-| Capability | Status |
-|---|---|
-| KYC verification | Yes — `kyc-submit`, `kyc_verifications` table, document upload |
-| KYB (merchant) | Yes — `gateway-merchant-kyb` (submit/review workflow) |
-| AML sanctions screening | Yes — `sanctions-screen` edge function |
-| Transaction monitoring | Yes — `transaction-monitor` + `ai-anomaly-detection` |
-| CDD (Customer Due Diligence) | Yes — `customer_due_diligence` table, PEP checks, risk scoring |
-| Risk scoring | Yes — `calculate_kyc_risk_score` DB function |
-| Data retention | Yes — 7-year COBAC compliance policy |
-| License type | Unclear — no EMI/MTL documentation found in codebase |
-
-### Missing
-
-1. **Formal EMI or Money Transmitter license documentation**: The platform operates as a wallet/payment processor but the licensing basis is not codified in the API. This is a business/legal gap, not a technical one.
-
-2. **Real-time transaction screening for outbound payouts**: `transaction-monitor` exists but it's not inline (pre-payout). Payouts execute first, monitor after.
-
-3. **Required compliance endpoints** (partially exist):
-
-```text
-POST   /v1/compliance/payout-screen     — Pre-payout AML/sanctions check (MISSING)
-GET    /v1/compliance/user-risk/{id}     — User risk profile (exists via calculate_kyc_risk_score)
-POST   /v1/compliance/sar               — Suspicious Activity Report submission (MISSING)
-```
-
----
-
-## SECTION E — TECHNICAL READINESS
-
-### Current State: PRODUCTION-GRADE (85%)
-
-| Feature | Status | Details |
+| Column | Type | Notes |
 |---|---|---|
-| Idempotency-Key | Yes | Supported on charges, payouts, funding intents via header + DB dedup |
-| Webhook system | Mature | HMAC-SHA256 signing, 7-retry exponential backoff, delivery logging, 24 event types |
-| Rate limiting | Yes | DB-backed (`check_rate_limit` RPC), per-provider webhook limits, per-user API limits |
-| Error format | Partial | Consistent `{error, message}` but NOT RFC 7807 `problem+json` everywhere |
-| Sandbox simulation | Yes | `sandbox-*` functions for data generation, API key creation, webhook testing |
-| API versioning | Yes | `/v1/` prefix on all endpoints |
-| OpenAPI spec | Yes | `public-api-spec` (OpenAPI 3.1.0, 245+ endpoints documented) |
-| Postman collection | Yes | `postman-collection` auto-generated |
+| id | UUID PK | |
+| service_id | UUID FK → travel_services | |
+| plan_name | TEXT | e.g. "70-seater Coach" |
+| rows | INT | Number of rows |
+| columns | INT | Max columns |
+| layout | JSONB | Array of `{row, col, seat_label, type, is_aisle}` — supports any pattern |
+| total_seats | INT | Computed bookable count |
 
-### Missing
+### 4. `travel_trips`
+Specific scheduled journeys on a route.
 
-1. **RFC 7807 error responses** are not consistently used (some functions return `{error, message}`, not `{type, title, status, detail}`)
-2. **SLA guarantees** are not programmatically documented (only operational: 15-min critical response)
-3. **Payout sandbox simulation** — sandbox exists for charges but payout simulation with realistic delays is not confirmed
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| route_id | UUID FK → travel_routes | |
+| seating_plan_id | UUID FK → travel_seating_plans | |
+| departure_at | TIMESTAMPTZ | |
+| arrival_at | TIMESTAMPTZ | |
+| price | NUMERIC | Base price per seat |
+| currency | TEXT | default `XAF` |
+| available_seats | INT | Decremented on booking |
+| status | TEXT | `scheduled`, `boarding`, `departed`, `completed`, `cancelled` |
+| vehicle_info | TEXT | e.g. bus plate, tour name |
+| metadata | JSONB | |
+
+### 5. `travel_bookings`
+A customer's booking (may contain multiple passengers/tickets).
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| trip_id | UUID FK → travel_trips | |
+| user_id | UUID FK → auth.users | Customer |
+| booking_ref | TEXT UNIQUE | e.g. `KOB-BUS-XXXXXX` |
+| total_amount | NUMERIC | |
+| currency | TEXT | |
+| payment_status | TEXT | `pending`, `paid`, `refunded` |
+| booking_status | TEXT | `confirmed`, `cancelled`, `completed` |
+| payment_method | TEXT | `wallet` |
+| created_at | TIMESTAMPTZ | |
+
+### 6. `travel_tickets`
+Individual e-tickets per seat, each with a unique QR code.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| booking_id | UUID FK → travel_bookings | |
+| seat_label | TEXT | e.g. `3A` |
+| passenger_name | TEXT | |
+| passenger_phone | TEXT | |
+| qr_code | TEXT UNIQUE | UUID-based validation token |
+| ticket_status | TEXT | `valid`, `used`, `cancelled`, `expired` |
+| validated_at | TIMESTAMPTZ | Set when scanned |
+| validated_by | UUID | Staff who scanned |
+
+### 7. `travel_timetables`
+Weekly recurring schedule templates.
+
+| Column | Type | Notes |
+|---|---|---|
+| id | UUID PK | |
+| route_id | UUID FK → travel_routes | |
+| day_of_week | INT | 0=Sun..6=Sat |
+| departure_time | TIME | |
+| arrival_time | TIME | |
+| price | NUMERIC | |
+| is_active | BOOLEAN | |
+
+### 8. RLS Policies
+- Merchants can CRUD their own `travel_services`, `travel_routes`, `travel_seating_plans`, `travel_trips`, `travel_timetables` (via `merchant_id` ownership chain).
+- Customers can SELECT active trips/routes/services; INSERT bookings/tickets for themselves.
+- Ticket validation (`UPDATE travel_tickets.ticket_status`) restricted to the owning merchant's staff.
 
 ---
 
-## COMPLETE GAP SUMMARY
+## Phase 2: Merchant Portal — Travel Services Module
 
-### To compete with Stripe-style instant payouts, KOB needs:
-
-| # | Gap | Priority | Effort |
-|---|---|---|---|
-| 1 | **Visa Direct integration** (true push-to-card) | CRITICAL | 1 edge function + Visa API onboarding |
-| 2 | **Formal `/v1/wallets/*` REST namespace** | HIGH | 1 edge function (router) |
-| 3 | **Instant payout rail router** with `speed` parameter | HIGH | 1 edge function + rail selection logic |
-| 4 | **Prefunding / float management API** | HIGH | 1 edge function + treasury tables |
-| 5 | **Pre-payout compliance screening** (inline) | HIGH | 1 edge function |
-| 6 | **Payout cancellation endpoint** | MEDIUM | Add to existing payout function |
-| 7 | **RFC 7807 error standardization** | MEDIUM | Update all edge functions |
-| 8 | **Escrow / hold sub-wallets** | MEDIUM | 1 migration + 1 function |
-| 9 | **Safeguarded fund segregation ledger** | MEDIUM | 1 migration |
-| 10 | **SAR submission endpoint** | LOW | 1 edge function |
-
----
-
-## FINAL ANSWERS
-
-| Question | Answer |
-|---|---|
-| Can KOB support instant wallet-to-bank withdrawals? | **Partially** — Flutterwave MoMo is near-instant; bank transfers are T+1 to T+3. No real-time bank rail (RTGS/SYSTAC) integration. |
-| Can KOB support instant wallet-to-card withdrawals? | **No** — Current implementation uses Stripe Refunds (requires prior deposit, 5-10 day processing). True push-to-card requires Visa Direct/Mastercard Send. |
-| Can KOB support 24/7 real-time payout infrastructure? | **No** — Dependent on provider business hours. No prefunding pool, no instant rail router, no 24/7 settlement engine. |
-| Production readiness for high-risk instant payout fintech? | **Not yet.** The wallet + standard payout infrastructure is solid (~90%), but instant rails, prefunding, and inline compliance screening are required before production deployment for an instant payout platform. |
-
-### Recommended Upgrade Roadmap
+New navigation section in `merchant-navigation-config.ts`:
 
 ```text
-Phase 1 (4-6 weeks): Wallet API namespace + inline compliance screening + payout cancel
-Phase 2 (6-10 weeks): Visa Direct integration + instant rail router + speed parameter
-Phase 3 (4-6 weeks): Prefunding/treasury API + float monitoring + 24/7 settlement cron
-Phase 4 (2-4 weeks): Escrow sub-wallets + safeguarding ledger + SAR endpoint
+Travel Services
+  ├── Service Setup       /merchant/travel-services
+  ├── Routes & Trips      /merchant/travel-routes
+  ├── Seating Plans       /merchant/travel-seating
+  ├── Timetable           /merchant/travel-timetable
+  ├── Bookings            /merchant/travel-bookings
+  └── Ticket Scanner      /merchant/travel-scanner
 ```
+
+### Key Pages
+
+1. **Service Setup** — Merchant selects which transport types they offer (Bus, Tours, Airlines, Trains). Bus and Tours are active; Airlines and Trains show "Coming Soon" badges. Each selection creates a `travel_services` record.
+
+2. **Seating Plan Designer** — Visual grid editor. Merchant defines rows × columns, then clicks cells to toggle between `seat`, `aisle`, `blocked`. Supports any irregular pattern. Preview renders the plan in real-time.
+
+3. **Routes & Trips** — CRUD for routes (origin/destination), then schedule trips on those routes with a selected seating plan, departure time, and price.
+
+4. **Timetable** — Weekly recurring schedule. Merchant sets departure times per day-of-week for each route.
+
+5. **Bookings Dashboard** — View all customer bookings, filter by trip/date/status.
+
+6. **QR Ticket Scanner** — Uses device camera to scan QR codes. Validates ticket via edge function `travel-validate-ticket`, marking it as `used`.
+
+---
+
+## Phase 3: Customer App — Travel Section
+
+### New Section on Home Page
+Add "Transport & Tourism" section to `CustomerHome.tsx` below existing sections, with themed category cards:
+
+| Category | Theme | Status |
+|---|---|---|
+| Bus Travel | Yellow/Black (`#F5C518` / `#1A1A1A`) | Active |
+| Tours | Aquatic Blue (`#00BCD4`) | Active |
+| Airlines | Red (`#D32F2F`) | Coming Soon |
+| Trains | Black (`#212121`) | Coming Soon |
+
+### New Pages
+
+1. **`/app/travel`** — Category grid (4 cards with themed colors).
+2. **`/app/travel/bus`** (and `/tours`) — Lists registered agencies for that category. Each card shows agency logo, name, and active route count.
+3. **`/app/travel/bus/:serviceId`** — Agency detail with routes list and timetable.
+4. **`/app/travel/bus/:serviceId/trips`** — Available trips for today/selected date. Shows departure, arrival, price, available seats.
+5. **`/app/travel/bus/:serviceId/trips/:tripId`** — Seat selector (renders seating plan grid dynamically), passenger form, wallet payment.
+6. **`/app/travel/ticket/:bookingId`** — E-ticket view with QR code (generated client-side using `qrcode` library), booking details, trip info.
+
+### Booking Flow
+1. Customer selects category → agency → route → trip
+2. Seat selector renders the agency's seating plan; taken seats are greyed out
+3. Customer fills passenger name/phone per seat selected
+4. Payment deducted from wallet balance via `api-transfers` pattern (debit customer account)
+5. `travel_bookings` + `travel_tickets` records created
+6. E-ticket displayed with unique QR code
+
+---
+
+## Phase 4: Edge Functions
+
+### `travel-validate-ticket`
+- Input: `{ qr_code: string }`
+- Auth: merchant staff JWT
+- Logic: Look up ticket by `qr_code`, verify `ticket_status = 'valid'`, verify trip belongs to merchant's service, mark as `used`, set `validated_at` and `validated_by`.
+- Returns: ticket + booking + trip details for display.
+
+### `travel-book-trip`
+- Input: `{ trip_id, seats: [{ seat_label, passenger_name, passenger_phone }] }`
+- Auth: customer JWT
+- Logic: Atomic transaction — check seat availability, debit wallet, create booking + tickets with generated QR codes, decrement `available_seats`.
+- Returns: booking with ticket QR codes.
+
+---
+
+## Phase 5: Feature Gating
+
+- Add `transport_tourism` to `AppFeatures` in `TenantProvider.tsx` so institutions can toggle this feature.
+- Add `travel_services` to merchant `metadata` schema to track which service types are enabled.
+- Airlines and Trains categories render with a "Coming Soon" overlay and are not clickable.
+
+---
+
+## Implementation Order
+
+1. Database migration (8 tables + RLS + indexes)
+2. Merchant nav config + Travel Services setup page
+3. Seating Plan Designer (visual grid editor)
+4. Routes, Trips & Timetable CRUD pages
+5. `travel-book-trip` edge function
+6. Customer App: travel category page + agency listing
+7. Customer App: trip browser + seat selector + payment
+8. Customer App: e-ticket with QR code
+9. `travel-validate-ticket` edge function + merchant scanner page
+10. Bookings dashboard for merchant
+
+---
+
+## Technical Decisions
+
+- **QR codes**: Generated client-side using a lightweight library (`qrcode.react`) — no server rendering needed. The QR payload is the `travel_tickets.qr_code` UUID.
+- **Seating plan flexibility**: The `layout` JSONB column stores an array of cell definitions, supporting any irregular pattern (L-shapes, missing seats, aisles, VIP sections). The visual editor and customer seat selector both render from this same data.
+- **Wallet payment**: Reuses the existing `api-transfers` double-entry pattern for debiting the customer's account.
+- **Theming**: Each service type has a predefined color palette applied via inline styles / Tailwind arbitrary values to maintain visual identity per category.
 
