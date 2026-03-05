@@ -249,39 +249,99 @@ const Index = () => {
 
             {/* Apps Ecosystem Banner - Modern animated cards */}
             <ScrollReveal>
-            <div className="mt-10 p-8 md:p-12 rounded-2xl border bg-card text-center">
-              <Smartphone className="h-8 w-8 text-primary mx-auto mb-4" />
-              <h3 className="text-2xl font-bold mb-3">Multi-Tenancy App Ecosystem</h3>
-              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
-                Explore our white-labeled PWA apps — Banking, Merchant & Customer — each branded per institution.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8">
-                {[
-                  { label: "Banking App", color: "hsl(217 91% 35%)", icon: Building2 },
-                  { label: "Merchant App", color: "hsl(142 76% 36%)", icon: Store },
-                  { label: "Customer App", color: "hsl(24 95% 53%)", icon: Users },
-                ].map((app, i) => (
-                  <motion.div
-                    key={app.label}
-                    className="flex-1 max-w-[200px] mx-auto rounded-2xl p-6 text-white cursor-pointer select-none"
-                    style={{ backgroundColor: app.color }}
-                    whileHover={{
-                      scale: 1.08,
-                      rotate: i === 1 ? -3 : i === 0 ? 3 : -2,
-                      y: -8,
-                    }}
-                    transition={{ type: "spring", stiffness: 300, damping: 18 }}
-                  >
-                    <app.icon className="h-8 w-8 mx-auto mb-3 opacity-90" strokeWidth={1.8} />
-                    <p className="font-semibold text-sm">{app.label}</p>
-                  </motion.div>
-                ))}
+            <div className="mt-10 p-8 md:p-12 rounded-2xl border bg-card">
+              <div className="grid md:grid-cols-2 gap-12 items-center">
+                {/* Left - Text Content */}
+                <div className="space-y-6">
+                  <div className="flex items-center gap-3">
+                    <Smartphone className="h-8 w-8 text-primary" />
+                    <Badge variant="outline" className="px-3 py-1">PWA Ecosystem</Badge>
+                  </div>
+                  <h3 className="text-3xl md:text-4xl font-bold leading-tight">Multi-Tenancy App Ecosystem</h3>
+                  <p className="text-muted-foreground text-lg leading-relaxed">
+                    Explore our white-labeled PWA apps — Banking, Merchant & Customer — each branded per institution, ready for deployment.
+                  </p>
+                  <ul className="space-y-3">
+                    {[
+                      "White-labeled per institution",
+                      "Offline-first PWA architecture",
+                      "Role-based access control",
+                    ].map((item) => (
+                      <li key={item} className="flex items-center gap-3 text-muted-foreground">
+                        <CheckCircle className="h-5 w-5 text-primary flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Link to="/apps">
+                    <Button size="lg" className="mt-2">
+                      Explore Apps <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* Right - Stacked Cards */}
+                <div className="relative flex items-center justify-center min-h-[420px]">
+                  {[
+                    { label: "Customer App", subtitle: "Personal Banking", desc: "Send money, pay bills, manage accounts — all from your phone.", icon: Users, color: "hsl(24 95% 53%)", features: ["Mobile Payments", "Bill Pay", "Account Management"], rotate: 6, z: 1, x: 16, y: 8 },
+                    { label: "Merchant App", subtitle: "Business Tools", desc: "Accept payments, track sales, manage inventory in real-time.", icon: Store, color: "hsl(142 76% 36%)", features: ["POS Integration", "Sales Analytics", "Inventory Sync"], rotate: 3, z: 2, x: 8, y: 4 },
+                    { label: "Banking App", subtitle: "Core Operations", desc: "Full banking operations — accounts, loans, KYC, and compliance.", icon: Building2, color: "hsl(217 91% 35%)", features: ["Account Ops", "Loan Management", "KYC & Compliance"], rotate: 0, z: 3, x: 0, y: 0 },
+                  ].map((app, i) => (
+                    <motion.div
+                      key={app.label}
+                      className="absolute cursor-pointer select-none"
+                      style={{ zIndex: app.z }}
+                      initial={{ rotate: app.rotate, x: app.x, y: app.y }}
+                      whileHover={{
+                        scale: 1.06,
+                        rotate: 0,
+                        x: 0,
+                        y: -16,
+                        zIndex: 10,
+                      }}
+                      transition={{ type: "spring", stiffness: 280, damping: 20 }}
+                    >
+                      <div
+                        className="w-[260px] h-[380px] rounded-3xl p-6 text-white flex flex-col shadow-2xl border border-white/10"
+                        style={{
+                          backgroundColor: "hsl(220 20% 12%)",
+                          boxShadow: `0 25px 60px -15px ${app.color.replace(')', ' / 0.3)')}`,
+                        }}
+                      >
+                        {/* Card Header */}
+                        <div className="mb-6">
+                          <h4 className="text-2xl font-bold tracking-tight">{app.label}</h4>
+                          <p className="text-sm text-white/50 mt-1">{app.subtitle}</p>
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="rounded-2xl p-4 flex-1 border border-white/10" style={{ backgroundColor: "hsl(220 18% 16%)" }}>
+                          <p className="text-xs text-white/60 mb-4 leading-relaxed">{app.desc}</p>
+                          <div className="space-y-2">
+                            {app.features.map((feat) => (
+                              <div key={feat} className="flex items-center gap-2 text-xs text-white/70">
+                                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: app.color }} />
+                                {feat}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Card Footer */}
+                        <div className="flex items-center gap-3 mt-4 pt-4 border-t border-white/10">
+                          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ backgroundColor: app.color }}>
+                            <app.icon className="h-4 w-4 text-white" strokeWidth={2} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-white/80">{app.label}</p>
+                            <p className="text-[10px] text-white/40">Edited 2 minutes ago</p>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
               </div>
-              <Link to="/apps">
-                <Button size="lg">
-                  Explore Apps <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
             </div>
             </ScrollReveal>
           </div>
