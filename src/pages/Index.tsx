@@ -421,6 +421,7 @@ const Index = () => {
           <ScrollReveal direction="right">
           <div className="mb-24 max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="md:order-1">
               <CodeImageFlipCard
                 endpoint="POST /v1/payments"
                 image={apiPaymentsPreview}
