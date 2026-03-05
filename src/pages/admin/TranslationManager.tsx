@@ -204,6 +204,30 @@ export default function TranslationManager() {
       }
     }
 
+    // Save French translation if provided
+    if (formFrenchValue.trim()) {
+      const targetId = editingString?.id;
+      if (targetId) {
+        await supabase.from("translation_values").upsert(
+          { string_id: targetId, language: "fr", value: formFrenchValue.trim(), is_auto_translated: false },
+          { onConflict: "string_id,language" }
+        );
+      } else {
+        // For new strings, fetch the newly created string id
+        const { data: newStr } = await supabase
+          .from("translation_strings")
+          .select("id")
+          .eq("string_key", formKey)
+          .maybeSingle();
+        if (newStr) {
+          await supabase.from("translation_values").upsert(
+            { string_id: newStr.id, language: "fr", value: formFrenchValue.trim(), is_auto_translated: false },
+            { onConflict: "string_id,language" }
+          );
+        }
+      }
+    }
+
     toast({ title: "Saved" });
     resetForm();
     setShowAddDialog(false);
