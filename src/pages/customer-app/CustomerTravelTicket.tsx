@@ -277,7 +277,7 @@ const CustomerTravelTicket: React.FC = () => {
             <TicketDivider />
 
             {/* Amount footer */}
-            <div className="px-6 py-4 bg-gradient-to-r from-[hsl(150,30%,96%)] to-[hsl(45,40%,96%)]">
+            <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-[hsl(150,30%,96%)] to-[hsl(45,40%,96%)]">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Total Paid</p>
