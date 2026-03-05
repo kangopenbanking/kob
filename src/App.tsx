@@ -490,6 +490,8 @@ function App() {
               <Route path="travel-counter-booking" element={<MerchantTravelCounterBooking />} />
               <Route path="travel-guide" element={<MerchantTravelGuide />} />
               <Route path="travel-discounts" element={<MerchantTravelDiscounts />} />
+              <Route path="travel-notifications" element={<MerchantTravelNotifications />} />
+              <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />
