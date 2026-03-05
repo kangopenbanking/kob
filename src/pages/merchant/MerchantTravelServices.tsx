@@ -182,9 +182,25 @@ const MerchantTravelServices: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Travel Services</h1>
-        <p className="text-muted-foreground">Set up and manage your transport & tourism offerings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Travel Services</h1>
+          <p className="text-muted-foreground">Set up and manage your transport & tourism offerings</p>
+        </div>
+        {merchantId && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={seedDemoData} disabled={seeding}>
+              {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+              Seed Demo Data
+            </Button>
+            {services.length > 0 && (
+              <Button variant="destructive" onClick={resetDemoData} disabled={resetting}>
+                {resetting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                Reset
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Category Cards */}
