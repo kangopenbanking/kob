@@ -226,8 +226,8 @@ const CustomerTravelBooking: React.FC = () => {
                 <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-[11px] text-muted-foreground">
                   <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(150,50%,95%)] border border-[hsl(150,40%,80%)]" /> Available</span>
                   <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-primary" /> Selected</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(217,70%,88%)] border border-[hsl(217,60%,75%)]" /> <span>♂ Male</span></span>
-                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(330,70%,88%)] border border-[hsl(330,60%,75%)]" /> <span>♀ Female</span></span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(217,70%,88%)] border border-[hsl(217,60%,75%)]" /> <span>M Male</span></span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(330,70%,88%)] border border-[hsl(330,60%,75%)]" /> <span>F Female</span></span>
                 </div>
               </div>
             ) : (
