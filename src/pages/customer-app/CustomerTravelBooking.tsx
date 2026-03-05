@@ -102,7 +102,39 @@ const CustomerTravelBooking: React.FC = () => {
     setSelectedSeats(prev => prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]);
   };
 
-  const totalPrice = selectedSeats.length * (trip?.price || 0);
+  const basePrice = selectedSeats.length * (trip?.price || 0);
+
+  // Calculate best applicable discount
+  const bestDiscount = useMemo(() => {
+    const candidates = [...autoDiscounts, appliedDiscount].filter(Boolean);
+    let best: any = null;
+    let bestSaving = 0;
+    for (const d of candidates) {
+      if (d.min_seats > selectedSeats.length) continue;
+      if (d.max_uses !== null && d.current_uses >= d.max_uses) continue;
+      const saving = d.discount_type === 'percentage' ? basePrice * d.discount_value / 100 : d.discount_value;
+      if (saving > bestSaving) { bestSaving = saving; best = d; }
+    }
+    return best;
+  }, [autoDiscounts, appliedDiscount, selectedSeats.length, basePrice]);
+
+  const discountAmount = bestDiscount
+    ? (bestDiscount.discount_type === 'percentage' ? Math.round(basePrice * bestDiscount.discount_value / 100) : bestDiscount.discount_value)
+    : 0;
+  const totalPrice = Math.max(0, basePrice - discountAmount);
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim() || !serviceId) return;
+    const { data } = await supabase.from('travel_discounts').select('*')
+      .eq('service_id', serviceId).eq('promo_code', promoCode.trim().toUpperCase())
+      .eq('is_active', true).lte('valid_from', new Date().toISOString()).maybeSingle();
+    if (!data) { toast.error('Invalid promo code'); return; }
+    const d = data as any;
+    if (d.valid_until && new Date(d.valid_until) < new Date()) { toast.error('Promo code expired'); return; }
+    if (d.max_uses !== null && d.current_uses >= d.max_uses) { toast.error('Promo code usage limit reached'); return; }
+    setAppliedDiscount(d);
+    toast.success(`Promo "${d.discount_name}" applied!`);
+  };
 
   const handleBook = async () => {
     const { data: { user } } = await supabase.auth.getUser();
