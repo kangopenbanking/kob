@@ -931,8 +931,8 @@ export const translations = {
     connected: "Connected",
     offline: "Offline",
     online: "Online",
-    syncInProgress: "Sync in progress",
-    syncComplete: "Sync complete",
+    dataSyncInProgress: "Sync in progress",
+    dataSyncComplete: "Sync complete",
     upToDate: "Up to date",
 
     // Staff Portal
