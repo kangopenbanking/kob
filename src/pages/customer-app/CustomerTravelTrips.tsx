@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MapPin, Clock, Calendar, Users, Loader2, ArrowRight, Route as RouteIcon, Ticket, Star, Bus, Shield, ChevronRight } from 'lucide-react';
+import { ChevronLeft, MapPin, Clock, Calendar, Users, Loader2, ArrowRight, Route as RouteIcon, Ticket, Star, Bus, Shield, ChevronRight, SlidersHorizontal, ArrowUpDown, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,6 +21,13 @@ const CustomerTravelTrips: React.FC = () => {
   const [userBookedRouteIds, setUserBookedRouteIds] = useState<string[]>([]);
   const [routeBookingCounts, setRouteBookingCounts] = useState<Record<string, number>>({});
   const sliderRef = useRef<HTMLDivElement>(null);
+
+  // Filters
+  type SortOption = 'departure' | 'price_low' | 'price_high' | 'seats';
+  type TimeFilter = 'all' | 'morning' | 'afternoon' | 'evening';
+  const [sortBy, setSortBy] = useState<SortOption>('departure');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -86,7 +93,30 @@ const CustomerTravelTrips: React.FC = () => {
     fetchData();
   }, [serviceId]);
 
-  const filteredTrips = selectedRoute ? trips.filter(t => t.route_id === selectedRoute) : trips;
+  // Apply filters
+  const filteredTrips = (() => {
+    let result = selectedRoute ? trips.filter(t => t.route_id === selectedRoute) : [...trips];
+    // Time filter
+    if (timeFilter !== 'all') {
+      result = result.filter(t => {
+        const hour = new Date(t.departure_at).getHours();
+        if (timeFilter === 'morning') return hour >= 5 && hour < 12;
+        if (timeFilter === 'afternoon') return hour >= 12 && hour < 17;
+        if (timeFilter === 'evening') return hour >= 17 || hour < 5;
+        return true;
+      });
+    }
+    // Sort
+    result.sort((a, b) => {
+      if (sortBy === 'price_low') return a.price - b.price;
+      if (sortBy === 'price_high') return b.price - a.price;
+      if (sortBy === 'seats') return b.available_seats - a.available_seats;
+      return new Date(a.departure_at).getTime() - new Date(b.departure_at).getTime();
+    });
+    return result;
+  })();
+
+  const activeFilterCount = (timeFilter !== 'all' ? 1 : 0) + (sortBy !== 'departure' ? 1 : 0);
 
   const routeAccents = [
     { solid: 'bg-gradient-to-br from-[hsl(217,91%,55%)] to-[hsl(230,80%,42%)]', light: 'hsl(217,80%,96%)', text: 'hsl(217,80%,40%)', dotColor: 'hsl(217,91%,55%)' },
@@ -176,6 +206,67 @@ const CustomerTravelTrips: React.FC = () => {
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
+            {/* ═══ FILTER BAR ═══ */}
+            <div className="px-4 space-y-2.5">
+              {/* Toggle row */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowFilters(p => !p)}
+                  className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-bold transition-all border shadow-sm ${showFilters ? 'bg-primary text-primary-foreground border-primary' : 'bg-white text-foreground border-border/50 hover:border-border'}`}
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[9px] font-black">{activeFilterCount}</span>
+                  )}
+                </button>
+
+                {/* Quick sort pills */}
+                <div className="flex gap-1.5 overflow-x-auto scrollbar-none flex-1">
+                  {([
+                    { key: 'departure' as SortOption, label: 'Soonest' },
+                    { key: 'price_low' as SortOption, label: 'Cheapest' },
+                    { key: 'price_high' as SortOption, label: 'Priciest' },
+                    { key: 'seats' as SortOption, label: 'Most Seats' },
+                  ]).map(s => (
+                    <button key={s.key} onClick={() => setSortBy(s.key)}
+                      className={`shrink-0 inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[10px] font-bold transition-all border ${sortBy === s.key ? 'bg-[hsl(220,30%,14%)] text-white border-[hsl(220,30%,14%)]' : 'bg-white text-muted-foreground border-border/40 hover:border-border'}`}>
+                      <ArrowUpDown className="h-2.5 w-2.5" />{s.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Expanded filter panel */}
+              {showFilters && (
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
+                  className="rounded-2xl bg-white border border-border/50 p-4 shadow-sm space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">Time of Day</p>
+                    {activeFilterCount > 0 && (
+                      <button onClick={() => { setTimeFilter('all'); setSortBy('departure'); }}
+                        className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive hover:underline">
+                        <X className="h-3 w-3" /> Clear all
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex gap-2">
+                    {([
+                      { key: 'all' as TimeFilter, label: 'Any Time', icon: '🕐' },
+                      { key: 'morning' as TimeFilter, label: 'Morning', icon: '🌅' },
+                      { key: 'afternoon' as TimeFilter, label: 'Afternoon', icon: '☀️' },
+                      { key: 'evening' as TimeFilter, label: 'Evening', icon: '🌙' },
+                    ]).map(t => (
+                      <button key={t.key} onClick={() => setTimeFilter(t.key)}
+                        className={`flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-bold transition-all border ${timeFilter === t.key ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'bg-muted/30 border-border/30 text-muted-foreground hover:bg-muted/50'}`}>
+                        <span className="text-base">{t.icon}</span>
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
+            </div>
             {/* ═══ ROUTE SLIDER ═══ */}
             <div>
               <div className="flex items-center justify-between px-4 mb-3">
