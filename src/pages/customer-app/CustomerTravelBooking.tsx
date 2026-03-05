@@ -252,59 +252,126 @@ const CustomerTravelBooking: React.FC = () => {
 
         {/* Step 2: Passenger Details */}
         {step === 'details' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Passenger Details</p>
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="space-y-4">
+            {/* Section header */}
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-[hsl(217,91%,50%)] shadow-md">
+                <Users className="h-4 w-4 text-white" />
+              </div>
+              <div>
+                <h2 className="text-[15px] font-bold text-foreground">Passenger Details</h2>
+                <p className="text-[11px] text-muted-foreground">Fill in details for each traveller</p>
+              </div>
+            </div>
+
             {selectedSeats.map((seat, idx) => {
-              const seatColors = [
-                { border: 'border-l-[hsl(217,91%,55%)]', bg: 'bg-[hsl(217,91%,97%)]' },
-                { border: 'border-l-[hsl(150,60%,40%)]', bg: 'bg-[hsl(150,60%,97%)]' },
-                { border: 'border-l-[hsl(38,92%,50%)]', bg: 'bg-[hsl(38,92%,97%)]' },
-                { border: 'border-l-[hsl(258,80%,58%)]', bg: 'bg-[hsl(258,80%,97%)]' },
+              const seatThemes = [
+                { accent: 'hsl(217,91%,55%)', bgFrom: 'hsl(217,80%,97%)', bgTo: 'hsl(217,60%,99%)', border: 'hsl(217,70%,88%)', icon: '🔵' },
+                { accent: 'hsl(150,60%,40%)', bgFrom: 'hsl(150,50%,96%)', bgTo: 'hsl(150,40%,99%)', icon: '🟢', border: 'hsl(150,50%,85%)' },
+                { accent: 'hsl(38,92%,50%)', bgFrom: 'hsl(38,80%,96%)', bgTo: 'hsl(38,60%,99%)', icon: '🟠', border: 'hsl(38,70%,85%)' },
+                { accent: 'hsl(258,80%,58%)', bgFrom: 'hsl(258,60%,97%)', bgTo: 'hsl(258,50%,99%)', icon: '🟣', border: 'hsl(258,60%,88%)' },
               ];
-              const color = seatColors[idx % seatColors.length];
+              const theme = seatThemes[idx % seatThemes.length];
               const p = passengers[seat] || { name: '', phone: '', gender: 'male' as Gender };
               const isAutoFilled = idx === 0 && customerUser?.fullName && p.name === customerUser.fullName;
+
               return (
-                <div key={seat} className={`rounded-2xl border ${color.bg} p-4 space-y-3 shadow-sm border-l-4 ${color.border}`}>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-[11px] font-bold">Seat {seat}</Badge>
-                    {isAutoFilled && <Badge className="bg-[hsl(150,60%,40%)] text-white text-[10px] border-0">Auto-filled</Badge>}
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[12px] font-semibold">Full Name *</Label>
-                    <Input placeholder="Passenger name" value={p.name}
-                      className="rounded-xl bg-white/80"
-                      onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], name: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[12px] font-semibold">Phone</Label>
-                    <Input placeholder="+237 ..." value={p.phone}
-                      className="rounded-xl bg-white/80"
-                      onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label className="text-[12px] font-semibold">Gender *</Label>
-                    <RadioGroup value={p.gender || 'male'} onValueChange={(v) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], gender: v as Gender } }))} className="flex gap-4">
-                      <div className="flex items-center gap-2">
-                        <RadioGroupItem value="male" id={`male-${seat}`} />
-                        <Label htmlFor={`male-${seat}`} className="text-[12px] flex items-center gap-1 cursor-pointer">
-                          <span className="text-[hsl(217,70%,50%)]">♂</span> Male
-                        </Label>
+                <motion.div
+                  key={seat}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.08 }}
+                  className="rounded-2xl overflow-hidden shadow-md border"
+                  style={{ borderColor: theme.border }}
+                >
+                  {/* Card header band */}
+                  <div className="flex items-center justify-between px-4 py-2.5" style={{ background: `linear-gradient(135deg, ${theme.bgFrom}, ${theme.bgTo})` }}>
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-lg shadow-sm" style={{ backgroundColor: theme.accent }}>
+                        <User className="h-3.5 w-3.5 text-white" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <RadioGroupItem value="female" id={`female-${seat}`} />
-                        <Label htmlFor={`female-${seat}`} className="text-[12px] flex items-center gap-1 cursor-pointer">
-                          <span className="text-[hsl(330,70%,50%)]">♀</span> Female
-                        </Label>
-                      </div>
-                    </RadioGroup>
+                      <span className="text-[13px] font-bold text-foreground">Passenger {idx + 1}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {isAutoFilled && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[hsl(150,60%,40%)] px-2 py-0.5 text-[9px] font-bold text-white">
+                          <Check className="h-2.5 w-2.5" /> Auto-filled
+                        </span>
+                      )}
+                      <span className="inline-flex items-center rounded-lg px-2 py-1 text-[11px] font-extrabold" style={{ backgroundColor: theme.accent, color: 'white' }}>
+                        <Armchair className="h-3 w-3 mr-1" />{seat}
+                      </span>
+                    </div>
                   </div>
-                </div>
+
+                  {/* Card body */}
+                  <div className="bg-card px-4 py-4 space-y-3.5">
+                    {/* Name */}
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Full Name <span className="text-destructive">*</span></Label>
+                      <Input
+                        placeholder="Enter passenger name"
+                        value={p.name}
+                        className="h-11 rounded-xl bg-muted/30 border-border/60 font-medium text-sm focus-visible:ring-2"
+                        style={{ ['--tw-ring-color' as any]: theme.accent }}
+                        onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], name: e.target.value, gender: prev[seat]?.gender || 'male' } }))}
+                      />
+                    </div>
+
+                    {/* Phone */}
+                    <div className="space-y-1">
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Phone Number</Label>
+                      <Input
+                        placeholder="+237 6XX XXX XXX"
+                        value={p.phone}
+                        className="h-11 rounded-xl bg-muted/30 border-border/60 font-medium text-sm"
+                        onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value, gender: prev[seat]?.gender || 'male' } }))}
+                      />
+                    </div>
+
+                    {/* Gender */}
+                    <div className="space-y-2">
+                      <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground/70">Gender <span className="text-destructive">*</span></Label>
+                      <RadioGroup
+                        value={p.gender || 'male'}
+                        onValueChange={(v) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], gender: v as Gender } }))}
+                        className="flex gap-3"
+                      >
+                        <label
+                          htmlFor={`male-${seat}`}
+                          className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 cursor-pointer transition-all text-[12px] font-bold ${
+                            p.gender === 'male'
+                              ? 'border-[hsl(217,70%,55%)] bg-[hsl(217,70%,96%)] text-[hsl(217,70%,40%)] shadow-sm'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted/40'
+                          }`}
+                        >
+                          <RadioGroupItem value="male" id={`male-${seat}`} className="sr-only" />
+                          <span className="text-lg">♂</span> Male
+                        </label>
+                        <label
+                          htmlFor={`female-${seat}`}
+                          className={`flex-1 flex items-center justify-center gap-2 rounded-xl border-2 py-2.5 cursor-pointer transition-all text-[12px] font-bold ${
+                            p.gender === 'female'
+                              ? 'border-[hsl(330,70%,55%)] bg-[hsl(330,70%,96%)] text-[hsl(330,70%,40%)] shadow-sm'
+                              : 'border-border bg-card text-muted-foreground hover:bg-muted/40'
+                          }`}
+                        >
+                          <RadioGroupItem value="female" id={`female-${seat}`} className="sr-only" />
+                          <span className="text-lg">♀</span> Female
+                        </label>
+                      </RadioGroup>
+                    </div>
+                  </div>
+                </motion.div>
               );
             })}
-            <div className="flex gap-3">
-              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-11 rounded-xl">Back</Button>
-              <Button onClick={() => setStep('confirm')} className="flex-1 h-11 rounded-xl bg-gradient-to-r from-primary to-[hsl(217,91%,50%)]">Review Booking</Button>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-1">
+              <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">Back</Button>
+              <Button onClick={() => setStep('confirm')} className="flex-1 h-12 rounded-xl bg-gradient-to-r from-primary to-[hsl(217,91%,50%)] font-bold text-sm shadow-lg">
+                Review Booking →
+              </Button>
             </div>
           </motion.div>
         )}
