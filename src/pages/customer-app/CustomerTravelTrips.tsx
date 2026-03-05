@@ -171,7 +171,7 @@ const CustomerTravelTrips: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 -mt-4 pb-24 space-y-5">
+      <div className="relative z-10 px-0 pt-3 -mt-4 pb-24 space-y-5">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : (
@@ -204,33 +204,45 @@ const CustomerTravelTrips: React.FC = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedRoute(isActive ? null : route.id)}
-                      className={`shrink-0 snap-start w-[200px] rounded-2xl p-4 text-left shadow-lg transition-all relative overflow-hidden ${accent.solid} ${isActive ? 'ring-3 ring-white/40 scale-[1.02]' : 'hover:scale-[1.01]'}`}
+                      className={`shrink-0 snap-start w-[220px] rounded-2xl p-4 text-left shadow-lg transition-all relative overflow-hidden ${accent.solid} ${isActive ? 'ring-3 ring-white/40 scale-[1.02]' : 'hover:scale-[1.01]'}`}
                     >
                       {/* Recent badge */}
                       {isUserBooked && (
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-2.5 right-2.5">
                           <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur-sm px-2 py-0.5 text-[8px] font-bold text-white uppercase tracking-wider">
                             <Star className="h-2.5 w-2.5 mr-0.5" /> Recent
                           </span>
                         </div>
                       )}
 
-                      <div className="space-y-3">
+                      {/* Agency name */}
+                      <div className="flex items-center gap-1.5 mb-3">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-md border border-white/30 bg-white/10">
+                          <Bus className="h-3 w-3 text-white/80" />
+                        </div>
+                        <span className="text-[9px] font-bold text-white/60 uppercase tracking-wider truncate">{service?.display_name}</span>
+                      </div>
+
+                      <div className="space-y-2.5">
                         {/* Origin */}
                         <div className="flex items-center gap-2">
-                          <div className="h-2.5 w-2.5 rounded-full bg-white/80 ring-2 ring-white/30 shrink-0" />
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/25 bg-white/10 shrink-0">
+                            <MapPin className="h-3 w-3 text-white/90" />
+                          </div>
                           <div className="min-w-0">
-                            <p className="text-[8px] font-bold uppercase tracking-wider text-white/50">From</p>
-                            <p className="text-sm font-extrabold text-white truncate">{route.origin}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-wider text-white/40">From</p>
+                            <p className="text-[13px] font-extrabold text-white truncate">{route.origin}</p>
                           </div>
                         </div>
 
-                        {/* Connector line */}
-                        <div className="flex items-center gap-2 pl-[5px]">
-                          <div className="w-0.5 h-3 bg-white/25 rounded-full" />
+                        {/* Connector line + duration */}
+                        <div className="flex items-center gap-2 pl-[11px]">
+                          <div className="w-0.5 h-3 bg-white/20 rounded-full" />
                           {route.estimated_duration_minutes && (
-                            <span className="text-[9px] font-semibold text-white/45 flex items-center gap-0.5">
-                              <Clock className="h-2.5 w-2.5" />
+                            <span className="text-[9px] font-semibold text-white/40 flex items-center gap-1">
+                              <div className="flex h-4 w-4 items-center justify-center rounded border border-white/20 bg-white/5">
+                                <Clock className="h-2.5 w-2.5 text-white/60" />
+                              </div>
                               {Math.floor(route.estimated_duration_minutes / 60)}h{route.estimated_duration_minutes % 60 > 0 ? `${route.estimated_duration_minutes % 60}m` : ''}
                             </span>
                           )}
@@ -238,22 +250,34 @@ const CustomerTravelTrips: React.FC = () => {
 
                         {/* Destination */}
                         <div className="flex items-center gap-2">
-                          <div className="h-2.5 w-2.5 rounded-sm bg-white shrink-0 ring-2 ring-white/30" />
+                          <div className="flex h-6 w-6 items-center justify-center rounded-lg border border-white/25 bg-white/10 shrink-0">
+                            <MapPin className="h-3 w-3 text-white" />
+                          </div>
                           <div className="min-w-0">
-                            <p className="text-[8px] font-bold uppercase tracking-wider text-white/50">To</p>
-                            <p className="text-sm font-extrabold text-white truncate">{route.destination}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-wider text-white/40">To</p>
+                            <p className="text-[13px] font-extrabold text-white truncate">{route.destination}</p>
                           </div>
                         </div>
                       </div>
 
-                      {/* Footer */}
-                      <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/15">
-                        <span className="inline-flex items-center rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold text-white">
+                      {/* Footer with more details */}
+                      <div className="mt-3 flex items-center justify-between pt-2.5 border-t border-white/15">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold text-white">
+                          <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-white/30">
+                            <Ticket className="h-2 w-2 text-white" />
+                          </div>
                           {tripCount} trip{tripCount !== 1 ? 's' : ''}
                         </span>
-                        {route.distance_km && (
-                          <span className="text-[9px] font-semibold text-white/45">{route.distance_km} km</span>
-                        )}
+                        <span className="inline-flex items-center gap-1 text-[9px] font-semibold text-white/45">
+                          {route.distance_km && (
+                            <>
+                              <div className="flex h-3.5 w-3.5 items-center justify-center rounded border border-white/20">
+                                <RouteIcon className="h-2 w-2 text-white/60" />
+                              </div>
+                              {route.distance_km} km
+                            </>
+                          )}
+                        </span>
                       </div>
                     </motion.button>
                   );
