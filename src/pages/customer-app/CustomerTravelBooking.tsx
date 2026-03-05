@@ -200,8 +200,10 @@ const CustomerTravelBooking: React.FC = () => {
         {step === 'details' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Passenger Details</p>
-            {selectedSeats.map((seat) => (
-              <div key={seat} className="rounded-2xl border bg-card p-4 space-y-3 shadow-sm">
+            {selectedSeats.map((seat, idx) => {
+              const seatColors = ['border-l-[hsl(217,91%,55%)]', 'border-l-[hsl(150,60%,40%)]', 'border-l-[hsl(38,92%,50%)]', 'border-l-[hsl(258,80%,58%)]'];
+              return (
+              <div key={seat} className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm border-l-4 ${seatColors[idx % seatColors.length]}`}>
                 <Badge variant="outline" className="text-[11px]">Seat {seat}</Badge>
                 <div className="space-y-1.5">
                   <Label className="text-[12px]">Full Name *</Label>
