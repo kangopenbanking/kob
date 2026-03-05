@@ -804,6 +804,11 @@ function App() {
               <Route path="help" element={<CustomerHelp />} />
               <Route path="linked-accounts" element={<CustomerLinkedAccounts />} />
               <Route path="fund" element={<CustomerFundWallet />} />
+              <Route path="travel" element={<CustomerTravelCategories />} />
+              <Route path="travel/:category" element={<CustomerTravelAgencies />} />
+              <Route path="travel/:category/:serviceId" element={<CustomerTravelTrips />} />
+              <Route path="travel/:category/:serviceId/trips/:tripId" element={<CustomerTravelBooking />} />
+              <Route path="travel/ticket/:bookingId" element={<CustomerTravelTicket />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
