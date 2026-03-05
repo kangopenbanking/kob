@@ -490,7 +490,7 @@ const CustomerHome: React.FC = () => {
           return (
             <button
               onClick={() => go('travel')}
-              className="group relative w-full overflow-hidden rounded-3xl text-left transition-transform active:scale-[0.98]"
+              className="group relative w-full min-h-[280px] overflow-hidden rounded-3xl text-left transition-transform active:scale-[0.98]"
             >
               {/* Cover image */}
               <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
