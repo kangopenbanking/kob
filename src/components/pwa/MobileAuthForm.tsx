@@ -15,7 +15,7 @@ import { sounds } from '@/lib/sounds';
 import { API_CONFIG } from '@/config/api';
 import kangLogo from '@/assets/kang-logo.png';
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin';
 

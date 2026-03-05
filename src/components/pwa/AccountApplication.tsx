@@ -17,7 +17,7 @@ interface AccountApplicationProps {
   onSkip?: () => void;
 }
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 const STEPS = ['Personal', 'Contact', 'Account', 'Security', 'Review'];
 
