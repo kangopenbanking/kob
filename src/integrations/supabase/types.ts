@@ -12705,6 +12705,68 @@ export type Database = {
           },
         ]
       }
+      travel_discounts: {
+        Row: {
+          applies_to_routes: string[] | null
+          created_at: string | null
+          current_uses: number | null
+          discount_name: string
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          min_seats: number | null
+          promo_code: string | null
+          service_id: string
+          updated_at: string | null
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          applies_to_routes?: string[] | null
+          created_at?: string | null
+          current_uses?: number | null
+          discount_name: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_seats?: number | null
+          promo_code?: string | null
+          service_id: string
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          applies_to_routes?: string[] | null
+          created_at?: string | null
+          current_uses?: number | null
+          discount_name?: string
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          min_seats?: number | null
+          promo_code?: string | null
+          service_id?: string
+          updated_at?: string | null
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_discounts_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "travel_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       travel_routes: {
         Row: {
           created_at: string
