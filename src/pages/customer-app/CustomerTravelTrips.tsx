@@ -111,7 +111,7 @@ const CustomerTravelTrips: React.FC = () => {
                   </div>
                 </motion.div>
                 );
-              ))}
+              })}
             </div>
 
             {/* Trips */}
