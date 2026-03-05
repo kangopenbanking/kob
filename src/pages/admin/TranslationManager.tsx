@@ -294,6 +294,75 @@ export default function TranslationManager() {
     }
   };
 
+  const handleScanAllStrings = async () => {
+    setScanning(true);
+    try {
+      // Collect ALL keys from the static translations file
+      const enStrings = translations.en;
+      const allKeys = Object.keys(enStrings) as (keyof typeof enStrings)[];
+      
+      const batch = allKeys.map((key) => {
+        const category = key.includes('.')
+          ? key.split('.')[0]
+          : inferCategory(key as string);
+        return {
+          key: key as string,
+          default_value: enStrings[key],
+          category,
+        };
+      });
+
+      // Send in chunks of 50
+      let totalRegistered = 0;
+      const chunkSize = 50;
+      for (let i = 0; i < batch.length; i += chunkSize) {
+        const chunk = batch.slice(i, i + chunkSize);
+        const { data, error } = await supabase.functions.invoke('register-translation-strings', {
+          body: { strings: chunk },
+        });
+        if (error) throw error;
+        totalRegistered += data?.registered || 0;
+      }
+
+      if (totalRegistered > 0) {
+        toast({ title: "Scan Complete", description: `${totalRegistered} new strings registered` });
+      } else {
+        toast({ title: "All Synced", description: "All strings are already in the database" });
+      }
+      fetchData();
+    } catch (e: any) {
+      toast({ title: "Scan failed", description: e.message, variant: "destructive" });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Infer category from key name
+  function inferCategory(key: string): string {
+    const k = key.toLowerCase();
+    if (/^(home|about|developer|contact|dashboard|admin|fiPortal|signIn|signOut|menu|more|overview|help|alerts|scan|wallet)$/i.test(key)) return 'navigation';
+    if (/^(hero|getStarted|viewDocs|footerTagline|quickLinks|legal|privacy|terms|cookies|copyright|allRightsReserved|poweredBy|followUs|newsletter|subscribe)$/i.test(key)) return 'landing';
+    if (/^(email|password|confirmPassword|forgotPassword|resetPassword|createAccount|signUp|signIn|verifyEmail|login|logout|twoFactor|enterCode|biometric|fingerprint|faceId|pin|changePassword|currentPassword|newPassword|rememberMe|staySignedIn|welcomeBack)$/i.test(key)) return 'auth';
+    if (k.includes('credit') || k.includes('score') || k.includes('crediq') || k.includes('factor') || k.includes('onboarding') || k.includes('improvement')) return 'crediq';
+    if (k.includes('transfer') || k.includes('payment') || k.includes('mobile') || k.includes('bank') || k.includes('card') || k.includes('invoice') || k.includes('refund') || k.includes('checkout')) return 'payments';
+    if (k.includes('kyc') || k.includes('verification') || k.includes('document') || k.includes('identity') || k.includes('selfie')) return 'kyc';
+    if (k.includes('njangi') || k.includes('group') || k.includes('contribution')) return 'njangi';
+    if (k.includes('merchant') || k.includes('gateway') || k.includes('pos') || k.includes('woocommerce') || k.includes('shopify')) return 'merchant';
+    if (k.includes('aml') || k.includes('sanction') || k.includes('pep') || k.includes('suspicious') || k.includes('compliance') || k.includes('risk')) return 'compliance';
+    if (k.includes('consent') || k.includes('openBanking') || k.includes('tpp') || k.includes('client') || k.includes('token') || k.includes('scope')) return 'openbanking';
+    if (k.includes('investor') || k.includes('revenue') || k.includes('growth') || k.includes('funding') || k.includes('valuation') || k.includes('market')) return 'investor';
+    if (k.includes('setting') || k.includes('theme') || k.includes('appearance') || k.includes('notification') || k.includes('preference') || k.includes('language') || k.includes('dark') || k.includes('light')) return 'settings';
+    if (k.includes('error') || k.includes('failed') || k.includes('denied') || k.includes('notFound') || k.includes('serverError') || k.includes('somethingWent')) return 'errors';
+    if (k.includes('notification') || k.includes('toast') || k.includes('alert') || k.includes('saved') || k.includes('deleted') || k.includes('created') || k.includes('updated')) return 'notifications';
+    if (k.includes('profile') || k.includes('firstName') || k.includes('lastName') || k.includes('phone') || k.includes('address') || k.includes('gender') || k.includes('nationality')) return 'profile';
+    if (k.includes('staff') || k.includes('department') || k.includes('payroll') || k.includes('attendance')) return 'staff';
+    if (k.includes('admin') || k.includes('manage') || k.includes('system') || k.includes('maintenance') || k.includes('approval')) return 'admin';
+    if (k.includes('dashboard') || k.includes('balance') || k.includes('spending') || k.includes('savings') || k.includes('budget') || k.includes('netWorth')) return 'dashboard';
+    if (k.includes('postiq') || k.includes('postal') || k.includes('geolocation') || k.includes('mapView')) return 'postiq';
+    if (k.includes('exchange') || k.includes('currency') || k.includes('xaf') || k.includes('usd') || k.includes('eur') || k.includes('interest') || k.includes('principal')) return 'finance';
+    return 'general';
+  }
+
   const handleSaveInlineTranslation = async () => {
     if (!editingTranslation) return;
     const { stringId, language } = editingTranslation;
