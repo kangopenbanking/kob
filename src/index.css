@@ -395,3 +395,8 @@ All colors MUST be HSL.
 .lucide {
   stroke-width: 2 !important;
 }
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
