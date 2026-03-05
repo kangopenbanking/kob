@@ -431,6 +431,8 @@ export default function TranslationManager() {
     setFormDefaultValue(str.default_value);
     setFormDescription(str.description || "");
     setFormContext(str.context || "");
+    const existingFr = getTranslation(str.id, "fr");
+    setFormFrenchValue(existingFr?.value || "");
     setShowAddDialog(true);
   };
 
