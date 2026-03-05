@@ -79,6 +79,7 @@ interface CustomerTenantBranding {
   heroActionColors: HeroActionColors;
   heroActionOpacity: number;
   typographyConfig: TypographyConfig;
+  travelCardConfig: TravelCardConfig;
 }
 
 const defaultFeatures: CustomerAppFeatures = {
