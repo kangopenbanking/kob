@@ -12658,6 +12658,342 @@ export type Database = {
           },
         ]
       }
+      travel_bookings: {
+        Row: {
+          booking_ref: string
+          booking_status: string
+          created_at: string
+          currency: string
+          id: string
+          payment_method: string | null
+          payment_status: string
+          total_amount: number
+          trip_id: string
+          user_id: string
+        }
+        Insert: {
+          booking_ref: string
+          booking_status?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          payment_status?: string
+          total_amount?: number
+          trip_id: string
+          user_id: string
+        }
+        Update: {
+          booking_ref?: string
+          booking_status?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          payment_method?: string | null
+          payment_status?: string
+          total_amount?: number
+          trip_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_bookings_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_routes: {
+        Row: {
+          created_at: string
+          destination: string
+          distance_km: number | null
+          estimated_duration_minutes: number | null
+          id: string
+          is_active: boolean
+          origin: string
+          service_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          destination: string
+          distance_km?: number | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean
+          origin: string
+          service_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          destination?: string
+          distance_km?: number | null
+          estimated_duration_minutes?: number | null
+          id?: string
+          is_active?: boolean
+          origin?: string
+          service_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_routes_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "travel_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_seating_plans: {
+        Row: {
+          columns: number
+          created_at: string
+          id: string
+          layout: Json
+          plan_name: string
+          rows: number
+          service_id: string
+          total_seats: number
+          updated_at: string
+        }
+        Insert: {
+          columns: number
+          created_at?: string
+          id?: string
+          layout?: Json
+          plan_name: string
+          rows: number
+          service_id: string
+          total_seats?: number
+          updated_at?: string
+        }
+        Update: {
+          columns?: number
+          created_at?: string
+          id?: string
+          layout?: Json
+          plan_name?: string
+          rows?: number
+          service_id?: string
+          total_seats?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_seating_plans_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "travel_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_services: {
+        Row: {
+          created_at: string
+          description: string | null
+          display_name: string
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          merchant_id: string
+          metadata: Json | null
+          service_type: string
+          theme_color: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          display_name: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          merchant_id: string
+          metadata?: Json | null
+          service_type: string
+          theme_color?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          merchant_id?: string
+          metadata?: Json | null
+          service_type?: string
+          theme_color?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_services_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_tickets: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          passenger_name: string
+          passenger_phone: string | null
+          qr_code: string
+          seat_label: string
+          ticket_status: string
+          validated_at: string | null
+          validated_by: string | null
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          passenger_name: string
+          passenger_phone?: string | null
+          qr_code?: string
+          seat_label: string
+          ticket_status?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          passenger_name?: string
+          passenger_phone?: string | null
+          qr_code?: string
+          seat_label?: string
+          ticket_status?: string
+          validated_at?: string | null
+          validated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_tickets_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "travel_bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_timetables: {
+        Row: {
+          arrival_time: string
+          created_at: string
+          day_of_week: number
+          departure_time: string
+          id: string
+          is_active: boolean
+          price: number
+          route_id: string
+        }
+        Insert: {
+          arrival_time: string
+          created_at?: string
+          day_of_week: number
+          departure_time: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          route_id: string
+        }
+        Update: {
+          arrival_time?: string
+          created_at?: string
+          day_of_week?: number
+          departure_time?: string
+          id?: string
+          is_active?: boolean
+          price?: number
+          route_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_timetables_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "travel_routes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      travel_trips: {
+        Row: {
+          arrival_at: string
+          available_seats: number
+          created_at: string
+          currency: string
+          departure_at: string
+          id: string
+          metadata: Json | null
+          price: number
+          route_id: string
+          seating_plan_id: string | null
+          status: string
+          updated_at: string
+          vehicle_info: string | null
+        }
+        Insert: {
+          arrival_at: string
+          available_seats?: number
+          created_at?: string
+          currency?: string
+          departure_at: string
+          id?: string
+          metadata?: Json | null
+          price?: number
+          route_id: string
+          seating_plan_id?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_info?: string | null
+        }
+        Update: {
+          arrival_at?: string
+          available_seats?: number
+          created_at?: string
+          currency?: string
+          departure_at?: string
+          id?: string
+          metadata?: Json | null
+          price?: number
+          route_id?: string
+          seating_plan_id?: string | null
+          status?: string
+          updated_at?: string
+          vehicle_info?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "travel_trips_route_id_fkey"
+            columns: ["route_id"]
+            isOneToOne: false
+            referencedRelation: "travel_routes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "travel_trips_seating_plan_id_fkey"
+            columns: ["seating_plan_id"]
+            isOneToOne: false
+            referencedRelation: "travel_seating_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treasury_float: {
         Row: {
           auto_replenish: boolean
@@ -13693,6 +14029,10 @@ export type Database = {
       }
       is_njangi_group_member: {
         Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_travel_service_owner: {
+        Args: { _service_id: string; _user_id: string }
         Returns: boolean
       }
       log_audit_event: {
