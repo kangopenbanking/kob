@@ -579,6 +579,7 @@ const Index = () => {
           <ScrollReveal direction="right">
           <div className="max-w-6xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
+              <div className="md:order-1">
               <CodeImageFlipCard
                 endpoint="POST /v1/savings/goals"
                 image={apiSavingsPreview}
@@ -599,6 +600,7 @@ const Index = () => {
   }
 }`}
               />
+              </div>
               <div className="space-y-6 md:order-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
                   <PiggyBank className="h-5 w-5 text-primary" />
