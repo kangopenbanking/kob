@@ -340,6 +340,6 @@ export default function CrediQOnboarding() {
           </p>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
