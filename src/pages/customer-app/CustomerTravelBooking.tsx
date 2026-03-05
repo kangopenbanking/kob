@@ -72,6 +72,17 @@ const CustomerTravelBooking: React.FC = () => {
         setBookedSeats(booked);
         setBookedSeatGenders(genders);
       }
+
+      // Fetch auto-applied discounts for this service
+      if (serviceId) {
+        const { data: discData } = await supabase.from('travel_discounts').select('*')
+          .eq('service_id', serviceId).eq('is_active', true)
+          .is('promo_code', null)
+          .lte('valid_from', new Date().toISOString());
+        const valid = (discData || []).filter((d: any) => !d.valid_until || new Date(d.valid_until) > new Date());
+        setAutoDiscounts(valid as any[]);
+      }
+
       setLoading(false);
     };
     fetchData();
