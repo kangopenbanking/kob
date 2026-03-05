@@ -521,6 +521,7 @@ function App() {
               <Route path="institution-urls" element={<InstitutionAppUrls />} />
               <Route path="homepage-hero" element={<HomepageHeroManager />} />
               <Route path="access-roles" element={<AccessRoleManagement />} />
+              <Route path="supported-countries" element={<SupportedCountriesManagement />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
