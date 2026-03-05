@@ -126,6 +126,14 @@ const defaultTypographyConfig: TypographyConfig = {
   sections: {},
 };
 
+const defaultTravelCardConfig: TravelCardConfig = {
+  bg_image: '',
+  overlay_opacity: 0.75,
+  button_text: 'Book Now',
+  button_bg_color: '#ffffff',
+  button_size: 'md',
+};
+
 const defaultBranding: CustomerTenantBranding = {
   id: KANG_PLATFORM_ID,
   name: 'Kang',
