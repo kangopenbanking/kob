@@ -104,12 +104,13 @@ const CustomerTravelTrips: React.FC = () => {
                     <span className="text-[11px] text-white/70 truncate">{route.destination}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className="text-[10px] text-muted-foreground">
+                    <span className="text-[10px] text-white/60">
                       {route.estimated_duration_minutes ? `${Math.floor(route.estimated_duration_minutes / 60)}h${route.estimated_duration_minutes % 60 > 0 ? ` ${route.estimated_duration_minutes % 60}m` : ''}` : '—'}
                     </span>
-                    <Badge variant="outline" className="text-[9px] h-5">{trips.filter(t => t.route_id === route.id).length} trips</Badge>
+                    <Badge className="text-[9px] h-5 border-0 bg-white/20 text-white">{trips.filter(t => t.route_id === route.id).length} trips</Badge>
                   </div>
                 </motion.div>
+                );
               ))}
             </div>
 
