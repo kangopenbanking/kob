@@ -229,14 +229,14 @@ const CustomerTravelBooking: React.FC = () => {
         {step === 'confirm' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Booking Summary</p>
-            <div className="rounded-2xl border bg-card p-5 space-y-3 shadow-sm">
+            <div className="rounded-2xl border bg-gradient-to-br from-card to-[hsl(217,91%,35%/0.03)] p-5 space-y-3 shadow-sm">
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Route</span><span className="font-semibold">{route?.origin} → {route?.destination}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Departure</span><span className="font-semibold">{format(new Date(trip.departure_at), 'dd MMM yyyy, HH:mm')}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Seats</span><span className="font-semibold">{selectedSeats.join(', ')}</span></div>
               <div className="flex justify-between text-sm"><span className="text-muted-foreground">Passengers</span><span className="font-semibold">{selectedSeats.length}</span></div>
               <div className="border-t border-border pt-3 flex justify-between items-center">
                 <span className="font-bold">Total</span>
-                <span className="text-xl font-black">{totalPrice.toLocaleString()} {trip.currency}</span>
+                <span className="text-xl font-black text-primary">{totalPrice.toLocaleString()} {trip.currency}</span>
               </div>
             </div>
             <div className="flex gap-3">
