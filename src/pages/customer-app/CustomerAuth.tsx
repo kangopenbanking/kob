@@ -23,6 +23,7 @@ type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
 const CustomerAuth: React.FC = () => {
+  const { data: supportedCountries = [] } = useSupportedCountries('consumer');
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<AuthMode>('welcome');
