@@ -93,7 +93,30 @@ const CustomerTravelTrips: React.FC = () => {
     fetchData();
   }, [serviceId]);
 
-  const filteredTrips = selectedRoute ? trips.filter(t => t.route_id === selectedRoute) : trips;
+  // Apply filters
+  const filteredTrips = (() => {
+    let result = selectedRoute ? trips.filter(t => t.route_id === selectedRoute) : [...trips];
+    // Time filter
+    if (timeFilter !== 'all') {
+      result = result.filter(t => {
+        const hour = new Date(t.departure_at).getHours();
+        if (timeFilter === 'morning') return hour >= 5 && hour < 12;
+        if (timeFilter === 'afternoon') return hour >= 12 && hour < 17;
+        if (timeFilter === 'evening') return hour >= 17 || hour < 5;
+        return true;
+      });
+    }
+    // Sort
+    result.sort((a, b) => {
+      if (sortBy === 'price_low') return a.price - b.price;
+      if (sortBy === 'price_high') return b.price - a.price;
+      if (sortBy === 'seats') return b.available_seats - a.available_seats;
+      return new Date(a.departure_at).getTime() - new Date(b.departure_at).getTime();
+    });
+    return result;
+  })();
+
+  const activeFilterCount = (timeFilter !== 'all' ? 1 : 0) + (sortBy !== 'departure' ? 1 : 0);
 
   const routeAccents = [
     { solid: 'bg-gradient-to-br from-[hsl(217,91%,55%)] to-[hsl(230,80%,42%)]', light: 'hsl(217,80%,96%)', text: 'hsl(217,80%,40%)', dotColor: 'hsl(217,91%,55%)' },
