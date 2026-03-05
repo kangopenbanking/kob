@@ -49,10 +49,7 @@ import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CodeImageFlipCard } from "@/components/CodeImageFlipCard";
-import apiAccountsPreview from "@/assets/api-accounts-preview.jpg";
-import apiPaymentsPreview from "@/assets/api-payments-preview.jpg";
-import apiLoansPreview from "@/assets/api-loans-preview.jpg";
-import apiSavingsPreview from "@/assets/api-savings-preview.jpg";
+import { AccountsPreview, PaymentsPreview, CreditScorePreview, SavingsPreview } from "@/components/AnimatedPreviews";
 
 const Index = () => {
   return (
