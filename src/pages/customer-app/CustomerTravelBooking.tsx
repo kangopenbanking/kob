@@ -440,7 +440,7 @@ const CustomerTravelBooking: React.FC = () => {
                       <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold ${
                         p?.gender === 'female' ? 'bg-[hsl(330,70%,92%)] text-[hsl(330,70%,40%)]' : 'bg-[hsl(217,70%,92%)] text-[hsl(217,70%,40%)]'
                       }`}>
-                        {p?.gender === 'female' ? '♀' : '♂'}
+                        {p?.gender === 'female' ? 'F' : 'M'}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{p?.name || 'Passenger'}</p>
