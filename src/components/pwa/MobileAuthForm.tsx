@@ -25,6 +25,7 @@ interface MobileAuthFormProps {
 }
 
 export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, onApplyAccount }) => {
+  const { data: supportedCountries = [] } = useSupportedCountries('banking');
   const tenant = useTenant();
   const [step, setStep] = useState<AuthStep>('phone');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
