@@ -180,7 +180,7 @@ export default function Apps() {
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="mx-auto mt-20 flex justify-center gap-4 sm:gap-8"
+            className="mx-auto mt-20 flex items-center justify-center gap-6 sm:gap-10 max-w-2xl"
           >
             {apps.map((app, i) => (
               <motion.div
