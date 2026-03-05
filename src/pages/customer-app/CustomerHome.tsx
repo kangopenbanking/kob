@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
 import rentKobImage from '@/assets/rent-kob.png';
+import travelCardBg from '@/assets/travel-card-bg.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -482,59 +483,67 @@ const CustomerHome: React.FC = () => {
 
       {/* ─── Transport & Tourism ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.14 }}>
-        <button
-          onClick={() => go('travel')}
-          className="group relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(220,25%,14%)] to-[hsl(220,30%,22%)] p-6 text-left transition-transform active:scale-[0.98]"
-        >
-          {/* Decorative circles */}
-          <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[hsl(48,90%,52%)]/15" />
-          <div className="pointer-events-none absolute -bottom-4 -left-4 h-20 w-20 rounded-full bg-[hsl(187,100%,42%)]/10" />
+        {(() => {
+          const tc = tenant.travelCardConfig;
+          const bgImg = tc.bg_image || travelCardBg;
+          const btnSizeClass = tc.button_size === 'sm' ? 'px-3 py-2 text-xs' : tc.button_size === 'lg' ? 'px-5 py-4 text-base' : 'px-4 py-3 text-sm';
+          return (
+            <button
+              onClick={() => go('travel')}
+              className="group relative w-full overflow-hidden rounded-3xl text-left transition-transform active:scale-[0.98]"
+            >
+              {/* Cover image */}
+              <img src={bgImg} alt="Travel" className="absolute inset-0 h-full w-full object-cover" />
+              {/* Dark overlay */}
+              <div className="absolute inset-0" style={{ backgroundColor: `rgba(0,0,0,${tc.overlay_opacity})` }} />
 
-          <div className="relative z-10 flex items-start justify-between gap-4">
-            <div className="flex-1 space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
-              <h3 className="text-xl font-extrabold leading-tight text-white">
-                Travel Made{'\n'}Effortless
-              </h3>
-              <p className="text-xs leading-relaxed text-white/60">
-                Book buses, tours & more — all from your wallet.
-              </p>
+              <div className="relative z-10 p-6">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
+                <h3 className="mt-2 text-xl font-extrabold leading-tight text-white">Travel & Tourism</h3>
 
-              {/* Category pills */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {[
-                  { icon: Bus, label: 'Bus', color: 'hsl(48,90%,52%)' },
-                  { icon: Compass, label: 'Tours', color: 'hsl(187,100%,42%)' },
-                  { icon: Plane, label: 'Flights', color: 'hsl(0,65%,51%)' },
-                  { icon: Train, label: 'Trains', color: 'hsl(0,0%,60%)' },
-                ].map((c) => {
-                  const Icon = c.icon;
-                  return (
-                    <span key={c.label} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
-                      <Icon className="h-3 w-3" style={{ color: c.color }} strokeWidth={2} />
-                      <span className="text-[10px] font-semibold text-white/80">{c.label}</span>
-                    </span>
-                  );
-                })}
+                <div className="mt-3 flex items-start justify-between gap-4">
+                  <div className="flex-1 space-y-3">
+                    <p className="text-xs leading-relaxed text-white/60">
+                      Book buses, tours & more — all from your wallet.
+                    </p>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
+                      {[
+                        { icon: Bus, label: 'Bus', color: 'hsl(48,90%,52%)' },
+                        { icon: Compass, label: 'Tours', color: 'hsl(187,100%,42%)' },
+                        { icon: Plane, label: 'Flights', color: 'hsl(0,65%,51%)' },
+                        { icon: Train, label: 'Trains', color: 'hsl(0,0%,60%)' },
+                      ].map((c) => {
+                        const Icon = c.icon;
+                        return (
+                          <span key={c.label} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
+                            <Icon className="h-3 w-3" style={{ color: c.color }} strokeWidth={2} />
+                            <span className="text-[10px] font-semibold text-white/80">{c.label}</span>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                  <div className="flex flex-col items-center gap-2 pt-2">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
+                      <Plane className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Book Now CTA */}
+                <div className="mt-5">
+                  <div
+                    className={`flex items-center justify-between rounded-2xl backdrop-blur-sm transition-colors ${btnSizeClass}`}
+                    style={{ backgroundColor: `${tc.button_bg_color}1a` }}
+                  >
+                    <span className="font-bold text-white">{tc.button_text}</span>
+                    <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+                  </div>
+                </div>
               </div>
-            </div>
-
-            {/* Right side icon cluster */}
-            <div className="flex flex-col items-center gap-2 pt-2">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
-                <Plane className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
-              </div>
-            </div>
-          </div>
-
-          {/* Book Now CTA */}
-          <div className="relative z-10 mt-5">
-            <div className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm transition-colors group-hover:bg-white/15">
-              <span className="text-sm font-bold text-white">Book Now</span>
-              <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
-            </div>
-          </div>
-        </button>
+            </button>
+          );
+        })()}
       </motion.div>
 
       {/* Earnings & Spending cards hidden — data shown in hero section */}
