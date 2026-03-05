@@ -421,8 +421,8 @@ const Index = () => {
               <div className="md:order-1">
               <CodeImageFlipCard
                 endpoint="POST /v1/payments"
-                image={apiPaymentsPreview}
                 imageAlt="Mobile Money Payment Processing"
+                previewContent={<PaymentsPreview />}
                 code={`{
   "payment": {
     "id": "pay_momo_456",
