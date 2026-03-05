@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, Plane, User } from 'lucide-react';
+import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, Plane, User, Bus, UserCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
