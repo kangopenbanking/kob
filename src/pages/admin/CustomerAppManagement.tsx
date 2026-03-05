@@ -152,6 +152,13 @@ const defaultConfig: CustomerAppConfig = {
     global_body_color: '#000000',
     sections: {},
   },
+  travel_card_config: {
+    bg_image: '',
+    overlay_opacity: 0.75,
+    button_text: 'Book Now',
+    button_bg_color: '#ffffff',
+    button_size: 'md',
+  },
 };
 
 // ─── Hooks ───
