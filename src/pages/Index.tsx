@@ -1219,8 +1219,14 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        <div className="container mx-auto px-4">
+      <section className="py-20 relative overflow-hidden text-primary-foreground">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${crediqHeroBg})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/85 to-primary/95 backdrop-blur-sm"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Ready to Transform Financial Services?
@@ -1231,7 +1237,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <SmartGetStartedButton size="lg" variant="secondary" className="text-lg px-8" />
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-blue-600 hover:bg-primary-foreground hover:text-primary">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                 Contact Sales
               </Button>
             </Link>
