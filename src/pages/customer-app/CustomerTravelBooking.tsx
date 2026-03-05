@@ -120,7 +120,7 @@ const CustomerTravelBooking: React.FC = () => {
     if (tickErr) { toast.error(tickErr.message); setBooking(false); return; }
 
     await supabase.from('travel_trips').update({ available_seats: Math.max(0, (trip?.available_seats || 0) - selectedSeats.length) } as any).eq('id', tripId || '');
-    toast.success('Booking confirmed! 🎉');
+    toast.success('Booking confirmed!');
     navigate(`/app/travel/ticket/${(bookingData as any).id}`);
     setBooking(false);
   };
