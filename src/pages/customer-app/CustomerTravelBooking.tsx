@@ -241,7 +241,7 @@ const CustomerTravelBooking: React.FC = () => {
             </div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back</Button>
-              <Button onClick={handleBook} disabled={booking} className="flex-1 h-12 rounded-xl text-[15px] font-bold">
+              <Button onClick={handleBook} disabled={booking} className="flex-1 h-12 rounded-xl text-[15px] font-bold bg-gradient-to-r from-[hsl(150,60%,40%)] to-[hsl(160,55%,35%)] hover:from-[hsl(150,60%,35%)] hover:to-[hsl(160,55%,30%)] shadow-lg">
                 {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
                 Pay & Confirm
               </Button>

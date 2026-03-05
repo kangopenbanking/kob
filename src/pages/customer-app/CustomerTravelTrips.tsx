@@ -129,15 +129,22 @@ const CustomerTravelTrips: React.FC = () => {
                   {filteredTrips.map((trip, i) => {
                     const route = routes.find(r => r.id === trip.route_id);
                     const seatsLow = trip.available_seats <= 5;
+                    const tripColors = [
+                      { timeBg: 'bg-[hsl(217,91%,55%)]', timeText: 'text-white' },
+                      { timeBg: 'bg-[hsl(150,60%,40%)]', timeText: 'text-white' },
+                      { timeBg: 'bg-[hsl(38,92%,50%)]', timeText: 'text-white' },
+                      { timeBg: 'bg-[hsl(258,80%,58%)]', timeText: 'text-white' },
+                    ];
+                    const tc = tripColors[i % tripColors.length];
                     return (
                       <motion.button key={trip.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
                         onClick={() => navigate(`/app/travel/${category}/${serviceId}/trips/${trip.id}`)}
                         className="group flex w-full items-center gap-3 rounded-2xl border bg-card p-4 text-left shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
                       >
                         {/* Time block */}
-                        <div className="flex flex-col items-center rounded-xl bg-primary/10 px-3 py-2">
-                          <span className="text-lg font-black text-primary">{format(new Date(trip.departure_at), 'HH:mm')}</span>
-                          <span className="text-[10px] font-medium text-primary/70">{format(new Date(trip.departure_at), 'dd MMM')}</span>
+                        <div className={`flex flex-col items-center rounded-xl ${tc.timeBg} px-3 py-2 shadow-md`}>
+                          <span className={`text-lg font-black ${tc.timeText}`}>{format(new Date(trip.departure_at), 'HH:mm')}</span>
+                          <span className={`text-[10px] font-medium ${tc.timeText}/70`}>{format(new Date(trip.departure_at), 'dd MMM')}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-foreground text-[15px]">{route?.origin} → {route?.destination}</p>

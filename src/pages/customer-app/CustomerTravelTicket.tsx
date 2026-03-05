@@ -126,7 +126,7 @@ const CustomerTravelTicket: React.FC = () => {
           )}
           <div className="border-t border-border pt-3 flex justify-between items-center">
             <span className="text-sm text-muted-foreground">Total Paid</span>
-            <span className="text-lg font-black">{booking.total_amount?.toLocaleString()} {booking.currency}</span>
+            <span className="text-lg font-black text-[hsl(150,60%,30%)]">{booking.total_amount?.toLocaleString()} {booking.currency}</span>
           </div>
         </div>
 
