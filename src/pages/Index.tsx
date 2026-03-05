@@ -389,8 +389,8 @@ const Index = () => {
               </div>
               <CodeImageFlipCard
                 endpoint="GET /v1/accounts"
-                image={apiAccountsPreview}
                 imageAlt="Banking Account Aggregation Dashboard"
+                previewContent={<AccountsPreview />}
                 code={`{
   "accounts": [{
     "id": "acc_cm_123",
