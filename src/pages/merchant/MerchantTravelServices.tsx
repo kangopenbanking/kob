@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Bus, Compass, Plane, Train, Plus, Check, Loader2 } from 'lucide-react';
+import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -47,6 +47,8 @@ const MerchantTravelServices: React.FC = () => {
   const [setupName, setSetupName] = useState('');
   const [setupDesc, setSetupDesc] = useState('');
   const [saving, setSaving] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     fetchMerchantAndServices();
@@ -124,6 +126,52 @@ const MerchantTravelServices: React.FC = () => {
 
   const activeTypes = services.map(s => s.service_type);
 
+  const seedDemoData = async () => {
+    if (!merchantId) return;
+    setSeeding(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('travel-seed-demo-data', {
+        body: { merchant_id: merchantId },
+      });
+      if (error) throw error;
+      toast.success(`Demo data seeded! Services: ${data.services}, Routes: ${data.routes}, Plans: ${data.seating_plans}, Trips: ${data.trips}, Timetables: ${data.timetables}`);
+      fetchMerchantAndServices();
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to seed data');
+    }
+    setSeeding(false);
+  };
+
+  const resetDemoData = async () => {
+    if (!merchantId || !confirm('Delete ALL your travel data (services, routes, trips, bookings)?')) return;
+    setResetting(true);
+    const svcIds = services.map(s => s.id);
+    if (svcIds.length > 0) {
+      const { data: routeData } = await supabase.from('travel_routes').select('id').in('service_id', svcIds);
+      const routeIds = (routeData || []).map((r: any) => r.id);
+      if (routeIds.length > 0) {
+        const { data: tripData } = await supabase.from('travel_trips').select('id').in('route_id', routeIds);
+        const tripIds = (tripData || []).map((t: any) => t.id);
+        if (tripIds.length > 0) {
+          const { data: bookingData } = await supabase.from('travel_bookings').select('id').in('trip_id', tripIds);
+          const bookingIds = (bookingData || []).map((b: any) => b.id);
+          if (bookingIds.length > 0) {
+            await supabase.from('travel_tickets').delete().in('booking_id', bookingIds);
+            await supabase.from('travel_bookings').delete().in('id', bookingIds);
+          }
+          await supabase.from('travel_trips').delete().in('id', tripIds);
+        }
+        await supabase.from('travel_timetables').delete().in('route_id', routeIds);
+        await supabase.from('travel_routes').delete().in('id', routeIds);
+      }
+      await supabase.from('travel_seating_plans').delete().in('service_id', svcIds);
+      await supabase.from('travel_services').delete().in('id', svcIds);
+    }
+    toast.success('All travel data reset');
+    fetchMerchantAndServices();
+    setResetting(false);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -134,9 +182,25 @@ const MerchantTravelServices: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Travel Services</h1>
-        <p className="text-muted-foreground">Set up and manage your transport & tourism offerings</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold">Travel Services</h1>
+          <p className="text-muted-foreground">Set up and manage your transport & tourism offerings</p>
+        </div>
+        {merchantId && (
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={seedDemoData} disabled={seeding}>
+              {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
+              Seed Demo Data
+            </Button>
+            {services.length > 0 && (
+              <Button variant="destructive" onClick={resetDemoData} disabled={resetting}>
+                {resetting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+                Reset
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Category Cards */}

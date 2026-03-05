@@ -316,6 +316,10 @@ import MerchantRegister from "./pages/merchant/MerchantRegister";
 import MerchantTravelServices from "./pages/merchant/MerchantTravelServices";
 import MerchantTravelSeating from "./pages/merchant/MerchantTravelSeating";
 import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
+import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
+import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
+import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
+import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
@@ -474,9 +478,9 @@ function App() {
               <Route path="travel-services" element={<MerchantTravelServices />} />
               <Route path="travel-routes" element={<MerchantTravelRoutes />} />
               <Route path="travel-seating" element={<MerchantTravelSeating />} />
-              <Route path="travel-timetable" element={<div className="p-6"><h1 className="text-2xl font-bold">Timetable</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
-              <Route path="travel-bookings" element={<div className="p-6"><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
-              <Route path="travel-scanner" element={<div className="p-6"><h1 className="text-2xl font-bold">Ticket Scanner</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
+              <Route path="travel-timetable" element={<MerchantTravelTimetable />} />
+              <Route path="travel-bookings" element={<MerchantTravelBookings />} />
+              <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
@@ -538,6 +542,7 @@ function App() {
               <Route path="access-roles" element={<AccessRoleManagement />} />
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
               <Route path="translations" element={<TranslationManager />} />
+              <Route path="travel-management" element={<AdminTravelManagement />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
