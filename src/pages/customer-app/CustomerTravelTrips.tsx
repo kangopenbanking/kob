@@ -233,17 +233,17 @@ const CustomerTravelTrips: React.FC = () => {
                 </div>
                 <div className="flex gap-2">
                   {([
-                    { key: 'all' as TimeFilter, label: 'Any Time', Icon: Timer },
-                    { key: 'morning' as TimeFilter, label: 'Morning', Icon: Sunrise },
-                    { key: 'afternoon' as TimeFilter, label: 'Afternoon', Icon: Sun },
-                    { key: 'evening' as TimeFilter, label: 'Evening', Icon: Moon },
+                    { key: 'all' as TimeFilter, label: 'Any Time', Icon: Timer, activeBg: '#f3f4f6', activeBorder: '#d1d5db', activeText: '#374151', activeIcon: '#6b7280' },
+                    { key: 'morning' as TimeFilter, label: 'Morning', Icon: Sunrise, activeBg: '#fef3c7', activeBorder: '#f59e0b', activeText: '#92400e', activeIcon: '#f59e0b' },
+                    { key: 'afternoon' as TimeFilter, label: 'Afternoon', Icon: Sun, activeBg: '#ffedd5', activeBorder: '#f97316', activeText: '#9a3412', activeIcon: '#f97316' },
+                    { key: 'evening' as TimeFilter, label: 'Evening', Icon: Moon, activeBg: '#e0e7ff', activeBorder: '#6366f1', activeText: '#3730a3', activeIcon: '#6366f1' },
                   ]).map(t => (
                     <button key={t.key} onClick={() => setTimeFilter(t.key)}
                       className="flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-bold transition-all border"
                       style={timeFilter === t.key
-                        ? { backgroundColor: theme.accentLight, borderColor: theme.color, color: theme.accentText }
+                        ? { backgroundColor: t.activeBg, borderColor: t.activeBorder, color: t.activeText }
                         : { backgroundColor: '#f9fafb', borderColor: '#f3f4f6', color: '#9ca3af' }}>
-                      <t.Icon className="h-4 w-4" style={{ color: timeFilter === t.key ? theme.color : '#9ca3af' }} />
+                      <t.Icon className="h-4 w-4" style={{ color: timeFilter === t.key ? t.activeIcon : '#9ca3af' }} />
                       {t.label}
                     </button>
                   ))}
