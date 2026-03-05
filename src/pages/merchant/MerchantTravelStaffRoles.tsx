@@ -155,7 +155,7 @@ const MerchantTravelStaffRoles: React.FC = () => {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{staff.length}</p><p className="text-xs text-muted-foreground">Total Staff</p></CardContent></Card>
-        <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-green-600">{activeCount}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
+        <Card><CardContent className="pt-6"><p className="text-2xl font-bold text-primary">{activeCount}</p><p className="text-xs text-muted-foreground">Active</p></CardContent></Card>
         <Card><CardContent className="pt-6"><p className="text-2xl font-bold">{Object.keys(rolePresets).length}</p><p className="text-xs text-muted-foreground">Role Presets</p></CardContent></Card>
       </div>
 
