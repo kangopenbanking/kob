@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Layout } from "@/components/Layout";
+
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -268,7 +268,7 @@ export default function CrediQOnboarding() {
   };
 
   return (
-    <Layout>
+    <>
       <div className="min-h-screen bg-gradient-to-br from-background to-primary/5 py-12">
         <div className="container max-w-2xl mx-auto px-4">
           <div className="mb-8">
@@ -340,6 +340,6 @@ export default function CrediQOnboarding() {
           </p>
         </div>
       </div>
-    </Layout>
+    </>
   );
 }
