@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search, BookOpen, Settings, ChevronRight, CheckCircle, ArrowLeft,
   Route, Armchair, Calendar, QrCode, ScanLine, ClipboardList, Shield,
-  Users, Layers, BarChart3, Tag, ShoppingCart,
+  Users, Layers, BarChart3, Tag, ShoppingCart, Bell, Mail,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
