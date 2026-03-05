@@ -579,8 +579,8 @@ const Index = () => {
               <div className="md:order-1">
               <CodeImageFlipCard
                 endpoint="POST /v1/savings/goals"
-                image={apiSavingsPreview}
                 imageAlt="Smart Savings Goal Tracker"
+                previewContent={<SavingsPreview />}
                 code={`{
   "savings_goal": {
     "id": "sav_101",
