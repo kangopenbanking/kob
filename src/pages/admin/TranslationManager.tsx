@@ -297,16 +297,16 @@ export default function TranslationManager() {
   const handleScanAllStrings = async () => {
     setScanning(true);
     try {
-      // Collect ALL keys from the static translations file
-      const enStrings = translations.en;
+      const enStrings = staticTranslations.en;
       const allKeys = Object.keys(enStrings) as (keyof typeof enStrings)[];
       
       const batch = allKeys.map((key) => {
-        const category = key.includes('.')
-          ? key.split('.')[0]
-          : inferCategory(key as string);
+        const keyStr = String(key);
+        const category = keyStr.includes('.')
+          ? keyStr.split('.')[0]
+          : inferCategory(keyStr);
         return {
-          key: key as string,
+          key: keyStr,
           default_value: enStrings[key],
           category,
         };
