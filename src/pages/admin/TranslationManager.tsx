@@ -421,6 +421,7 @@ export default function TranslationManager() {
     setFormDefaultValue("");
     setFormDescription("");
     setFormContext("");
+    setFormFrenchValue("");
   };
 
   const openEdit = (str: TranslationString) => {
