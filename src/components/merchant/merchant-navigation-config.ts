@@ -2,6 +2,7 @@ import {
   LayoutDashboard, Activity, ArrowUpDown, Link2, RefreshCw, Users,
   Wallet, DollarSign, Undo2, Key, Webhook, Building2, GitBranch,
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
+  Bus, Map, Grid3X3, Calendar, BookOpen, QrCode,
 } from "lucide-react";
 
 export const merchantNavigation = [
