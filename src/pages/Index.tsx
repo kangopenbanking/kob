@@ -34,9 +34,13 @@ import {
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
 import crediqHeroBg from "@/assets/crediq-hero-bg.png";
+import banksKob from "@/assets/banks-kob.jpg";
+import developerKang from "@/assets/developer-kang.png";
+import merchantsKob from "@/assets/merchants-kob.webp";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
 import { ProductTour } from "@/components/ProductTour";
 import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
+import { motion } from "framer-motion";
 
 const Index = () => {
   return (
@@ -93,128 +97,160 @@ const Index = () => {
       {/* Portal Access Section */}
       <section className="py-20 bg-muted/30">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Four Portals, One Platform
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Access the right tools for your role in the banking ecosystem
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1">
-              <Code className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-2xl font-bold mb-3">Developer Portal</h3>
-              <p className="text-muted-foreground mb-6">
-                Build and test integrations with our comprehensive API documentation, sandbox environment, and SDKs.
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16">
+              <Badge variant="outline" className="mb-4">Platform</Badge>
+              <h2 className="text-3xl md:text-5xl font-bold mb-4">
+                Three Portals, One Platform
+              </h2>
+              <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+                Access the right tools for your role in the banking ecosystem
               </p>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Interactive API documentation</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Sandbox testing environment</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Code examples & SDKs</span>
-                </li>
-              </ul>
-              <Link to="/for-developers">
-                <Button className="w-full">Access Developer API</Button>
-              </Link>
-            </Card>
+            </div>
 
-            <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1 border-primary">
-              <Building2 className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-2xl font-bold mb-3">Admin Portal</h3>
-              <p className="text-muted-foreground mb-6">
-                Manage your institution's integration, monitor compliance, and oversee operations.
+            {/* Portal 1 - Banking Ops - Image Left */}
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-16">
+              <div className="rounded-2xl overflow-hidden shadow-xl aspect-[4/3]">
+                <img src={banksKob} alt="Banking Operations" className="w-full h-full object-cover" />
+              </div>
+              <div className="space-y-5">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">Banking Ops</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold">Banking Operations Portal</h3>
+                <p className="text-muted-foreground text-lg">
+                  Monitor transactions, perform reconciliations, and manage banking operations in real-time.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Transaction monitoring</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Automated reconciliation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Bulk operations</span>
+                  </li>
+                </ul>
+                <Link to="/banking-ops">
+                  <Button size="lg" className="mt-2">
+                    Access Banking Ops <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Portal 2 - Merchant Portal - Image Right */}
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-16">
+              <div className="space-y-5 md:order-1">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <Store className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">Merchant Portal</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold">Merchant Portal</h3>
+                <p className="text-muted-foreground text-lg">
+                  Accept payments, manage disputes, and track settlements with self-service tools.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Payment collection & payouts</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Dispute & chargeback management</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>KYB verification & API keys</span>
+                  </li>
+                </ul>
+                <Link to="/for-merchants">
+                  <Button size="lg" className="mt-2">
+                    Learn More <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+              <div className="rounded-2xl overflow-hidden shadow-xl aspect-[4/3] md:order-2">
+                <img src={merchantsKob} alt="Merchant Portal" className="w-full h-full object-cover" />
+              </div>
+            </div>
+
+            {/* Portal 3 - Developer Portal - Image Left */}
+            <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-16">
+              <div className="rounded-2xl overflow-hidden shadow-xl aspect-[4/3] bg-muted">
+                <img src={developerKang} alt="Developer Portal" className="w-full h-full object-contain" />
+              </div>
+              <div className="space-y-5">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                  <Code className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-semibold text-primary">Developer Portal</span>
+                </div>
+                <h3 className="text-2xl md:text-3xl font-bold">Developer Portal</h3>
+                <p className="text-muted-foreground text-lg">
+                  Build and test integrations with our comprehensive API documentation, sandbox environment, and SDKs.
+                </p>
+                <ul className="space-y-3">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Interactive API documentation</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Sandbox testing environment</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
+                    <span>Code examples & SDKs</span>
+                  </li>
+                </ul>
+                <Link to="/for-developers">
+                  <Button size="lg" className="mt-2">
+                    Access Developer API <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Apps Ecosystem Banner - Modern animated cards */}
+            <div className="mt-10 p-8 md:p-12 rounded-2xl border bg-card text-center">
+              <Smartphone className="h-8 w-8 text-primary mx-auto mb-4" />
+              <h3 className="text-2xl font-bold mb-3">Multi-Tenancy App Ecosystem</h3>
+              <p className="text-muted-foreground mb-8 max-w-lg mx-auto">
+                Explore our white-labeled PWA apps — Banking, Merchant & Customer — each branded per institution.
               </p>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Institution management</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Compliance reporting</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>User & role management</span>
-                </li>
-              </ul>
-              <Link to="/admin">
-                <Button className="w-full" variant="outline">Access Admin Portal</Button>
+              <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8">
+                {[
+                  { label: "Banking App", color: "hsl(217 91% 35%)", icon: Building2 },
+                  { label: "Merchant App", color: "hsl(142 76% 36%)", icon: Store },
+                  { label: "Customer App", color: "hsl(24 95% 53%)", icon: Users },
+                ].map((app, i) => (
+                  <motion.div
+                    key={app.label}
+                    className="flex-1 max-w-[200px] mx-auto rounded-2xl p-6 text-white cursor-pointer select-none"
+                    style={{ backgroundColor: app.color }}
+                    whileHover={{
+                      scale: 1.08,
+                      rotate: i === 1 ? -3 : i === 0 ? 3 : -2,
+                      y: -8,
+                    }}
+                    transition={{ type: "spring", stiffness: 300, damping: 18 }}
+                  >
+                    <app.icon className="h-8 w-8 mx-auto mb-3 opacity-90" strokeWidth={1.8} />
+                    <p className="font-semibold text-sm">{app.label}</p>
+                  </motion.div>
+                ))}
+              </div>
+              <Link to="/apps">
+                <Button size="lg">
+                  Explore Apps <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </Link>
-            </Card>
-
-            <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1">
-              <Store className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-2xl font-bold mb-3">Merchant Portal</h3>
-              <p className="text-muted-foreground mb-6">
-                Accept payments, manage disputes, and track settlements with self-service tools.
-              </p>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Payment collection & payouts</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Dispute & chargeback management</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>KYB verification & API keys</span>
-                </li>
-              </ul>
-              <Link to="/for-merchants">
-                <Button className="w-full">Learn More</Button>
-              </Link>
-            </Card>
-
-            <Card className="p-8 hover:shadow-lg transition-all hover:-translate-y-1">
-              <BarChart3 className="h-12 w-12 text-primary mb-4" />
-              <h3 className="text-2xl font-bold mb-3">Banking Ops</h3>
-              <p className="text-muted-foreground mb-6">
-                Monitor transactions, perform reconciliations, and manage banking operations in real-time.
-              </p>
-              <ul className="space-y-2 mb-6 text-sm">
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Transaction monitoring</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Automated reconciliation</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <CheckCircle className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                  <span>Bulk operations</span>
-                </li>
-              </ul>
-              <Link to="/banking-ops">
-                <Button className="w-full">Access Banking Ops</Button>
-              </Link>
-            </Card>
-          </div>
-
-          {/* Apps Ecosystem Banner */}
-          <div className="mt-10 p-6 rounded-lg border bg-card text-center">
-            <Smartphone className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="text-xl font-bold mb-2">Multi-Tenancy App Ecosystem</h3>
-            <p className="text-muted-foreground mb-4 max-w-md mx-auto">
-              Explore our white-labeled PWA apps — Banking, Merchant & Customer — each branded per institution.
-            </p>
-            <Link to="/apps">
-              <Button>Explore Apps</Button>
-            </Link>
-          </div>
+            </div>
           </div>
         </div>
       </section>
@@ -1183,8 +1219,14 @@ const Index = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-        <div className="container mx-auto px-4">
+      <section className="py-20 relative overflow-hidden text-primary-foreground">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${crediqHeroBg})` }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-primary/95 via-primary/85 to-primary/95 backdrop-blur-sm"></div>
+        </div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-5xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
             Ready to Transform Financial Services?
@@ -1195,7 +1237,7 @@ const Index = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <SmartGetStartedButton size="lg" variant="secondary" className="text-lg px-8" />
             <Link to="/contact">
-              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-blue-600 hover:bg-primary-foreground hover:text-primary">
+              <Button size="lg" variant="outline" className="text-lg px-8 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
                 Contact Sales
               </Button>
             </Link>
