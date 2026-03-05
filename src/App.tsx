@@ -221,6 +221,7 @@ import BusinessKYCReview from "./pages/admin/BusinessKYCReview";
 import TPPRegistrationReview from "./pages/admin/TPPRegistrationReview";
 import InstitutionVerification from "./pages/admin/InstitutionVerification";
 import AccessRoleManagement from "./pages/admin/AccessRoleManagement";
+import SupportedCountriesManagement from "./pages/admin/SupportedCountriesManagement";
 import BusinessKYBSubmission from "./pages/BusinessKYBSubmission";
 import ForDevelopers from "./pages/ForDevelopers";
 import ForMerchants from "./pages/ForMerchants";
