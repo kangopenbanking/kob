@@ -346,7 +346,7 @@ const CustomerTravelBooking: React.FC = () => {
                           }`}
                         >
                           <RadioGroupItem value="male" id={`male-${seat}`} className="sr-only" />
-                          <span className="text-lg">♂</span> Male
+                          <UserCircle className="h-4 w-4 text-[hsl(217,70%,50%)]" /> Male
                         </label>
                         <label
                           htmlFor={`female-${seat}`}
