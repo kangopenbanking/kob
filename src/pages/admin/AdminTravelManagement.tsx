@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Bus, Compass, Plane, Train, Loader2, Search, MapPin, Calendar, Users,
-  Ticket, BarChart3, RefreshCw, Eye, Trash2, CheckCircle, XCircle, AlertTriangle,
+  Ticket, BarChart3, RefreshCw, Eye, Trash2, CheckCircle, XCircle, AlertTriangle, BookOpen,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
