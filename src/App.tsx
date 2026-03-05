@@ -313,6 +313,7 @@ import MerchantDisputes from "./pages/merchant/MerchantDisputes";
 import MerchantProfile from "./pages/merchant/MerchantProfile";
 import MerchantAnalytics from "./pages/merchant/MerchantAnalytics";
 import MerchantRegister from "./pages/merchant/MerchantRegister";
+import MerchantTravelServices from "./pages/merchant/MerchantTravelServices";
 import BankSplash from "./pages/banking-app/BankSplash";
 import BankAuth from "./pages/banking-app/BankAuth";
 import BankApply from "./pages/banking-app/BankApply";
