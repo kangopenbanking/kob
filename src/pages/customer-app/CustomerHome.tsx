@@ -367,18 +367,19 @@ const CustomerHome: React.FC = () => {
       {visiblePayments.length > 0 && (
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.06 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Payments & Bills</p>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex items-center justify-around">
             {visiblePayments.map((item) => (
-              <button key={item.path} onClick={() => go(item.path)}
-                className={`flex items-center gap-3 rounded-2xl ${item.color} p-4 border-2 ${item.borderColor}`}>
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/50">
-                  <item.icon className={`h-5 w-5 ${item.iconColor}`} strokeWidth={1.5} />
+              <motion.button
+                key={item.path}
+                whileTap={{ scale: 0.9 }}
+                onClick={() => go(item.path)}
+                className="flex flex-col items-center gap-1.5"
+              >
+                <div className={`flex h-14 w-14 items-center justify-center rounded-full ${item.color} shadow-sm`}>
+                  <item.icon className={`h-6 w-6 ${item.iconColor}`} strokeWidth={2} />
                 </div>
-                <div className="text-left">
-                  <p className="text-xs font-bold text-foreground">{item.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{item.description}</p>
-                </div>
-              </button>
+                <span className="text-[10px] font-semibold text-muted-foreground">{item.label}</span>
+              </motion.button>
             ))}
           </div>
         </motion.div>
