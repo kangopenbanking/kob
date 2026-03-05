@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Bus, Compass, Plane, Train, ChevronLeft, MapPin, Loader2, ArrowRight, Star, Route, Shield, Search, SlidersHorizontal, CheckCircle2 } from 'lucide-react';
+import { ChevronLeft, MapPin, Loader2, ArrowRight, Star, Route, Shield, Search, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-
-const categoryMeta: Record<string, { label: string; icon: React.ElementType; color: string; colorFg: string }> = {
-  bus:      { label: 'Bus Travel',         icon: Bus,     color: '#ffbe0b', colorFg: '#1a1a1a' },
-  tours:    { label: 'Tours & Excursions', icon: Compass, color: '#3a86ff', colorFg: '#ffffff' },
-  airlines: { label: 'Airlines',           icon: Plane,   color: '#d00000', colorFg: '#ffffff' },
-  trains:   { label: 'Trains',             icon: Train,   color: '#000000', colorFg: '#ffffff' },
-};
+import { getTheme } from '@/lib/travel-theme';
 
 interface Agency {
   id: string;
@@ -27,8 +21,8 @@ const CustomerTravelAgencies: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  const meta = categoryMeta[category || ''] || categoryMeta.bus;
-  const CatIcon = meta.icon;
+  const theme = getTheme(category);
+  const CatIcon = theme.icon;
 
   useEffect(() => {
     const fetchAgencies = async () => {
@@ -54,71 +48,53 @@ const CustomerTravelAgencies: React.FC = () => {
   const filtered = agencies.filter(a => a.display_name.toLowerCase().includes(search.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-[#f5f6f8]">
+    <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
       {/* ── Themed Header ── */}
-      <div className="relative overflow-hidden px-5 pb-16 pt-4" style={{ backgroundColor: meta.color }}>
-        {/* Subtle dot pattern */}
+      <div className="relative overflow-hidden px-5 pb-16 pt-4" style={{ backgroundColor: theme.color }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
-
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-7">
-            <button onClick={() => navigate('/app/travel')} className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: meta.colorFg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
-              <ChevronLeft className="h-5 w-5" style={{ color: meta.colorFg }} />
+            <button onClick={() => navigate('/app/travel')} className="flex h-10 w-10 items-center justify-center rounded-xl active:scale-95 transition-transform" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
+              <ChevronLeft className="h-5 w-5" style={{ color: theme.fg }} />
             </button>
             <div className="flex-1" />
-            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ backgroundColor: meta.colorFg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
-              <Shield className="h-3.5 w-3.5" style={{ color: meta.colorFg }} />
-              <span className="text-[11px] font-semibold" style={{ color: meta.colorFg, opacity: 0.85 }}>Verified</span>
+            <div className="flex items-center gap-1.5 rounded-full px-3 py-1.5" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }}>
+              <Shield className="h-3.5 w-3.5" style={{ color: theme.fg }} />
+              <span className="text-[11px] font-semibold" style={{ color: theme.fg, opacity: 0.85 }}>Verified</span>
             </div>
           </div>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
             <div className="flex items-center gap-3 mb-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ backgroundColor: meta.colorFg === '#ffffff' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)' }}>
-                <CatIcon className="h-6 w-6" style={{ color: meta.colorFg }} strokeWidth={1.8} />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ backgroundColor: theme.fg === '#ffffff' ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)' }}>
+                <CatIcon className="h-6 w-6" style={{ color: theme.fg }} strokeWidth={1.8} />
               </div>
               <div>
-                <h1 className="text-[22px] font-extrabold tracking-tight" style={{ color: meta.colorFg }}>{meta.label}</h1>
-                <p className="text-[12px] font-medium" style={{ color: meta.colorFg, opacity: 0.6 }}>Choose an agency to browse trips</p>
+                <h1 className="text-[22px] font-extrabold tracking-tight" style={{ color: theme.fg }}>{theme.label}</h1>
+                <p className="text-[12px] font-medium" style={{ color: theme.fg, opacity: 0.6 }}>Choose an agency to browse trips</p>
               </div>
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* ── Search Bar (overlapping header) ── */}
+      {/* ── Search Bar ── */}
       <div className="relative z-10 -mt-8 px-5 mb-4">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.1 }}
-          className="flex items-center gap-3 rounded-2xl bg-white p-1.5 shadow-md"
-        >
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.1 }}
+          className="flex items-center gap-3 rounded-2xl bg-white p-1.5 shadow-md">
           <div className="flex flex-1 items-center gap-2.5 px-3">
-            <Search className="h-4.5 w-4.5 text-[#0f1729]/30" />
-            <input
-              type="text"
-              placeholder="Search agencies..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="flex-1 bg-transparent text-[14px] font-medium text-[#0f1729] placeholder:text-[#0f1729]/30 outline-none"
-            />
+            <Search className="h-4 w-4 text-[#0f1729]/30" />
+            <input type="text" placeholder="Search agencies..." value={search} onChange={(e) => setSearch(e.target.value)}
+              className="flex-1 bg-transparent text-[14px] font-medium text-[#0f1729] placeholder:text-[#0f1729]/30 outline-none" />
           </div>
-          <button className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ backgroundColor: meta.color }}>
-            <SlidersHorizontal className="h-4 w-4" style={{ color: meta.colorFg }} />
-          </button>
         </motion.div>
       </div>
 
-      {/* ── Stats Row ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.15 }}
-        className="flex items-center gap-2 px-5 mb-4"
-      >
+      {/* ── Stats ── */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}
+        className="flex items-center gap-2 px-5 mb-4">
         <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
-          <Route className="h-3.5 w-3.5" style={{ color: meta.color }} />
+          <Route className="h-3.5 w-3.5" style={{ color: theme.color }} />
           <span className="text-[11px] font-bold text-[#0f1729]">{agencies.length} Agencies</span>
         </div>
         <div className="flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 shadow-sm">
@@ -127,7 +103,6 @@ const CustomerTravelAgencies: React.FC = () => {
         </div>
       </motion.div>
 
-      {/* ── Section Label ── */}
       <div className="px-5 mb-3">
         <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#0f1729]/30">Available agencies</p>
       </div>
@@ -135,68 +110,52 @@ const CustomerTravelAgencies: React.FC = () => {
       {/* ── Agency Cards ── */}
       <div className="space-y-3 px-5 pb-28">
         {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-7 w-7 animate-spin text-[#0f1729]/20" />
-          </div>
+          <div className="flex justify-center py-20"><Loader2 className="h-7 w-7 animate-spin text-[#0f1729]/20" /></div>
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             className="flex flex-col items-center gap-3 rounded-3xl bg-white py-16 text-center shadow-sm">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl" style={{ backgroundColor: meta.color + '15' }}>
-              <CatIcon className="h-8 w-8" style={{ color: meta.color }} strokeWidth={1.5} />
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl" style={{ backgroundColor: theme.accentLight }}>
+              <CatIcon className="h-8 w-8" style={{ color: theme.color }} strokeWidth={1.5} />
             </div>
             <p className="font-bold text-[#0f1729]">No agencies found</p>
             <p className="text-[13px] text-[#0f1729]/40 max-w-[240px]">
-              {search ? 'Try a different search term.' : `Check back soon for registered ${meta.label.toLowerCase()} providers.`}
+              {search ? 'Try a different search term.' : `Check back soon for registered ${theme.label.toLowerCase()} providers.`}
             </p>
           </motion.div>
         ) : (
           filtered.map((agency, i) => (
-            <motion.button
-              key={agency.id}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
+            <motion.button key={agency.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, delay: 0.2 + i * 0.06 }}
               onClick={() => navigate(`/app/travel/${category}/${agency.id}`)}
-              className="group flex w-full items-center gap-4 rounded-3xl bg-white p-4 text-left shadow-sm transition-all active:scale-[0.98]"
-            >
-              {/* Agency Logo / Icon */}
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-md" style={{ backgroundColor: meta.color }}>
+              className="group flex w-full items-center gap-4 rounded-3xl bg-white p-4 text-left shadow-sm transition-all active:scale-[0.98]">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-md" style={{ backgroundColor: theme.color }}>
                 {agency.logo_url ? (
                   <img src={agency.logo_url} alt={agency.display_name} className="h-10 w-10 rounded-xl object-cover" />
                 ) : (
-                  <CatIcon className="h-7 w-7" style={{ color: meta.colorFg }} strokeWidth={1.5} />
+                  <CatIcon className="h-7 w-7" style={{ color: theme.fg }} strokeWidth={1.5} />
                 )}
               </div>
-
-              {/* Info */}
               <div className="flex-1 min-w-0">
                 <p className="text-[15px] font-bold text-[#0f1729] truncate">{agency.display_name}</p>
-                <p className="mt-0.5 text-[12px] text-[#0f1729]/45 truncate leading-relaxed">{agency.description || 'Licensed travel operator'}</p>
+                <p className="mt-0.5 text-[12px] text-[#0f1729]/45 truncate">{agency.description || 'Licensed travel operator'}</p>
                 <div className="mt-2 flex items-center gap-3">
                   <span className="flex items-center gap-1 text-[10px] font-semibold text-[#0f1729]/40">
                     <MapPin className="h-3 w-3" /> {agency.route_count} route{agency.route_count !== 1 ? 's' : ''}
                   </span>
-                  <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: meta.color }}>
+                  <span className="flex items-center gap-1 text-[10px] font-semibold" style={{ color: theme.color }}>
                     <Star className="h-3 w-3" /> Verified
                   </span>
                 </div>
               </div>
-
-              {/* Arrow */}
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-colors" style={{ backgroundColor: meta.color + '12' }}>
-                <ArrowRight className="h-4 w-4" style={{ color: meta.color }} />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ backgroundColor: theme.accentLight }}>
+                <ArrowRight className="h-4 w-4" style={{ color: theme.color }} />
               </div>
             </motion.button>
           ))
         )}
 
-        {/* ── Trust Footer ── */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.4, delay: 0.5 }}
-          className="mt-5 flex items-center justify-center gap-3 text-[10px] font-medium text-[#0f1729]/25"
-        >
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4, delay: 0.5 }}
+          className="mt-5 flex items-center justify-center gap-3 text-[10px] font-medium text-[#0f1729]/25">
           <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Licensed</span>
           <span className="text-[6px]">●</span>
           <span>E-Tickets</span>
