@@ -22,6 +22,7 @@ const categoryColors: Record<string, string> = {
 };
 
 const AdminTravelManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
