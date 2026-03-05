@@ -195,7 +195,7 @@ const CustomerTravelTicket: React.FC = () => {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}
             className="rounded-3xl bg-white shadow-xl overflow-hidden border border-gray-100">
 
-            <div className="h-2" style={{ backgroundColor: theme.color }} />
+            <div className="h-2" style={{ backgroundImage: `repeating-linear-gradient(to right, ${theme.color} 0px, ${theme.color} 6px, transparent 6px, transparent 12px)` }} />
 
             <div className="px-5 pt-5 pb-3">
               {route && (
@@ -280,7 +280,7 @@ const CustomerTravelTicket: React.FC = () => {
               </div>
             </div>
 
-            <div className="h-2" style={{ backgroundColor: theme.color }} />
+            <div className="h-2" style={{ backgroundImage: `repeating-linear-gradient(to right, ${theme.color} 0px, ${theme.color} 6px, transparent 6px, transparent 12px)` }} />
           </motion.div>
         )}
 
