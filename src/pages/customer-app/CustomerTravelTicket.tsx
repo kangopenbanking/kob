@@ -236,12 +236,12 @@ const CustomerTravelTicket: React.FC = () => {
 
             {/* Date/time chips */}
             {trip && (
-              <div className="px-6 pb-3 flex gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(150,40%,94%)] px-3 py-1.5 text-[11px] font-semibold text-[hsl(150,55%,25%)]">
-                  <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy')}
+              <div className="px-4 sm:px-6 pb-3 flex gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(150,40%,94%)] px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-[hsl(150,55%,25%)]">
+                  <Calendar className="h-3 w-3 shrink-0" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy')}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(217,40%,94%)] px-3 py-1.5 text-[11px] font-semibold text-[hsl(217,70%,40%)]">
-                  <Clock className="h-3 w-3" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(217,40%,94%)] px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-[hsl(217,70%,40%)]">
+                  <Clock className="h-3 w-3 shrink-0" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
                 </span>
               </div>
             )}
