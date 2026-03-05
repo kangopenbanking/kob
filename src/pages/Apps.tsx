@@ -285,7 +285,7 @@ export default function Apps() {
                   Launch Banking Demo <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" className="rounded-full px-8 border-white/10 text-white hover:bg-white/5" asChild>
+              <Button size="lg" variant="outline" className="rounded-full px-8 border-white/10 text-white hover:bg-white/5 bg-transparent" asChild>
                 <Link to="/register">Register Institution</Link>
               </Button>
             </motion.div>
