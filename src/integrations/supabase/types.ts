@@ -12587,6 +12587,77 @@ export type Database = {
           },
         ]
       }
+      translation_strings: {
+        Row: {
+          category: string
+          context: string | null
+          created_at: string
+          default_value: string
+          description: string | null
+          id: string
+          string_key: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string
+          context?: string | null
+          created_at?: string
+          default_value: string
+          description?: string | null
+          id?: string
+          string_key: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          context?: string | null
+          created_at?: string
+          default_value?: string
+          description?: string | null
+          id?: string
+          string_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      translation_values: {
+        Row: {
+          id: string
+          is_auto_translated: boolean | null
+          language: string
+          string_id: string
+          translated_at: string
+          translated_by: string | null
+          value: string
+        }
+        Insert: {
+          id?: string
+          is_auto_translated?: boolean | null
+          language: string
+          string_id: string
+          translated_at?: string
+          translated_by?: string | null
+          value: string
+        }
+        Update: {
+          id?: string
+          is_auto_translated?: boolean | null
+          language?: string
+          string_id?: string
+          translated_at?: string
+          translated_by?: string | null
+          value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "translation_values_string_id_fkey"
+            columns: ["string_id"]
+            isOneToOne: false
+            referencedRelation: "translation_strings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treasury_float: {
         Row: {
           auto_replenish: boolean
