@@ -113,7 +113,7 @@ const CustomerTravelTicket: React.FC = () => {
         )}
 
         {/* Journey details */}
-        <div className="rounded-2xl border bg-card p-5 space-y-3 shadow-sm">
+        <div className="rounded-2xl border bg-card p-5 space-y-3 shadow-sm border-l-4 border-l-[hsl(150,60%,40%)]">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Journey Details</p>
           {route && (
             <div className="flex items-center gap-2"><MapPin className="h-4 w-4 text-primary" /><span className="font-semibold text-sm">{route.origin} → {route.destination}</span></div>
