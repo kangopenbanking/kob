@@ -542,6 +542,14 @@ export default function TranslationManager() {
                     onChange={(e) => setFormContext(e.target.value)}
                   />
                 </div>
+                <div>
+                  <Label>French Translation</Label>
+                  <Textarea
+                    placeholder="Traduction française"
+                    value={formFrenchValue}
+                    onChange={(e) => setFormFrenchValue(e.target.value)}
+                  />
+                </div>
                 <Button onClick={handleSaveString} className="w-full">
                   {editingString ? "Update" : "Add"} String
                 </Button>
