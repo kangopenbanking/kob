@@ -166,7 +166,7 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
           {/* Content */}
           <motion.div
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={stagger}
-            className="flex-1 max-w-xl"
+            className="flex-1 max-w-xl text-center"
           >
             <motion.div variants={fadeUp} custom={0} className="flex items-center gap-3 mb-5">
               <div className="h-8 w-8 rounded-lg flex items-center justify-center text-sm font-bold" style={{ backgroundColor: app.accent + '20', color: app.accent }}>
