@@ -489,7 +489,6 @@ const CustomerTravelBooking: React.FC = () => {
                 </div>
                 <span className="text-xl font-black" style={{ color: theme.fg }}>{totalPrice.toLocaleString()} {trip.currency}</span>
               </div>
-              </div>
             </div>
 
             <div className="flex gap-3">
