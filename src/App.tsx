@@ -319,6 +319,8 @@ import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
 import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
 import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
+import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
+import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
@@ -326,6 +328,7 @@ import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies"
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
 import CustomerTravelBooking from "./pages/customer-app/CustomerTravelBooking";
 import CustomerTravelTicket from "./pages/customer-app/CustomerTravelTicket";
+import CustomerTravelHistory from "./pages/customer-app/CustomerTravelHistory";
 import BankSplash from "./pages/banking-app/BankSplash";
 import BankAuth from "./pages/banking-app/BankAuth";
 import BankApply from "./pages/banking-app/BankApply";
@@ -481,6 +484,8 @@ function App() {
               <Route path="travel-seating" element={<MerchantTravelSeating />} />
               <Route path="travel-timetable" element={<MerchantTravelTimetable />} />
               <Route path="travel-bookings" element={<MerchantTravelBookings />} />
+              <Route path="travel-counter-booking" element={<MerchantTravelCounterBooking />} />
+              <Route path="travel-guide" element={<MerchantTravelGuide />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />
@@ -816,6 +821,7 @@ function App() {
               <Route path="travel/:category/:serviceId" element={<CustomerTravelTrips />} />
               <Route path="travel/:category/:serviceId/trips/:tripId" element={<CustomerTravelBooking />} />
               <Route path="travel/ticket/:bookingId" element={<CustomerTravelTicket />} />
+              <Route path="travel/history" element={<CustomerTravelHistory />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />

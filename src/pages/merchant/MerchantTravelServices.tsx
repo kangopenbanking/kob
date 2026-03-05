@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2 } from 'lucide-react';
+import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2, BookOpen } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -39,6 +40,7 @@ interface TravelService {
 }
 
 const MerchantTravelServices: React.FC = () => {
+  const navigate = useNavigate();
   const [services, setServices] = useState<TravelService[]>([]);
   const [loading, setLoading] = useState(true);
   const [merchantId, setMerchantId] = useState<string | null>(null);
@@ -189,6 +191,9 @@ const MerchantTravelServices: React.FC = () => {
         </div>
         {merchantId && (
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => navigate('/merchant/travel-guide')}>
+              <BookOpen className="mr-2 h-4 w-4" /> Training Guide
+            </Button>
             <Button variant="outline" onClick={seedDemoData} disabled={seeding}>
               {seeding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Database className="mr-2 h-4 w-4" />}
               Seed Demo Data

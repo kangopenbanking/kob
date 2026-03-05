@@ -5,12 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, Search, Ticket, Eye, XCircle, Users, BarChart3, RefreshCw } from 'lucide-react';
+import { Loader2, Search, Ticket, Eye, XCircle, Users, BarChart3, RefreshCw, ShoppingCart } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
 const MerchantTravelBookings: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [bookings, setBookings] = useState<any[]>([]);
   const [tickets, setTickets] = useState<any[]>([]);
@@ -77,7 +79,12 @@ const MerchantTravelBookings: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">View all customer bookings for your travel services</p></div>
-        <Button variant="outline" onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
+        <div className="flex gap-2">
+          <Button onClick={() => navigate('/merchant/travel-counter-booking')}>
+            <ShoppingCart className="mr-2 h-4 w-4" /> Counter Booking
+          </Button>
+          <Button variant="outline" onClick={fetchData}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">
