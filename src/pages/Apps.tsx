@@ -104,7 +104,7 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
       />
 
       <div className="container relative z-10 mx-auto px-4">
-        <div className={`flex flex-col items-center gap-16 lg:gap-24 ${index % 2 !== 0 ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}>
+        <div className="flex flex-col items-center gap-16 lg:gap-20">
           
           {/* Phone mockup */}
           <motion.div
