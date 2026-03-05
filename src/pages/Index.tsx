@@ -176,7 +176,9 @@ const Index = () => {
                 </Link>
               </div>
             </div>
+            </ScrollReveal>
 
+            <ScrollReveal direction="right">
             {/* Portal 2 - Merchant Portal - Image Right */}
             <div className="grid md:grid-cols-2 gap-8 md:gap-12 items-center mb-16">
               <div className="space-y-5 md:order-1">
