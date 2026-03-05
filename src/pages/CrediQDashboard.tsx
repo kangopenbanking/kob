@@ -474,7 +474,7 @@ export default function CrediQDashboard() {
                 className={`relative p-3 rounded-xl text-center transition-all ${
                   score >= b.min && score <= b.max ? 'ring-2 ring-offset-2 ring-offset-background scale-105 shadow-md' : 'opacity-60'
                 } ${b.bg}`}
-                style={score >= b.min && score <= b.max ? { ringColor: b.color } : {}}
+                style={score >= b.min && score <= b.max ? { '--tw-ring-color': b.color } as React.CSSProperties : {}}
               >
                 <p className={`text-xs font-bold ${b.text}`}>{b.label}</p>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{b.min}–{b.max}</p>
