@@ -187,7 +187,7 @@ const CustomerTravelBooking: React.FC = () => {
               <div className="rounded-2xl border bg-card p-4 shadow-sm overflow-x-auto">
                 {/* Bus front indicator */}
                 <div className="flex justify-center mb-3">
-                  <div className="rounded-full bg-muted px-4 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">🚌 Front</div>
+                  <div className="rounded-full bg-muted px-4 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1"><Bus className="h-3 w-3" /> Front</div>
                 </div>
                 <div className="flex flex-col items-center gap-1.5 min-w-fit">
                   <div className="flex gap-1.5">
