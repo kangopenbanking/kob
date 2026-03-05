@@ -1758,6 +1758,11 @@ export default function CustomerAppManagement() {
                 <TabsContent value="typography">
                   <TypographyPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
+
+                {/* Travel Card Tab */}
+                <TabsContent value="travel-card">
+                  <TravelCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
               </Tabs>
             </>
           )}
