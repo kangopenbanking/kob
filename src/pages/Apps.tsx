@@ -194,7 +194,7 @@ function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
             </motion.p>
 
             {/* Feature list — clean checklist style */}
-            <motion.div variants={fadeUp} custom={3} className="grid grid-cols-2 gap-x-6 gap-y-3 mb-10">
+            <motion.div variants={fadeUp} custom={3} className="grid grid-cols-2 gap-x-6 gap-y-3 mb-10 text-left mx-auto max-w-md">
               {app.features.map((f) => (
                 <div key={f.label} className="flex items-center gap-3">
                   <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full" style={{ backgroundColor: app.accent + '20' }}>
