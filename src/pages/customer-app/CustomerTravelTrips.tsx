@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, MapPin, Clock, Calendar, Users, Loader2, ArrowRight, Route as RouteIcon, Ticket, Star, Bus, Shield } from 'lucide-react';
+import { ChevronLeft, MapPin, Clock, Calendar, Users, Loader2, ArrowRight, Route as RouteIcon, Ticket, Star, Bus, Shield, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
@@ -18,6 +18,9 @@ const CustomerTravelTrips: React.FC = () => {
   const [trips, setTrips] = useState<Trip[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
+  const [userBookedRouteIds, setUserBookedRouteIds] = useState<string[]>([]);
+  const [routeBookingCounts, setRouteBookingCounts] = useState<Record<string, number>>({});
+  const sliderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,10 +33,53 @@ const CustomerTravelTrips: React.FC = () => {
       setRoutes(routeData);
 
       if (routeData.length > 0) {
+        const routeIds = routeData.map(r => r.id);
         const { data: tripData } = await supabase.from('travel_trips').select('*')
-          .in('route_id', routeData.map(r => r.id)).in('status', ['scheduled', 'boarding'])
+          .in('route_id', routeIds).in('status', ['scheduled', 'boarding'])
           .gte('departure_at', new Date().toISOString()).order('departure_at', { ascending: true });
         setTrips((tripData as any[]) || []);
+
+        // Fetch user's booking history for sorting
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: userBookings } = await supabase.from('travel_bookings')
+            .select('trip_id, created_at')
+            .eq('user_id', user.id)
+            .eq('booking_status', 'confirmed')
+            .order('created_at', { ascending: false });
+
+          if (userBookings && userBookings.length > 0) {
+            const tripIds = userBookings.map((b: any) => b.trip_id);
+            const { data: bookedTrips } = await supabase.from('travel_trips').select('id, route_id').in('id', tripIds);
+            const bookedRouteOrder: string[] = [];
+            const counts: Record<string, number> = {};
+            (bookedTrips || []).forEach((t: any) => {
+              if (!bookedRouteOrder.includes(t.route_id)) bookedRouteOrder.push(t.route_id);
+              counts[t.route_id] = (counts[t.route_id] || 0) + 1;
+            });
+            setUserBookedRouteIds(bookedRouteOrder);
+            setRouteBookingCounts(counts);
+          }
+        }
+
+        // Global booking counts per route for "most booked"
+        const { data: allBookings } = await supabase.from('travel_bookings')
+          .select('trip_id')
+          .eq('booking_status', 'confirmed');
+        if (allBookings && allBookings.length > 0) {
+          const allTripIds = allBookings.map((b: any) => b.trip_id);
+          const { data: allBookedTrips } = await supabase.from('travel_trips').select('id, route_id').in('id', allTripIds);
+          const globalCounts: Record<string, number> = {};
+          (allBookedTrips || []).forEach((t: any) => {
+            globalCounts[t.route_id] = (globalCounts[t.route_id] || 0) + 1;
+          });
+          setRouteBookingCounts(prev => {
+            const merged = { ...globalCounts };
+            // User's own routes get a boost
+            Object.keys(prev).forEach(k => { merged[k] = (merged[k] || 0) + (prev[k] || 0) * 2; });
+            return merged;
+          });
+        }
       }
       setLoading(false);
     };
@@ -43,13 +89,27 @@ const CustomerTravelTrips: React.FC = () => {
   const filteredTrips = selectedRoute ? trips.filter(t => t.route_id === selectedRoute) : trips;
 
   const routeAccents = [
-    { gradient: 'from-[hsl(217,91%,55%)] to-[hsl(230,80%,48%)]', light: 'hsl(217,80%,96%)', text: 'hsl(217,80%,40%)', dot: 'bg-[hsl(217,91%,55%)]' },
-    { gradient: 'from-[hsl(150,60%,40%)] to-[hsl(165,55%,32%)]', light: 'hsl(150,50%,95%)', text: 'hsl(150,60%,28%)', dot: 'bg-[hsl(150,60%,40%)]' },
-    { gradient: 'from-[hsl(38,92%,50%)] to-[hsl(25,88%,45%)]', light: 'hsl(38,80%,95%)', text: 'hsl(38,70%,30%)', dot: 'bg-[hsl(38,92%,50%)]' },
-    { gradient: 'from-[hsl(258,80%,58%)] to-[hsl(275,72%,48%)]', light: 'hsl(258,60%,96%)', text: 'hsl(258,60%,35%)', dot: 'bg-[hsl(258,80%,58%)]' },
-    { gradient: 'from-[hsl(172,66%,40%)] to-[hsl(185,60%,32%)]', light: 'hsl(172,50%,95%)', text: 'hsl(172,55%,28%)', dot: 'bg-[hsl(172,66%,40%)]' },
-    { gradient: 'from-[hsl(347,77%,50%)] to-[hsl(335,72%,42%)]', light: 'hsl(347,60%,96%)', text: 'hsl(347,60%,35%)', dot: 'bg-[hsl(347,77%,50%)]' },
+    { solid: 'bg-gradient-to-br from-[hsl(217,91%,55%)] to-[hsl(230,80%,42%)]', light: 'hsl(217,80%,96%)', text: 'hsl(217,80%,40%)', dotColor: 'hsl(217,91%,55%)' },
+    { solid: 'bg-gradient-to-br from-[hsl(150,60%,38%)] to-[hsl(165,55%,28%)]', light: 'hsl(150,50%,95%)', text: 'hsl(150,60%,28%)', dotColor: 'hsl(150,60%,40%)' },
+    { solid: 'bg-gradient-to-br from-[hsl(38,92%,50%)] to-[hsl(25,88%,42%)]', light: 'hsl(38,80%,95%)', text: 'hsl(38,70%,30%)', dotColor: 'hsl(38,92%,50%)' },
+    { solid: 'bg-gradient-to-br from-[hsl(258,80%,55%)] to-[hsl(275,72%,42%)]', light: 'hsl(258,60%,96%)', text: 'hsl(258,60%,35%)', dotColor: 'hsl(258,80%,58%)' },
+    { solid: 'bg-gradient-to-br from-[hsl(172,66%,38%)] to-[hsl(185,60%,28%)]', light: 'hsl(172,50%,95%)', text: 'hsl(172,55%,28%)', dotColor: 'hsl(172,66%,40%)' },
+    { solid: 'bg-gradient-to-br from-[hsl(347,77%,48%)] to-[hsl(335,72%,38%)]', light: 'hsl(347,60%,96%)', text: 'hsl(347,60%,35%)', dotColor: 'hsl(347,77%,50%)' },
   ];
+
+  // Sort routes: user's recently booked first, then most booked globally
+  const sortedRoutes = [...routes].sort((a, b) => {
+    const aUserIdx = userBookedRouteIds.indexOf(a.id);
+    const bUserIdx = userBookedRouteIds.indexOf(b.id);
+    if (aUserIdx !== -1 && bUserIdx === -1) return -1;
+    if (aUserIdx === -1 && bUserIdx !== -1) return 1;
+    if (aUserIdx !== -1 && bUserIdx !== -1) return aUserIdx - bUserIdx;
+    return (routeBookingCounts[b.id] || 0) - (routeBookingCounts[a.id] || 0);
+  });
+
+  const scrollSlider = (dir: 'left' | 'right') => {
+    sliderRef.current?.scrollBy({ left: dir === 'right' ? 200 : -200, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen bg-[hsl(220,20%,97%)]">
@@ -111,48 +171,65 @@ const CustomerTravelTrips: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 px-4 -mt-4 pb-24 space-y-5">
+      <div className="relative z-10 -mt-4 pb-24 space-y-5">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
-            {/* ═══ ROUTE GRID ═══ */}
+            {/* ═══ ROUTE SLIDER ═══ */}
             <div>
-              <p className="mb-3 text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
-                <RouteIcon className="h-3.5 w-3.5" /> Popular Routes
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                {routes.map((route, i) => {
+              <div className="flex items-center justify-between px-4 mb-3">
+                <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
+                  <RouteIcon className="h-3.5 w-3.5" /> Popular Routes
+                </p>
+                <div className="flex gap-1">
+                  <button onClick={() => scrollSlider('left')} className="flex h-6 w-6 items-center justify-center rounded-full bg-white border border-border/50 shadow-sm active:scale-90 transition-transform">
+                    <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                  <button onClick={() => scrollSlider('right')} className="flex h-6 w-6 items-center justify-center rounded-full bg-white border border-border/50 shadow-sm active:scale-90 transition-transform">
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+              <div ref={sliderRef} className="flex gap-3 overflow-x-auto scrollbar-none px-4 snap-x snap-mandatory">
+                {sortedRoutes.map((route, i) => {
                   const accent = routeAccents[i % routeAccents.length];
                   const tripCount = trips.filter(t => t.route_id === route.id).length;
                   const isActive = selectedRoute === route.id;
+                  const isUserBooked = userBookedRouteIds.includes(route.id);
                   return (
                     <motion.button
                       key={route.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.04 }}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.05 }}
                       onClick={() => setSelectedRoute(isActive ? null : route.id)}
-                      className={`group relative rounded-2xl bg-white p-4 text-left shadow-sm border transition-all overflow-hidden ${isActive ? 'border-primary ring-2 ring-primary/20 shadow-md' : 'border-border/50 hover:shadow-md hover:border-border'}`}
+                      className={`shrink-0 snap-start w-[200px] rounded-2xl p-4 text-left shadow-lg transition-all relative overflow-hidden ${accent.solid} ${isActive ? 'ring-3 ring-white/40 scale-[1.02]' : 'hover:scale-[1.01]'}`}
                     >
-                      {/* Top accent line */}
-                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${accent.gradient}`} />
+                      {/* Recent badge */}
+                      {isUserBooked && (
+                        <div className="absolute top-2 right-2">
+                          <span className="inline-flex items-center rounded-full bg-white/20 backdrop-blur-sm px-2 py-0.5 text-[8px] font-bold text-white uppercase tracking-wider">
+                            <Star className="h-2.5 w-2.5 mr-0.5" /> Recent
+                          </span>
+                        </div>
+                      )}
 
-                      <div className="space-y-2.5 pt-1">
+                      <div className="space-y-3">
                         {/* Origin */}
-                        <div className="flex items-start gap-2">
-                          <div className={`mt-0.5 h-2.5 w-2.5 rounded-full ${accent.dot} shrink-0 ring-2 ring-white shadow-sm`} />
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-full bg-white/80 ring-2 ring-white/30 shrink-0" />
                           <div className="min-w-0">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">From</p>
-                            <p className="text-sm font-extrabold text-foreground truncate">{route.origin}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-wider text-white/50">From</p>
+                            <p className="text-sm font-extrabold text-white truncate">{route.origin}</p>
                           </div>
                         </div>
 
-                        {/* Connector */}
-                        <div className="flex items-center gap-2 pl-1">
-                          <div className="w-0.5 h-4 rounded-full bg-border ml-[3.5px]" />
+                        {/* Connector line */}
+                        <div className="flex items-center gap-2 pl-[5px]">
+                          <div className="w-0.5 h-3 bg-white/25 rounded-full" />
                           {route.estimated_duration_minutes && (
-                            <span className="text-[9px] font-semibold text-muted-foreground/50 flex items-center gap-0.5">
+                            <span className="text-[9px] font-semibold text-white/45 flex items-center gap-0.5">
                               <Clock className="h-2.5 w-2.5" />
                               {Math.floor(route.estimated_duration_minutes / 60)}h{route.estimated_duration_minutes % 60 > 0 ? `${route.estimated_duration_minutes % 60}m` : ''}
                             </span>
@@ -160,22 +237,22 @@ const CustomerTravelTrips: React.FC = () => {
                         </div>
 
                         {/* Destination */}
-                        <div className="flex items-start gap-2">
-                          <div className="mt-0.5 h-2.5 w-2.5 rounded-sm bg-foreground shrink-0 ring-2 ring-white shadow-sm" />
+                        <div className="flex items-center gap-2">
+                          <div className="h-2.5 w-2.5 rounded-sm bg-white shrink-0 ring-2 ring-white/30" />
                           <div className="min-w-0">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground/50">To</p>
-                            <p className="text-sm font-extrabold text-foreground truncate">{route.destination}</p>
+                            <p className="text-[8px] font-bold uppercase tracking-wider text-white/50">To</p>
+                            <p className="text-sm font-extrabold text-white truncate">{route.destination}</p>
                           </div>
                         </div>
                       </div>
 
                       {/* Footer */}
-                      <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/40">
-                        <Badge className="text-[9px] h-5 border-0 font-bold" style={{ backgroundColor: accent.light, color: accent.text }}>
+                      <div className="mt-3 flex items-center justify-between pt-2 border-t border-white/15">
+                        <span className="inline-flex items-center rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold text-white">
                           {tripCount} trip{tripCount !== 1 ? 's' : ''}
-                        </Badge>
+                        </span>
                         {route.distance_km && (
-                          <span className="text-[9px] font-semibold text-muted-foreground/50">{route.distance_km} km</span>
+                          <span className="text-[9px] font-semibold text-white/45">{route.distance_km} km</span>
                         )}
                       </div>
                     </motion.button>
@@ -185,7 +262,7 @@ const CustomerTravelTrips: React.FC = () => {
             </div>
 
             {/* ═══ TRIP LIST ═══ */}
-            <div>
+            <div className="px-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
                   <Ticket className="h-3.5 w-3.5" /> Available Journeys
@@ -218,12 +295,14 @@ const CustomerTravelTrips: React.FC = () => {
                         onClick={() => navigate(`/app/travel/${category}/${serviceId}/trips/${trip.id}`)}
                         className="group w-full rounded-2xl bg-white border border-border/50 shadow-sm hover:shadow-lg transition-all active:scale-[0.99] overflow-hidden text-left"
                       >
-                        {/* Left accent line via border */}
                         <div className="flex">
-                          <div className={`w-1.5 shrink-0 bg-gradient-to-b ${accent.gradient}`} />
+                          {/* Dotted left border */}
+                          <div className="w-4 shrink-0 flex items-center justify-center py-3">
+                            <div className="h-full w-0 border-l-[3px] border-dotted" style={{ borderColor: accent.dotColor }} />
+                          </div>
 
-                          <div className="flex-1 p-4">
-                            {/* Top row: route + agency */}
+                          <div className="flex-1 py-4 pr-4">
+                            {/* Top row: route + price */}
                             <div className="flex items-start justify-between gap-2 mb-3">
                               <div className="min-w-0">
                                 <p className="text-[15px] font-extrabold text-foreground truncate">{route?.origin} → {route?.destination}</p>
@@ -254,7 +333,7 @@ const CustomerTravelTrips: React.FC = () => {
                                 <Users className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
                                 <div className="flex-1 max-w-[120px]">
                                   <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                                    <div className={`h-full rounded-full transition-all ${seatsLow ? 'bg-destructive' : `bg-gradient-to-r ${accent.gradient}`}`} style={{ width: `${seatPercent}%` }} />
+                                    <div className={`h-full rounded-full transition-all`} style={{ width: `${seatPercent}%`, background: seatsLow ? undefined : accent.dotColor, backgroundColor: seatsLow ? 'hsl(0,84%,60%)' : undefined }} />
                                   </div>
                                 </div>
                                 <span className={`text-[11px] font-bold ${seatsLow ? 'text-destructive' : 'text-muted-foreground'}`}>
