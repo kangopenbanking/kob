@@ -79,6 +79,16 @@ const CATEGORIES = [
   "admin",
   "forms",
   "landing",
+  "profile",
+  "kyc",
+  "njangi",
+  "merchant",
+  "compliance",
+  "openbanking",
+  "investor",
+  "staff",
+  "postiq",
+  "finance",
 ];
 
 export default function TranslationManager() {
