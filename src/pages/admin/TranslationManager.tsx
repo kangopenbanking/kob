@@ -422,6 +422,19 @@ export default function TranslationManager() {
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
+            onClick={handleScanAllStrings}
+            disabled={scanning}
+            className="gap-2"
+          >
+            {scanning ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ScanSearch className="h-4 w-4" />
+            )}
+            {scanning ? "Scanning..." : "Scan & Sync All Strings"}
+          </Button>
+          <Button
+            variant="outline"
             onClick={handleBulkTranslate}
             disabled={bulkTranslating}
             className="gap-2"
