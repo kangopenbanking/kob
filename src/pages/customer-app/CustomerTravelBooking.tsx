@@ -210,7 +210,7 @@ const CustomerTravelBooking: React.FC = () => {
                           <button key={c} onClick={() => toggleSeat(cell.seat_label)} disabled={isBooked}
                             className={`flex h-10 w-10 items-center justify-center rounded-xl text-[10px] font-bold transition-all ${getSeatColor(cell)}`}>
                             {isBooked ? (
-                              <span>{gender === 'female' ? '♀' : '♂'}</span>
+                              <span className="text-[9px]">{gender === 'female' ? 'F' : 'M'}</span>
                             ) : isSelected ? (
                               <Check className="h-4 w-4" />
                             ) : (
