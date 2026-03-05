@@ -98,7 +98,7 @@ const CustomerTravelTicket: React.FC = () => {
         {/* QR Ticket card */}
         {currentTicket && (
           <motion.div key={currentTicket.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl border bg-card p-6 shadow-sm text-center space-y-4">
+            className="rounded-2xl border bg-gradient-to-b from-card to-[hsl(150,50%,25%/0.04)] p-6 shadow-md text-center space-y-4"
             <QRCodeDisplay value={currentTicket.qr_code} />
             <div className="space-y-2 text-left">
               <div className="flex items-center gap-2">
