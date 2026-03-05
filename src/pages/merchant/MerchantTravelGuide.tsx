@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search, BookOpen, Bus, Compass, Plane, Train, MapPin, Armchair, Calendar,
   QrCode, Ticket, Users, Settings, ChevronRight, CheckCircle, ArrowLeft,
-  Route, ScanLine, ShoppingCart, CreditCard, History, Layers,
+  Route, ScanLine, ShoppingCart, CreditCard, History, Layers, Bell, Shield, Tag,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
