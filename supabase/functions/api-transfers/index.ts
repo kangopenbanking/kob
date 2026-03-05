@@ -36,7 +36,10 @@ serve(async (req) => {
       });
     }
 
-    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type } = await req.json();
+    const body = await req.json();
+    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type } = body;
+
+    console.log('Transfer request:', { source_account_id, destination_account_id, amount, currency, identifier_type });
 
     // Validate required fields
     if (!source_account_id || !destination_account_id || !amount) {
@@ -265,6 +268,7 @@ serve(async (req) => {
     }
 
     if (!destAccount) {
+      console.error('Destination not found for:', { destination_account_id, identifier_type, cleaned: destination_account_id?.replace?.(/[\s\-]/g, '') });
       return new Response(JSON.stringify({ error: 'Destination account not found. Try an account number, ID, phone number, RIB, or IBAN.' }), {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
