@@ -22,6 +22,13 @@ const CustomerTravelTrips: React.FC = () => {
   const [routeBookingCounts, setRouteBookingCounts] = useState<Record<string, number>>({});
   const sliderRef = useRef<HTMLDivElement>(null);
 
+  // Filters
+  type SortOption = 'departure' | 'price_low' | 'price_high' | 'seats';
+  type TimeFilter = 'all' | 'morning' | 'afternoon' | 'evening';
+  const [sortBy, setSortBy] = useState<SortOption>('departure');
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>('all');
+  const [showFilters, setShowFilters] = useState(false);
+
   useEffect(() => {
     const fetchData = async () => {
       const [svcRes, routeRes] = await Promise.all([
