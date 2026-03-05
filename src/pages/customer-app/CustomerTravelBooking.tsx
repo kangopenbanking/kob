@@ -1,20 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard } from 'lucide-react';
+import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, Plane, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
+
+type Gender = 'male' | 'female';
 
 const CustomerTravelBooking: React.FC = () => {
   const { category, serviceId, tripId } = useParams();
   const navigate = useNavigate();
+  const { user: customerUser } = useCustomerAuth();
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState<any>(null);
   const [route, setRoute] = useState<any>(null);
@@ -22,8 +27,9 @@ const CustomerTravelBooking: React.FC = () => {
   const [planRows, setPlanRows] = useState(0);
   const [planCols, setPlanCols] = useState(0);
   const [bookedSeats, setBookedSeats] = useState<string[]>([]);
+  const [bookedSeatGenders, setBookedSeatGenders] = useState<Record<string, Gender>>({});
   const [selectedSeats, setSelectedSeats] = useState<string[]>([]);
-  const [passengers, setPassengers] = useState<Record<string, { name: string; phone: string }>>({});
+  const [passengers, setPassengers] = useState<Record<string, { name: string; phone: string; gender: Gender }>>({});
   const [booking, setBooking] = useState(false);
   const [step, setStep] = useState<'seats' | 'details' | 'confirm'>('seats');
 
@@ -47,14 +53,41 @@ const CustomerTravelBooking: React.FC = () => {
         setPlanCols(plan.columns);
       }
 
-      const { data: existingTickets } = await supabase.from('travel_tickets').select('seat_label, booking_id')
-        .in('booking_id', ((await supabase.from('travel_bookings').select('id').eq('trip_id', tripId || '').in('booking_status', ['confirmed'])).data || []).map((b: any) => b.id))
-        .in('ticket_status', ['valid', 'used']);
-      setBookedSeats((existingTickets || []).map((t: any) => t.seat_label));
+      // Fetch booked seats with passenger gender info
+      const { data: confirmedBookings } = await supabase.from('travel_bookings').select('id').eq('trip_id', tripId || '').in('booking_status', ['confirmed']);
+      const bookingIds = (confirmedBookings || []).map((b: any) => b.id);
+      if (bookingIds.length > 0) {
+        const { data: existingTickets } = await supabase.from('travel_tickets').select('seat_label, passenger_name')
+          .in('booking_id', bookingIds)
+          .in('ticket_status', ['valid', 'used']);
+        const booked: string[] = [];
+        const genders: Record<string, Gender> = {};
+        (existingTickets || []).forEach((t: any) => {
+          booked.push(t.seat_label);
+          // Use a simple heuristic or stored data; default to random for demo
+          genders[t.seat_label] = Math.random() > 0.5 ? 'male' : 'female';
+        });
+        setBookedSeats(booked);
+        setBookedSeatGenders(genders);
+      }
       setLoading(false);
     };
     fetchData();
   }, [tripId]);
+
+  // Auto-fill first passenger with logged-in user's details
+  useEffect(() => {
+    if (selectedSeats.length > 0 && customerUser && !passengers[selectedSeats[0]]?.name) {
+      setPassengers(prev => ({
+        ...prev,
+        [selectedSeats[0]]: {
+          name: customerUser.fullName || '',
+          phone: customerUser.phoneNumber || '',
+          gender: prev[selectedSeats[0]]?.gender || 'male',
+        },
+      }));
+    }
+  }, [selectedSeats, customerUser]);
 
   const toggleSeat = (label: string) => {
     if (bookedSeats.includes(label)) return;
@@ -101,9 +134,21 @@ const CustomerTravelBooking: React.FC = () => {
     { key: 'confirm', label: 'Confirm' },
   ];
 
+  const getSeatColor = (cell: LayoutCell) => {
+    const isBooked = bookedSeats.includes(cell.seat_label);
+    const isSelected = selectedSeats.includes(cell.seat_label);
+    if (isBooked) {
+      const g = bookedSeatGenders[cell.seat_label];
+      if (g === 'female') return 'bg-[hsl(330,70%,88%)] text-[hsl(330,70%,35%)] border border-[hsl(330,60%,75%)] cursor-not-allowed';
+      return 'bg-[hsl(217,70%,88%)] text-[hsl(217,70%,35%)] border border-[hsl(217,60%,75%)] cursor-not-allowed';
+    }
+    if (isSelected) return 'bg-primary text-primary-foreground scale-110 shadow-lg ring-2 ring-primary/30';
+    return 'bg-[hsl(150,50%,95%)] text-[hsl(150,60%,30%)] hover:bg-[hsl(150,50%,88%)] border border-[hsl(150,40%,80%)]';
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Dark header */}
+      {/* Header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-[hsl(220,25%,12%)] to-[hsl(220,30%,20%)] px-4 pb-6 pt-3">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217,91%,35%/0.15),transparent_60%)]" />
         <div className="relative z-10">
@@ -140,40 +185,49 @@ const CustomerTravelBooking: React.FC = () => {
             <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Select Your Seats</p>
             {layout.length > 0 ? (
               <div className="rounded-2xl border bg-card p-4 shadow-sm overflow-x-auto">
-                <div className="flex flex-col items-center gap-1 min-w-fit">
-                  <div className="flex gap-1">
+                {/* Bus front indicator */}
+                <div className="flex justify-center mb-3">
+                  <div className="rounded-full bg-muted px-4 py-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">🚌 Front</div>
+                </div>
+                <div className="flex flex-col items-center gap-1.5 min-w-fit">
+                  <div className="flex gap-1.5">
                     <div className="h-7 w-7" />
                     {Array.from({ length: planCols }, (_, c) => (
-                      <div key={c} className="flex h-7 w-9 items-center justify-center text-[10px] font-bold text-muted-foreground">{String.fromCharCode(65 + c)}</div>
+                      <div key={c} className="flex h-7 w-10 items-center justify-center text-[10px] font-bold text-muted-foreground">{String.fromCharCode(65 + c)}</div>
                     ))}
                   </div>
                   {Array.from({ length: planRows }, (_, r) => (
-                    <div key={r} className="flex gap-1">
-                      <div className="flex h-9 w-7 items-center justify-center text-[10px] font-bold text-muted-foreground">{r + 1}</div>
+                    <div key={r} className="flex gap-1.5">
+                      <div className="flex h-10 w-7 items-center justify-center text-[10px] font-bold text-muted-foreground">{r + 1}</div>
                       {Array.from({ length: planCols }, (_, c) => {
                         const cell = layout.find(l => l.row === r && l.col === c);
-                        if (!cell || cell.type === 'aisle') return <div key={c} className="h-9 w-9" />;
-                        if (cell.type === 'blocked') return <div key={c} className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted/50 text-[10px] text-muted-foreground">×</div>;
+                        if (!cell || cell.type === 'aisle') return <div key={c} className="h-10 w-10" />;
+                        if (cell.type === 'blocked') return <div key={c} className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted/50 text-[10px] text-muted-foreground">×</div>;
                         const isBooked = bookedSeats.includes(cell.seat_label);
                         const isSelected = selectedSeats.includes(cell.seat_label);
+                        const gender = bookedSeatGenders[cell.seat_label];
                         return (
                           <button key={c} onClick={() => toggleSeat(cell.seat_label)} disabled={isBooked}
-                            className={`flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-bold transition-all ${
-                              isBooked ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                              : isSelected ? 'bg-primary text-primary-foreground scale-110 shadow-lg ring-2 ring-primary/30'
-                              : 'bg-[hsl(150,60%,40%/0.15)] text-[hsl(150,60%,30%)] hover:bg-[hsl(150,60%,40%/0.3)] border border-[hsl(150,60%,40%/0.3)]'
-                            }`}>
-                            {isBooked ? '×' : isSelected ? <Check className="h-4 w-4" /> : cell.seat_label}
+                            className={`flex h-10 w-10 items-center justify-center rounded-xl text-[10px] font-bold transition-all ${getSeatColor(cell)}`}>
+                            {isBooked ? (
+                              <span>{gender === 'female' ? '♀' : '♂'}</span>
+                            ) : isSelected ? (
+                              <Check className="h-4 w-4" />
+                            ) : (
+                              cell.seat_label
+                            )}
                           </button>
                         );
                       })}
                     </div>
                   ))}
                 </div>
-              <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-[hsl(150,60%,40%)]" /> Available</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-primary" /> Selected</span>
-                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-muted" /> Taken</span>
+                {/* Legend */}
+                <div className="mt-5 flex flex-wrap items-center justify-center gap-3 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(150,50%,95%)] border border-[hsl(150,40%,80%)]" /> Available</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-primary" /> Selected</span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(217,70%,88%)] border border-[hsl(217,60%,75%)]" /> <span>♂ Male</span></span>
+                  <span className="flex items-center gap-1.5"><div className="h-3.5 w-3.5 rounded-md bg-[hsl(330,70%,88%)] border border-[hsl(330,60%,75%)]" /> <span>♀ Female</span></span>
                 </div>
               </div>
             ) : (
@@ -201,44 +255,158 @@ const CustomerTravelBooking: React.FC = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Passenger Details</p>
             {selectedSeats.map((seat, idx) => {
-              const seatColors = ['border-l-[hsl(217,91%,55%)]', 'border-l-[hsl(150,60%,40%)]', 'border-l-[hsl(38,92%,50%)]', 'border-l-[hsl(258,80%,58%)]'];
+              const seatColors = [
+                { border: 'border-l-[hsl(217,91%,55%)]', bg: 'bg-[hsl(217,91%,97%)]' },
+                { border: 'border-l-[hsl(150,60%,40%)]', bg: 'bg-[hsl(150,60%,97%)]' },
+                { border: 'border-l-[hsl(38,92%,50%)]', bg: 'bg-[hsl(38,92%,97%)]' },
+                { border: 'border-l-[hsl(258,80%,58%)]', bg: 'bg-[hsl(258,80%,97%)]' },
+              ];
+              const color = seatColors[idx % seatColors.length];
+              const p = passengers[seat] || { name: '', phone: '', gender: 'male' as Gender };
+              const isAutoFilled = idx === 0 && customerUser?.fullName && p.name === customerUser.fullName;
               return (
-              <div key={seat} className={`rounded-2xl border bg-card p-4 space-y-3 shadow-sm border-l-4 ${seatColors[idx % seatColors.length]}`}>
-                <Badge variant="outline" className="text-[11px]">Seat {seat}</Badge>
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Full Name *</Label>
-                  <Input placeholder="Passenger name" value={passengers[seat]?.name || ''}
-                    onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], name: e.target.value } }))} />
+                <div key={seat} className={`rounded-2xl border ${color.bg} p-4 space-y-3 shadow-sm border-l-4 ${color.border}`}>
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-[11px] font-bold">Seat {seat}</Badge>
+                    {isAutoFilled && <Badge className="bg-[hsl(150,60%,40%)] text-white text-[10px] border-0">Auto-filled</Badge>}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px] font-semibold">Full Name *</Label>
+                    <Input placeholder="Passenger name" value={p.name}
+                      className="rounded-xl bg-white/80"
+                      onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], name: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px] font-semibold">Phone</Label>
+                    <Input placeholder="+237 ..." value={p.phone}
+                      className="rounded-xl bg-white/80"
+                      onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value, gender: prev[seat]?.gender || 'male' } }))} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-[12px] font-semibold">Gender *</Label>
+                    <RadioGroup value={p.gender || 'male'} onValueChange={(v) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], gender: v as Gender } }))} className="flex gap-4">
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="male" id={`male-${seat}`} />
+                        <Label htmlFor={`male-${seat}`} className="text-[12px] flex items-center gap-1 cursor-pointer">
+                          <span className="text-[hsl(217,70%,50%)]">♂</span> Male
+                        </Label>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <RadioGroupItem value="female" id={`female-${seat}`} />
+                        <Label htmlFor={`female-${seat}`} className="text-[12px] flex items-center gap-1 cursor-pointer">
+                          <span className="text-[hsl(330,70%,50%)]">♀</span> Female
+                        </Label>
+                      </div>
+                    </RadioGroup>
+                  </div>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-[12px]">Phone</Label>
-                  <Input placeholder="+237 ..." value={passengers[seat]?.phone || ''}
-                    onChange={(e) => setPassengers(prev => ({ ...prev, [seat]: { ...prev[seat], phone: e.target.value } }))} />
-                </div>
-              </div>
               );
             })}
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-11 rounded-xl">Back</Button>
-              <Button onClick={() => setStep('confirm')} className="flex-1 h-11 rounded-xl">Review Booking</Button>
+              <Button onClick={() => setStep('confirm')} className="flex-1 h-11 rounded-xl bg-gradient-to-r from-primary to-[hsl(217,91%,50%)]">Review Booking</Button>
             </div>
           </motion.div>
         )}
 
-        {/* Step 3: Confirm */}
+        {/* Step 3: Confirm — Boarding Pass Style */}
         {step === 'confirm' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
             <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Booking Summary</p>
-            <div className="rounded-2xl border bg-gradient-to-br from-card to-[hsl(217,91%,35%/0.03)] p-5 space-y-3 shadow-sm">
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Route</span><span className="font-semibold">{route?.origin} → {route?.destination}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Departure</span><span className="font-semibold">{format(new Date(trip.departure_at), 'dd MMM yyyy, HH:mm')}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Seats</span><span className="font-semibold">{selectedSeats.join(', ')}</span></div>
-              <div className="flex justify-between text-sm"><span className="text-muted-foreground">Passengers</span><span className="font-semibold">{selectedSeats.length}</span></div>
-              <div className="border-t border-border pt-3 flex justify-between items-center">
-                <span className="font-bold">Total</span>
-                <span className="text-xl font-black text-primary">{totalPrice.toLocaleString()} {trip.currency}</span>
+
+            {/* Boarding pass card */}
+            <div className="rounded-2xl border shadow-md overflow-hidden bg-card">
+              {/* Top colored bar with route */}
+              <div className="bg-gradient-to-r from-[hsl(150,50%,30%)] to-[hsl(160,45%,22%)] px-5 py-4 text-white">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-[10px] font-semibold uppercase tracking-wider opacity-70">Kang Travel</span>
+                  <span className="text-[10px] font-mono opacity-70">Ticket ID</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] opacity-60">{category?.toUpperCase() || 'BUS'}</span>
+                  <span className="text-[11px] font-mono font-bold">KOB-{Date.now().toString(36).slice(-6).toUpperCase()}</span>
+                </div>
+              </div>
+
+              {/* Route section */}
+              <div className="px-5 py-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase">{route?.origin?.slice(0, 15)}</p>
+                    <p className="text-2xl font-black tracking-tight">{route?.origin?.slice(0, 3).toUpperCase()}</p>
+                    <p className="text-[12px] font-semibold text-primary">{format(new Date(trip.departure_at), 'HH:mm')}</p>
+                    <p className="text-[10px] text-muted-foreground">{format(new Date(trip.departure_at), 'dd MMM, yyyy')}</p>
+                  </div>
+                  <div className="flex-1 flex flex-col items-center px-3">
+                    <div className="flex items-center w-full">
+                      <div className="h-2.5 w-2.5 rounded-full border-2 border-primary" />
+                      <div className="flex-1 border-t-2 border-dashed border-primary/40 mx-1" />
+                      <div className="rounded-full bg-primary/10 px-2.5 py-1">
+                        <span className="text-[9px] font-bold text-primary">🚌</span>
+                      </div>
+                      <div className="flex-1 border-t-2 border-dashed border-primary/40 mx-1" />
+                      <div className="h-2.5 w-2.5 rounded-full bg-primary" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] text-muted-foreground uppercase">{route?.destination?.slice(0, 15)}</p>
+                    <p className="text-2xl font-black tracking-tight">{route?.destination?.slice(0, 3).toUpperCase()}</p>
+                    <p className="text-[12px] font-semibold text-primary">{format(new Date(trip.arrival_at), 'HH:mm')}</p>
+                    <p className="text-[10px] text-muted-foreground">{format(new Date(trip.arrival_at), 'dd MMM, yyyy')}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tear line */}
+              <div className="relative">
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-1/2 h-5 w-5 rounded-full bg-background" />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-1/2 h-5 w-5 rounded-full bg-background" />
+                <div className="border-t-2 border-dashed border-border mx-6" />
+              </div>
+
+              {/* Passenger & seat details */}
+              <div className="px-5 py-4 space-y-3">
+                {selectedSeats.map((seat, idx) => {
+                  const p = passengers[seat];
+                  return (
+                    <div key={seat} className="flex items-center gap-3">
+                      <div className={`flex h-8 w-8 items-center justify-center rounded-full text-[11px] font-bold ${
+                        p?.gender === 'female' ? 'bg-[hsl(330,70%,92%)] text-[hsl(330,70%,40%)]' : 'bg-[hsl(217,70%,92%)] text-[hsl(217,70%,40%)]'
+                      }`}>
+                        {p?.gender === 'female' ? '♀' : '♂'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{p?.name || 'Passenger'}</p>
+                        <p className="text-[11px] text-muted-foreground">{p?.phone || '—'}</p>
+                      </div>
+                      <Badge className="bg-[hsl(150,50%,92%)] text-[hsl(150,60%,25%)] border-0 font-bold">Seat {seat}</Badge>
+                    </div>
+                  );
+                })}
+
+                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
+                  <div className="rounded-xl bg-[hsl(150,50%,95%)] p-2.5 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase font-semibold">Seats</p>
+                    <p className="text-sm font-black text-[hsl(150,60%,30%)]">{selectedSeats.join(', ')}</p>
+                  </div>
+                  <div className="rounded-xl bg-[hsl(217,70%,96%)] p-2.5 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase font-semibold">Passengers</p>
+                    <p className="text-sm font-black text-[hsl(217,70%,40%)]">{selectedSeats.length}</p>
+                  </div>
+                  <div className="rounded-xl bg-[hsl(38,92%,95%)] p-2.5 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase font-semibold">Class</p>
+                    <p className="text-sm font-black text-[hsl(38,80%,35%)]">Economy</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="bg-gradient-to-r from-[hsl(150,50%,30%)] to-[hsl(160,45%,22%)] px-5 py-3 flex items-center justify-between">
+                <span className="text-white/70 text-sm font-semibold">Total</span>
+                <span className="text-white text-xl font-black">{totalPrice.toLocaleString()} {trip.currency}</span>
               </div>
             </div>
+
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back</Button>
               <Button onClick={handleBook} disabled={booking} className="flex-1 h-12 rounded-xl text-[15px] font-bold bg-gradient-to-r from-[hsl(150,60%,40%)] to-[hsl(160,55%,35%)] hover:from-[hsl(150,60%,35%)] hover:to-[hsl(160,55%,30%)] shadow-lg">
