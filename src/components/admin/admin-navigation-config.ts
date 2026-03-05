@@ -124,6 +124,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Supported Countries", path: "/admin/supported-countries", icon: Globe },
       { title: "Homepage Hero", path: "/admin/homepage-hero", icon: Palette },
       { title: "Auth Branding", path: "/admin/auth-branding", icon: Palette },
+      { title: "Translations", path: "/admin/translations", icon: Languages },
       { title: "Compliance Dashboard", path: "/admin/compliance-dashboard", icon: ScrollText },
       { title: "API Health", path: "/admin/api-health", icon: Activity },
     ],
