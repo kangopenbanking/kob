@@ -102,12 +102,15 @@ const Index = () => {
       } />
 
       {/* Payment Systems Marquee */}
-      <section className="py-8 bg-background overflow-hidden border-b border-border/40">
-        <div className="relative">
-          <div className="flex animate-[marquee_20s_linear_infinite] gap-16 items-center w-max">
-            {[paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank,
-              paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank].map((logo, i) => (
-              <img key={i} src={logo} alt="Payment partner" className="h-12 md:h-14 w-auto object-contain opacity-70 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" />
+      <section className="py-6 bg-background overflow-hidden border-b border-border/40">
+        <div className="relative marquee-container">
+          <div className="marquee-track">
+            {[...Array(3)].map((_, setIdx) => (
+              <div key={setIdx} className="flex gap-16 items-center shrink-0 px-8">
+                {[paymentVisa, paymentMastercard, paymentMtn, paymentOrange, paymentPaypal, paymentBank].map((logo, i) => (
+                  <img key={`${setIdx}-${i}`} src={logo} alt="Payment partner" className="h-10 md:h-12 w-auto object-contain opacity-60 hover:opacity-100 transition-opacity grayscale hover:grayscale-0" />
+                ))}
+              </div>
             ))}
           </div>
         </div>
