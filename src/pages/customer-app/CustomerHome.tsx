@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
+import rentKobImage from '@/assets/rent-kob.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -427,17 +428,53 @@ const CustomerHome: React.FC = () => {
         <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.12 }}>
           <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Financial Health</p>
           <div className="grid grid-cols-2 gap-3">
-            {visibleHealth.map((item) => (
-              <button key={item.path} onClick={() => go(item.path)}
-                className={`flex flex-col gap-2 rounded-3xl ${item.color} p-4 text-left`}>
-                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${item.color}`}>
-                  <item.icon className={`h-4.5 w-4.5 ${item.iconColor}`} strokeWidth={2} />
-                </div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider ${item.iconColor}">{item.label}</p>
-                <p className="text-lg font-bold text-foreground">{item.description || 'View'}</p>
-                <p className="text-[10px] font-medium text-muted-foreground">{item.subtitle || ''}</p>
-              </button>
-            ))}
+            {/* Credit Score Card with Doughnut */}
+            {visibleHealth.find(i => i.featureKey === 'credit_score') && (() => {
+              const item = visibleHealth.find(i => i.featureKey === 'credit_score')!;
+              const scoreVal = 720;
+              const maxVal = 850;
+              const pct = scoreVal / maxVal;
+              const r = 40;
+              const circ = 2 * Math.PI * r;
+              const offset = circ * (1 - pct);
+              return (
+                <button key={item.path} onClick={() => go(item.path)}
+                  className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(150,40%,90%)] p-4 text-left">
+                  <div className="relative flex h-24 w-24 items-center justify-center">
+                    <svg width={100} height={100} className="-rotate-90">
+                      <circle cx={50} cy={50} r={r} stroke="hsl(150,40%,80%)" strokeWidth={10} fill="none" />
+                      <motion.circle
+                        cx={50} cy={50} r={r}
+                        stroke="hsl(150,40%,35%)"
+                        strokeWidth={10}
+                        fill="none"
+                        strokeLinecap="round"
+                        strokeDasharray={circ}
+                        initial={{ strokeDashoffset: circ }}
+                        animate={{ strokeDashoffset: offset }}
+                        transition={{ duration: 1.5, ease: 'easeOut' }}
+                      />
+                    </svg>
+                    <span className="absolute text-lg font-black text-[hsl(150,40%,35%)]">{scoreVal}</span>
+                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(150,40%,35%)]">{item.label}</p>
+                  <span className="rounded-full bg-[hsl(150,40%,35%)] px-4 py-1.5 text-[11px] font-bold text-white">Check Now</span>
+                </button>
+              );
+            })()}
+
+            {/* Rent Report Card with Image */}
+            {visibleHealth.find(i => i.featureKey === 'rent_reporting') && (() => {
+              const item = visibleHealth.find(i => i.featureKey === 'rent_reporting')!;
+              return (
+                <button key={item.path} onClick={() => go(item.path)}
+                  className="flex flex-col items-center gap-3 rounded-3xl bg-[hsl(210,80%,93%)] p-4 text-left">
+                  <img src={rentKobImage} alt="Rent Report" className="h-24 w-24 object-contain" />
+                  <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(210,60%,45%)]">{item.label}</p>
+                  <span className="rounded-full bg-[hsl(210,60%,45%)] px-4 py-1.5 text-[11px] font-bold text-white">{item.description || 'Open'}</span>
+                </button>
+              );
+            })()}
           </div>
         </motion.div>
       )}
