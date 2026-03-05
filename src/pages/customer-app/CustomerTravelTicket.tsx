@@ -210,25 +210,25 @@ const CustomerTravelTicket: React.FC = () => {
             <div className="bg-gradient-to-r from-[hsl(150,55%,30%)] via-[hsl(155,50%,35%)] to-[hsl(45,90%,50%)] h-2" />
 
             {/* Route header */}
-            <div className="px-6 pt-5 pb-3">
+            <div className="px-4 sm:px-6 pt-5 pb-3">
               {route && (
-                <div className="flex items-center justify-between">
-                  <div className="text-center flex-1">
+                <div className="flex items-center justify-between gap-1 min-w-0">
+                  <div className="text-center flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">From</p>
-                    <p className="text-xl font-black text-foreground">{route.origin}</p>
+                    <p className="text-base sm:text-xl font-black text-foreground truncate">{route.origin}</p>
                   </div>
-                  <div className="flex flex-col items-center px-4">
-                    <div className="flex items-center gap-1">
+                  <div className="flex flex-col items-center shrink-0 px-1 sm:px-4">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                       <div className="h-2 w-2 rounded-full bg-[hsl(150,55%,35%)]" />
-                      <div className="h-[2px] w-12 bg-gradient-to-r from-[hsl(150,55%,35%)] to-[hsl(45,90%,50%)]" />
-                      <Bus className="h-4 w-4 text-[hsl(45,90%,45%)]" />
-                      <div className="h-[2px] w-12 bg-gradient-to-r from-[hsl(45,90%,50%)] to-[hsl(150,55%,35%)]" />
+                      <div className="h-[2px] w-6 sm:w-12 bg-gradient-to-r from-[hsl(150,55%,35%)] to-[hsl(45,90%,50%)]" />
+                      <Bus className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-[hsl(45,90%,45%)] shrink-0" />
+                      <div className="h-[2px] w-6 sm:w-12 bg-gradient-to-r from-[hsl(45,90%,50%)] to-[hsl(150,55%,35%)]" />
                       <div className="h-2 w-2 rounded-full bg-[hsl(150,55%,35%)]" />
                     </div>
                   </div>
-                  <div className="text-center flex-1">
+                  <div className="text-center flex-1 min-w-0">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60 mb-1">To</p>
-                    <p className="text-xl font-black text-foreground">{route.destination}</p>
+                    <p className="text-base sm:text-xl font-black text-foreground truncate">{route.destination}</p>
                   </div>
                 </div>
               )}
@@ -236,12 +236,12 @@ const CustomerTravelTicket: React.FC = () => {
 
             {/* Date/time chips */}
             {trip && (
-              <div className="px-6 pb-3 flex gap-2 flex-wrap">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(150,40%,94%)] px-3 py-1.5 text-[11px] font-semibold text-[hsl(150,55%,25%)]">
-                  <Calendar className="h-3 w-3" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy')}
+              <div className="px-4 sm:px-6 pb-3 flex gap-2 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(150,40%,94%)] px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-[hsl(150,55%,25%)]">
+                  <Calendar className="h-3 w-3 shrink-0" />{format(new Date(trip.departure_at), 'EEE, dd MMM yyyy')}
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(217,40%,94%)] px-3 py-1.5 text-[11px] font-semibold text-[hsl(217,70%,40%)]">
-                  <Clock className="h-3 w-3" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[hsl(217,40%,94%)] px-2.5 py-1.5 text-[10px] sm:text-[11px] font-semibold text-[hsl(217,70%,40%)]">
+                  <Clock className="h-3 w-3 shrink-0" />{format(new Date(trip.departure_at), 'HH:mm')} — {format(new Date(trip.arrival_at), 'HH:mm')}
                 </span>
               </div>
             )}
@@ -250,7 +250,7 @@ const CustomerTravelTicket: React.FC = () => {
             <TicketDivider />
 
             {/* QR + Passenger section */}
-            <div className="px-6 py-4 flex gap-5 items-start">
+            <div className="px-4 sm:px-6 py-4 flex flex-col sm:flex-row gap-4 sm:gap-5 items-center sm:items-start">
               <QRCodeDisplay value={currentTicket.qr_code} />
               <div className="flex-1 space-y-3 pt-1">
                 <div>
@@ -277,7 +277,7 @@ const CustomerTravelTicket: React.FC = () => {
             <TicketDivider />
 
             {/* Amount footer */}
-            <div className="px-6 py-4 bg-gradient-to-r from-[hsl(150,30%,96%)] to-[hsl(45,40%,96%)]">
+            <div className="px-4 sm:px-6 py-4 bg-gradient-to-r from-[hsl(150,30%,96%)] to-[hsl(45,40%,96%)]">
               <div className="flex justify-between items-center">
                 <div>
                   <p className="text-[9px] font-semibold uppercase tracking-widest text-muted-foreground/50">Total Paid</p>
