@@ -203,6 +203,7 @@ export const CustomerTenantProvider: React.FC<{ children: React.ReactNode }> = (
       const heroActionColors: HeroActionColors = { ...defaultHeroActionColors, ...(customerConfig.hero_action_colors || {}) };
       const heroActionOpacity: number = customerConfig.hero_action_opacity ?? 0.8;
       const typographyConfig: TypographyConfig = { ...defaultTypographyConfig, ...(customerConfig.typography_config || {}), sections: { ...defaultTypographyConfig.sections, ...(customerConfig.typography_config?.sections || {}) } };
+      const travelCardConfig: TravelCardConfig = { ...defaultTravelCardConfig, ...(customerConfig.travel_card_config || {}) };
 
       setBranding({
         id: inst.id,
