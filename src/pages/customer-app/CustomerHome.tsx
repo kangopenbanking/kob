@@ -482,33 +482,59 @@ const CustomerHome: React.FC = () => {
 
       {/* ─── Transport & Tourism ─── */}
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.14 }}>
-        <p className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Transport & Tourism</p>
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { key: 'bus', label: 'Bus Travel', icon: Bus, bg: 'bg-[hsl(48,90%,52%)]', text: 'text-[hsl(0,0%,10%)]', active: true },
-            { key: 'tours', label: 'Tours', icon: Compass, bg: 'bg-[hsl(187,100%,42%)]', text: 'text-white', active: true },
-            { key: 'airlines', label: 'Airlines', icon: Plane, bg: 'bg-[hsl(0,65%,51%)]', text: 'text-white', active: false },
-            { key: 'trains', label: 'Trains', icon: Train, bg: 'bg-[hsl(0,0%,13%)]', text: 'text-white', active: false },
-          ].map((cat) => {
-            const CatIcon = cat.icon;
-            return (
-              <button
-                key={cat.key}
-                onClick={() => cat.active && go(`travel/${cat.key}`)}
-                disabled={!cat.active}
-                className={`relative flex flex-col items-center gap-2 rounded-3xl ${cat.bg} p-5 transition-transform active:scale-95 ${!cat.active ? 'opacity-50' : ''}`}
-              >
-                {!cat.active && (
-                  <span className="absolute right-2 top-2 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/80">Soon</span>
-                )}
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/20">
-                  <CatIcon className={`h-6 w-6 ${cat.text}`} strokeWidth={1.5} />
-                </div>
-                <p className={`text-sm font-bold ${cat.text}`}>{cat.label}</p>
-              </button>
-            );
-          })}
-        </div>
+        <button
+          onClick={() => go('travel')}
+          className="group relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(220,25%,14%)] to-[hsl(220,30%,22%)] p-6 text-left transition-transform active:scale-[0.98]"
+        >
+          {/* Decorative circles */}
+          <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[hsl(48,90%,52%)]/15" />
+          <div className="pointer-events-none absolute -bottom-4 -left-4 h-20 w-20 rounded-full bg-[hsl(187,100%,42%)]/10" />
+
+          <div className="relative z-10 flex items-start justify-between gap-4">
+            <div className="flex-1 space-y-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
+              <h3 className="text-xl font-extrabold leading-tight text-white">
+                Travel Made{'\n'}Effortless
+              </h3>
+              <p className="text-xs leading-relaxed text-white/60">
+                Book buses, tours & more — all from your wallet.
+              </p>
+
+              {/* Category pills */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {[
+                  { icon: Bus, label: 'Bus', color: 'hsl(48,90%,52%)' },
+                  { icon: Compass, label: 'Tours', color: 'hsl(187,100%,42%)' },
+                  { icon: Plane, label: 'Flights', color: 'hsl(0,65%,51%)' },
+                  { icon: Train, label: 'Trains', color: 'hsl(0,0%,60%)' },
+                ].map((c) => {
+                  const Icon = c.icon;
+                  return (
+                    <span key={c.label} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
+                      <Icon className="h-3 w-3" style={{ color: c.color }} strokeWidth={2} />
+                      <span className="text-[10px] font-semibold text-white/80">{c.label}</span>
+                    </span>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right side icon cluster */}
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
+                <Plane className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
+              </div>
+            </div>
+          </div>
+
+          {/* Book Now CTA */}
+          <div className="relative z-10 mt-5">
+            <div className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm transition-colors group-hover:bg-white/15">
+              <span className="text-sm font-bold text-white">Book Now</span>
+              <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+            </div>
+          </div>
+        </button>
       </motion.div>
 
       {/* Earnings & Spending cards hidden — data shown in hero section */}
