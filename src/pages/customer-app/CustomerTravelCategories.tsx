@@ -59,7 +59,7 @@ const CustomerTravelCategories: React.FC = () => {
       </div>
 
       {/* Categories */}
-      <div className="space-y-3 px-4 -mt-4 pb-24">
+      <div className="relative z-10 space-y-3 px-4 -mt-4 pb-24">
         {categories.map((cat, i) => {
           const CatIcon = cat.icon;
           const StatIcon = cat.statIcon;
