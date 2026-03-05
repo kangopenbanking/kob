@@ -11,6 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
 import rentKobImage from '@/assets/rent-kob.png';
+import travelBg from '@/assets/travel-kob.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -484,54 +485,49 @@ const CustomerHome: React.FC = () => {
       <motion.div {...fadeUp} transition={{ duration: 0.3, delay: 0.14 }}>
         <button
           onClick={() => go('travel')}
-          className="group relative w-full overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(220,25%,14%)] to-[hsl(220,30%,22%)] p-6 text-left transition-transform active:scale-[0.98]"
+          className="group relative w-full overflow-hidden rounded-3xl text-left transition-transform active:scale-[0.98]"
+          style={{ minHeight: 220 }}
         >
-          {/* Decorative circles */}
-          <div className="pointer-events-none absolute -right-6 -top-6 h-28 w-28 rounded-full bg-[hsl(48,90%,52%)]/15" />
-          <div className="pointer-events-none absolute -bottom-4 -left-4 h-20 w-20 rounded-full bg-[hsl(187,100%,42%)]/10" />
+          {/* Background image */}
+          <img
+            src={travelBg}
+            alt="Travel"
+            className="absolute inset-0 h-full w-full object-cover rounded-3xl"
+          />
+          {/* Overlay */}
+          <div className="absolute inset-0 rounded-3xl bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-          <div className="relative z-10 flex items-start justify-between gap-4">
-            <div className="flex-1 space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Transport & Tourism</p>
-              <h3 className="text-xl font-extrabold leading-tight text-white">
-                Travel Made{'\n'}Effortless
-              </h3>
-              <p className="text-xs leading-relaxed text-white/60">
-                Book buses, tours & more — all from your wallet.
-              </p>
+          <div className="relative z-10 flex h-full flex-col justify-end p-6 pt-16">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Transport & Tourism</p>
+            <h3 className="mt-1 text-xl font-extrabold leading-tight text-white">
+              Travel Made Effortless
+            </h3>
+            <p className="mt-1 text-xs leading-relaxed text-white/70">
+              Book buses, tours & more — all from your wallet.
+            </p>
 
-              {/* Category pills */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {[
-                  { icon: Bus, label: 'Bus', color: 'hsl(48,90%,52%)' },
-                  { icon: Compass, label: 'Tours', color: 'hsl(187,100%,42%)' },
-                  { icon: Plane, label: 'Flights', color: 'hsl(0,65%,51%)' },
-                  { icon: Train, label: 'Trains', color: 'hsl(0,0%,60%)' },
-                ].map((c) => {
-                  const Icon = c.icon;
-                  return (
-                    <span key={c.label} className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2.5 py-1">
-                      <Icon className="h-3 w-3" style={{ color: c.color }} strokeWidth={2} />
-                      <span className="text-[10px] font-semibold text-white/80">{c.label}</span>
-                    </span>
-                  );
-                })}
-              </div>
+            {/* Category pills */}
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {[
+                { icon: Bus, label: 'Bus', color: 'hsl(48,90%,52%)' },
+                { icon: Compass, label: 'Tours', color: 'hsl(187,100%,42%)' },
+                { icon: Plane, label: 'Flights', color: 'hsl(0,65%,51%)' },
+                { icon: Train, label: 'Trains', color: 'hsl(0,0%,75%)' },
+              ].map((c) => {
+                const Icon = c.icon;
+                return (
+                  <span key={c.label} className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 backdrop-blur-sm">
+                    <Icon className="h-3 w-3" style={{ color: c.color }} strokeWidth={2} />
+                    <span className="text-[10px] font-semibold text-white/90">{c.label}</span>
+                  </span>
+                );
+              })}
             </div>
 
-            {/* Right side icon cluster */}
-            <div className="flex flex-col items-center gap-2 pt-2">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[hsl(48,90%,52%)]">
-                <Plane className="h-6 w-6 text-[hsl(220,25%,14%)]" strokeWidth={1.5} />
-              </div>
-            </div>
-          </div>
-
-          {/* Book Now CTA */}
-          <div className="relative z-10 mt-5">
-            <div className="flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 backdrop-blur-sm transition-colors group-hover:bg-white/15">
+            {/* Book Now CTA */}
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-white/15 px-4 py-3 backdrop-blur-md transition-colors group-hover:bg-white/25">
               <span className="text-sm font-bold text-white">Book Now</span>
-              <ChevronRight className="h-4 w-4 text-white/60 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+              <ChevronRight className="h-4 w-4 text-white/70 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
             </div>
           </div>
         </button>
