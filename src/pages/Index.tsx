@@ -443,6 +443,7 @@ const Index = () => {
   }
 }`}
               />
+              </div>
               <div className="space-y-6 md:order-2">
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary/10 border border-secondary/20">
                   <CreditCard className="h-5 w-5 text-secondary" />
