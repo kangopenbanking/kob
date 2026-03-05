@@ -322,6 +322,8 @@ import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
 import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
 import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
 import MerchantTravelDiscounts from "./pages/merchant/MerchantTravelDiscounts";
+import MerchantTravelNotifications from "./pages/merchant/MerchantTravelNotifications";
+import MerchantTravelStaffRoles from "./pages/merchant/MerchantTravelStaffRoles";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
@@ -488,6 +490,8 @@ function App() {
               <Route path="travel-counter-booking" element={<MerchantTravelCounterBooking />} />
               <Route path="travel-guide" element={<MerchantTravelGuide />} />
               <Route path="travel-discounts" element={<MerchantTravelDiscounts />} />
+              <Route path="travel-notifications" element={<MerchantTravelNotifications />} />
+              <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />

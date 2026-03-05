@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search, BookOpen, Settings, ChevronRight, CheckCircle, ArrowLeft,
   Route, Armchair, Calendar, QrCode, ScanLine, ClipboardList, Shield,
-  Users, Layers, BarChart3, Tag, ShoppingCart,
+  Users, Layers, BarChart3, Tag, ShoppingCart, Bell, Mail,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -135,6 +135,39 @@ const guideSections: GuideSection[] = [
       { title: 'Auto-Applied', detail: 'Themes apply to headers, buttons, seats, badges, QR codes, and e-tickets automatically based on the service_type field.' },
     ],
     tips: ['No manual configuration needed — themes are driven by the service category.'],
+  },
+  {
+    id: 'notifications', title: 'Merchant Notifications', icon: Bell, badge: 'New',
+    description: 'How merchants send push notices and alerts to their passengers.',
+    steps: [
+      { title: 'Notification Types', detail: 'Merchants can send 5 types: General Notice, Trip Delay, Trip Cancellation, Schedule Change, and Promotion.' },
+      { title: 'Targeting', detail: 'Notifications can target all passengers across active trips or passengers of a specific trip only.' },
+      { title: 'Delivery', detail: 'Notifications are delivered as in-app alerts to the customer app. Each passenger gets an entry in app_notifications.' },
+      { title: 'History', detail: 'All sent notifications are logged in merchant_travel_notifications with recipient counts and timestamps.' },
+    ],
+    tips: ['Monitor notification abuse — merchants sending excessive promos can be flagged.'],
+  },
+  {
+    id: 'staff-roles', title: 'Staff Role Access', icon: Shield, badge: 'New',
+    description: 'How merchants manage their team access to travel services.',
+    steps: [
+      { title: 'Role Presets', detail: 'System provides 5 presets: Admin (full), Manager (all ops), Booking Agent (bookings + scanner), Scanner (scan only), Viewer (no access).' },
+      { title: 'Custom Permissions', detail: '9 permission toggles: Services, Routes, Seating, Timetable, Bookings, Discounts, Scanner, Notifications, Reports.' },
+      { title: 'Staff Table', detail: 'merchant_staff_roles stores staff with merchant_id, user_id, role, permissions JSON, and active status.' },
+      { title: 'Monitoring', detail: 'Admins can query the merchant_staff_roles table to audit who has access to what across all merchants.' },
+    ],
+    tips: ['RLS ensures merchants can only manage their own staff.', 'The unique constraint on (merchant_id, user_id) prevents duplicate assignments.'],
+  },
+  {
+    id: 'email-templates', title: 'Email Templates', icon: Mail, badge: 'New',
+    description: 'Manage automated email templates for travel bookings and notifications.',
+    steps: [
+      { title: 'Template Library', detail: '10 travel-specific email templates are pre-configured: Booking Confirmation, Cancellation, Departure Reminder, Trip Delay, Trip Cancellation Notice, Ticket Scanned, Refund Processed, Promo Alert, Schedule Change, and Counter Booking Receipt.' },
+      { title: 'Managing Templates', detail: 'Go to Admin > Email Templates. All travel templates are in the Transactional and Notification tabs. Toggle active/inactive, edit subject and HTML body.' },
+      { title: 'Template Variables', detail: 'Each template uses variables like {{passenger_name}}, {{booking_ref}}, {{origin}}, {{destination}} that are replaced at send time.' },
+      { title: 'Preview', detail: 'Click the eye icon on any template to preview the rendered HTML before activating it.' },
+    ],
+    tips: ['Transactional templates (booking confirm, receipt) should always stay active.', 'Notification templates (reminders, promos) can be toggled per merchant preference.'],
   },
 ];
 

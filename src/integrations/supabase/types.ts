@@ -8291,6 +8291,113 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_staff_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          invited_by: string | null
+          is_active: boolean | null
+          merchant_id: string
+          permissions: Json
+          role: string
+          staff_email: string | null
+          staff_name: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean | null
+          merchant_id: string
+          permissions?: Json
+          role?: string
+          staff_email?: string | null
+          staff_name: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invited_by?: string | null
+          is_active?: boolean | null
+          merchant_id?: string
+          permissions?: Json
+          role?: string
+          staff_email?: string | null
+          staff_name?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_staff_roles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_travel_notifications: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          merchant_id: string
+          message: string
+          notification_type: string
+          recipients_count: number | null
+          sent_at: string | null
+          target_audience: string
+          title: string
+          trip_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          merchant_id: string
+          message: string
+          notification_type?: string
+          recipients_count?: number | null
+          sent_at?: string | null
+          target_audience?: string
+          title: string
+          trip_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          merchant_id?: string
+          message?: string
+          notification_type?: string
+          recipients_count?: number | null
+          sent_at?: string | null
+          target_audience?: string
+          title?: string
+          trip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_travel_notifications_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "merchant_travel_notifications_trip_id_fkey"
+            columns: ["trip_id"]
+            isOneToOne: false
+            referencedRelation: "travel_trips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mfa_settings: {
         Row: {
           backup_codes: string[] | null

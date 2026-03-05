@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
-import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2, BookOpen, Tag } from 'lucide-react';
+import { Bus, Compass, Plane, Train, Plus, Check, Loader2, Database, Trash2, BookOpen, Tag, Bell, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -190,9 +190,15 @@ const MerchantTravelServices: React.FC = () => {
           <p className="text-muted-foreground">Set up and manage your transport & tourism offerings</p>
         </div>
         {merchantId && (
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             <Button variant="outline" onClick={() => navigate('/merchant/travel-discounts')}>
               <Tag className="mr-2 h-4 w-4" /> Discounts
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/merchant/travel-notifications')}>
+              <Bell className="mr-2 h-4 w-4" /> Notifications
+            </Button>
+            <Button variant="outline" onClick={() => navigate('/merchant/travel-staff-roles')}>
+              <Shield className="mr-2 h-4 w-4" /> Staff Roles
             </Button>
             <Button variant="outline" onClick={() => navigate('/merchant/travel-guide')}>
               <BookOpen className="mr-2 h-4 w-4" /> Training Guide

@@ -7,7 +7,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Search, BookOpen, Bus, Compass, Plane, Train, MapPin, Armchair, Calendar,
   QrCode, Ticket, Users, Settings, ChevronRight, CheckCircle, ArrowLeft,
-  Route, ScanLine, ShoppingCart, CreditCard, History, Layers,
+  Route, ScanLine, ShoppingCart, CreditCard, History, Layers, Bell, Shield, Tag,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -130,6 +130,44 @@ const guideSections: GuideSection[] = [
       { title: 'Monitor Usage', detail: 'Track how many times each discount has been used. Disable or delete discounts anytime.' },
     ],
     tips: ['Use min seats to encourage group bookings (e.g., 10% off for 3+ seats).', 'Set expiry dates for seasonal promos.', 'Share promo codes on social media to drive bookings.'],
+  },
+  {
+    id: 'notifications', title: 'Passenger Notifications', icon: Bell, badge: 'New',
+    description: 'Send push notices, delay alerts, and announcements to your passengers.',
+    steps: [
+      { title: 'Open Notifications', detail: 'From Travel Services, click "Notifications". This opens the Passenger Notifications panel where you can compose and send alerts.' },
+      { title: 'Choose Type', detail: 'Select the notification type: General Notice, Trip Delay, Trip Cancellation, Schedule Change, or Promotion. Each type has a distinct icon and urgency level.' },
+      { title: 'Target a Trip', detail: 'Choose "All Active Trips" to notify all passengers, or select a specific trip to only reach passengers booked on that trip.' },
+      { title: 'Compose & Send', detail: 'Enter a title and message, then click "Send to Passengers". The system creates in-app notifications for each affected passenger.' },
+      { title: 'View History', detail: 'All sent notifications appear in the history list below, showing recipient count, type, date, and target route.' },
+    ],
+    tips: ['Use delay/cancellation types for urgent notices — they appear as warnings in the customer app.', 'Always include actionable info: new times, refund details, or alternative options.', 'Promotion notifications are great for filling empty seats on upcoming trips.'],
+  },
+  {
+    id: 'staff-roles', title: 'Staff & Role Access', icon: Shield, badge: 'New',
+    description: 'Manage your team members and control what each person can access.',
+    steps: [
+      { title: 'Open Staff Roles', detail: 'From Travel Services, click "Staff Roles". This opens the Staff & Role Access management panel.' },
+      { title: 'Add a Staff Member', detail: 'Click "Add Staff", enter their name and email, then choose a role preset (Admin, Manager, Booking Agent, Scanner, or Viewer).' },
+      { title: 'Customize Permissions', detail: 'After selecting a preset, toggle individual permissions: Services, Routes, Seating, Timetable, Bookings, Discounts, Scanner, Notifications, Reports.' },
+      { title: 'Manage Staff', detail: 'Toggle staff active/inactive, edit their role and permissions, or remove them entirely from the table.' },
+    ],
+    tips: ['Use "Booking Agent" for counter staff — they get bookings and scanner access only.', 'Use "Scanner" for boarding agents who only need to validate tickets.', 'Admin role gives full access to all travel management sections.'],
+  },
+  {
+    id: 'email-templates', title: 'Email & Push Templates', icon: Tag,
+    description: 'Understand the automated emails and notifications sent to passengers.',
+    steps: [
+      { title: 'Booking Confirmation', detail: 'Sent automatically when a customer completes a booking. Contains booking ref, route, departure, seats, and amount paid with a "View Ticket" button.' },
+      { title: 'Booking Cancellation', detail: 'Sent when a booking is cancelled (by customer or merchant). Includes the cancellation reason and refund information.' },
+      { title: 'Departure Reminder', detail: 'Sent the day before departure. Reminds passengers of their route, time, and seat details with a prompt to arrive early.' },
+      { title: 'Trip Delay / Cancel Notice', detail: 'Sent when you notify passengers of a delay or cancellation. Includes original time, new time, and reason.' },
+      { title: 'Ticket Scanned', detail: 'Sent when a passenger\'s ticket is scanned at boarding, confirming they are checked in.' },
+      { title: 'Refund Processed', detail: 'Sent when a refund is issued, with refund amount, currency, and payment method details.' },
+      { title: 'Counter Booking Receipt', detail: 'Sent for cash bookings made at the counter, serving as a digital receipt with agent name and booking details.' },
+      { title: 'Promo / Discount Alert', detail: 'Sent to promote special offers with promo code, discount value, and a "Book Now" button.' },
+    ],
+    tips: ['All emails are managed by the admin. Contact your admin to customize email branding.', 'Push notifications are sent instantly; emails may take a few minutes.', 'Customers also receive in-app notifications for all booking events.'],
   },
 ];
 
