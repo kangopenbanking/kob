@@ -93,6 +93,7 @@ export default function TranslationManager() {
   const [editingString, setEditingString] = useState<TranslationString | null>(null);
   const [translatingIds, setTranslatingIds] = useState<Set<string>>(new Set());
   const [bulkTranslating, setBulkTranslating] = useState(false);
+  const [scanning, setScanning] = useState(false);
 
   // Form state
   const [formKey, setFormKey] = useState("");
