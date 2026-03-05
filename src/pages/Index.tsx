@@ -550,15 +550,11 @@ const Index = () => {
                   </Link>
                 </div>
               </div>
-              <div className="bg-card border rounded-2xl p-6 shadow-lg">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-3 h-3 rounded-full bg-destructive"></div>
-                  <div className="w-3 h-3 rounded-full bg-accent"></div>
-                  <div className="w-3 h-3 rounded-full bg-secondary"></div>
-                  <span className="text-xs text-muted-foreground ml-2 font-mono">POST /v1/loans/apply</span>
-                </div>
-                <pre className="text-xs md:text-sm text-muted-foreground font-mono overflow-x-auto whitespace-pre-wrap">
-{`{
+              <CodeImageFlipCard
+                endpoint="POST /v1/loans/apply"
+                image={apiLoansPreview}
+                imageAlt="Loan & Credit Scoring Dashboard"
+                code={`{
   "loan": {
     "id": "loan_789",
     "applicant": "Jean-Paul Nkomo",
@@ -572,8 +568,7 @@ const Index = () => {
     "decision_time_ms": 1200
   }
 }`}
-                </pre>
-              </div>
+              />
             </div>
           </div>
           </ScrollReveal>
