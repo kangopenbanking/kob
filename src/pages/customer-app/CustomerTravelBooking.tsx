@@ -170,8 +170,8 @@ const CustomerTravelBooking: React.FC = () => {
                     </div>
                   ))}
                 </div>
-                <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-secondary/15 border" /> Available</span>
+              <div className="mt-4 flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
+                  <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-[hsl(150,60%,40%)]" /> Available</span>
                   <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-primary" /> Selected</span>
                   <span className="flex items-center gap-1.5"><div className="h-3 w-3 rounded bg-muted" /> Taken</span>
                 </div>
