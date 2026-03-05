@@ -36,7 +36,10 @@ serve(async (req) => {
       });
     }
 
-    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type } = await req.json();
+    const body = await req.json();
+    const { source_account_id, destination_account_id, amount, currency, reference, description, institution_id, identifier_type } = body;
+
+    console.log('Transfer request:', { source_account_id, destination_account_id, amount, currency, identifier_type });
 
     // Validate required fields
     if (!source_account_id || !destination_account_id || !amount) {
