@@ -16,13 +16,14 @@ import { toast } from 'sonner';
 import kangLogo from '@/assets/kang-logo.png';
 import { API_CONFIG } from '@/config/api';
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
 const CustomerAuth: React.FC = () => {
+  const { data: supportedCountries = [] } = useSupportedCountries('consumer');
   const navigate = useNavigate();
 
   const [mode, setMode] = useState<AuthMode>('welcome');
@@ -387,8 +388,8 @@ const CustomerAuth: React.FC = () => {
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              {COUNTRY_CODES.map(cc => (
-                                <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                              {supportedCountries.map(cc => (
+                                <SelectItem key={`${cc.dial_code}-${cc.code}`} value={cc.dial_code}>{cc.flag} {cc.dial_code}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>

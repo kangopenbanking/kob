@@ -15,7 +15,7 @@ import { sounds } from '@/lib/sounds';
 import { API_CONFIG } from '@/config/api';
 import kangLogo from '@/assets/kang-logo.png';
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin';
 
@@ -25,6 +25,7 @@ interface MobileAuthFormProps {
 }
 
 export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, onApplyAccount }) => {
+  const { data: supportedCountries = [] } = useSupportedCountries('banking');
   const tenant = useTenant();
   const [step, setStep] = useState<AuthStep>('phone');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -355,8 +356,8 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        {COUNTRY_CODES.map(cc => (
-                          <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                        {supportedCountries.map(cc => (
+                          <SelectItem key={`${cc.dial_code}-${cc.code}`} value={cc.dial_code}>{cc.flag} {cc.dial_code}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

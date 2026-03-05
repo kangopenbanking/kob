@@ -11640,6 +11640,45 @@ export type Database = {
         }
         Relationships: []
       }
+      supported_countries: {
+        Row: {
+          code: string
+          country: string
+          created_at: string | null
+          dial_code: string
+          enabled_banking_app: boolean
+          enabled_consumer_app: boolean
+          flag: string
+          id: string
+          sort_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          code: string
+          country: string
+          created_at?: string | null
+          dial_code: string
+          enabled_banking_app?: boolean
+          enabled_consumer_app?: boolean
+          flag: string
+          id?: string
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Update: {
+          code?: string
+          country?: string
+          created_at?: string | null
+          dial_code?: string
+          enabled_banking_app?: boolean
+          enabled_consumer_app?: boolean
+          flag?: string
+          id?: string
+          sort_order?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       supported_currencies: {
         Row: {
           code: string

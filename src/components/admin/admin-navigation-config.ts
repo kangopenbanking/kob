@@ -1,4 +1,5 @@
 import {
+  Globe,
   Smartphone,
   Palette,
   LayoutDashboard,
@@ -119,6 +120,7 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Configuration",
     items: [
       { title: "System Config", path: "/admin/system-config", icon: Settings },
+      { title: "Supported Countries", path: "/admin/supported-countries", icon: Globe },
       { title: "Homepage Hero", path: "/admin/homepage-hero", icon: Palette },
       { title: "Auth Branding", path: "/admin/auth-branding", icon: Palette },
       { title: "Compliance Dashboard", path: "/admin/compliance-dashboard", icon: ScrollText },

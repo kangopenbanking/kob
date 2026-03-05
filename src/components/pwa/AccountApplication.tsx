@@ -17,11 +17,12 @@ interface AccountApplicationProps {
   onSkip?: () => void;
 }
 
-import { COUNTRY_CODES } from '@/lib/country-codes';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 const STEPS = ['Personal', 'Contact', 'Account', 'Security', 'Review'];
 
 export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComplete, onSkip }) => {
+  const { data: supportedCountries = [] } = useSupportedCountries('banking');
   const tenant = useTenant();
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -208,8 +209,8 @@ export const AccountApplication: React.FC<AccountApplicationProps> = ({ onComple
                   <Select value={form.countryCode} onValueChange={v => update('countryCode', v)}>
                     <SelectTrigger className="w-[120px]"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {COUNTRY_CODES.map(cc => (
-                        <SelectItem key={cc.code} value={cc.code}>{cc.flag} {cc.code}</SelectItem>
+                      {supportedCountries.map(cc => (
+                        <SelectItem key={`${cc.dial_code}-${cc.code}`} value={cc.dial_code}>{cc.flag} {cc.dial_code}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
