@@ -171,7 +171,7 @@ const CustomerTravelTrips: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 -mt-4 pb-24 space-y-5">
+      <div className="relative z-10 px-0 pt-3 -mt-4 pb-24 space-y-5">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : (
