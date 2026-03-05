@@ -478,9 +478,9 @@ function App() {
               <Route path="travel-services" element={<MerchantTravelServices />} />
               <Route path="travel-routes" element={<MerchantTravelRoutes />} />
               <Route path="travel-seating" element={<MerchantTravelSeating />} />
-              <Route path="travel-timetable" element={<div className="p-6"><h1 className="text-2xl font-bold">Timetable</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
-              <Route path="travel-bookings" element={<div className="p-6"><h1 className="text-2xl font-bold">Bookings</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
-              <Route path="travel-scanner" element={<div className="p-6"><h1 className="text-2xl font-bold">Ticket Scanner</h1><p className="text-muted-foreground">Coming in next iteration</p></div>} />
+              <Route path="travel-timetable" element={<MerchantTravelTimetable />} />
+              <Route path="travel-bookings" element={<MerchantTravelBookings />} />
+              <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />
             <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
