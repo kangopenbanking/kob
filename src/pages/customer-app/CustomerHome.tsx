@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
+import rentKobImage from '@/assets/rent-kob.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
