@@ -102,6 +102,7 @@ const AdminTravelManagement: React.FC = () => {
           <p className="text-muted-foreground">Oversee all transport & tourism services across the platform</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/travel-guide')}><BookOpen className="mr-2 h-4 w-4" /> Training Guide</Button>
           <Button variant="outline" onClick={fetchAll}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
           <Button variant="destructive" onClick={resetAllDemoData}><Trash2 className="mr-2 h-4 w-4" /> Reset All Data</Button>
         </div>
