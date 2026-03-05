@@ -201,13 +201,13 @@ const CustomerTravelTrips: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 px-0 pt-3 -mt-4 pb-24 space-y-5">
+      <div className="relative z-10 px-0 pt-6 -mt-4 pb-24 space-y-5">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
             {/* ═══ FILTER BAR ═══ */}
-            <div className="px-4 space-y-2.5">
+            <div className="px-4 space-y-3">
               {/* Toggle row */}
               <div className="flex items-center gap-2">
                 <button
