@@ -189,7 +189,7 @@ const CustomerTravelBooking: React.FC = () => {
               </div>
             )}
             {selectedSeats.length > 0 && (
-              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl" onClick={() => setStep('details')}>
+              <Button className="mt-4 w-full h-12 text-[15px] font-bold rounded-xl bg-gradient-to-r from-primary to-[hsl(217,91%,50%)] shadow-lg" onClick={() => setStep('details')}>
                 <Users className="mr-2 h-4 w-4" /> Continue · {selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''} · {totalPrice.toLocaleString()} {trip.currency}
               </Button>
             )}
