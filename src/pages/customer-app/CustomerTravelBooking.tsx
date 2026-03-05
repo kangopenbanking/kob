@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, User, UserCircle } from 'lucide-react';
+import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, User, UserCircle, Tag } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,6 +34,9 @@ const CustomerTravelBooking: React.FC = () => {
   const [passengers, setPassengers] = useState<Record<string, { name: string; phone: string; gender: Gender }>>({});
   const [booking, setBooking] = useState(false);
   const [step, setStep] = useState<'seats' | 'details' | 'confirm'>('seats');
+  const [promoCode, setPromoCode] = useState('');
+  const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
+  const [autoDiscounts, setAutoDiscounts] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,6 +72,17 @@ const CustomerTravelBooking: React.FC = () => {
         setBookedSeats(booked);
         setBookedSeatGenders(genders);
       }
+
+      // Fetch auto-applied discounts for this service
+      if (serviceId) {
+        const { data: discData } = await supabase.from('travel_discounts').select('*')
+          .eq('service_id', serviceId).eq('is_active', true)
+          .is('promo_code', null)
+          .lte('valid_from', new Date().toISOString());
+        const valid = (discData || []).filter((d: any) => !d.valid_until || new Date(d.valid_until) > new Date());
+        setAutoDiscounts(valid as any[]);
+      }
+
       setLoading(false);
     };
     fetchData();
@@ -88,7 +102,39 @@ const CustomerTravelBooking: React.FC = () => {
     setSelectedSeats(prev => prev.includes(label) ? prev.filter(s => s !== label) : [...prev, label]);
   };
 
-  const totalPrice = selectedSeats.length * (trip?.price || 0);
+  const basePrice = selectedSeats.length * (trip?.price || 0);
+
+  // Calculate best applicable discount
+  const bestDiscount = useMemo(() => {
+    const candidates = [...autoDiscounts, appliedDiscount].filter(Boolean);
+    let best: any = null;
+    let bestSaving = 0;
+    for (const d of candidates) {
+      if (d.min_seats > selectedSeats.length) continue;
+      if (d.max_uses !== null && d.current_uses >= d.max_uses) continue;
+      const saving = d.discount_type === 'percentage' ? basePrice * d.discount_value / 100 : d.discount_value;
+      if (saving > bestSaving) { bestSaving = saving; best = d; }
+    }
+    return best;
+  }, [autoDiscounts, appliedDiscount, selectedSeats.length, basePrice]);
+
+  const discountAmount = bestDiscount
+    ? (bestDiscount.discount_type === 'percentage' ? Math.round(basePrice * bestDiscount.discount_value / 100) : bestDiscount.discount_value)
+    : 0;
+  const totalPrice = Math.max(0, basePrice - discountAmount);
+
+  const applyPromoCode = async () => {
+    if (!promoCode.trim() || !serviceId) return;
+    const { data } = await supabase.from('travel_discounts').select('*')
+      .eq('service_id', serviceId).eq('promo_code', promoCode.trim().toUpperCase())
+      .eq('is_active', true).lte('valid_from', new Date().toISOString()).maybeSingle();
+    if (!data) { toast.error('Invalid promo code'); return; }
+    const d = data as any;
+    if (d.valid_until && new Date(d.valid_until) < new Date()) { toast.error('Promo code expired'); return; }
+    if (d.max_uses !== null && d.current_uses >= d.max_uses) { toast.error('Promo code usage limit reached'); return; }
+    setAppliedDiscount(d);
+    toast.success(`Promo "${d.discount_name}" applied!`);
+  };
 
   const handleBook = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -415,10 +461,32 @@ const CustomerTravelBooking: React.FC = () => {
                     <p className="text-sm font-black text-gray-700">Economy</p>
                   </div>
                 </div>
+
+                {/* Promo Code Input */}
+                <div className="pt-3 border-t border-gray-100">
+                  <p className="text-[10px] text-gray-400 uppercase font-semibold mb-2">Promo Code</p>
+                  <div className="flex gap-2">
+                    <input placeholder="Enter code" className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono uppercase"
+                      value={promoCode} onChange={e => setPromoCode(e.target.value.toUpperCase())} />
+                    <button onClick={applyPromoCode} className="rounded-lg px-3 py-2 text-xs font-bold" style={{ backgroundColor: theme.accentLight, color: theme.accentText }}>
+                      Apply
+                    </button>
+                  </div>
+                  {bestDiscount && (
+                    <div className="mt-2 flex items-center gap-1.5 rounded-lg bg-emerald-50 border border-emerald-200 px-3 py-1.5">
+                      <Tag className="h-3 w-3 text-emerald-600" />
+                      <span className="text-[11px] font-semibold text-emerald-700">{bestDiscount.discount_name}: -{bestDiscount.discount_type === 'percentage' ? `${bestDiscount.discount_value}%` : `${bestDiscount.discount_value} XAF`}</span>
+                      <span className="ml-auto text-[11px] font-bold text-emerald-800">-{discountAmount.toLocaleString()} {trip.currency}</span>
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: theme.color }}>
-                <span className="text-sm font-semibold" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
+                <div>
+                  <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
+                  {discountAmount > 0 && <span className="text-[10px] line-through" style={{ color: theme.fg, opacity: 0.4 }}>{basePrice.toLocaleString()} {trip.currency}</span>}
+                </div>
                 <span className="text-xl font-black" style={{ color: theme.fg }}>{totalPrice.toLocaleString()} {trip.currency}</span>
               </div>
             </div>

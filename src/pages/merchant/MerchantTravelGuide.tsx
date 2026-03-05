@@ -120,6 +120,17 @@ const guideSections: GuideSection[] = [
     ],
     tips: ['If a customer calls about a booking, ask for their booking reference (starts with KOB-).', 'Customers can view all their past and upcoming bookings in the Booking History section of the app.'],
   },
+  {
+    id: 'discounts', title: 'Discounts & Promos', icon: ShoppingCart, badge: 'New',
+    description: 'Create discount codes and promotions to attract more customers.',
+    steps: [
+      { title: 'Open Discounts', detail: 'From Travel Services, click the "Discounts" button. This opens the Discounts & Promos management page.' },
+      { title: 'Create a Discount', detail: 'Click "New Discount". Choose percentage or fixed amount, set the value, optionally add a promo code (e.g., SUMMER25), min seats required, usage limit, and validity dates.' },
+      { title: 'Auto vs Promo Code', detail: 'If you leave the promo code blank, the discount auto-applies at checkout. If you set a code, customers must enter it manually.' },
+      { title: 'Monitor Usage', detail: 'Track how many times each discount has been used. Disable or delete discounts anytime.' },
+    ],
+    tips: ['Use min seats to encourage group bookings (e.g., 10% off for 3+ seats).', 'Set expiry dates for seasonal promos.', 'Share promo codes on social media to drive bookings.'],
+  },
 ];
 
 const MerchantTravelGuide: React.FC = () => {
