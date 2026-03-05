@@ -34,9 +34,13 @@ import {
 } from "lucide-react";
 import heroBanner from "@/assets/hero-banner-kob.png";
 import crediqHeroBg from "@/assets/crediq-hero-bg.png";
+import banksKob from "@/assets/banks-kob.jpg";
+import developerKang from "@/assets/developer-kang.png";
+import merchantsKob from "@/assets/merchants-kob.webp";
 import { SmartGetStartedButton } from "@/components/SmartGetStartedButton";
 import { ProductTour } from "@/components/ProductTour";
 import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
+import { motion } from "framer-motion";
 
 const Index = () => {
   return (
