@@ -201,13 +201,13 @@ const CustomerTravelTrips: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative z-10 px-0 pt-3 -mt-4 pb-24 space-y-5">
+      <div className="relative z-10 px-0 pt-6 -mt-4 pb-24 space-y-5">
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-muted-foreground" /></div>
         ) : (
           <>
             {/* ═══ FILTER BAR ═══ */}
-            <div className="px-4 space-y-2.5">
+            <div className="px-4 space-y-3">
               {/* Toggle row */}
               <div className="flex items-center gap-2">
                 <button
@@ -237,35 +237,34 @@ const CustomerTravelTrips: React.FC = () => {
                 </div>
               </div>
 
-              {/* Expanded filter panel */}
-              {showFilters && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl bg-white border border-border/50 p-4 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70">Time of Day</p>
-                    {activeFilterCount > 0 && (
-                      <button onClick={() => { setTimeFilter('all'); setSortBy('departure'); }}
-                        className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive hover:underline">
-                        <X className="h-3 w-3" /> Clear all
-                      </button>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    {([
-                      { key: 'all' as TimeFilter, label: 'Any Time', icon: '🕐' },
-                      { key: 'morning' as TimeFilter, label: 'Morning', icon: '🌅' },
-                      { key: 'afternoon' as TimeFilter, label: 'Afternoon', icon: '☀️' },
-                      { key: 'evening' as TimeFilter, label: 'Evening', icon: '🌙' },
-                    ]).map(t => (
-                      <button key={t.key} onClick={() => setTimeFilter(t.key)}
-                        className={`flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-bold transition-all border ${timeFilter === t.key ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'bg-muted/30 border-border/30 text-muted-foreground hover:bg-muted/50'}`}>
-                        <span className="text-base">{t.icon}</span>
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
+              {/* Time of day filter - always visible */}
+              <div className="rounded-2xl bg-white border border-border/50 p-3.5 shadow-sm space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1.5">
+                    <Clock className="h-3 w-3" /> Time of Day
+                  </p>
+                  {activeFilterCount > 0 && (
+                    <button onClick={() => { setTimeFilter('all'); setSortBy('departure'); }}
+                      className="inline-flex items-center gap-1 text-[10px] font-bold text-destructive hover:underline">
+                      <X className="h-3 w-3" /> Clear all
+                    </button>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  {([
+                    { key: 'all' as TimeFilter, label: 'Any Time', icon: '🕐' },
+                    { key: 'morning' as TimeFilter, label: 'Morning', icon: '🌅' },
+                    { key: 'afternoon' as TimeFilter, label: 'Afternoon', icon: '☀️' },
+                    { key: 'evening' as TimeFilter, label: 'Evening', icon: '🌙' },
+                  ]).map(t => (
+                    <button key={t.key} onClick={() => setTimeFilter(t.key)}
+                      className={`flex-1 flex flex-col items-center gap-1 rounded-xl py-2.5 text-[10px] font-bold transition-all border ${timeFilter === t.key ? 'bg-primary/5 border-primary text-primary shadow-sm' : 'bg-muted/30 border-border/30 text-muted-foreground hover:bg-muted/50'}`}>
+                      <span className="text-base">{t.icon}</span>
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
             {/* ═══ ROUTE SLIDER ═══ */}
             <div>
