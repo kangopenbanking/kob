@@ -49,10 +49,7 @@ import { HomepageHeroSlider } from "@/components/HomepageHeroSlider";
 import { motion } from "framer-motion";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { CodeImageFlipCard } from "@/components/CodeImageFlipCard";
-import apiAccountsPreview from "@/assets/api-accounts-preview.jpg";
-import apiPaymentsPreview from "@/assets/api-payments-preview.jpg";
-import apiLoansPreview from "@/assets/api-loans-preview.jpg";
-import apiSavingsPreview from "@/assets/api-savings-preview.jpg";
+import { AccountsPreview, PaymentsPreview, CreditScorePreview, SavingsPreview } from "@/components/AnimatedPreviews";
 
 const Index = () => {
   return (
@@ -392,8 +389,8 @@ const Index = () => {
               </div>
               <CodeImageFlipCard
                 endpoint="GET /v1/accounts"
-                image={apiAccountsPreview}
                 imageAlt="Banking Account Aggregation Dashboard"
+                previewContent={<AccountsPreview />}
                 code={`{
   "accounts": [{
     "id": "acc_cm_123",
@@ -424,8 +421,8 @@ const Index = () => {
               <div className="md:order-1">
               <CodeImageFlipCard
                 endpoint="POST /v1/payments"
-                image={apiPaymentsPreview}
                 imageAlt="Mobile Money Payment Processing"
+                previewContent={<PaymentsPreview />}
                 code={`{
   "payment": {
     "id": "pay_momo_456",
@@ -554,8 +551,8 @@ const Index = () => {
               </div>
               <CodeImageFlipCard
                 endpoint="POST /v1/loans/apply"
-                image={apiLoansPreview}
                 imageAlt="Loan & Credit Scoring Dashboard"
+                previewContent={<CreditScorePreview />}
                 code={`{
   "loan": {
     "id": "loan_789",
@@ -582,8 +579,8 @@ const Index = () => {
               <div className="md:order-1">
               <CodeImageFlipCard
                 endpoint="POST /v1/savings/goals"
-                image={apiSavingsPreview}
                 imageAlt="Smart Savings Goal Tracker"
+                previewContent={<SavingsPreview />}
                 code={`{
   "savings_goal": {
     "id": "sav_101",
