@@ -1,5 +1,6 @@
 import {
   Globe,
+  Languages,
   Smartphone,
   Palette,
   LayoutDashboard,
