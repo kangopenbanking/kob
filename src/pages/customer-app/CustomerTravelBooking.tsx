@@ -160,8 +160,8 @@ const CustomerTravelBooking: React.FC = () => {
                           <button key={c} onClick={() => toggleSeat(cell.seat_label)} disabled={isBooked}
                             className={`flex h-9 w-9 items-center justify-center rounded-lg text-[10px] font-bold transition-all ${
                               isBooked ? 'bg-muted text-muted-foreground cursor-not-allowed'
-                              : isSelected ? 'bg-primary text-primary-foreground scale-105 shadow-md'
-                              : 'bg-secondary/15 text-secondary hover:bg-secondary/25'
+                              : isSelected ? 'bg-primary text-primary-foreground scale-110 shadow-lg ring-2 ring-primary/30'
+                              : 'bg-[hsl(150,60%,40%/0.15)] text-[hsl(150,60%,30%)] hover:bg-[hsl(150,60%,40%/0.3)] border border-[hsl(150,60%,40%/0.3)]'
                             }`}>
                             {isBooked ? '×' : isSelected ? <Check className="h-4 w-4" /> : cell.seat_label}
                           </button>
