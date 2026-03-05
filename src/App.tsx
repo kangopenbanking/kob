@@ -320,6 +320,7 @@ import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
 import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
+import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
@@ -543,6 +544,7 @@ function App() {
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
               <Route path="translations" element={<TranslationManager />} />
               <Route path="travel-management" element={<AdminTravelManagement />} />
+              <Route path="travel-guide" element={<AdminTravelGuide />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />

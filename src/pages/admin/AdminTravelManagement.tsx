@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   Bus, Compass, Plane, Train, Loader2, Search, MapPin, Calendar, Users,
-  Ticket, BarChart3, RefreshCw, Eye, Trash2, CheckCircle, XCircle, AlertTriangle,
+  Ticket, BarChart3, RefreshCw, Eye, Trash2, CheckCircle, XCircle, AlertTriangle, BookOpen,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -21,6 +22,7 @@ const categoryColors: Record<string, string> = {
 };
 
 const AdminTravelManagement: React.FC = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [services, setServices] = useState<any[]>([]);
   const [routes, setRoutes] = useState<any[]>([]);
@@ -100,6 +102,7 @@ const AdminTravelManagement: React.FC = () => {
           <p className="text-muted-foreground">Oversee all transport & tourism services across the platform</p>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/travel-guide')}><BookOpen className="mr-2 h-4 w-4" /> Training Guide</Button>
           <Button variant="outline" onClick={fetchAll}><RefreshCw className="mr-2 h-4 w-4" /> Refresh</Button>
           <Button variant="destructive" onClick={resetAllDemoData}><Trash2 className="mr-2 h-4 w-4" /> Reset All Data</Button>
         </div>
