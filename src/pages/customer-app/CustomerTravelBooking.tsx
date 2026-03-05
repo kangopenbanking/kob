@@ -266,10 +266,10 @@ const CustomerTravelBooking: React.FC = () => {
 
             {selectedSeats.map((seat, idx) => {
               const seatThemes = [
-                { accent: 'hsl(217,91%,55%)', bgFrom: 'hsl(217,80%,97%)', bgTo: 'hsl(217,60%,99%)', border: 'hsl(217,70%,88%)', icon: '🔵' },
-                { accent: 'hsl(150,60%,40%)', bgFrom: 'hsl(150,50%,96%)', bgTo: 'hsl(150,40%,99%)', icon: '🟢', border: 'hsl(150,50%,85%)' },
-                { accent: 'hsl(38,92%,50%)', bgFrom: 'hsl(38,80%,96%)', bgTo: 'hsl(38,60%,99%)', icon: '🟠', border: 'hsl(38,70%,85%)' },
-                { accent: 'hsl(258,80%,58%)', bgFrom: 'hsl(258,60%,97%)', bgTo: 'hsl(258,50%,99%)', icon: '🟣', border: 'hsl(258,60%,88%)' },
+                { accent: 'hsl(217,91%,55%)', bgFrom: 'hsl(217,80%,97%)', bgTo: 'hsl(217,60%,99%)', border: 'hsl(217,70%,88%)' },
+                { accent: 'hsl(150,60%,40%)', bgFrom: 'hsl(150,50%,96%)', bgTo: 'hsl(150,40%,99%)', border: 'hsl(150,50%,85%)' },
+                { accent: 'hsl(38,92%,50%)', bgFrom: 'hsl(38,80%,96%)', bgTo: 'hsl(38,60%,99%)', border: 'hsl(38,70%,85%)' },
+                { accent: 'hsl(258,80%,58%)', bgFrom: 'hsl(258,60%,97%)', bgTo: 'hsl(258,50%,99%)', border: 'hsl(258,60%,88%)' },
               ];
               const theme = seatThemes[idx % seatThemes.length];
               const p = passengers[seat] || { name: '', phone: '', gender: 'male' as Gender };
