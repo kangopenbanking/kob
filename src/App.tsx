@@ -199,6 +199,7 @@ import BankingAppManagement from "./pages/admin/BankingAppManagement";
 import InstitutionAppUrls from "./pages/admin/InstitutionAppUrls";
 import HomepageHeroManager from "./pages/admin/HomepageHeroManager";
 import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
+import TranslationManager from "./pages/admin/TranslationManager";
 import CrediQ from "./pages/CrediQ";
 import CrediQOnboarding from "./pages/CrediQOnboarding";
 import CrediQDashboard from "./pages/CrediQDashboard";
@@ -522,6 +523,7 @@ function App() {
               <Route path="homepage-hero" element={<HomepageHeroManager />} />
               <Route path="access-roles" element={<AccessRoleManagement />} />
               <Route path="supported-countries" element={<SupportedCountriesManagement />} />
+              <Route path="translations" element={<TranslationManager />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
