@@ -536,7 +536,7 @@ export default function AccessRoleManagement() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium">Role</Label>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v); if (v !== "__custom__") setCustomRoleName(""); }}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select a role" /></SelectTrigger>
                 <SelectContent>
                   {SYSTEM_ROLES.map(r => (
@@ -547,15 +547,36 @@ export default function AccessRoleManagement() {
                       </div>
                     </SelectItem>
                   ))}
+                  <SelectItem value="__custom__">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-[9px] uppercase tracking-wider font-semibold border ${ROLE_COLORS.custom}`}>custom</Badge>
+                      <span className="text-xs text-muted-foreground">Enter a custom role name</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedUserId && selectedRole && (
+            {selectedRole === "__custom__" && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Custom Role Name</Label>
+                <Input
+                  placeholder="e.g. auditor, support_agent…"
+                  value={customRoleName}
+                  onChange={e => setCustomRoleName(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Must match an existing role in the database enum. Spaces will be converted to underscores.
+                </p>
+              </div>
+            )}
+
+            {selectedUserId && (selectedRole && selectedRole !== "__custom__" || customRoleName.trim()) && (
               <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border/40">
                 <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  This will grant <strong className="text-foreground">{selectedRole}</strong> privileges to the selected user immediately.
+                  This will grant <strong className="text-foreground">{getEffectiveRole()}</strong> privileges to the selected user immediately.
                 </p>
               </div>
             )}
@@ -564,8 +585,8 @@ export default function AccessRoleManagement() {
             <Button variant="outline" size="sm" onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
             <Button
               size="sm"
-              onClick={() => assignRoleMutation.mutate({ userId: selectedUserId, role: selectedRole })}
-              disabled={!selectedUserId || !selectedRole || assignRoleMutation.isPending}
+              onClick={() => assignRoleMutation.mutate({ userId: selectedUserId, role: getEffectiveRole() })}
+              disabled={!selectedUserId || !getEffectiveRole() || assignRoleMutation.isPending}
             >
               {assignRoleMutation.isPending ? (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Assigning…</>
