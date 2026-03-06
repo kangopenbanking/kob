@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Shield, Users, Trash2, UserPlus, Search, Key, Settings, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
-const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator"] as const;
+const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator", "developer"] as const;
 type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -28,6 +28,8 @@ const ROLE_COLORS: Record<string, string> = {
   tpp: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/20",
   staff: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/20",
   moderator: "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  developer: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/20",
+  custom: "bg-slate-500/15 text-slate-700 dark:text-slate-400 border-slate-500/20",
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -38,6 +40,8 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   tpp: "Third-party provider",
   staff: "Institution staff",
   moderator: "Content moderator",
+  developer: "API & developer access",
+  custom: "Custom defined role",
 };
 
 const PERMISSION_SCOPES = [
@@ -70,6 +74,7 @@ export default function AccessRoleManagement() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [customRoleName, setCustomRoleName] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [permRole, setPermRole] = useState<string>("admin");
 
@@ -128,21 +133,27 @@ export default function AccessRoleManagement() {
     },
   });
 
+  // Resolve the effective role (handles "custom" selection)
+  const getEffectiveRole = () => {
+    if (selectedRole === "__custom__") return customRoleName.trim().toLowerCase().replace(/\s+/g, '_');
+    return selectedRole;
+  };
+
   // Assign role mutation
   const assignRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      if (!SYSTEM_ROLES.includes(role as SystemRole)) {
-        throw new Error(`Invalid role '${role}'. Please choose a supported role.`);
-      }
+      if (!role) throw new Error("Please select or enter a role.");
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as any });
       if (error) throw error;
     },
     onSuccess: () => {
+      const effectiveRole = getEffectiveRole();
       queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
-      toast({ title: "Role Assigned", description: `Role '${selectedRole}' assigned successfully.` });
+      toast({ title: "Role Assigned", description: `Role '${effectiveRole}' assigned successfully.` });
       setAssignDialogOpen(false);
       setSelectedUserId("");
       setSelectedRole("");
+      setCustomRoleName("");
     },
     onError: (error: any) => {
       let description = error?.message || "Failed to assign role.";
@@ -241,7 +252,7 @@ export default function AccessRoleManagement() {
       </div>
 
       {/* Role Distribution Cards */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
         {SYSTEM_ROLES.map(role => {
           const count = roleCounts[role];
           const isActive = roleFilter === role;
@@ -525,7 +536,7 @@ export default function AccessRoleManagement() {
             </div>
             <div className="space-y-2">
               <Label className="text-xs font-medium">Role</Label>
-              <Select value={selectedRole} onValueChange={setSelectedRole}>
+              <Select value={selectedRole} onValueChange={(v) => { setSelectedRole(v); if (v !== "__custom__") setCustomRoleName(""); }}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select a role" /></SelectTrigger>
                 <SelectContent>
                   {SYSTEM_ROLES.map(r => (
@@ -536,15 +547,36 @@ export default function AccessRoleManagement() {
                       </div>
                     </SelectItem>
                   ))}
+                  <SelectItem value="__custom__">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className={`text-[9px] uppercase tracking-wider font-semibold border ${ROLE_COLORS.custom}`}>custom</Badge>
+                      <span className="text-xs text-muted-foreground">Enter a custom role name</span>
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedUserId && selectedRole && (
+            {selectedRole === "__custom__" && (
+              <div className="space-y-2">
+                <Label className="text-xs font-medium">Custom Role Name</Label>
+                <Input
+                  placeholder="e.g. auditor, support_agent…"
+                  value={customRoleName}
+                  onChange={e => setCustomRoleName(e.target.value)}
+                  className="h-9 text-sm"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Must match an existing role in the database enum. Spaces will be converted to underscores.
+                </p>
+              </div>
+            )}
+
+            {selectedUserId && (selectedRole && selectedRole !== "__custom__" || customRoleName.trim()) && (
               <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border/40">
                 <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  This will grant <strong className="text-foreground">{selectedRole}</strong> privileges to the selected user immediately.
+                  This will grant <strong className="text-foreground">{getEffectiveRole()}</strong> privileges to the selected user immediately.
                 </p>
               </div>
             )}
@@ -553,8 +585,8 @@ export default function AccessRoleManagement() {
             <Button variant="outline" size="sm" onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
             <Button
               size="sm"
-              onClick={() => assignRoleMutation.mutate({ userId: selectedUserId, role: selectedRole })}
-              disabled={!selectedUserId || !selectedRole || assignRoleMutation.isPending}
+              onClick={() => assignRoleMutation.mutate({ userId: selectedUserId, role: getEffectiveRole() })}
+              disabled={!selectedUserId || !getEffectiveRole() || assignRoleMutation.isPending}
             >
               {assignRoleMutation.isPending ? (
                 <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Assigning…</>
