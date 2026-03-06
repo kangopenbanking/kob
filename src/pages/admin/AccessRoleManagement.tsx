@@ -133,12 +133,16 @@ export default function AccessRoleManagement() {
     },
   });
 
+  // Resolve the effective role (handles "custom" selection)
+  const getEffectiveRole = () => {
+    if (selectedRole === "__custom__") return customRoleName.trim().toLowerCase().replace(/\s+/g, '_');
+    return selectedRole;
+  };
+
   // Assign role mutation
   const assignRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
-      if (!SYSTEM_ROLES.includes(role as SystemRole)) {
-        throw new Error(`Invalid role '${role}'. Please choose a supported role.`);
-      }
+      if (!role) throw new Error("Please select or enter a role.");
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as any });
       if (error) throw error;
     },
