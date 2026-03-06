@@ -29,6 +29,7 @@ interface GlossaryItem {
 const manualMeta: Record<string, { title: string; subtitle: string; code: string; icon: React.ElementType }> = {
   banks: { title: 'Banking & FI Training', subtitle: 'Step-by-step guide for banks and financial institutions', code: 'KOB-MAN-BANK', icon: Landmark },
   customers: { title: 'Customer Training', subtitle: 'Learn how to use the Kang app from start to finish', code: 'KOB-MAN-CUST', icon: Smartphone },
+  merchants: { title: 'Merchant & Staff Training', subtitle: 'Travel services, staff management, and role-based access', code: 'KOB-MAN-MERCH', icon: Store },
   developers: { title: 'Developer Training', subtitle: 'API integration course with hands-on examples', code: 'KOB-MAN-DEV', icon: Code },
 };
 

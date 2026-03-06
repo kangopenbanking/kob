@@ -6,6 +6,23 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.6.0",
+      date: "2026-03-06",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Dedicated Merchant Staff Login portal at /staff-login — dual-auth with Email+Password and Phone+6-digit PIN tabs" },
+        { type: "feature", description: "merchant-create-staff edge function — merchants set email, password, phone, and PIN for staff; creates auth user and links to merchant_staff_roles" },
+        { type: "feature", description: "staff-pin-login edge function — validates phone + salted SHA-256 PIN hash, returns authenticated session via magic link token" },
+        { type: "feature", description: "phone_number and pin_hash columns added to merchant_staff_roles table for PIN-based staff authentication" },
+        { type: "feature", description: "Merchant Staff Login button added to main /auth page — dashed-border CTA linking to dedicated staff portal" },
+        { type: "feature", description: "'Copy Login Link' action on Merchant Staff Roles dashboard — merchants share /staff-login URL with team" },
+        { type: "improvement", description: "Merchant Travel Guide: 11-module staff management section covering credential setup, role presets, permissions, and security best practices" },
+        { type: "improvement", description: "Admin Travel Guide: staff-roles section updated with authentication flow details and credential management monitoring" },
+        { type: "improvement", description: "Apps Ecosystem: Merchant App features updated to reflect Staff Portal, Travel Booking, and Route Management capabilities" },
+        { type: "improvement", description: "Product Manual: Merchants manual type added alongside Banks, Customers, and Developers" },
+      ]
+    },
+    {
       version: "3.5.0",
       date: "2026-03-01",
       type: "minor",
