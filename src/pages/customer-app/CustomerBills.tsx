@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useCustomerAccounts, useAccountBalances, useRecentBillPayments } from '@/hooks/useCustomerData';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
