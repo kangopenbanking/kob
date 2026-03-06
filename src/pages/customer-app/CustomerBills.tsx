@@ -28,16 +28,7 @@ const categories: BillCategory[] = [
   { id: 'insurance', name: 'Insurance', icon: <Shield className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(25,80%,90%)', billers: ['Activa', 'Chanas', 'SAAR'] },
 ];
 
-interface RecentBill {
-  id: string;
-  biller: string;
-  category: string;
-  amount: number;
-  date: string;
-  status: 'paid' | 'pending';
-}
-
-// Recent bills fetched from DB below
+// Recent bills fetched from DB via useRecentBillPayments
 
 import { KANG_PLATFORM_ID } from '@/constants/platform';
 
