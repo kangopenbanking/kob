@@ -37,7 +37,7 @@ interface RecentBill {
   status: 'paid' | 'pending';
 }
 
-const recentBills: RecentBill[] = [];
+// Recent bills are fetched from DB via useRecentBillPayments hook
 
 import { KANG_PLATFORM_ID } from '@/constants/platform';
 
