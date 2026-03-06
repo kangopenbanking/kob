@@ -161,6 +161,16 @@ const CustomerTravelBooking: React.FC = () => {
     if (tickErr) { toast.error(tickErr.message); setBooking(false); return; }
 
     await supabase.from('travel_trips').update({ available_seats: Math.max(0, (trip?.available_seats || 0) - selectedSeats.length) } as any).eq('id', tripId || '');
+    
+    // Send booking confirmation notification & email
+    try {
+      await supabase.functions.invoke('travel-booking-notification', {
+        body: { booking_id: (bookingData as any).id, event_type: 'booking_confirmed' },
+      });
+    } catch (notifErr) {
+      console.error('Notification error (non-fatal):', notifErr);
+    }
+    
     toast.success('Booking confirmed!');
     navigate(`/app/travel/ticket/${(bookingData as any).id}`);
     setBooking(false);

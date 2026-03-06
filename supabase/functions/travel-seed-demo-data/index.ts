@@ -28,8 +28,10 @@ Deno.serve(async (req) => {
 
     // Create services
     const serviceConfigs = [
-      { service_type: 'bus', display_name: 'KOB Express Bus', theme_color: '#F5C518', description: 'Fast intercity bus travel across Cameroon' },
-      { service_type: 'tours', display_name: 'KOB Discovery Tours', theme_color: '#00BCD4', description: 'Guided tours and sightseeing packages' },
+      { service_type: 'bus', display_name: 'KOB Express Bus', theme_color: '#ffbe0b', description: 'Fast intercity bus travel across Cameroon' },
+      { service_type: 'tours', display_name: 'KOB Discovery Tours', theme_color: '#3a86ff', description: 'Guided tours and sightseeing packages' },
+      { service_type: 'airlines', display_name: 'KOB Air Connect', theme_color: '#d00000', description: 'Domestic and regional flights across Cameroon' },
+      { service_type: 'trains', display_name: 'KOB Rail Express', theme_color: '#000000', description: 'Rail travel across the Cameroon network' },
     ];
 
     const createdServices: any[] = [];
