@@ -164,21 +164,8 @@ export default function Auth() {
     const success = await firebasePhone.verifyOTP(firebaseOtpCode);
     if (success) {
       setAuthStep('complete');
-      // Redirect based on institution status
-      try {
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) { setTimeout(() => navigate('/dashboard'), 1000); return; }
-        const { data: institution } = await supabase.from('institutions').select('id, status').eq('user_id', user.id).single();
-        if (!institution) {
-          setTimeout(() => navigate(isLogin ? '/dashboard' : '/register'), 1000);
-        } else if (institution.status === 'approved') {
-          setTimeout(() => navigate('/fi-portal'), 1000);
-        } else {
-          setTimeout(() => navigate('/pending-approval'), 1000);
-        }
-      } catch {
-        setTimeout(() => navigate('/dashboard'), 1000);
-      }
+      // Redirect via DashboardRouter which handles all role-based routing
+      setTimeout(() => navigate('/dashboard'), 1000);
     }
   };
 
