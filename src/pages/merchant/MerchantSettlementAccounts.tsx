@@ -105,6 +105,7 @@ export default function MerchantSettlementAccounts() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [step, setStep] = useState<"method" | "details">("method");
   const [form, setForm] = useState<FormState>({ ...INITIAL_FORM });
 
   useEffect(() => { loadData(); }, []);
