@@ -1,30 +1,21 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { motion, AnimatePresence } from 'framer-motion';
-import { LogOut, Clock, ShieldAlert } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { SessionWarningPopup } from './SessionWarningPopup';
+import { SessionKickedPopup } from './SessionKickedPopup';
 
 const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes of inactivity
 const WARNING_MS = 60 * 1000; // 1-minute warning before logout
-const SESSION_CHECK_MS = 30 * 1000; // check session validity every 30s
+const SESSION_CHECK_MS = 30 * 1000; // fallback poll every 30s
 const ACTIVITY_EVENTS = ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart'] as const;
 
 interface Props {
   children: React.ReactNode;
-  /** Where to redirect on forced logout (default: /auth) */
   logoutPath?: string;
-  /** App label shown in the popup */
   appName?: string;
-  /** App context for session isolation (e.g. 'customer', 'banking:institutionId') */
   appContext?: string;
 }
 
-/**
- * Wraps any app section to enforce:
- *   1. Inactivity timeout with warning popup
- *   2. Single-device session — polls to detect remote sign-out
- */
 export const SessionGuard: React.FC<Props> = ({
   children,
   logoutPath = '/auth',
@@ -35,18 +26,23 @@ export const SessionGuard: React.FC<Props> = ({
   const [showWarning, setShowWarning] = useState(false);
   const [showKicked, setShowKicked] = useState(false);
   const [countdown, setCountdown] = useState(60);
+  const [kickedDevice, setKickedDevice] = useState<string | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const warningTimerRef = useRef<ReturnType<typeof setInterval>>();
   const sessionCheckRef = useRef<ReturnType<typeof setInterval>>();
   const sessionIdRef = useRef<string>();
+  const userIdRef = useRef<string>();
 
   // ---- session registration ----
   const registerSession = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
-      const sid = session.access_token.slice(-16); // deterministic per session
+      const sid = session.access_token.slice(-16);
       sessionIdRef.current = sid;
+
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) userIdRef.current = user.id;
 
       const deviceInfo = `${navigator.userAgent.slice(0, 80)} | ${new Date().toISOString()}`;
       await supabase.functions.invoke('enforce-single-session', {
@@ -55,43 +51,48 @@ export const SessionGuard: React.FC<Props> = ({
     } catch (e) {
       console.error('Session registration error:', e);
     }
-  }, []);
+  }, [appContext]);
 
-  // ---- session validity poll ----
+  // ---- handle being kicked ----
+  const handleKicked = useCallback((deviceInfo?: string) => {
+    if (showKicked) return; // already showing
+    setKickedDevice(deviceInfo || null);
+    setShowKicked(true);
+  }, [showKicked]);
+
+  // ---- session validity poll (fallback) ----
   const checkSessionValidity = useCallback(async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        // Session gone (signed out remotely)
-        setShowKicked(true);
+        handleKicked();
         return;
       }
 
-      // Check if our session is still the active one
       const sid = sessionIdRef.current;
       if (!sid) return;
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        setShowKicked(true);
+        handleKicked();
         return;
       }
 
       const { data: activeSessions } = await supabase
         .from('user_active_sessions')
-        .select('session_id')
+        .select('session_id, device_info')
         .eq('user_id', user.id)
         .eq('app_context', appContext)
         .order('last_active_at', { ascending: false })
         .limit(1);
 
       if (activeSessions && activeSessions.length > 0 && activeSessions[0].session_id !== sid) {
-        setShowKicked(true);
+        handleKicked(activeSessions[0].device_info || undefined);
       }
     } catch {
       // network error — ignore, will retry
     }
-  }, []);
+  }, [appContext, handleKicked]);
 
   // ---- inactivity timeout ----
   const resetTimer = useCallback(() => {
@@ -108,7 +109,51 @@ export const SessionGuard: React.FC<Props> = ({
     registerSession();
   }, [registerSession]);
 
-  // Poll session validity
+  // ---- Realtime subscription for instant detection ----
+  useEffect(() => {
+    const uid = userIdRef.current;
+    if (!uid) return;
+
+    const channel = supabase
+      .channel(`session-guard-${appContext}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'user_active_sessions',
+          filter: `user_id=eq.${uid}`,
+        },
+        (payload) => {
+          const newRow = payload.new as { session_id: string; app_context: string; device_info?: string };
+          if (
+            newRow.app_context === appContext &&
+            newRow.session_id !== sessionIdRef.current
+          ) {
+            handleKicked(newRow.device_info || undefined);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [appContext, handleKicked]);
+
+  // Also subscribe after registerSession sets userIdRef
+  useEffect(() => {
+    if (!userIdRef.current) {
+      // Re-check after a short delay for the async registerSession
+      const t = setTimeout(() => {
+        // force re-render to pick up userIdRef
+        setCountdown((c) => c);
+      }, 2000);
+      return () => clearTimeout(t);
+    }
+  }, []);
+
+  // Fallback poll session validity
   useEffect(() => {
     sessionCheckRef.current = setInterval(checkSessionValidity, SESSION_CHECK_MS);
     return () => clearInterval(sessionCheckRef.current);
@@ -145,7 +190,6 @@ export const SessionGuard: React.FC<Props> = ({
     setShowWarning(false);
     clearInterval(warningTimerRef.current);
     resetTimer();
-    // Update last_active so server knows we're still here
     if (sessionIdRef.current) {
       supabase.from('user_active_sessions')
         .update({ last_active_at: new Date().toISOString() })
@@ -158,104 +202,30 @@ export const SessionGuard: React.FC<Props> = ({
     clearTimeout(timerRef.current);
     clearInterval(warningTimerRef.current);
     clearInterval(sessionCheckRef.current);
-    await supabase.auth.signOut();
+    try {
+      await supabase.auth.signOut();
+    } catch {
+      // Session may already be invalidated remotely — safe to ignore
+    }
     navigate(logoutPath, { replace: true });
   };
 
   return (
     <>
       {children}
-
-      {/* Inactivity Warning Popup */}
-      <AnimatePresence>
-        {showWarning && !showKicked && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-sm rounded-2xl border-2 border-primary/30 bg-background p-6 shadow-2xl"
-            >
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="relative">
-                  <img src="/kob-logo.png" alt={appName} className="h-12 w-12 rounded-xl object-contain opacity-80" />
-                  <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-primary flex items-center justify-center">
-                    <Clock className="h-3 w-3 text-primary-foreground" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">Session Timeout</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    You've been inactive. For your security, you'll be signed out in
-                  </p>
-                </div>
-                <div className="text-3xl font-bold tabular-nums text-primary">
-                  {countdown}s
-                </div>
-                <div className="flex w-full gap-3">
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-primary/30"
-                    onClick={handleLogout}
-                  >
-                    <LogOut className="h-4 w-4 mr-2" />
-                    Sign Out
-                  </Button>
-                  <Button
-                    className="flex-1"
-                    onClick={handleStayLoggedIn}
-                  >
-                    Stay Logged In
-                  </Button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Kicked / Another Device Popup */}
-      <AnimatePresence>
-        {showKicked && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              className="w-full max-w-sm rounded-2xl border-2 border-destructive/30 bg-background p-6 shadow-2xl"
-            >
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="relative">
-                  <img src="/kob-logo.png" alt={appName} className="h-12 w-12 rounded-xl object-contain opacity-80" />
-                  <div className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-destructive flex items-center justify-center">
-                    <ShieldAlert className="h-3 w-3 text-destructive-foreground" />
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-foreground">Signed In Elsewhere</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Your account was accessed on another device. For security, only one active session is allowed at a time.
-                  </p>
-                </div>
-                <Button className="w-full" onClick={handleLogout}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Return to Login
-                </Button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <SessionWarningPopup
+        show={showWarning && !showKicked}
+        countdown={countdown}
+        appName={appName}
+        onStayLoggedIn={handleStayLoggedIn}
+        onLogout={handleLogout}
+      />
+      <SessionKickedPopup
+        show={showKicked}
+        appName={appName}
+        deviceInfo={kickedDevice}
+        onLogout={handleLogout}
+      />
     </>
   );
 };
