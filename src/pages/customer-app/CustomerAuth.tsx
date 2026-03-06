@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { toast } from 'sonner';
 import kangLogo from '@/assets/kang-logo.png';
+import authBanner from '@/assets/auth-banner.png';
 import { API_CONFIG } from '@/config/api';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
