@@ -74,6 +74,10 @@ export default function AccessRoleManagement() {
   // Assign role mutation
   const assignRoleMutation = useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      if (!SYSTEM_ROLES.includes(role as SystemRole)) {
+        throw new Error(`Invalid role '${role}'. Please choose a supported role.`);
+      }
+
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as any });
       if (error) throw error;
     },
@@ -84,8 +88,18 @@ export default function AccessRoleManagement() {
       setSelectedUserId("");
       setSelectedRole("");
     },
-    onError: (error) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+    onError: (error: any) => {
+      let description = error?.message || "Failed to assign role.";
+
+      if (error?.code === "42501") {
+        description = "You don't have permission to assign roles. Only admins can assign roles.";
+      } else if (error?.code === "22P02") {
+        description = "Selected role is not supported by the backend role list.";
+      } else if (error?.code === "23505") {
+        description = "This user already has the selected role.";
+      }
+
+      toast({ title: "Error", description, variant: "destructive" });
     },
   });
 
