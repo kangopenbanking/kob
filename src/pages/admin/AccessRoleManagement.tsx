@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,11 +13,32 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Users, Plus, Trash2, UserPlus, Search, Key, Settings, CheckCircle, Clock, XCircle } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Shield, Users, Trash2, UserPlus, Search, Key, Settings, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
 const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator"] as const;
 type SystemRole = (typeof SYSTEM_ROLES)[number];
+
+const ROLE_COLORS: Record<string, string> = {
+  admin: "bg-red-500/15 text-red-700 dark:text-red-400 border-red-500/20",
+  personal: "bg-blue-500/15 text-blue-700 dark:text-blue-400 border-blue-500/20",
+  institution: "bg-purple-500/15 text-purple-700 dark:text-purple-400 border-purple-500/20",
+  merchant: "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20",
+  tpp: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/20",
+  staff: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/20",
+  moderator: "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/20",
+};
+
+const ROLE_DESCRIPTIONS: Record<string, string> = {
+  admin: "Full system access",
+  personal: "Standard user",
+  institution: "Financial institution",
+  merchant: "Business merchant",
+  tpp: "Third-party provider",
+  staff: "Institution staff",
+  moderator: "Content moderator",
+};
 
 const PERMISSION_SCOPES = [
   "users", "transactions", "accounts", "reports", "settings", "compliance", "api", "branches", "fees", "webhooks", "audit_logs"
@@ -33,6 +54,15 @@ const AUTO_ASSIGN_RULES = [
   { trigger: "institution_approved", role: "institution", description: "Assign 'institution' when institution is approved" },
 ];
 
+interface UserRoleRow {
+  id: string;
+  user_id: string;
+  role: string;
+  created_at: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 export default function AccessRoleManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -40,19 +70,46 @@ export default function AccessRoleManagement() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [permRole, setPermRole] = useState<string>("admin");
 
-  // Fetch all user roles
-  const { data: userRoles, isLoading: rolesLoading } = useQuery({
+  // Fetch user roles + profiles with separate queries joined client-side
+  const { data: userRoles, isLoading: rolesLoading, refetch: refetchRoles } = useQuery({
     queryKey: ["admin-user-roles"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("user_roles").select("*, profiles(full_name, email)").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
+      // Fetch roles
+      const { data: roles, error: rolesErr } = await supabase
+        .from("user_roles")
+        .select("id, user_id, role, created_at")
+        .order("created_at", { ascending: false });
+      if (rolesErr) throw rolesErr;
+
+      if (!roles || roles.length === 0) return [] as UserRoleRow[];
+
+      // Get unique user IDs
+      const userIds = [...new Set(roles.map(r => r.user_id))];
+
+      // Fetch profiles for those user IDs
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .in("id", userIds);
+
+      const profileMap = new Map(
+        (profiles || []).map(p => [p.id, p])
+      );
+
+      // Merge
+      return roles.map(r => ({
+        ...r,
+        full_name: profileMap.get(r.user_id)?.full_name || null,
+        email: profileMap.get(r.user_id)?.email || null,
+      })) as UserRoleRow[];
     },
   });
 
   // Fetch all role permissions
-  const { data: rolePermissions, isLoading: permsLoading } = useQuery({
+  const { data: rolePermissions } = useQuery({
     queryKey: ["admin-role-permissions"],
     queryFn: async () => {
       const { data, error } = await supabase.from("role_permissions").select("*").order("role");
@@ -77,7 +134,6 @@ export default function AccessRoleManagement() {
       if (!SYSTEM_ROLES.includes(role as SystemRole)) {
         throw new Error(`Invalid role '${role}'. Please choose a supported role.`);
       }
-
       const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: role as any });
       if (error) throw error;
     },
@@ -90,15 +146,9 @@ export default function AccessRoleManagement() {
     },
     onError: (error: any) => {
       let description = error?.message || "Failed to assign role.";
-
-      if (error?.code === "42501") {
-        description = "You don't have permission to assign roles. Only admins can assign roles.";
-      } else if (error?.code === "22P02") {
-        description = "Selected role is not supported by the backend role list.";
-      } else if (error?.code === "23505") {
-        description = "This user already has the selected role.";
-      }
-
+      if (error?.code === "42501") description = "You don't have permission to assign roles. Only admins can do this.";
+      else if (error?.code === "22P02") description = "Selected role is not supported by the system.";
+      else if (error?.code === "23505") description = "This user already has the selected role.";
       toast({ title: "Error", description, variant: "destructive" });
     },
   });
@@ -111,7 +161,7 @@ export default function AccessRoleManagement() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
-      toast({ title: "Role Revoked" });
+      toast({ title: "Role Revoked", description: "The role has been revoked successfully." });
     },
     onError: (error) => {
       toast({ title: "Error", description: error.message, variant: "destructive" });
@@ -124,7 +174,7 @@ export default function AccessRoleManagement() {
       const newActions = currentActions.includes(action)
         ? currentActions.filter(a => a !== action)
         : [...currentActions, action];
-      
+
       const existing = rolePermissions?.find(p => p.role === role && p.scope === scope);
       if (existing) {
         const { error } = await supabase.from("role_permissions").update({ actions: newActions as any }).eq("id", existing.id);
@@ -146,123 +196,185 @@ export default function AccessRoleManagement() {
     return rolePermissions?.find(p => p.role === role && p.scope === scope)?.actions || [];
   };
 
-  const filteredUserRoles = searchQuery
-    ? userRoles?.filter(ur => {
-        const profile = ur.profiles as any;
-        return `${profile?.full_name || ""} ${profile?.email || ""} ${ur.role}`.toLowerCase().includes(searchQuery.toLowerCase());
-      })
-    : userRoles;
+  const filteredUserRoles = (userRoles || []).filter(ur => {
+    const matchesSearch = !searchQuery || `${ur.full_name || ""} ${ur.email || ""} ${ur.role}`.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === "all" || ur.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const roleCounts = SYSTEM_ROLES.reduce((acc, role) => {
     acc[role] = userRoles?.filter(ur => ur.role === role).length || 0;
     return acc;
   }, {} as Record<string, number>);
 
-  const [permRole, setPermRole] = useState<string>("admin");
+  const totalAssignments = userRoles?.length || 0;
+
+  const getInitials = (name: string | null, email: string | null) => {
+    if (name) return name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
+    if (email) return email[0].toUpperCase();
+    return "?";
+  };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm">
             <Key className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Access & Role Management</h1>
-            <p className="text-xs text-muted-foreground">Manage roles, permissions, and automatic role assignment rules</p>
+            <p className="text-xs text-muted-foreground">
+              {totalAssignments} total assignments across {new Set(userRoles?.map(r => r.user_id)).size} users
+            </p>
           </div>
         </div>
-        <Button size="sm" onClick={() => setAssignDialogOpen(true)}>
-          <UserPlus className="h-3.5 w-3.5 mr-1.5" />Assign Role
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => refetchRoles()}>
+            <RefreshCw className="h-3.5 w-3.5 mr-1.5" />Refresh
+          </Button>
+          <Button size="sm" onClick={() => setAssignDialogOpen(true)}>
+            <UserPlus className="h-3.5 w-3.5 mr-1.5" />Assign Role
+          </Button>
+        </div>
       </div>
 
-      {/* Role Distribution */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
-        {SYSTEM_ROLES.map(role => (
-          <Card key={role} className="border-border/60">
-            <CardContent className="pt-4 pb-3 px-4">
-              <p className="text-xs text-muted-foreground uppercase tracking-wider">{role}</p>
-              <p className="text-xl font-bold mt-1">{roleCounts[role]}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Role Distribution Cards */}
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+        {SYSTEM_ROLES.map(role => {
+          const count = roleCounts[role];
+          const isActive = roleFilter === role;
+          return (
+            <Card
+              key={role}
+              className={`cursor-pointer transition-all duration-200 hover:shadow-md ${isActive ? "ring-2 ring-primary shadow-md" : "border-border/60 hover:border-border"}`}
+              onClick={() => setRoleFilter(isActive ? "all" : role)}
+            >
+              <CardContent className="pt-4 pb-3 px-4">
+                <div className="flex items-center justify-between mb-1">
+                  <Badge variant="outline" className={`text-[9px] uppercase tracking-widest font-semibold border ${ROLE_COLORS[role] || ""}`}>
+                    {role}
+                  </Badge>
+                </div>
+                <p className="text-2xl font-bold mt-2">{count}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{ROLE_DESCRIPTIONS[role]}</p>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
+
+      {roleFilter !== "all" && (
+        <div className="flex items-center gap-2">
+          <Badge variant="secondary" className="text-xs">
+            Filtering: {roleFilter}
+          </Badge>
+          <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={() => setRoleFilter("all")}>
+            Clear filter
+          </Button>
+        </div>
+      )}
 
       <Tabs defaultValue="assignments" className="space-y-4">
-        <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1">
-          <TabsTrigger value="assignments" className="rounded-md px-3 text-xs font-medium">
-            <Users className="h-3.5 w-3.5 mr-1.5" />Role Assignments
+        <TabsList className="inline-flex h-10 items-center rounded-lg bg-muted p-1">
+          <TabsTrigger value="assignments" className="rounded-md px-4 text-xs font-medium data-[state=active]:shadow-sm">
+            <Users className="h-3.5 w-3.5 mr-1.5" />Assignments
           </TabsTrigger>
-          <TabsTrigger value="permissions" className="rounded-md px-3 text-xs font-medium">
-            <Shield className="h-3.5 w-3.5 mr-1.5" />Permissions Matrix
+          <TabsTrigger value="permissions" className="rounded-md px-4 text-xs font-medium data-[state=active]:shadow-sm">
+            <Shield className="h-3.5 w-3.5 mr-1.5" />Permissions
           </TabsTrigger>
-          <TabsTrigger value="auto-assign" className="rounded-md px-3 text-xs font-medium">
-            <Settings className="h-3.5 w-3.5 mr-1.5" />Auto-Assign Rules
+          <TabsTrigger value="auto-assign" className="rounded-md px-4 text-xs font-medium data-[state=active]:shadow-sm">
+            <Settings className="h-3.5 w-3.5 mr-1.5" />Auto-Assign
           </TabsTrigger>
         </TabsList>
 
         {/* Role Assignments Tab */}
         <TabsContent value="assignments" className="space-y-4">
-          <div className="relative max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search users or roles…" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+          <div className="flex items-center gap-3">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, or role…"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9 h-9 text-sm"
+              />
+            </div>
+            <p className="text-xs text-muted-foreground hidden sm:block">
+              {filteredUserRoles.length} result{filteredUserRoles.length !== 1 ? "s" : ""}
+            </p>
           </div>
 
-          <Card className="border-border/60">
+          <Card className="border-border/60 overflow-hidden">
             <CardContent className="p-0">
               {rolesLoading ? (
-                <p className="text-sm text-muted-foreground py-12 text-center">Loading…</p>
-              ) : (filteredUserRoles?.length || 0) === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16">
-                  <Users className="h-12 w-12 text-muted-foreground/30 mb-3" />
-                  <p className="text-sm text-muted-foreground">No role assignments found</p>
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <RefreshCw className="h-6 w-6 text-muted-foreground animate-spin" />
+                  <p className="text-sm text-muted-foreground">Loading role assignments…</p>
+                </div>
+              ) : filteredUserRoles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 gap-3">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-muted">
+                    <Users className="h-7 w-7 text-muted-foreground/40" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-medium text-muted-foreground">No role assignments found</p>
+                    <p className="text-xs text-muted-foreground/70 mt-1">
+                      {searchQuery || roleFilter !== "all" ? "Try adjusting your search or filter" : "Assign a role to get started"}
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <Table>
                   <TableHeader>
-                    <TableRow className="hover:bg-transparent">
-                      <TableHead className="text-xs font-semibold">User</TableHead>
-                      <TableHead className="text-xs font-semibold">Role</TableHead>
-                      <TableHead className="text-xs font-semibold">Assigned</TableHead>
-                      <TableHead className="text-xs font-semibold w-[80px]">Actions</TableHead>
+                    <TableRow className="hover:bg-transparent bg-muted/30">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">User</TableHead>
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Role</TableHead>
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground hidden md:table-cell">Assigned On</TableHead>
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUserRoles?.map((ur) => {
-                      const profile = ur.profiles as any;
-                      return (
-                        <TableRow key={ur.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium text-sm">{profile?.full_name || "Unknown"}</p>
-                              <p className="text-xs text-muted-foreground">{profile?.email || "—"}</p>
+                    {filteredUserRoles.map((ur) => (
+                      <TableRow key={ur.id} className="group">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="h-8 w-8 text-[11px]">
+                              <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                {getInitials(ur.full_name, ur.email)}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                              <p className="font-medium text-sm truncate">{ur.full_name || "Unknown User"}</p>
+                              <p className="text-xs text-muted-foreground truncate">{ur.email || "No email"}</p>
                             </div>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant={ur.role === "admin" ? "default" : "outline"} className="text-[10px] uppercase tracking-wider">{ur.role}</Badge>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground">
-                            {ur.created_at ? format(new Date(ur.created_at), "PP") : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-7 w-7 text-destructive hover:bg-destructive/10"
-                              onClick={() => {
-                                if (confirm(`Revoke '${ur.role}' role from ${profile?.full_name}?`)) {
-                                  revokeRoleMutation.mutate(ur.id);
-                                }
-                              }}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className={`text-[10px] uppercase tracking-wider font-semibold border ${ROLE_COLORS[ur.role] || ""}`}>
+                            {ur.role}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground hidden md:table-cell">
+                          {ur.created_at ? format(new Date(ur.created_at), "MMM d, yyyy") : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-destructive hover:bg-destructive/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => {
+                              if (confirm(`Revoke '${ur.role}' role from ${ur.full_name || "this user"}?`)) {
+                                revokeRoleMutation.mutate(ur.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               )}
@@ -273,7 +385,7 @@ export default function AccessRoleManagement() {
         {/* Permissions Matrix Tab */}
         <TabsContent value="permissions" className="space-y-4">
           <div className="flex items-center gap-4">
-            <Label className="text-xs">Role:</Label>
+            <Label className="text-xs font-medium">Role:</Label>
             <Select value={permRole} onValueChange={setPermRole}>
               <SelectTrigger className="w-[200px] h-9 text-sm">
                 <SelectValue />
@@ -286,18 +398,21 @@ export default function AccessRoleManagement() {
             </Select>
           </div>
 
-          <Card className="border-border/60">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-sm font-semibold capitalize">Permissions for {permRole}</CardTitle>
+          <Card className="border-border/60 overflow-hidden">
+            <CardHeader className="pb-3 bg-muted/20">
+              <CardTitle className="text-sm font-semibold capitalize flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Permissions for {permRole}
+              </CardTitle>
               <CardDescription className="text-xs">Toggle actions per scope for this role</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="hover:bg-transparent">
-                    <TableHead className="text-xs font-semibold w-[150px]">Scope</TableHead>
+                  <TableRow className="hover:bg-transparent bg-muted/30">
+                    <TableHead className="text-[11px] font-semibold uppercase tracking-wider w-[150px]">Scope</TableHead>
                     {PERMISSION_ACTIONS.map(action => (
-                      <TableHead key={action} className="text-xs font-semibold text-center capitalize">{action}</TableHead>
+                      <TableHead key={action} className="text-[11px] font-semibold uppercase tracking-wider text-center">{action}</TableHead>
                     ))}
                   </TableRow>
                 </TableHeader>
@@ -336,14 +451,14 @@ export default function AccessRoleManagement() {
             <CardContent>
               <div className="space-y-3">
                 {AUTO_ASSIGN_RULES.map(rule => (
-                  <div key={rule.trigger} className="flex items-center justify-between p-4 rounded-lg border border-border/60 bg-muted/20">
+                  <div key={rule.trigger} className="flex items-center justify-between p-4 rounded-lg border border-border/60 bg-muted/20 hover:bg-muted/30 transition-colors">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                         {rule.trigger.includes("kyc") ? <Shield className="h-4 w-4 text-primary" /> : <Users className="h-4 w-4 text-primary" />}
                       </div>
                       <div>
                         <p className="text-sm font-medium">{rule.description}</p>
-                        <div className="flex items-center gap-2 mt-0.5">
+                        <div className="flex items-center gap-2 mt-1">
                           <Badge variant="outline" className="text-[10px]">Trigger: {rule.trigger}</Badge>
                           <Badge variant="secondary" className="text-[10px]">→ {rule.role}</Badge>
                         </div>
@@ -385,39 +500,67 @@ export default function AccessRoleManagement() {
 
       {/* Assign Role Dialog */}
       <Dialog open={assignDialogOpen} onOpenChange={setAssignDialogOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Assign Role to User</DialogTitle>
-            <DialogDescription>Select a user and the role to assign.</DialogDescription>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-primary" />
+              Assign Role to User
+            </DialogTitle>
+            <DialogDescription>Select a user and the role you want to assign.</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
-              <Label className="text-xs">User</Label>
+              <Label className="text-xs font-medium">User</Label>
               <Select value={selectedUserId} onValueChange={setSelectedUserId}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select a user" /></SelectTrigger>
                 <SelectContent>
                   {allUsers?.map(u => (
-                    <SelectItem key={u.id} value={u.id}>{u.full_name || u.email} ({u.email})</SelectItem>
+                    <SelectItem key={u.id} value={u.id}>
+                      <span className="font-medium">{u.full_name || "Unnamed"}</span>
+                      <span className="text-muted-foreground ml-1.5 text-xs">({u.email})</span>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-xs">Role</Label>
+              <Label className="text-xs font-medium">Role</Label>
               <Select value={selectedRole} onValueChange={setSelectedRole}>
                 <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="Select a role" /></SelectTrigger>
                 <SelectContent>
                   {SYSTEM_ROLES.map(r => (
-                    <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>
+                    <SelectItem key={r} value={r}>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`text-[9px] uppercase tracking-wider font-semibold border ${ROLE_COLORS[r] || ""}`}>{r}</Badge>
+                        <span className="text-xs text-muted-foreground">{ROLE_DESCRIPTIONS[r]}</span>
+                      </div>
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            {selectedUserId && selectedRole && (
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/50 border border-border/40">
+                <AlertCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                <p className="text-xs text-muted-foreground">
+                  This will grant <strong className="text-foreground">{selectedRole}</strong> privileges to the selected user immediately.
+                </p>
+              </div>
+            )}
           </div>
-          <DialogFooter>
+          <DialogFooter className="gap-2">
             <Button variant="outline" size="sm" onClick={() => setAssignDialogOpen(false)}>Cancel</Button>
-            <Button size="sm" onClick={() => assignRoleMutation.mutate({ userId: selectedUserId, role: selectedRole })} disabled={!selectedUserId || !selectedRole || assignRoleMutation.isPending}>
-              Assign Role
+            <Button
+              size="sm"
+              onClick={() => assignRoleMutation.mutate({ userId: selectedUserId, role: selectedRole })}
+              disabled={!selectedUserId || !selectedRole || assignRoleMutation.isPending}
+            >
+              {assignRoleMutation.isPending ? (
+                <><RefreshCw className="h-3.5 w-3.5 mr-1.5 animate-spin" />Assigning…</>
+              ) : (
+                <><UserPlus className="h-3.5 w-3.5 mr-1.5" />Assign Role</>
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
