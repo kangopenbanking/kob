@@ -240,7 +240,7 @@ const CustomerInvoices: React.FC = () => {
       <AnimatePresence>
         {showCreate && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-3xl border border-primary/20 bg-card shadow-lg">
+            className="overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-b from-primary/5 via-card to-card shadow-lg shadow-primary/5">
             <div className="flex flex-col gap-4 p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
