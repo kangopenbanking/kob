@@ -14,7 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import kangCardBg from '@/assets/kangcard_visa.png';
 
-const MAX_LINKED_ACCOUNTS = 2;
+const MAX_LINKED_ACCOUNTS = 3;
 
 const CM_BANKS = [
   { code: '10005', name: 'Afriland First Bank', swift: 'AFRIACMCXXX' },
