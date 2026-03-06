@@ -147,11 +147,13 @@ export default function AccessRoleManagement() {
       if (error) throw error;
     },
     onSuccess: () => {
+      const effectiveRole = getEffectiveRole();
       queryClient.invalidateQueries({ queryKey: ["admin-user-roles"] });
-      toast({ title: "Role Assigned", description: `Role '${selectedRole}' assigned successfully.` });
+      toast({ title: "Role Assigned", description: `Role '${effectiveRole}' assigned successfully.` });
       setAssignDialogOpen(false);
       setSelectedUserId("");
       setSelectedRole("");
+      setCustomRoleName("");
     },
     onError: (error: any) => {
       let description = error?.message || "Failed to assign role.";
