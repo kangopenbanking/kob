@@ -26,16 +26,18 @@ export function CreditScoreWidget({
   const navigate = useNavigate();
   
   const getScoreColor = (score: number) => {
-    if (score >= 720) return "text-green-600";
+    if (score >= 750) return "text-green-600";
     if (score >= 650) return "text-yellow-600";
+    if (score >= 550) return "text-orange-500";
     return "text-red-600";
   };
 
   const getScoreLabel = (score: number) => {
-    if (score >= 720) return "Excellent";
+    if (score >= 750) return "Excellent";
     if (score >= 650) return "Good";
-    if (score >= 580) return "Fair";
-    return "Needs Improvement";
+    if (score >= 550) return "Fair";
+    if (score >= 400) return "Needs Work";
+    return "Poor";
   };
 
   const progressPercentage = (score / maxScore) * 100;

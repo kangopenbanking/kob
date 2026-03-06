@@ -366,9 +366,9 @@ const CustomerCreditScore: React.FC = () => {
                       {ev.event_time ? format(new Date(ev.event_time), 'MMM d, yyyy') : ''}
                     </p>
                   </div>
-                  {ev.value_numeric > 0 && (
+                  {ev.value_numeric != null && ev.value_numeric !== 0 && (
                     <span className={`text-[11px] font-bold ${isPositive ? 'text-[hsl(150,60%,40%)]' : 'text-destructive'}`}>
-                      {isPositive ? '+' : '−'}{ev.value_numeric}
+                      {isPositive ? '+' : '−'}{Math.abs(ev.value_numeric)}
                     </span>
                   )}
                 </motion.div>
