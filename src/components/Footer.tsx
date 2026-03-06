@@ -14,6 +14,7 @@ const footerSections = [
       { label: "FAQ", to: "/faq" },
       { label: "Bank Manual", to: "/manual/banks" },
       { label: "Customer Guide", to: "/manual/customers" },
+      { label: "Merchant Guide", to: "/manual/merchants" },
       { label: "Developer Manual", to: "/manual/developers" },
     ],
   },

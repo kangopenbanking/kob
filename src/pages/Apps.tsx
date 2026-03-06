@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   Building2, Palette, Smartphone, Wallet, CreditCard, History,
   ShieldCheck, Send, Store, Users, QrCode, BarChart3, Receipt,
-  Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check
+  Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check,
+  Bus, UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -46,15 +47,15 @@ const apps: AppPhase[] = [
   },
   {
     title: 'Merchant App',
-    subtitle: 'Accept payments, manage settlements & analytics',
-    description: 'Give merchants the tools to accept payments, track sales, and manage their business — all from a single app.',
-    status: 'coming-soon',
+    subtitle: 'Accept payments, travel booking & staff management',
+    description: 'Give merchants the tools to accept payments, manage transport & tourism services, and control staff access — all from a single platform.',
+    status: 'live',
     accent: '#22C55E', accentBorder: 'border-green-500/30', accentBg: 'bg-green-500/10', accentText: 'text-green-400',
-    phase: 2,
+    phase: 2, link: '/merchant',
     features: [
-      { icon: Store, label: 'Storefront POS' }, { icon: Receipt, label: 'Invoice & Billing' },
+      { icon: Bus, label: 'Travel & Transport' }, { icon: UserCheck, label: 'Staff Portal & Roles' },
       { icon: BarChart3, label: 'Sales Analytics' }, { icon: Package, label: 'Settlement Mgmt' },
-      { icon: QrCode, label: 'QR Accept' }, { icon: Users, label: 'Customer CRM' },
+      { icon: QrCode, label: 'QR Ticket Scanner' }, { icon: Receipt, label: 'Booking Management' },
     ],
   },
   {
