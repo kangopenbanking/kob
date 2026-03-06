@@ -8299,9 +8299,12 @@ export type Database = {
           is_active: boolean | null
           merchant_id: string
           permissions: Json
+          phone_number: string | null
+          pin_hash: string | null
           role: string
           staff_email: string | null
           staff_name: string
+          temp_password: string | null
           updated_at: string | null
           user_id: string
         }
@@ -8312,9 +8315,12 @@ export type Database = {
           is_active?: boolean | null
           merchant_id: string
           permissions?: Json
+          phone_number?: string | null
+          pin_hash?: string | null
           role?: string
           staff_email?: string | null
           staff_name: string
+          temp_password?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -8325,9 +8331,12 @@ export type Database = {
           is_active?: boolean | null
           merchant_id?: string
           permissions?: Json
+          phone_number?: string | null
+          pin_hash?: string | null
           role?: string
           staff_email?: string | null
           staff_name?: string
+          temp_password?: string | null
           updated_at?: string | null
           user_id?: string
         }
