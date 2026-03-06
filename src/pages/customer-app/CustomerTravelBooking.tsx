@@ -154,6 +154,7 @@ const CustomerTravelBooking: React.FC = () => {
     const tickets = selectedSeats.map(seat => ({
       booking_id: (bookingData as any).id, seat_label: seat,
       passenger_name: passengers[seat]?.name?.trim() || '', passenger_phone: passengers[seat]?.phone?.trim() || null,
+      passenger_gender: passengers[seat]?.gender || 'male',
       qr_code: crypto.randomUUID(),
     }));
     const { error: tickErr } = await supabase.from('travel_tickets').insert(tickets as any);
