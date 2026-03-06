@@ -16,7 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Shield, Users, Plus, Trash2, UserPlus, Search, Key, Settings, CheckCircle, Clock, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
-const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "developer"] as const;
+const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator"] as const;
+type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 const PERMISSION_SCOPES = [
   "users", "transactions", "accounts", "reports", "settings", "compliance", "api", "branches", "fees", "webhooks", "audit_logs"
