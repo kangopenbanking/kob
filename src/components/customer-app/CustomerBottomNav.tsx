@@ -26,7 +26,7 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
     { label: 'Home', iconSrc: homeIcon, path: `${basePath}/home` },
     { label: 'Activity', iconSrc: activitiesIcon, path: `${basePath}/activity` },
     { label: 'Scan', isCenter: true, path: `${basePath}/scan` },
-    { label: 'Cards', iconSrc: cardIcon, path: `${basePath}/cards` },
+    { label: 'Accounts', iconSrc: cardIcon, path: `${basePath}/linked-accounts` },
     { label: 'More', iconSrc: moreIcon, path: `${basePath}/more` },
   ];
 
