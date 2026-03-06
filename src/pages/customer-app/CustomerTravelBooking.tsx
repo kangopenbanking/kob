@@ -67,7 +67,7 @@ const CustomerTravelBooking: React.FC = () => {
         const genders: Record<string, Gender> = {};
         (existingTickets || []).forEach((t: any) => {
           booked.push(t.seat_label);
-          genders[t.seat_label] = Math.random() > 0.5 ? 'male' : 'female';
+          genders[t.seat_label] = (t.passenger_gender === 'female') ? 'female' : 'male';
         });
         setBookedSeats(booked);
         setBookedSeatGenders(genders);
@@ -154,12 +154,23 @@ const CustomerTravelBooking: React.FC = () => {
     const tickets = selectedSeats.map(seat => ({
       booking_id: (bookingData as any).id, seat_label: seat,
       passenger_name: passengers[seat]?.name?.trim() || '', passenger_phone: passengers[seat]?.phone?.trim() || null,
+      passenger_gender: passengers[seat]?.gender || 'male',
       qr_code: crypto.randomUUID(),
     }));
     const { error: tickErr } = await supabase.from('travel_tickets').insert(tickets as any);
     if (tickErr) { toast.error(tickErr.message); setBooking(false); return; }
 
     await supabase.from('travel_trips').update({ available_seats: Math.max(0, (trip?.available_seats || 0) - selectedSeats.length) } as any).eq('id', tripId || '');
+    
+    // Send booking confirmation notification & email
+    try {
+      await supabase.functions.invoke('travel-booking-notification', {
+        body: { booking_id: (bookingData as any).id, event_type: 'booking_confirmed' },
+      });
+    } catch (notifErr) {
+      console.error('Notification error (non-fatal):', notifErr);
+    }
+    
     toast.success('Booking confirmed!');
     navigate(`/app/travel/ticket/${(bookingData as any).id}`);
     setBooking(false);

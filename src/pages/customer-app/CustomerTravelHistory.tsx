@@ -94,7 +94,7 @@ const CustomerTravelHistory: React.FC = () => {
 
       {/* Filters */}
       <div className="px-5 py-3 flex gap-2 overflow-x-auto">
-        {['all', 'confirmed', 'cancelled'].map(s => (
+        {['all', 'confirmed', 'completed', 'cancelled'].map(s => (
           <button key={s} onClick={() => setStatusFilter(s)}
             className={`rounded-full px-4 py-1.5 text-xs font-semibold transition-colors whitespace-nowrap ${statusFilter === s ? 'bg-[#0f1729] text-white' : 'bg-white text-gray-500 border border-gray-200'}`}>
             {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}

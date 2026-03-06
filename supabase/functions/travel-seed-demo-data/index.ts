@@ -28,8 +28,10 @@ Deno.serve(async (req) => {
 
     // Create services
     const serviceConfigs = [
-      { service_type: 'bus', display_name: 'KOB Express Bus', theme_color: '#F5C518', description: 'Fast intercity bus travel across Cameroon' },
-      { service_type: 'tours', display_name: 'KOB Discovery Tours', theme_color: '#00BCD4', description: 'Guided tours and sightseeing packages' },
+      { service_type: 'bus', display_name: 'KOB Express Bus', theme_color: '#ffbe0b', description: 'Fast intercity bus travel across Cameroon' },
+      { service_type: 'tours', display_name: 'KOB Discovery Tours', theme_color: '#3a86ff', description: 'Guided tours and sightseeing packages' },
+      { service_type: 'airlines', display_name: 'KOB Air Connect', theme_color: '#d00000', description: 'Domestic and regional flights across Cameroon' },
+      { service_type: 'trains', display_name: 'KOB Rail Express', theme_color: '#000000', description: 'Rail travel across the Cameroon network' },
     ];
 
     const createdServices: any[] = [];
@@ -53,8 +55,12 @@ Deno.serve(async (req) => {
     ];
 
     const createdRoutes: any[] = [];
-    for (const svc of createdServices) {
-      const routesForSvc = svc === createdServices[0] ? routeConfigs.slice(0, 3) : routeConfigs.slice(2, 5);
+    for (let si = 0; si < createdServices.length; si++) {
+      const svc = createdServices[si];
+      // Distribute routes: first 3 for bus, routes 2-4 for tours, routes 0-2 for airlines, routes 3-4 for trains
+      const sliceMap = [[0, 3], [2, 5], [0, 3], [3, 5]];
+      const [start, end] = sliceMap[si] || [0, 3];
+      const routesForSvc = routeConfigs.slice(start, end);
       for (const cfg of routesForSvc) {
         const { data: existing } = await supabase.from('travel_routes').select('id').eq('service_id', svc.id).eq('origin', cfg.origin).eq('destination', cfg.destination).maybeSingle();
         if (existing) { createdRoutes.push({ ...existing, service_id: svc.id }); continue; }
@@ -68,6 +74,9 @@ Deno.serve(async (req) => {
       { plan_name: '30-Seater Coach', rows: 8, columns: 4, service_idx: 0 },
       { plan_name: '52-Seater Bus', rows: 13, columns: 4, service_idx: 0 },
       { plan_name: '15-Seater Tour Van', rows: 5, columns: 3, service_idx: 1 },
+      { plan_name: '120-Seater Aircraft', rows: 20, columns: 6, service_idx: 2 },
+      { plan_name: '80-Seater Train Car', rows: 16, columns: 5, service_idx: 3 },
+    ];
     ];
 
     const createdPlans: any[] = [];
