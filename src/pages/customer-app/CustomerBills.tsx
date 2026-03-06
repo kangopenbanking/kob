@@ -48,6 +48,7 @@ const CustomerBills: React.FC = () => {
   const { data: accounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
+  const { data: recentBills = [], isLoading: billsLoading } = useRecentBillPayments(user?.id);
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
