@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import {
   Search, BookOpen, Download, ChevronRight, ChevronLeft,
   Loader2, GraduationCap, CheckCircle2, Circle, List, X,
-  Landmark, Smartphone, Code, ClipboardList,
+  Landmark, Smartphone, Code, ClipboardList, Store,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
