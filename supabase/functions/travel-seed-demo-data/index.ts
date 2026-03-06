@@ -55,8 +55,12 @@ Deno.serve(async (req) => {
     ];
 
     const createdRoutes: any[] = [];
-    for (const svc of createdServices) {
-      const routesForSvc = svc === createdServices[0] ? routeConfigs.slice(0, 3) : routeConfigs.slice(2, 5);
+    for (let si = 0; si < createdServices.length; si++) {
+      const svc = createdServices[si];
+      // Distribute routes: first 3 for bus, routes 2-4 for tours, routes 0-2 for airlines, routes 3-4 for trains
+      const sliceMap = [[0, 3], [2, 5], [0, 3], [3, 5]];
+      const [start, end] = sliceMap[si] || [0, 3];
+      const routesForSvc = routeConfigs.slice(start, end);
       for (const cfg of routesForSvc) {
         const { data: existing } = await supabase.from('travel_routes').select('id').eq('service_id', svc.id).eq('origin', cfg.origin).eq('destination', cfg.destination).maybeSingle();
         if (existing) { createdRoutes.push({ ...existing, service_id: svc.id }); continue; }
