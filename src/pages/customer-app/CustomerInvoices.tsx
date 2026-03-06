@@ -417,10 +417,10 @@ const CustomerInvoices: React.FC = () => {
                       <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                         <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
                           {/* Meta Grid */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 p-2.5">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 p-2.5 overflow-hidden">
                               <p className="text-[9px] font-bold uppercase tracking-wider text-blue-500 mb-0.5">Recipient</p>
-                              <p className="text-[11px] font-semibold text-foreground truncate">{inv.client_email}</p>
+                              <p className="text-[11px] font-semibold text-foreground break-all">{inv.client_email}</p>
                             </div>
                             <div className={`rounded-xl p-2.5 border ${isDue ? 'bg-red-50/60 dark:bg-red-950/20 border-red-100 dark:border-red-900/40' : 'bg-muted/50 border-border'}`}>
                               <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isDue ? 'text-red-500' : 'text-muted-foreground'}`}>Due Date</p>
