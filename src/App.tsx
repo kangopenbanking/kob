@@ -757,6 +757,7 @@ function App() {
             <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="/staff-login" element={<StaffLogin />} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
