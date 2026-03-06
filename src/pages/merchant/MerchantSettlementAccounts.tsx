@@ -412,73 +412,98 @@ export default function MerchantSettlementAccounts() {
           <h1 className="text-2xl font-bold">Settlement Accounts</h1>
           <p className="text-muted-foreground">Manage payout destinations across all supported rails</p>
         </div>
-        <Dialog open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) setForm({ ...INITIAL_FORM }); }}>
-          <DialogTrigger asChild>
-            <Button className="gap-2"><Plus className="h-4 w-4" /> Add Account</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Add Settlement Account</DialogTitle>
-              <DialogDescription>Configure a new payout destination for receiving settlements</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* Account Type Selection */}
-              <div className="space-y-2">
-                <Label>Payout Method</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  {ACCOUNT_TYPES.map(t => {
-                    const Icon = t.icon;
-                    const selected = form.account_type === t.value;
-                    return (
-                      <button
-                        key={t.value}
-                        type="button"
-                        onClick={() => setForm(f => ({ ...INITIAL_FORM, account_type: t.value, currency: f.currency }))}
-                        className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                          selected ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:border-primary/40"
-                        }`}
-                      >
-                        <div className={`h-9 w-9 rounded-md flex items-center justify-center ${selected ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
-                          <Icon className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-medium ${selected ? "text-primary" : ""}`}>{t.label}</p>
-                          <p className="text-xs text-muted-foreground truncate">{t.description}</p>
-                        </div>
-                      </button>
-                    );
-                  })}
+        <Sheet open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) { setForm({ ...INITIAL_FORM }); setStep("method"); } }}>
+          <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
+            <SheetHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+              <div className="flex items-center gap-3">
+                {step === "details" && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0" onClick={() => setStep("method")}>
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                )}
+                <div>
+                  <SheetTitle>{step === "method" ? "Choose Payout Method" : "Account Details"}</SheetTitle>
+                  <SheetDescription className="text-xs mt-0.5">
+                    {step === "method" ? "Select how you'd like to receive settlements" : `Configure your ${getAccountLabel(form.account_type)} details`}
+                  </SheetDescription>
                 </div>
               </div>
+            </SheetHeader>
 
-              <Separator />
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="px-6 py-5 space-y-4">
+                {step === "method" ? (
+                  <div className="grid grid-cols-1 gap-2">
+                    {ACCOUNT_TYPES.map(t => {
+                      const Icon = t.icon;
+                      const selected = form.account_type === t.value;
+                      return (
+                        <button
+                          key={t.value}
+                          type="button"
+                          onClick={() => {
+                            setForm(f => ({ ...INITIAL_FORM, account_type: t.value, currency: f.currency }));
+                            setStep("details");
+                          }}
+                          className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all group ${
+                            selected
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                              : "border-border hover:border-primary/40 hover:bg-muted/50"
+                          }`}
+                        >
+                          <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                            selected ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-primary/10"
+                          }`}>
+                            <Icon className="h-5 w-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>{t.label}</p>
+                            <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
+                          </div>
+                          <ChevronRight className={`h-4 w-4 shrink-0 transition-colors ${selected ? "text-primary" : "text-muted-foreground/50"}`} />
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <>
+                    {/* Selected method badge */}
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 border">
+                      {(() => { const Icon = getAccountIcon(form.account_type); return <Icon className="h-4 w-4 text-primary" />; })()}
+                      <span className="text-sm font-medium">{getAccountLabel(form.account_type)}</span>
+                      <Check className="h-3.5 w-3.5 text-primary ml-auto" />
+                    </div>
 
-              {/* Dynamic Form Fields */}
-              {renderFormFields()}
+                    {renderFormFields()}
 
-              {/* Currency */}
-              <div className="space-y-2">
-                <Label>Settlement Currency</Label>
-                <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {CURRENCIES.map(c => (
-                      <SelectItem key={c.code} value={c.code}>
-                        {c.flag} {c.code} — {c.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                    <div className="space-y-2">
+                      <Label>Settlement Currency</Label>
+                      <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          {CURRENCIES.map(c => (
+                            <SelectItem key={c.code} value={c.code}>
+                              {c.flag} {c.code} — {c.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </>
+                )}
               </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={saving || !isFormValid()}>
-                {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Add Account
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </ScrollArea>
+
+            {step === "details" && (
+              <div className="px-6 py-4 border-t shrink-0 flex gap-3">
+                <Button variant="outline" className="flex-1" onClick={() => setStep("method")}>Back</Button>
+                <Button className="flex-1" onClick={handleCreate} disabled={saving || !isFormValid()}>
+                  {saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />} Add Account
+                </Button>
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
       </div>
 
       {/* Info Banner */}
