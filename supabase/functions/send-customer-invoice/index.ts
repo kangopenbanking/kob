@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 serve(async (req) => {
@@ -14,6 +14,8 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const resendApiKey = Deno.env.get('RESEND_API_KEY');
+    const resendFrom = Deno.env.get('RESEND_FROM') || 'noreply@notify.kangopenbanking.com';
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const authHeader = req.headers.get('Authorization');
@@ -91,14 +93,44 @@ serve(async (req) => {
 </body>
 </html>`;
 
+    // Send email via Resend
+    let emailSent = false;
+    if (resendApiKey) {
+      const resendRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${resendApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: resendFrom,
+          to: [invoice.client_email],
+          subject: `Invoice ${invoice.invoice_number} from ${senderName} — ${Number(invoice.amount).toLocaleString()} ${invoice.currency}`,
+          html: emailHtml,
+        }),
+      });
+
+      if (resendRes.ok) {
+        emailSent = true;
+        console.log(`Email sent to ${invoice.client_email} for invoice ${invoice.invoice_number}`);
+      } else {
+        const resendErr = await resendRes.text();
+        console.error(`Resend API error: ${resendRes.status} - ${resendErr}`);
+      }
+    } else {
+      console.warn('RESEND_API_KEY not configured, skipping email delivery');
+    }
+
     // Create app notification for the sender
     await supabase.from('app_notifications').insert({
       user_id: user.id,
       type: 'success',
-      title: 'Invoice Sent',
-      message: `Invoice ${invoice.invoice_number} for ${Number(invoice.amount).toLocaleString()} ${invoice.currency} sent to ${invoice.client_email}`,
+      title: emailSent ? 'Invoice Sent' : 'Invoice Created',
+      message: emailSent
+        ? `Invoice ${invoice.invoice_number} for ${Number(invoice.amount).toLocaleString()} ${invoice.currency} sent to ${invoice.client_email}`
+        : `Invoice ${invoice.invoice_number} created but email delivery failed. You can resend it later.`,
       icon: 'invoice',
-      metadata: { invoice_id: invoice.id, client_email: invoice.client_email, amount: invoice.amount }
+      metadata: { invoice_id: invoice.id, client_email: invoice.client_email, amount: invoice.amount, email_sent: emailSent }
     });
 
     // Update invoice sent_at
@@ -107,10 +139,8 @@ serve(async (req) => {
       .update({ sent_at: new Date().toISOString(), status: 'sent' })
       .eq('id', invoice_id);
 
-    console.log(`Customer invoice ${invoice.invoice_number} processed for ${invoice.client_email}`);
-
     return new Response(
-      JSON.stringify({ success: true, invoice_number: invoice.invoice_number, email_html_length: emailHtml.length }),
+      JSON.stringify({ success: true, invoice_number: invoice.invoice_number, email_sent: emailSent }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
   } catch (error) {
