@@ -51,7 +51,7 @@ export function DashboardRouter() {
         return;
       }
 
-      // Check for merchant role
+      // Check for merchant role (owner)
       const { data: isMerchant } = await supabase.rpc('has_role', {
         _user_id: user.id,
         _role: 'merchant' as any
@@ -62,7 +62,21 @@ export function DashboardRouter() {
         return;
       }
 
-      // Check for institution
+      // Check for merchant staff (not owner, but staff member)
+      const { data: merchantStaff } = await supabase
+        .from("merchant_staff_roles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .limit(1)
+        .maybeSingle();
+
+      if (merchantStaff) {
+        navigate("/merchant/travel-services", { replace: true });
+        return;
+      }
+
+      // Check for institution owner
       const { data: institution } = await supabase
         .from("institutions")
         .select("status, institution_type")
@@ -81,6 +95,17 @@ export function DashboardRouter() {
           navigate("/pending-approval", { replace: true });
           return;
         }
+      }
+
+      // Check for FI staff role
+      const { data: isStaff } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'staff' as any
+      });
+
+      if (isStaff) {
+        navigate("/fi-portal", { replace: true });
+        return;
       }
 
       // Default to personal credit score dashboard
