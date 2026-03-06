@@ -98,13 +98,24 @@ Deno.serve(async (req) => {
     }
 
     // Emit credit event
-    await supabase.from('credit_events').insert({
+    const { data: creditEvent } = await supabase.from('credit_events').insert({
       user_id: user.id,
       event_type: eventType,
       value_numeric: group.contribution_amount + lateInterest,
       description: `Njangi contribution ${isLate ? '(late)' : '(on-time)'} - ${group.name} cycle ${group.current_cycle}`,
       event_time: now.toISOString(),
-    });
+    }).select('id').single();
+
+    // Link credit event to contribution
+    if (creditEvent) {
+      const contribId = pendingContrib?.id;
+      if (contribId) {
+        await supabase
+          .from('njangi_contributions')
+          .update({ credit_event_id: creditEvent.id })
+          .eq('id', contribId);
+      }
+    }
 
     // Recompute score
     let scoreResult = null;

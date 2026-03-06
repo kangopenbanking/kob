@@ -107,7 +107,10 @@ export function useNjangiPayout() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
+      qc.invalidateQueries({ queryKey: ['credit-score'] });
+    },
     onError: (err: any) => toast.error(err.message),
   });
 }
