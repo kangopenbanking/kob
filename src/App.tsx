@@ -324,6 +324,7 @@ import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounter
 import MerchantTravelDiscounts from "./pages/merchant/MerchantTravelDiscounts";
 import MerchantTravelNotifications from "./pages/merchant/MerchantTravelNotifications";
 import MerchantTravelStaffRoles from "./pages/merchant/MerchantTravelStaffRoles";
+import StaffLogin from "./pages/merchant/StaffLogin";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
