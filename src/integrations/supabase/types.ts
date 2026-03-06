@@ -13277,6 +13277,7 @@ export type Database = {
           booking_id: string
           created_at: string
           id: string
+          passenger_gender: string | null
           passenger_name: string
           passenger_phone: string | null
           qr_code: string
@@ -13289,6 +13290,7 @@ export type Database = {
           booking_id: string
           created_at?: string
           id?: string
+          passenger_gender?: string | null
           passenger_name: string
           passenger_phone?: string | null
           qr_code?: string
@@ -13301,6 +13303,7 @@ export type Database = {
           booking_id?: string
           created_at?: string
           id?: string
+          passenger_gender?: string | null
           passenger_name?: string
           passenger_phone?: string | null
           qr_code?: string
