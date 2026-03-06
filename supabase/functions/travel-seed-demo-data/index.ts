@@ -74,6 +74,9 @@ Deno.serve(async (req) => {
       { plan_name: '30-Seater Coach', rows: 8, columns: 4, service_idx: 0 },
       { plan_name: '52-Seater Bus', rows: 13, columns: 4, service_idx: 0 },
       { plan_name: '15-Seater Tour Van', rows: 5, columns: 3, service_idx: 1 },
+      { plan_name: '120-Seater Aircraft', rows: 20, columns: 6, service_idx: 2 },
+      { plan_name: '80-Seater Train Car', rows: 16, columns: 5, service_idx: 3 },
+    ];
     ];
 
     const createdPlans: any[] = [];
