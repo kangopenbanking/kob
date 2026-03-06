@@ -6,11 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Building2, Smartphone, Plus, Trash2, Star, CreditCard, Wallet, Globe, Landmark, Shield, AlertCircle } from "lucide-react";
+import { Loader2, Building2, Smartphone, Plus, Trash2, Star, CreditCard, Wallet, Globe, Landmark, Shield, AlertCircle, ChevronRight, ArrowLeft, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const CAMEROON_BANKS = [
   { code: "10005", name: "Afriland First Bank" },
