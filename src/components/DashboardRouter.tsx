@@ -152,7 +152,7 @@ export function useDashboardPath() {
           return;
         }
 
-        // Check merchant role
+        // Check merchant role (owner)
         const { data: isMerchant } = await supabase.rpc('has_role', {
           _user_id: user.id,
           _role: 'merchant' as any
@@ -163,7 +163,21 @@ export function useDashboardPath() {
           return;
         }
 
-        // Check institution
+        // Check for merchant staff
+        const { data: merchantStaff } = await supabase
+          .from("merchant_staff_roles")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("is_active", true)
+          .limit(1)
+          .maybeSingle();
+
+        if (merchantStaff) {
+          setDashboardPath("/merchant/travel-services");
+          return;
+        }
+
+        // Check institution owner
         const { data: institution } = await supabase
           .from("institutions")
           .select("status, institution_type")
@@ -181,6 +195,17 @@ export function useDashboardPath() {
 
         if (institution) {
           setDashboardPath("/pending-approval");
+          return;
+        }
+
+        // Check for FI staff
+        const { data: isStaff } = await supabase.rpc('has_role', {
+          _user_id: user.id,
+          _role: 'staff' as any
+        });
+
+        if (isStaff) {
+          setDashboardPath("/fi-portal");
           return;
         }
 

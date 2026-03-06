@@ -80,7 +80,7 @@ const StaffLogin: React.FC = () => {
           refresh_token: data.session.refresh_token,
         });
         toast.success(`Welcome, ${data.staff?.name}!`);
-        navigate('/merchant/travel-services');
+        navigate('/dashboard');
       } else {
         throw new Error('No session returned');
       }
