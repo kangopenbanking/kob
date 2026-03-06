@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 type SplitMode = 'equal' | 'custom' | 'percentage';
 
@@ -19,22 +22,10 @@ interface Participant {
   paid: boolean;
 }
 
-interface SplitBill {
-  id: string;
-  title: string;
-  total: number;
-  splitMode: SplitMode;
-  participants: Participant[];
-  date: string;
-  notes: string;
-}
-
 const colors = [
   'bg-[hsl(210,80%,93%)]', 'bg-[hsl(150,40%,90%)]', 'bg-[hsl(340,60%,92%)]',
   'bg-[hsl(45,70%,90%)]', 'bg-[hsl(270,60%,92%)]', 'bg-[hsl(25,80%,92%)]',
 ];
-
-const initialBills: SplitBill[] = [];
 
 const makeParticipant = (name: string, phone: string, color: string, paid: boolean): Participant => {
   const initials = name.trim().split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
@@ -43,10 +34,26 @@ const makeParticipant = (name: string, phone: string, color: string, paid: boole
 
 const CustomerSplitBills: React.FC = () => {
   const navigate = useNavigate();
-  const [bills, setBills] = useState(initialBills);
+  const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [sending, setSending] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  // Fetch split bills from DB
+  const { data: bills = [], isLoading } = useQuery({
+    queryKey: ['customer-split-bills', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('split_bills')
+        .select('*, split_bill_participants(*)')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   // Form state
   const [title, setTitle] = useState('');
@@ -63,32 +70,22 @@ const CustomerSplitBills: React.FC = () => {
   const totalNum = Number(total || 0);
   const perPerson = participants.length > 0 ? Math.ceil(totalNum / participants.length) : 0;
 
-  // Calculate shares with auto-remainder for "You" (idx 0)
   const shares = useMemo(() => {
-    if (splitMode === 'equal') {
-      return participants.map(() => perPerson);
-    }
+    if (splitMode === 'equal') return participants.map(() => perPerson);
     if (splitMode === 'custom') {
       const othersTotal = participants.slice(1).reduce((s, p) => s + (p.customAmount || 0), 0);
-      const myShare = Math.max(totalNum - othersTotal, 0);
-      return [myShare, ...participants.slice(1).map(p => p.customAmount || 0)];
+      return [Math.max(totalNum - othersTotal, 0), ...participants.slice(1).map(p => p.customAmount || 0)];
     }
     if (splitMode === 'percentage') {
       const othersPercent = participants.slice(1).reduce((s, p) => s + (p.customPercent || 0), 0);
       const myPercent = Math.max(100 - othersPercent, 0);
-      return [
-        Math.ceil(totalNum * myPercent / 100),
-        ...participants.slice(1).map(p => Math.ceil(totalNum * (p.customPercent || 0) / 100)),
-      ];
+      return [Math.ceil(totalNum * myPercent / 100), ...participants.slice(1).map(p => Math.ceil(totalNum * (p.customPercent || 0) / 100))];
     }
     return participants.map(() => 0);
   }, [splitMode, participants, totalNum, perPerson]);
 
-  // Validation helpers
   const customTotal = splitMode === 'custom' ? shares.reduce((s, v) => s + v, 0) : 0;
-  const percentTotal = splitMode === 'percentage'
-    ? participants.slice(1).reduce((s, p) => s + (p.customPercent || 0), 0)
-    : 0;
+  const percentTotal = splitMode === 'percentage' ? participants.slice(1).reduce((s, p) => s + (p.customPercent || 0), 0) : 0;
   const myAutoPercent = splitMode === 'percentage' ? Math.max(100 - percentTotal, 0) : 0;
 
   const addPerson = () => {
@@ -106,42 +103,59 @@ const CustomerSplitBills: React.FC = () => {
     setParticipants(participants.map((p, idx) => idx === i ? { ...p, [field]: value } : p));
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!title.trim()) { toast.error('Enter a bill title'); return; }
     if (!total || totalNum <= 0) { toast.error('Enter a valid total amount'); return; }
     if (participants.length < 2) { toast.error('Add at least one other person'); return; }
-
-    // Validate custom mode
     if (splitMode === 'custom') {
       const othersTotal = participants.slice(1).reduce((s, p) => s + (p.customAmount || 0), 0);
       if (othersTotal <= 0) { toast.error('Enter amounts for each participant'); return; }
       if (othersTotal > totalNum) { toast.error('Participant amounts exceed the total bill'); return; }
     }
-
-    // Validate percentage mode
     if (splitMode === 'percentage') {
       if (percentTotal <= 0) { toast.error('Enter percentages for each participant'); return; }
       if (percentTotal > 100) { toast.error('Total percentages exceed 100%'); return; }
     }
 
     setSending(true);
-    setTimeout(() => {
-      const bill: SplitBill = {
-        id: `SB-${String(bills.length + 1).padStart(3, '0')}`,
-        title: title.trim(), total: totalNum, splitMode, notes,
-        date: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        participants: participants.map((p, i) => ({
-          ...p,
-          customAmount: shares[i],
-          customPercent: splitMode === 'percentage' ? (i === 0 ? myAutoPercent : p.customPercent) : 0,
-        })),
-      };
-      setBills([bill, ...bills]);
+    try {
+      // Insert split bill
+      const { data: bill, error: billError } = await supabase
+        .from('split_bills')
+        .insert({
+          user_id: user!.id,
+          title: title.trim(),
+          total_amount: totalNum,
+          split_mode: splitMode,
+          notes: notes || null,
+          status: 'pending',
+        })
+        .select()
+        .single();
+      if (billError) throw billError;
+
+      // Insert participants
+      const participantRows = participants.map((p, i) => ({
+        split_bill_id: bill.id,
+        name: p.name,
+        phone: p.phone || null,
+        share_amount: shares[i],
+        share_percent: splitMode === 'percentage' ? (i === 0 ? myAutoPercent : p.customPercent) : 0,
+        is_owner: i === 0,
+        paid: i === 0,
+      }));
+      const { error: partError } = await supabase.from('split_bill_participants').insert(participantRows);
+      if (partError) throw partError;
+
+      queryClient.invalidateQueries({ queryKey: ['customer-split-bills'] });
       setShowCreate(false);
       resetForm();
-      setSending(false);
       toast.success(`Split request sent to ${participants.length - 1} people`);
-    }, 1200);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create split bill');
+    } finally {
+      setSending(false);
+    }
   };
 
   const resetForm = () => {
@@ -151,7 +165,6 @@ const CustomerSplitBills: React.FC = () => {
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
@@ -162,7 +175,6 @@ const CustomerSplitBills: React.FC = () => {
         </Button>
       </div>
 
-      {/* How It Works Flow */}
       <HowItWorksFlow
         title="How Split Bills Works"
         steps={[
@@ -184,7 +196,6 @@ const CustomerSplitBills: React.FC = () => {
                 <button onClick={() => { setShowCreate(false); resetForm(); }}><X className="h-5 w-5 text-muted-foreground" /></button>
               </div>
 
-              {/* Bill Details */}
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Bill Details</p>
                 <Input value={title} onChange={e => setTitle(e.target.value)} placeholder="Bill title (e.g. Friday Dinner)" className="rounded-xl" />
@@ -194,7 +205,6 @@ const CustomerSplitBills: React.FC = () => {
                 </div>
               </div>
 
-              {/* Split Mode */}
               <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Split Method</p>
                 <div className="flex gap-2">
@@ -211,7 +221,6 @@ const CustomerSplitBills: React.FC = () => {
                 </div>
               </div>
 
-              {/* Mode description */}
               <div className="rounded-2xl bg-muted/50 p-2.5">
                 <p className="text-[10px] text-muted-foreground text-center">
                   {splitMode === 'equal' && 'Everyone pays the same amount'}
@@ -220,7 +229,6 @@ const CustomerSplitBills: React.FC = () => {
                 </p>
               </div>
 
-              {/* Participants */}
               <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Participants ({participants.length})</p>
                 {participants.map((p, i) => (
@@ -235,14 +243,10 @@ const CustomerSplitBills: React.FC = () => {
                         <p className="text-[9px] text-primary font-semibold">Auto-calculated</p>
                       )}
                     </div>
-
-                    {/* Custom amount input (others only) */}
                     {splitMode === 'custom' && i > 0 && (
                       <Input type="number" min={0} value={p.customAmount || ''} onChange={e => updateParticipant(i, 'customAmount', Number(e.target.value))}
                         placeholder="XAF" className="rounded-lg text-xs w-24 h-8" />
                     )}
-
-                    {/* Percentage input (others only) */}
                     {splitMode === 'percentage' && i > 0 && (
                       <div className="flex items-center gap-1">
                         <Input type="number" min={0} max={100} value={p.customPercent || ''} onChange={e => updateParticipant(i, 'customPercent', Math.min(Number(e.target.value), 100))}
@@ -250,22 +254,16 @@ const CustomerSplitBills: React.FC = () => {
                         <span className="text-[10px] text-muted-foreground">%</span>
                       </div>
                     )}
-
-                    {/* Show percentage for "You" in percentage mode */}
                     {splitMode === 'percentage' && i === 0 && (
                       <span className="text-[10px] font-bold text-primary">{myAutoPercent}%</span>
                     )}
-
-                    {/* Share amount */}
                     <span className="text-xs font-bold text-foreground w-20 text-right shrink-0">
                       {shares[i]?.toLocaleString() || '0'} <span className="text-[9px] text-muted-foreground">XAF</span>
                     </span>
-
                     {i > 0 && <button onClick={() => removePerson(i)} className="shrink-0"><X className="h-4 w-4 text-muted-foreground" /></button>}
                   </div>
                 ))}
 
-                {/* Validation warnings */}
                 {splitMode === 'custom' && totalNum > 0 && participants.length > 1 && (
                   <div className={`flex items-center gap-2 rounded-xl p-2 text-[10px] font-bold ${customTotal === totalNum ? 'bg-[hsl(150,40%,90%)] text-[hsl(150,60%,40%)]' : customTotal > totalNum ? 'bg-[hsl(0,60%,93%)] text-[hsl(0,60%,50%)]' : 'bg-[hsl(45,70%,90%)] text-[hsl(45,60%,35%)]'}`}>
                     {customTotal === totalNum ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertCircle className="h-3.5 w-3.5" />}
@@ -298,7 +296,6 @@ const CustomerSplitBills: React.FC = () => {
                 )}
               </div>
 
-              {/* Notes */}
               <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Notes (optional)"
                 className="w-full rounded-xl border border-border bg-background p-3 text-xs outline-none resize-none h-14" />
 
@@ -313,8 +310,13 @@ const CustomerSplitBills: React.FC = () => {
 
       {/* Bills History */}
       <div className="space-y-2">
-        {bills.map((bill, i) => {
-          const paidCount = bill.participants.filter(p => p.paid).length;
+        {isLoading ? (
+          <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+        ) : bills.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted-foreground">No split bills yet. Create your first one!</p>
+        ) : bills.map((bill: any, i: number) => {
+          const parts = bill.split_bill_participants || [];
+          const paidCount = parts.filter((p: any) => p.paid).length;
           const isExpanded = expandedId === bill.id;
           return (
             <motion.div key={bill.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -325,12 +327,12 @@ const CustomerSplitBills: React.FC = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{bill.title}</p>
-                  <p className="text-[11px] text-muted-foreground">{bill.date} · {bill.participants.length} people · {bill.splitMode}</p>
+                  <p className="text-[11px] text-muted-foreground">{new Date(bill.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {parts.length} people · {bill.split_mode}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold text-foreground">{bill.total.toLocaleString()}</p>
-                  <span className={`text-[10px] font-bold ${paidCount === bill.participants.length ? 'text-[hsl(150,60%,40%)]' : 'text-[hsl(45,60%,35%)]'}`}>
-                    {paidCount}/{bill.participants.length} paid
+                  <p className="text-sm font-bold text-foreground">{Number(bill.total_amount).toLocaleString()}</p>
+                  <span className={`text-[10px] font-bold ${paidCount === parts.length ? 'text-[hsl(150,60%,40%)]' : 'text-[hsl(45,60%,35%)]'}`}>
+                    {paidCount}/{parts.length} paid
                   </span>
                 </div>
                 <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
@@ -339,31 +341,21 @@ const CustomerSplitBills: React.FC = () => {
                 {isExpanded && (
                   <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
                     <div className="border-t border-border px-4 pb-4 pt-3 space-y-2">
-                      {bill.participants.map((p, j) => {
-                        const share = bill.splitMode === 'equal'
-                          ? Math.ceil(bill.total / bill.participants.length)
-                          : bill.splitMode === 'custom'
-                            ? p.customAmount
-                            : Math.ceil(bill.total * (p.customPercent || 0) / 100);
-                        return (
-                          <div key={j} className="flex items-center gap-2">
-                            <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${p.color}`}>
-                              <span className="text-[9px] font-bold text-foreground">{p.initials}</span>
-                            </div>
-                            <span className="flex-1 text-xs font-semibold text-foreground">{p.name}</span>
-                            <span className="text-xs font-bold text-foreground">{share.toLocaleString()}</span>
-                            {p.paid
-                              ? <CheckCircle2 className="h-4 w-4 text-[hsl(150,60%,40%)]" strokeWidth={2} />
-                              : <span className="text-[10px] font-bold text-[hsl(45,60%,35%)] bg-[hsl(45,70%,90%)] rounded-md px-1.5 py-0.5">Pending</span>
-                            }
+                      {bill.notes && <p className="text-[11px] text-muted-foreground italic">{bill.notes}</p>}
+                      {parts.map((p: any) => (
+                        <div key={p.id} className="flex items-center gap-2 rounded-xl bg-muted/50 p-2.5">
+                          <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${p.is_owner ? 'bg-[hsl(210,80%,93%)]' : 'bg-[hsl(340,60%,92%)]'}`}>
+                            <span className="text-[9px] font-bold text-foreground">{p.name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)}</span>
                           </div>
-                        );
-                      })}
-                      {bill.notes && <p className="text-[11px] text-muted-foreground italic mt-2">{bill.notes}</p>}
-                      <Button size="sm" variant="outline" className="rounded-xl text-[11px] h-8 w-full mt-2"
-                        onClick={() => toast.success('Reminder sent to unpaid participants')}>
-                        <Send className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Remind Unpaid
-                      </Button>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-foreground truncate">{p.name}{p.is_owner ? ' (You)' : ''}</p>
+                            {p.phone && <p className="text-[10px] text-muted-foreground">{p.phone}</p>}
+                          </div>
+                          <span className="text-xs font-bold text-foreground">{Number(p.share_amount).toLocaleString()} XAF</span>
+                          {p.paid ? <CheckCircle2 className="h-4 w-4 text-[hsl(150,60%,40%)] shrink-0" strokeWidth={1.5} />
+                            : <div className="h-4 w-4 rounded-full border-2 border-muted-foreground/30 shrink-0" />}
+                        </div>
+                      ))}
                     </div>
                   </motion.div>
                 )}

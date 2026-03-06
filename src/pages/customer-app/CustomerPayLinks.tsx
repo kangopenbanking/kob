@@ -1,30 +1,35 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Link2, Plus, Copy, Share2, X, CheckCircle2, Calendar, DollarSign, StickyNote, ExternalLink, BarChart3 } from 'lucide-react';
+import { ArrowLeft, Link2, Plus, Copy, Share2, X, Calendar, DollarSign, StickyNote, ExternalLink } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { API_CONFIG } from '@/config/api';
-
-interface PayLink {
-  name: string;
-  description: string;
-  amount: number | null;
-  clicks: number;
-  payments: number;
-  created: string;
-  expiresAt: string | null;
-  active: boolean;
-}
-
-const initialLinks: PayLink[] = [];
+import { supabase } from '@/integrations/supabase/client';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const CustomerPayLinks: React.FC = () => {
   const navigate = useNavigate();
-  const [links, setLinks] = useState(initialLinks);
+  const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  const { data: links = [], isLoading } = useQuery({
+    queryKey: ['customer-pay-links', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('customer_pay_links')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   // Form state
   const [newName, setNewName] = useState('');
@@ -33,60 +38,71 @@ const CustomerPayLinks: React.FC = () => {
   const [newExpiry, setNewExpiry] = useState('');
   const [isOpenAmount, setIsOpenAmount] = useState(false);
 
-  const handleCreate = () => {
+  const generateSlug = () => `pay-${Date.now().toString(36)}-${Math.random().toString(36).substr(2, 6)}`;
+
+  const handleCreate = async () => {
     if (!newName.trim()) { toast.error('Enter a link name'); return; }
     if (!newDescription.trim()) { toast.error('Enter a description'); return; }
     if (!isOpenAmount && (!newAmount || Number(newAmount) <= 0)) { toast.error('Enter a valid amount or enable open amount'); return; }
     setCreating(true);
-    setTimeout(() => {
-      const newLink: PayLink = {
+    try {
+      const { error } = await supabase.from('customer_pay_links').insert({
+        user_id: user!.id,
+        slug: generateSlug(),
         name: newName.trim(),
         description: newDescription.trim(),
         amount: isOpenAmount ? null : Number(newAmount),
-        clicks: 0,
-        payments: 0,
-        created: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        expiresAt: newExpiry || null,
-        active: true,
-      };
-      setLinks([newLink, ...links]);
+        is_open_amount: isOpenAmount,
+        expires_at: newExpiry ? new Date(newExpiry).toISOString() : null,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['customer-pay-links'] });
       setShowCreate(false);
       resetForm();
-      setCreating(false);
       toast.success('Pay link created!');
-    }, 1000);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create link');
+    } finally {
+      setCreating(false);
+    }
   };
 
   const resetForm = () => { setNewName(''); setNewDescription(''); setNewAmount(''); setNewExpiry(''); setIsOpenAmount(false); };
 
-  const getUrl = (name: string) => `${API_CONFIG.SITE_URL}/pay/${name.toLowerCase().replace(/\s/g, '-')}`;
+  const getUrl = (slug: string) => `${API_CONFIG.SITE_URL}/pay/${slug}`;
 
-  const handleCopy = (name: string) => {
-    navigator.clipboard.writeText(getUrl(name)).then(
+  const handleCopy = (slug: string) => {
+    navigator.clipboard.writeText(getUrl(slug)).then(
       () => toast.success('Link copied to clipboard'),
       () => toast.success('Link copied!')
     );
   };
 
-  const handleShare = (name: string) => {
+  const handleShare = (link: any) => {
+    const url = getUrl(link.slug);
     if (navigator.share) {
-      navigator.share({ title: name, url: getUrl(name) });
+      navigator.share({ title: link.name, url });
     } else {
-      handleCopy(name);
+      handleCopy(link.slug);
     }
   };
 
-  const handleToggle = (i: number) => {
-    setLinks(links.map((l, idx) => idx === i ? { ...l, active: !l.active } : l));
-    toast.success(links[i].active ? 'Link deactivated' : 'Link activated');
+  const handleToggle = async (link: any) => {
+    const newActive = !link.is_active;
+    const { error } = await supabase
+      .from('customer_pay_links')
+      .update({ is_active: newActive })
+      .eq('id', link.id);
+    if (error) { toast.error('Failed to update'); return; }
+    queryClient.invalidateQueries({ queryKey: ['customer-pay-links'] });
+    toast.success(newActive ? 'Link activated' : 'Link deactivated');
   };
 
-  const totalRevenue = links.reduce((s, l) => s + (l.amount || 0) * l.payments, 0);
-  const totalClicks = links.reduce((s, l) => s + l.clicks, 0);
+  const totalRevenue = links.reduce((s: number, l: any) => s + Number(l.total_collected || 0), 0);
+  const totalClicks = links.reduce((s: number, l: any) => s + (l.clicks || 0), 0);
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
@@ -97,7 +113,6 @@ const CustomerPayLinks: React.FC = () => {
         </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-2">
         <div className="rounded-2xl bg-[hsl(210,80%,93%)] p-3 text-center">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(210,60%,45%)]">Links</p>
@@ -136,7 +151,6 @@ const CustomerPayLinks: React.FC = () => {
                 </div>
               </div>
 
-              {/* Amount */}
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Amount</p>
                 <button onClick={() => setIsOpenAmount(!isOpenAmount)}
@@ -154,7 +168,6 @@ const CustomerPayLinks: React.FC = () => {
                 )}
               </div>
 
-              {/* Expiry */}
               <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Expiry (optional)</p>
                 <div className="relative">
@@ -162,14 +175,6 @@ const CustomerPayLinks: React.FC = () => {
                   <Input type="date" value={newExpiry} onChange={e => setNewExpiry(e.target.value)} className="rounded-xl pl-10" />
                 </div>
               </div>
-
-              {/* Preview */}
-              {newName && (
-                <div className="rounded-2xl bg-muted p-3">
-                  <p className="text-[10px] font-bold text-muted-foreground mb-1">Preview URL</p>
-                  <p className="text-[11px] font-mono text-foreground truncate">{getUrl(newName)}</p>
-                </div>
-              )}
 
               <Button onClick={handleCreate} disabled={creating} className="rounded-2xl h-11 text-xs font-bold">
                 {creating ? <span className="flex items-center gap-2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" /> Creating...</span>
@@ -182,35 +187,39 @@ const CustomerPayLinks: React.FC = () => {
 
       {/* Links List */}
       <div className="space-y-2">
-        {links.map((link, i) => (
-          <motion.div key={`${link.name}-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+        {isLoading ? (
+          <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+        ) : links.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted-foreground">No pay links yet. Create your first one!</p>
+        ) : links.map((link: any, i: number) => (
+          <motion.div key={link.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border p-4">
             <div className="flex items-center justify-between mb-1">
               <p className="text-sm font-bold text-foreground">{link.name}</p>
-              <button onClick={() => handleToggle(i)}
-                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${link.active ? 'bg-[hsl(150,40%,90%)] text-[hsl(150,60%,40%)]' : 'bg-muted text-muted-foreground'}`}>
-                {link.active ? 'Active' : 'Inactive'}
+              <button onClick={() => handleToggle(link)}
+                className={`rounded-lg px-2.5 py-1 text-[10px] font-bold transition-all ${link.is_active ? 'bg-[hsl(150,40%,90%)] text-[hsl(150,60%,40%)]' : 'bg-muted text-muted-foreground'}`}>
+                {link.is_active ? 'Active' : 'Inactive'}
               </button>
             </div>
             <p className="text-[11px] text-muted-foreground mb-2">{link.description}</p>
             <div className="flex items-center gap-3 text-[10px] text-muted-foreground mb-3">
-              <span className="font-bold">{link.amount ? `${link.amount.toLocaleString()} XAF` : 'Open amount'}</span>
+              <span className="font-bold">{link.amount ? `${Number(link.amount).toLocaleString()} XAF` : 'Open amount'}</span>
               <span>·</span>
-              <span>{link.clicks} clicks</span>
+              <span>{link.clicks || 0} clicks</span>
               <span>·</span>
-              <span>{link.payments} payments</span>
-              {link.expiresAt && <><span>·</span><span>Exp: {link.expiresAt}</span></>}
+              <span>{link.payments_count || 0} payments</span>
+              {link.expires_at && <><span>·</span><span>Exp: {new Date(link.expires_at).toLocaleDateString()}</span></>}
             </div>
             <div className="flex gap-2">
-              <button onClick={() => handleCopy(link.name)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 flex-1 justify-center">
+              <button onClick={() => handleCopy(link.slug)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 flex-1 justify-center">
                 <Copy className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
                 <span className="text-[10px] font-bold text-muted-foreground">Copy</span>
               </button>
-              <button onClick={() => handleShare(link.name)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 flex-1 justify-center">
+              <button onClick={() => handleShare(link)} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2 flex-1 justify-center">
                 <Share2 className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
                 <span className="text-[10px] font-bold text-muted-foreground">Share</span>
               </button>
-              <button onClick={() => window.open(getUrl(link.name), '_blank')} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2">
+              <button onClick={() => window.open(getUrl(link.slug), '_blank')} className="flex items-center gap-1.5 rounded-xl bg-muted px-3 py-2">
                 <ExternalLink className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={1.5} />
               </button>
             </div>

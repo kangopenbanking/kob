@@ -3726,6 +3726,60 @@ export type Database = {
           },
         ]
       }
+      customer_pay_links: {
+        Row: {
+          amount: number | null
+          clicks: number
+          created_at: string
+          currency: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          is_open_amount: boolean
+          name: string
+          payments_count: number
+          slug: string
+          total_collected: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          clicks?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          is_open_amount?: boolean
+          name: string
+          payments_count?: number
+          slug: string
+          total_collected?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number | null
+          clicks?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          is_open_amount?: boolean
+          name?: string
+          payments_count?: number
+          slug?: string
+          total_collected?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       dashboard_widgets: {
         Row: {
           config: Json | null
@@ -10128,6 +10182,63 @@ export type Database = {
         }
         Relationships: []
       }
+      recurring_payments: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          currency: string
+          end_date: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          metadata: Json | null
+          name: string
+          next_payment_date: string
+          notify: boolean
+          payments_made: number
+          start_date: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          category?: string
+          created_at?: string
+          currency?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          name: string
+          next_payment_date: string
+          notify?: boolean
+          payments_made?: number
+          start_date: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          currency?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          metadata?: Json | null
+          name?: string
+          next_payment_date?: string
+          notify?: boolean
+          payments_made?: number
+          start_date?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       refresh_tokens: {
         Row: {
           access_token_id: string | null
@@ -11593,6 +11704,92 @@ export type Database = {
           service_name?: string
           status?: string
           success?: boolean
+        }
+        Relationships: []
+      }
+      split_bill_participants: {
+        Row: {
+          created_at: string
+          id: string
+          is_owner: boolean
+          name: string
+          paid: boolean
+          paid_at: string | null
+          phone: string | null
+          share_amount: number
+          share_percent: number
+          split_bill_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_owner?: boolean
+          name: string
+          paid?: boolean
+          paid_at?: string | null
+          phone?: string | null
+          share_amount?: number
+          share_percent?: number
+          split_bill_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_owner?: boolean
+          name?: string
+          paid?: boolean
+          paid_at?: string | null
+          phone?: string | null
+          share_amount?: number
+          share_percent?: number
+          split_bill_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "split_bill_participants_split_bill_id_fkey"
+            columns: ["split_bill_id"]
+            isOneToOne: false
+            referencedRelation: "split_bills"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      split_bills: {
+        Row: {
+          created_at: string
+          currency: string
+          id: string
+          notes: string | null
+          split_mode: string
+          status: string
+          title: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          split_mode?: string
+          status?: string
+          title: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          id?: string
+          notes?: string | null
+          split_mode?: string
+          status?: string
+          title?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
-import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
+import { useCustomerAccounts, useAccountBalances, useRecentBillPayments } from '@/hooks/useCustomerData';
 import { useQueryClient } from '@tanstack/react-query';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 
@@ -28,16 +28,7 @@ const categories: BillCategory[] = [
   { id: 'insurance', name: 'Insurance', icon: <Shield className="h-6 w-6" strokeWidth={1.5} />, color: 'hsl(25,80%,90%)', billers: ['Activa', 'Chanas', 'SAAR'] },
 ];
 
-interface RecentBill {
-  id: string;
-  biller: string;
-  category: string;
-  amount: number;
-  date: string;
-  status: 'paid' | 'pending';
-}
-
-const recentBills: RecentBill[] = [];
+// Recent bills fetched from DB via useRecentBillPayments
 
 import { KANG_PLATFORM_ID } from '@/constants/platform';
 
@@ -48,6 +39,7 @@ const CustomerBills: React.FC = () => {
   const { data: accounts = [] } = useCustomerAccounts(user?.id);
   const accountIds = accounts.map((a: any) => a.id);
   const { data: balances = [] } = useAccountBalances(accountIds);
+  const { data: recentBills = [], isLoading: billsLoading } = useRecentBillPayments(user?.id);
 
   const [search, setSearch] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<BillCategory | null>(null);
@@ -164,15 +156,19 @@ const CustomerBills: React.FC = () => {
 
             <div className="flex flex-col gap-3">
               <h2 className="text-sm font-semibold text-foreground">Recent Payments</h2>
-              {recentBills.map(bill => (
+              {billsLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+              ) : recentBills.length === 0 ? (
+                <p className="py-4 text-center text-xs text-muted-foreground">No recent bill payments</p>
+              ) : recentBills.map((bill: any) => (
                 <motion.div key={bill.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                   className="flex items-center justify-between rounded-2xl border border-border bg-card p-4">
                   <div className="flex flex-col gap-0.5">
-                    <span className="text-sm font-medium text-foreground">{bill.biller}</span>
-                    <span className="text-xs text-muted-foreground">{bill.category} · {bill.date}</span>
+                    <span className="text-sm font-medium text-foreground">{bill.transaction_information || 'Bill Payment'}</span>
+                    <span className="text-xs text-muted-foreground">{new Date(bill.booking_datetime).toLocaleDateString()}</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-semibold text-foreground">{bill.amount.toLocaleString()} XAF</span>
+                    <span className="text-sm font-semibold text-foreground">{Number(bill.amount).toLocaleString()} {bill.currency}</span>
                     <CheckCircle2 className="h-4 w-4 text-primary" strokeWidth={1.5} />
                   </div>
                 </motion.div>

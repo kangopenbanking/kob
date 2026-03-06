@@ -5,22 +5,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-
-interface RecurringPayment {
-  name: string;
-  category: string;
-  amount: number;
-  frequency: string;
-  startDate: string;
-  endDate: string | null;
-  nextDate: string;
-  active: boolean;
-  notify: boolean;
-  icon: React.ElementType;
-  color: string;
-  iconColor: string;
-  paymentsMade: number;
-}
+import { supabase } from '@/integrations/supabase/client';
+import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const categories = [
   { label: 'Utilities', icon: Zap, color: 'bg-[hsl(50,80%,90%)]', iconColor: 'text-[hsl(50,60%,35%)]' },
@@ -29,14 +16,39 @@ const categories = [
   { label: 'Other', icon: Tag, color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
 ];
 
-const initialPayments: RecurringPayment[] = [];
+function calculateNextDate(startDate: string, frequency: string): string {
+  const d = new Date(startDate);
+  const now = new Date();
+  while (d < now) {
+    if (frequency === 'Daily') d.setDate(d.getDate() + 1);
+    else if (frequency === 'Weekly') d.setDate(d.getDate() + 7);
+    else if (frequency === 'Monthly') d.setMonth(d.getMonth() + 1);
+    else if (frequency === 'Quarterly') d.setMonth(d.getMonth() + 3);
+  }
+  return d.toISOString().split('T')[0];
+}
 
 const CustomerRecurring: React.FC = () => {
   const navigate = useNavigate();
-  const [payments, setPayments] = useState(initialPayments);
+  const { user } = useCustomerAuth();
+  const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+  const [expandedIdx, setExpandedIdx] = useState<string | null>(null);
+
+  const { data: payments = [], isLoading } = useQuery({
+    queryKey: ['customer-recurring-payments', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('recurring_payments')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+  });
 
   // Form
   const [newName, setNewName] = useState('');
@@ -47,31 +59,46 @@ const CustomerRecurring: React.FC = () => {
   const [newEndDate, setNewEndDate] = useState('');
   const [newNotify, setNewNotify] = useState(true);
 
-  const handleToggle = (i: number) => {
-    setPayments(payments.map((p, idx) => idx === i ? { ...p, active: !p.active } : p));
-    toast.success(payments[i].active ? `${payments[i].name} paused` : `${payments[i].name} resumed`);
+  const handleToggle = async (payment: any) => {
+    const newActive = !payment.is_active;
+    const { error } = await supabase
+      .from('recurring_payments')
+      .update({ is_active: newActive })
+      .eq('id', payment.id);
+    if (error) { toast.error('Failed to update'); return; }
+    queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
+    toast.success(newActive ? `${payment.name} resumed` : `${payment.name} paused`);
   };
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     if (!newName.trim()) { toast.error('Enter payment name'); return; }
     if (!newAmount || Number(newAmount) <= 0) { toast.error('Enter valid amount'); return; }
     if (!newStartDate) { toast.error('Select start date'); return; }
     setCreating(true);
-    const cat = categories.find(c => c.label === newCategory) || categories[0];
-    setTimeout(() => {
-      const payment: RecurringPayment = {
-        name: newName.trim(), category: newCategory, amount: Number(newAmount),
-        frequency: newFreq, startDate: newStartDate, endDate: newEndDate || null,
-        nextDate: new Date(newStartDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-        active: true, notify: newNotify, paymentsMade: 0,
-        icon: cat.icon, color: cat.color, iconColor: cat.iconColor,
-      };
-      setPayments([payment, ...payments]);
+    try {
+      const nextDate = calculateNextDate(newStartDate, newFreq);
+      const { error } = await supabase.from('recurring_payments').insert({
+        user_id: user!.id,
+        name: newName.trim(),
+        category: newCategory,
+        amount: Number(newAmount),
+        frequency: newFreq,
+        start_date: newStartDate,
+        end_date: newEndDate || null,
+        next_payment_date: nextDate,
+        is_active: true,
+        notify: newNotify,
+      });
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
       setShowCreate(false);
       resetForm();
-      setCreating(false);
       toast.success('Recurring payment created');
-    }, 1000);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to create');
+    } finally {
+      setCreating(false);
+    }
   };
 
   const resetForm = () => {
@@ -79,16 +106,19 @@ const CustomerRecurring: React.FC = () => {
     setNewStartDate(''); setNewEndDate(''); setNewNotify(true);
   };
 
-  const activeCount = payments.filter(p => p.active).length;
-  const totalMonthly = payments.filter(p => p.active).reduce((s, p) => {
-    if (p.frequency === 'Weekly') return s + p.amount * 4;
-    if (p.frequency === 'Quarterly') return s + Math.ceil(p.amount / 3);
-    return s + p.amount;
+  const activeCount = payments.filter((p: any) => p.is_active).length;
+  const totalMonthly = payments.filter((p: any) => p.is_active).reduce((s: number, p: any) => {
+    const amt = Number(p.amount);
+    if (p.frequency === 'Weekly') return s + amt * 4;
+    if (p.frequency === 'Quarterly') return s + Math.ceil(amt / 3);
+    if (p.frequency === 'Daily') return s + amt * 30;
+    return s + amt;
   }, 0);
+
+  const getCategoryMeta = (cat: string) => categories.find(c => c.label === cat) || categories[3];
 
   return (
     <div className="flex flex-col gap-5 p-5 pb-28">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate(-1)}><ArrowLeft className="h-6 w-6 text-foreground" strokeWidth={1.5} /></button>
@@ -99,7 +129,6 @@ const CustomerRecurring: React.FC = () => {
         </Button>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-2 gap-2">
         <div className="rounded-2xl bg-[hsl(210,80%,93%)] p-3 text-center">
           <p className="text-[10px] font-bold uppercase tracking-wider text-[hsl(210,60%,45%)]">Active</p>
@@ -122,7 +151,6 @@ const CustomerRecurring: React.FC = () => {
                 <button onClick={() => { setShowCreate(false); resetForm(); }}><X className="h-5 w-5 text-muted-foreground" /></button>
               </div>
 
-              {/* Category */}
               <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Category</p>
                 <div className="flex gap-2">
@@ -136,14 +164,12 @@ const CustomerRecurring: React.FC = () => {
                 </div>
               </div>
 
-              {/* Payment Details */}
               <div className="space-y-3">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Payment Details</p>
                 <Input value={newName} onChange={e => setNewName(e.target.value)} placeholder="Payment name (e.g. ENEO Electricity)" className="rounded-xl" />
                 <Input type="number" value={newAmount} onChange={e => setNewAmount(e.target.value)} placeholder="Amount (XAF)" className="rounded-xl" />
               </div>
 
-              {/* Frequency */}
               <div className="space-y-2">
                 <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Frequency</p>
                 <div className="flex gap-2">
@@ -156,7 +182,6 @@ const CustomerRecurring: React.FC = () => {
                 </div>
               </div>
 
-              {/* Dates */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-[11px] font-semibold text-muted-foreground">Start Date *</label>
@@ -174,7 +199,6 @@ const CustomerRecurring: React.FC = () => {
                 </div>
               </div>
 
-              {/* Notifications */}
               <button onClick={() => setNewNotify(!newNotify)}
                 className="flex items-center gap-3 rounded-2xl bg-muted p-3">
                 <Bell className={`h-4 w-4 ${newNotify ? 'text-primary' : 'text-muted-foreground'}`} strokeWidth={1.5} />
@@ -195,24 +219,30 @@ const CustomerRecurring: React.FC = () => {
 
       {/* Payments List */}
       <div className="space-y-2">
-        {payments.map((p, i) => {
-          const isExpanded = expandedIdx === i;
+        {isLoading ? (
+          <div className="flex justify-center py-8"><div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>
+        ) : payments.length === 0 ? (
+          <p className="py-8 text-center text-xs text-muted-foreground">No recurring payments yet</p>
+        ) : payments.map((p: any) => {
+          const cat = getCategoryMeta(p.category);
+          const CatIcon = cat.icon;
+          const isExpanded = expandedIdx === p.id;
           return (
-            <motion.div key={`${p.name}-${i}`} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.04 }} className="rounded-3xl bg-card border-2 border-border overflow-hidden">
-              <button onClick={() => setExpandedIdx(isExpanded ? null : i)} className="flex items-center gap-3 p-4 w-full text-left">
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${p.color}`}>
-                  <p.icon className={`h-5 w-5 ${p.iconColor}`} strokeWidth={1.5} />
+            <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+              className="rounded-3xl bg-card border-2 border-border overflow-hidden">
+              <button onClick={() => setExpandedIdx(isExpanded ? null : p.id)} className="flex items-center gap-3 p-4 w-full text-left">
+                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${cat.color}`}>
+                  <CatIcon className={`h-5 w-5 ${cat.iconColor}`} strokeWidth={1.5} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-foreground truncate">{p.name}</p>
-                  <p className="text-[11px] text-muted-foreground">{p.frequency} · Next: {p.nextDate}</p>
+                  <p className="text-[11px] text-muted-foreground">{p.frequency} · Next: {new Date(p.next_payment_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
                 </div>
                 <div className="text-right flex items-center gap-2">
                   <div>
-                    <p className="text-sm font-bold text-foreground">{p.amount.toLocaleString()}</p>
-                    <span className={`text-[10px] font-bold ${p.active ? 'text-[hsl(150,60%,40%)]' : 'text-muted-foreground'}`}>
-                      {p.active ? 'Active' : 'Paused'}
+                    <p className="text-sm font-bold text-foreground">{Number(p.amount).toLocaleString()}</p>
+                    <span className={`text-[10px] font-bold ${p.is_active ? 'text-[hsl(150,60%,40%)]' : 'text-muted-foreground'}`}>
+                      {p.is_active ? 'Active' : 'Paused'}
                     </span>
                   </div>
                   <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
@@ -224,13 +254,13 @@ const CustomerRecurring: React.FC = () => {
                     <div className="border-t border-border px-4 pb-4 pt-3 space-y-3">
                       <div className="grid grid-cols-2 gap-2 text-[11px]">
                         <div><span className="text-muted-foreground">Category:</span> <span className="font-semibold text-foreground">{p.category}</span></div>
-                        <div><span className="text-muted-foreground">Payments:</span> <span className="font-semibold text-foreground">{p.paymentsMade}</span></div>
-                        <div><span className="text-muted-foreground">Started:</span> <span className="font-semibold text-foreground">{p.startDate}</span></div>
-                        <div><span className="text-muted-foreground">Ends:</span> <span className="font-semibold text-foreground">{p.endDate || 'Ongoing'}</span></div>
+                        <div><span className="text-muted-foreground">Payments:</span> <span className="font-semibold text-foreground">{p.payments_made}</span></div>
+                        <div><span className="text-muted-foreground">Started:</span> <span className="font-semibold text-foreground">{p.start_date}</span></div>
+                        <div><span className="text-muted-foreground">Ends:</span> <span className="font-semibold text-foreground">{p.end_date || 'Ongoing'}</span></div>
                         <div><span className="text-muted-foreground">Notify:</span> <span className="font-semibold text-foreground">{p.notify ? 'Yes' : 'No'}</span></div>
                       </div>
-                      <Button size="sm" variant="outline" className="rounded-xl text-[11px] h-8 w-full" onClick={(e) => { e.stopPropagation(); handleToggle(i); }}>
-                        {p.active ? <><Pause className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Pause Payment</> : <><Play className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Resume Payment</>}
+                      <Button size="sm" variant="outline" className="rounded-xl text-[11px] h-8 w-full" onClick={(e) => { e.stopPropagation(); handleToggle(p); }}>
+                        {p.is_active ? <><Pause className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Pause Payment</> : <><Play className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Resume Payment</>}
                       </Button>
                     </div>
                   </motion.div>
