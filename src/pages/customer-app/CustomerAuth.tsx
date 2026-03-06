@@ -14,6 +14,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { toast } from 'sonner';
 import kangLogo from '@/assets/kang-logo.png';
+import authBanner from '@/assets/auth-banner.png';
 import { API_CONFIG } from '@/config/api';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
@@ -285,7 +286,9 @@ const CustomerAuth: React.FC = () => {
       <div id="recaptcha-container" />
 
       {/* Hero Header */}
-      <div className="relative overflow-hidden bg-primary px-6 pb-16 pt-12">
+      <div className="relative overflow-hidden px-6 pb-16 pt-12" style={{ minHeight: 220 }}>
+        <img src={authBanner} alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-primary/60" />
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[hsl(0,0%,100%)]/[0.08]" />
         <div className="absolute -left-8 bottom-4 h-28 w-28 rounded-full bg-[hsl(0,0%,100%)]/[0.05]" />
         <div className="absolute right-8 bottom-12 h-16 w-16 rounded-full bg-[hsl(0,0%,100%)]/[0.06]" />
