@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   Building2, Palette, Smartphone, Wallet, CreditCard, History,
   ShieldCheck, Send, Store, Users, QrCode, BarChart3, Receipt,
-  Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check
+  Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check,
+  Bus, UserCheck
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
