@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Gift, Star, Copy, Share2, Loader2, CheckCircle2, Banknote, UserPlus, Ticket, Tag } from 'lucide-react';
+import { ArrowLeft, Gift, Star, Copy, Share2, Loader2, CheckCircle2, Banknote, UserPlus, Ticket, Tag, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -14,32 +14,33 @@ const CustomerRewards: React.FC = () => {
   const { user } = useCustomerAuth();
   const [tab, setTab] = useState<'cashback' | 'coupons' | 'referrals'>('cashback');
 
-  // Fetch rewards config from institution
-  const { data: rewardsConfig } = useQuery({
-    queryKey: ['rewards-config'],
+  // Fetch all rewards from customer_rewards table
+  const { data: rewards = [], isLoading } = useQuery({
+    queryKey: ['customer-rewards', user?.id],
+    enabled: !!user?.id,
     queryFn: async () => {
-      return {
-        cashback_enabled: true,
-        cashback_min_transfer: 10000,
-        cashback_rate: 1,
-        coupons: [],
-        referral_bonus: 500,
-        referral_enabled: true,
-      };
+      const { data, error } = await (supabase as any)
+        .from('customer_rewards')
+        .select('*')
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(100);
+      if (error) throw error;
+      return data || [];
     },
   });
 
-  const { data: cashbackHistory = [], isLoading } = useQuery({
-    queryKey: ['customer-cashback', user?.id],
+  // Fetch referrals made by this user
+  const { data: referrals = [] } = useQuery({
+    queryKey: ['customer-referrals', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
-      const { data } = await supabase
-        .from('transactions')
-        .select('id, amount, currency, transaction_information, booking_datetime, metadata')
-        .eq('user_id', user!.id)
-        .in('transaction_type', ['cashback', 'reward', 'referral_bonus'])
-        .order('booking_datetime', { ascending: false })
-        .limit(50);
+      const { data, error } = await (supabase as any)
+        .from('customer_referrals')
+        .select('*')
+        .eq('referrer_id', user!.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
       return data || [];
     },
   });
@@ -60,11 +61,17 @@ const CustomerRewards: React.FC = () => {
     },
   });
 
-  const totalCashback = cashbackHistory.reduce((s, t: any) => s + Math.abs(t.amount || 0), 0);
+  const cashbackRewards = rewards.filter((r: any) => r.reward_type === 'cashback');
+  const referralRewards = rewards.filter((r: any) => r.reward_type === 'referral_bonus');
+  const totalCashback = cashbackRewards.reduce((s: number, r: any) => s + (r.amount || 0), 0);
+  const totalReferralBonus = referralRewards.reduce((s: number, r: any) => s + (r.amount || 0), 0);
+  const totalEarned = rewards.reduce((s: number, r: any) => s + (r.amount || 0), 0);
+
   const referralLink = `${API_CONFIG.SITE_URL}/app/register?ref=${user?.id?.slice(0, 8)}`;
 
-  const coupons = rewardsConfig?.coupons || [];
-  const activeCoupons = coupons.filter((c: any) => c.active);
+  const cashbackRate = 1;
+  const cashbackMinTransfer = 10000;
+  const referralBonus = 500;
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);
@@ -98,18 +105,27 @@ const CustomerRewards: React.FC = () => {
             {isLoading ? (
               <Loader2 className="h-5 w-5 animate-spin text-muted-foreground mt-1" />
             ) : (
-              <p className="text-2xl font-bold text-foreground">{totalCashback.toLocaleString()} XAF</p>
+              <p className="text-2xl font-bold text-foreground">{totalEarned.toLocaleString()} XAF</p>
             )}
           </div>
         </div>
-        {rewardsConfig?.cashback_enabled && (
-          <div className="mt-3 rounded-2xl bg-background/50 p-3">
-            <p className="text-[11px] text-foreground font-medium">
-              Earn <span className="font-bold">{rewardsConfig.cashback_rate || 1}% cashback</span> on transfers over{' '}
-              <span className="font-bold">{(rewardsConfig.cashback_min_transfer || 10000).toLocaleString()} XAF</span>
-            </p>
+        {/* Breakdown mini stats */}
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="rounded-2xl bg-background/50 p-2.5 text-center">
+            <p className="text-[10px] text-muted-foreground font-medium">Cashback</p>
+            <p className="text-sm font-bold text-foreground">{totalCashback.toLocaleString()}</p>
           </div>
-        )}
+          <div className="rounded-2xl bg-background/50 p-2.5 text-center">
+            <p className="text-[10px] text-muted-foreground font-medium">Referrals</p>
+            <p className="text-sm font-bold text-foreground">{totalReferralBonus.toLocaleString()}</p>
+          </div>
+        </div>
+        <div className="mt-3 rounded-2xl bg-background/50 p-3">
+          <p className="text-[11px] text-foreground font-medium">
+            Earn <span className="font-bold">{cashbackRate}% cashback</span> on transfers over{' '}
+            <span className="font-bold">{cashbackMinTransfer.toLocaleString()} XAF</span>
+          </p>
+        </div>
       </motion.div>
 
       {/* Tabs */}
@@ -137,34 +153,34 @@ const CustomerRewards: React.FC = () => {
             </div>
             <div className="h-2 rounded-full bg-muted overflow-hidden">
               <div className="h-full rounded-full bg-primary transition-all"
-                style={{ width: `${Math.min(((transferStats?.totalTransferred || 0) / (rewardsConfig?.cashback_min_transfer || 10000)) * 100, 100)}%` }} />
+                style={{ width: `${Math.min(((transferStats?.totalTransferred || 0) / cashbackMinTransfer) * 100, 100)}%` }} />
             </div>
             <p className="text-[10px] text-muted-foreground mt-1.5">
-              {(transferStats?.totalTransferred || 0) >= (rewardsConfig?.cashback_min_transfer || 10000)
+              {(transferStats?.totalTransferred || 0) >= cashbackMinTransfer
                 ? '✓ Eligible for cashback on future transfers'
-                : `Transfer ${((rewardsConfig?.cashback_min_transfer || 10000) - (transferStats?.totalTransferred || 0)).toLocaleString()} XAF more to unlock cashback`
+                : `Transfer ${(cashbackMinTransfer - (transferStats?.totalTransferred || 0)).toLocaleString()} XAF more to unlock cashback`
               }
             </p>
           </div>
 
           {/* History */}
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Cashback History</p>
-          {cashbackHistory.length === 0 ? (
+          {cashbackRewards.length === 0 ? (
             <div className="flex flex-col items-center gap-3 py-10">
               <Star className="h-10 w-10 text-muted-foreground" strokeWidth={1} />
               <p className="text-sm text-muted-foreground">No cashback earned yet</p>
               <p className="text-xs text-muted-foreground text-center">Make qualifying transfers to start earning</p>
             </div>
           ) : (
-            cashbackHistory.map((tx: any, i: number) => (
-              <motion.div key={tx.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+            cashbackRewards.map((r: any, i: number) => (
+              <motion.div key={r.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
                 <CheckCircle2 className="h-5 w-5 text-[hsl(150,60%,40%)] shrink-0" strokeWidth={1.5} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-foreground truncate">{tx.transaction_information || 'Cashback'}</p>
-                  <p className="text-[10px] text-muted-foreground">{tx.booking_datetime ? new Date(tx.booking_datetime).toLocaleDateString() : ''}</p>
+                  <p className="text-xs font-semibold text-foreground truncate">{r.description || 'Cashback'}</p>
+                  <p className="text-[10px] text-muted-foreground">{r.created_at ? new Date(r.created_at).toLocaleDateString() : ''}</p>
                 </div>
-                <span className="text-sm font-bold text-[hsl(150,60%,40%)]">+{Math.abs(tx.amount || 0).toLocaleString()}</span>
+                <span className="text-sm font-bold text-[hsl(150,60%,40%)]">+{(r.amount || 0).toLocaleString()}</span>
               </motion.div>
             ))
           )}
@@ -173,35 +189,11 @@ const CustomerRewards: React.FC = () => {
 
       {tab === 'coupons' && (
         <div className="space-y-3">
-          {activeCoupons.length === 0 ? (
-            <div className="flex flex-col items-center gap-3 py-10">
-              <Tag className="h-10 w-10 text-muted-foreground" strokeWidth={1} />
-              <p className="text-sm text-muted-foreground">No coupons available</p>
-              <p className="text-xs text-muted-foreground text-center">Check back later for special offers</p>
-            </div>
-          ) : (
-            activeCoupons.map((c: any, i: number) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.05 }} className="rounded-3xl bg-[hsl(340,60%,92%)] p-4">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background/50">
-                    <Ticket className="h-5 w-5 text-[hsl(340,50%,40%)]" strokeWidth={1.5} />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-bold text-foreground">{c.name}</p>
-                    <p className="text-[11px] text-muted-foreground">{c.description}</p>
-                  </div>
-                </div>
-                {c.code && (
-                  <button onClick={() => { navigator.clipboard.writeText(c.code); toast.success('Code copied!'); }}
-                    className="mt-3 w-full rounded-2xl bg-background/50 p-2.5 flex items-center justify-center gap-2">
-                    <span className="text-xs font-mono font-bold text-foreground">{c.code}</span>
-                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                  </button>
-                )}
-              </motion.div>
-            ))
-          )}
+          <div className="flex flex-col items-center gap-3 py-10">
+            <Tag className="h-10 w-10 text-muted-foreground" strokeWidth={1} />
+            <p className="text-sm text-muted-foreground">No coupons available</p>
+            <p className="text-xs text-muted-foreground text-center">Check back later for special offers</p>
+          </div>
         </div>
       )}
 
@@ -215,7 +207,7 @@ const CustomerRewards: React.FC = () => {
               <div>
                 <p className="text-sm font-bold text-foreground">Invite & Earn</p>
                 <p className="text-[11px] text-muted-foreground">
-                  Earn {(rewardsConfig?.referral_bonus || 500).toLocaleString()} XAF for each friend who signs up
+                  Earn {referralBonus.toLocaleString()} XAF for each friend who signs up
                 </p>
               </div>
             </div>
@@ -236,12 +228,42 @@ const CustomerRewards: React.FC = () => {
             </div>
           </div>
 
+          {/* Referral Stats */}
+          <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Friends Referred</p>
+              <p className="text-2xl font-bold text-foreground">{referrals.length}</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Total Earned</p>
+              <p className="text-2xl font-bold text-foreground">{totalReferralBonus.toLocaleString()} <span className="text-xs text-muted-foreground">XAF</span></p>
+            </div>
+          </div>
+
+          {/* Referral history */}
+          {referrals.length > 0 && (
+            <>
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Referral History</p>
+              {referrals.map((ref: any, i: number) => (
+                <motion.div key={ref.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3">
+                  <UserPlus className="h-5 w-5 text-[hsl(210,60%,45%)] shrink-0" strokeWidth={1.5} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-semibold text-foreground">Friend joined</p>
+                    <p className="text-[10px] text-muted-foreground">{ref.created_at ? new Date(ref.created_at).toLocaleDateString() : ''}</p>
+                  </div>
+                  <span className="text-sm font-bold text-[hsl(150,60%,40%)]">+{(ref.bonus_amount || 0).toLocaleString()}</span>
+                </motion.div>
+              ))}
+            </>
+          )}
+
           {/* How it works */}
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">How It Works</p>
           {[
             { step: '1', text: 'Share your unique referral link with friends' },
             { step: '2', text: 'They sign up and link their account' },
-            { step: '3', text: `You both earn ${(rewardsConfig?.referral_bonus || 500).toLocaleString()} XAF` },
+            { step: '3', text: `You both earn ${referralBonus.toLocaleString()} XAF` },
           ].map((s, i) => (
             <div key={i} className="flex items-start gap-3 rounded-2xl bg-card border border-border p-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">{s.step}</span>
