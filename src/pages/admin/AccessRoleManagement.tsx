@@ -17,7 +17,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Shield, Users, Trash2, UserPlus, Search, Key, Settings, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 
-const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator"] as const;
+const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator", "developer"] as const;
 type SystemRole = (typeof SYSTEM_ROLES)[number];
 
 const ROLE_COLORS: Record<string, string> = {
@@ -28,6 +28,8 @@ const ROLE_COLORS: Record<string, string> = {
   tpp: "bg-cyan-500/15 text-cyan-700 dark:text-cyan-400 border-cyan-500/20",
   staff: "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/20",
   moderator: "bg-orange-500/15 text-orange-700 dark:text-orange-400 border-orange-500/20",
+  developer: "bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border-indigo-500/20",
+  custom: "bg-slate-500/15 text-slate-700 dark:text-slate-400 border-slate-500/20",
 };
 
 const ROLE_DESCRIPTIONS: Record<string, string> = {
@@ -38,6 +40,8 @@ const ROLE_DESCRIPTIONS: Record<string, string> = {
   tpp: "Third-party provider",
   staff: "Institution staff",
   moderator: "Content moderator",
+  developer: "API & developer access",
+  custom: "Custom defined role",
 };
 
 const PERMISSION_SCOPES = [
