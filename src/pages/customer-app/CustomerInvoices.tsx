@@ -366,10 +366,8 @@ const CustomerInvoices: React.FC = () => {
               transition={{ delay: i * 0.03, duration: 0.25 }}
               className={`rounded-2xl overflow-hidden transition-all ${isExpanded ? 'shadow-lg shadow-primary/10' : 'shadow-sm'}`}>
               
-              {/* Coloured wrapper with left accent stripe */}
-              <div className="flex">
-                <div className={`w-1.5 rounded-l-2xl bg-gradient-to-b ${stripeColor}`} />
-                <div className={`flex-1 bg-card border border-l-0 rounded-r-2xl ${isExpanded ? 'border-primary/25' : 'border-border'}`}>
+               <div>
+                 <div className={`bg-card border rounded-2xl ${isExpanded ? 'border-primary/25' : 'border-border'}`}>
                   
                   {/* Card Header */}
                   <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 w-full text-left">
