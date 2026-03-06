@@ -355,112 +355,135 @@ const CustomerInvoices: React.FC = () => {
           const isExpanded = expandedId === inv.id;
           const isDue = new Date(inv.due_date) < new Date() && inv.status !== 'paid';
 
+          // Status-aware accent colors for left stripe
+          const stripeColor = inv.status === 'paid' ? 'from-emerald-400 to-emerald-600'
+            : inv.status === 'overdue' ? 'from-red-400 to-red-600'
+            : inv.status === 'sent' ? 'from-blue-400 to-blue-600'
+            : 'from-amber-400 to-amber-500';
+
           return (
             <motion.div key={inv.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03, duration: 0.25 }}
-              className={`rounded-2xl bg-card border overflow-hidden transition-all ${isExpanded ? 'border-primary/30 shadow-md' : 'border-border shadow-sm'}`}>
+              className={`rounded-2xl overflow-hidden transition-all ${isExpanded ? 'shadow-lg shadow-primary/10' : 'shadow-sm'}`}>
               
-              {/* Card Header */}
-              <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="flex items-center gap-3 p-4 w-full text-left">
-                {/* Status Indicator */}
-                <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${cfg.bg} ring-1 ${cfg.ring}`}>
-                  <StatusIcon className={`h-5 w-5 ${cfg.color}`} strokeWidth={1.5} />
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-foreground truncate">{inv.client_name}</p>
-                    {isDue && <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">OVERDUE</span>}
-                  </div>
-                  <div className="flex items-center gap-1.5 mt-0.5">
-                    <span className="text-[10px] font-mono text-muted-foreground">{inv.invoice_number}</span>
-                    <span className="text-muted-foreground/40">·</span>
-                    <span className="text-[10px] text-muted-foreground">{formatDate(inv.created_at)}</span>
-                  </div>
-                </div>
-
-                {/* Amount */}
-                <div className="text-right flex flex-col items-end gap-1.5">
-                  <p className="text-sm font-bold text-foreground">{Number(inv.amount).toLocaleString()} <span className="text-[10px] text-muted-foreground font-medium">{inv.currency}</span></p>
-                  <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cfg.bg} ${cfg.color}`}>
-                    {cfg.label}
-                  </span>
-                </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
-              </button>
-
-              {/* Expanded Details */}
-              <AnimatePresence>
-                {isExpanded && (
-                  <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
-                    <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
-                      {/* Meta Grid */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-xl bg-muted/50 p-2.5">
-                          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Recipient</p>
-                          <p className="text-[11px] font-semibold text-foreground truncate">{inv.client_email}</p>
-                        </div>
-                        <div className="rounded-xl bg-muted/50 p-2.5">
-                          <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Due Date</p>
-                          <p className={`text-[11px] font-semibold ${isDue ? 'text-red-600' : 'text-foreground'}`}>{formatDate(inv.due_date)}</p>
-                        </div>
-                        {inv.sent_at && (
-                          <div className="rounded-xl bg-muted/50 p-2.5">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-0.5">Sent</p>
-                            <p className="text-[11px] font-semibold text-foreground">{formatDate(inv.sent_at)}</p>
-                          </div>
-                        )}
-                        {inv.paid_at && (
-                          <div className="rounded-xl bg-emerald-50 p-2.5">
-                            <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-600 mb-0.5">Paid</p>
-                            <p className="text-[11px] font-semibold text-emerald-700">{formatDate(inv.paid_at)}</p>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Line Items */}
-                      <div>
-                        <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Line Items</p>
-                        <div className="rounded-xl border border-border overflow-hidden">
-                          {inv.items.map((item, idx) => (
-                            <div key={idx} className={`flex justify-between items-center px-3 py-2.5 text-[11px] ${idx < inv.items.length - 1 ? 'border-b border-border' : ''}`}>
-                              <div>
-                                <p className="font-semibold text-foreground">{item.description}</p>
-                                <p className="text-[9px] text-muted-foreground">{item.quantity} × {Number(item.unitPrice).toLocaleString()} {inv.currency}</p>
-                              </div>
-                              <p className="font-bold text-foreground">{(item.quantity * item.unitPrice).toLocaleString()}</p>
-                            </div>
-                          ))}
-                          <div className="flex justify-between items-center px-3 py-2.5 bg-muted/50 border-t border-border">
-                            <p className="text-[11px] font-bold text-foreground">Total</p>
-                            <p className="text-sm font-bold text-foreground">{Number(inv.amount).toLocaleString()} {inv.currency}</p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {inv.notes && (
-                        <p className="text-[11px] text-muted-foreground italic border-l-2 border-muted pl-3">{inv.notes}</p>
-                      )}
-
-                      {/* Actions */}
-                      {inv.status !== 'paid' && (
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="rounded-xl text-[10px] h-8 flex-1"
-                            onClick={() => handleResend(inv)} disabled={sendingId === inv.id}>
-                            {sendingId === inv.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="mr-1 h-3 w-3" strokeWidth={1.5} />}
-                            {inv.sent_at ? 'Resend' : 'Send'}
-                          </Button>
-                          <Button size="sm" className="rounded-xl text-[10px] h-8 flex-1 bg-emerald-600 hover:bg-emerald-700"
-                            onClick={() => handleMarkPaid(inv)}>
-                            <CheckCircle2 className="mr-1 h-3 w-3" strokeWidth={1.5} /> Mark Paid
-                          </Button>
+              {/* Coloured wrapper with left accent stripe */}
+              <div className="flex">
+                <div className={`w-1.5 rounded-l-2xl bg-gradient-to-b ${stripeColor}`} />
+                <div className={`flex-1 bg-card border border-l-0 rounded-r-2xl ${isExpanded ? 'border-primary/25' : 'border-border'}`}>
+                  
+                  {/* Card Header */}
+                  <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="flex items-center gap-3 p-4 w-full text-left">
+                    {/* Status Icon with gradient bg */}
+                    <div className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${cfg.bg} ring-1 ${cfg.ring}`}>
+                      <StatusIcon className={`h-5 w-5 ${cfg.color}`} strokeWidth={1.5} />
+                      {inv.status === 'paid' && (
+                        <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 flex items-center justify-center">
+                          <CheckCircle2 className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />
                         </div>
                       )}
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-sm font-bold text-foreground truncate">{inv.client_name}</p>
+                        {isDue && (
+                          <span className="text-[8px] font-bold text-white bg-gradient-to-r from-red-500 to-red-600 px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse">
+                            Overdue
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[10px] font-mono text-muted-foreground">{inv.invoice_number}</span>
+                        <span className="text-muted-foreground/40">·</span>
+                        <span className="text-[10px] text-muted-foreground">{formatDate(inv.created_at)}</span>
+                      </div>
+                    </div>
+
+                    {/* Amount */}
+                    <div className="text-right flex flex-col items-end gap-1.5">
+                      <p className="text-[15px] font-extrabold text-foreground">{Number(inv.amount).toLocaleString()} <span className="text-[9px] text-muted-foreground font-semibold">{inv.currency}</span></p>
+                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cfg.bg} ${cfg.color} ring-1 ${cfg.ring}`}>
+                        <StatusIcon className="h-2.5 w-2.5" strokeWidth={2} />
+                        {cfg.label}
+                      </span>
+                    </div>
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
+                  </button>
+
+                  {/* Expanded Details */}
+                  <AnimatePresence>
+                    {isExpanded && (
+                      <motion.div initial={{ height: 0 }} animate={{ height: 'auto' }} exit={{ height: 0 }} className="overflow-hidden">
+                        <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
+                          {/* Meta Grid */}
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 p-2.5">
+                              <p className="text-[9px] font-bold uppercase tracking-wider text-blue-500 mb-0.5">Recipient</p>
+                              <p className="text-[11px] font-semibold text-foreground truncate">{inv.client_email}</p>
+                            </div>
+                            <div className={`rounded-xl p-2.5 border ${isDue ? 'bg-red-50/60 dark:bg-red-950/20 border-red-100 dark:border-red-900/40' : 'bg-muted/50 border-border'}`}>
+                              <p className={`text-[9px] font-bold uppercase tracking-wider mb-0.5 ${isDue ? 'text-red-500' : 'text-muted-foreground'}`}>Due Date</p>
+                              <p className={`text-[11px] font-semibold ${isDue ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>{formatDate(inv.due_date)}</p>
+                            </div>
+                            {inv.sent_at && (
+                              <div className="rounded-xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-100 dark:border-indigo-900/40 p-2.5">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-indigo-500 mb-0.5">Sent</p>
+                                <p className="text-[11px] font-semibold text-foreground">{formatDate(inv.sent_at)}</p>
+                              </div>
+                            )}
+                            {inv.paid_at && (
+                              <div className="rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-2.5">
+                                <p className="text-[9px] font-bold uppercase tracking-wider text-emerald-500 mb-0.5">Paid</p>
+                                <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">{formatDate(inv.paid_at)}</p>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Line Items */}
+                          <div>
+                            <p className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Line Items</p>
+                            <div className="rounded-xl border border-border overflow-hidden">
+                              {inv.items.map((item, idx) => (
+                                <div key={idx} className={`flex justify-between items-center px-3 py-2.5 text-[11px] ${idx % 2 === 0 ? 'bg-muted/20' : 'bg-card'} ${idx < inv.items.length - 1 ? 'border-b border-border/50' : ''}`}>
+                                  <div>
+                                    <p className="font-semibold text-foreground">{item.description}</p>
+                                    <p className="text-[9px] text-muted-foreground">{item.quantity} × {Number(item.unitPrice).toLocaleString()} {inv.currency}</p>
+                                  </div>
+                                  <p className="font-bold text-foreground">{(item.quantity * item.unitPrice).toLocaleString()}</p>
+                                </div>
+                              ))}
+                              <div className="flex justify-between items-center px-3 py-3 bg-gradient-to-r from-primary/5 to-primary/10 border-t border-primary/15">
+                                <p className="text-[11px] font-bold text-primary">Total</p>
+                                <p className="text-sm font-extrabold text-primary">{Number(inv.amount).toLocaleString()} {inv.currency}</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {inv.notes && (
+                            <p className="text-[11px] text-muted-foreground italic border-l-2 border-primary/30 pl-3 bg-primary/5 rounded-r-lg py-2 pr-3">{inv.notes}</p>
+                          )}
+
+                          {/* Actions */}
+                          {inv.status !== 'paid' && (
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" className="rounded-xl text-[10px] h-9 flex-1 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/30"
+                                onClick={() => handleResend(inv)} disabled={sendingId === inv.id}>
+                                {sendingId === inv.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <Send className="mr-1.5 h-3 w-3" strokeWidth={1.5} />}
+                                {inv.sent_at ? 'Resend' : 'Send'}
+                              </Button>
+                              <Button size="sm" className="rounded-xl text-[10px] h-9 flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-sm shadow-emerald-500/20"
+                                onClick={() => handleMarkPaid(inv)}>
+                                <CheckCircle2 className="mr-1.5 h-3 w-3" strokeWidth={1.5} /> Mark Paid
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </div>
             </motion.div>
           );
         })}
