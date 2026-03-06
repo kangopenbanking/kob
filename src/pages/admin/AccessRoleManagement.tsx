@@ -74,6 +74,7 @@ export default function AccessRoleManagement() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [selectedRole, setSelectedRole] = useState("");
+  const [customRoleName, setCustomRoleName] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [permRole, setPermRole] = useState<string>("admin");
 
