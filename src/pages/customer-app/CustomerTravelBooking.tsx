@@ -67,7 +67,7 @@ const CustomerTravelBooking: React.FC = () => {
         const genders: Record<string, Gender> = {};
         (existingTickets || []).forEach((t: any) => {
           booked.push(t.seat_label);
-          genders[t.seat_label] = Math.random() > 0.5 ? 'male' : 'female';
+          genders[t.seat_label] = (t.passenger_gender === 'female') ? 'female' : 'male';
         });
         setBookedSeats(booked);
         setBookedSeatGenders(genders);
