@@ -372,10 +372,10 @@ const CustomerInvoices: React.FC = () => {
                 <div className={`flex-1 bg-card border border-l-0 rounded-r-2xl ${isExpanded ? 'border-primary/25' : 'border-border'}`}>
                   
                   {/* Card Header */}
-                  <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="flex items-center gap-3 p-4 w-full text-left">
+                  <button onClick={() => setExpandedId(isExpanded ? null : inv.id)} className="flex items-center gap-2 sm:gap-3 p-3 sm:p-4 w-full text-left">
                     {/* Status Icon with gradient bg */}
-                    <div className={`relative flex h-12 w-12 items-center justify-center rounded-2xl ${cfg.bg} ring-1 ${cfg.ring}`}>
-                      <StatusIcon className={`h-5 w-5 ${cfg.color}`} strokeWidth={1.5} />
+                    <div className={`relative flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl ${cfg.bg} ring-1 ${cfg.ring}`}>
+                      <StatusIcon className={`h-4 w-4 sm:h-5 sm:w-5 ${cfg.color}`} strokeWidth={1.5} />
                       {inv.status === 'paid' && (
                         <div className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-emerald-500 flex items-center justify-center">
                           <CheckCircle2 className="h-2.5 w-2.5 text-white" strokeWidth={2.5} />
@@ -384,31 +384,31 @@ const CustomerInvoices: React.FC = () => {
                     </div>
 
                     {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-bold text-foreground truncate">{inv.client_name}</p>
+                    <div className="flex-1 min-w-0 overflow-hidden">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="text-xs sm:text-sm font-bold text-foreground truncate max-w-[120px] sm:max-w-none">{inv.client_name}</p>
                         {isDue && (
-                          <span className="text-[8px] font-bold text-white bg-gradient-to-r from-red-500 to-red-600 px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse">
+                          <span className="text-[8px] font-bold text-white bg-gradient-to-r from-red-500 to-red-600 px-1.5 py-0.5 rounded-md uppercase tracking-wider animate-pulse shrink-0">
                             Overdue
                           </span>
                         )}
                       </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[10px] font-mono text-muted-foreground">{inv.invoice_number}</span>
-                        <span className="text-muted-foreground/40">·</span>
-                        <span className="text-[10px] text-muted-foreground">{formatDate(inv.created_at)}</span>
+                      <div className="flex items-center gap-1 sm:gap-1.5 mt-0.5 overflow-hidden">
+                        <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground truncate">{inv.invoice_number}</span>
+                        <span className="text-muted-foreground/40 shrink-0">·</span>
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground shrink-0">{formatDate(inv.created_at)}</span>
                       </div>
                     </div>
 
                     {/* Amount */}
-                    <div className="text-right flex flex-col items-end gap-1.5">
-                      <p className="text-[15px] font-extrabold text-foreground">{Number(inv.amount).toLocaleString()} <span className="text-[9px] text-muted-foreground font-semibold">{inv.currency}</span></p>
-                      <span className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-wider ${cfg.bg} ${cfg.color} ring-1 ${cfg.ring}`}>
-                        <StatusIcon className="h-2.5 w-2.5" strokeWidth={2} />
+                    <div className="text-right flex flex-col items-end gap-1 shrink-0">
+                      <p className="text-xs sm:text-[15px] font-extrabold text-foreground whitespace-nowrap">{Number(inv.amount).toLocaleString()} <span className="text-[8px] sm:text-[9px] text-muted-foreground font-semibold">{inv.currency}</span></p>
+                      <span className={`inline-flex items-center gap-0.5 sm:gap-1 rounded-full px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[9px] font-bold uppercase tracking-wider ${cfg.bg} ${cfg.color} ring-1 ${cfg.ring}`}>
+                        <StatusIcon className="h-2 w-2 sm:h-2.5 sm:w-2.5" strokeWidth={2} />
                         {cfg.label}
                       </span>
                     </div>
-                    <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
+                    <ChevronDown className={`h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground transition-transform duration-200 shrink-0 ${isExpanded ? 'rotate-180' : ''}`} strokeWidth={1.5} />
                   </button>
 
                   {/* Expanded Details */}
