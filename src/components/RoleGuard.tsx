@@ -108,7 +108,7 @@ export const RoleGuard = ({ children, allowedRoles, redirectTo = '/dashboard' }:
             continue;
           }
 
-          // For merchant role, check via has_role
+          // For merchant role, check via has_role OR merchant_staff_roles
           if (role === 'merchant') {
             const { data: isMerchant } = await supabase.rpc('has_role', {
               _user_id: user.id,
@@ -116,6 +116,21 @@ export const RoleGuard = ({ children, allowedRoles, redirectTo = '/dashboard' }:
             });
 
             if (isMerchant) {
+              setAuthorized(true);
+              setLoading(false);
+              return;
+            }
+
+            // Also check if user is active merchant staff
+            const { data: merchantStaff } = await supabase
+              .from('merchant_staff_roles')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('is_active', true)
+              .limit(1)
+              .maybeSingle();
+
+            if (merchantStaff) {
               setAuthorized(true);
               setLoading(false);
               return;
