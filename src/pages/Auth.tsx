@@ -498,6 +498,24 @@ export default function Auth() {
                 </div>
               )}
 
+              {/* Merchant Staff Login Link */}
+              {!showForgotPassword && (
+                <button
+                  type="button"
+                  onClick={() => navigate('/staff-login')}
+                  className="flex items-center gap-3 w-full rounded-lg border-2 border-dashed border-border p-3 text-left transition-all hover:border-primary/50 hover:bg-primary/5"
+                >
+                  <Bus className="h-5 w-5 text-muted-foreground" />
+                  <div className="flex-1">
+                    <span className="text-sm font-medium">Merchant Staff Login</span>
+                    <p className="text-xs text-muted-foreground">
+                      Travel & transport staff — login with email or PIN
+                    </p>
+                  </div>
+                  <ArrowLeft className="h-4 w-4 text-muted-foreground rotate-180" />
+                </button>
+              )}
+
               <div className="space-y-2">
                 <Label>Security Check</Label>
                 <p className="text-lg font-semibold text-center py-4 bg-muted rounded-md">
