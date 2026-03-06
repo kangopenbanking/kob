@@ -252,7 +252,7 @@ export default function AccessRoleManagement() {
       </div>
 
       {/* Role Distribution Cards */}
-      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4 lg:grid-cols-8">
         {SYSTEM_ROLES.map(role => {
           const count = roleCounts[role];
           const isActive = roleFilter === role;
