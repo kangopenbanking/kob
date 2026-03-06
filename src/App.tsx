@@ -324,6 +324,7 @@ import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounter
 import MerchantTravelDiscounts from "./pages/merchant/MerchantTravelDiscounts";
 import MerchantTravelNotifications from "./pages/merchant/MerchantTravelNotifications";
 import MerchantTravelStaffRoles from "./pages/merchant/MerchantTravelStaffRoles";
+import StaffLogin from "./pages/merchant/StaffLogin";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
@@ -757,6 +758,7 @@ function App() {
             <Route path="/njangi" element={<Layout><NjangiInfo /></Layout>} />
             <Route path="/rent-reporting" element={<Layout><RentReportingInfo /></Layout>} />
             <Route path="/auth" element={<Layout showFooter={false}><Auth /></Layout>} />
+            <Route path="/staff-login" element={<StaffLogin />} />
             <Route path="/setup-pin" element={<MandatoryPinSetup />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             {/* Banking App redirects for legacy /banking-app paths */}
