@@ -214,14 +214,14 @@ const CustomerInvoices: React.FC = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-2">
         {([
-          { label: 'Received', value: stats.paid, color: 'emerald' },
-          { label: 'Pending', value: stats.pending, color: 'amber' },
-          { label: 'Overdue', value: stats.overdue, color: 'red' },
+          { label: 'Received', value: stats.paid, bg: 'bg-emerald-50 dark:bg-emerald-950/40', border: 'border-emerald-200 dark:border-emerald-800', text: 'text-emerald-700 dark:text-emerald-400', sub: 'text-emerald-500 dark:text-emerald-500' },
+          { label: 'Pending', value: stats.pending, bg: 'bg-amber-50 dark:bg-amber-950/40', border: 'border-amber-200 dark:border-amber-800', text: 'text-amber-700 dark:text-amber-400', sub: 'text-amber-500 dark:text-amber-500' },
+          { label: 'Overdue', value: stats.overdue, bg: 'bg-red-50 dark:bg-red-950/40', border: 'border-red-200 dark:border-red-800', text: 'text-red-700 dark:text-red-400', sub: 'text-red-500 dark:text-red-500' },
         ] as const).map(s => (
-          <div key={s.label} className="rounded-2xl bg-card border border-border p-3 text-center">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{s.label}</p>
-            <p className="text-sm font-bold text-foreground mt-0.5">{s.value.toLocaleString()}</p>
-            <p className="text-[9px] text-muted-foreground">XAF</p>
+          <div key={s.label} className={`rounded-2xl ${s.bg} border ${s.border} p-3 text-center`}>
+            <p className={`text-[10px] font-bold uppercase tracking-wider ${s.sub}`}>{s.label}</p>
+            <p className={`text-sm font-bold ${s.text} mt-0.5`}>{s.value.toLocaleString()}</p>
+            <p className={`text-[9px] ${s.sub}`}>XAF</p>
           </div>
         ))}
       </div>
@@ -240,7 +240,7 @@ const CustomerInvoices: React.FC = () => {
       <AnimatePresence>
         {showCreate && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }}
-            className="overflow-hidden rounded-3xl border border-primary/20 bg-card shadow-lg">
+            className="overflow-hidden rounded-3xl border-2 border-primary/30 bg-gradient-to-b from-primary/5 via-card to-card shadow-lg shadow-primary/5">
             <div className="flex flex-col gap-4 p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
