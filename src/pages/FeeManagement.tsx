@@ -239,6 +239,10 @@ export default function FeeManagement() {
         <TabsContent value="analytics">
           <FeeAnalytics transactionFees={filteredFees} feeStructures={filteredStructures} />
         </TabsContent>
+
+        <TabsContent value="limits">
+          <LimitsChargesTab />
+        </TabsContent>
       </Tabs>
 
       {/* Create Fee Structure Dialog */}
