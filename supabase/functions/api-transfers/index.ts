@@ -82,13 +82,15 @@ serve(async (req) => {
     }
 
     // Check source account balance — try InterimAvailable first, then ClosingAvailable
+    // SECURITY: Filter by credit_debit_indicator='Credit' to ensure accurate available funds
     let sourceBalance = null;
     const { data: interimBal } = await supabase
       .from('account_balances')
       .select('id, amount, balance_type')
       .eq('account_id', source_account_id)
       .eq('balance_type', 'InterimAvailable')
-      .single();
+      .eq('credit_debit_indicator', 'Credit')
+      .maybeSingle();
 
     if (interimBal) {
       sourceBalance = interimBal;
@@ -98,7 +100,8 @@ serve(async (req) => {
         .select('id, amount, balance_type')
         .eq('account_id', source_account_id)
         .eq('balance_type', 'ClosingAvailable')
-        .single();
+        .eq('credit_debit_indicator', 'Credit')
+        .maybeSingle();
       sourceBalance = closingBal;
     }
 
