@@ -127,7 +127,7 @@ serve(async (req) => {
     }
 
     // Fee calculation per scope
-    const { fee, net } = calculateScopedFee(amount, method, fundingScope);
+    const { fee, net } = await calculateScopedFee(amount, method, fundingScope, supabase, { merchantId, institutionId: null });
 
     const txRef = `fi_${(accountId || merchantId || 'api').toString().slice(0, 8)}_${Date.now()}`;
     let providerRef = '';
