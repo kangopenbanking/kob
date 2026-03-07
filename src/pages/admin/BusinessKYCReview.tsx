@@ -288,23 +288,24 @@ export default function BusinessKYCReview() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Business Documents</p>
                 <div className="grid grid-cols-3 gap-3">
                   {DOCS.map(doc => {
-                    const url = selectedKYB[doc.key];
-                    const isImage = url?.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
+                    const storedPath = selectedKYB[doc.key];
+                    const thumbUrl = resolvedThumbs[doc.key];
+                    const isImage = thumbUrl?.match(/\.(jpg|jpeg|png|webp)(\?|$)/i) || storedPath?.match(/\.(jpg|jpeg|png|webp)/i);
                     return (
                       <button
                         key={doc.key}
                         className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40"
-                        disabled={!url}
-                        onClick={() => openPreview(url, doc.label)}
+                        disabled={!storedPath}
+                        onClick={() => openPreview(storedPath, doc.label)}
                       >
-                        {url && isImage ? (
+                        {thumbUrl && isImage ? (
                           <>
-                            <img src={url} alt={doc.label} className="w-full h-full object-cover" />
+                            <img src={thumbUrl} alt={doc.label} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                               <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           </>
-                        ) : url ? (
+                        ) : storedPath ? (
                           <div className="flex flex-col items-center justify-center h-full gap-1">
                             <FileText className="h-6 w-6 text-muted-foreground/50" />
                             <span className="text-[10px] text-muted-foreground">Click to view</span>
