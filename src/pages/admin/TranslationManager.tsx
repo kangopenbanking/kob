@@ -547,7 +547,9 @@ export default function TranslationManager() {
             ) : (
               <Wand2 className="h-4 w-4" />
             )}
-            Translate All to French
+            {bulkTranslating && bulkProgress.total > 0
+              ? `Translating ${bulkProgress.done}/${bulkProgress.total}...`
+              : "Translate All to French"}
           </Button>
           <Dialog open={showAddDialog} onOpenChange={(o) => { setShowAddDialog(o); if (!o) { resetForm(); setEditingString(null); } }}>
             <DialogTrigger asChild>
