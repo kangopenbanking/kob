@@ -152,11 +152,7 @@ export default function KycDueDiligence() {
   const next = useCallback(() => { setDirection(1); setStep(s => Math.min(s + 1, totalSteps - 1)); }, [totalSteps]);
   const prev = useCallback(() => { setDirection(-1); setStep(s => Math.max(s - 1, 0)); }, []);
 
-  const getPublicUrl = (path: string) => {
-    if (!path) return "";
-    const { data } = supabase.storage.from("kyc-documents").getPublicUrl(path);
-    return data.publicUrl;
-  };
+  // Documents are stored as storage paths (private bucket, signed URLs used for viewing)
 
   const handleSubmit = async () => {
     if (!form.accuracyDeclaration) { toast.error("You must confirm the accuracy declaration."); return; }
@@ -174,9 +170,9 @@ export default function KycDueDiligence() {
             document_number: form.idNumber,
             document_country: form.nationality || "CM",
             document_expiry_date: form.idExpiry,
-            document_front_url: getPublicUrl(docs.idFront),
-            document_back_url: docs.idBack ? getPublicUrl(docs.idBack) : undefined,
-            selfie_url: getPublicUrl(docs.selfie),
+            document_front_url: docs.idFront,
+            document_back_url: docs.idBack || undefined,
+            selfie_url: docs.selfie,
           },
         });
         if (error) throw error;
@@ -192,11 +188,11 @@ export default function KycDueDiligence() {
             business_address: { street: form.addressLine1, city: form.addressCity, country: form.registrationCountry || "CM" },
             business_description: form.businessDescription,
             annual_turnover: form.annualTurnover ? parseFloat(form.annualTurnover) : null,
-            registration_certificate_url: getPublicUrl(docs.registrationCertificate),
-            articles_of_association_url: getPublicUrl(docs.articlesOfAssociation),
-            tax_certificate_url: docs.taxCertificate ? getPublicUrl(docs.taxCertificate) : null,
-            proof_of_address_url: docs.businessProofOfAddress ? getPublicUrl(docs.businessProofOfAddress) : null,
-            bank_statement_url: docs.bankStatement ? getPublicUrl(docs.bankStatement) : null,
+            registration_certificate_url: docs.registrationCertificate,
+            articles_of_association_url: docs.articlesOfAssociation,
+            tax_certificate_url: docs.taxCertificate || null,
+            proof_of_address_url: docs.businessProofOfAddress || null,
+            bank_statement_url: docs.bankStatement || null,
           },
         });
         if (error) throw error;

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getKycDocumentUrl } from "@/lib/kyc-storage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,7 @@ export default function BusinessKYCReview() {
   const [reviewNotes, setReviewNotes] = useState("");
   const [reviewAction, setReviewAction] = useState<"approved" | "rejected">("approved");
   const [searchQuery, setSearchQuery] = useState("");
+  const [resolvedThumbs, setResolvedThumbs] = useState<Record<string, string>>({});
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -78,8 +80,23 @@ export default function BusinessKYCReview() {
     }
   };
 
-  const openPreview = (url: string | null, label: string) => {
-    if (url) { setPreviewUrl(url); setPreviewLabel(label); }
+  const openPreview = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) { setPreviewUrl(signedUrl); setPreviewLabel(label); }
+  };
+
+  const handleOpenDetail = async (kyb: any) => {
+    setSelectedKYB(kyb);
+    setDetailOpen(true);
+    const urls: Record<string, string> = {};
+    for (const doc of DOCS) {
+      if (kyb[doc.key]) {
+        const signed = await getKycDocumentUrl(kyb[doc.key]);
+        if (signed) urls[doc.key] = signed;
+      }
+    }
+    setResolvedThumbs(urls);
   };
 
   const getStatusBadge = (status: string) => {
@@ -172,7 +189,7 @@ export default function BusinessKYCReview() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedKYB(kyb); setDetailOpen(true); }}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDetail(kyb)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                       {kyb.verification_status === "pending" && (
@@ -271,23 +288,24 @@ export default function BusinessKYCReview() {
                 <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Business Documents</p>
                 <div className="grid grid-cols-3 gap-3">
                   {DOCS.map(doc => {
-                    const url = selectedKYB[doc.key];
-                    const isImage = url?.match(/\.(jpg|jpeg|png|webp)(\?|$)/i);
+                    const storedPath = selectedKYB[doc.key];
+                    const thumbUrl = resolvedThumbs[doc.key];
+                    const isImage = thumbUrl?.match(/\.(jpg|jpeg|png|webp)(\?|$)/i) || storedPath?.match(/\.(jpg|jpeg|png|webp)/i);
                     return (
                       <button
                         key={doc.key}
                         className="relative rounded-lg border border-border/60 overflow-hidden aspect-[4/3] bg-muted/30 hover:border-primary/50 transition-colors group disabled:opacity-40"
-                        disabled={!url}
-                        onClick={() => openPreview(url, doc.label)}
+                        disabled={!storedPath}
+                        onClick={() => openPreview(storedPath, doc.label)}
                       >
-                        {url && isImage ? (
+                        {thumbUrl && isImage ? (
                           <>
-                            <img src={url} alt={doc.label} className="w-full h-full object-cover" />
+                            <img src={thumbUrl} alt={doc.label} className="w-full h-full object-cover" />
                             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                               <Eye className="h-5 w-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                             </div>
                           </>
-                        ) : url ? (
+                        ) : storedPath ? (
                           <div className="flex flex-col items-center justify-center h-full gap-1">
                             <FileText className="h-6 w-6 text-muted-foreground/50" />
                             <span className="text-[10px] text-muted-foreground">Click to view</span>

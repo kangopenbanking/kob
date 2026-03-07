@@ -15,21 +15,18 @@ const kycSubmissionSchema = z.object({
     .max(50, 'Document number too long')
     .regex(/^[A-Z0-9-]+$/i, 'Document number must contain only letters, numbers, and hyphens'),
   document_country: z.string()
-    .length(2, 'Country code must be 2 characters')
-    .regex(/^[A-Z]{2}$/i, 'Invalid ISO country code'),
+    .min(2, 'Country code must be at least 2 characters')
+    .max(50, 'Country code too long'),
   document_expiry_date: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format')
     .refine(date => new Date(date) > new Date(), 'Document must not be expired'),
   document_front_url: z.string()
-    .url('Invalid URL format')
-    .startsWith('https://', 'Document URLs must use HTTPS'),
+    .min(1, 'Document front is required'),
   document_back_url: z.string()
-    .url('Invalid URL format')
-    .startsWith('https://', 'Document URLs must use HTTPS')
+    .min(1)
     .optional(),
   selfie_url: z.string()
-    .url('Invalid URL format')
-    .startsWith('https://', 'Selfie URL must use HTTPS')
+    .min(1, 'Selfie is required')
 });
 
 Deno.serve(async (req) => {
