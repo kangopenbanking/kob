@@ -689,10 +689,10 @@ function App() {
             <Route path="/credit-report" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CreditReport /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/credit-api-docs" element={<Layout><CreditAPIDocumentation /></Layout>} />
-            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/banking-ops" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><BankingOps /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><DashboardLayout><ProfileSettings /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/profile-settings" element={<Layout><ProtectedRoute><ProfileSettings /></ProtectedRoute></Layout>} />
+            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/banking-ops" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><BankingOps /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><ProfileSettings /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/profile-settings" element={<Layout><ProtectedRoute><NonInstitutionRoute><ProfileSettings /></NonInstitutionRoute></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
             <Route path="/cookies" element={<Layout><Cookies /></Layout>} />
