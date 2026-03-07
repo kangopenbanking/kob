@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
     // Return registration response
     const response = {
       client_id: registration.client_id,
-      client_secret: registration.client_secret,
+      client_secret: clientSecret, // Return plaintext only once at registration time
       client_name: registration.client_name,
       software_id: registration.software_id,
       software_roles: registration.software_roles,
