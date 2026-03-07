@@ -57,8 +57,8 @@ export default function FeeManagement() {
     try {
       const [instRes, feeRes, feesRes, invRes] = await Promise.all([
         supabase.from('institutions').select('id, institution_name, status').eq('status', 'approved').order('institution_name'),
-        supabase.from('fee_structures').select('*, institutions(institution_name)').order('created_at', { ascending: false }),
-        supabase.from('transaction_fees').select('*, institutions(institution_name)').order('transaction_date', { ascending: false }).limit(200),
+        supabase.from('fee_structures').select('*, institutions!fee_structures_institution_id_fkey(institution_name)').order('created_at', { ascending: false }),
+        supabase.from('transaction_fees').select('*, institutions!transaction_fees_institution_id_fkey(institution_name)').order('transaction_date', { ascending: false }).limit(200),
         supabase.from('institution_invoices').select('*, institutions(institution_name)').order('created_at', { ascending: false }).limit(50),
       ]);
       setInstitutions(instRes.data || []);
