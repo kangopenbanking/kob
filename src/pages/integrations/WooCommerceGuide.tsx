@@ -540,8 +540,8 @@ const WooCommerceGuide = () => {
             </CardHeader>
             <CardContent className="text-center space-y-6">
               <div>
-                <div className="text-5xl font-bold text-[#96588a] mb-2">3.5%</div>
-                <div className="text-muted-foreground">+ 100 XAF per transaction</div>
+                <div className="text-5xl font-bold text-[#96588a] mb-2">Low Fees</div>
+                <div className="text-muted-foreground">Dynamic rates per channel — view in merchant dashboard</div>
               </div>
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">✓ Free plugin download</p>

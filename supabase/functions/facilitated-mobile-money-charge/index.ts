@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -51,7 +52,7 @@ serve(async (req) => {
     // Generate transaction reference
     const transactionRef = `KOB-MM-${Date.now()}-${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
 
-    // Calculate KOB fee
+    // Calculate KOB fee using unified fee engine
     let kobFeeAmount = 0;
     if (institution.kob_payment_fee_structure_id) {
       const { data: feeCalc } = await supabase.rpc('calculate_transaction_fee', {
@@ -64,8 +65,9 @@ serve(async (req) => {
         kobFeeAmount = feeCalc.final_fee || 0;
       }
     } else {
-      // Default fee: 3.5% + 100 XAF
-      kobFeeAmount = (amount * 0.035) + 100;
+      // Dynamic fallback: query fee_structures via gateway adapter
+      const feeResult = await calculateGatewayFee(amount, 'mobile_money', supabase, { institutionId: institution.id });
+      kobFeeAmount = feeResult.fee;
     }
 
     // Insert pending transaction

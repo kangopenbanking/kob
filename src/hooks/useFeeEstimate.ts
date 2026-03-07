@@ -33,7 +33,9 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   gateway_payout: "gateway_payout",
 };
 
-// Hardcoded fallback rates (backward compatibility)
+// Last-resort fallback rates — only used when fee_structures DB has no matching row.
+// These MUST stay in sync with the platform-scope fee_structures entries.
+// Prefer adding fee_structures rows in the admin panel instead of relying on these.
 const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   mobile_money_charge: { rate: 0.03, fixed: 50 },
   card_payment: { rate: 0.035, fixed: 100 },
@@ -44,6 +46,8 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   virtual_card_topup: { rate: 0.015, fixed: 0 },
   withdrawal: { rate: 0.015, fixed: 0 },
   fx_conversion: { rate: 0.015, fixed: 0 },
+  gateway_charge: { rate: 0.03, fixed: 50 },
+  gateway_payout: { rate: 0.02, fixed: 75 },
 };
 
 interface UseFeeEstimateOptions {
@@ -121,7 +125,8 @@ export function useFeeEstimate({
       return null;
     },
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutes — fee structures change infrequently but should sync reasonably fast
+    refetchOnWindowFocus: true, // Re-validate fees when user returns to tab
   });
 
   const rate = dbFee?.rate ?? FALLBACK_RATES[txType]?.rate ?? 0.035;

@@ -45,7 +45,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">End-users fund their own KOB banking accounts. The API validates that <code>account.user_id</code> matches the authenticated user.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> Bearer JWT token</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>account_balances</code></p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Standard tier (2.5%–3.5% depending on method)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Dynamically resolved from <code>fee_structures</code> (platform scope). Use <code>/gateway-fee-estimate?amount=X&channel=mobile_money</code> to preview.</p>
           </TabsContent>
 
           <TabsContent value="merchant" className="space-y-3 mt-4">
@@ -53,7 +53,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">Merchants fund their gateway wallet balance. Requires <code>merchant_id</code> and validates ownership via <code>gateway_merchants.user_id</code>.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> Bearer JWT token (merchant user)</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>gateway_merchant_wallets</code> (available_balance)</p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Merchant tier (2% flat)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Merchant-scope fees from <code>fee_structures</code>. Use <code>/gateway-fee-estimate?amount=X&channel=mobile_money&merchant_id=UUID</code> to preview.</p>
             <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
 {`{
   "amount": 500000,
@@ -70,7 +70,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">Institution owners or staff fund internal clearing/float accounts. Validates ownership via <code>institutions.user_id</code> or <code>staff_assignments</code>.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> Bearer JWT token (institution owner or staff)</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>account_balances</code> (institution-scoped account)</p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution tier (1.5%)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution-scope fees from <code>fee_structures</code>. Use <code>/gateway-fee-estimate?amount=X&channel=bank_transfer&institution_id=UUID</code> to preview.</p>
             <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
 {`{
   "amount": 1000000,
@@ -87,7 +87,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">External fintech apps credit a customer's KOB account after successful payment. Uses OAuth <code>client_credentials</code> grant — no user JWT needed.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> OAuth access_token (from <code>/oauth/token</code> with <code>grant_type=client_credentials</code>)</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>account_balances</code> (customer account within institution scope)</p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution tier (1.5%)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution-scope fees from <code>fee_structures</code>.</p>
 
             <Card className="bg-muted/50">
               <CardHeader className="pb-2"><CardTitle className="text-sm">Step 1: Get access token</CardTitle></CardHeader>
@@ -272,25 +272,23 @@ const FundingIntentsGuide = () => (
     <Card>
       <CardHeader>
         <CardTitle>Fee Schedule by Scope</CardTitle>
-        <CardDescription>Fees vary by consumer type and payment method</CardDescription>
+        <CardDescription>Fees are dynamically resolved from the <code>fee_structures</code> table (merchant → institution → platform fallback). Use the <code>/gateway-fee-estimate</code> API to preview real-time fees.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="font-semibold mb-2">End User (Standard)</p>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            <div><p className="font-medium">Mobile Money</p><p className="text-muted-foreground">2.5%</p></div>
-            <div><p className="font-medium">Card</p><p className="text-muted-foreground">3.5% + 100 XAF</p></div>
-            <div><p className="font-medium">PayPal</p><p className="text-muted-foreground">3.5% + 150 XAF</p></div>
-            <div><p className="font-medium">Bank Transfer</p><p className="text-muted-foreground">2% + 75 XAF</p></div>
-          </div>
+          <p className="font-semibold mb-2">End User (Platform Scope)</p>
+          <p className="text-sm text-muted-foreground">Fees configured in the admin Fee Management panel under <strong>platform</strong> scope. Varies by payment method.</p>
         </div>
         <div>
           <p className="font-semibold mb-2">Merchant</p>
-          <p className="text-sm text-muted-foreground">Flat <strong>2%</strong> across all methods</p>
+          <p className="text-sm text-muted-foreground">Merchant-scope overrides in <strong>fee_structures</strong>. Falls back to platform scope if no merchant-specific entry exists.</p>
         </div>
         <div>
           <p className="font-semibold mb-2">Institution / External API</p>
-          <p className="text-sm text-muted-foreground">Flat <strong>1.5%</strong> across all methods</p>
+          <p className="text-sm text-muted-foreground">Institution-scope overrides in <strong>fee_structures</strong>. Falls back to platform scope if no institution-specific entry exists.</p>
+        </div>
+        <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+          <strong>Preview API:</strong> <code>GET /gateway-fee-estimate?amount=10000&channel=mobile_money&merchant_id=UUID&institution_id=UUID</code>
         </div>
       </CardContent>
     </Card>
