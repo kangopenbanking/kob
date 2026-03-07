@@ -171,9 +171,9 @@ export default function KycDueDiligence() {
             document_number: form.idNumber,
             document_country: form.nationality || "CM",
             document_expiry_date: form.idExpiry,
-            document_front_url: getPublicUrl(docs.idFront),
-            document_back_url: docs.idBack ? getPublicUrl(docs.idBack) : undefined,
-            selfie_url: getPublicUrl(docs.selfie),
+            document_front_url: docs.idFront,
+            document_back_url: docs.idBack || undefined,
+            selfie_url: docs.selfie,
           },
         });
         if (error) throw error;
