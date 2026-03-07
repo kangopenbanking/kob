@@ -110,7 +110,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
   };
 
   const canProceed = () => {
-    if (step === 1) return formData.institution_id && formData.transaction_type;
+    if (step === 1) return (formData.fee_scope === 'platform' || formData.institution_id) && formData.transaction_type;
     if (step === 2) return formData.fee_model;
     return true;
   };
