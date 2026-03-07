@@ -10,6 +10,7 @@ import {
   Wallet, 
   ArrowUpRight, 
   ArrowDownLeft,
+  ArrowDownToLine,
   Send,
   Download,
   Plus,
@@ -99,8 +100,11 @@ const PersonalAccounts = () => {
       case 'transfer':
         navigate('/payments', { state: { tab: 'bank-transfer' } });
         break;
+      case 'fund':
+        navigate('/fund-account');
+        break;
       case 'pay-bills':
-        toast({ title: "Coming soon", description: "Bill payment feature will be available soon." });
+        navigate('/payments', { state: { tab: 'mobile-money' } });
         break;
       case 'mobile-money':
         navigate('/mobile-money');
@@ -203,6 +207,10 @@ const PersonalAccounts = () => {
                   <Button variant="outline" className="w-full justify-start" onClick={() => handleQuickAction('transfer')}>
                     <Send className="mr-2 h-4 w-4" />
                     Send Money
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => handleQuickAction('fund')}>
+                    <ArrowDownToLine className="mr-2 h-4 w-4" />
+                    Fund Account
                   </Button>
                   <Button variant="outline" className="w-full justify-start" onClick={() => handleQuickAction('mobile-money')}>
                     <ArrowUpRight className="mr-2 h-4 w-4" />

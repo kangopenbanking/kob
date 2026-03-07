@@ -1,12 +1,14 @@
-import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Smartphone, CreditCard, Building2 } from "lucide-react";
 import { CardPaymentForm } from "@/components/payments/CardPaymentForm";
 import { BankTransferForm } from "@/components/payments/BankTransferForm";
 import MobileMoney from "./MobileMoney";
+import { useLocation } from "react-router-dom";
 
 const Payments = () => {
+  const location = useLocation();
+  const initialTab = (location.state as any)?.tab || "mobile-money";
+
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="mb-8">
@@ -16,7 +18,7 @@ const Payments = () => {
         </p>
       </div>
 
-      <Tabs defaultValue="mobile-money" className="space-y-6">
+      <Tabs defaultValue={initialTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="mobile-money" className="flex items-center gap-2">
             <Smartphone className="h-4 w-4" />
