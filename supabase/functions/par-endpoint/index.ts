@@ -41,7 +41,7 @@ Deno.serve(async (req) => {
     // Verify client exists and is active
     const { data: client, error: clientError } = await supabase
       .from('tpp_registrations')
-      .select('*')
+      .select('client_id, client_name, software_roles, redirect_uris, is_active, institution_id, token_endpoint_auth_method, require_mtls, scope')
       .eq('client_id', clientId)
       .eq('is_active', true)
       .single();
