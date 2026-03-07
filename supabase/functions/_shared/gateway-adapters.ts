@@ -192,7 +192,6 @@ export const ZERO_DECIMAL_CURRENCIES = ['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf'
 export function toStripeAmount(amount: number, currency: string): number {
   return ZERO_DECIMAL_CURRENCIES.includes(currency.toLowerCase()) ? Math.round(amount) : Math.round(amount * 100);
 }
-}
 
 export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResult> {
   const STRIPE_SECRET = typeof Deno !== "undefined" ? Deno.env.get('STRIPE_SECRET_KEY') : undefined;
