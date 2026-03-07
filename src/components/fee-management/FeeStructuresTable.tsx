@@ -1,9 +1,15 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MoreHorizontal, Pencil, Power, PowerOff, Trash2, Copy, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  MoreHorizontal, Pencil, Power, PowerOff, Trash2, Copy, ChevronDown, ChevronUp,
+  ArrowLeftRight, CreditCard, Receipt, Smartphone, PhoneCall, Landmark,
+  QrCode, PiggyBank, Users, Home, ArrowUpFromLine, ArrowDownToLine,
+  Wallet, Globe2, Hash, Banknote, Zap, Send, Lock, Plug, Radio, FileText,
+  Plus, RefreshCw, Search, LayoutGrid, List, Filter,
+} from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -14,6 +20,8 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
 interface FeeStructuresTableProps {
   structures: any[];
@@ -22,17 +30,73 @@ interface FeeStructuresTableProps {
 }
 
 const MODEL_COLORS: Record<string, string> = {
-  fixed: "bg-emerald-500/10 text-emerald-700 border-emerald-200",
-  percentage: "bg-blue-500/10 text-blue-700 border-blue-200",
-  hybrid: "bg-purple-500/10 text-purple-700 border-purple-200",
-  tiered: "bg-amber-500/10 text-amber-700 border-amber-200",
+  fixed: "bg-emerald-500/10 text-emerald-700 border-emerald-200 dark:text-emerald-400 dark:border-emerald-800",
+  percentage: "bg-blue-500/10 text-blue-700 border-blue-200 dark:text-blue-400 dark:border-blue-800",
+  hybrid: "bg-purple-500/10 text-purple-700 border-purple-200 dark:text-purple-400 dark:border-purple-800",
+  tiered: "bg-amber-500/10 text-amber-700 border-amber-200 dark:text-amber-400 dark:border-amber-800",
 };
+
+const TX_TYPE_META: Record<string, { icon: any; category: string; label: string }> = {
+  transfer: { icon: ArrowLeftRight, category: "Core", label: "Account Transfer" },
+  payment: { icon: CreditCard, category: "Core", label: "Payment" },
+  bill_payment: { icon: Receipt, category: "Core", label: "Bill Payment" },
+  mobile_money_transfer: { icon: Smartphone, category: "Mobile", label: "Mobile Money Transfer" },
+  mobile_money_charge: { icon: PhoneCall, category: "Mobile", label: "Mobile Money Charge" },
+  bank_transfer: { icon: Landmark, category: "Core", label: "Bank Transfer" },
+  card_payment: { icon: CreditCard, category: "Cards", label: "Card Payment" },
+  virtual_card_topup: { icon: RefreshCw, category: "Cards", label: "Virtual Card Top-up" },
+  qr_payment: { icon: QrCode, category: "Core", label: "QR Payment" },
+  piggybank_deposit: { icon: PiggyBank, category: "Savings", label: "Piggy Bank Deposit" },
+  piggybank_withdrawal: { icon: PiggyBank, category: "Savings", label: "Piggy Bank Withdrawal" },
+  njangi_contribution: { icon: Users, category: "Social", label: "Njangi Contribution" },
+  njangi_payout: { icon: Users, category: "Social", label: "Njangi Payout" },
+  rent_payment: { icon: Home, category: "Core", label: "Rent Payment" },
+  loan_disbursement: { icon: ArrowUpFromLine, category: "Lending", label: "Loan Disbursement" },
+  loan_repayment: { icon: ArrowDownToLine, category: "Lending", label: "Loan Repayment" },
+  savings_deposit: { icon: Wallet, category: "Savings", label: "Savings Deposit" },
+  savings_withdrawal: { icon: Wallet, category: "Savings", label: "Savings Withdrawal" },
+  international_transfer: { icon: Globe2, category: "International", label: "International Transfer" },
+  ussd_payment: { icon: Hash, category: "Mobile", label: "USSD Payment" },
+  withdrawal: { icon: Banknote, category: "Core", label: "Cash Out" },
+  account_funding: { icon: Plus, category: "Core", label: "Account Funding" },
+  gateway_charge: { icon: Zap, category: "Gateway", label: "Gateway Charge" },
+  gateway_payout: { icon: Send, category: "Gateway", label: "Gateway Payout" },
+  paypal_payment: { icon: Globe2, category: "International", label: "PayPal Payment" },
+  fx_conversion: { icon: ArrowLeftRight, category: "International", label: "FX Conversion" },
+  escrow_payment: { icon: Lock, category: "Core", label: "Escrow Payment" },
+  api_request: { icon: Plug, category: "Gateway", label: "API Request" },
+  mobile_recharge: { icon: Radio, category: "Mobile", label: "Mobile Recharge" },
+  invoice_create: { icon: FileText, category: "Core", label: "Invoice Create" },
+};
+
+const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Savings", "Lending", "Social", "International", "Gateway"];
+
+const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; icon: any }> = {
+  Core: { bg: "bg-blue-500/5", border: "border-blue-200 dark:border-blue-800", text: "text-blue-700 dark:text-blue-400", icon: ArrowLeftRight },
+  Mobile: { bg: "bg-violet-500/5", border: "border-violet-200 dark:border-violet-800", text: "text-violet-700 dark:text-violet-400", icon: Smartphone },
+  Cards: { bg: "bg-rose-500/5", border: "border-rose-200 dark:border-rose-800", text: "text-rose-700 dark:text-rose-400", icon: CreditCard },
+  Savings: { bg: "bg-emerald-500/5", border: "border-emerald-200 dark:border-emerald-800", text: "text-emerald-700 dark:text-emerald-400", icon: Wallet },
+  Lending: { bg: "bg-orange-500/5", border: "border-orange-200 dark:border-orange-800", text: "text-orange-700 dark:text-orange-400", icon: ArrowUpFromLine },
+  Social: { bg: "bg-pink-500/5", border: "border-pink-200 dark:border-pink-800", text: "text-pink-700 dark:text-pink-400", icon: Users },
+  International: { bg: "bg-cyan-500/5", border: "border-cyan-200 dark:border-cyan-800", text: "text-cyan-700 dark:text-cyan-400", icon: Globe2 },
+  Gateway: { bg: "bg-amber-500/5", border: "border-amber-200 dark:border-amber-800", text: "text-amber-700 dark:text-amber-400", icon: Zap },
+};
+
+function getFeeDisplay(s: any) {
+  if (s.fee_model === "fixed") return `${Number(s.fixed_amount).toLocaleString()} XAF`;
+  if (s.fee_model === "percentage") return `${s.percentage_rate}%`;
+  if (s.fee_model === "hybrid") return `${Number(s.fixed_amount).toLocaleString()} XAF + ${s.percentage_rate}%`;
+  if (s.fee_model === "tiered") return `${(s.tiered_rates as any[])?.length || 0} tiers`;
+  return "—";
+}
 
 export function FeeStructuresTable({ structures, institutions = [], onRefresh }: FeeStructuresTableProps) {
   const { toast } = useToast();
   const [editItem, setEditItem] = useState<any | null>(null);
   const [deleteItem, setDeleteItem] = useState<any | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const toggleActive = async (id: string, currentActive: boolean) => {
     const { error } = await supabase.from("fee_structures").update({ is_active: !currentActive }).eq("id", id);
@@ -91,6 +155,37 @@ export function FeeStructuresTable({ structures, institutions = [], onRefresh }:
     }
   };
 
+  const grouped = useMemo(() => {
+    const filtered = structures.filter((s) => {
+      const meta = TX_TYPE_META[s.transaction_type];
+      const label = meta?.label || s.transaction_type;
+      const institution = s.institutions?.institution_name || "";
+      const matchesSearch = !searchTerm || label.toLowerCase().includes(searchTerm.toLowerCase()) || institution.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesCategory = !activeCategory || (meta?.category === activeCategory);
+      return matchesSearch && matchesCategory;
+    });
+
+    const map: Record<string, any[]> = {};
+    filtered.forEach((s) => {
+      const cat = TX_TYPE_META[s.transaction_type]?.category || "Other";
+      if (!map[cat]) map[cat] = [];
+      map[cat].push(s);
+    });
+
+    return CATEGORY_ORDER
+      .filter((cat) => map[cat]?.length)
+      .map((cat) => ({ category: cat, items: map[cat] }));
+  }, [structures, searchTerm, activeCategory]);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    structures.forEach((s) => {
+      const cat = TX_TYPE_META[s.transaction_type]?.category || "Other";
+      counts[cat] = (counts[cat] || 0) + 1;
+    });
+    return counts;
+  }, [structures]);
+
   if (structures.length === 0) {
     return (
       <div className="rounded-xl border border-dashed bg-muted/30 p-12 text-center">
@@ -101,84 +196,204 @@ export function FeeStructuresTable({ structures, institutions = [], onRefresh }:
 
   return (
     <>
-      <div className="space-y-3">
-        {structures.map((s, idx) => (
-          <motion.div
-            key={s.id}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.03 }}
-            className="rounded-xl border bg-card shadow-sm hover:shadow-md transition-shadow"
+      {/* Toolbar */}
+      <div className="flex flex-col gap-3 mb-5">
+        <div className="relative max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search fee structures..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+
+        {/* Category filter pills */}
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant={activeCategory === null ? "default" : "outline"}
+            size="sm"
+            className="h-7 text-xs rounded-full"
+            onClick={() => setActiveCategory(null)}
           >
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm truncate">{s.institutions?.institution_name || 'Unknown'}</span>
-                    {!s.is_active && <Badge variant="outline" className="text-[10px] border-destructive text-destructive">Inactive</Badge>}
-                  </div>
-                  <span className="text-xs text-muted-foreground">{s.transaction_type.replace(/_/g, ' ')}</span>
+            All ({structures.length})
+          </Button>
+          {CATEGORY_ORDER.filter((c) => categoryCounts[c]).map((cat) => {
+            const style = CATEGORY_STYLES[cat];
+            const CatIcon = style?.icon;
+            return (
+              <Button
+                key={cat}
+                variant={activeCategory === cat ? "default" : "outline"}
+                size="sm"
+                className={cn("h-7 text-xs rounded-full gap-1.5", activeCategory !== cat && style?.text)}
+                onClick={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              >
+                {CatIcon && <CatIcon className="h-3 w-3" />}
+                {cat} ({categoryCounts[cat]})
+              </Button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Categorized Grid */}
+      <div className="space-y-6">
+        {grouped.map(({ category, items }) => {
+          const style = CATEGORY_STYLES[category] || CATEGORY_STYLES.Core;
+          const CatIcon = style.icon;
+          return (
+            <motion.div
+              key={category}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.25 }}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <div className={cn("flex items-center justify-center h-7 w-7 rounded-lg", style.bg, style.border, "border")}>
+                  <CatIcon className={cn("h-3.5 w-3.5", style.text)} />
                 </div>
+                <h3 className="text-sm font-semibold text-foreground">{category}</h3>
+                <Badge variant="secondary" className="text-[10px] h-5">{items.length}</Badge>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Badge variant="outline" className={`text-[11px] font-semibold ${MODEL_COLORS[s.fee_model] || ''}`}>
-                  {s.fee_model.toUpperCase()}
-                </Badge>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {items.map((s: any, idx: number) => {
+                  const meta = TX_TYPE_META[s.transaction_type];
+                  const TxIcon = meta?.icon || FileText;
+                  const isExpanded = expandedId === s.id;
 
-                <div className="text-right hidden sm:block">
-                  {s.fixed_amount > 0 && <p className="text-sm font-bold">{Number(s.fixed_amount).toLocaleString()} XAF</p>}
-                  {s.percentage_rate > 0 && <p className="text-sm font-bold">{s.percentage_rate}%</p>}
-                  {s.fee_model === 'tiered' && <p className="text-xs text-muted-foreground">{(s.tiered_rates as any[])?.length || 0} tiers</p>}
-                </div>
+                  return (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, scale: 0.97 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: idx * 0.02 }}
+                      className={cn(
+                        "rounded-xl border bg-card shadow-sm hover:shadow-md transition-all group relative",
+                        !s.is_active && "opacity-70"
+                      )}
+                    >
+                      {/* Card header */}
+                      <div className="p-4 pb-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className={cn("flex items-center justify-center h-9 w-9 rounded-lg shrink-0", style.bg, style.border, "border")}>
+                              <TxIcon className={cn("h-4 w-4", style.text)} />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-semibold truncate">{meta?.label || s.transaction_type.replace(/_/g, " ")}</p>
+                              <p className="text-xs text-muted-foreground truncate">{s.institutions?.institution_name || "Platform Default"}</p>
+                            </div>
+                          </div>
 
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpandedId(expandedId === s.id ? null : s.id)}>
-                  {expandedId === s.id ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                </Button>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8"><MoreHorizontal className="h-4 w-4" /></Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => setEditItem(s)}><Pencil className="h-3 w-3 mr-2" /> Edit</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => duplicate(s)}><Copy className="h-3 w-3 mr-2" /> Duplicate</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => toggleActive(s.id, s.is_active)}>
-                      {s.is_active ? <><PowerOff className="h-3 w-3 mr-2" /> Deactivate</> : <><Power className="h-3 w-3 mr-2" /> Activate</>}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="text-destructive" onClick={() => setDeleteItem(s)}>
-                      <Trash2 className="h-3 w-3 mr-2" /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-
-            <AnimatePresence>
-              {expandedId === s.id && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div className="border-t px-4 pb-4 pt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
-                    <div><span className="text-muted-foreground text-xs">Effective From</span><p className="font-medium">{new Date(s.effective_from).toLocaleDateString()}</p></div>
-                    <div><span className="text-muted-foreground text-xs">Effective Until</span><p className="font-medium">{s.effective_until ? new Date(s.effective_until).toLocaleDateString() : 'Ongoing'}</p></div>
-                    {s.min_fee_amount > 0 && <div><span className="text-muted-foreground text-xs">Min Fee</span><p className="font-medium">{Number(s.min_fee_amount).toLocaleString()} XAF</p></div>}
-                    {s.max_fee_amount && <div><span className="text-muted-foreground text-xs">Max Fee</span><p className="font-medium">{Number(s.max_fee_amount).toLocaleString()} XAF</p></div>}
-                    {s.fee_model === 'tiered' && Array.isArray(s.tiered_rates) && (
-                      <div className="col-span-full">
-                        <span className="text-muted-foreground text-xs">Tiers</span>
-                        <div className="mt-1 grid grid-cols-4 gap-1 text-xs font-medium bg-muted/50 rounded-lg p-2">
-                          <span>Min</span><span>Max</span><span>Fixed</span><span>%</span>
-                          {(s.tiered_rates as any[]).map((t: any, i: number) => (
-                            <><span key={`min${i}`}>{Number(t.min).toLocaleString()}</span><span key={`max${i}`}>{t.max ? Number(t.max).toLocaleString() : '∞'}</span><span key={`fix${i}`}>{t.fixed}</span><span key={`pct${i}`}>{t.percentage}%</span></>
-                          ))}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreHorizontal className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem onClick={() => setEditItem(s)}><Pencil className="h-3 w-3 mr-2" /> Edit</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => duplicate(s)}><Copy className="h-3 w-3 mr-2" /> Duplicate</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => toggleActive(s.id, s.is_active)}>
+                                {s.is_active ? <><PowerOff className="h-3 w-3 mr-2" /> Deactivate</> : <><Power className="h-3 w-3 mr-2" /> Activate</>}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => setDeleteItem(s)}>
+                                <Trash2 className="h-3 w-3 mr-2" /> Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
+
+                        {/* Fee info row */}
+                        <div className="flex items-center gap-2 mt-3">
+                          <Badge variant="outline" className={cn("text-[10px] font-semibold", MODEL_COLORS[s.fee_model] || "")}>
+                            {s.fee_model.toUpperCase()}
+                          </Badge>
+                          <span className="text-sm font-bold text-foreground ml-auto">{getFeeDisplay(s)}</span>
+                        </div>
+
+                        {!s.is_active && (
+                          <Badge variant="outline" className="text-[10px] border-destructive text-destructive mt-2">Inactive</Badge>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.div>
-        ))}
+
+                      {/* Expand toggle */}
+                      <button
+                        onClick={() => setExpandedId(isExpanded ? null : s.id)}
+                        className="w-full border-t px-4 py-1.5 flex items-center justify-center text-xs text-muted-foreground hover:bg-muted/50 transition-colors"
+                      >
+                        {isExpanded ? <ChevronUp className="h-3 w-3 mr-1" /> : <ChevronDown className="h-3 w-3 mr-1" />}
+                        {isExpanded ? "Less" : "Details"}
+                      </button>
+
+                      {/* Expanded details */}
+                      <AnimatePresence>
+                        {isExpanded && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="border-t px-4 pb-3 pt-2 space-y-2 text-xs">
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <span className="text-muted-foreground">From</span>
+                                  <p className="font-medium">{new Date(s.effective_from).toLocaleDateString()}</p>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Until</span>
+                                  <p className="font-medium">{s.effective_until ? new Date(s.effective_until).toLocaleDateString() : "Ongoing"}</p>
+                                </div>
+                                {s.min_fee_amount > 0 && (
+                                  <div>
+                                    <span className="text-muted-foreground">Min Fee</span>
+                                    <p className="font-medium">{Number(s.min_fee_amount).toLocaleString()} XAF</p>
+                                  </div>
+                                )}
+                                {s.max_fee_amount && (
+                                  <div>
+                                    <span className="text-muted-foreground">Max Fee</span>
+                                    <p className="font-medium">{Number(s.max_fee_amount).toLocaleString()} XAF</p>
+                                  </div>
+                                )}
+                              </div>
+
+                              {s.fee_model === "tiered" && Array.isArray(s.tiered_rates) && (
+                                <div>
+                                  <span className="text-muted-foreground">Tiers</span>
+                                  <div className="mt-1 grid grid-cols-4 gap-1 text-[10px] font-medium bg-muted/50 rounded-lg p-2">
+                                    <span>Min</span><span>Max</span><span>Fixed</span><span>%</span>
+                                    {(s.tiered_rates as any[]).map((t: any, i: number) => (
+                                      <span key={i} className="contents">
+                                        <span>{Number(t.min).toLocaleString()}</span>
+                                        <span>{t.max ? Number(t.max).toLocaleString() : "∞"}</span>
+                                        <span>{t.fixed}</span>
+                                        <span>{t.percentage}%</span>
+                                      </span>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          );
+        })}
+
+        {grouped.length === 0 && (
+          <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
+            <p className="text-muted-foreground text-sm">No fee structures match your search.</p>
+          </div>
+        )}
       </div>
 
       {/* Edit Dialog */}
