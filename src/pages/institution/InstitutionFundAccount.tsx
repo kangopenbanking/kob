@@ -1,20 +1,28 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Building2, Loader2, Shield } from "lucide-react";
+import { Building2, Loader2, Shield, Wallet, CreditCard, Banknote } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelector";
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { StatCard } from "@/components/ui/stat-card";
 import { API_CONFIG } from "@/config/api";
 
-const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } }),
+};
+
+const fmt = (n: number) =>
+  new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
 const InstitutionFundAccount = () => {
   const [amount, setAmount] = useState("");
@@ -26,20 +34,45 @@ const InstitutionFundAccount = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const resolveInstitutionId = async (userId: string): Promise<string | null> => {
+    const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", userId).maybeSingle();
+    if (inst) return inst.id;
+    const { data: staffInst } = await supabase.rpc("get_staff_institution_id", { _user_id: userId });
+    return staffInst || null;
+  };
+
   const { data: accounts } = useQuery({
     queryKey: ["institution-accounts-for-funding"],
     queryFn: async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
-      const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-      let institutionId = inst?.id;
-      if (!institutionId) {
-        const { data: staff } = await supabase.from("staff_assignments").select("institution_id").eq("user_id", user.id).eq("is_active", true).maybeSingle();
-        institutionId = staff?.institution_id;
-      }
+      const institutionId = await resolveInstitutionId(user.id);
       if (!institutionId) return [];
-      const { data } = await supabase.from("accounts").select("id, account_holder_name, account_id, currency, nickname").eq("institution_id", institutionId).eq("is_active", true);
+      const { data } = await supabase
+        .from("accounts")
+        .select("id, account_holder_name, account_id, currency, nickname")
+        .eq("institution_id", institutionId)
+        .eq("is_active", true);
       return data || [];
+    },
+  });
+
+  const { data: fundingStats } = useQuery({
+    queryKey: ["institution-funding-stats"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return { total: 0, count: 0, pending: 0 };
+      const { data } = await supabase
+        .from("funding_intents")
+        .select("amount, status")
+        .eq("user_id", user.id)
+        .eq("funding_scope", "institution");
+      const all = data || [];
+      return {
+        total: all.filter((f) => f.status === "succeeded").reduce((s, f) => s + Number(f.amount), 0),
+        count: all.length,
+        pending: all.filter((f) => f.status?.startsWith("pending")).length,
+      };
     },
   });
 
@@ -72,89 +105,109 @@ const InstitutionFundAccount = () => {
     setLoading(false);
   };
 
+  const selectedAccount = accounts?.find((a: any) => a.id === selectedAccountId);
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-3">
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp} className="flex items-center gap-3">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10">
           <Building2 className="h-6 w-6 text-primary" />
         </div>
         <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Fund Institution Account</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">Fund Institution Account</h1>
           <p className="text-muted-foreground text-sm">Add funds to float, clearing, or customer accounts</p>
         </div>
-      </div>
+      </motion.div>
+
+      {/* Stats */}
+      <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp} className="grid gap-4 md:grid-cols-3">
+        <StatCard title="Total Funded" value={fmt(fundingStats?.total || 0)} icon={<Wallet className="h-5 w-5" />} />
+        <StatCard title="Funding Requests" value={String(fundingStats?.count || 0)} icon={<CreditCard className="h-5 w-5" />} />
+        <StatCard title="Pending" value={String(fundingStats?.pending || 0)} icon={<Banknote className="h-5 w-5" />} />
+      </motion.div>
 
       {!result ? (
-        <Card className="overflow-hidden border-border/60 shadow-sm">
-          <div className="h-1 bg-gradient-to-r from-primary to-secondary" />
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg">New Account Funding</CardTitle>
-                <CardDescription>Select a target account and payment method</CardDescription>
+        <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
+          <Card className="overflow-hidden border-border/60 shadow-sm">
+            <div className="h-1 bg-gradient-to-r from-primary to-secondary" />
+            <CardHeader className="pb-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg">New Account Funding</CardTitle>
+                  <CardDescription>Select a target account and payment method</CardDescription>
+                </div>
+                <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">1.5% fee</span>
               </div>
-              <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">1.5% fee</span>
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {/* Account Selection */}
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Target Account</Label>
-              <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
-                <SelectTrigger className="h-12">
-                  <SelectValue placeholder="Select account to fund" />
-                </SelectTrigger>
-                <SelectContent>
-                  {accounts?.map((a: any) => (
-                    <SelectItem key={a.id} value={a.id}>
-                      {a.nickname || a.account_holder_name} — {a.account_id}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <AmountInput value={amount} onChange={setAmount} feePercent={0.015} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Payment Method</Label>
-              <PaymentMethodSelector value={method} onChange={setMethod} />
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Description (optional)</Label>
-              <Input placeholder="e.g. Float account top-up Q1 2026" value={description} onChange={e => setDescription(e.target.value)} className="h-11" />
-            </div>
-
-            {method === "mobile_money" && (
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Account Selection */}
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Phone Number</Label>
-                <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11" />
+                <Label className="text-sm font-semibold">Target Account</Label>
+                <Select value={selectedAccountId} onValueChange={setSelectedAccountId}>
+                  <SelectTrigger className="h-12">
+                    <SelectValue placeholder="Select account to fund" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {accounts?.map((a: any) => (
+                      <SelectItem key={a.id} value={a.id}>
+                        {a.nickname || a.account_holder_name} — {a.account_id}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedAccount && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Currency: <span className="font-semibold text-foreground">{selectedAccount.currency || "XAF"}</span>
+                  </p>
+                )}
               </div>
-            )}
-            {(method === "card" || method === "paypal") && (
+
+              <AmountInput value={amount} onChange={setAmount} feePercent={0.015} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
+
               <div className="space-y-2">
-                <Label className="text-sm font-semibold">Email</Label>
-                <Input type="email" placeholder="finance@institution.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11" />
+                <Label className="text-sm font-semibold">Payment Method</Label>
+                <PaymentMethodSelector value={method} onChange={setMethod} />
               </div>
-            )}
 
-            <Button onClick={handleFund} disabled={loading} className="w-full h-12 text-base font-semibold" size="lg">
-              {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              {loading ? "Processing..." : `Fund ${amount && Number(amount) > 0 ? fmt(Number(amount)) : "Account"}`}
-            </Button>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold">Description (optional)</Label>
+                <Input placeholder="e.g. Float account top-up Q1 2026" value={description} onChange={(e) => setDescription(e.target.value)} className="h-11" />
+              </div>
 
-            <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
-              <Shield className="h-3.5 w-3.5" /> Secured with end-to-end encryption
-            </p>
-          </CardContent>
-        </Card>
+              {method === "mobile_money" && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Phone Number</Label>
+                  <Input placeholder="237677123456" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11" />
+                </div>
+              )}
+              {(method === "card" || method === "paypal") && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-semibold">Email</Label>
+                  <Input type="email" placeholder="finance@institution.com" value={email} onChange={(e) => setEmail(e.target.value)} className="h-11" />
+                </div>
+              )}
+
+              <Button onClick={handleFund} disabled={loading} className="w-full h-12 text-base font-semibold" size="lg">
+                {loading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+                {loading ? "Processing..." : `Fund ${amount && Number(amount) > 0 ? fmt(Number(amount)) : "Account"}`}
+              </Button>
+
+              <p className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <Shield className="h-3.5 w-3.5" /> Secured with end-to-end encryption
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
       ) : (
-        <FundingResult result={result} fmt={fmt} />
+        <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
+          <FundingResult result={result} fmt={fmt} />
+        </motion.div>
       )}
 
-      <FundingHistory scope="institution" accountId={selectedAccountId} fmt={fmt} />
+      <motion.div initial="hidden" animate="visible" custom={3} variants={fadeUp}>
+        <FundingHistory scope="institution" accountId={selectedAccountId} fmt={fmt} />
+      </motion.div>
     </div>
   );
 };
