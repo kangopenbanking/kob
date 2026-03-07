@@ -143,6 +143,17 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
             <div className="space-y-2">
+              <Label className="text-sm font-semibold">Fee Scope</Label>
+              <Select value={formData.fee_scope} onValueChange={(v) => setFormData({ ...formData, fee_scope: v, institution_id: v === 'platform' ? '' : formData.institution_id })}>
+                <SelectTrigger className="h-11"><SelectValue placeholder="Select fee scope" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="platform">🌐 Platform Default (all institutions)</SelectItem>
+                  <SelectItem value="institution">🏦 Institution-Specific</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.fee_scope === 'institution' && (
+            <div className="space-y-2">
               <Label className="text-sm font-semibold">Institution</Label>
               <Select value={formData.institution_id} onValueChange={(v) => setFormData({ ...formData, institution_id: v })}>
                 <SelectTrigger className="h-11"><SelectValue placeholder="Select an institution" /></SelectTrigger>
@@ -153,6 +164,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Transaction Type</Label>
               <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
