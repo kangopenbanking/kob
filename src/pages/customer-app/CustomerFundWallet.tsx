@@ -91,11 +91,17 @@ const CustomerFundWallet: React.FC = () => {
 
   const selectedAccount = linkedAccounts.find((a: any) => a.id === selectedAccountId);
   const method = selectedAccount ? providerTypeToMethod(selectedAccount.provider_type) : 'mobile_money';
+  const selectedInstitutionId = selectedAccount?.institution_id;
 
   const numAmount = Number(amount);
 
-  // Dynamic fee estimation from fee_structures table
-  const { fee: feeEstimateData } = useFeeEstimate({ channel: method, amount: numAmount });
+  // Dynamic fee estimation from fee_structures table — scoped to selected account's institution
+  const { fee: feeEstimateData } = useFeeEstimate({
+    channel: method,
+    amount: numAmount,
+    scope: selectedInstitutionId ? "institution" : "platform",
+    institutionId: selectedInstitutionId ?? undefined,
+  });
 
   const fee = numAmount > 0 ? feeEstimateData.totalFee : 0;
 
