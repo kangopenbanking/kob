@@ -83,12 +83,15 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
     }
   }, [selectedAccount, amount]);
 
+  const { fee: fxFeeData } = useFeeEstimate({ channel: "fx_conversion", amount: 0 });
+  const feePercentage = fxFeeData.feePercent * 100; // e.g. 1.5
+
   const calculateConversion = () => {
     if (!amount || !exchangeRate) return null;
 
     const sourceAmount = parseFloat(amount);
     const usdBeforeFee = sourceAmount * exchangeRate;
-    const conversionFee = usdBeforeFee * 0.015; // 1.5% fee
+    const conversionFee = usdBeforeFee * fxFeeData.feePercent;
     const finalUsd = usdBeforeFee - conversionFee;
 
     return {
@@ -96,7 +99,7 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
       usdBeforeFee,
       conversionFee,
       finalUsd,
-      feePercentage: 1.5,
+      feePercentage,
     };
   };
 

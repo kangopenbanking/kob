@@ -614,33 +614,87 @@ export async function createFlutterwaveMomoPayout(req: PayoutRequest): Promise<P
 
 // ─── Fee Calculation ───
 
-export function calculateGatewayFee(amount: number, channel: string): { fee: number; net: number } {
-  let feeRate = 0.035; // 3.5% default
-  let fixedFee = 0;
+// Default fallback rates (used when DB lookup is unavailable)
+const DEFAULT_CHANNEL_RATES: Record<string, { rate: number; fixed: number }> = {
+  mobile_money: { rate: 0.03, fixed: 50 },
+  card: { rate: 0.035, fixed: 100 },
+  bank_transfer: { rate: 0.02, fixed: 75 },
+  apple_pay: { rate: 0.035, fixed: 100 },
+  google_pay: { rate: 0.035, fixed: 100 },
+  ussd: { rate: 0.025, fixed: 25 },
+  account_funding: { rate: 0.025, fixed: 0 },
+  paypal: { rate: 0.035, fixed: 150 },
+};
 
-  if (channel === 'mobile_money') {
-    feeRate = 0.03;
-    fixedFee = 50; // 50 XAF fixed
-  } else if (channel === 'card') {
-    feeRate = 0.035;
-    fixedFee = 100;
-  } else if (channel === 'bank_transfer') {
-    feeRate = 0.02;
-    fixedFee = 75;
-  } else if (channel === 'apple_pay' || channel === 'google_pay') {
-    feeRate = 0.035;
-    fixedFee = 100;
-  } else if (channel === 'ussd') {
-    feeRate = 0.025;
-    fixedFee = 25;
-  } else if (channel === 'account_funding') {
-    feeRate = 0.025;
-    fixedFee = 0;
-  } else if (channel === 'paypal') {
-    feeRate = 0.035;
-    fixedFee = 150; // ~$0.25 USD equivalent in XAF
+const CHANNEL_TO_TX_TYPE: Record<string, string> = {
+  mobile_money: "mobile_money_charge",
+  card: "card_payment",
+  bank_transfer: "bank_transfer",
+  apple_pay: "card_payment",
+  google_pay: "card_payment",
+  ussd: "ussd_payment",
+  account_funding: "account_funding",
+  paypal: "paypal_payment",
+};
+
+/**
+ * Calculate gateway fee. If a supabaseClient is provided, attempts DB lookup
+ * with resolution: merchant → institution → platform → hardcoded fallback.
+ */
+export async function calculateGatewayFee(
+  amount: number,
+  channel: string,
+  supabaseClient?: any,
+  opts?: { merchantId?: string; institutionId?: string }
+): Promise<{ fee: number; net: number }> {
+  const txType = CHANNEL_TO_TX_TYPE[channel] || channel;
+
+  // Try dynamic DB lookup if client provided
+  if (supabaseClient) {
+    const scopes: { scope: string; filter?: Record<string, string> }[] = [];
+    if (opts?.merchantId) scopes.push({ scope: "merchant", filter: { merchant_id: opts.merchantId } });
+    if (opts?.institutionId) scopes.push({ scope: "institution", filter: { institution_id: opts.institutionId } });
+    scopes.push({ scope: "platform" });
+
+    for (const s of scopes) {
+      let query = supabaseClient
+        .from("fee_structures")
+        .select("percentage_rate, fixed_amount")
+        .eq("transaction_type", txType)
+        .eq("fee_scope", s.scope)
+        .eq("is_active", true)
+        .lte("effective_from", new Date().toISOString().split("T")[0])
+        .order("effective_from", { ascending: false })
+        .limit(1);
+
+      if (s.filter) {
+        for (const [k, v] of Object.entries(s.filter)) {
+          query = query.eq(k, v);
+        }
+      }
+
+      const { data } = await query;
+      if (data && data.length > 0) {
+        const rate = Number(data[0].percentage_rate) / 100;
+        const fixed = Number(data[0].fixed_amount);
+        const fee = Math.round(amount * rate + fixed);
+        return { fee, net: amount - fee };
+      }
+    }
   }
 
-  const fee = Math.round(amount * feeRate + fixedFee);
+  // Fallback to hardcoded rates
+  const defaults = DEFAULT_CHANNEL_RATES[channel] || { rate: 0.035, fixed: 0 };
+  const fee = Math.round(amount * defaults.rate + defaults.fixed);
+  return { fee, net: amount - fee };
+}
+
+/**
+ * Synchronous fallback for callers that can't await.
+ * Preserved for backward compatibility — prefer the async version.
+ */
+export function calculateGatewayFeeSync(amount: number, channel: string): { fee: number; net: number } {
+  const defaults = DEFAULT_CHANNEL_RATES[channel] || { rate: 0.035, fixed: 0 };
+  const fee = Math.round(amount * defaults.rate + defaults.fixed);
   return { fee, net: amount - fee };
 }
