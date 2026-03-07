@@ -315,14 +315,15 @@ serve(async (req) => {
     // ══════════════════════════════════════════════
     // STEP 2: Credit destination account balance
     // ══════════════════════════════════════════════
-    // Try InterimAvailable first, then ClosingAvailable
+    // Try InterimAvailable first, then ClosingAvailable (filter by Credit indicator)
     let destBalance = null;
     const { data: destInterimBal } = await supabase
       .from('account_balances')
       .select('id, amount, balance_type')
       .eq('account_id', destAccount.id)
       .eq('balance_type', 'InterimAvailable')
-      .single();
+      .eq('credit_debit_indicator', 'Credit')
+      .maybeSingle();
 
     if (destInterimBal) {
       destBalance = destInterimBal;
@@ -332,7 +333,8 @@ serve(async (req) => {
         .select('id, amount, balance_type')
         .eq('account_id', destAccount.id)
         .eq('balance_type', 'ClosingAvailable')
-        .single();
+        .eq('credit_debit_indicator', 'Credit')
+        .maybeSingle();
       destBalance = destClosingBal;
     }
 
