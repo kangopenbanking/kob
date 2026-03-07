@@ -52,7 +52,7 @@ const StaffLogin: React.FC = () => {
       }
 
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate('/merchant/travel-services', { replace: true });
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
     } finally {
