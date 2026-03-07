@@ -122,6 +122,8 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: only allow submission on the final step
+    if (step !== 3) return;
     const isPlatform = formData.fee_scope === 'platform';
     onSubmit({
       ...formData,
@@ -166,7 +168,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
   const selectedModel = FEE_MODELS.find(m => m.value === formData.fee_model);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && step < 3) e.preventDefault(); }} className="space-y-6">
       {/* Progress stepper */}
       <div className="flex items-center justify-between px-1">
         {STEP_LABELS.map((label, idx) => {
@@ -477,11 +479,12 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
             <ArrowLeft className="h-3.5 w-3.5" /> Back
           </Button>
         )}
-        {step < 3 ? (
+        {step < 3 && (
           <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed()} className="gap-1.5 rounded-lg">
             Continue <ArrowRight className="h-3.5 w-3.5" />
           </Button>
-        ) : (
+        )}
+        {step === 3 && (
           <Button type="submit" className="gap-1.5 rounded-lg shadow-md">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {initialData ? 'Update Structure' : 'Create Structure'}
