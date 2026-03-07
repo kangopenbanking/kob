@@ -11,15 +11,56 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { merchantNavigation } from "./merchant-navigation-config";
 import { NotificationCenter } from "@/components/NotificationCenter";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+
+const STAFF_ALLOWED_SECTION = "Travel Services";
+
+function useIsStaffUser() {
+  const [isStaff, setIsStaff] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const check = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { setLoading(false); return; }
+
+      const { data: isMerchant } = await supabase.rpc('has_role', {
+        _user_id: user.id,
+        _role: 'merchant' as any,
+      });
+      if (isMerchant) { setIsStaff(false); setLoading(false); return; }
+
+      const { data: staffRole } = await supabase
+        .from('merchant_staff_roles')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      setIsStaff(!!staffRole);
+      setLoading(false);
+    };
+    check();
+  }, []);
+
+  return { isStaff, loading };
+}
 
 export function MerchantLayout() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { isStaff } = useIsStaffUser();
 
   const isActivePath = (path: string) => {
     if (path === "/merchant") return location.pathname === path;
     return location.pathname === path || location.pathname.startsWith(path + "/");
   };
+
+  const visibleNavigation = isStaff
+    ? merchantNavigation.filter(s => s.title === STAFF_ALLOWED_SECTION)
+    : merchantNavigation;
 
   return (
     <SessionGuard logoutPath="/auth" appName="Merchant Portal" appContext="merchant">
@@ -32,14 +73,14 @@ export function MerchantLayout() {
                 <Store className="h-4 w-4" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold truncate">Merchant Portal</p>
-                <p className="text-[11px] text-sidebar-foreground/60">Business Dashboard</p>
+                <p className="text-sm font-semibold truncate">{isStaff ? "Staff Portal" : "Merchant Portal"}</p>
+                <p className="text-[11px] text-sidebar-foreground/60">{isStaff ? "Travel Services" : "Business Dashboard"}</p>
               </div>
             </div>
           </div>
 
           <SidebarContent className="px-2 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {merchantNavigation.map((section) => (
+            {visibleNavigation.map((section) => (
               <SidebarGroup key={section.title}>
                 <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-3 py-2">
                   {section.title}
