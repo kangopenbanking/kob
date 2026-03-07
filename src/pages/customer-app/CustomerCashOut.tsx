@@ -152,7 +152,6 @@ const CustomerCashOut: React.FC = () => {
       case 'momo_mtn':
       case 'momo_orange': return 'Instant – 30 minutes';
       case 'paypal': return '1–2 business days';
-      case 'agent': return 'Collect at agent location';
       default: return '1–3 business days';
     }
   };
