@@ -80,8 +80,23 @@ export default function BusinessKYCReview() {
     }
   };
 
-  const openPreview = (url: string | null, label: string) => {
-    if (url) { setPreviewUrl(url); setPreviewLabel(label); }
+  const openPreview = async (storedPath: string | null, label: string) => {
+    if (!storedPath) return;
+    const signedUrl = await getKycDocumentUrl(storedPath);
+    if (signedUrl) { setPreviewUrl(signedUrl); setPreviewLabel(label); }
+  };
+
+  const handleOpenDetail = async (kyb: any) => {
+    setSelectedKYB(kyb);
+    setDetailOpen(true);
+    const urls: Record<string, string> = {};
+    for (const doc of DOCS) {
+      if (kyb[doc.key]) {
+        const signed = await getKycDocumentUrl(kyb[doc.key]);
+        if (signed) urls[doc.key] = signed;
+      }
+    }
+    setResolvedThumbs(urls);
   };
 
   const getStatusBadge = (status: string) => {
