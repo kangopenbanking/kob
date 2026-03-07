@@ -286,7 +286,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-semibold text-foreground">Transaction Type</Label>
-                {selectedType && <Badge className="bg-primary/10 text-primary border-0 text-xs">{selectedType.icon} {selectedType.label}</Badge>}
+                {selectedType && <Badge className="bg-primary/10 text-primary border-0 text-xs gap-1"><selectedType.icon className="h-3 w-3" /> {selectedType.label}</Badge>}
               </div>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
