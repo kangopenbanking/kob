@@ -24,6 +24,8 @@ const MerchantFundWallet = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "merchant", merchantId: merchant?.id });
+
   const { data: merchant } = useQuery({
     queryKey: ["my-merchant"],
     queryFn: async () => {
