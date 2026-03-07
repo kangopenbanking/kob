@@ -45,7 +45,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">End-users fund their own KOB banking accounts. The API validates that <code>account.user_id</code> matches the authenticated user.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> Bearer JWT token</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>account_balances</code></p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Standard tier (2.5%–3.5% depending on method)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Dynamically resolved from <code>fee_structures</code> (platform scope). Use <code>/gateway-fee-estimate?amount=X&channel=mobile_money</code> to preview.</p>
           </TabsContent>
 
           <TabsContent value="merchant" className="space-y-3 mt-4">
