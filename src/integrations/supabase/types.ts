@@ -4497,6 +4497,84 @@ export type Database = {
         }
         Relationships: []
       }
+      fee_limits_charges: {
+        Row: {
+          agent_commission_fixed: number
+          agent_commission_percent: number
+          category: string
+          daily_count_limit: number
+          daily_limit: number
+          daily_request_accept_limit: number
+          fixed_charge: number
+          id: string
+          is_active: boolean
+          max_amount: number
+          max_charge_cap: number
+          merchant_fixed_charge: number
+          merchant_percent_charge: number
+          min_amount: number
+          monthly_limit: number
+          monthly_request_accept_limit: number
+          percentage_charge: number
+          referral_fixed_commission: number
+          referral_percent_commission: number
+          updated_at: string
+          updated_by: string | null
+          user_fixed_charge: number
+          user_percent_charge: number
+        }
+        Insert: {
+          agent_commission_fixed?: number
+          agent_commission_percent?: number
+          category: string
+          daily_count_limit?: number
+          daily_limit?: number
+          daily_request_accept_limit?: number
+          fixed_charge?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          max_charge_cap?: number
+          merchant_fixed_charge?: number
+          merchant_percent_charge?: number
+          min_amount?: number
+          monthly_limit?: number
+          monthly_request_accept_limit?: number
+          percentage_charge?: number
+          referral_fixed_commission?: number
+          referral_percent_commission?: number
+          updated_at?: string
+          updated_by?: string | null
+          user_fixed_charge?: number
+          user_percent_charge?: number
+        }
+        Update: {
+          agent_commission_fixed?: number
+          agent_commission_percent?: number
+          category?: string
+          daily_count_limit?: number
+          daily_limit?: number
+          daily_request_accept_limit?: number
+          fixed_charge?: number
+          id?: string
+          is_active?: boolean
+          max_amount?: number
+          max_charge_cap?: number
+          merchant_fixed_charge?: number
+          merchant_percent_charge?: number
+          min_amount?: number
+          monthly_limit?: number
+          monthly_request_accept_limit?: number
+          percentage_charge?: number
+          referral_fixed_commission?: number
+          referral_percent_commission?: number
+          updated_at?: string
+          updated_by?: string | null
+          user_fixed_charge?: number
+          user_percent_charge?: number
+        }
+        Relationships: []
+      }
       fee_structures: {
         Row: {
           created_at: string | null
