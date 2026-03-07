@@ -187,9 +187,11 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
 
 // ─── Stripe Adapter ───
 
-function toStripeAmount(amount: number, currency: string): number {
-  const zeroDec = ['BIF', 'CLP', 'DJF', 'GNF', 'JPY', 'KMF', 'KRW', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV', 'XAF', 'XOF', 'XPF'];
-  return zeroDec.includes(currency.toUpperCase()) ? Math.round(amount) : Math.round(amount * 100);
+export const ZERO_DECIMAL_CURRENCIES = ['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'];
+
+export function toStripeAmount(amount: number, currency: string): number {
+  return ZERO_DECIMAL_CURRENCIES.includes(currency.toLowerCase()) ? Math.round(amount) : Math.round(amount * 100);
+}
 }
 
 export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResult> {
