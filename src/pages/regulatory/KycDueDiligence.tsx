@@ -189,11 +189,11 @@ export default function KycDueDiligence() {
             business_address: { street: form.addressLine1, city: form.addressCity, country: form.registrationCountry || "CM" },
             business_description: form.businessDescription,
             annual_turnover: form.annualTurnover ? parseFloat(form.annualTurnover) : null,
-            registration_certificate_url: getPublicUrl(docs.registrationCertificate),
-            articles_of_association_url: getPublicUrl(docs.articlesOfAssociation),
-            tax_certificate_url: docs.taxCertificate ? getPublicUrl(docs.taxCertificate) : null,
-            proof_of_address_url: docs.businessProofOfAddress ? getPublicUrl(docs.businessProofOfAddress) : null,
-            bank_statement_url: docs.bankStatement ? getPublicUrl(docs.bankStatement) : null,
+            registration_certificate_url: docs.registrationCertificate,
+            articles_of_association_url: docs.articlesOfAssociation,
+            tax_certificate_url: docs.taxCertificate || null,
+            proof_of_address_url: docs.businessProofOfAddress || null,
+            bank_statement_url: docs.bankStatement || null,
           },
         });
         if (error) throw error;
