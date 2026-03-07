@@ -133,6 +133,15 @@ export function FeeStructuresTable({ structures, institutions = [], onRefresh }:
       tiered_rates: formData.tiered_rates || null,
       effective_from: formData.effective_from,
       effective_until: formData.effective_until,
+      daily_limit: formData.daily_limit ?? -1,
+      monthly_limit: formData.monthly_limit ?? -1,
+      max_charge_cap: formData.max_charge_cap ?? -1,
+      agent_commission_percent: formData.agent_commission_percent ?? 0,
+      agent_commission_fixed: formData.agent_commission_fixed ?? 0,
+      referral_percent_commission: formData.referral_percent_commission ?? 0,
+      referral_fixed_commission: formData.referral_fixed_commission ?? 0,
+      merchant_percent_charge: formData.merchant_percent_charge ?? 0,
+      merchant_fixed_charge: formData.merchant_fixed_charge ?? 0,
     }).eq("id", editItem.id);
 
     if (error) {
