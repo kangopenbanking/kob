@@ -510,6 +510,26 @@ export async function createFlutterwaveMomoPayout(req: PayoutRequest): Promise<P
 
 // ─── Fee Calculation ───
 
+export interface GatewayFeeLimits {
+  min_amount: number;
+  max_amount: number;
+  daily_limit: number;
+  monthly_limit: number;
+  max_charge_cap?: number;
+}
+
+export interface GatewayFeeCommissions {
+  agent: number;
+  referral: number;
+}
+
+export interface GatewayFeeComponents {
+  base_percent: number;
+  base_fixed: number;
+  merchant_percent: number;
+  merchant_fixed: number;
+}
+
 // Default fallback rates (used when DB lookup is unavailable)
 const DEFAULT_CHANNEL_RATES: Record<string, { rate: number; fixed: number }> = {
   mobile_money: { rate: 0.03, fixed: 50 },
@@ -557,6 +577,30 @@ const CHANNEL_TO_LIMITS_CATEGORY: Record<string, string> = {
   withdrawal: "cash_out",
 };
 
+function computeCommissionAndMerchantComponents(amount: number, limitsRow: any, isMerchantContext: boolean) {
+  const merchantPercent = isMerchantContext ? Number(limitsRow?.merchant_percent_charge) || 0 : 0;
+  const merchantFixed = isMerchantContext ? Number(limitsRow?.merchant_fixed_charge) || 0 : 0;
+
+  const agentCommission = Math.round(
+    amount * ((Number(limitsRow?.agent_commission_percent) || 0) / 100) +
+    (Number(limitsRow?.agent_commission_fixed) || 0)
+  );
+
+  const referralCommission = Math.round(
+    amount * ((Number(limitsRow?.referral_percent_commission) || 0) / 100) +
+    (Number(limitsRow?.referral_fixed_commission) || 0)
+  );
+
+  return {
+    merchantPercent,
+    merchantFixed,
+    commissions: {
+      agent: Math.max(agentCommission, 0),
+      referral: Math.max(referralCommission, 0),
+    } as GatewayFeeCommissions,
+  };
+}
+
 /**
  * Calculate gateway fee. Resolution order:
  * 1. fee_structures (merchant → institution → platform)
@@ -568,11 +612,34 @@ export async function calculateGatewayFee(
   channel: string,
   supabaseClient?: any,
   opts?: { merchantId?: string; institutionId?: string }
-): Promise<{ fee: number; net: number; limits?: { min_amount: number; max_amount: number; daily_limit: number; monthly_limit: number } }> {
+): Promise<{
+  fee: number;
+  net: number;
+  limits?: GatewayFeeLimits;
+  commissions?: GatewayFeeCommissions;
+  components?: GatewayFeeComponents;
+}> {
   const txType = CHANNEL_TO_TX_TYPE[channel] || channel;
   const today = new Date().toISOString().split("T")[0];
 
   if (supabaseClient) {
+    const limitsRow = await fetchLimitsChargesRow(supabaseClient, channel);
+    const limits = limitsRow
+      ? {
+          min_amount: Number(limitsRow.min_amount) || 0,
+          max_amount: Number(limitsRow.max_amount) || 0,
+          daily_limit: Number(limitsRow.daily_limit) || -1,
+          monthly_limit: Number(limitsRow.monthly_limit) || -1,
+          max_charge_cap: Number(limitsRow.max_charge_cap) || -1,
+        }
+      : undefined;
+
+    const { merchantPercent, merchantFixed, commissions } = computeCommissionAndMerchantComponents(
+      amount,
+      limitsRow,
+      Boolean(opts?.merchantId)
+    );
+
     // Step 1: Try fee_structures (most specific)
     const scopes: { scope: string; filter?: Record<string, string> }[] = [];
     if (opts?.merchantId) scopes.push({ scope: "merchant", filter: { merchant_id: opts.merchantId } });
@@ -582,7 +649,7 @@ export async function calculateGatewayFee(
     for (const s of scopes) {
       let query = supabaseClient
         .from("fee_structures")
-        .select("percentage_rate, fixed_amount, min_fee_amount, max_fee_amount, fee_model")
+        .select("percentage_rate, fixed_amount, min_fee_amount, max_fee_amount, fee_model, effective_until")
         .eq("transaction_type", txType)
         .eq("fee_scope", s.scope)
         .eq("is_active", true)
@@ -601,46 +668,61 @@ export async function calculateGatewayFee(
         const row = data[0];
         if (row.effective_until && row.effective_until < today) continue;
 
-        const rate = Number(row.percentage_rate) / 100;
-        const fixed = Number(row.fixed_amount);
-        let fee = Math.round(amount * rate + fixed);
+        const basePercent = Number(row.percentage_rate) || 0;
+        const baseFixed = Number(row.fixed_amount) || 0;
+        let fee = Math.round(amount * (basePercent / 100) + baseFixed);
 
         const minFee = Number(row.min_fee_amount) || 0;
         const maxFee = Number(row.max_fee_amount) || 0;
         if (minFee > 0 && fee < minFee) fee = minFee;
         if (maxFee > 0 && fee > maxFee) fee = maxFee;
 
-        // Also fetch limits from fee_limits_charges
-        const limits = await fetchLimitsCharges(supabaseClient, channel);
-        return { fee, net: amount - fee, limits };
+        // Apply merchant surcharge components from fee_limits_charges when merchant context exists
+        if (merchantPercent > 0 || merchantFixed > 0) {
+          fee += Math.round(amount * (merchantPercent / 100) + merchantFixed);
+        }
+
+        const maxCap = limits?.max_charge_cap || -1;
+        if (maxCap > 0 && fee > maxCap) fee = maxCap;
+
+        return {
+          fee,
+          net: amount - fee,
+          limits,
+          commissions,
+          components: {
+            base_percent: basePercent,
+            base_fixed: baseFixed,
+            merchant_percent: merchantPercent,
+            merchant_fixed: merchantFixed,
+          },
+        };
       }
     }
 
     // Step 2: Try fee_limits_charges table
-    const limitsCategory = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
-    const { data: limitsRow } = await supabaseClient
-      .from("fee_limits_charges")
-      .select("*")
-      .eq("category", limitsCategory)
-      .eq("is_active", true)
-      .maybeSingle();
-
     if (limitsRow) {
-      const rate = Number(limitsRow.percentage_charge) / 100;
-      const fixed = Number(limitsRow.fixed_charge);
-      let fee = Math.round(amount * rate + fixed);
+      const basePercent = Number(limitsRow.percentage_charge) || 0;
+      const baseFixed = Number(limitsRow.fixed_charge) || 0;
+      let fee = Math.round(amount * (basePercent / 100) + baseFixed);
 
-      const maxCap = Number(limitsRow.max_charge_cap);
+      if (merchantPercent > 0 || merchantFixed > 0) {
+        fee += Math.round(amount * (merchantPercent / 100) + merchantFixed);
+      }
+
+      const maxCap = Number(limitsRow.max_charge_cap) || -1;
       if (maxCap > 0 && fee > maxCap) fee = maxCap;
 
       return {
         fee,
         net: amount - fee,
-        limits: {
-          min_amount: Number(limitsRow.min_amount) || 0,
-          max_amount: Number(limitsRow.max_amount) || 0,
-          daily_limit: Number(limitsRow.daily_limit) || -1,
-          monthly_limit: Number(limitsRow.monthly_limit) || -1,
+        limits,
+        commissions,
+        components: {
+          base_percent: basePercent,
+          base_fixed: baseFixed,
+          merchant_percent: merchantPercent,
+          merchant_fixed: merchantFixed,
         },
       };
     }
@@ -649,18 +731,34 @@ export async function calculateGatewayFee(
   // Step 3: Hardcoded fallback
   const defaults = DEFAULT_CHANNEL_RATES[channel] || { rate: 0.035, fixed: 0 };
   const fee = Math.round(amount * defaults.rate + defaults.fixed);
-  return { fee, net: amount - fee };
+  return {
+    fee,
+    net: amount - fee,
+    commissions: { agent: 0, referral: 0 },
+    components: {
+      base_percent: defaults.rate * 100,
+      base_fixed: defaults.fixed,
+      merchant_percent: 0,
+      merchant_fixed: 0,
+    },
+  };
+}
+
+async function fetchLimitsChargesRow(supabaseClient: any, channel: string) {
+  const category = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
+  const { data } = await supabaseClient
+    .from("fee_limits_charges")
+    .select("min_amount, max_amount, daily_limit, monthly_limit, max_charge_cap, percentage_charge, fixed_charge, merchant_percent_charge, merchant_fixed_charge, agent_commission_percent, agent_commission_fixed, referral_percent_commission, referral_fixed_commission")
+    .eq("category", category)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  return data || null;
 }
 
 /** Fetch limits from fee_limits_charges for a given channel */
 async function fetchLimitsCharges(supabaseClient: any, channel: string) {
-  const category = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
-  const { data } = await supabaseClient
-    .from("fee_limits_charges")
-    .select("min_amount, max_amount, daily_limit, monthly_limit")
-    .eq("category", category)
-    .eq("is_active", true)
-    .maybeSingle();
+  const data = await fetchLimitsChargesRow(supabaseClient, channel);
 
   if (!data) return undefined;
   return {
@@ -668,6 +766,7 @@ async function fetchLimitsCharges(supabaseClient: any, channel: string) {
     max_amount: Number(data.max_amount) || 0,
     daily_limit: Number(data.daily_limit) || -1,
     monthly_limit: Number(data.monthly_limit) || -1,
+    max_charge_cap: Number(data.max_charge_cap) || -1,
   };
 }
 
