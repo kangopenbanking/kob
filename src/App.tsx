@@ -424,7 +424,7 @@ function App() {
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/fund-account" element={<Layout><ProtectedRoute><CustomerFundAccount /></ProtectedRoute></Layout>} />
+            <Route path="/fund-account" element={<Layout><ProtectedRoute><NonInstitutionRoute><CustomerFundAccount /></NonInstitutionRoute></ProtectedRoute></Layout>} />
             {/* Institution Portal Routes - Nested with InstitutionLayout */}
             <Route path="/fi-portal" element={<ProtectedRoute><RoleGuard allowedRoles={['institution', 'staff']} redirectTo="/dashboard"><InstitutionLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<FIPortal />} />
