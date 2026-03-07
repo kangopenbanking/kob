@@ -276,7 +276,7 @@ const MerchantTravelScanner: React.FC = () => {
               {stats.valid} valid
             </Badge>
             {stats.alreadyUsed > 0 && (
-              <Badge variant="outline" className="text-yellow-600 border-yellow-300 gap-1.5">
+              <Badge variant="outline" className="text-amber-600 dark:text-amber-400 border-amber-300 dark:border-amber-600 gap-1.5">
                 <AlertTriangle className="h-3 w-3" />
                 {stats.alreadyUsed} reused
               </Badge>
