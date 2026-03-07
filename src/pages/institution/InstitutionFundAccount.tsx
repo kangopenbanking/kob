@@ -35,6 +35,8 @@ const InstitutionFundAccount = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "institution" });
+
   const resolveInstitutionId = async (userId: string): Promise<string | null> => {
     const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", userId).maybeSingle();
     if (inst) return inst.id;
