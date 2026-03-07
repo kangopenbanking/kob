@@ -75,7 +75,7 @@ const BankFundAccount: React.FC = () => {
     }
   }, [accounts, selectedAccountId]);
 
-  const feePercent = method === 'mobile_money' ? 0.035 : method === 'card' ? 0.03 : method === 'paypal' ? 0.035 : 0.015;
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "institution", institutionId });
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
   const selectedMethod = paymentMethods.find(m => m.value === method)!;
 
