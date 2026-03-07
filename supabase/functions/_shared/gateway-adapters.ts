@@ -541,21 +541,39 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   withdrawal: "withdrawal",
 };
 
+// Map channels to fee_limits_charges categories
+const CHANNEL_TO_LIMITS_CATEGORY: Record<string, string> = {
+  mobile_money: "send_money",
+  card: "payment_charges",
+  bank_transfer: "bank_transfer",
+  apple_pay: "payment_charges",
+  google_pay: "payment_charges",
+  ussd: "payment_charges",
+  account_funding: "cash_in",
+  paypal: "payment_charges",
+  virtual_card_topup: "cash_in",
+  gateway_charge: "payment_charges",
+  gateway_payout: "cash_out",
+  withdrawal: "cash_out",
+};
+
 /**
- * Calculate gateway fee. If a supabaseClient is provided, attempts DB lookup
- * with resolution: merchant → institution → platform → hardcoded fallback.
+ * Calculate gateway fee. Resolution order:
+ * 1. fee_structures (merchant → institution → platform)
+ * 2. fee_limits_charges (admin-configured per category)
+ * 3. Hardcoded fallback
  */
 export async function calculateGatewayFee(
   amount: number,
   channel: string,
   supabaseClient?: any,
   opts?: { merchantId?: string; institutionId?: string }
-): Promise<{ fee: number; net: number }> {
+): Promise<{ fee: number; net: number; limits?: { min_amount: number; max_amount: number; daily_limit: number; monthly_limit: number } }> {
   const txType = CHANNEL_TO_TX_TYPE[channel] || channel;
   const today = new Date().toISOString().split("T")[0];
 
-  // Try dynamic DB lookup if client provided
   if (supabaseClient) {
+    // Step 1: Try fee_structures (most specific)
     const scopes: { scope: string; filter?: Record<string, string> }[] = [];
     if (opts?.merchantId) scopes.push({ scope: "merchant", filter: { merchant_id: opts.merchantId } });
     if (opts?.institutionId) scopes.push({ scope: "institution", filter: { institution_id: opts.institutionId } });
@@ -572,8 +590,6 @@ export async function calculateGatewayFee(
         .order("effective_from", { ascending: false })
         .limit(1);
 
-      // Also filter out expired structures
-      // Note: or filter for null effective_until is complex; we handle post-query
       if (s.filter) {
         for (const [k, v] of Object.entries(s.filter)) {
           query = query.eq(k, v);
@@ -583,28 +599,76 @@ export async function calculateGatewayFee(
       const { data } = await query;
       if (data && data.length > 0) {
         const row = data[0];
-        // Skip if effective_until is set and in the past
         if (row.effective_until && row.effective_until < today) continue;
 
         const rate = Number(row.percentage_rate) / 100;
         const fixed = Number(row.fixed_amount);
         let fee = Math.round(amount * rate + fixed);
 
-        // Apply min/max fee caps
         const minFee = Number(row.min_fee_amount) || 0;
         const maxFee = Number(row.max_fee_amount) || 0;
         if (minFee > 0 && fee < minFee) fee = minFee;
         if (maxFee > 0 && fee > maxFee) fee = maxFee;
 
-        return { fee, net: amount - fee };
+        // Also fetch limits from fee_limits_charges
+        const limits = await fetchLimitsCharges(supabaseClient, channel);
+        return { fee, net: amount - fee, limits };
       }
+    }
+
+    // Step 2: Try fee_limits_charges table
+    const limitsCategory = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
+    const { data: limitsRow } = await supabaseClient
+      .from("fee_limits_charges")
+      .select("*")
+      .eq("category", limitsCategory)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (limitsRow) {
+      const rate = Number(limitsRow.percentage_charge) / 100;
+      const fixed = Number(limitsRow.fixed_charge);
+      let fee = Math.round(amount * rate + fixed);
+
+      const maxCap = Number(limitsRow.max_charge_cap);
+      if (maxCap > 0 && fee > maxCap) fee = maxCap;
+
+      return {
+        fee,
+        net: amount - fee,
+        limits: {
+          min_amount: Number(limitsRow.min_amount) || 0,
+          max_amount: Number(limitsRow.max_amount) || 0,
+          daily_limit: Number(limitsRow.daily_limit) || -1,
+          monthly_limit: Number(limitsRow.monthly_limit) || -1,
+        },
+      };
     }
   }
 
-  // Fallback to hardcoded rates
+  // Step 3: Hardcoded fallback
   const defaults = DEFAULT_CHANNEL_RATES[channel] || { rate: 0.035, fixed: 0 };
   const fee = Math.round(amount * defaults.rate + defaults.fixed);
   return { fee, net: amount - fee };
+}
+
+/** Fetch limits from fee_limits_charges for a given channel */
+async function fetchLimitsCharges(supabaseClient: any, channel: string) {
+  const category = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
+  const { data } = await supabaseClient
+    .from("fee_limits_charges")
+    .select("min_amount, max_amount, daily_limit, monthly_limit")
+    .eq("category", category)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!data) return undefined;
+  return {
+    min_amount: Number(data.min_amount) || 0,
+    max_amount: Number(data.max_amount) || 0,
+    daily_limit: Number(data.daily_limit) || -1,
+    monthly_limit: Number(data.monthly_limit) || -1,
+  };
 }
 
 /**

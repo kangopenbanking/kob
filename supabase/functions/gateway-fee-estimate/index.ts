@@ -1,11 +1,10 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+// deno-lint-ignore-file
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
-};
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -20,24 +19,24 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'amount must be a positive number' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Create admin client for DB lookup
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
-    const { fee, net } = await calculateGatewayFee(amount, channel, supabase, { merchantId, institutionId });
+    const result = await calculateGatewayFee(amount, channel, supabase, { merchantId, institutionId });
 
     return new Response(JSON.stringify({
       amount,
       currency,
       channel,
-      fee_amount: fee,
-      net_amount: net,
+      fee_amount: result.fee,
+      net_amount: result.net,
       fee_breakdown: {
-        rate: `${((fee - 0) / amount * 100).toFixed(1)}%`,
+        rate: `${((result.fee) / amount * 100).toFixed(1)}%`,
         currency,
       },
+      limits: result.limits || null,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

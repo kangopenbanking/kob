@@ -15,7 +15,7 @@ interface AmountInputProps {
     fixedFee: number;
     totalFee: number;
     netAmount: number;
-    source: "db" | "fallback";
+    source: "db" | "limits" | "fallback";
   };
   feeLoading?: boolean;
   fmt: (n: number) => string;
