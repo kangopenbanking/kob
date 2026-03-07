@@ -121,18 +121,37 @@ export default function TranslationManager() {
   } | null>(null);
   const [editValue, setEditValue] = useState("");
 
+  const fetchAllRows = async (table: string, query: any) => {
+    const PAGE_SIZE = 1000;
+    let allData: any[] = [];
+    let from = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
+      if (error) throw error;
+      if (data) allData = allData.concat(data);
+      hasMore = data && data.length === PAGE_SIZE;
+      from += PAGE_SIZE;
+    }
+    return allData;
+  };
+
   const fetchData = useCallback(async () => {
     setLoading(true);
-    const [{ data: stringsData }, { data: valuesData }] = await Promise.all([
-      supabase
-        .from("translation_strings")
-        .select("*")
-        .order("category")
-        .order("string_key"),
-      supabase.from("translation_values").select("*"),
-    ]);
-    setStrings((stringsData as TranslationString[]) || []);
-    setTranslations((valuesData as TranslationValue[]) || []);
+    try {
+      const [stringsData, valuesData] = await Promise.all([
+        fetchAllRows("translation_strings",
+          supabase.from("translation_strings").select("*").order("category").order("string_key")
+        ),
+        fetchAllRows("translation_values",
+          supabase.from("translation_values").select("*")
+        ),
+      ]);
+      setStrings((stringsData as TranslationString[]) || []);
+      setTranslations((valuesData as TranslationValue[]) || []);
+    } catch (e) {
+      console.error("Failed to fetch translation data:", e);
+    }
     setLoading(false);
   }, []);
 
