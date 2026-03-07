@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, User, UserCircle, Tag } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ChevronLeft, Loader2, Check, Armchair, Users, MapPin, Clock, CreditCard, User, UserCircle, Tag, Wallet, AlertTriangle, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
+import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
 import { getTheme } from '@/lib/travel-theme';
 
 interface LayoutCell { row: number; col: number; seat_label: string; type: 'seat' | 'aisle' | 'blocked'; }
@@ -19,6 +20,7 @@ const CustomerTravelBooking: React.FC = () => {
   const { category, serviceId, tripId } = useParams();
   const navigate = useNavigate();
   const { user: customerUser } = useCustomerAuth();
+  const { account: walletAccount, loading: walletLoading } = useEnsureWalletAccount(customerUser?.id);
   const theme = getTheme(category);
   const CatIcon = theme.icon;
 
@@ -37,6 +39,28 @@ const CustomerTravelBooking: React.FC = () => {
   const [promoCode, setPromoCode] = useState('');
   const [appliedDiscount, setAppliedDiscount] = useState<any>(null);
   const [autoDiscounts, setAutoDiscounts] = useState<any[]>([]);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [balanceLoading, setBalanceLoading] = useState(true);
+
+  // Fetch wallet balance
+  useEffect(() => {
+    if (!walletAccount?.id) { setBalanceLoading(false); return; }
+    const fetchBalance = async () => {
+      setBalanceLoading(true);
+      const { data } = await supabase
+        .from('account_balances')
+        .select('amount')
+        .eq('account_id', walletAccount.id)
+        .eq('balance_type', 'ClosingAvailable')
+        .eq('credit_debit_indicator', 'Credit')
+        .order('balance_datetime', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setWalletBalance(data?.amount ?? 0);
+      setBalanceLoading(false);
+    };
+    fetchBalance();
+  }, [walletAccount?.id]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -73,7 +97,6 @@ const CustomerTravelBooking: React.FC = () => {
         setBookedSeatGenders(genders);
       }
 
-      // Fetch auto-applied discounts for this service
       if (serviceId) {
         const { data: discData } = await supabase.from('travel_discounts').select('*')
           .eq('service_id', serviceId).eq('is_active', true)
@@ -104,7 +127,6 @@ const CustomerTravelBooking: React.FC = () => {
 
   const basePrice = selectedSeats.length * (trip?.price || 0);
 
-  // Calculate best applicable discount
   const bestDiscount = useMemo(() => {
     const candidates = [...autoDiscounts, appliedDiscount].filter(Boolean);
     let best: any = null;
@@ -122,6 +144,8 @@ const CustomerTravelBooking: React.FC = () => {
     ? (bestDiscount.discount_type === 'percentage' ? Math.round(basePrice * bestDiscount.discount_value / 100) : bestDiscount.discount_value)
     : 0;
   const totalPrice = Math.max(0, basePrice - discountAmount);
+  const hasInsufficientFunds = totalPrice > 0 && walletBalance < totalPrice;
+  const shortfall = hasInsufficientFunds ? totalPrice - walletBalance : 0;
 
   const applyPromoCode = async () => {
     if (!promoCode.trim() || !serviceId) return;
@@ -142,38 +166,65 @@ const CustomerTravelBooking: React.FC = () => {
     for (const seat of selectedSeats) {
       if (!passengers[seat]?.name?.trim()) { toast.error(`Enter name for seat ${seat}`); return; }
     }
+
     setBooking(true);
-    const bookingRef = `KOB-${(category || 'TRV').toUpperCase().slice(0, 3)}-${Date.now().toString(36).toUpperCase()}`;
-    const { data: bookingData, error: bookErr } = await supabase.from('travel_bookings').insert({
-      trip_id: tripId, user_id: user.id, booking_ref: bookingRef, total_amount: totalPrice,
-      currency: trip?.currency || 'XAF', payment_status: 'paid', booking_status: 'confirmed', payment_method: 'wallet',
-    } as any).select('id').single();
 
-    if (bookErr || !bookingData) { toast.error(bookErr?.message || 'Booking failed'); setBooking(false); return; }
-
-    const tickets = selectedSeats.map(seat => ({
-      booking_id: (bookingData as any).id, seat_label: seat,
-      passenger_name: passengers[seat]?.name?.trim() || '', passenger_phone: passengers[seat]?.phone?.trim() || null,
-      passenger_gender: passengers[seat]?.gender || 'male',
-      qr_code: crypto.randomUUID(),
-    }));
-    const { error: tickErr } = await supabase.from('travel_tickets').insert(tickets as any);
-    if (tickErr) { toast.error(tickErr.message); setBooking(false); return; }
-
-    await supabase.from('travel_trips').update({ available_seats: Math.max(0, (trip?.available_seats || 0) - selectedSeats.length) } as any).eq('id', tripId || '');
-    
-    // Send booking confirmation notification & email
     try {
-      await supabase.functions.invoke('travel-booking-notification', {
-        body: { booking_id: (bookingData as any).id, event_type: 'booking_confirmed' },
+      const { data, error } = await supabase.functions.invoke('travel-book-and-pay', {
+        body: {
+          trip_id: tripId,
+          selected_seats: selectedSeats,
+          passengers,
+          category,
+          discount_id: bestDiscount?.id || null,
+          promo_code: promoCode.trim().toUpperCase() || null,
+        },
       });
-    } catch (notifErr) {
-      console.error('Notification error (non-fatal):', notifErr);
+
+      if (error) throw error;
+
+      if (data?.error) {
+        if (data.code === 'INSUFFICIENT_FUNDS') {
+          toast.error(`Insufficient balance. You need ${data.shortfall?.toLocaleString()} ${data.currency} more.`, {
+            action: {
+              label: 'Add Money',
+              onClick: () => navigate('/app/fund', {
+                state: {
+                  returnTo: window.location.pathname,
+                  requiredAmount: data.shortfall,
+                  reason: 'travel_booking',
+                },
+              }),
+            },
+            duration: 8000,
+          });
+          // Update displayed balance
+          setWalletBalance(data.available ?? walletBalance);
+          setBooking(false);
+          return;
+        }
+        throw new Error(data.error);
+      }
+
+      toast.success('Booking confirmed! Payment successful.');
+      setWalletBalance(data.new_balance ?? walletBalance);
+      navigate(`/app/travel/ticket/${data.booking_id}`);
+    } catch (err: any) {
+      console.error('Booking error:', err);
+      toast.error(err.message || 'Booking failed. Please try again.');
+    } finally {
+      setBooking(false);
     }
-    
-    toast.success('Booking confirmed!');
-    navigate(`/app/travel/ticket/${(bookingData as any).id}`);
-    setBooking(false);
+  };
+
+  const handleAddMoney = () => {
+    navigate('/app/fund', {
+      state: {
+        returnTo: window.location.pathname,
+        requiredAmount: shortfall,
+        reason: 'travel_booking',
+      },
+    });
   };
 
   if (loading) return <div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-gray-300" /></div>;
@@ -182,7 +233,7 @@ const CustomerTravelBooking: React.FC = () => {
   const steps = [
     { key: 'seats', label: 'Seats' },
     { key: 'details', label: 'Passengers' },
-    { key: 'confirm', label: 'Confirm' },
+    { key: 'confirm', label: 'Payment' },
   ];
 
   const overlayBg = theme.fg === '#ffffff' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
@@ -201,7 +252,7 @@ const CustomerTravelBooking: React.FC = () => {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: theme.lightBg }}>
-      {/* ── Header ── */}
+      {/* Header */}
       <div className="relative overflow-hidden px-5 pb-6 pt-4" style={{ backgroundColor: theme.color }}>
         <div className="absolute inset-0 opacity-[0.06]" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)', backgroundSize: '20px 20px' }} />
         <div className="relative z-10">
@@ -383,17 +434,59 @@ const CustomerTravelBooking: React.FC = () => {
               <Button variant="outline" onClick={() => setStep('seats')} className="flex-1 h-12 rounded-xl font-bold text-sm">Back</Button>
               <Button onClick={() => setStep('confirm')} className="flex-1 h-12 rounded-xl font-bold text-sm shadow-lg"
                 style={{ backgroundColor: theme.color, color: theme.fg }}>
-                Review Booking →
+                Review & Pay →
               </Button>
             </div>
           </motion.div>
         )}
 
-        {/* Step 3: Confirm */}
+        {/* Step 3: Payment & Confirm */}
         {step === 'confirm' && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
-            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">Booking Summary</p>
+            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#0f1729]/40">Payment & Summary</p>
 
+            {/* Wallet Balance Card */}
+            <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+              className="rounded-2xl overflow-hidden shadow-md">
+              <div className="px-5 py-4 bg-[#0f1729]">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-white/60" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-white/60">Wallet Balance</span>
+                  </div>
+                  {balanceLoading || walletLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin text-white/40" />
+                  ) : null}
+                </div>
+                <p className="text-2xl font-black text-white">
+                  {balanceLoading ? '...' : `${walletBalance.toLocaleString()} ${trip.currency || 'XAF'}`}
+                </p>
+                {!balanceLoading && hasInsufficientFunds && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-red-500/20 px-3 py-2">
+                    <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-bold text-red-300">Insufficient funds</p>
+                      <p className="text-[10px] text-red-300/70">You need {shortfall.toLocaleString()} {trip.currency} more</p>
+                    </div>
+                    <button
+                      onClick={handleAddMoney}
+                      className="flex items-center gap-1 rounded-lg bg-white px-3 py-1.5 text-[11px] font-bold text-[#0f1729] shrink-0 active:scale-95 transition-transform">
+                      <Plus className="h-3 w-3" /> Add Money
+                    </button>
+                  </div>
+                )}
+                {!balanceLoading && !hasInsufficientFunds && totalPrice > 0 && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-emerald-500/20 px-3 py-2">
+                    <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <p className="text-[11px] font-semibold text-emerald-300">
+                      Sufficient balance — {(walletBalance - totalPrice).toLocaleString()} {trip.currency} remaining after payment
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+            {/* Booking Summary Card */}
             <div className="rounded-2xl shadow-md overflow-hidden bg-white">
               <div className="px-5 py-4" style={{ backgroundColor: theme.color }}>
                 <div className="flex items-center justify-between mb-1">
@@ -468,12 +561,12 @@ const CustomerTravelBooking: React.FC = () => {
                     <p className="text-sm font-black text-blue-700">{selectedSeats.length}</p>
                   </div>
                   <div className="rounded-xl bg-gray-50 p-2.5 text-center">
-                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Class</p>
-                    <p className="text-sm font-black text-gray-700">Economy</p>
+                    <p className="text-[9px] text-gray-500 uppercase font-semibold">Payment</p>
+                    <p className="text-sm font-black text-gray-700">Wallet</p>
                   </div>
                 </div>
 
-                {/* Promo Code Input */}
+                {/* Promo Code */}
                 <div className="pt-3 border-t border-gray-100">
                   <p className="text-[10px] text-gray-400 uppercase font-semibold mb-2">Promo Code</p>
                   <div className="flex gap-2">
@@ -493,6 +586,7 @@ const CustomerTravelBooking: React.FC = () => {
                 </div>
               </div>
 
+              {/* Total footer */}
               <div className="px-5 py-3 flex items-center justify-between" style={{ backgroundColor: theme.color }}>
                 <div>
                   <span className="text-sm font-semibold block" style={{ color: theme.fg, opacity: 0.7 }}>Total</span>
@@ -502,13 +596,21 @@ const CustomerTravelBooking: React.FC = () => {
               </div>
             </div>
 
+            {/* Action buttons */}
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setStep('details')} className="flex-1 h-11 rounded-xl">Back</Button>
-              <Button onClick={handleBook} disabled={booking} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg"
-                style={{ backgroundColor: theme.color, color: theme.fg }}>
-                {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CreditCard className="mr-2 h-4 w-4" />}
-                Pay & Confirm
-              </Button>
+              {hasInsufficientFunds ? (
+                <Button onClick={handleAddMoney} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg bg-[#0f1729] text-white hover:bg-[#1a2744]">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add {shortfall.toLocaleString()} {trip.currency}
+                </Button>
+              ) : (
+                <Button onClick={handleBook} disabled={booking || balanceLoading} className="flex-1 h-12 rounded-xl text-[15px] font-bold shadow-lg"
+                  style={{ backgroundColor: theme.color, color: theme.fg }}>
+                  {booking ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Wallet className="mr-2 h-4 w-4" />}
+                  {booking ? 'Processing...' : 'Pay & Confirm'}
+                </Button>
+              )}
             </div>
           </motion.div>
         )}
