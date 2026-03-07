@@ -682,11 +682,11 @@ function App() {
             {/* CrediQ Routes */}
             <Route path="/crediq" element={<CrediQ />} />
             <Route path="/crediq/info" element={<CrediQInfo />} />
-            <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><CrediQOnboarding /></ProtectedRoute></Layout>} />
-            <Route path="/crediq/dashboard" element={<ProtectedRoute><DashboardLayout><CrediQDashboard /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/crediq/settings" element={<Layout><ProtectedRoute><CrediQSettings /></ProtectedRoute></Layout>} />
-            <Route path="/credit-score" element={<ProtectedRoute><DashboardLayout><CreditScore /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/credit-report" element={<ProtectedRoute><DashboardLayout><CreditReport /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><NonInstitutionRoute><CrediQOnboarding /></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/crediq/dashboard" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CrediQDashboard /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/crediq/settings" element={<Layout><ProtectedRoute><NonInstitutionRoute><CrediQSettings /></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/credit-score" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CreditScore /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/credit-report" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CreditReport /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/credit-api-docs" element={<Layout><CreditAPIDocumentation /></Layout>} />
             <Route path="/kyc-verification" element={<Layout><ProtectedRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></ProtectedRoute></Layout>} />
