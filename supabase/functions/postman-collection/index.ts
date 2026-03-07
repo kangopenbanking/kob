@@ -1,8 +1,4 @@
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'GET, OPTIONS',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 // Helper to create a request item
 const r = (name: string, method: string, path: string, opts?: {
