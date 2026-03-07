@@ -163,7 +163,6 @@ const CustomerCashOut: React.FC = () => {
       case 'momo_mtn':
       case 'momo_orange': return 'Funds sent directly to your mobile money wallet.';
       case 'paypal': return 'PayPal payout initiated to your linked email address.';
-      case 'agent': return 'Present your withdrawal code at any authorized agent.';
       default: return 'Your withdrawal is being processed.';
     }
   };
