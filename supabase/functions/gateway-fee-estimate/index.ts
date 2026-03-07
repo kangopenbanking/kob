@@ -33,9 +33,11 @@ Deno.serve(async (req) => {
       fee_amount: result.fee,
       net_amount: result.net,
       fee_breakdown: {
-        rate: `${((result.fee) / amount * 100).toFixed(1)}%`,
+        effective_rate: `${((result.fee) / amount * 100).toFixed(1)}%`,
+        components: result.components || null,
         currency,
       },
+      commissions: result.commissions || { agent: 0, referral: 0 },
       limits: result.limits || null,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
