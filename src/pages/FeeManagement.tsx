@@ -12,6 +12,7 @@ import { TransactionFeesTable } from "@/components/fee-management/TransactionFee
 import { InvoicesTable } from "@/components/fee-management/InvoicesTable";
 import { WaiversManagement } from "@/components/fee-management/WaiversManagement";
 import { FeeAnalytics } from "@/components/fee-management/FeeAnalytics";
+import { LimitsChargesTab } from "@/components/fee-management/LimitsChargesTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
