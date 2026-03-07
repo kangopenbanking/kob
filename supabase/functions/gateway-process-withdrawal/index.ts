@@ -38,7 +38,7 @@ serve(async (req) => {
     const {
       amount,
       account_id,
-      destination_type,     // 'bank_card' | 'bank_account' | 'momo_mtn' | 'momo_orange' | 'paypal' | 'agent'
+      destination_type,     // 'bank_card' | 'bank_account' | 'momo_mtn' | 'momo_orange' | 'paypal'
       linked_account_id,
       currency = 'XAF',
       narration,
