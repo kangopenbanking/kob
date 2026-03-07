@@ -44,7 +44,7 @@ serve(async (req) => {
       if (existing) return new Response(JSON.stringify(existing), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' } });
     }
 
-    const { fee } = calculateGatewayFee(amount, channel);
+    const { fee } = calculateGatewayFeeSync(amount, channel);
 
     const { data: payout, error: insertErr } = await supabase.from('gateway_payouts').insert({
       merchant_id, amount, currency, channel, status: 'pending', provider: 'flutterwave',

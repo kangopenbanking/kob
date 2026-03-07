@@ -54,7 +54,7 @@ serve(async (req) => {
     }, 0);
 
     // Fee calculation
-    const { fee, net } = calculateGatewayFee(amount, channel);
+    const { fee, net } = calculateGatewayFeeSync(amount, channel);
     const totalDebit = amount + fee;
 
     if (availableBalance < totalDebit) {

@@ -40,7 +40,7 @@ serve(async (req) => {
     // Create individual payouts
     let completed = 0, failed = 0;
     for (const item of items) {
-      const { fee } = calculateGatewayFee(item.amount, item.channel || 'mobile_money');
+      const { fee } = calculateGatewayFeeSync(item.amount, item.channel || 'mobile_money');
       const txRef = `batch_${batch.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
       const { data: payout } = await supabase.from('gateway_payouts').insert({
