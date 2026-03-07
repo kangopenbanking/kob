@@ -207,6 +207,10 @@ const PersonalAccounts = () => {
                     <Send className="mr-2 h-4 w-4" />
                     Send Money
                   </Button>
+                  <Button variant="outline" className="w-full justify-start" onClick={() => handleQuickAction('fund')}>
+                    <ArrowDownToLine className="mr-2 h-4 w-4" />
+                    Fund Account
+                  </Button>
                   <Button variant="outline" className="w-full justify-start" onClick={() => handleQuickAction('mobile-money')}>
                     <ArrowUpRight className="mr-2 h-4 w-4" />
                     Mobile Money
