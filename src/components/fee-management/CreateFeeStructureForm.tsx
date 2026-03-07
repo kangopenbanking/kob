@@ -168,7 +168,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
   const selectedModel = FEE_MODELS.find(m => m.value === formData.fee_model);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} onKeyDown={(e) => { if (e.key === 'Enter' && step < 3) e.preventDefault(); }} className="space-y-6">
       {/* Progress stepper */}
       <div className="flex items-center justify-between px-1">
         {STEP_LABELS.map((label, idx) => {
