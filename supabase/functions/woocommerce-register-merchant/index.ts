@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
         client_secret_hash: secretHashHex,
         plugin_version: plugin_version || '1.0.0',
         webhook_url: webhookUrl,
-        webhook_secret: webhookSecret,
+        webhook_secret: webhookSecret, // trigger auto-hashes to webhook_secret_hash
         status: 'active'
       })
       .select()

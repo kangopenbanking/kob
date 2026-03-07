@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     // Find merchant by API key hash
     const { data: merchant, error: merchantError } = await supabaseClient
       .from('woocommerce_merchants')
-      .select('*')
+      .select('id, store_name, store_url, admin_email, api_key_hash, status, user_id')
       .eq('api_key_hash', apiKeyHashHex)
       .single();
 
