@@ -53,7 +53,7 @@ serve(async (req) => {
 
         const tx_ref = `sub-${sub.id}-${Date.now()}`;
         const channel = 'mobile_money'; // default for subscriptions
-        const { fee, net } = calculateGatewayFeeSync(plan.amount, channel);
+        const { fee, net } = await calculateGatewayFee(plan.amount, channel, supabase);
         const provider = 'flutterwave';
 
         // Create charge
