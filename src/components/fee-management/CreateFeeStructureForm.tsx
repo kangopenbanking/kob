@@ -314,7 +314,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
                               : "border-transparent hover:bg-muted/50"
                           )}
                         >
-                          <span className="text-base">{tt.icon}</span>
+                          <tt.icon className="h-4 w-4 text-muted-foreground shrink-0" />
                           <span className="truncate">{tt.label}</span>
                         </button>
                       ))}
