@@ -87,7 +87,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">External fintech apps credit a customer's KOB account after successful payment. Uses OAuth <code>client_credentials</code> grant — no user JWT needed.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> OAuth access_token (from <code>/oauth/token</code> with <code>grant_type=client_credentials</code>)</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>account_balances</code> (customer account within institution scope)</p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution tier (1.5%)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution-scope fees from <code>fee_structures</code>.</p>
 
             <Card className="bg-muted/50">
               <CardHeader className="pb-2"><CardTitle className="text-sm">Step 1: Get access token</CardTitle></CardHeader>
