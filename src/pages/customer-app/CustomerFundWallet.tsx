@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
+import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { cn } from '@/lib/utils';
 
@@ -93,27 +94,10 @@ const CustomerFundWallet: React.FC = () => {
 
   const numAmount = Number(amount);
 
-  // Fetch real-time fee estimate from backend instead of hardcoding
-  const { data: feeEstimate } = useQuery({
-    queryKey: ['fee-estimate', method, numAmount],
-    enabled: numAmount > 0 && !!method,
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('gateway-fee-estimate', {
-        body: null,
-        headers: {},
-      });
-      // Use query params approach since the function reads from URL search params
-      const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-fee-estimate?amount=${numAmount}&channel=${method}&currency=XAF`;
-      const resp = await fetch(url, {
-        headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY },
-      });
-      if (!resp.ok) return null;
-      return resp.json();
-    },
-    staleTime: 10000,
-  });
+  // Dynamic fee estimation from fee_structures table
+  const { fee: feeEstimateData } = useFeeEstimate({ channel: method, amount: numAmount });
 
-  const fee = feeEstimate?.fee_amount ?? (numAmount > 0 ? Math.round(numAmount * 0.03) : 0);
+  const fee = numAmount > 0 ? feeEstimateData.totalFee : 0;
 
   // Fetch banks for bank_transfer method
   const fetchBanks = useCallback(async () => {
@@ -476,7 +460,7 @@ const CustomerFundWallet: React.FC = () => {
                   <span className="font-bold text-foreground">{fmt(numAmount)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Fee{feeEstimate?.fee_breakdown?.rate ? ` (${feeEstimate.fee_breakdown.rate})` : ''}</span>
+                  <span className="text-muted-foreground">Fee ({(feeEstimateData.feePercent * 100).toFixed(1)}%)</span>
                   <span className="font-bold text-foreground">{fmt(fee)}</span>
                 </div>
                 <div className="border-t border-border pt-2 flex justify-between text-sm">

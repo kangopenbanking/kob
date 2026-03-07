@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -33,6 +34,8 @@ const InstitutionFundAccount = () => {
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "institution" });
 
   const resolveInstitutionId = async (userId: string): Promise<string | null> => {
     const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", userId).maybeSingle();
@@ -163,7 +166,7 @@ const InstitutionFundAccount = () => {
                 )}
               </div>
 
-              <AmountInput value={amount} onChange={setAmount} feePercent={0.015} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
+              <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
 
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Payment Method</Label>

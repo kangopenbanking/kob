@@ -29,6 +29,16 @@ const TRANSACTION_TYPES = [
   { value: "savings_withdrawal", label: "Savings Withdrawal", icon: "💰" },
   { value: "international_transfer", label: "International Transfer", icon: "🌍" },
   { value: "ussd_payment", label: "USSD Payment", icon: "📞" },
+  { value: "withdrawal", label: "Cash Out", icon: "🏧" },
+  { value: "account_funding", label: "Account Funding", icon: "➕" },
+  { value: "gateway_charge", label: "Gateway Charge", icon: "⚡" },
+  { value: "gateway_payout", label: "Gateway Payout", icon: "📤" },
+  { value: "paypal_payment", label: "PayPal Payment", icon: "🌐" },
+  { value: "fx_conversion", label: "FX Conversion", icon: "💱" },
+  { value: "escrow_payment", label: "Escrow Payment", icon: "🔒" },
+  { value: "api_request", label: "API Request", icon: "🔌" },
+  { value: "mobile_recharge", label: "Mobile Recharge", icon: "📶" },
+  { value: "invoice_create", label: "Invoice Create", icon: "📄" },
 ];
 
 const FEE_MODELS = [

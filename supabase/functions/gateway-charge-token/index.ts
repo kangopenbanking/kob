@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
+import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,7 +40,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'token_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { fee, net } = calculateGatewayFee(amount, token.channel);
+    const { fee, net } = calculateGatewayFeeSync(amount, token.channel);
     const provider = token.provider;
 
     // Create charge record

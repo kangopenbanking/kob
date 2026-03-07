@@ -86,7 +86,7 @@ serve(async (req) => {
     }
 
     // Fee calculation
-    const { fee, net } = calculateGatewayFee(amount, channel);
+    const { fee, net } = await calculateGatewayFee(amount, channel, supabase, { merchantId: merchant.id });
 
     // Fee bearer: if customer bears the fee, the total charged increases
     const effectiveFeeBearer = fee_bearer || merchant.fee_bearer || 'merchant';

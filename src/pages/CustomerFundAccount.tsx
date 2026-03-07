@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,8 @@ const CustomerFundAccount = () => {
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount) });
 
   const { data: accounts } = useQuery({
     queryKey: ["my-accounts-for-funding"],
@@ -109,7 +112,7 @@ const CustomerFundAccount = () => {
             </div>
 
             {/* Amount */}
-            <AmountInput value={amount} onChange={setAmount} feePercent={0.025} fmt={fmt} presets={[5000, 10000, 25000, 50000]} />
+            <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} presets={[5000, 10000, 25000, 50000]} />
 
             {/* Payment Method */}
             <div className="space-y-2">

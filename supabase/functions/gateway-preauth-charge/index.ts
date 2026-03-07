@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { calculateGatewayFee } from "../_shared/gateway-adapters.ts";
+import { calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -26,7 +26,7 @@ serve(async (req) => {
     const { data: merchant } = await supabase.from('gateway_merchants').select('*').eq('id', merchant_id).eq('user_id', user.id).single();
     if (!merchant) return new Response(JSON.stringify({ error: 'merchant_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
-    const { fee, net } = calculateGatewayFee(amount, 'card');
+    const { fee, net } = calculateGatewayFeeSync(amount, 'card');
 
     // Create Stripe PaymentIntent with manual capture
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY')!;

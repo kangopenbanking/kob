@@ -3,58 +3,58 @@ import { describe, it, expect } from "vitest";
 // ─── Stage 1: Gateway Adapter Unit Tests ───
 
 describe("Gateway Adapters — Fee Calculation", () => {
-  it("should calculate mobile_money fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "mobile_money");
+  it("should calculate mobile_money fees correctly (sync fallback)", async () => {
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "mobile_money");
     expect(fee).toBe(Math.round(10000 * 0.03 + 50)); // 350
     expect(net).toBe(10000 - fee);
   });
 
   it("should calculate card fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "card");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "card");
     expect(fee).toBe(Math.round(10000 * 0.035 + 100)); // 450
     expect(net).toBe(10000 - fee);
   });
 
   it("should calculate bank_transfer fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "bank_transfer");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "bank_transfer");
     expect(fee).toBe(Math.round(10000 * 0.02 + 75)); // 275
     expect(net).toBe(10000 - fee);
   });
 
   it("should calculate account_funding fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(50000, "account_funding");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(50000, "account_funding");
     expect(fee).toBe(Math.round(50000 * 0.025 + 0)); // 1250
     expect(net).toBe(50000 - fee);
   });
 
   it("should calculate ussd fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "ussd");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "ussd");
     expect(fee).toBe(Math.round(10000 * 0.025 + 25)); // 275
     expect(net).toBe(10000 - fee);
   });
 
   it("should calculate apple_pay fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "apple_pay");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "apple_pay");
     expect(fee).toBe(Math.round(10000 * 0.035 + 100)); // 450
     expect(net).toBe(10000 - fee);
   });
 
   it("should calculate google_pay fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "google_pay");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "google_pay");
     expect(fee).toBe(Math.round(10000 * 0.035 + 100)); // 450
     expect(net).toBe(10000 - fee);
   });
 
   it("should default to 3.5% for unknown channels", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee } = calculateGatewayFee(10000, "unknown_channel");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee } = calculateGatewayFeeSync(10000, "unknown_channel");
     expect(fee).toBe(Math.round(10000 * 0.035));
   });
 });
@@ -105,8 +105,8 @@ describe("Gateway Adapters — Status Mapping", () => {
 
 describe("Gateway Adapters — PayPal Fee Calculation", () => {
   it("should calculate paypal fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "paypal");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "paypal");
     expect(fee).toBe(Math.round(10000 * 0.035 + 150)); // 500
     expect(net).toBe(10000 - fee);
   });

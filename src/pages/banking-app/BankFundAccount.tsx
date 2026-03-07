@@ -4,6 +4,7 @@ import { ArrowLeft, Wallet, Loader2, Shield, Smartphone, CreditCard, Globe, Buil
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useBankAccounts } from '@/hooks/useBankingData';
+import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { AmountInput } from '@/components/funding/AmountInput';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { FundingHistory } from '@/components/funding/FundingHistory';
@@ -74,7 +75,7 @@ const BankFundAccount: React.FC = () => {
     }
   }, [accounts, selectedAccountId]);
 
-  const feePercent = method === 'mobile_money' ? 0.035 : method === 'card' ? 0.03 : method === 'paypal' ? 0.035 : 0.015;
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "institution", institutionId });
   const selectedAccount = accounts?.find(a => a.id === selectedAccountId);
   const selectedMethod = paymentMethods.find(m => m.value === method)!;
 
@@ -258,7 +259,7 @@ const BankFundAccount: React.FC = () => {
 
               {/* Amount */}
               <div className="rounded-2xl border border-border/60 bg-card p-4">
-                <AmountInput value={amount} onChange={setAmount} feePercent={feePercent} fmt={fmt} />
+                <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} />
               </div>
 
               {/* Conditional Fields */}

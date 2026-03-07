@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwavePayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
+import { createFlutterwavePayout, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -44,7 +44,7 @@ serve(async (req) => {
       if (existing) return new Response(JSON.stringify(existing), { headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' } });
     }
 
-    const { fee } = calculateGatewayFee(amount, channel);
+    const { fee } = calculateGatewayFeeSync(amount, channel);
 
     const { data: payout, error: insertErr } = await supabase.from('gateway_payouts').insert({
       merchant_id, amount, currency, channel, status: 'pending', provider: 'flutterwave',

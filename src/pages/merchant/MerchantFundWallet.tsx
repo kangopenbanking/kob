@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useFeeEstimate } from "@/hooks/useFeeEstimate";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,6 +43,8 @@ const MerchantFundWallet = () => {
     },
     enabled: !!merchant?.id,
   });
+
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "merchant", merchantId: merchant?.id });
 
   const handleFund = async () => {
     if (!merchant?.id) { toast.error("Merchant not found"); return; }
@@ -117,11 +120,11 @@ const MerchantFundWallet = () => {
                 <CardTitle className="text-lg">New Wallet Top-Up</CardTitle>
                 <CardDescription>Choose an amount and payment method</CardDescription>
               </div>
-              <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">2% fee</span>
+              <span className="rounded-full bg-secondary/10 px-3 py-1 text-xs font-semibold text-secondary">{(feeData.feePercent * 100).toFixed(1)}% fee</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-6">
-            <AmountInput value={amount} onChange={setAmount} feePercent={0.02} fmt={fmt} presets={[25000, 50000, 100000, 500000]} />
+            <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} presets={[25000, 50000, 100000, 500000]} />
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Payment Method</Label>
