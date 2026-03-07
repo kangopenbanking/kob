@@ -121,7 +121,7 @@ Deno.serve(async (req) => {
     // Find merchant by API key hash
     const { data: merchant, error: merchantError } = await supabaseClient
       .from('woocommerce_merchants')
-      .select('*')
+      .select('id, store_name, store_url, admin_email, api_key_hash, status, user_id')
       .eq('api_key_hash', apiKeyHashHex)
       .single();
 
@@ -133,8 +133,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify webhook signature
-    const isValid = await verifyWebhookSignature(rawPayload, signature, merchant.webhook_secret);
+    // Verify webhook signature using server-side HMAC (no plaintext secret read)
+    const { data: hmacResult } = await supabaseClient.rpc('compute_woo_webhook_hmac', {
+      p_merchant_id: merchant.id,
+      p_payload: rawPayload,
+    });
+    const isValid = hmacResult && signature === hmacResult;
     if (!isValid) {
       console.error('Invalid webhook signature');
       return new Response(

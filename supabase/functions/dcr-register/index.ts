@@ -139,7 +139,7 @@ Deno.serve(async (req) => {
       .from('tpp_registrations')
       .insert({
         client_id: clientId,
-        client_secret: clientSecretHash,
+        client_secret_hash: clientSecretHash,
         institution_id: institution?.id || null,
         client_name: ssaPayload.software_client_name as string,
         software_id: ssaPayload.software_id as string,
@@ -173,7 +173,7 @@ Deno.serve(async (req) => {
     // Return registration response
     const response = {
       client_id: registration.client_id,
-      client_secret: registration.client_secret,
+      client_secret: clientSecret, // Return plaintext only once at registration time
       client_name: registration.client_name,
       software_id: registration.software_id,
       software_roles: registration.software_roles,

@@ -1,28 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 /**
  * savings-accrue-interest
- * 
- * Cron-compatible edge function that calculates and posts daily interest
- * for all active savings accounts. Creates interest_accruals records and
- * posts corresponding journal entries to the ledger.
- * 
- * Can be triggered by:
- * - Supabase cron (pg_cron)
- * - Manual admin invocation
- * 
- * POST body (optional):
- *   { "accrual_date": "2026-02-16" }  — defaults to today
+ * Cron-compatible edge function that calculates and posts daily interest.
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
 
   if (req.method !== 'POST') {
     return new Response(JSON.stringify({ error: 'method_not_allowed' }), {

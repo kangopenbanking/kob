@@ -1,26 +1,22 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-cron-secret",
 };
 
 /**
  * Settlement Cron — Automated 24/7 settlement processor
- *
- * Runs on schedule (every 15 minutes) to:
- * 1. Finalize submitted payouts by polling provider status
- * 2. Release reserved float on completed payouts
- * 3. Restore float on failed payouts + rollback wallet debits
- * 4. Generate low-balance alerts
- * 5. Auto-fail payouts stuck > 24h
- * 6. Log settlement run summary
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
 
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
