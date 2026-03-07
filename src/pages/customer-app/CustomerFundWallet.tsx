@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
+import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { cn } from '@/lib/utils';
 
