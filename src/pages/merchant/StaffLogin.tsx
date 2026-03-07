@@ -52,7 +52,7 @@ const StaffLogin: React.FC = () => {
       }
 
       toast.success('Welcome back!');
-      navigate('/dashboard');
+      navigate('/merchant/travel-services', { replace: true });
     } catch (error: any) {
       toast.error(error.message || 'Login failed');
     } finally {
@@ -80,7 +80,7 @@ const StaffLogin: React.FC = () => {
           refresh_token: data.session.refresh_token,
         });
         toast.success(`Welcome, ${data.staff?.name}!`);
-        navigate('/dashboard');
+        navigate('/merchant/travel-services', { replace: true });
       } else {
         throw new Error('No session returned');
       }
