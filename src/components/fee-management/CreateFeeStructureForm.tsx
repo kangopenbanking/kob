@@ -203,7 +203,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
           </Badge>
           {selectedType && (
             <Badge variant="outline" className="gap-1.5 py-1 px-3 text-xs font-medium">
-              <span>{selectedType.icon}</span> {selectedType.label}
+              <selectedType.icon className="h-3 w-3" /> {selectedType.label}
             </Badge>
           )}
           {selectedModel && step > 2 && (
