@@ -1,16 +1,24 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { StatCard } from "@/components/ui/stat-card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Loader2, Link2, Copy, Plus, ExternalLink, Trash2 } from "lucide-react";
+import { Loader2, Link2, Copy, Plus, ExternalLink, Trash2, Search, CheckCircle2, XCircle, DollarSign } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { API_CONFIG } from "@/config/api";
+import { motion } from "framer-motion";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } }),
+};
 
 export default function MerchantPaymentLinks() {
   const [links, setLinks] = useState<any[]>([]);
@@ -18,11 +26,14 @@ export default function MerchantPaymentLinks() {
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [form, setForm] = useState({ title: "", description: "", amount: "", currency: "XAF", redirect_url: "" });
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
+    setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
     const { data: m } = await supabase.from("gateway_merchants").select("id").eq("user_id", user.id).maybeSingle();
@@ -76,14 +87,31 @@ export default function MerchantPaymentLinks() {
     loadData();
   };
 
+  const filtered = links.filter(l => {
+    if (search && !l.title?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (statusFilter !== "all" && l.status !== statusFilter) return false;
+    return true;
+  });
+
+  const activeCount = links.filter(l => l.status === "active").length;
+  const inactiveCount = links.filter(l => l.status !== "active").length;
+  const totalRevenue = links.reduce((sum, l) => sum + Number(l.amount || 0), 0);
+
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div><h1 className="text-2xl font-bold">Payment Links</h1><p className="text-muted-foreground">Create and share no-code payment pages</p></div>
+      {/* Header */}
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Payment Links</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Create and share no-code payment pages</p>
+        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Create Link</Button></DialogTrigger>
+          <DialogTrigger asChild>
+            <Button className="gap-2"><Plus className="h-4 w-4" /> Create Link</Button>
+          </DialogTrigger>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Create Payment Link</DialogTitle>
@@ -96,8 +124,14 @@ export default function MerchantPaymentLinks() {
                 <div className="space-y-2"><Label>Amount (leave empty for flexible)</Label><Input type="number" placeholder="5000" value={form.amount} onChange={e => setForm(f => ({ ...f, amount: e.target.value }))} /></div>
                 <div className="space-y-2">
                   <Label>Currency</Label>
-                  <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}><SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent><SelectItem value="XAF">XAF</SelectItem><SelectItem value="XOF">XOF</SelectItem><SelectItem value="NGN">NGN</SelectItem><SelectItem value="USD">USD</SelectItem></SelectContent>
+                  <Select value={form.currency} onValueChange={v => setForm(f => ({ ...f, currency: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="XAF">XAF</SelectItem>
+                      <SelectItem value="XOF">XOF</SelectItem>
+                      <SelectItem value="NGN">NGN</SelectItem>
+                      <SelectItem value="USD">USD</SelectItem>
+                    </SelectContent>
                   </Select>
                 </div>
               </div>
@@ -109,41 +143,102 @@ export default function MerchantPaymentLinks() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </motion.div>
 
-      {links.length === 0 ? (
-        <Card><CardContent className="py-12 text-center">
-          <Link2 className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-          <p className="text-muted-foreground">No payment links yet</p>
-          <p className="text-sm text-muted-foreground mt-1">Create your first payment link to start accepting payments without code</p>
-        </CardContent></Card>
-      ) : (
-        <div className="grid gap-4">
-          {links.map(l => (
-            <Card key={l.id}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium truncate">{l.title}</p>
-                      <Badge variant={l.status === "active" ? "default" : "secondary"}>{l.status === "active" ? "Active" : "Inactive"}</Badge>
-                    </div>
-                    <p className="text-sm text-muted-foreground mt-0.5">
-                      {l.amount ? `${Number(l.amount).toLocaleString()} ${l.currency}` : "Flexible amount"} · Created {l.created_at ? format(new Date(l.created_at), "MMM d, yyyy") : "—"}
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => copyLink(l.slug)} title="Copy link"><Copy className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => window.open(`${API_CONFIG.SITE_URL}/pay/${l.slug}`, "_blank")} title="Open"><ExternalLink className="h-4 w-4" /></Button>
-                    <Button variant="ghost" size="sm" onClick={() => toggleActive(l.id, l.status === "active")}>{l.status === "active" ? "Disable" : "Enable"}</Button>
-                    <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => deleteLink(l.id)}><Trash2 className="h-4 w-4" /></Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+      {/* Stats */}
+      <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp}
+        className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+        <StatCard title="Total Links" value={links.length.toLocaleString()} icon={<Link2 className="h-5 w-5" />} />
+        <StatCard title="Active" value={activeCount.toLocaleString()} icon={<CheckCircle2 className="h-5 w-5" />} />
+        <StatCard title="Inactive" value={inactiveCount.toLocaleString()} icon={<XCircle className="h-5 w-5" />} />
+        <StatCard title="Fixed Amount Total" value={`${totalRevenue.toLocaleString()} XAF`} icon={<DollarSign className="h-5 w-5" />} />
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}
+        className="flex flex-wrap gap-3">
+        <div className="relative flex-1 min-w-[200px] max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input placeholder="Search by title..." className="pl-9 h-9" value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-      )}
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[150px] h-9"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Statuses</SelectItem>
+            <SelectItem value="active">Active</SelectItem>
+            <SelectItem value="inactive">Inactive</SelectItem>
+          </SelectContent>
+        </Select>
+      </motion.div>
+
+      {/* Links List */}
+      <motion.div initial="hidden" animate="visible" custom={3} variants={fadeUp}>
+        {filtered.length === 0 ? (
+          <Card className="border-border/60">
+            <CardContent className="p-0">
+              <EmptyState
+                icon={<Link2 className="h-6 w-6 text-muted-foreground" />}
+                title={search || statusFilter !== "all" ? "No matching links" : "No payment links yet"}
+                description="Create your first payment link to start accepting payments without code"
+                action={!search && statusFilter === "all" ? { label: "Create Link", onClick: () => setDialogOpen(true) } : undefined}
+              />
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border-border/60">
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b bg-muted/40">
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Title</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Created</th>
+                      <th className="text-right py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map(l => (
+                      <tr key={l.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-4">
+                          <div>
+                            <p className="font-medium truncate max-w-[220px]">{l.title}</p>
+                            {l.description && <p className="text-xs text-muted-foreground truncate max-w-[220px]">{l.description}</p>}
+                          </div>
+                        </td>
+                        <td className="py-3 px-4 font-semibold">
+                          {l.amount ? `${Number(l.amount).toLocaleString()} ${l.currency}` : <span className="text-muted-foreground text-xs">Flexible</span>}
+                        </td>
+                        <td className="py-3 px-4">
+                          <Badge variant={l.status === "active" ? "default" : "secondary"} className="text-xs">
+                            {l.status === "active" ? "Active" : "Inactive"}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-4 text-muted-foreground whitespace-nowrap">
+                          {l.created_at ? format(new Date(l.created_at), "MMM d, yyyy") : "—"}
+                        </td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => copyLink(l.slug)} title="Copy link"><Copy className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => window.open(`${API_CONFIG.SITE_URL}/pay/${l.slug}`, "_blank")} title="Open"><ExternalLink className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => toggleActive(l.id, l.status === "active")}>
+                              {l.status === "active" ? "Disable" : "Enable"}
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => deleteLink(l.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+      </motion.div>
     </div>
   );
 }
