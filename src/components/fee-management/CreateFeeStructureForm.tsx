@@ -122,6 +122,8 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    // Guard: only allow submission on the final step
+    if (step !== 3) return;
     const isPlatform = formData.fee_scope === 'platform';
     onSubmit({
       ...formData,
