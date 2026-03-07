@@ -45,10 +45,16 @@ export async function getKycDocumentUrl(storedValue: string | null): Promise<str
     return data.signedUrl;
   }
 
-  // If signed URL failed but we have a legacy full URL, fall back to it directly
-  // (it may still be accessible as a public URL from the original project)
+  // If signed URL failed and this is a legacy KYC bucket URL, the file is not available
+  // in the current backend storage (common after migrations between projects).
+  // Return null to avoid rendering broken image links in review UIs.
+  if (isFullUrl && storedValue.includes(`/storage/v1/object/public/${BUCKET}/`)) {
+    console.warn("Signed URL failed and legacy file is unavailable in current storage:", path, error);
+    return null;
+  }
+
+  // For non-KYC external full URLs, keep backward compatibility and return as-is.
   if (isFullUrl) {
-    console.warn("Signed URL failed, falling back to original URL for", path, error);
     return storedValue;
   }
 
