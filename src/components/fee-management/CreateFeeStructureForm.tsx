@@ -65,6 +65,7 @@ interface CreateFeeStructureFormProps {
 export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initialData }: CreateFeeStructureFormProps) {
   const [formData, setFormData] = useState({
     institution_id: initialData?.institution_id || '',
+    fee_scope: initialData?.fee_scope || 'institution',
     transaction_type: initialData?.transaction_type || '',
     fee_model: initialData?.fee_model || '',
     fixed_amount: initialData?.fixed_amount || 0,
