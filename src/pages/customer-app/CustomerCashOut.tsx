@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Users, Clock, Mail, Bell } from 'lucide-react';
+import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, Banknote, Plus, Clock, Mail, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
@@ -18,7 +18,6 @@ const iconMap: Record<string, { icon: React.ElementType; color: string; iconColo
   momo_orange: { icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
   paypal: { icon: Wallet, color: 'bg-[hsl(210,70%,90%)]', iconColor: 'text-[hsl(210,70%,50%)]' },
   bank_card: { icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
-  agent: { icon: Users, color: 'bg-[hsl(140,50%,90%)]', iconColor: 'text-[hsl(140,50%,35%)]' },
 };
 
 const defaultQuickAmounts = [5000, 10000, 25000, 50000, 100000];
@@ -153,7 +152,6 @@ const CustomerCashOut: React.FC = () => {
       case 'momo_mtn':
       case 'momo_orange': return 'Instant – 30 minutes';
       case 'paypal': return '1–2 business days';
-      case 'agent': return 'Collect at agent location';
       default: return '1–3 business days';
     }
   };
@@ -165,7 +163,6 @@ const CustomerCashOut: React.FC = () => {
       case 'momo_mtn':
       case 'momo_orange': return 'Funds sent directly to your mobile money wallet.';
       case 'paypal': return 'PayPal payout initiated to your linked email address.';
-      case 'agent': return 'Present your withdrawal code at any authorized agent.';
       default: return 'Your withdrawal is being processed.';
     }
   };
@@ -184,8 +181,7 @@ const CustomerCashOut: React.FC = () => {
   const handleWithdraw = async () => {
     setProcessing(true);
     try {
-      const isAgentCashout = selectedAccount?._isAgent;
-      const destinationType = isAgentCashout ? 'agent' : selectedAccount?.account_type;
+      const destinationType = selectedAccount?.account_type;
 
       // Call the unified withdrawal edge function
       const { data: result, error } = await supabase.functions.invoke('gateway-process-withdrawal', {
@@ -193,7 +189,7 @@ const CustomerCashOut: React.FC = () => {
           amount: numAmount,
           account_id: primaryAccount?.id,
           destination_type: destinationType,
-          linked_account_id: isAgentCashout ? null : selectedAccount?.id,
+          linked_account_id: selectedAccount?.id,
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
         },
@@ -327,9 +323,6 @@ const CustomerCashOut: React.FC = () => {
   };
 
   const standaloneMethodCards: { key: string; label: string; description: string; iconKey: string }[] = [];
-  if (cashoutMethods.agent) {
-    standaloneMethodCards.push({ key: 'agent', label: 'Agent Cash Out', description: 'Withdraw via a nearby agent', iconKey: 'agent' });
-  }
 
   const feeDesc = getFeeDescription();
 
@@ -352,7 +345,7 @@ const CustomerCashOut: React.FC = () => {
             <div className="text-center">
               <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
               <p className="text-sm text-muted-foreground mt-1">
-                XAF {netAmount.toLocaleString()} to {selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}
+                XAF {netAmount.toLocaleString()} to {selectedAccount?.account_name}
               </p>
               {fee > 0 && <p className="text-xs text-muted-foreground mt-0.5">Fee: XAF {fee.toLocaleString()}</p>}
             </div>
@@ -366,7 +359,7 @@ const CustomerCashOut: React.FC = () => {
                 <div>
                   <p className="text-xs font-bold text-foreground">Estimated Processing</p>
                   <p className="text-sm font-extrabold text-primary">
-                    {getProcessingTime(selectedAccount?._isAgent ? 'agent' : selectedAccount?.account_type)}
+                    {getProcessingTime(selectedAccount?.account_type)}
                   </p>
                 </div>
               </div>
@@ -554,7 +547,7 @@ const CustomerCashOut: React.FC = () => {
               )}
               <div className="border-t border-border pt-3 flex justify-between text-sm">
                 <span className="text-muted-foreground">To</span>
-                <span className="font-bold text-foreground">{selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}</span>
+                <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{selectedAccount?.provider_name}</span>

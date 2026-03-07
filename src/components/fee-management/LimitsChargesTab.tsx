@@ -107,19 +107,18 @@ const CATEGORIES: {
     ],
   },
   {
-    key: "cash_out", label: "Cash Out", description: "Withdrawals & agent cash-out",
+    key: "cash_out", label: "Cash Out", description: "Withdrawals to linked accounts",
     icon: ArrowUpFromLine,
     fields: [
       { key: "percentage_charge", label: "Percentage Charge", suffix: "%" },
       { key: "fixed_charge", label: "Fixed Charge", suffix: "XAF" },
       { key: "min_amount", label: "Minimum Amount", suffix: "XAF" },
       { key: "max_amount", label: "Maximum Amount", suffix: "XAF" },
-      { key: "agent_commission_fixed", label: "Agent Commission (fixed)", suffix: "XAF" },
-      { key: "agent_commission_percent", label: "Agent Commission (%)", suffix: "%" },
       { key: "daily_limit", label: "Daily Cash Out Limit", suffix: "XAF", hint: "-1 for unlimited" },
       { key: "monthly_limit", label: "Monthly Cash Out Limit", suffix: "XAF", hint: "-1 for unlimited" },
       { key: "referral_percent_commission", label: "Referral % Commission", suffix: "%" },
       { key: "referral_fixed_commission", label: "Referral Fixed Commission", suffix: "XAF" },
+      { key: "max_charge_cap", label: "Max Charge Cap", suffix: "XAF", hint: "-1 for no cap" },
     ],
   },
   {

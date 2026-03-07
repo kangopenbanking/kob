@@ -66,7 +66,6 @@ interface CustomerAppConfig {
     bank_transfer: boolean;
     mobile_money: boolean;
     paypal: boolean;
-    agent: boolean;
   };
   cashout_limits: {
     min_amount: number;
@@ -134,7 +133,7 @@ const defaultConfig: CustomerAppConfig = {
   card_colors: {},
   support_phone: '',
   support_email: '',
-  cashout_methods: { bank_transfer: true, mobile_money: true, paypal: true, agent: true },
+  cashout_methods: { bank_transfer: true, mobile_money: true, paypal: true },
   cashout_limits: { min_amount: 0, max_amount: 0, daily_limit: 0, quick_amounts: [5000, 10000, 25000, 50000, 100000] },
   rewards_config: defaultRewardsConfig,
   hero_bg_color: '',
@@ -748,7 +747,6 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
               { key: 'bank_transfer', label: 'Bank Transfer', desc: 'Withdraw to bank account' },
               { key: 'mobile_money', label: 'Mobile Money', desc: 'Withdraw to MoMo wallet' },
               { key: 'paypal', label: 'PayPal', desc: 'Withdraw to PayPal account' },
-              { key: 'agent', label: 'Agent Cashout', desc: 'Withdraw at a nearby agent' },
             ] as const).map(m => (
               <div key={m.key} className="flex items-center justify-between">
                 <div>
