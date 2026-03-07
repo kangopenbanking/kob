@@ -416,6 +416,9 @@ export default function CreditScore() {
 
           {/* Right Column - Quick Actions & Info */}
           <div className="space-y-6">
+            {/* Linked Accounts */}
+            <LinkedAccountsWidget />
+
             {/* Confidence Indicator */}
             <ConfidenceIndicator
               confidenceLevel={confidenceLevel}
