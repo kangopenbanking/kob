@@ -747,7 +747,6 @@ function FeatureConfigPanel({ institutionId, appConfig }: { institutionId: strin
               { key: 'bank_transfer', label: 'Bank Transfer', desc: 'Withdraw to bank account' },
               { key: 'mobile_money', label: 'Mobile Money', desc: 'Withdraw to MoMo wallet' },
               { key: 'paypal', label: 'PayPal', desc: 'Withdraw to PayPal account' },
-              { key: 'agent', label: 'Agent Cashout', desc: 'Withdraw at a nearby agent' },
             ] as const).map(m => (
               <div key={m.key} className="flex items-center justify-between">
                 <div>

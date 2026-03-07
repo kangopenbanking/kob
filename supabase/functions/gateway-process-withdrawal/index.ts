@@ -223,11 +223,6 @@ serve(async (req) => {
         providerResult = { provider_ref: ppResult.batch_id, status: 'processing', provider_raw: ppResult.provider_raw };
         payoutStatus = ppResult.batch_status === 'SUCCESS' ? 'completed' : 'processing';
 
-      } else if (destination_type === 'agent') {
-        providerName = 'agent';
-        providerResult = { provider_ref: `agent_${txRef}`, status: 'pending', provider_raw: {} };
-        payoutStatus = 'pending';
-
       } else {
         throw new Error(`Unsupported destination type: ${destination_type}`);
       }

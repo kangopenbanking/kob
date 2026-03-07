@@ -547,7 +547,7 @@ const CustomerCashOut: React.FC = () => {
               )}
               <div className="border-t border-border pt-3 flex justify-between text-sm">
                 <span className="text-muted-foreground">To</span>
-                <span className="font-bold text-foreground">{selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}</span>
+                <span className="font-bold text-foreground">{selectedAccount?.account_name}</span>
               </div>
               <div className="flex justify-between text-xs text-muted-foreground">
                 <span>{selectedAccount?.provider_name}</span>
