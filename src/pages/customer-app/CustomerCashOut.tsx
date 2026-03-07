@@ -181,8 +181,7 @@ const CustomerCashOut: React.FC = () => {
   const handleWithdraw = async () => {
     setProcessing(true);
     try {
-      const isAgentCashout = selectedAccount?._isAgent;
-      const destinationType = isAgentCashout ? 'agent' : selectedAccount?.account_type;
+      const destinationType = selectedAccount?.account_type;
 
       // Call the unified withdrawal edge function
       const { data: result, error } = await supabase.functions.invoke('gateway-process-withdrawal', {
@@ -190,7 +189,7 @@ const CustomerCashOut: React.FC = () => {
           amount: numAmount,
           account_id: primaryAccount?.id,
           destination_type: destinationType,
-          linked_account_id: isAgentCashout ? null : selectedAccount?.id,
+          linked_account_id: selectedAccount?.id,
           currency: 'XAF',
           narration: `Cash out to ${selectedAccount?.account_name || destinationType}`,
         },
