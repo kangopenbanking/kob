@@ -60,23 +60,43 @@ const MerchantTravelServices: React.FC = () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
+    // Try as merchant owner first
+    let resolvedMerchantId: string | null = null;
+
     const { data: merchant } = await supabase
       .from('gateway_merchants')
       .select('id')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!merchant) {
+    if (merchant) {
+      resolvedMerchantId = merchant.id;
+    } else {
+      // Check if user is staff — get merchant_id from staff role
+      const { data: staffRole } = await supabase
+        .from('merchant_staff_roles')
+        .select('merchant_id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+
+      if (staffRole) {
+        resolvedMerchantId = staffRole.merchant_id;
+      }
+    }
+
+    if (!resolvedMerchantId) {
       setLoading(false);
       return;
     }
 
-    setMerchantId(merchant.id);
+    setMerchantId(resolvedMerchantId);
 
     const { data } = await supabase
       .from('travel_services')
       .select('*')
-      .eq('merchant_id', merchant.id);
+      .eq('merchant_id', resolvedMerchantId);
 
     setServices((data as any[]) || []);
     setLoading(false);
