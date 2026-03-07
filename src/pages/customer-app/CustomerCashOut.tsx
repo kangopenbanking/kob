@@ -359,7 +359,7 @@ const CustomerCashOut: React.FC = () => {
                 <div>
                   <p className="text-xs font-bold text-foreground">Estimated Processing</p>
                   <p className="text-sm font-extrabold text-primary">
-                    {getProcessingTime(selectedAccount?._isAgent ? 'agent' : selectedAccount?.account_type)}
+                    {getProcessingTime(selectedAccount?.account_type)}
                   </p>
                 </div>
               </div>
