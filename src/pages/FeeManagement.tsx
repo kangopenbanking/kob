@@ -199,6 +199,7 @@ export default function FeeManagement() {
           <TabsTrigger value="invoices" className="rounded-lg gap-1.5"><FileText className="h-3.5 w-3.5" /> Invoices</TabsTrigger>
           <TabsTrigger value="waivers" className="rounded-lg gap-1.5"><Gift className="h-3.5 w-3.5" /> Waivers</TabsTrigger>
           <TabsTrigger value="analytics" className="rounded-lg gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Analytics</TabsTrigger>
+          <TabsTrigger value="limits" className="rounded-lg gap-1.5"><Sliders className="h-3.5 w-3.5" /> Limits & Charges</TabsTrigger>
         </TabsList>
 
         <TabsContent value="structures" className="space-y-4">
