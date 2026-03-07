@@ -323,9 +323,6 @@ const CustomerCashOut: React.FC = () => {
   };
 
   const standaloneMethodCards: { key: string; label: string; description: string; iconKey: string }[] = [];
-  if (cashoutMethods.agent) {
-    standaloneMethodCards.push({ key: 'agent', label: 'Agent Cash Out', description: 'Withdraw via a nearby agent', iconKey: 'agent' });
-  }
 
   const feeDesc = getFeeDescription();
 
