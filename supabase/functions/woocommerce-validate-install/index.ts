@@ -2,7 +2,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { crypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts';
 
 import { corsHeaders } from "../_shared/cors.ts";
-};
 
 interface ValidateRequest {
   api_key: string;
