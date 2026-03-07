@@ -137,7 +137,7 @@ export default function InstitutionLoans() {
     loadData();
   };
 
-  const handleUpdateApplicationStatus = async (appId: string, newStatus: string) => {
+  const handleUpdateApplicationStatus = async (appId: string, newStatus: "active" | "approved" | "completed" | "defaulted" | "disbursed" | "draft" | "rejected" | "submitted" | "under_review" | "written_off") => {
     const { error } = await supabase.from("loan_applications").update({ status: newStatus }).eq("id", appId);
     if (error) { toast.error("Failed to update status"); return; }
     toast.success(`Application ${newStatus}`);
