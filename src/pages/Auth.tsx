@@ -181,14 +181,22 @@ export default function Auth() {
       const { data, error } = await supabase.functions.invoke('phone-auth-check-pin', {
         body: { phone_number: fullPhone }
       });
-      if (error || !data) { setUserHasPIN(false); return { exists: false, hasPIN: false }; }
+      if (error) {
+        console.error('PIN check network error:', error);
+        toast({ title: 'Connection Error', description: 'Could not verify account. Please try again.', variant: 'destructive' });
+        setUserHasPIN(false);
+        return { exists: null, hasPIN: false };
+      }
+      if (!data) { setUserHasPIN(false); return { exists: false, hasPIN: false }; }
       const userExists = data.user_exists === true;
       const hasPIN = data.has_pin === true;
       setUserHasPIN(hasPIN);
       return { exists: userExists, hasPIN };
     } catch (error) {
+      console.error('PIN check error:', error);
+      toast({ title: 'Connection Error', description: 'Could not verify account. Please try again.', variant: 'destructive' });
       setUserHasPIN(false);
-      return { exists: false, hasPIN: false };
+      return { exists: null, hasPIN: false };
     }
   };
 
