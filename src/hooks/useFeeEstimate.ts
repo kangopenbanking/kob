@@ -125,7 +125,8 @@ export function useFeeEstimate({
       return null;
     },
     enabled,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000, // 2 minutes — fee structures change infrequently but should sync reasonably fast
+    refetchOnWindowFocus: true, // Re-validate fees when user returns to tab
   });
 
   const rate = dbFee?.rate ?? FALLBACK_RATES[txType]?.rate ?? 0.035;
