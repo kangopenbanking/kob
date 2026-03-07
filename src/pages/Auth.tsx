@@ -220,6 +220,11 @@ export default function Auth() {
     try {
       if (isLogin) {
         const { exists, hasPIN } = await checkIfUserHasPIN();
+        if (exists === null) {
+          // Network error — already toasted in checkIfUserHasPIN
+          setLoading(false);
+          return;
+        }
         if (!exists) {
           toast({ title: 'Account Not Found', description: 'No account found. Please sign up first.', variant: 'destructive' });
           setLoading(false);
