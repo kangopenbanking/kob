@@ -189,7 +189,7 @@ export default function BusinessKYCReview() {
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => { setSelectedKYB(kyb); setDetailOpen(true); }}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleOpenDetail(kyb)}>
                         <Eye className="h-3.5 w-3.5" />
                       </Button>
                       {kyb.verification_status === "pending" && (
