@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,15 +7,59 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, Banknote, FileText, Calendar, CreditCard } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { motion } from "framer-motion";
+import { RefreshCw, Banknote, FileText, Calendar, CreditCard, Search, Plus, Download, Eye, TrendingUp, CheckCircle, XCircle, Clock, ToggleLeft } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } }),
+};
+
+const statusStyles: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; className: string }> = {
+  draft: { variant: "outline", className: "" },
+  submitted: { variant: "secondary", className: "bg-fi-amber/15 text-fi-amber border-fi-amber/30" },
+  under_review: { variant: "secondary", className: "bg-fi-blue/15 text-fi-blue border-fi-blue/30" },
+  approved: { variant: "default", className: "bg-fi-green/15 text-fi-green border-fi-green/30" },
+  disbursed: { variant: "default", className: "bg-fi-teal/15 text-fi-teal border-fi-teal/30" },
+  rejected: { variant: "destructive", className: "bg-destructive/15 text-destructive border-destructive/30" },
+  defaulted: { variant: "destructive", className: "" },
+  closed: { variant: "secondary", className: "" },
+  active: { variant: "default", className: "bg-fi-green/15 text-fi-green border-fi-green/30" },
+};
 
 export default function InstitutionLoans() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [products, setProducts] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [repayments, setRepayments] = useState<any[]>([]);
+
+  // Filters
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+
+  // Detail sheet
+  const [selectedApp, setSelectedApp] = useState<any>(null);
+
+  // Create product dialog
+  const [showCreate, setShowCreate] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    product_name: "", product_code: "", loan_type: "personal_loan" as string,
+    interest_rate: "12", interest_calculation_method: "reducing_balance",
+    min_amount: "50000", max_amount: "5000000",
+    min_tenure_months: "3", max_tenure_months: "60",
+    processing_fee_percentage: "1", description: "",
+    requires_collateral: false, requires_guarantor: false,
+  });
 
   useEffect(() => { loadData(); }, []);
 
@@ -24,21 +68,30 @@ export default function InstitutionLoans() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
+
+      let instId: string | null = null;
       const { data: institution } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-      if (!institution) { navigate('/register'); return; }
-      const { data: prods } = await supabase.from("loan_products").select("*").eq("institution_id", institution.id).order("created_at", { ascending: false });
+      if (institution) {
+        instId = institution.id;
+      } else {
+        const { data: staff } = await supabase.from("staff_assignments").select("institution_id").eq("user_id", user.id).eq("is_active", true).maybeSingle();
+        if (staff) instId = staff.institution_id;
+      }
+      if (!instId) { navigate('/register'); return; }
+      setInstitutionId(instId);
+
+      const { data: prods } = await supabase.from("loan_products").select("*").eq("institution_id", instId).order("created_at", { ascending: false });
       setProducts(prods || []);
       const productIds = (prods || []).map(p => p.id);
       if (productIds.length > 0) {
         const { data: apps } = await supabase.from("loan_applications").select("*").in("loan_product_id", productIds).order("created_at", { ascending: false });
         setApplications(apps || []);
-        // Fetch loan_accounts linked to these applications, then repayments
         const appIds = (apps || []).map(a => a.id);
         if (appIds.length > 0) {
           const { data: loanAccounts } = await supabase.from("loan_accounts").select("id").in("application_id", appIds);
           const loanAccountIds = (loanAccounts || []).map(la => la.id);
           if (loanAccountIds.length > 0) {
-            const { data: reps } = await supabase.from("loan_repayments").select("*").in("loan_id", loanAccountIds).order("created_at", { ascending: false }).limit(100);
+            const { data: reps } = await supabase.from("loan_repayments").select("*").in("loan_id", loanAccountIds).order("created_at", { ascending: false }).limit(200);
             setRepayments(reps || []);
           }
         }
@@ -47,109 +100,479 @@ export default function InstitutionLoans() {
     finally { setLoading(false); }
   };
 
-  const statusColor = (status: string) => {
-    const map: Record<string, "default" | "secondary" | "destructive" | "outline"> = { applied: "outline", under_review: "secondary", approved: "default", disbursed: "default", rejected: "destructive", defaulted: "destructive", closed: "secondary" };
-    return map[status] || "outline";
+  const handleCreateProduct = async () => {
+    if (!institutionId || !newProduct.product_name || !newProduct.product_code) return;
+    setCreating(true);
+    try {
+      const { error } = await supabase.from("loan_products").insert({
+        institution_id: institutionId,
+        product_name: newProduct.product_name,
+        product_code: newProduct.product_code,
+        loan_type: newProduct.loan_type as any,
+        interest_rate: Number(newProduct.interest_rate),
+        interest_calculation_method: newProduct.interest_calculation_method,
+        min_amount: Number(newProduct.min_amount),
+        max_amount: Number(newProduct.max_amount),
+        min_tenure_months: Number(newProduct.min_tenure_months),
+        max_tenure_months: Number(newProduct.max_tenure_months),
+        processing_fee_percentage: Number(newProduct.processing_fee_percentage) || null,
+        description: newProduct.description || null,
+        requires_collateral: newProduct.requires_collateral,
+        requires_guarantor: newProduct.requires_guarantor,
+        is_active: true,
+      });
+      if (error) throw error;
+      toast.success("Loan product created successfully");
+      setShowCreate(false);
+      setNewProduct({ product_name: "", product_code: "", loan_type: "personal_loan", interest_rate: "12", interest_calculation_method: "reducing_balance", min_amount: "50000", max_amount: "5000000", min_tenure_months: "3", max_tenure_months: "60", processing_fee_percentage: "1", description: "", requires_collateral: false, requires_guarantor: false });
+      loadData();
+    } catch (err: any) { toast.error(err.message || "Failed to create product"); }
+    finally { setCreating(false); }
   };
+
+  const handleToggleProduct = async (productId: string, currentActive: boolean) => {
+    const { error } = await supabase.from("loan_products").update({ is_active: !currentActive }).eq("id", productId);
+    if (error) { toast.error("Failed to update product"); return; }
+    toast.success(`Product ${!currentActive ? 'activated' : 'deactivated'}`);
+    loadData();
+  };
+
+  const handleUpdateApplicationStatus = async (appId: string, newStatus: string) => {
+    const { error } = await supabase.from("loan_applications").update({ status: newStatus }).eq("id", appId);
+    if (error) { toast.error("Failed to update status"); return; }
+    toast.success(`Application ${newStatus}`);
+    setSelectedApp(null);
+    loadData();
+  };
+
+  const exportCSV = () => {
+    const headers = ["Application #", "Amount", "Tenure", "Status", "Purpose", "Credit Score", "Date"];
+    const rows = applications.map(a => [a.application_number, a.requested_amount, a.tenure_months, a.status, a.purpose, a.credit_score || '', a.created_at ? format(new Date(a.created_at), 'yyyy-MM-dd') : '']);
+    const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `loan-applications-${format(new Date(), 'yyyy-MM-dd')}.csv`; a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Stats
+  const totalRequested = applications.reduce((s, a) => s + Number(a.requested_amount || 0), 0);
+  const approvedCount = applications.filter(a => ['approved', 'disbursed', 'active'].includes(a.status)).length;
+  const pendingCount = applications.filter(a => ['submitted', 'under_review'].includes(a.status)).length;
+  const totalRepaid = repayments.reduce((s, r) => s + Number(r.amount || 0), 0);
+
+  const filteredProducts = useMemo(() => products.filter(p => {
+    if (searchQuery && !p.product_name.toLowerCase().includes(searchQuery.toLowerCase()) && !p.product_code.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    return true;
+  }), [products, searchQuery]);
+
+  const filteredApplications = useMemo(() => applications.filter(a => {
+    if (searchQuery && !(a.application_number || "").toLowerCase().includes(searchQuery.toLowerCase()) && !(a.purpose || "").toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (statusFilter !== "all" && a.status !== statusFilter) return false;
+    return true;
+  }), [applications, searchQuery, statusFilter]);
+
+  const stats = [
+    { label: "Total Requested", value: `${(totalRequested / 1000000).toFixed(1)}M XAF`, icon: Banknote, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20", sub: `${applications.length} applications` },
+    { label: "Approved", value: approvedCount, icon: CheckCircle, color: "text-fi-green bg-fi-green/10 border-fi-green/20", sub: `${applications.length > 0 ? ((approvedCount / applications.length) * 100).toFixed(0) : 0}% approval rate` },
+    { label: "Pending Review", value: pendingCount, icon: Clock, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20", sub: "Awaiting decision" },
+    { label: "Total Repaid", value: `${totalRepaid.toLocaleString()} XAF`, icon: TrendingUp, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20", sub: `${repayments.length} payments` },
+  ];
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      {/* Header */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0} className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-fi-amber/10 border border-fi-amber/20"><Banknote className="h-5 w-5 text-fi-amber" /></div>
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-fi-amber/10 border border-fi-amber/20">
+            <Banknote className="h-5.5 w-5.5 text-fi-amber" />
+          </div>
           <div>
-            <h1 className="text-xl font-bold tracking-tight">Loans</h1>
-            <p className="text-xs text-muted-foreground">Manage loan products, applications, and repayments</p>
+            <h1 className="text-xl font-bold tracking-tight text-foreground">Loans Management</h1>
+            <p className="text-xs text-muted-foreground">Products, applications, approvals & repayments</p>
           </div>
         </div>
-        <Button variant="outline" size="sm" onClick={loadData} disabled={loading}><RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />Refresh</Button>
-      </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportCSV} className="gap-1.5 text-xs"><Download className="h-3.5 w-3.5" />Export</Button>
+          <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1.5 text-xs bg-fi-amber text-white hover:bg-fi-amber/90"><Plus className="h-3.5 w-3.5" />New Product</Button>
+          <Button variant="outline" size="sm" onClick={loadData} disabled={loading}><RefreshCw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} /></Button>
+        </div>
+      </motion.div>
 
-      <div className="grid gap-4 md:grid-cols-4">
-        {[
-          { label: "Products", value: products.length, icon: Banknote, color: "text-fi-amber bg-fi-amber/10 border-fi-amber/20" },
-          { label: "Applications", value: applications.length, icon: FileText, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
-          { label: "Active Loans", value: applications.filter(a => a.status === 'disbursed').length, icon: CreditCard, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
-          { label: "Repayments", value: repayments.length, icon: Calendar, color: "text-fi-purple bg-fi-purple/10 border-fi-purple/20" },
-        ].map(s => (
-          <Card key={s.label} className="border-border/60">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
-              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
-            </CardHeader>
-            <CardContent><div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : s.value}</div></CardContent>
-          </Card>
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {stats.map((s, i) => (
+          <motion.div key={s.label} initial="hidden" animate="visible" variants={fadeUp} custom={i + 1}>
+            <Card className="border-border/60 hover:shadow-md transition-shadow">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-1.5">
+                <CardTitle className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
+                <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-20" /> : s.value}</div>
+                <p className="mt-0.5 text-[10px] text-muted-foreground">{s.sub}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
-      <Tabs defaultValue="products" className="space-y-4">
-        <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1">
-          <TabsTrigger value="products" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Products</TabsTrigger>
-          <TabsTrigger value="applications" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Applications</TabsTrigger>
-          <TabsTrigger value="repayments" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Repayments</TabsTrigger>
-        </TabsList>
+      {/* Search & Filters */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={5} className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <Input placeholder="Search products or applications..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-9 h-9 text-sm" />
+        </div>
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px] h-9 text-xs"><SelectValue placeholder="Status" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            <SelectItem value="submitted">Submitted</SelectItem>
+            <SelectItem value="under_review">Under Review</SelectItem>
+            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="disbursed">Disbursed</SelectItem>
+            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="closed">Closed</SelectItem>
+          </SelectContent>
+        </Select>
+      </motion.div>
 
-        <TabsContent value="products">
-          <Card className="border-border/60"><CardHeader><CardTitle className="text-sm font-semibold">Loan Products</CardTitle></CardHeader><CardContent>
-            {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div> : products.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground"><Banknote className="h-10 w-10 mx-auto mb-3 opacity-30" /><p className="text-sm">No loan products</p></div>
-            ) : (
-              <Table><TableHeader><TableRow className="hover:bg-transparent"><TableHead className="text-xs">Product</TableHead><TableHead className="text-xs">Code</TableHead><TableHead className="text-xs">Type</TableHead><TableHead className="text-xs">Interest Rate</TableHead><TableHead className="text-xs">Amount Range</TableHead><TableHead className="text-xs">Tenure</TableHead><TableHead className="text-xs">Status</TableHead></TableRow></TableHeader>
-                <TableBody>{products.map(p => (
-                  <TableRow key={p.id}>
-                    <TableCell className="font-medium text-sm">{p.product_name}</TableCell>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{p.product_code}</TableCell>
-                    <TableCell><Badge variant="outline" className="text-[10px]">{p.loan_type}</Badge></TableCell>
-                    <TableCell className="text-sm">{p.interest_rate}%</TableCell>
-                    <TableCell className="text-sm">{Number(p.min_amount).toLocaleString()} - {Number(p.max_amount).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm">{p.min_tenure_months}-{p.max_tenure_months} months</TableCell>
-                    <TableCell><Badge variant={p.is_active ? "default" : "secondary"} className="text-[10px]">{p.is_active ? "Active" : "Inactive"}</Badge></TableCell>
-                  </TableRow>
-                ))}</TableBody></Table>
-            )}
-          </CardContent></Card>
-        </TabsContent>
+      {/* Tabs */}
+      <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={6}>
+        <Tabs defaultValue="applications" className="space-y-4">
+          <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1">
+            <TabsTrigger value="applications" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Applications ({filteredApplications.length})</TabsTrigger>
+            <TabsTrigger value="products" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Products ({filteredProducts.length})</TabsTrigger>
+            <TabsTrigger value="repayments" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Repayments ({repayments.length})</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="applications">
-          <Card className="border-border/60"><CardHeader><CardTitle className="text-sm font-semibold">Loan Applications</CardTitle></CardHeader><CardContent>
-            {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div> : applications.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground"><FileText className="h-10 w-10 mx-auto mb-3 opacity-30" /><p className="text-sm">No loan applications</p></div>
-            ) : (
-              <Table><TableHeader><TableRow className="hover:bg-transparent"><TableHead className="text-xs">Application #</TableHead><TableHead className="text-xs">Amount</TableHead><TableHead className="text-xs">Tenure</TableHead><TableHead className="text-xs">Purpose</TableHead><TableHead className="text-xs">Status</TableHead><TableHead className="text-xs">Date</TableHead></TableRow></TableHeader>
-                <TableBody>{applications.map(a => (
-                  <TableRow key={a.id}>
-                    <TableCell className="font-mono text-xs text-muted-foreground">{a.application_number}</TableCell>
-                    <TableCell className="text-sm">{Number(a.requested_amount).toLocaleString()} XAF</TableCell>
-                    <TableCell className="text-sm">{a.tenure_months} months</TableCell>
-                    <TableCell className="max-w-[200px] truncate text-sm">{a.purpose}</TableCell>
-                    <TableCell><Badge variant={statusColor(a.status)} className="text-[10px]">{a.status}</Badge></TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{a.created_at ? format(new Date(a.created_at), 'PP') : '--'}</TableCell>
-                  </TableRow>
-                ))}</TableBody></Table>
-            )}
-          </CardContent></Card>
-        </TabsContent>
+          {/* Applications */}
+          <TabsContent value="applications">
+            <Card className="border-border/60">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Loan Applications</CardTitle>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="text-[10px] bg-fi-amber/10 text-fi-amber">{pendingCount} pending</Badge>
+                  <Badge variant="outline" className="text-[10px] bg-fi-green/10 text-fi-green">{approvedCount} approved</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div> : filteredApplications.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <FileText className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">No loan applications</p>
+                    <p className="text-xs mt-1">Applications from the banking app will appear here</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Application #</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tenure</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Purpose</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credit Score</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Decision</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredApplications.map(a => {
+                          const style = statusStyles[a.status] || statusStyles.draft;
+                          return (
+                            <TableRow key={a.id} className="hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => setSelectedApp(a)}>
+                              <TableCell className="font-mono text-xs text-muted-foreground">{a.application_number}</TableCell>
+                              <TableCell className="text-sm font-semibold">{Number(a.requested_amount).toLocaleString()} XAF</TableCell>
+                              <TableCell className="text-sm">{a.tenure_months}mo</TableCell>
+                              <TableCell className="max-w-[150px] truncate text-sm text-muted-foreground">{a.purpose || '—'}</TableCell>
+                              <TableCell>
+                                {a.credit_score ? (
+                                  <Badge variant="outline" className={`text-[10px] ${a.credit_score >= 700 ? 'bg-fi-green/10 text-fi-green' : a.credit_score >= 580 ? 'bg-fi-amber/10 text-fi-amber' : 'bg-destructive/10 text-destructive'}`}>
+                                    {a.credit_score}
+                                  </Badge>
+                                ) : <span className="text-xs text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell>
+                                {a.auto_decision ? (
+                                  <Badge variant="outline" className="text-[10px] capitalize">{a.auto_decision.replace('_', ' ')}</Badge>
+                                ) : <span className="text-xs text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell><Badge variant={style.variant} className={`text-[10px] ${style.className}`}>{a.status}</Badge></TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{a.created_at ? format(new Date(a.created_at), 'PP') : '—'}</TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={e => { e.stopPropagation(); setSelectedApp(a); }}>
+                                  <Eye className="h-3 w-3" />Review
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="repayments">
-          <Card className="border-border/60"><CardHeader><CardTitle className="text-sm font-semibold">Loan Repayments</CardTitle></CardHeader><CardContent>
-            {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div> : repayments.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground"><Calendar className="h-10 w-10 mx-auto mb-3 opacity-30" /><p className="text-sm">No repayments recorded</p></div>
-            ) : (
-              <Table><TableHeader><TableRow className="hover:bg-transparent"><TableHead className="text-xs">Amount</TableHead><TableHead className="text-xs">Principal</TableHead><TableHead className="text-xs">Interest</TableHead><TableHead className="text-xs">Fees</TableHead><TableHead className="text-xs">Method</TableHead><TableHead className="text-xs">Date</TableHead></TableRow></TableHeader>
-                <TableBody>{repayments.map(r => (
-                  <TableRow key={r.id}>
-                    <TableCell className="font-medium text-sm">{Number(r.amount).toLocaleString()} XAF</TableCell>
-                    <TableCell className="text-sm">{Number(r.principal_paid).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm">{Number(r.interest_paid).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm">{Number(r.fees_paid).toLocaleString()}</TableCell>
-                    <TableCell className="text-sm">{r.payment_method || '--'}</TableCell>
-                    <TableCell className="text-xs text-muted-foreground">{r.created_at ? format(new Date(r.created_at), 'PP') : '--'}</TableCell>
-                  </TableRow>
-                ))}</TableBody></Table>
-            )}
-          </CardContent></Card>
-        </TabsContent>
-      </Tabs>
+          {/* Products */}
+          <TabsContent value="products">
+            <Card className="border-border/60">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Loan Products</CardTitle>
+                <Badge variant="outline" className="text-[10px]">{products.filter(p => p.is_active).length} active</Badge>
+              </CardHeader>
+              <CardContent>
+                {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div> : filteredProducts.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <Banknote className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">No loan products</p>
+                    <Button size="sm" onClick={() => setShowCreate(true)} className="mt-4 gap-1.5"><Plus className="h-3.5 w-3.5" />Create Product</Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Product</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Code</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Type</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Interest Rate</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Amount Range</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tenure</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Applications</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredProducts.map(p => {
+                          const appCount = applications.filter(a => a.loan_product_id === p.id).length;
+                          return (
+                            <TableRow key={p.id} className="hover:bg-muted/40 transition-colors">
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium text-sm">{p.product_name}</p>
+                                  {p.description && <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{p.description}</p>}
+                                </div>
+                              </TableCell>
+                              <TableCell className="font-mono text-xs text-muted-foreground">{p.product_code}</TableCell>
+                              <TableCell><Badge variant="outline" className="text-[10px] capitalize">{p.loan_type?.replace('_', ' ')}</Badge></TableCell>
+                              <TableCell className="text-sm font-semibold text-fi-amber">{p.interest_rate}% p.a.</TableCell>
+                              <TableCell className="text-xs">{Number(p.min_amount).toLocaleString()} — {Number(p.max_amount).toLocaleString()}</TableCell>
+                              <TableCell className="text-sm">{p.min_tenure_months}–{p.max_tenure_months}mo</TableCell>
+                              <TableCell><Badge variant="secondary" className="text-[10px]">{appCount}</Badge></TableCell>
+                              <TableCell><Badge variant={p.is_active ? "default" : "secondary"} className="text-[10px]">{p.is_active ? "Active" : "Inactive"}</Badge></TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" onClick={() => handleToggleProduct(p.id, p.is_active)} className="h-7 px-2 text-xs gap-1">
+                                  <ToggleLeft className="h-3 w-3" />{p.is_active ? 'Disable' : 'Enable'}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Repayments */}
+          <TabsContent value="repayments">
+            <Card className="border-border/60">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Loan Repayments</CardTitle>
+                <Badge variant="outline" className="text-[10px]">{repayments.length} payments</Badge>
+              </CardHeader>
+              <CardContent>
+                {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full" />)}</div> : repayments.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground"><Calendar className="h-12 w-12 mx-auto mb-3 opacity-20" /><p className="text-sm font-medium">No repayments recorded</p></div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Principal</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Interest</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Fees</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Method</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {repayments.map(r => (
+                          <TableRow key={r.id} className="hover:bg-muted/40 transition-colors">
+                            <TableCell className="font-semibold text-sm text-fi-green">+{Number(r.amount).toLocaleString()} XAF</TableCell>
+                            <TableCell className="text-sm">{Number(r.principal_paid).toLocaleString()}</TableCell>
+                            <TableCell className="text-sm">{Number(r.interest_paid).toLocaleString()}</TableCell>
+                            <TableCell className="text-sm">{Number(r.fees_paid).toLocaleString()}</TableCell>
+                            <TableCell className="text-sm capitalize">{r.payment_method?.replace('_', ' ') || '—'}</TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{r.created_at ? format(new Date(r.created_at), 'PP p') : '—'}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </motion.div>
+
+      {/* Application Detail/Review Sheet */}
+      <Sheet open={!!selectedApp} onOpenChange={() => setSelectedApp(null)}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-lg">Application Review</SheetTitle>
+          </SheetHeader>
+          {selectedApp && (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-xl bg-fi-amber/5 border border-fi-amber/20 p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Requested Amount</p>
+                <p className="text-3xl font-bold text-fi-amber">{Number(selectedApp.requested_amount).toLocaleString()} XAF</p>
+                {selectedApp.recommended_amount && selectedApp.recommended_amount !== selectedApp.requested_amount && (
+                  <p className="text-xs text-muted-foreground mt-1">Recommended: {Number(selectedApp.recommended_amount).toLocaleString()} XAF</p>
+                )}
+              </div>
+              
+              {selectedApp.credit_score && (
+                <div className="rounded-lg border border-border/40 p-3 flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Credit Score</span>
+                  <Badge variant="outline" className={`text-sm font-bold ${selectedApp.credit_score >= 700 ? 'bg-fi-green/10 text-fi-green border-fi-green/30' : selectedApp.credit_score >= 580 ? 'bg-fi-amber/10 text-fi-amber border-fi-amber/30' : 'bg-destructive/10 text-destructive border-destructive/30'}`}>
+                    {selectedApp.credit_score}
+                  </Badge>
+                </div>
+              )}
+
+              {[
+                { label: "Application #", value: selectedApp.application_number },
+                { label: "Status", value: selectedApp.status },
+                { label: "Auto Decision", value: selectedApp.auto_decision?.replace('_', ' ') || '—' },
+                { label: "Tenure", value: `${selectedApp.tenure_months} months` },
+                { label: "Frequency", value: selectedApp.repayment_frequency || 'monthly' },
+                { label: "Purpose", value: selectedApp.purpose || '—' },
+                { label: "Submitted", value: selectedApp.submitted_at ? format(new Date(selectedApp.submitted_at), 'PPp') : '—' },
+                { label: "Created", value: selectedApp.created_at ? format(new Date(selectedApp.created_at), 'PPp') : '—' },
+              ].map(f => (
+                <div key={f.label} className="flex items-center justify-between border-b border-border/30 pb-2">
+                  <span className="text-xs text-muted-foreground">{f.label}</span>
+                  <span className="text-sm font-medium capitalize">{f.value}</span>
+                </div>
+              ))}
+
+              {/* Action buttons for pending applications */}
+              {['submitted', 'under_review'].includes(selectedApp.status) && (
+                <div className="pt-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Actions</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1 gap-1.5 bg-fi-green text-white hover:bg-fi-green/90" onClick={() => handleUpdateApplicationStatus(selectedApp.id, 'approved')}>
+                      <CheckCircle className="h-3.5 w-3.5" />Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" className="flex-1 gap-1.5" onClick={() => handleUpdateApplicationStatus(selectedApp.id, 'rejected')}>
+                      <XCircle className="h-3.5 w-3.5" />Reject
+                    </Button>
+                  </div>
+                  {selectedApp.status === 'submitted' && (
+                    <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={() => handleUpdateApplicationStatus(selectedApp.id, 'under_review')}>
+                      <Clock className="h-3.5 w-3.5" />Mark Under Review
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Create Product Dialog */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Banknote className="h-5 w-5 text-fi-amber" />Create Loan Product</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 pt-2">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Product Name *</Label>
+                <Input placeholder="e.g. Personal Loan" value={newProduct.product_name} onChange={e => setNewProduct(p => ({ ...p, product_name: e.target.value }))} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Product Code *</Label>
+                <Input placeholder="e.g. PL-001" value={newProduct.product_code} onChange={e => setNewProduct(p => ({ ...p, product_code: e.target.value }))} className="h-9 text-sm font-mono" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Loan Type *</Label>
+                <Select value={newProduct.loan_type} onValueChange={v => setNewProduct(p => ({ ...p, loan_type: v }))}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal_loan">Personal Loan</SelectItem>
+                    <SelectItem value="business_loan">Business Loan</SelectItem>
+                    <SelectItem value="salary_advance">Salary Advance</SelectItem>
+                    <SelectItem value="mortgage">Mortgage</SelectItem>
+                    <SelectItem value="auto_loan">Auto Loan</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Interest Rate (% p.a.) *</Label>
+                <Input type="number" step="0.1" value={newProduct.interest_rate} onChange={e => setNewProduct(p => ({ ...p, interest_rate: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Min Amount (XAF)</Label>
+                <Input type="number" value={newProduct.min_amount} onChange={e => setNewProduct(p => ({ ...p, min_amount: e.target.value }))} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Max Amount (XAF)</Label>
+                <Input type="number" value={newProduct.max_amount} onChange={e => setNewProduct(p => ({ ...p, max_amount: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Min Tenure (months)</Label>
+                <Input type="number" value={newProduct.min_tenure_months} onChange={e => setNewProduct(p => ({ ...p, min_tenure_months: e.target.value }))} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Max Tenure (months)</Label>
+                <Input type="number" value={newProduct.max_tenure_months} onChange={e => setNewProduct(p => ({ ...p, max_tenure_months: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Interest Method</Label>
+                <Select value={newProduct.interest_calculation_method} onValueChange={v => setNewProduct(p => ({ ...p, interest_calculation_method: v }))}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="reducing_balance">Reducing Balance</SelectItem>
+                    <SelectItem value="flat_rate">Flat Rate</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Processing Fee (%)</Label>
+                <Input type="number" step="0.1" value={newProduct.processing_fee_percentage} onChange={e => setNewProduct(p => ({ ...p, processing_fee_percentage: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Description</Label>
+              <Input placeholder="Product description..." value={newProduct.description} onChange={e => setNewProduct(p => ({ ...p, description: e.target.value }))} className="h-9 text-sm" />
+            </div>
+            <Button onClick={handleCreateProduct} disabled={creating || !newProduct.product_name || !newProduct.product_code} className="mt-2 bg-fi-amber text-white hover:bg-fi-amber/90">
+              {creating ? 'Creating...' : 'Create Product'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
