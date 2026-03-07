@@ -252,7 +252,7 @@ export function LimitsChargesTab() {
                         <Input
                           type="number"
                           step="any"
-                          value={row[field.key] ?? 0}
+                          value={String(row[field.key] ?? 0)}
                           onChange={(e) => handleChange(cat.key, field.key, e.target.value)}
                           className="pr-12"
                         />
