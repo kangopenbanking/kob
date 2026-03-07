@@ -1,14 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-
+import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CreditApiIntegrationWidget } from "@/components/credit-api/CreditApiIntegrationWidget";
-import { TrendingUp, Shield, Activity, RefreshCw, ExternalLink } from "lucide-react";
+import { TrendingUp, Shield, Activity, RefreshCw, ExternalLink, Code } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 14 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.05, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } }),
+};
+
+const resolveInstitutionId = async (userId: string): Promise<string | null> => {
+  const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", userId).maybeSingle();
+  if (inst) return inst.id;
+  const { data: staffInst } = await supabase.rpc("get_staff_institution_id", { _user_id: userId });
+  return staffInst || null;
+};
 
 export default function InstitutionCreditApi() {
   const navigate = useNavigate();
@@ -24,92 +36,73 @@ export default function InstitutionCreditApi() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
-
-      const { data: institution } = await supabase
-        .from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-      if (!institution) { navigate('/register'); return; }
-      setInstitutionId(institution.id);
-
-      // Count credit API queries
-      const { count } = await supabase
-        .from("api_usage_metrics")
-        .select("id", { count: "exact", head: true })
-        .eq("institution_id", institution.id)
-        .ilike("endpoint", "%credit%");
-
+      const instId = await resolveInstitutionId(user.id);
+      if (!instId) { navigate('/register'); return; }
+      setInstitutionId(instId);
+      const { count } = await supabase.from("api_usage_metrics").select("id", { count: "exact", head: true }).eq("institution_id", instId).ilike("endpoint", "%credit%");
       setQueryCount(count || 0);
-    } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    } finally {
-      setLoading(false);
-    }
+    } catch (error: any) { toast({ title: "Error", description: error.message, variant: "destructive" }); }
+    finally { setLoading(false); }
   };
 
   return (
-    <>
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6">
+      <motion.div initial="hidden" animate="visible" custom={0} variants={fadeUp} className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-fi-teal/10 border border-fi-teal/20"><TrendingUp className="h-5 w-5 text-fi-teal" /></div>
           <div>
-            <h1 className="text-3xl font-bold">Credit Scoring API</h1>
-            <p className="text-muted-foreground">Query customer credit scores for lending decisions via the V1 API</p>
+            <h1 className="text-2xl font-bold tracking-tight">Credit Scoring API</h1>
+            <p className="text-sm text-muted-foreground">Query customer credit scores for lending decisions</p>
           </div>
-          <Button variant="outline" onClick={loadData}><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
         </div>
+        <Button variant="outline" size="sm" onClick={loadData} disabled={loading}><RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />Refresh</Button>
+      </motion.div>
 
-        <div className="grid gap-4 md:grid-cols-3">
-          <Card>
+      <motion.div initial="hidden" animate="visible" custom={1} variants={fadeUp} className="grid gap-4 md:grid-cols-3">
+        {[
+          { label: "API Queries", value: loading ? null : queryCount, sub: "Total credit score queries", icon: Activity, color: "text-fi-blue bg-fi-blue/10 border-fi-blue/20" },
+          { label: "Endpoint", value: "POST /v1/credit/query", sub: "Score query endpoint", icon: Code, color: "text-fi-teal bg-fi-teal/10 border-fi-teal/20" },
+          { label: "Authentication", value: "OAuth 2.0 + JWT", sub: "Certificate-bound tokens", icon: Shield, color: "text-fi-green bg-fi-green/10 border-fi-green/20" },
+        ].map(s => (
+          <Card key={s.label} className="border-border/60">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">API Queries</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{s.label}</CardTitle>
+              <div className={`flex h-8 w-8 items-center justify-center rounded-lg border ${s.color}`}><s.icon className="h-3.5 w-3.5" /></div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{loading ? <Skeleton className="h-8 w-16" /> : queryCount}</div>
-              <p className="text-xs text-muted-foreground">Total credit score queries</p>
+              {s.value === null ? <Skeleton className="h-6 w-16" /> : typeof s.value === 'number' ? <div className="text-2xl font-bold">{s.value}</div> : <code className="text-xs font-mono">{s.value}</code>}
+              {s.sub && <p className="text-[11px] text-muted-foreground mt-0.5">{s.sub}</p>}
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">API Endpoint</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <code className="text-sm font-mono text-muted-foreground">POST /v1/credit/query</code>
-              <p className="text-xs text-muted-foreground mt-1">Score query endpoint</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Authentication</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <Badge>OAuth 2.0 + JWT</Badge>
-              <p className="text-xs text-muted-foreground mt-1">Certificate-bound tokens</p>
-            </CardContent>
-          </Card>
-        </div>
+        ))}
+      </motion.div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Credit Score Query Tool</CardTitle>
-            <CardDescription>Test credit score queries using your API credentials</CardDescription>
+      <motion.div initial="hidden" animate="visible" custom={2} variants={fadeUp}>
+        <Card className="border-border/60 overflow-hidden">
+          <div className="h-1 bg-gradient-to-r from-fi-teal to-fi-blue" />
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-teal/10 border border-fi-teal/20"><TrendingUp className="h-4 w-4 text-fi-teal" /></div>
+              <div><CardTitle className="text-sm font-semibold">Credit Score Query Tool</CardTitle><CardDescription className="text-xs">Test credit score queries using your API credentials</CardDescription></div>
+            </div>
+          </CardHeader>
+          <CardContent>{institutionId ? <CreditApiIntegrationWidget institutionId={institutionId} /> : <p className="text-sm text-muted-foreground">Loading...</p>}</CardContent>
+        </Card>
+      </motion.div>
+
+      <motion.div initial="hidden" animate="visible" custom={3} variants={fadeUp}>
+        <Card className="border-border/60">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-fi-indigo/10 border border-fi-indigo/20"><Code className="h-4 w-4 text-fi-indigo" /></div>
+                <div><CardTitle className="text-sm font-semibold">API Reference</CardTitle><CardDescription className="text-xs">Integration documentation</CardDescription></div>
+              </div>
+              <Button variant="outline" size="sm" asChild><a href="/documentation" target="_blank"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Full Docs</a></Button>
+            </div>
           </CardHeader>
           <CardContent>
-            {institutionId ? (
-              <CreditApiIntegrationWidget institutionId={institutionId} />
-            ) : (
-              <p className="text-muted-foreground">Loading...</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>API Reference</CardTitle>
-            <CardDescription>Integration documentation for the Credit Scoring API</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="p-4 bg-muted rounded-lg font-mono text-sm space-y-2">
+            <div className="rounded-lg border border-border/60 bg-muted/30 p-4 font-mono text-xs space-y-1">
               <p className="text-muted-foreground"># Request</p>
               <p>POST /v1/credit/query</p>
               <p>Authorization: Bearer {'<access_token>'}</p>
@@ -119,12 +112,9 @@ export default function InstitutionCreditApi() {
               <p>  "consent_id": "consent_xyz"</p>
               <p>{'}'}</p>
             </div>
-            <Button variant="outline" asChild>
-              <a href="/documentation" target="_blank"><ExternalLink className="h-4 w-4 mr-2" />View Full Documentation</a>
-            </Button>
           </CardContent>
         </Card>
-      </div>
-    </>
+      </motion.div>
+    </div>
   );
 }
