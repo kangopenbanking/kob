@@ -10,6 +10,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
+import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PWARouteGuard } from "@/components/pwa/PWARouteGuard";
