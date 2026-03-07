@@ -94,15 +94,16 @@ const CATEGORIES: {
     ],
   },
   {
-    key: "cash_in", label: "Cash In", description: "Agent deposits & money-in",
+    key: "cash_in", label: "Add Money", description: "Account funding & deposits",
     icon: ArrowDownToLine,
     fields: [
-      { key: "min_amount", label: "Minimum Amount", suffix: "XAF" },
-      { key: "max_amount", label: "Maximum Amount", suffix: "XAF" },
-      { key: "agent_commission_fixed", label: "Agent Commission (fixed)", suffix: "XAF" },
-      { key: "agent_commission_percent", label: "Agent Commission (%)", suffix: "%" },
-      { key: "daily_limit", label: "Daily Money In Limit", suffix: "XAF", hint: "-1 for unlimited" },
-      { key: "monthly_limit", label: "Monthly Money In Limit", suffix: "XAF", hint: "-1 for unlimited" },
+      { key: "percentage_charge", label: "Percentage Charge", suffix: "%" },
+      { key: "fixed_charge", label: "Fixed Charge", suffix: "XAF" },
+      { key: "min_amount", label: "Minimum Deposit", suffix: "XAF" },
+      { key: "max_amount", label: "Maximum Deposit", suffix: "XAF" },
+      { key: "daily_limit", label: "Daily Deposit Limit", suffix: "XAF", hint: "-1 for unlimited" },
+      { key: "monthly_limit", label: "Monthly Deposit Limit", suffix: "XAF", hint: "-1 for unlimited" },
+      { key: "max_charge_cap", label: "Max Charge Cap", suffix: "XAF", hint: "-1 for no cap" },
     ],
   },
   {
