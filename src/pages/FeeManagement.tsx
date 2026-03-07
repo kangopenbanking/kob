@@ -302,9 +302,6 @@ export default function FeeManagement() {
           <FeeAnalytics transactionFees={filteredFees} feeStructures={filteredStructures} />
         </TabsContent>
 
-        <TabsContent value="limits">
-          <LimitsChargesTab />
-        </TabsContent>
 
         <TabsContent value="merchant-fees">
           <MerchantFeesTab />
