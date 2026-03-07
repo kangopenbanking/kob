@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
+import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -212,6 +213,24 @@ serve(async (req) => {
       action_type: 'gateway_charge_created', entity_type: 'gateway_charge', entity_id: charge.id,
       performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref, payment_link_id, settlement_currency, save_token },
     }).then(() => {}).catch(() => {});
+
+    // Record transaction fee for billing/invoicing
+    if (charge.status !== 'failed') {
+      const merchantInstitution = merchant.institution_id || null;
+      recordTransactionFee({
+        supabase,
+        institutionId: merchantInstitution,
+        transactionType: `gateway_charge_${channel}`,
+        transactionRef: tx_ref,
+        transactionAmount: amount,
+        transactionCurrency: currency,
+        feeModel: 'hybrid',
+        calculatedFee: fee,
+        finalFee: fee,
+        feeBreakdown: { fee_amount: fee, net_amount: net, channel, provider },
+        metadata: { charge_id: charge.id, merchant_id },
+      }).catch(() => {});
+    }
 
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

@@ -65,6 +65,7 @@ interface CreateFeeStructureFormProps {
 export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initialData }: CreateFeeStructureFormProps) {
   const [formData, setFormData] = useState({
     institution_id: initialData?.institution_id || '',
+    fee_scope: initialData?.fee_scope || 'institution',
     transaction_type: initialData?.transaction_type || '',
     fee_model: initialData?.fee_model || '',
     fixed_amount: initialData?.fixed_amount || 0,
@@ -98,15 +99,18 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const isPlatform = formData.fee_scope === 'platform';
     onSubmit({
       ...formData,
+      institution_id: isPlatform ? null : formData.institution_id,
+      fee_scope: formData.fee_scope,
       tiered_rates: formData.fee_model === 'tiered' ? tiers : null,
       effective_until: formData.effective_until || null,
     });
   };
 
   const canProceed = () => {
-    if (step === 1) return formData.institution_id && formData.transaction_type;
+    if (step === 1) return (formData.fee_scope === 'platform' || formData.institution_id) && formData.transaction_type;
     if (step === 2) return formData.fee_model;
     return true;
   };
@@ -139,6 +143,17 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
         {step === 1 && (
           <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-4">
             <div className="space-y-2">
+              <Label className="text-sm font-semibold">Fee Scope</Label>
+              <Select value={formData.fee_scope} onValueChange={(v) => setFormData({ ...formData, fee_scope: v, institution_id: v === 'platform' ? '' : formData.institution_id })}>
+                <SelectTrigger className="h-11"><SelectValue placeholder="Select fee scope" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="platform">🌐 Platform Default (all institutions)</SelectItem>
+                  <SelectItem value="institution">🏦 Institution-Specific</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            {formData.fee_scope === 'institution' && (
+            <div className="space-y-2">
               <Label className="text-sm font-semibold">Institution</Label>
               <Select value={formData.institution_id} onValueChange={(v) => setFormData({ ...formData, institution_id: v })}>
                 <SelectTrigger className="h-11"><SelectValue placeholder="Select an institution" /></SelectTrigger>
@@ -149,6 +164,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
                 </SelectContent>
               </Select>
             </div>
+            )}
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Transaction Type</Label>
               <div className="grid grid-cols-2 gap-2 max-h-[300px] overflow-y-auto pr-1">
@@ -269,7 +285,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
             <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-4">
               <h4 className="text-sm font-bold mb-2">Fee Preview</h4>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p><span className="font-medium text-foreground">Institution:</span> {institutions.find(i => i.id === formData.institution_id)?.institution_name || '—'}</p>
+                <p><span className="font-medium text-foreground">Scope:</span> {formData.fee_scope === 'platform' ? 'Platform Default' : (institutions.find(i => i.id === formData.institution_id)?.institution_name || '—')}</p>
                 <p><span className="font-medium text-foreground">Type:</span> {TRANSACTION_TYPES.find(t => t.value === formData.transaction_type)?.label || '—'}</p>
                 <p><span className="font-medium text-foreground">Model:</span> {FEE_MODELS.find(m => m.value === formData.fee_model)?.label || '—'}</p>
                 {formData.fixed_amount > 0 && <p><span className="font-medium text-foreground">Fixed:</span> {formData.fixed_amount.toLocaleString()} XAF</p>}

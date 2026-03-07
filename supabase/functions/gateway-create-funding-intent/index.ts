@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee, getPayPalAccessToken } from "../_shared/gateway-adapters.ts";
 import { sumUsageForPeriod, validateAmountRange } from "../_shared/limits-enforcement.ts";
+import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -278,6 +279,23 @@ serve(async (req) => {
       funding_intent_id: intent.id, event_type: 'created',
       payload: { method, provider: resolvedProvider, amount, currency, funding_scope: fundingScope },
     });
+
+    // Record transaction fee for billing/invoicing
+    if (institutionId && fee > 0) {
+      recordTransactionFee({
+        supabase,
+        institutionId,
+        transactionType: `funding_${method}`,
+        transactionRef: txRef,
+        transactionAmount: amount,
+        transactionCurrency: currency,
+        feeModel: 'hybrid',
+        calculatedFee: fee,
+        finalFee: fee,
+        feeBreakdown: { fee_amount: fee, net_amount: net, method, provider: resolvedProvider, ...(components || {}) },
+        metadata: { funding_intent_id: intent.id, funding_scope: fundingScope, merchant_id: merchantId },
+      }).catch(() => {});
+    }
 
     return new Response(JSON.stringify(intent), { status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
