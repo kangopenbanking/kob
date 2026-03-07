@@ -1,7 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
 import { corsHeaders } from "../_shared/cors.ts";
-}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -74,7 +73,6 @@ Deno.serve(async (req) => {
       { plan_name: '15-Seater Tour Van', rows: 5, columns: 3, service_idx: 1 },
       { plan_name: '120-Seater Aircraft', rows: 20, columns: 6, service_idx: 2 },
       { plan_name: '80-Seater Train Car', rows: 16, columns: 5, service_idx: 3 },
-    ];
     ];
 
     const createdPlans: any[] = [];
