@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, PiggyBank, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useCreateSavingsGoal } from '@/hooks/useBankingData';
 
 const BankNewSavings: React.FC = () => {
   const navigate = useNavigate();
+  const { institutionId } = useParams();
   const createGoal = useCreateSavingsGoal();
 
   const [productId, setProductId] = useState('');
@@ -21,13 +22,19 @@ const BankNewSavings: React.FC = () => {
   const [targetDate, setTargetDate] = useState('');
 
   const { data: products, isLoading: productsLoading } = useQuery({
-    queryKey: ['savings-products'],
+    queryKey: ['savings-products', institutionId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from('savings_products')
         .select('*')
         .eq('is_active', true)
         .order('savings_type');
+      
+      if (institutionId) {
+        query = query.eq('institution_id', institutionId);
+      }
+      
+      const { data, error } = await query;
       if (error) throw error;
       return data || [];
     },
