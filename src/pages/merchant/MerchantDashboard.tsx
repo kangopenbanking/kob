@@ -4,11 +4,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { StatCard } from "@/components/ui/stat-card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { TransactionDetailSheet } from "@/components/ui/transaction-detail-sheet";
-import { Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2, Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet, Link2, FileText, CreditCard } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import {
+  Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2,
+  Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet,
+  Link2, FileText, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
+  Clock, Zap, Users, Globe,
+} from "lucide-react";
 import { format } from "date-fns";
+import { Area, AreaChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
+import { motion } from "framer-motion";
 
 interface SetupStep {
   key: string;
@@ -19,15 +26,20 @@ interface SetupStep {
   path: string;
 }
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 16 },
+  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.06, duration: 0.4, ease: "easeOut" } }),
+};
+
 export default function MerchantDashboard() {
   const navigate = useNavigate();
   const [merchant, setMerchant] = useState<any>(null);
   const [charges, setCharges] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ totalRevenue: 0, txCount: 0, successRate: 0 });
+  const [stats, setStats] = useState({ totalRevenue: 0, txCount: 0, successRate: 0, failedCount: 0, pendingCount: 0 });
   const [setupSteps, setSetupSteps] = useState<SetupStep[]>([]);
   const [wallets, setWallets] = useState<any[]>([]);
-  const [sparkline, setSparkline] = useState<number[]>([]);
+  const [chartData, setChartData] = useState<{ day: string; revenue: number }[]>([]);
   const [disputeCount, setDisputeCount] = useState(0);
   const [selectedTx, setSelectedTx] = useState<any>(null);
 
@@ -58,24 +70,36 @@ export default function MerchantDashboard() {
 
         if (allChRes.data) {
           const allCh = allChRes.data;
-          const total = allCh.filter(c => c.status === "successful").reduce((s, c) => s + Number(c.amount), 0);
-          const success = allCh.filter(c => c.status === "successful").length;
-          setStats({ totalRevenue: total, txCount: allCh.length, successRate: allCh.length > 0 ? Math.round((success / allCh.length) * 100) : 0 });
+          const successful = allCh.filter(c => c.status === "successful");
+          const total = successful.reduce((s, c) => s + Number(c.amount), 0);
+          const failed = allCh.filter(c => c.status === "failed").length;
+          const pending = allCh.filter(c => c.status === "pending").length;
+          setStats({
+            totalRevenue: total,
+            txCount: allCh.length,
+            successRate: allCh.length > 0 ? Math.round((successful.length / allCh.length) * 100) : 0,
+            failedCount: failed,
+            pendingCount: pending,
+          });
 
-          // Build sparkline from last 14 days
           const daily: Record<string, number> = {};
-          allCh.filter(c => c.status === "successful").forEach(c => {
+          successful.forEach(c => {
             const day = c.created_at?.split("T")[0] || "";
             daily[day] = (daily[day] || 0) + Number(c.amount);
           });
-          setSparkline(Object.entries(daily).sort().slice(-14).map(([, v]) => v));
+          setChartData(
+            Object.entries(daily).sort().slice(-14).map(([day, revenue]) => ({
+              day: format(new Date(day), "MMM d"),
+              revenue,
+            }))
+          );
         }
 
         setSetupSteps([
-          { key: "kyb", title: "Complete KYB Verification", description: "Submit your business documents to go live", icon: ShieldCheck, completed: m.kyb_status === "verified" || m.status === "active", path: "/merchant/kyb" },
-          { key: "api_keys", title: "Generate API Keys", description: "Get your sandbox keys to start integrating", icon: Key, completed: (apiKeysRes.data?.length || 0) > 0, path: "/merchant/api-keys" },
-          { key: "webhooks", title: "Configure Webhooks", description: "Set up real-time payment notifications", icon: Webhook, completed: (webhooksRes.data?.length || 0) > 0, path: "/merchant/webhooks" },
-          { key: "settlement", title: "Add Settlement Account", description: "Add a bank or mobile money account for payouts", icon: Building2, completed: (settlementRes.data?.length || 0) > 0, path: "/merchant/settlement-accounts" },
+          { key: "kyb", title: "Complete KYB Verification", description: "Submit business documents to go live", icon: ShieldCheck, completed: m.kyb_status === "verified" || m.status === "active", path: "/merchant/kyb" },
+          { key: "api_keys", title: "Generate API Keys", description: "Get sandbox keys to integrate", icon: Key, completed: (apiKeysRes.data?.length || 0) > 0, path: "/merchant/api-keys" },
+          { key: "webhooks", title: "Configure Webhooks", description: "Real-time payment notifications", icon: Webhook, completed: (webhooksRes.data?.length || 0) > 0, path: "/merchant/webhooks" },
+          { key: "settlement", title: "Add Settlement Account", description: "Bank or mobile money for payouts", icon: Building2, completed: (settlementRes.data?.length || 0) > 0, path: "/merchant/settlement-accounts" },
         ]);
       }
     } finally {
@@ -83,7 +107,11 @@ export default function MerchantDashboard() {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading) return (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 
   if (!merchant) {
     return (
@@ -94,7 +122,7 @@ export default function MerchantDashboard() {
         <div>
           <h2 className="text-2xl font-bold">Welcome to the Merchant Portal</h2>
           <p className="text-muted-foreground mt-2">
-            You haven't set up your merchant account yet. Get started in minutes and begin accepting payments across Africa.
+            Get started in minutes and begin accepting payments across Africa.
           </p>
         </div>
         <Button size="lg" onClick={() => navigate("/merchant-register")} className="gap-2">
@@ -109,158 +137,354 @@ export default function MerchantDashboard() {
   const showSetup = setupProgress < 100;
   const currency = (merchant.metadata as any)?.default_currency || "XAF";
 
+  const statusColor = (s: string) =>
+    s === "successful" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+    : s === "failed" ? "bg-destructive/10 text-destructive border-destructive/20"
+    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20";
+
+  const quickActions = [
+    { label: "Payment Link", icon: Link2, path: "/merchant/payment-links", color: "bg-sky-500/10 text-sky-600 dark:text-sky-400" },
+    { label: "Send Invoice", icon: FileText, path: "/merchant/invoices", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
+    { label: "API Keys", icon: Key, path: "/merchant/api-keys", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
+    { label: "New Charge", icon: CreditCard, path: "/merchant/charges", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+  ];
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-[1400px] mx-auto">
+      {/* Hero Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+      >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">{merchant.business_name}</h1>
-          <p className="text-muted-foreground">Welcome to your merchant dashboard</p>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">{merchant.business_name}</h1>
+          <p className="text-muted-foreground text-sm mt-0.5">
+            Overview of your payment operations · <span className="text-foreground/70">{format(new Date(), "EEEE, MMMM d")}</span>
+          </p>
         </div>
-        {disputeCount > 0 && (
-          <Button variant="outline" size="sm" onClick={() => navigate("/merchant/disputes")} className="gap-2">
-            <AlertCircle className="h-4 w-4 text-destructive" />
-            {disputeCount} Open Dispute{disputeCount > 1 ? "s" : ""}
+        <div className="flex items-center gap-2">
+          {disputeCount > 0 && (
+            <Button variant="outline" size="sm" onClick={() => navigate("/merchant/disputes")} className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/5">
+              <AlertCircle className="h-4 w-4" />
+              {disputeCount} Open Dispute{disputeCount > 1 ? "s" : ""}
+            </Button>
+          )}
+          <Button size="sm" onClick={() => navigate("/merchant/analytics")} className="gap-2">
+            <BarChart3 className="h-4 w-4" /> Analytics
           </Button>
-        )}
-      </div>
+        </div>
+      </motion.div>
 
       {/* KYB Banner */}
       {merchant.kyb_status !== "verified" && merchant.status !== "active" && (
-        <Card className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-          <CardContent className="p-4 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-amber-600 dark:text-amber-400 shrink-0" />
-              <div>
-                <p className="font-medium">KYB Verification: <Badge variant={merchant.kyb_status === "submitted" ? "secondary" : "outline"}>{merchant.kyb_status?.replace(/_/g, " ").toUpperCase()}</Badge></p>
-                <p className="text-sm text-muted-foreground">Complete your KYB to accept live payments.</p>
+        <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
+          <Card className="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 overflow-hidden">
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+                  <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">
+                    KYB Verification: <Badge variant="secondary" className="ml-1">{merchant.kyb_status?.replace(/_/g, " ").toUpperCase()}</Badge>
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Complete your KYB to accept live payments.</p>
+                </div>
               </div>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => navigate("/merchant/kyb")}>Complete KYB</Button>
-          </CardContent>
-        </Card>
+              <Button size="sm" onClick={() => navigate("/merchant/kyb")}>Complete KYB</Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {/* Setup Checklist */}
       {showSetup && (
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-base">Getting Started</CardTitle>
-                <CardDescription>{completedSteps} of {setupSteps.length} steps completed</CardDescription>
-              </div>
-              <Badge variant="secondary">{setupProgress}%</Badge>
-            </div>
-            <div className="w-full bg-muted rounded-full h-2 mt-2">
-              <div className="bg-primary rounded-full h-2 transition-all duration-500" style={{ width: `${setupProgress}%` }} />
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            {setupSteps.map(s => (
-              <div key={s.key}
-                className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors hover:bg-muted/50 ${s.completed ? "opacity-60" : ""}`}
-                onClick={() => navigate(s.path)}
-              >
-                {s.completed ? <CheckCircle2 className="h-5 w-5 text-primary shrink-0" /> : <s.icon className="h-5 w-5 text-muted-foreground shrink-0" />}
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${s.completed ? "line-through" : ""}`}>{s.title}</p>
-                  <p className="text-xs text-muted-foreground">{s.description}</p>
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Getting Started</CardTitle>
+                  <CardDescription className="mt-0.5">{completedSteps} of {setupSteps.length} steps completed</CardDescription>
                 </div>
-                {!s.completed && <ArrowRight className="h-4 w-4 text-muted-foreground" />}
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-bold text-primary">{setupProgress}%</span>
+                </div>
               </div>
-            ))}
-          </CardContent>
-        </Card>
+              <Progress value={setupProgress} className="mt-3 h-2" />
+            </CardHeader>
+            <CardContent className="grid gap-2 sm:grid-cols-2">
+              {setupSteps.map((s, i) => (
+                <motion.div
+                  key={s.key}
+                  custom={i}
+                  variants={fadeUp}
+                  initial="hidden"
+                  animate="visible"
+                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/40 ${s.completed ? "opacity-50" : ""}`}
+                  onClick={() => navigate(s.path)}
+                >
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${s.completed ? "bg-primary/10" : "bg-muted"}`}>
+                    {s.completed
+                      ? <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
+                      : <s.icon className="h-4.5 w-4.5 text-muted-foreground" />
+                    }
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-medium ${s.completed ? "line-through" : ""}`}>{s.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{s.description}</p>
+                  </div>
+                  {!s.completed && <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />}
+                </motion.div>
+              ))}
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <StatCard
-          title="Total Revenue"
-          value={`${stats.totalRevenue.toLocaleString()} ${currency}`}
-          icon={<DollarSign className="h-5 w-5" />}
-          sparklineData={sparkline}
-        />
-        <StatCard
-          title="Transactions"
-          value={stats.txCount.toLocaleString()}
-          icon={<ArrowUpDown className="h-5 w-5" />}
-        />
-        <StatCard
-          title="Success Rate"
-          value={`${stats.successRate}%`}
-          icon={<TrendingUp className="h-5 w-5" />}
-          trend={stats.successRate >= 90 ? { value: stats.successRate - 85, label: "vs baseline" } : undefined}
-        />
-      </div>
-
-      {/* Wallet Balances */}
-      {wallets.length > 0 && (
-        <div className="grid gap-4 md:grid-cols-3">
-          {wallets.map(w => (
-            <StatCard
-              key={w.id}
-              title={`${w.currency} Wallet`}
-              value={`${Number(w.available_balance || 0).toLocaleString()} ${w.currency}`}
-              icon={<Wallet className="h-5 w-5" />}
-              onClick={() => navigate("/merchant/wallets")}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Quick Actions */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+      {/* Stats Grid */}
+      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         {[
-          { label: "Payment Link", icon: Link2, path: "/merchant/payment-links" },
-          { label: "Send Invoice", icon: FileText, path: "/merchant/invoices" },
-          { label: "View API Keys", icon: Key, path: "/merchant/api-keys" },
-          { label: "New Charge", icon: CreditCard, path: "/merchant/charges" },
-        ].map(a => (
-          <Button key={a.label} variant="outline" className="h-auto py-3 flex-col gap-1.5" onClick={() => navigate(a.path)}>
-            <a.icon className="h-4 w-4" />
-            <span className="text-xs">{a.label}</span>
-          </Button>
+          {
+            title: "Total Revenue",
+            value: `${stats.totalRevenue.toLocaleString()}`,
+            suffix: currency,
+            icon: DollarSign,
+            iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+            change: stats.successRate >= 90 ? "+12%" : undefined,
+            changeUp: true,
+          },
+          {
+            title: "Transactions",
+            value: stats.txCount.toLocaleString(),
+            icon: ArrowUpDown,
+            iconBg: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+          },
+          {
+            title: "Success Rate",
+            value: `${stats.successRate}%`,
+            icon: TrendingUp,
+            iconBg: stats.successRate >= 90
+              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+              : "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+            change: stats.successRate >= 90 ? "Healthy" : "Needs attention",
+            changeUp: stats.successRate >= 90,
+          },
+          {
+            title: "Pending",
+            value: stats.pendingCount.toLocaleString(),
+            icon: Clock,
+            iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+          },
+        ].map((stat, i) => (
+          <motion.div key={stat.title} custom={i} variants={fadeUp} initial="hidden" animate="visible">
+            <Card className="hover:shadow-md transition-shadow">
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between">
+                  <div className="space-y-1.5">
+                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.title}</p>
+                    <p className="text-2xl font-bold tracking-tight text-foreground">
+                      {stat.value}
+                      {stat.suffix && <span className="text-sm font-medium text-muted-foreground ml-1">{stat.suffix}</span>}
+                    </p>
+                    {stat.change && (
+                      <div className={`flex items-center gap-1 text-xs font-medium ${stat.changeUp ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                        {stat.changeUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
+                        {stat.change}
+                      </div>
+                    )}
+                  </div>
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${stat.iconBg}`}>
+                    <stat.icon className="h-5 w-5" />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </div>
 
+      {/* Revenue Chart + Wallets */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        {/* Revenue Chart */}
+        <motion.div className="lg:col-span-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+          <Card className="h-full">
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base">Revenue Trend</CardTitle>
+                  <CardDescription>Last 14 days</CardDescription>
+                </div>
+                <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/analytics")} className="text-xs gap-1">
+                  Details <ArrowRight className="h-3 w-3" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {chartData.length > 1 ? (
+                <div className="h-[220px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="revenueGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                          <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                      <XAxis dataKey="day" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} />
+                      <Tooltip
+                        contentStyle={{
+                          background: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          boxShadow: "var(--shadow-medium)",
+                        }}
+                        formatter={(value: number) => [`${value.toLocaleString()} ${currency}`, "Revenue"]}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="revenue"
+                        stroke="hsl(var(--primary))"
+                        strokeWidth={2}
+                        fill="url(#revenueGrad)"
+                        dot={false}
+                        activeDot={{ r: 4, fill: "hsl(var(--primary))", stroke: "hsl(var(--background))", strokeWidth: 2 }}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              ) : (
+                <div className="h-[220px] flex items-center justify-center text-sm text-muted-foreground">
+                  Not enough data to display chart
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Wallets */}
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base">Wallets</CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {wallets.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Wallet className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">No wallet balances yet</p>
+                </div>
+              ) : (
+                wallets.map(w => (
+                  <div key={w.id} className="p-3.5 rounded-xl bg-muted/40 border border-border/50 space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{w.currency} Balance</span>
+                      <Badge variant="outline" className="text-[10px]">Available</Badge>
+                    </div>
+                    <p className="text-xl font-bold tracking-tight">{Number(w.available_balance || 0).toLocaleString()}<span className="text-sm font-medium text-muted-foreground ml-1">{w.currency}</span></p>
+                    {(Number(w.pending_balance) > 0) && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                        +{Number(w.pending_balance).toLocaleString()} pending
+                      </p>
+                    )}
+                  </div>
+                ))
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Quick Actions */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+        <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
+          {quickActions.map((a, i) => (
+            <Card
+              key={a.label}
+              className="cursor-pointer hover:shadow-md transition-all group border-border/60"
+              onClick={() => navigate(a.path)}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${a.color} transition-transform group-hover:scale-110`}>
+                  <a.icon className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold">{a.label}</p>
+                  <p className="text-xs text-muted-foreground">Quick action</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </motion.div>
+
       {/* Recent Transactions */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Recent Transactions</CardTitle>
-            <CardDescription>Latest 10 charges</CardDescription>
-          </div>
-          <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/transactions")}>View All</Button>
-        </CardHeader>
-        <CardContent>
-          {charges.length === 0 ? (
-            <EmptyState
-              icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />}
-              title="No transactions yet"
-              description="Start integrating with our API to accept your first payment"
-              action={{ label: "View API Docs", onClick: () => navigate("/developer/gateway/charges") }}
-            />
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead><tr className="border-b"><th className="text-left py-2 px-3">Reference</th><th className="text-left py-2 px-3">Amount</th><th className="text-left py-2 px-3">Status</th><th className="text-left py-2 px-3">Channel</th><th className="text-left py-2 px-3">Date</th></tr></thead>
-                <tbody>
-                  {charges.map(c => (
-                    <tr key={c.id} className="border-b last:border-0 cursor-pointer hover:bg-muted/50" onClick={() => setSelectedTx(c)}>
-                      <td className="py-2 px-3 font-mono text-xs">{c.charge_ref?.slice(0, 16)}</td>
-                      <td className="py-2 px-3">{Number(c.amount).toLocaleString()} {c.currency}</td>
-                      <td className="py-2 px-3"><Badge variant={c.status === "successful" ? "default" : c.status === "failed" ? "destructive" : "secondary"}>{c.status}</Badge></td>
-                      <td className="py-2 px-3">{c.channel}</td>
-                      <td className="py-2 px-3">{c.created_at ? format(new Date(c.created_at), "MMM d, HH:mm") : "-"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <div>
+              <CardTitle className="text-base">Recent Transactions</CardTitle>
+              <CardDescription>Latest payment activity</CardDescription>
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/transactions")} className="gap-1 text-xs">
+              View All <ArrowRight className="h-3 w-3" />
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {charges.length === 0 ? (
+              <EmptyState
+                icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />}
+                title="No transactions yet"
+                description="Start integrating with our API to accept your first payment"
+                action={{ label: "View API Docs", onClick: () => navigate("/developer/gateway/charges") }}
+              />
+            ) : (
+              <div className="overflow-x-auto -mx-6">
+                <table className="w-full text-sm min-w-[600px]">
+                  <thead>
+                    <tr className="border-b border-border/60">
+                      <th className="text-left py-2.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reference</th>
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
+                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Channel</th>
+                      <th className="text-left py-2.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {charges.map(c => (
+                      <tr
+                        key={c.id}
+                        className="border-b border-border/40 last:border-0 cursor-pointer hover:bg-muted/30 transition-colors"
+                        onClick={() => setSelectedTx(c)}
+                      >
+                        <td className="py-3 px-6 font-mono text-xs text-foreground/80">{c.charge_ref?.slice(0, 18)}</td>
+                        <td className="py-3 px-3 font-semibold">{Number(c.amount).toLocaleString()} <span className="text-muted-foreground font-normal">{c.currency}</span></td>
+                        <td className="py-3 px-3">
+                          <Badge variant="outline" className={`text-[11px] font-medium border ${statusColor(c.status)}`}>
+                            {c.status}
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-3 text-muted-foreground capitalize">{c.channel || "—"}</td>
+                        <td className="py-3 px-6 text-muted-foreground">{c.created_at ? format(new Date(c.created_at), "MMM d, HH:mm") : "—"}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       <TransactionDetailSheet open={!!selectedTx} onOpenChange={o => !o && setSelectedTx(null)} transaction={selectedTx} />
     </div>
