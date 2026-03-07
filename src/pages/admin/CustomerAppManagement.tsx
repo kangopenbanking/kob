@@ -66,7 +66,6 @@ interface CustomerAppConfig {
     bank_transfer: boolean;
     mobile_money: boolean;
     paypal: boolean;
-    agent: boolean;
   };
   cashout_limits: {
     min_amount: number;
