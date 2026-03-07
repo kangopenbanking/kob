@@ -285,7 +285,7 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
             <div className="rounded-xl border bg-gradient-to-br from-primary/5 to-primary/10 p-4">
               <h4 className="text-sm font-bold mb-2">Fee Preview</h4>
               <div className="text-sm text-muted-foreground space-y-1">
-                <p><span className="font-medium text-foreground">Institution:</span> {institutions.find(i => i.id === formData.institution_id)?.institution_name || '—'}</p>
+                <p><span className="font-medium text-foreground">Scope:</span> {formData.fee_scope === 'platform' ? 'Platform Default' : (institutions.find(i => i.id === formData.institution_id)?.institution_name || '—')}</p>
                 <p><span className="font-medium text-foreground">Type:</span> {TRANSACTION_TYPES.find(t => t.value === formData.transaction_type)?.label || '—'}</p>
                 <p><span className="font-medium text-foreground">Model:</span> {FEE_MODELS.find(m => m.value === formData.fee_model)?.label || '—'}</p>
                 {formData.fixed_amount > 0 && <p><span className="font-medium text-foreground">Fixed:</span> {formData.fixed_amount.toLocaleString()} XAF</p>}

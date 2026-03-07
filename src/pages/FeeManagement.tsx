@@ -72,8 +72,10 @@ export default function FeeManagement() {
   const createFeeStructure = async (formData: any) => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
+      const isPlatform = formData.fee_scope === 'platform';
       const { error } = await supabase.from('fee_structures').insert({
-        institution_id: formData.institution_id,
+        institution_id: isPlatform ? null : formData.institution_id,
+        fee_scope: formData.fee_scope || 'institution',
         transaction_type: formData.transaction_type,
         fee_model: formData.fee_model,
         fixed_amount: formData.fixed_amount || 0,

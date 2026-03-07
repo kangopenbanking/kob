@@ -98,6 +98,7 @@ export function useFeeEstimate({
       }
       scopes.push({ scope: "platform" });
 
+      const today = new Date().toISOString().split("T")[0];
       for (const s of scopes) {
         let query = supabase
           .from("fee_structures")
@@ -105,7 +106,8 @@ export function useFeeEstimate({
           .eq("transaction_type", txType)
           .eq("fee_scope", s.scope)
           .eq("is_active", true)
-          .lte("effective_from", new Date().toISOString().split("T")[0])
+          .lte("effective_from", today)
+          .or(`effective_until.is.null,effective_until.gte.${today}`)
           .order("effective_from", { ascending: false })
           .limit(1);
 
