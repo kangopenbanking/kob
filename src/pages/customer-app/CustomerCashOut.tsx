@@ -18,7 +18,6 @@ const iconMap: Record<string, { icon: React.ElementType; color: string; iconColo
   momo_orange: { icon: Smartphone, color: 'bg-[hsl(25,80%,92%)]', iconColor: 'text-[hsl(25,60%,40%)]' },
   paypal: { icon: Wallet, color: 'bg-[hsl(210,70%,90%)]', iconColor: 'text-[hsl(210,70%,50%)]' },
   bank_card: { icon: CreditCard, color: 'bg-[hsl(270,50%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
-  agent: { icon: Users, color: 'bg-[hsl(140,50%,90%)]', iconColor: 'text-[hsl(140,50%,35%)]' },
 };
 
 const defaultQuickAmounts = [5000, 10000, 25000, 50000, 100000];
