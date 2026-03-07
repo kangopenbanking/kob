@@ -87,6 +87,15 @@ export default function FeeManagement() {
         effective_until: formData.effective_until || null,
         is_active: true,
         created_by: user?.id,
+        daily_limit: formData.daily_limit ?? -1,
+        monthly_limit: formData.monthly_limit ?? -1,
+        max_charge_cap: formData.max_charge_cap ?? -1,
+        agent_commission_percent: formData.agent_commission_percent ?? 0,
+        agent_commission_fixed: formData.agent_commission_fixed ?? 0,
+        referral_percent_commission: formData.referral_percent_commission ?? 0,
+        referral_fixed_commission: formData.referral_fixed_commission ?? 0,
+        merchant_percent_charge: formData.merchant_percent_charge ?? 0,
+        merchant_fixed_charge: formData.merchant_fixed_charge ?? 0,
       });
       if (error) throw error;
       toast({ title: "Success", description: "Fee structure created" });
