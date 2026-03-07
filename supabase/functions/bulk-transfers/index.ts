@@ -81,10 +81,16 @@ serve(async (req) => {
           throw new Error('Invalid amount');
         }
 
+        if (row.source_account === row.destination_account) {
+          throw new Error('Cannot transfer to the same account');
+        }
+
+        const txCurrency = row.currency || 'XAF';
+
         // Verify source account belongs to user
         const { data: sourceAccount, error: accountError } = await supabase
           .from('accounts')
-          .select('id')
+          .select('id, account_holder_name, user_id, institution_id')
           .eq('account_id', row.source_account)
           .eq('user_id', user.id)
           .single();
@@ -96,59 +102,173 @@ serve(async (req) => {
         // Verify destination account exists
         const { data: destAccount, error: destError } = await supabase
           .from('accounts')
-          .select('id')
+          .select('id, account_holder_name, user_id, institution_id')
           .eq('account_id', row.destination_account)
+          .eq('is_active', true)
           .single();
 
         if (destError || !destAccount) {
           throw new Error('Invalid destination account');
         }
 
-        // Check balance
-        const { data: balance } = await supabase
+        // Check source balance — try InterimAvailable then ClosingAvailable, filter by Credit indicator
+        let sourceBalance: any = null;
+        const { data: interimBal } = await supabase
           .from('account_balances')
-          .select('amount')
+          .select('id, amount, balance_type')
           .eq('account_id', sourceAccount.id)
           .eq('balance_type', 'InterimAvailable')
-          .single();
+          .eq('credit_debit_indicator', 'Credit')
+          .maybeSingle();
 
-        if (!balance || parseFloat(balance.amount) < amount) {
+        if (interimBal) {
+          sourceBalance = interimBal;
+        } else {
+          const { data: closingBal } = await supabase
+            .from('account_balances')
+            .select('id, amount, balance_type')
+            .eq('account_id', sourceAccount.id)
+            .eq('balance_type', 'ClosingAvailable')
+            .eq('credit_debit_indicator', 'Credit')
+            .maybeSingle();
+          sourceBalance = closingBal;
+        }
+
+        if (!sourceBalance || parseFloat(sourceBalance.amount) < amount) {
           throw new Error('Insufficient funds');
         }
 
         // Create transaction reference
-        const transactionRef = `TXN-${Date.now()}-${i}`;
+        const transactionRef = `BULK-${Date.now()}-${i}-${Math.random().toString(36).substring(2, 6)}`;
+        const now = new Date().toISOString();
 
-        // Create transaction record
-        const { error: txnError } = await supabase
+        // Determine transfer rail
+        let transferRail = 'internal';
+        if (sourceAccount.institution_id !== destAccount.institution_id) {
+          transferRail = 'domestic_interbank';
+        }
+
+        // ═══ STEP 1: Debit source balance ═══
+        const newSourceAmount = parseFloat(sourceBalance.amount) - amount;
+        const { error: debitBalErr } = await supabase
+          .from('account_balances')
+          .update({ amount: newSourceAmount, balance_datetime: now })
+          .eq('id', sourceBalance.id);
+
+        if (debitBalErr) {
+          throw new Error('Failed to debit source balance');
+        }
+
+        // ═══ STEP 2: Credit destination balance ═══
+        let destBalance: any = null;
+        const { data: destInterimBal } = await supabase
+          .from('account_balances')
+          .select('id, amount, balance_type')
+          .eq('account_id', destAccount.id)
+          .eq('balance_type', 'InterimAvailable')
+          .eq('credit_debit_indicator', 'Credit')
+          .maybeSingle();
+
+        if (destInterimBal) {
+          destBalance = destInterimBal;
+        } else {
+          const { data: destClosingBal } = await supabase
+            .from('account_balances')
+            .select('id, amount, balance_type')
+            .eq('account_id', destAccount.id)
+            .eq('balance_type', 'ClosingAvailable')
+            .eq('credit_debit_indicator', 'Credit')
+            .maybeSingle();
+          destBalance = destClosingBal;
+        }
+
+        if (destBalance) {
+          const newDestAmount = parseFloat(destBalance.amount) + amount;
+          const { error: creditBalErr } = await supabase
+            .from('account_balances')
+            .update({ amount: newDestAmount, balance_datetime: now })
+            .eq('id', destBalance.id);
+
+          if (creditBalErr) {
+            // Rollback source debit
+            await supabase.from('account_balances')
+              .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
+              .eq('id', sourceBalance.id);
+            throw new Error('Failed to credit destination balance');
+          }
+        } else {
+          // Create new balance record for destination
+          const { error: insertBalErr } = await supabase
+            .from('account_balances')
+            .insert({
+              account_id: destAccount.id,
+              balance_type: 'ClosingAvailable',
+              credit_debit_indicator: 'Credit',
+              amount: amount,
+              currency: txCurrency,
+              balance_datetime: now,
+            });
+
+          if (insertBalErr) {
+            // Rollback source debit
+            await supabase.from('account_balances')
+              .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
+              .eq('id', sourceBalance.id);
+            throw new Error('Failed to create destination balance');
+          }
+        }
+
+        // ═══ STEP 3: Create debit transaction (sender) ═══
+        const txDescription = row.description || `Bulk transfer to ${destAccount.account_holder_name}`;
+        await supabase
           .from('transactions')
           .insert({
             account_id: sourceAccount.id,
-            institution_id: sourceAccount.institution_id || '00000000-0000-0000-0000-000000000000',
+            institution_id: sourceAccount.institution_id || destAccount.institution_id || '00000000-0000-0000-0000-000000000000',
             user_id: user.id,
             amount: amount,
-            currency: row.currency || 'XAF',
+            currency: txCurrency,
             credit_debit_indicator: 'Debit',
             status: 'Booked',
             transaction_type: 'Transfer',
-            booking_datetime: new Date().toISOString(),
-            value_datetime: new Date().toISOString(),
-            transaction_information: row.description || `Bulk transfer to ${row.destination_account}`,
+            booking_datetime: now,
+            value_datetime: now,
+            transaction_information: txDescription,
             merchant_details: {
               transaction_ref: transactionRef,
               destination_account: row.destination_account,
+              destination_account_holder: destAccount.account_holder_name,
+              transfer_type: transferRail,
+              rail: transferRail,
+              bulk_transfer: true,
             },
           });
 
-        if (txnError) {
-          throw new Error(`Failed to create transaction: ${txnError.message}`);
-        }
-
-        // Update source balance
-        await supabase.rpc('update_account_balance', {
-          p_account_id: sourceAccount.id,
-          p_amount: -amount,
-        });
+        // ═══ STEP 4: Create credit transaction (receiver) ═══
+        const creditDescription = row.description || `Received from ${sourceAccount.account_holder_name}`;
+        await supabase
+          .from('transactions')
+          .insert({
+            account_id: destAccount.id,
+            institution_id: destAccount.institution_id || sourceAccount.institution_id || '00000000-0000-0000-0000-000000000000',
+            user_id: destAccount.user_id,
+            amount: amount,
+            currency: txCurrency,
+            credit_debit_indicator: 'Credit',
+            status: 'Booked',
+            transaction_type: 'Transfer',
+            booking_datetime: now,
+            value_datetime: now,
+            transaction_information: creditDescription,
+            merchant_details: {
+              transaction_ref: `${transactionRef}-CR`,
+              source_account: row.source_account,
+              source_account_holder: sourceAccount.account_holder_name,
+              transfer_type: transferRail,
+              rail: transferRail,
+              bulk_transfer: true,
+            },
+          });
 
         results.successful++;
         console.log(`Row ${i + 1}: Transfer successful - ${transactionRef}`);
@@ -166,12 +286,13 @@ serve(async (req) => {
 
     // Log bulk operation
     await supabase
-      .from('security_audit_logs')
+      .from('audit_logs')
       .insert({
-        user_id: user.id,
-        event_type: 'bulk_transfer_processed',
-        event_category: 'transaction',
-        metadata: {
+        action_type: 'bulk_transfer_processed',
+        entity_type: 'bulk_transfer',
+        entity_id: user.id,
+        performed_by: user.id,
+        details: {
           total_rows: totalRows,
           successful: results.successful,
           failed: results.failed,
