@@ -133,6 +133,15 @@ export function FeeStructuresTable({ structures, institutions = [], onRefresh }:
       tiered_rates: formData.tiered_rates || null,
       effective_from: formData.effective_from,
       effective_until: formData.effective_until,
+      daily_limit: formData.daily_limit ?? -1,
+      monthly_limit: formData.monthly_limit ?? -1,
+      max_charge_cap: formData.max_charge_cap ?? -1,
+      agent_commission_percent: formData.agent_commission_percent ?? 0,
+      agent_commission_fixed: formData.agent_commission_fixed ?? 0,
+      referral_percent_commission: formData.referral_percent_commission ?? 0,
+      referral_fixed_commission: formData.referral_fixed_commission ?? 0,
+      merchant_percent_charge: formData.merchant_percent_charge ?? 0,
+      merchant_fixed_charge: formData.merchant_fixed_charge ?? 0,
     }).eq("id", editItem.id);
 
     if (error) {
@@ -317,6 +326,22 @@ export function FeeStructuresTable({ structures, institutions = [], onRefresh }:
                         {!s.is_active && (
                           <Badge variant="outline" className="text-[10px] border-destructive text-destructive mt-2">Inactive</Badge>
                         )}
+
+                        {/* Limit & Commission badges */}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {s.daily_limit && s.daily_limit > 0 && (
+                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5">Daily: {Number(s.daily_limit).toLocaleString()}</Badge>
+                          )}
+                          {s.monthly_limit && s.monthly_limit > 0 && (
+                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5">Monthly: {Number(s.monthly_limit).toLocaleString()}</Badge>
+                          )}
+                          {s.max_charge_cap && s.max_charge_cap > 0 && (
+                            <Badge variant="secondary" className="text-[9px] h-4 px-1.5">Cap: {Number(s.max_charge_cap).toLocaleString()}</Badge>
+                          )}
+                          {s.agent_commission_percent > 0 && (
+                            <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-emerald-200 text-emerald-700 dark:text-emerald-400">Agent {s.agent_commission_percent}%</Badge>
+                          )}
+                        </div>
                       </div>
 
                       {/* Expand toggle */}

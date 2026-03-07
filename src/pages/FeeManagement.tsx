@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Sliders, Store, ArrowUpRight, Activity } from "lucide-react";
+import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateFeeStructureForm } from "@/components/fee-management/CreateFeeStructureForm";
 import { FeeStructuresTable } from "@/components/fee-management/FeeStructuresTable";
@@ -12,7 +12,7 @@ import { TransactionFeesTable } from "@/components/fee-management/TransactionFee
 import { InvoicesTable } from "@/components/fee-management/InvoicesTable";
 import { WaiversManagement } from "@/components/fee-management/WaiversManagement";
 import { FeeAnalytics } from "@/components/fee-management/FeeAnalytics";
-import { LimitsChargesTab } from "@/components/fee-management/LimitsChargesTab";
+
 import { MerchantFeesTab } from "@/components/fee-management/MerchantFeesTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -87,6 +87,15 @@ export default function FeeManagement() {
         effective_until: formData.effective_until || null,
         is_active: true,
         created_by: user?.id,
+        daily_limit: formData.daily_limit ?? -1,
+        monthly_limit: formData.monthly_limit ?? -1,
+        max_charge_cap: formData.max_charge_cap ?? -1,
+        agent_commission_percent: formData.agent_commission_percent ?? 0,
+        agent_commission_fixed: formData.agent_commission_fixed ?? 0,
+        referral_percent_commission: formData.referral_percent_commission ?? 0,
+        referral_fixed_commission: formData.referral_fixed_commission ?? 0,
+        merchant_percent_charge: formData.merchant_percent_charge ?? 0,
+        merchant_fixed_charge: formData.merchant_fixed_charge ?? 0,
       });
       if (error) throw error;
       toast({ title: "Success", description: "Fee structure created" });
@@ -258,9 +267,6 @@ export default function FeeManagement() {
             <TabsTrigger value="analytics" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(172,66%,40%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
               <BarChart3 className="h-3.5 w-3.5" /> Analytics
             </TabsTrigger>
-            <TabsTrigger value="limits" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(351,88%,46%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
-              <Sliders className="h-3.5 w-3.5" /> Limits
-            </TabsTrigger>
             <TabsTrigger value="merchant-fees" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(217,91%,55%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
               <Store className="h-3.5 w-3.5" /> Merchants
             </TabsTrigger>
@@ -305,9 +311,6 @@ export default function FeeManagement() {
           <FeeAnalytics transactionFees={filteredFees} feeStructures={filteredStructures} />
         </TabsContent>
 
-        <TabsContent value="limits">
-          <LimitsChargesTab />
-        </TabsContent>
 
         <TabsContent value="merchant-fees">
           <MerchantFeesTab />
