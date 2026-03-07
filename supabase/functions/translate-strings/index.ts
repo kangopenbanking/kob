@@ -29,8 +29,8 @@ serve(async (req) => {
       value: s.value,
     }));
 
-    const langName = target_language === "fr" ? "French" : target_language;
-
+    const langNames: Record<string, string> = { fr: "French", es: "Spanish", de: "German", pt: "Portuguese", ar: "Arabic", zh: "Chinese" };
+    const langName = langNames[target_language] || target_language;
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
