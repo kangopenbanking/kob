@@ -83,11 +83,11 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
           business_description: formData.business_description,
           annual_turnover: formData.annual_turnover ? parseFloat(formData.annual_turnover) : null,
           number_of_employees: formData.number_of_employees ? parseInt(formData.number_of_employees) : null,
-          registration_certificate_url: getPublicUrl(docUrls.registration_certificate),
-          articles_of_association_url: getPublicUrl(docUrls.articles_of_association),
-          tax_certificate_url: getPublicUrl(docUrls.tax_certificate),
-          proof_of_address_url: getPublicUrl(docUrls.proof_of_address),
-          bank_statement_url: getPublicUrl(docUrls.bank_statement),
+          registration_certificate_url: docUrls.registration_certificate || null,
+          articles_of_association_url: docUrls.articles_of_association || null,
+          tax_certificate_url: docUrls.tax_certificate || null,
+          proof_of_address_url: docUrls.proof_of_address || null,
+          bank_statement_url: docUrls.bank_statement || null,
         }
       });
       if (error) throw error;

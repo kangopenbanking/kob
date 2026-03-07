@@ -138,24 +138,22 @@ const CustomerRegister: React.FC = () => {
       } as any).eq('id', user.id);
 
       // Upload KYC documents to storage and create kyc_verifications record
-      let documentFrontUrl: string | null = null;
-      let selfieUrl: string | null = null;
+      let documentFrontPath: string | null = null;
+      let selfiePath: string | null = null;
 
       if (idPhoto) {
         const idPath = `${user.id}/kyc/id-front-${Date.now()}.${idPhoto.name.split('.').pop()}`;
         const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(idPath, idPhoto);
         if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(idPath);
-          documentFrontUrl = urlData.publicUrl;
+          documentFrontPath = idPath;
         }
       }
 
       if (selfie) {
-        const selfiePath = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
-        const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(selfiePath, selfie);
+        const uploadedSelfiePath = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
+        const { error: uploadErr } = await supabase.storage.from('kyc-documents').upload(uploadedSelfiePath, selfie);
         if (!uploadErr) {
-          const { data: urlData } = supabase.storage.from('kyc-documents').getPublicUrl(selfiePath);
-          selfieUrl = urlData.publicUrl;
+          selfiePath = uploadedSelfiePath;
         }
       }
 
@@ -165,8 +163,8 @@ const CustomerRegister: React.FC = () => {
         verification_type: 'identity',
         status: 'pending',
         document_type: 'national_id',
-        document_front_url: documentFrontUrl,
-        selfie_url: selfieUrl,
+        document_front_url: documentFrontPath,
+        selfie_url: selfiePath,
         source_app: 'customer_app',
         institution_id: null,
       } as any);
