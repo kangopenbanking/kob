@@ -12,7 +12,7 @@ export function HeroSection() {
           API v1 — Production Ready
         </div>
         <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight leading-tight">
-          Payment Gateway & Open Banking API for <span className="text-primary">Africa</span>
+          Payment Gateway & Open Banking API for <span className="text-primary">Cameroon</span>
         </h1>
         <p className="text-lg md:text-xl text-muted-foreground max-w-2xl">
           Accept mobile money, cards, and bank transfers. Initiate payouts, access open banking data, and manage merchants — all through a single REST API.
