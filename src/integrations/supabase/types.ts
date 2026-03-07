@@ -4574,8 +4574,11 @@ export type Database = {
       }
       fee_structures: {
         Row: {
+          agent_commission_fixed: number | null
+          agent_commission_percent: number | null
           created_at: string | null
           created_by: string | null
+          daily_limit: number | null
           effective_from: string
           effective_until: string | null
           fee_model: string
@@ -4584,10 +4587,16 @@ export type Database = {
           id: string
           institution_id: string | null
           is_active: boolean | null
+          max_charge_cap: number | null
           max_fee_amount: number | null
+          merchant_fixed_charge: number | null
           merchant_id: string | null
+          merchant_percent_charge: number | null
           min_fee_amount: number | null
+          monthly_limit: number | null
           percentage_rate: number | null
+          referral_fixed_commission: number | null
+          referral_percent_commission: number | null
           target_entity_id: string | null
           tiered_rates: Json | null
           transaction_type: string
@@ -4595,8 +4604,11 @@ export type Database = {
           updated_by: string | null
         }
         Insert: {
+          agent_commission_fixed?: number | null
+          agent_commission_percent?: number | null
           created_at?: string | null
           created_by?: string | null
+          daily_limit?: number | null
           effective_from?: string
           effective_until?: string | null
           fee_model: string
@@ -4605,10 +4617,16 @@ export type Database = {
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          max_charge_cap?: number | null
           max_fee_amount?: number | null
+          merchant_fixed_charge?: number | null
           merchant_id?: string | null
+          merchant_percent_charge?: number | null
           min_fee_amount?: number | null
+          monthly_limit?: number | null
           percentage_rate?: number | null
+          referral_fixed_commission?: number | null
+          referral_percent_commission?: number | null
           target_entity_id?: string | null
           tiered_rates?: Json | null
           transaction_type: string
@@ -4616,8 +4634,11 @@ export type Database = {
           updated_by?: string | null
         }
         Update: {
+          agent_commission_fixed?: number | null
+          agent_commission_percent?: number | null
           created_at?: string | null
           created_by?: string | null
+          daily_limit?: number | null
           effective_from?: string
           effective_until?: string | null
           fee_model?: string
@@ -4626,10 +4647,16 @@ export type Database = {
           id?: string
           institution_id?: string | null
           is_active?: boolean | null
+          max_charge_cap?: number | null
           max_fee_amount?: number | null
+          merchant_fixed_charge?: number | null
           merchant_id?: string | null
+          merchant_percent_charge?: number | null
           min_fee_amount?: number | null
+          monthly_limit?: number | null
           percentage_rate?: number | null
+          referral_fixed_commission?: number | null
+          referral_percent_commission?: number | null
           target_entity_id?: string | null
           tiered_rates?: Json | null
           transaction_type?: string
