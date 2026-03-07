@@ -4,7 +4,6 @@ import { mapStripeStatus, mapStripeDisputeStatus } from "../_shared/gateway-adap
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
-};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
