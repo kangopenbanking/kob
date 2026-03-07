@@ -566,7 +566,7 @@ function App() {
             <Route path="/compliance-dashboard" element={<Navigate to="/admin/compliance-dashboard" replace />} />
             
             {/* New Developer Portal */}
-            <Route path="/developer" element={<DeveloperLayout />}>
+            <Route path="/developer" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<DeveloperHome />} />
               <Route path="getting-started" element={<GettingStarted />} />
               <Route path="getting-started/authentication" element={<GettingStarted />} />
