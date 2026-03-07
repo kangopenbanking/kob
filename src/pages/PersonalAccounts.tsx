@@ -99,8 +99,11 @@ const PersonalAccounts = () => {
       case 'transfer':
         navigate('/payments', { state: { tab: 'bank-transfer' } });
         break;
+      case 'fund':
+        navigate('/fund-account');
+        break;
       case 'pay-bills':
-        toast({ title: "Coming soon", description: "Bill payment feature will be available soon." });
+        navigate('/payments', { state: { tab: 'mobile-money' } });
         break;
       case 'mobile-money':
         navigate('/mobile-money');
