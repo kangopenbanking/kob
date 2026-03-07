@@ -345,7 +345,7 @@ const CustomerCashOut: React.FC = () => {
             <div className="text-center">
               <p className="text-lg font-bold text-foreground">Withdrawal Initiated!</p>
               <p className="text-sm text-muted-foreground mt-1">
-                XAF {netAmount.toLocaleString()} to {selectedAccount?._isAgent ? 'Agent Cash Out' : selectedAccount?.account_name}
+                XAF {netAmount.toLocaleString()} to {selectedAccount?.account_name}
               </p>
               {fee > 0 && <p className="text-xs text-muted-foreground mt-0.5">Fee: XAF {fee.toLocaleString()}</p>}
             </div>
