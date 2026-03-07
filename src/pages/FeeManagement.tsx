@@ -245,6 +245,10 @@ export default function FeeManagement() {
         <TabsContent value="limits">
           <LimitsChargesTab />
         </TabsContent>
+
+        <TabsContent value="merchant-fees">
+          <MerchantFeesTab />
+        </TabsContent>
       </Tabs>
 
       {/* Create Fee Structure Dialog */}
