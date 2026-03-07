@@ -6,7 +6,14 @@ export interface FeeEstimate {
   fixedFee: number;
   totalFee: number;
   netAmount: number;
-  source: "db" | "fallback";
+  source: "db" | "limits" | "fallback";
+  limits?: {
+    min_amount: number;
+    max_amount: number;
+    daily_limit: number;
+    monthly_limit: number;
+    max_charge_cap: number;
+  };
 }
 
 // Maps payment method / channel names to fee_structures transaction_type
@@ -24,6 +31,22 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   fx_conversion: "fx_conversion",
   gateway_charge: "gateway_charge",
   gateway_payout: "gateway_payout",
+};
+
+// Maps channels to fee_limits_charges categories
+const CHANNEL_TO_LIMITS_CATEGORY: Record<string, string> = {
+  mobile_money: "send_money",
+  card: "payment_charges",
+  bank_transfer: "bank_transfer",
+  apple_pay: "payment_charges",
+  google_pay: "payment_charges",
+  ussd: "payment_charges",
+  account_funding: "cash_in",
+  paypal: "payment_charges",
+  virtual_card_topup: "cash_in",
+  gateway_charge: "payment_charges",
+  gateway_payout: "cash_out",
+  withdrawal: "cash_out",
 };
 
 // Hardcoded fallback rates (backward compatibility)
@@ -60,11 +83,12 @@ export function useFeeEstimate({
   isLoading: boolean;
 } {
   const txType = CHANNEL_TO_TX_TYPE[channel] || channel;
+  const limitsCategory = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
 
   const { data: dbFee, isLoading } = useQuery({
-    queryKey: ["fee-estimate", txType, scope, merchantId, institutionId],
+    queryKey: ["fee-estimate", txType, limitsCategory, scope, merchantId, institutionId],
     queryFn: async () => {
-      // Resolution order: merchant → institution → platform
+      // Step 1: Try fee_structures (merchant → institution → platform)
       const scopes: { scope: string; id?: string }[] = [];
       if (scope === "merchant" && merchantId) {
         scopes.push({ scope: "merchant", id: merchantId });
@@ -93,25 +117,58 @@ export function useFeeEstimate({
 
         const { data } = await query;
         if (data && data.length > 0) {
+          // Also fetch limits from fee_limits_charges
+          const limits = await fetchLimitsForCategory(limitsCategory);
           return {
             rate: Number(data[0].percentage_rate) / 100,
             fixed: Number(data[0].fixed_amount),
             source: "db" as const,
+            limits,
           };
         }
+      }
+
+      // Step 2: Try fee_limits_charges table
+      const { data: limitsRow } = await (supabase as any)
+        .from("fee_limits_charges")
+        .select("*")
+        .eq("category", limitsCategory)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (limitsRow) {
+        return {
+          rate: Number(limitsRow.percentage_charge) / 100,
+          fixed: Number(limitsRow.fixed_charge),
+          source: "limits" as const,
+          limits: {
+            min_amount: Number(limitsRow.min_amount) || 0,
+            max_amount: Number(limitsRow.max_amount) || 0,
+            daily_limit: Number(limitsRow.daily_limit) || -1,
+            monthly_limit: Number(limitsRow.monthly_limit) || -1,
+            max_charge_cap: Number(limitsRow.max_charge_cap) || -1,
+          },
+        };
       }
 
       return null;
     },
     enabled,
-    staleTime: 5 * 60 * 1000, // cache for 5 min
+    staleTime: 5 * 60 * 1000,
   });
 
   const rate = dbFee?.rate ?? FALLBACK_RATES[txType]?.rate ?? 0.035;
   const fixed = dbFee?.fixed ?? FALLBACK_RATES[txType]?.fixed ?? 0;
   const source = dbFee?.source ?? "fallback";
 
-  const totalFee = amount > 0 ? Math.round(amount * rate + fixed) : 0;
+  let totalFee = amount > 0 ? Math.round(amount * rate + fixed) : 0;
+
+  // Apply max charge cap from limits
+  const maxCap = dbFee?.limits?.max_charge_cap;
+  if (maxCap && maxCap > 0 && totalFee > maxCap) {
+    totalFee = maxCap;
+  }
+
   const netAmount = amount - totalFee;
 
   return {
@@ -121,7 +178,26 @@ export function useFeeEstimate({
       totalFee,
       netAmount,
       source,
+      limits: dbFee?.limits,
     },
     isLoading,
+  };
+}
+
+async function fetchLimitsForCategory(category: string) {
+  const { data } = await (supabase as any)
+    .from("fee_limits_charges")
+    .select("min_amount, max_amount, daily_limit, monthly_limit, max_charge_cap")
+    .eq("category", category)
+    .eq("is_active", true)
+    .maybeSingle();
+
+  if (!data) return undefined;
+  return {
+    min_amount: Number(data.min_amount) || 0,
+    max_amount: Number(data.max_amount) || 0,
+    daily_limit: Number(data.daily_limit) || -1,
+    monthly_limit: Number(data.monthly_limit) || -1,
+    max_charge_cap: Number(data.max_charge_cap) || -1,
   };
 }
