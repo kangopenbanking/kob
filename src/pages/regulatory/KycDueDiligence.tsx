@@ -152,11 +152,8 @@ export default function KycDueDiligence() {
   const next = useCallback(() => { setDirection(1); setStep(s => Math.min(s + 1, totalSteps - 1)); }, [totalSteps]);
   const prev = useCallback(() => { setDirection(-1); setStep(s => Math.max(s - 1, 0)); }, []);
 
-  const getPublicUrl = (path: string) => {
-    if (!path) return "";
-    const { data } = supabase.storage.from("kyc-documents").getPublicUrl(path);
-    return data.publicUrl;
-  };
+  // Return the storage path directly (bucket is private, no public URLs)
+  const getStoragePath = (path: string) => path || "";
 
   const handleSubmit = async () => {
     if (!form.accuracyDeclaration) { toast.error("You must confirm the accuracy declaration."); return; }
