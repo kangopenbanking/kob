@@ -28,8 +28,9 @@ export async function uploadKycDocument(
 export async function getKycDocumentUrl(storedValue: string | null): Promise<string | null> {
   if (!storedValue) return null;
 
-  // Extract path from legacy full URLs
+  // If it's a full URL (legacy or external), extract the path and try a signed URL first
   let path = storedValue;
+  const isFullUrl = storedValue.startsWith("http://") || storedValue.startsWith("https://");
   const publicPrefix = `/storage/v1/object/public/${BUCKET}/`;
   const idx = storedValue.indexOf(publicPrefix);
   if (idx !== -1) {
@@ -40,12 +41,19 @@ export async function getKycDocumentUrl(storedValue: string | null): Promise<str
     .from(BUCKET)
     .createSignedUrl(path, SIGNED_URL_EXPIRY);
 
-  if (error || !data?.signedUrl) {
-    console.warn("Failed to create signed URL for", path, error);
-    return null;
+  if (data?.signedUrl) {
+    return data.signedUrl;
   }
 
-  return data.signedUrl;
+  // If signed URL failed but we have a legacy full URL, fall back to it directly
+  // (it may still be accessible as a public URL from the original project)
+  if (isFullUrl) {
+    console.warn("Signed URL failed, falling back to original URL for", path, error);
+    return storedValue;
+  }
+
+  console.warn("Failed to create signed URL for", path, error);
+  return null;
 }
 
 /**
