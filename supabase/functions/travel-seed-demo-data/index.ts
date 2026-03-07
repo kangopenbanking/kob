@@ -74,7 +74,6 @@ Deno.serve(async (req) => {
       { plan_name: '120-Seater Aircraft', rows: 20, columns: 6, service_idx: 2 },
       { plan_name: '80-Seater Train Car', rows: 16, columns: 5, service_idx: 3 },
     ];
-    ];
 
     const createdPlans: any[] = [];
     for (const cfg of planConfigs) {
