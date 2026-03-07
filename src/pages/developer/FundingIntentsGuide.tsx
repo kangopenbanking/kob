@@ -53,7 +53,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">Merchants fund their gateway wallet balance. Requires <code>merchant_id</code> and validates ownership via <code>gateway_merchants.user_id</code>.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> Bearer JWT token (merchant user)</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>gateway_merchant_wallets</code> (available_balance)</p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Merchant tier (2% flat)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Merchant-scope fees from <code>fee_structures</code>. Use <code>/gateway-fee-estimate?amount=X&channel=mobile_money&merchant_id=UUID</code> to preview.</p>
             <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
 {`{
   "amount": 500000,
