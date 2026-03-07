@@ -5,19 +5,21 @@ import {
   getFlutterwaveTransferStatus,
   getPayPalPayoutStatus,
 } from "../_shared/gateway-adapters.ts";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 /**
  * Automated Payout Status Poller
- * Polls provider APIs for all 'processing' payouts and auto-finalizes them.
- * Designed to run on a cron schedule (every 5 minutes).
  */
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
 
   try {
     const supabase = createClient(

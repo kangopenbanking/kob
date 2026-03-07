@@ -1,9 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
 };
 
 // Helper function to create HMAC signature
@@ -27,16 +28,15 @@ async function createHmacSignature(secret: string, data: string): Promise<string
 
 // Sanitize error messages to prevent sensitive data leakage
 function sanitizeErrorMessage(message: string, maxLength: number = 200): string {
-  // Remove common sensitive patterns
   const sanitized = message
-    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')  // API tokens
-    .replace(/api[_-]?key["\s:=]+[A-Za-z0-9\-._~+/]+/gi, 'apikey=[REDACTED]')  // API keys
-    .replace(/password["\s:=]+[^,}\s]+/gi, 'password=[REDACTED]')  // Passwords
-    .replace(/secret["\s:=]+[^,}\s]+/gi, 'secret=[REDACTED]')  // Secrets
-    .replace(/token["\s:=]+[A-Za-z0-9\-._~+/]+=*/gi, 'token=[REDACTED]')  // Tokens
-    .replace(/\b\d{13,19}\b/g, '[CARD_NUMBER]')  // Credit card numbers
-    .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')  // Email addresses
-    .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]');  // IP addresses
+    .replace(/Bearer\s+[A-Za-z0-9\-._~+/]+=*/gi, 'Bearer [REDACTED]')
+    .replace(/api[_-]?key["\s:=]+[A-Za-z0-9\-._~+/]+/gi, 'apikey=[REDACTED]')
+    .replace(/password["\s:=]+[^,}\s]+/gi, 'password=[REDACTED]')
+    .replace(/secret["\s:=]+[^,}\s]+/gi, 'secret=[REDACTED]')
+    .replace(/token["\s:=]+[A-Za-z0-9\-._~+/]+=*/gi, 'token=[REDACTED]')
+    .replace(/\b\d{13,19}\b/g, '[CARD_NUMBER]')
+    .replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, '[EMAIL]')
+    .replace(/\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b/g, '[IP_ADDRESS]');
   
   return sanitized.substring(0, maxLength);
 }
@@ -45,6 +45,9 @@ serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;

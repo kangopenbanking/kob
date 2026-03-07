@@ -2,11 +2,15 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getPayPalAccessToken, mapFlutterwaveStatus, mapStripeStatus } from "../_shared/gateway-adapters.ts";
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
