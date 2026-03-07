@@ -22,6 +22,7 @@ import ScoreEducation from '@/components/credit/ScoreEducation';
 import QuickStats from '@/components/credit/QuickStats';
 import { PostiQVerification } from '@/components/credit/PostiQVerification';
 import PostiQFeatureShowcase from '@/components/credit/PostiQFeatureShowcase';
+import LinkedAccountsWidget from '@/components/credit/LinkedAccountsWidget';
 
 export default function CreditScore() {
   const [isRefreshing, setIsRefreshing] = useState(false);
