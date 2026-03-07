@@ -497,7 +497,7 @@ function App() {
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
-            <Route path="/loans" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/loans" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><Loans /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             
             {/* Admin Routes - Nested with AdminLayout */}
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
