@@ -89,20 +89,26 @@ export default function Auth() {
     return () => clearInterval(interval);
   }, [authStep]);
 
-  const generateCaptcha = async () => {
+  const generateCaptcha = async (retryCount = 0) => {
     try {
       const { data, error } = await supabase.functions.invoke('captcha-generate');
       if (error) throw error;
+      if (!data?.question || !data?.session_id) throw new Error('Invalid captcha response');
       setCaptchaQuestion(data.question);
       setCaptchaSessionId(data.session_id);
       setCaptchaAnswer('');
     } catch (error) {
       console.error('Failed to generate captcha:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load security check. Please refresh the page.',
-        variant: 'destructive',
-      });
+      if (retryCount < 2) {
+        console.log(`Retrying captcha generation (attempt ${retryCount + 2})...`);
+        setTimeout(() => generateCaptcha(retryCount + 1), 1500 * (retryCount + 1));
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Failed to load security check. Please refresh the page.',
+          variant: 'destructive',
+        });
+      }
     }
   };
 
