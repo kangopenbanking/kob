@@ -115,7 +115,7 @@ const GatewayFundingGuide = () => (
         </div>
         <div>
           <p className="font-semibold mb-1">3. Fee Calculation</p>
-          <p className="text-sm text-muted-foreground">Funding uses the <code>account_funding</code> fee tier (2.5% + 0 fixed). Withdrawals use the standard channel fee tier (bank_transfer: 2% + 75 XAF).</p>
+          <p className="text-sm text-muted-foreground">Fees are dynamically resolved from the <code>fee_structures</code> table using the unified resolution engine (merchant → institution → platform). Use <code>/gateway-fee-estimate</code> to preview fees before initiating transactions.</p>
         </div>
       </CardContent>
     </Card>

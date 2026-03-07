@@ -272,25 +272,23 @@ const FundingIntentsGuide = () => (
     <Card>
       <CardHeader>
         <CardTitle>Fee Schedule by Scope</CardTitle>
-        <CardDescription>Fees vary by consumer type and payment method</CardDescription>
+        <CardDescription>Fees are dynamically resolved from the <code>fee_structures</code> table (merchant → institution → platform fallback). Use the <code>/gateway-fee-estimate</code> API to preview real-time fees.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <p className="font-semibold mb-2">End User (Standard)</p>
-          <div className="grid grid-cols-4 gap-4 text-sm">
-            <div><p className="font-medium">Mobile Money</p><p className="text-muted-foreground">2.5%</p></div>
-            <div><p className="font-medium">Card</p><p className="text-muted-foreground">3.5% + 100 XAF</p></div>
-            <div><p className="font-medium">PayPal</p><p className="text-muted-foreground">3.5% + 150 XAF</p></div>
-            <div><p className="font-medium">Bank Transfer</p><p className="text-muted-foreground">2% + 75 XAF</p></div>
-          </div>
+          <p className="font-semibold mb-2">End User (Platform Scope)</p>
+          <p className="text-sm text-muted-foreground">Fees configured in the admin Fee Management panel under <strong>platform</strong> scope. Varies by payment method.</p>
         </div>
         <div>
           <p className="font-semibold mb-2">Merchant</p>
-          <p className="text-sm text-muted-foreground">Flat <strong>2%</strong> across all methods</p>
+          <p className="text-sm text-muted-foreground">Merchant-scope overrides in <strong>fee_structures</strong>. Falls back to platform scope if no merchant-specific entry exists.</p>
         </div>
         <div>
           <p className="font-semibold mb-2">Institution / External API</p>
-          <p className="text-sm text-muted-foreground">Flat <strong>1.5%</strong> across all methods</p>
+          <p className="text-sm text-muted-foreground">Institution-scope overrides in <strong>fee_structures</strong>. Falls back to platform scope if no institution-specific entry exists.</p>
+        </div>
+        <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+          <strong>Preview API:</strong> <code>GET /gateway-fee-estimate?amount=10000&channel=mobile_money&merchant_id=UUID&institution_id=UUID</code>
         </div>
       </CardContent>
     </Card>
