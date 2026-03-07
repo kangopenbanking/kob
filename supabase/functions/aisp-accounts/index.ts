@@ -1,9 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { getRateLimitInfo, checkRateLimit, addRateLimitHeaders, rateLimitResponse } from '../_shared/security.ts';
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-consent-id',
+import { corsHeaders } from "../_shared/cors.ts";
 };
 
 Deno.serve(async (req) => {
