@@ -58,11 +58,6 @@ export const BusinessKYCForm = ({ accountId, onSuccess, onCancel }: BusinessKYCF
     });
   }, []);
 
-  const getPublicUrl = (path: string) => {
-    if (!path) return null;
-    const { data } = supabase.storage.from("kyc-documents").getPublicUrl(path);
-    return data.publicUrl;
-  };
 
   const next = useCallback(() => { setDirection(1); setStep(s => Math.min(s + 1, steps.length - 1)); }, []);
   const prev = useCallback(() => { setDirection(-1); setStep(s => Math.max(s - 1, 0)); }, []);
