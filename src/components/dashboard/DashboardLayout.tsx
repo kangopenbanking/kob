@@ -3,9 +3,9 @@ import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { SessionGuard } from "@/components/auth/SessionGuard";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { Button } from "@/components/ui/button";
-import { 
-  ArrowLeft, 
-  LayoutDashboard, 
+import {
+  ArrowLeft,
+  LayoutDashboard,
   CreditCard,
   FileText,
   Smartphone,
@@ -16,7 +16,8 @@ import {
   User,
   Shield,
   TrendingUp,
-  Bell
+  Bell,
+  Sparkles,
 } from "lucide-react";
 import {
   Sidebar,
@@ -30,9 +31,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Breadcrumbs } from "@/components/Breadcrumbs";
+import { Separator } from "@/components/ui/separator";
 import { NotificationCenter } from "@/components/NotificationCenter";
-import { Menu } from "lucide-react";
 
 const dashboardNavigation = [
   {
@@ -40,14 +40,14 @@ const dashboardNavigation = [
     items: [
       { title: "My Dashboard", path: "/dashboard", icon: LayoutDashboard },
       { title: "CrediQ Dashboard", path: "/crediq/dashboard", icon: TrendingUp },
-    ]
+    ],
   },
   {
     title: "Credit & Scoring",
     items: [
       { title: "Credit Score", path: "/credit-score", icon: TrendingUp },
       { title: "Credit Report", path: "/credit-report", icon: FileText },
-    ]
+    ],
   },
   {
     title: "Financial Services",
@@ -58,7 +58,7 @@ const dashboardNavigation = [
       { title: "Loans", path: "/loans", icon: DollarSign },
       { title: "Virtual Cards", path: "/virtual-cards", icon: CreditCard },
       { title: "Banking Operations", path: "/banking-ops", icon: Landmark },
-    ]
+    ],
   },
   {
     title: "Settings",
@@ -66,8 +66,8 @@ const dashboardNavigation = [
       { title: "Profile Settings", path: "/profile", icon: User },
       { title: "Security Settings", path: "/security", icon: Shield },
       { title: "Notifications", path: "/notifications", icon: Bell },
-    ]
-  }
+    ],
+  },
 ];
 
 interface DashboardLayoutProps {
@@ -79,69 +79,85 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const location = useLocation();
 
   const isActivePath = (path: string) => {
-    return location.pathname === path;
+    if (path === "/dashboard") return location.pathname === path;
+    return location.pathname === path || location.pathname.startsWith(path + "/");
   };
 
   return (
     <SessionGuard logoutPath="/auth" appName="Kang Dashboard" appContext="dashboard">
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <Sidebar className="border-r" collapsible="icon">
-          <div className="p-4 border-b">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate(-1)}
-              className="w-full justify-start"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              <span className="truncate">Back</span>
-            </Button>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-muted/30">
+          <Sidebar className="border-r border-border/60" collapsible="icon">
+            <div className="p-4 border-b border-border/60">
+              <div className="flex items-center gap-3 px-1">
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">Kang</p>
+                  <p className="text-[11px] text-sidebar-foreground/60">Personal Dashboard</p>
+                </div>
+              </div>
+            </div>
+
+            <SidebarContent className="px-2 py-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {dashboardNavigation.map((section) => (
+                <SidebarGroup key={section.title}>
+                  <SidebarGroupLabel className="text-[11px] font-semibold uppercase tracking-wider text-sidebar-foreground/50 px-3 py-2">
+                    {section.title}
+                  </SidebarGroupLabel>
+                  <SidebarGroupContent>
+                    <SidebarMenu>
+                      {section.items.map((item) => (
+                        <SidebarMenuItem key={item.path}>
+                          <SidebarMenuButton
+                            asChild
+                            isActive={isActivePath(item.path)}
+                            className="h-9 rounded-md text-[13px] font-medium"
+                          >
+                            <Link to={item.path}>
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.title}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      ))}
+                    </SidebarMenu>
+                  </SidebarGroupContent>
+                </SidebarGroup>
+              ))}
+            </SidebarContent>
+
+            <div className="mt-auto border-t border-border/60 p-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="w-full justify-start text-xs text-sidebar-foreground/70 hover:text-sidebar-foreground"
+              >
+                <ArrowLeft className="mr-2 h-3.5 w-3.5" />
+                Back
+              </Button>
+            </div>
+          </Sidebar>
+
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="sticky top-0 z-10 flex h-12 items-center gap-4 border-b border-border/60 bg-background/95 backdrop-blur-sm px-6">
+              <SidebarTrigger />
+              <Separator orientation="vertical" className="h-5" />
+              <div className="flex-1" />
+              <div className="flex items-center gap-2">
+                <NotificationCenter />
+                <UserProfileMenu variant="dashboard" />
+              </div>
+            </header>
+
+            <main className="flex-1 p-6">
+              {children || <Outlet />}
+            </main>
           </div>
-
-          <SidebarContent className="scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
-            {dashboardNavigation.map((section) => (
-              <SidebarGroup key={section.title}>
-                <SidebarGroupLabel>{section.title}</SidebarGroupLabel>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {section.items.map((item) => (
-                      <SidebarMenuItem key={item.path}>
-                        <SidebarMenuButton asChild isActive={isActivePath(item.path)}>
-                          <Link to={item.path}>
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.title}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </SidebarGroup>
-            ))}
-          </SidebarContent>
-        </Sidebar>
-
-        <div className="flex-1 flex flex-col">
-          <header className="dashboard-header">
-            <SidebarTrigger className="-ml-1">
-              <Menu className="h-5 w-5" />
-            </SidebarTrigger>
-            <div className="flex-1 min-w-0">
-              <Breadcrumbs />
-            </div>
-            <div className="flex items-center gap-2">
-              <NotificationCenter />
-              <UserProfileMenu variant="dashboard" />
-            </div>
-          </header>
-
-          <main className="flex-1 p-6 sm:p-8 overflow-auto dashboard-content">
-            {children || <Outlet />}
-          </main>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
     </SessionGuard>
   );
 }
