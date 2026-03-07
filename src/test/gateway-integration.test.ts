@@ -105,8 +105,8 @@ describe("Gateway Adapters — Status Mapping", () => {
 
 describe("Gateway Adapters — PayPal Fee Calculation", () => {
   it("should calculate paypal fees correctly", async () => {
-    const { calculateGatewayFee } = await import("../../supabase/functions/_shared/gateway-adapters");
-    const { fee, net } = calculateGatewayFee(10000, "paypal");
+    const { calculateGatewayFeeSync } = await import("../../supabase/functions/_shared/gateway-adapters");
+    const { fee, net } = calculateGatewayFeeSync(10000, "paypal");
     expect(fee).toBe(Math.round(10000 * 0.035 + 150)); // 500
     expect(net).toBe(10000 - fee);
   });

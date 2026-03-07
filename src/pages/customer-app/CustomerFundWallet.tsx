@@ -460,7 +460,7 @@ const CustomerFundWallet: React.FC = () => {
                   <span className="font-bold text-foreground">{fmt(numAmount)}</span>
                 </div>
                 <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground">Fee{feeEstimate?.fee_breakdown?.rate ? ` (${feeEstimate.fee_breakdown.rate})` : ''}</span>
+                  <span className="text-muted-foreground">Fee ({(feeEstimateData.feePercent * 100).toFixed(1)}%)</span>
                   <span className="font-bold text-foreground">{fmt(fee)}</span>
                 </div>
                 <div className="border-t border-border pt-2 flex justify-between text-sm">
