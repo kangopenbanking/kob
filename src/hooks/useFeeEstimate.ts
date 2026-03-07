@@ -22,6 +22,8 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   virtual_card_topup: "virtual_card_topup",
   withdrawal: "withdrawal",
   fx_conversion: "fx_conversion",
+  gateway_charge: "gateway_charge",
+  gateway_payout: "gateway_payout",
 };
 
 // Hardcoded fallback rates (backward compatibility)
