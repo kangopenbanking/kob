@@ -133,8 +133,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify webhook signature
-    const isValid = await verifyWebhookSignature(rawPayload, signature, merchant.webhook_secret);
+    // Verify webhook signature using server-side HMAC (no plaintext secret read)
+    const { data: hmacResult } = await supabaseClient.rpc('compute_woo_webhook_hmac', {
+      p_merchant_id: merchant.id,
+      p_payload: rawPayload,
+    });
+    const isValid = hmacResult && signature === hmacResult;
     if (!isValid) {
       console.error('Invalid webhook signature');
       return new Response(
