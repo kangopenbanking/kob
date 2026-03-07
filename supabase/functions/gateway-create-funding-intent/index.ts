@@ -7,21 +7,10 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
-// Scope-aware fee calculation
-function calculateScopedFee(amount: number, method: string, scope: string) {
-  if (scope === 'merchant') {
-    // Merchant tier: flat 2%
-    const fee = Math.round(amount * 0.02);
-    return { fee, net: amount - fee };
-  }
-  if (scope === 'institution' || scope === 'external_api') {
-    // Institution tier: 1.5%
-    const fee = Math.round(amount * 0.015);
-    return { fee, net: amount - fee };
-  }
-  // End-user: standard fee schedule
+// Scope-aware fee calculation — now async with DB lookup
+async function calculateScopedFee(amount: number, method: string, scope: string, supabaseClient: any, opts?: { merchantId?: string; institutionId?: string }) {
   const feeChannel = method === 'paypal' ? 'paypal' : method === 'card' ? 'card' : method === 'bank_transfer' ? 'bank_transfer' : 'account_funding';
-  return calculateGatewayFee(amount, feeChannel);
+  return await calculateGatewayFee(amount, feeChannel, supabaseClient, opts);
 }
 
 serve(async (req) => {
