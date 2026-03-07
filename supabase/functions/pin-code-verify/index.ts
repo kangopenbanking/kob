@@ -3,7 +3,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 // bcrypt removed due to edge environment limitations
 
 import { corsHeaders } from "../_shared/cors.ts";
-};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
