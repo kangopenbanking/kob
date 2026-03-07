@@ -7,11 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign, Percent, Layers, Plus, Trash2, Globe, Building2, CheckCircle2,
-  ArrowRight, ArrowLeft, Sparkles, Calculator, Search,
+  ArrowRight, ArrowLeft, Sparkles, Calculator, Search, Shield,
   ArrowLeftRight, CreditCard, Receipt, Smartphone, PhoneCall, Landmark,
   QrCode, PiggyBank, Users, Home, ArrowUpFromLine, ArrowDownToLine,
   Wallet, Globe2, Hash, Banknote, Zap, Send, Lock, Plug, Radio, FileText,
-  RefreshCw
+  RefreshCw, ChevronDown, ChevronUp
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +78,16 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
     max_fee_amount: initialData?.max_fee_amount || null as number | null,
     effective_from: initialData?.effective_from?.split('T')[0] || new Date().toISOString().split('T')[0],
     effective_until: initialData?.effective_until?.split('T')[0] || '',
+    // Limits & Commissions
+    daily_limit: initialData?.daily_limit ?? -1,
+    monthly_limit: initialData?.monthly_limit ?? -1,
+    max_charge_cap: initialData?.max_charge_cap ?? -1,
+    agent_commission_percent: initialData?.agent_commission_percent ?? 0,
+    agent_commission_fixed: initialData?.agent_commission_fixed ?? 0,
+    referral_percent_commission: initialData?.referral_percent_commission ?? 0,
+    referral_fixed_commission: initialData?.referral_fixed_commission ?? 0,
+    merchant_percent_charge: initialData?.merchant_percent_charge ?? 0,
+    merchant_fixed_charge: initialData?.merchant_fixed_charge ?? 0,
   });
 
   const [tiers, setTiers] = useState<TierRate[]>(
@@ -86,6 +96,14 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
 
   const [step, setStep] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showLimits, setShowLimits] = useState(
+    initialData ? (
+      (initialData.daily_limit != null && initialData.daily_limit !== -1) ||
+      (initialData.monthly_limit != null && initialData.monthly_limit !== -1) ||
+      (initialData.agent_commission_percent > 0) ||
+      (initialData.merchant_percent_charge > 0)
+    ) : false
+  );
 
   const categories = useMemo(() => {
     const cats = [...new Set(TRANSACTION_TYPES.map(t => t.category))];
@@ -122,7 +140,6 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Guard: only allow submission on the final step
     if (step !== 3) return;
     const isPlatform = formData.fee_scope === 'platform';
     onSubmit({
@@ -448,6 +465,100 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
                   <Input type="date" value={formData.effective_until} onChange={(e) => setFormData({ ...formData, effective_until: e.target.value })} className="h-10 rounded-lg" />
                 </div>
               </div>
+            </div>
+
+            {/* Limits & Commissions (Collapsible) */}
+            <div className="rounded-xl border bg-card overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setShowLimits(!showLimits)}
+                className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4 text-primary" />
+                  <h4 className="text-sm font-bold text-foreground">Limits & Commissions</h4>
+                  <Badge variant="secondary" className="text-[10px]">Optional</Badge>
+                </div>
+                {showLimits ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+
+              <AnimatePresence>
+                {showLimits && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-4 border-t pt-4">
+                      {/* Transaction Limits */}
+                      <div className="space-y-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Transaction Limits</p>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Daily Limit</Label>
+                            <Input type="number" value={formData.daily_limit} onChange={(e) => setFormData({ ...formData, daily_limit: Number(e.target.value) })} placeholder="-1 = unlimited" className="h-9 text-sm rounded-lg" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Monthly Limit</Label>
+                            <Input type="number" value={formData.monthly_limit} onChange={(e) => setFormData({ ...formData, monthly_limit: Number(e.target.value) })} placeholder="-1 = unlimited" className="h-9 text-sm rounded-lg" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Max Charge Cap</Label>
+                            <Input type="number" value={formData.max_charge_cap} onChange={(e) => setFormData({ ...formData, max_charge_cap: Number(e.target.value) })} placeholder="-1 = no cap" className="h-9 text-sm rounded-lg" />
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-muted-foreground">Use -1 for unlimited. Max charge cap limits the maximum fee that can be charged.</p>
+                      </div>
+
+                      {/* Agent Commissions */}
+                      <div className="space-y-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Agent Commission</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Percent (%)</Label>
+                            <Input type="number" step="0.01" min={0} value={formData.agent_commission_percent} onChange={(e) => setFormData({ ...formData, agent_commission_percent: Number(e.target.value) })} className="h-9 text-sm rounded-lg" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Fixed (XAF)</Label>
+                            <Input type="number" min={0} value={formData.agent_commission_fixed} onChange={(e) => setFormData({ ...formData, agent_commission_fixed: Number(e.target.value) })} className="h-9 text-sm rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Referral Commissions */}
+                      <div className="space-y-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Referral Commission</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Percent (%)</Label>
+                            <Input type="number" step="0.01" min={0} value={formData.referral_percent_commission} onChange={(e) => setFormData({ ...formData, referral_percent_commission: Number(e.target.value) })} className="h-9 text-sm rounded-lg" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Fixed (XAF)</Label>
+                            <Input type="number" min={0} value={formData.referral_fixed_commission} onChange={(e) => setFormData({ ...formData, referral_fixed_commission: Number(e.target.value) })} className="h-9 text-sm rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Merchant Surcharges */}
+                      <div className="space-y-3">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Merchant Surcharge</p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Percent (%)</Label>
+                            <Input type="number" step="0.01" min={0} value={formData.merchant_percent_charge} onChange={(e) => setFormData({ ...formData, merchant_percent_charge: Number(e.target.value) })} className="h-9 text-sm rounded-lg" />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-[10px] uppercase tracking-wide text-muted-foreground">Fixed (XAF)</Label>
+                            <Input type="number" min={0} value={formData.merchant_fixed_charge} onChange={(e) => setFormData({ ...formData, merchant_fixed_charge: Number(e.target.value) })} className="h-9 text-sm rounded-lg" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Live Fee Simulator */}

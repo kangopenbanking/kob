@@ -114,14 +114,12 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   const FLW_SECRET = typeof Deno !== "undefined" ? Deno.env.get('FLUTTERWAVE_SECRET_KEY') : undefined;
   if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
 
-  // Detect country from phone number prefix for francophone mobile money
   const phoneStr = req.customer_phone || '';
-  let country = 'CM'; // Default Cameroon
+  let country = 'CM';
   if (phoneStr.startsWith('225')) { country = 'CI'; }
   else if (phoneStr.startsWith('221')) { country = 'SN'; }
   else if (phoneStr.startsWith('226')) { country = 'BF'; }
 
-  // Build payload per Flutterwave v3 docs — top-level fields, NOT nested in customer
   const body: Record<string, unknown> = {
     tx_ref: req.tx_ref,
     amount: req.amount,
@@ -139,16 +137,15 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
     chargeType = 'charges?type=mobile_money_franco';
   } else if (req.channel === 'ussd') {
     body.type = 'ussd';
-    body.account_bank = '058'; // default GTBank USSD
+    body.account_bank = '058';
     chargeType = 'charges?type=ussd';
   } else if (req.channel === 'bank_transfer') {
     body.type = 'bank_transfer';
     chargeType = 'charges?type=bank_transfer';
   } else if (req.channel === 'card') {
-    // For card payments on Flutterwave, redirect to hosted checkout
     body.redirect_url = (req.metadata?.redirect_url as string) || 'https://kangopenbanking.com/gateway/callback';
     body.payment_options = 'card';
-    chargeType = 'payments'; // Use standard payment link flow
+    chargeType = 'payments';
   }
 
   if (req.metadata) body.meta = req.metadata;
@@ -561,34 +558,18 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   withdrawal: "withdrawal",
 };
 
-// Map channels to fee_limits_charges categories
-const CHANNEL_TO_LIMITS_CATEGORY: Record<string, string> = {
-  mobile_money: "send_money",
-  card: "payment_charges",
-  bank_transfer: "bank_transfer",
-  apple_pay: "payment_charges",
-  google_pay: "payment_charges",
-  ussd: "payment_charges",
-  account_funding: "cash_in",
-  paypal: "payment_charges",
-  virtual_card_topup: "cash_in",
-  gateway_charge: "payment_charges",
-  gateway_payout: "cash_out",
-  withdrawal: "cash_out",
-};
-
-function computeCommissionAndMerchantComponents(amount: number, limitsRow: any, isMerchantContext: boolean) {
-  const merchantPercent = isMerchantContext ? Number(limitsRow?.merchant_percent_charge) || 0 : 0;
-  const merchantFixed = isMerchantContext ? Number(limitsRow?.merchant_fixed_charge) || 0 : 0;
+function computeCommissionAndMerchantComponents(amount: number, feeRow: any, isMerchantContext: boolean) {
+  const merchantPercent = isMerchantContext ? Number(feeRow?.merchant_percent_charge) || 0 : 0;
+  const merchantFixed = isMerchantContext ? Number(feeRow?.merchant_fixed_charge) || 0 : 0;
 
   const agentCommission = Math.round(
-    amount * ((Number(limitsRow?.agent_commission_percent) || 0) / 100) +
-    (Number(limitsRow?.agent_commission_fixed) || 0)
+    amount * ((Number(feeRow?.agent_commission_percent) || 0) / 100) +
+    (Number(feeRow?.agent_commission_fixed) || 0)
   );
 
   const referralCommission = Math.round(
-    amount * ((Number(limitsRow?.referral_percent_commission) || 0) / 100) +
-    (Number(limitsRow?.referral_fixed_commission) || 0)
+    amount * ((Number(feeRow?.referral_percent_commission) || 0) / 100) +
+    (Number(feeRow?.referral_fixed_commission) || 0)
   );
 
   return {
@@ -603,9 +584,8 @@ function computeCommissionAndMerchantComponents(amount: number, limitsRow: any, 
 
 /**
  * Calculate gateway fee. Resolution order:
- * 1. fee_structures (merchant → institution → platform)
- * 2. fee_limits_charges (admin-configured per category)
- * 3. Hardcoded fallback
+ * 1. fee_structures (merchant → institution → platform) — single source of truth
+ * 2. Hardcoded fallback
  */
 export async function calculateGatewayFee(
   amount: number,
@@ -623,24 +603,7 @@ export async function calculateGatewayFee(
   const today = new Date().toISOString().split("T")[0];
 
   if (supabaseClient) {
-    const limitsRow = await fetchLimitsChargesRow(supabaseClient, channel);
-    const limits = limitsRow
-      ? {
-          min_amount: Number(limitsRow.min_amount) || 0,
-          max_amount: Number(limitsRow.max_amount) || 0,
-          daily_limit: Number(limitsRow.daily_limit) || -1,
-          monthly_limit: Number(limitsRow.monthly_limit) || -1,
-          max_charge_cap: Number(limitsRow.max_charge_cap) || -1,
-        }
-      : undefined;
-
-    const { merchantPercent, merchantFixed, commissions } = computeCommissionAndMerchantComponents(
-      amount,
-      limitsRow,
-      Boolean(opts?.merchantId)
-    );
-
-    // Step 1: Try fee_structures (most specific)
+    // Step 1: Try fee_structures (most specific scope first)
     const scopes: { scope: string; filter?: Record<string, string> }[] = [];
     if (opts?.merchantId) scopes.push({ scope: "merchant", filter: { merchant_id: opts.merchantId } });
     if (opts?.institutionId) scopes.push({ scope: "institution", filter: { institution_id: opts.institutionId } });
@@ -649,7 +612,7 @@ export async function calculateGatewayFee(
     for (const s of scopes) {
       let query = supabaseClient
         .from("fee_structures")
-        .select("percentage_rate, fixed_amount, min_fee_amount, max_fee_amount, fee_model, effective_until")
+        .select("percentage_rate, fixed_amount, min_fee_amount, max_fee_amount, fee_model, effective_until, daily_limit, monthly_limit, max_charge_cap, agent_commission_percent, agent_commission_fixed, referral_percent_commission, referral_fixed_commission, merchant_percent_charge, merchant_fixed_charge")
         .eq("transaction_type", txType)
         .eq("fee_scope", s.scope)
         .eq("is_active", true)
@@ -668,6 +631,20 @@ export async function calculateGatewayFee(
         const row = data[0];
         if (row.effective_until && row.effective_until < today) continue;
 
+        const { merchantPercent, merchantFixed, commissions } = computeCommissionAndMerchantComponents(
+          amount,
+          row,
+          Boolean(opts?.merchantId)
+        );
+
+        const limits: GatewayFeeLimits = {
+          min_amount: 0,
+          max_amount: 0,
+          daily_limit: Number(row.daily_limit) || -1,
+          monthly_limit: Number(row.monthly_limit) || -1,
+          max_charge_cap: Number(row.max_charge_cap) || -1,
+        };
+
         const basePercent = Number(row.percentage_rate) || 0;
         const baseFixed = Number(row.fixed_amount) || 0;
         let fee = Math.round(amount * (basePercent / 100) + baseFixed);
@@ -677,12 +654,12 @@ export async function calculateGatewayFee(
         if (minFee > 0 && fee < minFee) fee = minFee;
         if (maxFee > 0 && fee > maxFee) fee = maxFee;
 
-        // Apply merchant surcharge components from fee_limits_charges when merchant context exists
+        // Apply merchant surcharge from fee_structures
         if (merchantPercent > 0 || merchantFixed > 0) {
           fee += Math.round(amount * (merchantPercent / 100) + merchantFixed);
         }
 
-        const maxCap = limits?.max_charge_cap || -1;
+        const maxCap = limits.max_charge_cap || -1;
         if (maxCap > 0 && fee > maxCap) fee = maxCap;
 
         return {
@@ -699,36 +676,9 @@ export async function calculateGatewayFee(
         };
       }
     }
-
-    // Step 2: Try fee_limits_charges table
-    if (limitsRow) {
-      const basePercent = Number(limitsRow.percentage_charge) || 0;
-      const baseFixed = Number(limitsRow.fixed_charge) || 0;
-      let fee = Math.round(amount * (basePercent / 100) + baseFixed);
-
-      if (merchantPercent > 0 || merchantFixed > 0) {
-        fee += Math.round(amount * (merchantPercent / 100) + merchantFixed);
-      }
-
-      const maxCap = Number(limitsRow.max_charge_cap) || -1;
-      if (maxCap > 0 && fee > maxCap) fee = maxCap;
-
-      return {
-        fee,
-        net: amount - fee,
-        limits,
-        commissions,
-        components: {
-          base_percent: basePercent,
-          base_fixed: baseFixed,
-          merchant_percent: merchantPercent,
-          merchant_fixed: merchantFixed,
-        },
-      };
-    }
   }
 
-  // Step 3: Hardcoded fallback
+  // Step 2: Hardcoded fallback
   const defaults = DEFAULT_CHANNEL_RATES[channel] || { rate: 0.035, fixed: 0 };
   const fee = Math.round(amount * defaults.rate + defaults.fixed);
   return {
@@ -741,32 +691,6 @@ export async function calculateGatewayFee(
       merchant_percent: 0,
       merchant_fixed: 0,
     },
-  };
-}
-
-async function fetchLimitsChargesRow(supabaseClient: any, channel: string) {
-  const category = CHANNEL_TO_LIMITS_CATEGORY[channel] || channel;
-  const { data } = await supabaseClient
-    .from("fee_limits_charges")
-    .select("min_amount, max_amount, daily_limit, monthly_limit, max_charge_cap, percentage_charge, fixed_charge, merchant_percent_charge, merchant_fixed_charge, agent_commission_percent, agent_commission_fixed, referral_percent_commission, referral_fixed_commission")
-    .eq("category", category)
-    .eq("is_active", true)
-    .maybeSingle();
-
-  return data || null;
-}
-
-/** Fetch limits from fee_limits_charges for a given channel */
-async function fetchLimitsCharges(supabaseClient: any, channel: string) {
-  const data = await fetchLimitsChargesRow(supabaseClient, channel);
-
-  if (!data) return undefined;
-  return {
-    min_amount: Number(data.min_amount) || 0,
-    max_amount: Number(data.max_amount) || 0,
-    daily_limit: Number(data.daily_limit) || -1,
-    monthly_limit: Number(data.monthly_limit) || -1,
-    max_charge_cap: Number(data.max_charge_cap) || -1,
   };
 }
 
