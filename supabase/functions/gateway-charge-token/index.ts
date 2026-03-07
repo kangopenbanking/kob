@@ -40,7 +40,7 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'token_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    const { fee, net } = calculateGatewayFeeSync(amount, token.channel);
+    const { fee, net } = await calculateGatewayFee(amount, token.channel, supabase, { merchantId: merchant_id });
     const provider = token.provider;
 
     // Create charge record

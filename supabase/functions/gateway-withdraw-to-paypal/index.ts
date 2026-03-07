@@ -67,7 +67,7 @@ serve(async (req) => {
       .eq('balance_type', 'InterimAvailable')
       .single();
 
-    const { fee } = calculateGatewayFeeSync(amount, 'paypal');
+    const { fee } = await calculateGatewayFee(amount, 'paypal', supabase);
     const totalDebit = amount + fee;
 
     if (!balance || balance.amount < totalDebit) {

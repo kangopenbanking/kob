@@ -47,7 +47,7 @@ serve(async (req) => {
     }
 
     // Calculate fee
-    const { fee, net } = calculateGatewayFeeSync(amount, 'paypal');
+    const { fee, net } = await calculateGatewayFee(amount, 'paypal', supabase);
 
     // Create PayPal payout
     const senderBatchId = `KOB-${tx_ref}-${Date.now()}`;

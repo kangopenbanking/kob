@@ -55,7 +55,7 @@ serve(async (req) => {
     }
 
     // Fee calculation
-    const { fee, net } = calculateGatewayFeeSync(amount, 'account_funding');
+    const { fee, net } = await calculateGatewayFee(amount, 'account_funding', supabase);
 
     // Generate unique reference
     const txRef = `fund_${account_id.substring(0, 8)}_${Date.now()}`;
