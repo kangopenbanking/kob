@@ -54,8 +54,8 @@ const PaymentFacilitation = () => {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-16 max-w-4xl mx-auto">
               <div className="text-center">
-                <div className="text-4xl font-bold text-primary mb-2">1.5%</div>
-                <div className="text-sm text-muted-foreground">Transaction Fee</div>
+                <div className="text-4xl font-bold text-primary mb-2">Low</div>
+                <div className="text-sm text-muted-foreground">Transaction Fees</div>
               </div>
               <div className="text-center">
                 <div className="text-4xl font-bold text-primary mb-2">0 min</div>
