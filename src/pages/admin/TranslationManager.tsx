@@ -309,43 +309,88 @@ export default function TranslationManager() {
     }
 
     setBulkTranslating(true);
+    setBulkProgress({ done: 0, total: untranslated.length });
+    let totalTranslated = 0;
+    let totalFailed = 0;
+
     try {
-      // Translate in batches of 20
-      const batchSize = 20;
+      const batchSize = 15;
+      const delayBetweenBatches = 2500; // 2.5s delay to avoid rate limits
+
       for (let i = 0; i < untranslated.length; i += batchSize) {
         const batch = untranslated.slice(i, i + batchSize);
-        const { data, error } = await supabase.functions.invoke("translate-strings", {
-          body: {
-            strings: batch.map((s) => ({ key: s.string_key, value: s.default_value })),
-            target_language: "fr",
-          },
-        });
-        if (error) throw error;
-        const translated = data?.translations || {};
+        
+        // Retry logic: up to 3 attempts per batch
+        let attempts = 0;
+        let success = false;
+        
+        while (attempts < 3 && !success) {
+          attempts++;
+          try {
+            const { data, error } = await supabase.functions.invoke("translate-strings", {
+              body: {
+                strings: batch.map((s) => ({ key: s.string_key, value: s.default_value })),
+                target_language: "fr",
+              },
+            });
 
-        const upserts = batch
-          .filter((s) => translated[s.string_key])
-          .map((s) => ({
-            string_id: s.id,
-            language: "fr",
-            value: translated[s.string_key],
-            is_auto_translated: true,
-            translated_at: new Date().toISOString(),
-          }));
+            if (error) {
+              // Check for rate limit
+              if (error.message?.includes("429") || error.message?.includes("Rate limit")) {
+                console.warn(`Rate limited on batch ${i / batchSize + 1}, waiting 10s...`);
+                await new Promise((r) => setTimeout(r, 10000));
+                continue;
+              }
+              throw error;
+            }
 
-        if (upserts.length) {
-          await supabase
-            .from("translation_values")
-            .upsert(upserts, { onConflict: "string_id,language" });
+            const translated = data?.translations || {};
+            const upserts = batch
+              .filter((s) => translated[s.string_key])
+              .map((s) => ({
+                string_id: s.id,
+                language: "fr",
+                value: translated[s.string_key],
+                is_auto_translated: true,
+                translated_at: new Date().toISOString(),
+              }));
+
+            if (upserts.length) {
+              await supabase
+                .from("translation_values")
+                .upsert(upserts, { onConflict: "string_id,language" });
+              totalTranslated += upserts.length;
+            }
+            totalFailed += batch.length - upserts.length;
+            success = true;
+          } catch (batchErr: any) {
+            if (attempts >= 3) {
+              console.error(`Batch ${i / batchSize + 1} failed after 3 attempts:`, batchErr);
+              totalFailed += batch.length;
+            } else {
+              await new Promise((r) => setTimeout(r, 5000));
+            }
+          }
+        }
+
+        setBulkProgress({ done: Math.min(i + batchSize, untranslated.length), total: untranslated.length });
+
+        // Delay between batches to respect rate limits
+        if (i + batchSize < untranslated.length) {
+          await new Promise((r) => setTimeout(r, delayBetweenBatches));
         }
       }
 
-      toast({ title: "Bulk translation complete", description: `${untranslated.length} strings translated` });
+      toast({
+        title: "Bulk translation complete",
+        description: `${totalTranslated} translated, ${totalFailed} failed out of ${untranslated.length}`,
+      });
       fetchData();
     } catch (e: any) {
       toast({ title: "Bulk translation failed", description: e.message, variant: "destructive" });
     } finally {
       setBulkTranslating(false);
+      setBulkProgress({ done: 0, total: 0 });
     }
   };
 
