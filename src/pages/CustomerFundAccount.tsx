@@ -112,7 +112,7 @@ const CustomerFundAccount = () => {
             </div>
 
             {/* Amount */}
-            <AmountInput value={amount} onChange={setAmount} feePercent={0.025} fmt={fmt} presets={[5000, 10000, 25000, 50000]} />
+            <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} presets={[5000, 10000, 25000, 50000]} />
 
             {/* Payment Method */}
             <div className="space-y-2">

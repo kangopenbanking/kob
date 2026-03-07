@@ -259,7 +259,7 @@ const BankFundAccount: React.FC = () => {
 
               {/* Amount */}
               <div className="rounded-2xl border border-border/60 bg-card p-4">
-                <AmountInput value={amount} onChange={setAmount} feePercent={feePercent} fmt={fmt} />
+                <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} />
               </div>
 
               {/* Conditional Fields */}

@@ -164,7 +164,7 @@ const InstitutionFundAccount = () => {
                 )}
               </div>
 
-              <AmountInput value={amount} onChange={setAmount} feePercent={0.015} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
+              <AmountInput value={amount} onChange={setAmount} feeData={feeData} feeLoading={feeLoading} fmt={fmt} presets={[100000, 250000, 500000, 1000000]} />
 
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Payment Method</Label>
