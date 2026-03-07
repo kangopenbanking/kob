@@ -4,7 +4,7 @@ import {
   createFlutterwavePayout,
   createFlutterwaveMomoPayout,
   createPayPalPayout,
-  calculateGatewayFeeSync,
+  calculateGatewayFee,
 } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {

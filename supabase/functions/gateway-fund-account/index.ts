@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
+import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -55,7 +55,7 @@ serve(async (req) => {
     }
 
     // Fee calculation
-    const { fee, net } = calculateGatewayFeeSync(amount, 'account_funding');
+    const { fee, net } = await calculateGatewayFee(amount, 'account_funding', supabase);
 
     // Generate unique reference
     const txRef = `fund_${account_id.substring(0, 8)}_${Date.now()}`;

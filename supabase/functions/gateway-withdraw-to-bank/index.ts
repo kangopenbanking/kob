@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwavePayout, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
+import { createFlutterwavePayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -54,7 +54,7 @@ serve(async (req) => {
     }, 0);
 
     // Fee calculation
-    const { fee, net } = calculateGatewayFeeSync(amount, channel);
+    const { fee, net } = await calculateGatewayFee(amount, channel, supabase);
     const totalDebit = amount + fee;
 
     if (availableBalance < totalDebit) {

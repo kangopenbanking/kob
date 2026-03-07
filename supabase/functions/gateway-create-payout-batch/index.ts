@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwavePayout, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
+import { createFlutterwavePayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -40,7 +40,7 @@ serve(async (req) => {
     // Create individual payouts
     let completed = 0, failed = 0;
     for (const item of items) {
-      const { fee } = calculateGatewayFeeSync(item.amount, item.channel || 'mobile_money');
+      const { fee } = await calculateGatewayFee(item.amount, item.channel || 'mobile_money', supabase);
       const txRef = `batch_${batch.id}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
       const { data: payout } = await supabase.from('gateway_payouts').insert({

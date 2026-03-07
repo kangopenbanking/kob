@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createPayPalPayout, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
+import { createPayPalPayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -67,7 +67,7 @@ serve(async (req) => {
       .eq('balance_type', 'InterimAvailable')
       .single();
 
-    const { fee } = calculateGatewayFeeSync(amount, 'paypal');
+    const { fee } = await calculateGatewayFee(amount, 'paypal', supabase);
     const totalDebit = amount + fee;
 
     if (!balance || balance.amount < totalDebit) {

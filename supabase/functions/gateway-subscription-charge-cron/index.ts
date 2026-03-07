@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFeeSync } from "../_shared/gateway-adapters.ts";
+import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -53,7 +53,7 @@ serve(async (req) => {
 
         const tx_ref = `sub-${sub.id}-${Date.now()}`;
         const channel = 'mobile_money'; // default for subscriptions
-        const { fee, net } = calculateGatewayFeeSync(plan.amount, channel);
+        const { fee, net } = await calculateGatewayFee(plan.amount, channel, supabase);
         const provider = 'flutterwave';
 
         // Create charge

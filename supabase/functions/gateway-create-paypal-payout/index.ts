@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { createPayPalPayout, calculateGatewayFeeSync, mapPayPalStatus } from "../_shared/gateway-adapters.ts";
+import { createPayPalPayout, calculateGatewayFee, mapPayPalStatus } from "../_shared/gateway-adapters.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -47,7 +47,7 @@ serve(async (req) => {
     }
 
     // Calculate fee
-    const { fee, net } = calculateGatewayFeeSync(amount, 'paypal');
+    const { fee, net } = await calculateGatewayFee(amount, 'paypal', supabase);
 
     // Create PayPal payout
     const senderBatchId = `KOB-${tx_ref}-${Date.now()}`;

@@ -92,6 +92,22 @@ export function mapStripeDisputeStatus(status: string): string {
   return map[status?.toLowerCase()] || 'open';
 }
 
+export function mapPayPalStatus(status: string): string {
+  const map: Record<string, string> = {
+    COMPLETED: 'successful',
+    PENDING: 'processing',
+    UNCLAIMED: 'processing',
+    RETURNED: 'failed',
+    ONHOLD: 'processing',
+    BLOCKED: 'failed',
+    REFUNDED: 'refunded',
+    REVERSED: 'failed',
+    FAILED: 'failed',
+    SUCCESS: 'successful',
+  };
+  return map[status?.toUpperCase()] || 'pending';
+}
+
 // ─── Flutterwave Adapter ───
 
 export async function createFlutterwaveCharge(req: ChargeRequest): Promise<ChargeResult> {
@@ -118,86 +134,63 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   let chargeType = 'charge';
 
   if (req.channel === 'mobile_money') {
-    if (!req.customer_phone) throw new Error('customer_phone is required for mobile_money charges');
-    chargeType = 'mobile_money_franco';
+    body.type = 'mobile_money_franco';
     body.country = country;
+    chargeType = 'charges?type=mobile_money_franco';
+  } else if (req.channel === 'ussd') {
+    body.type = 'ussd';
+    body.account_bank = '058'; // default GTBank USSD
+    chargeType = 'charges?type=ussd';
+  } else if (req.channel === 'bank_transfer') {
+    body.type = 'bank_transfer';
+    chargeType = 'charges?type=bank_transfer';
   } else if (req.channel === 'card') {
-    chargeType = 'card';
-    body.redirect_url = req.metadata?.redirect_url || 'https://kangopenbanking.com/gateway/callback';
+    // For card payments on Flutterwave, redirect to hosted checkout
+    body.redirect_url = (req.metadata?.redirect_url as string) || 'https://kangopenbanking.com/gateway/callback';
+    body.payment_options = 'card';
+    chargeType = 'payments'; // Use standard payment link flow
   }
 
-  console.log('[Flutterwave] Sending charge request:', JSON.stringify({
-    type: chargeType, amount: req.amount, currency: req.currency, country, phone: phoneStr?.slice(0, 6) + '***',
-  }));
+  if (req.metadata) body.meta = req.metadata;
 
-  let res: Response;
-  try {
-    res = await fetch(`https://api.flutterwave.com/v3/charges?type=${chargeType}`, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${FLW_SECRET}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(60000),
-    });
-  } catch (err: any) {
-    if (err.name === 'TimeoutError' || err.name === 'AbortError') {
-      throw new Error('Flutterwave API request timed out after 60s');
-    }
-    throw err;
-  }
+  console.log(`[Flutterwave] Creating charge: ${chargeType}`, { amount: req.amount, currency: req.currency, channel: req.channel, country });
 
-  // Defensive response parsing
-  const contentType = res.headers.get('content-type') || '';
-  if (!contentType.includes('application/json')) {
-    const text = await res.text();
-    console.error('[Flutterwave] Non-JSON response:', res.status, text.slice(0, 500));
-    throw new Error(`Flutterwave returned non-JSON response (${res.status}): ${text.slice(0, 200)}`);
-  }
+  const endpoint = chargeType === 'payments'
+    ? 'https://api.flutterwave.com/v3/payments'
+    : `https://api.flutterwave.com/v3/${chargeType}`;
 
-  let data: any;
-  try {
-    data = await res.json();
-  } catch (parseErr) {
-    console.error('[Flutterwave] JSON parse failed:', parseErr);
-    throw new Error('Failed to parse Flutterwave response as JSON');
-  }
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${FLW_SECRET}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
 
-  console.log('[Flutterwave] Charge response:', JSON.stringify({
-    status: data.status,
-    message: data.message,
-    data_status: data.data?.status,
-    flw_ref: data.data?.flw_ref,
-    auth_mode: data.meta?.authorization?.mode,
-    has_redirect: !!data.meta?.authorization?.redirect_url,
-  }));
+  const data = await res.json();
+  console.log('[Flutterwave] Response:', JSON.stringify(data).substring(0, 500));
 
-  // Throw on API-level errors so the intent creator doesn't save a broken intent
   if (data.status === 'error') {
-    throw new Error(`Flutterwave charge failed: ${data.message || 'Unknown error'}`);
+    throw new Error(`Flutterwave error: ${data.message || JSON.stringify(data)}`);
   }
-
-  const authMode = data.meta?.authorization?.mode;
-  const redirectUrl = data.meta?.authorization?.redirect_url;
 
   return {
-    provider_ref: data.data?.flw_ref || data.data?.id?.toString() || '',
-    status: mapFlutterwaveStatus(data.data?.status || 'pending'),
+    provider_ref: data.data?.id?.toString() || data.data?.flw_ref || '',
+    status: chargeType === 'payments'
+      ? 'pending'
+      : mapFlutterwaveStatus(data.data?.status || data.status || 'pending'),
     provider_raw: data,
-    redirect_url: redirectUrl || undefined,
+    redirect_url: data.data?.link || data.data?.meta?.authorization?.redirect || undefined,
   };
 }
 
-// Zero-decimal currencies (Stripe expects amount in smallest unit; these have no cents)
-const ZERO_DECIMAL_CURRENCIES = ['xaf','xof','bif','clp','djf','gnf','jpy','kmf','krw','mga','pyg','rwf','ugx','vnd','vuv'];
+// ─── Stripe Adapter ───
 
-export { ZERO_DECIMAL_CURRENCIES };
+export const ZERO_DECIMAL_CURRENCIES = ['bif', 'clp', 'djf', 'gnf', 'jpy', 'kmf', 'krw', 'mga', 'pyg', 'rwf', 'ugx', 'vnd', 'vuv', 'xaf', 'xof', 'xpf'];
 
 export function toStripeAmount(amount: number, currency: string): number {
-  return ZERO_DECIMAL_CURRENCIES.includes(currency.toLowerCase())
-    ? Math.round(amount)
-    : Math.round(amount * 100);
+  return ZERO_DECIMAL_CURRENCIES.includes(currency.toLowerCase()) ? Math.round(amount) : Math.round(amount * 100);
 }
 
 export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResult> {
@@ -205,24 +198,21 @@ export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResu
   if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
   const stripeAmount = toStripeAmount(req.amount, req.currency);
+
   const params = new URLSearchParams();
   params.append('amount', stripeAmount.toString());
   params.append('currency', req.currency.toLowerCase());
   params.append('payment_method_types[]', 'card');
   if (req.customer_email) params.append('receipt_email', req.customer_email);
   params.append('metadata[tx_ref]', req.tx_ref);
-  params.append('metadata[channel]', 'card');
-
-  // Pass additional metadata from request
+  params.append('metadata[channel]', req.channel);
   if (req.metadata) {
-    for (const [key, value] of Object.entries(req.metadata)) {
-      if (value !== null && value !== undefined && key !== 'tx_ref' && key !== 'channel') {
-        params.append(`metadata[${key}]`, String(value));
-      }
-    }
+    Object.entries(req.metadata).forEach(([k, v]) => {
+      if (typeof v === 'string') params.append(`metadata[${k}]`, v);
+    });
   }
 
-  console.log('[Stripe] Creating PaymentIntent:', { amount: stripeAmount, currency: req.currency.toLowerCase(), tx_ref: req.tx_ref });
+  console.log('[Stripe] Creating PaymentIntent:', { amount: stripeAmount, currency: req.currency });
 
   const res = await fetch('https://api.stripe.com/v1/payment_intents', {
     method: 'POST',
@@ -234,18 +224,15 @@ export async function createStripeCharge(req: ChargeRequest): Promise<ChargeResu
   });
 
   const data = await res.json();
+  if (data.error) throw new Error(`Stripe error: ${data.error.message}`);
 
-  if (data.error) {
-    console.error('[Stripe] PaymentIntent error:', JSON.stringify(data.error));
-    throw new Error(`Stripe error: ${data.error.message || data.error.type}`);
-  }
-
-  console.log('[Stripe] PaymentIntent created:', { id: data.id, status: data.status, has_client_secret: !!data.client_secret });
+  console.log('[Stripe] PaymentIntent created:', { id: data.id, status: data.status });
 
   return {
     provider_ref: data.id || '',
     status: mapStripeStatus(data.status || 'pending'),
     provider_raw: data,
+    redirect_url: data.next_action?.redirect_to_url?.url || undefined,
   };
 }
 
@@ -256,19 +243,16 @@ export async function createFlutterwavePayout(req: PayoutRequest): Promise<Payou
   if (!FLW_SECRET) throw new Error('FLUTTERWAVE_SECRET_KEY not configured');
 
   const body: Record<string, unknown> = {
-    account_bank: req.beneficiary_bank,
-    account_number: req.beneficiary_account || req.beneficiary_phone,
+    account_bank: req.beneficiary_bank || '',
+    account_number: req.beneficiary_account || '',
     amount: req.amount,
     currency: req.currency,
     narration: req.narration || `Payout ${req.tx_ref}`,
     reference: req.tx_ref,
-    beneficiary_name: req.beneficiary_name,
+    beneficiary_name: req.beneficiary_name || 'Beneficiary',
   };
 
-  if (req.channel === 'mobile_money') {
-    body.account_bank = 'MPS'; // MoMo
-    body.account_number = req.beneficiary_phone;
-  }
+  console.log('[Flutterwave] Creating payout:', { amount: req.amount, currency: req.currency });
 
   const res = await fetch('https://api.flutterwave.com/v3/transfers', {
     method: 'POST',
@@ -280,6 +264,7 @@ export async function createFlutterwavePayout(req: PayoutRequest): Promise<Payou
   });
 
   const data = await res.json();
+  if (data.status === 'error') throw new Error(`Flutterwave payout failed: ${data.message}`);
 
   return {
     provider_ref: data.data?.id?.toString() || '',
@@ -296,8 +281,8 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
 
   const params = new URLSearchParams();
   params.append('payment_intent', req.provider_ref);
-  params.append('amount', toStripeAmount(req.amount, req.reason?.includes('currency:') ? req.reason.split('currency:')[1].trim() : 'xaf').toString());
-  if (req.reason) params.append('reason', req.reason);
+  params.append('amount', Math.round(req.amount * 100).toString());
+  if (req.reason) params.append('reason', 'requested_by_customer');
 
   const res = await fetch('https://api.stripe.com/v1/refunds', {
     method: 'POST',
@@ -309,6 +294,7 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
   });
 
   const data = await res.json();
+  if (data.error) throw new Error(`Stripe refund failed: ${data.error.message}`);
 
   return {
     provider_ref: data.id || '',
@@ -317,114 +303,43 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
   };
 }
 
-// ─── HMAC Signing for Merchant Webhooks ───
-
-export async function signPayload(payload: string, secret: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(secret),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(payload));
-  return Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
-}
-
-// ─── PayPal Status Mapping ───
-
-export function mapPayPalStatus(status: string): string {
-  const map: Record<string, string> = {
-    'SUCCESS': 'successful',
-    'FAILED': 'failed',
-    'PENDING': 'processing',
-    'UNCLAIMED': 'pending',
-    'RETURNED': 'failed',
-    'ONHOLD': 'processing',
-    'BLOCKED': 'failed',
-    'REFUNDED': 'failed',
-    'REVERSED': 'failed',
-  };
-  return map[status?.toUpperCase()] || 'pending';
-}
-
-// ─── PayPal OAuth2 Token Management ───
-
-let _paypalTokenCache: { token: string; expiresAt: number } | null = null;
+// ─── PayPal Adapter ───
 
 export async function getPayPalAccessToken(): Promise<string> {
-  // Return cached token if still valid (with 5-minute buffer)
-  if (_paypalTokenCache && Date.now() < _paypalTokenCache.expiresAt - 300_000) {
-    return _paypalTokenCache.token;
-  }
+  const clientId = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_ID') : undefined;
+  const secret = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_SECRET') : undefined;
+  if (!clientId || !secret) throw new Error('PayPal credentials not configured');
 
-  const PAYPAL_CLIENT_ID = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_ID') : undefined;
-  const PAYPAL_CLIENT_SECRET = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_SECRET') : undefined;
-  if (!PAYPAL_CLIENT_ID || !PAYPAL_CLIENT_SECRET) throw new Error('PayPal credentials not configured');
-
-  const baseUrl = 'https://api-m.paypal.com'; // Production; use api-m.sandbox.paypal.com for sandbox
-
-  const res = await fetch(`${baseUrl}/v1/oauth2/token`, {
+  const res = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
     method: 'POST',
     headers: {
-      'Authorization': `Basic ${btoa(`${PAYPAL_CLIENT_ID}:${PAYPAL_CLIENT_SECRET}`)}`,
+      'Authorization': `Basic ${btoa(`${clientId}:${secret}`)}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body: 'grant_type=client_credentials',
   });
 
-  if (!res.ok) {
-    const errBody = await res.text();
-    throw new Error(`PayPal OAuth2 failed: ${res.status} ${errBody}`);
-  }
-
   const data = await res.json();
-  _paypalTokenCache = {
-    token: data.access_token,
-    expiresAt: Date.now() + (data.expires_in * 1000),
-  };
-
+  if (!data.access_token) throw new Error('Failed to get PayPal token');
   return data.access_token;
 }
 
-// ─── PayPal Payout ───
-
-export interface PayPalPayoutRequest {
-  sender_batch_id: string;
-  items: {
-    recipient_type: 'EMAIL' | 'PHONE' | 'PAYPAL_ID';
-    receiver: string;
-    amount: number;
-    currency: string;
-    note?: string;
-    sender_item_id: string;
-  }[];
-}
-
-export interface PayPalPayoutResult {
-  batch_id: string;
-  batch_status: string;
-  items: { payout_item_id: string; transaction_status: string }[];
-  provider_raw: Record<string, unknown>;
-}
-
-export async function createPayPalPayout(req: PayPalPayoutRequest): Promise<PayPalPayoutResult> {
+export async function createPayPalPayout(req: PayoutRequest): Promise<PayoutResult> {
   const token = await getPayPalAccessToken();
 
   const body = {
     sender_batch_header: {
-      sender_batch_id: req.sender_batch_id,
-      email_subject: 'You have a payout!',
-      email_message: 'You have received a payout from Kang Open Banking.',
+      sender_batch_id: req.tx_ref,
+      email_subject: 'Payment from KOB',
+      email_message: req.narration || 'You have received a payment',
     },
-    items: req.items.map(item => ({
-      recipient_type: item.recipient_type,
-      amount: { value: (item.amount / 100).toFixed(2), currency: item.currency },
-      receiver: item.receiver,
-      note: item.note || `Payout ${item.sender_item_id}`,
-      sender_item_id: item.sender_item_id,
-    })),
+    items: [{
+      recipient_type: 'EMAIL',
+      amount: { value: req.amount.toFixed(2), currency: req.currency },
+      receiver: req.beneficiary_account,
+      note: req.narration || 'Payout',
+      sender_item_id: req.tx_ref,
+    }],
   };
 
   const res = await fetch('https://api-m.paypal.com/v1/payments/payouts', {
@@ -437,50 +352,31 @@ export async function createPayPalPayout(req: PayPalPayoutRequest): Promise<PayP
   });
 
   const data = await res.json();
-
-  if (!res.ok) {
-    throw new Error(`PayPal Payout failed: ${res.status} ${JSON.stringify(data)}`);
-  }
+  if (data.error) throw new Error(`PayPal payout failed: ${data.message || JSON.stringify(data)}`);
 
   return {
-    batch_id: data.batch_header?.payout_batch_id || '',
-    batch_status: data.batch_header?.batch_status || 'PENDING',
-    items: (data.items || []).map((i: any) => ({
-      payout_item_id: i.payout_item_id || '',
-      transaction_status: i.transaction_status || 'PENDING',
-    })),
+    provider_ref: data.batch_header?.payout_batch_id || '',
+    status: mapPayPalStatus(data.batch_header?.batch_status || 'PENDING'),
     provider_raw: data,
   };
 }
 
-export async function getPayPalPayoutStatus(batchId: string): Promise<PayPalPayoutResult> {
+export async function getPayPalPayoutStatus(batchId: string): Promise<PayoutResult> {
   const token = await getPayPalAccessToken();
 
   const res = await fetch(`https://api-m.paypal.com/v1/payments/payouts/${batchId}`, {
-    method: 'GET',
-    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+    headers: { 'Authorization': `Bearer ${token}` },
   });
 
   const data = await res.json();
-
   return {
-    batch_id: data.batch_header?.payout_batch_id || batchId,
-    batch_status: data.batch_header?.batch_status || 'PENDING',
-    items: (data.items || []).map((i: any) => ({
-      payout_item_id: i.payout_item_id || '',
-      transaction_status: i.transaction_status || 'PENDING',
-    })),
+    provider_ref: batchId,
+    status: mapPayPalStatus(data.batch_header?.batch_status || 'PENDING'),
     provider_raw: data,
   };
 }
 
-// ─── PayPal Webhook Signature Verification ───
-
-export async function verifyPayPalWebhookSignature(
-  headers: Record<string, string>,
-  body: string,
-  webhookId: string,
-): Promise<boolean> {
+export async function verifyPayPalWebhookSignature(headers: Record<string, string>, body: string, webhookId: string): Promise<boolean> {
   const token = await getPayPalAccessToken();
 
   const verifyBody = {
@@ -624,6 +520,10 @@ const DEFAULT_CHANNEL_RATES: Record<string, { rate: number; fixed: number }> = {
   ussd: { rate: 0.025, fixed: 25 },
   account_funding: { rate: 0.025, fixed: 0 },
   paypal: { rate: 0.035, fixed: 150 },
+  virtual_card_topup: { rate: 0.015, fixed: 0 },
+  gateway_charge: { rate: 0.03, fixed: 50 },
+  gateway_payout: { rate: 0.02, fixed: 75 },
+  withdrawal: { rate: 0.015, fixed: 0 },
 };
 
 const CHANNEL_TO_TX_TYPE: Record<string, string> = {
@@ -635,6 +535,10 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   ussd: "ussd_payment",
   account_funding: "account_funding",
   paypal: "paypal_payment",
+  virtual_card_topup: "virtual_card_topup",
+  gateway_charge: "gateway_charge",
+  gateway_payout: "gateway_payout",
+  withdrawal: "withdrawal",
 };
 
 /**
@@ -648,6 +552,7 @@ export async function calculateGatewayFee(
   opts?: { merchantId?: string; institutionId?: string }
 ): Promise<{ fee: number; net: number }> {
   const txType = CHANNEL_TO_TX_TYPE[channel] || channel;
+  const today = new Date().toISOString().split("T")[0];
 
   // Try dynamic DB lookup if client provided
   if (supabaseClient) {
@@ -659,14 +564,16 @@ export async function calculateGatewayFee(
     for (const s of scopes) {
       let query = supabaseClient
         .from("fee_structures")
-        .select("percentage_rate, fixed_amount")
+        .select("percentage_rate, fixed_amount, min_fee_amount, max_fee_amount, fee_model")
         .eq("transaction_type", txType)
         .eq("fee_scope", s.scope)
         .eq("is_active", true)
-        .lte("effective_from", new Date().toISOString().split("T")[0])
+        .lte("effective_from", today)
         .order("effective_from", { ascending: false })
         .limit(1);
 
+      // Also filter out expired structures
+      // Note: or filter for null effective_until is complex; we handle post-query
       if (s.filter) {
         for (const [k, v] of Object.entries(s.filter)) {
           query = query.eq(k, v);
@@ -675,9 +582,20 @@ export async function calculateGatewayFee(
 
       const { data } = await query;
       if (data && data.length > 0) {
-        const rate = Number(data[0].percentage_rate) / 100;
-        const fixed = Number(data[0].fixed_amount);
-        const fee = Math.round(amount * rate + fixed);
+        const row = data[0];
+        // Skip if effective_until is set and in the past
+        if (row.effective_until && row.effective_until < today) continue;
+
+        const rate = Number(row.percentage_rate) / 100;
+        const fixed = Number(row.fixed_amount);
+        let fee = Math.round(amount * rate + fixed);
+
+        // Apply min/max fee caps
+        const minFee = Number(row.min_fee_amount) || 0;
+        const maxFee = Number(row.max_fee_amount) || 0;
+        if (minFee > 0 && fee < minFee) fee = minFee;
+        if (maxFee > 0 && fee > maxFee) fee = maxFee;
+
         return { fee, net: amount - fee };
       }
     }
