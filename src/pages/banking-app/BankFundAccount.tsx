@@ -4,6 +4,7 @@ import { ArrowLeft, Wallet, Loader2, Shield, Smartphone, CreditCard, Globe, Buil
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useBankAccounts } from '@/hooks/useBankingData';
+import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { AmountInput } from '@/components/funding/AmountInput';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { FundingHistory } from '@/components/funding/FundingHistory';
