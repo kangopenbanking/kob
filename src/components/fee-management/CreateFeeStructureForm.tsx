@@ -479,11 +479,12 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
             <ArrowLeft className="h-3.5 w-3.5" /> Back
           </Button>
         )}
-        {step < 3 ? (
+        {step < 3 && (
           <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed()} className="gap-1.5 rounded-lg">
             Continue <ArrowRight className="h-3.5 w-3.5" />
           </Button>
-        ) : (
+        )}
+        {step === 3 && (
           <Button type="submit" className="gap-1.5 rounded-lg shadow-md">
             <CheckCircle2 className="h-3.5 w-3.5" />
             {initialData ? 'Update Structure' : 'Create Structure'}
