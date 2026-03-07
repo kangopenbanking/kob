@@ -28,6 +28,8 @@ const CustomerFundAccount = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount) });
+
   const { data: accounts } = useQuery({
     queryKey: ["my-accounts-for-funding"],
     queryFn: async () => {
