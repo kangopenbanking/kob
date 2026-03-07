@@ -424,7 +424,7 @@ const MerchantTravelScanner: React.FC = () => {
                   {scan.type === 'success' ? (
                     <CheckCircle className="h-4 w-4 text-primary shrink-0" />
                   ) : scan.type === 'warning' ? (
-                    <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0" />
+                    <AlertTriangle className="h-4 w-4 text-amber-500 dark:text-amber-400 shrink-0" />
                   ) : (
                     <XCircle className="h-4 w-4 text-destructive shrink-0" />
                   )}
