@@ -44,6 +44,8 @@ const MerchantFundWallet = () => {
     enabled: !!merchant?.id,
   });
 
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "merchant", merchantId: merchant?.id });
+
   const handleFund = async () => {
     if (!merchant?.id) { toast.error("Merchant not found"); return; }
     if (!amount || Number(amount) <= 0) { toast.error("Enter a valid amount"); return; }
