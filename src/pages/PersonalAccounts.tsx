@@ -10,6 +10,7 @@ import {
   Wallet, 
   ArrowUpRight, 
   ArrowDownLeft,
+  ArrowDownToLine,
   Send,
   Download,
   Plus,
