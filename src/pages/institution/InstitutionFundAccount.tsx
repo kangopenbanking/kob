@@ -35,14 +35,25 @@ const InstitutionFundAccount = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "institution" });
-
   const resolveInstitutionId = async (userId: string): Promise<string | null> => {
     const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", userId).maybeSingle();
     if (inst) return inst.id;
     const { data: staffInst } = await supabase.rpc("get_staff_institution_id", { _user_id: userId });
     return staffInst || null;
   };
+
+  // Resolve institution ID for fee lookup
+  const { data: resolvedInstitutionId } = useQuery({
+    queryKey: ["resolved-institution-id-for-fees"],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      return resolveInstitutionId(user.id);
+    },
+  });
+
+  const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "institution", institutionId: resolvedInstitutionId ?? undefined });
+
 
   const { data: accounts } = useQuery({
     queryKey: ["institution-accounts-for-funding"],
