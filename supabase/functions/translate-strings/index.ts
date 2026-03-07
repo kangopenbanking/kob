@@ -23,7 +23,6 @@ serve(async (req) => {
       );
     }
 
-    // Build prompt for batch translation
     const stringsMap = strings.map((s: { key: string; value: string }) => ({
       key: s.key,
       value: s.value,
@@ -31,6 +30,10 @@ serve(async (req) => {
 
     const langNames: Record<string, string> = { fr: "French", es: "Spanish", de: "German", pt: "Portuguese", ar: "Arabic", zh: "Chinese" };
     const langName = langNames[target_language] || target_language;
+    
+    const inputObj = Object.fromEntries(stringsMap.map((s: any) => [s.key, s.value]));
+
+    // Use simple completion without tool_choice - more reliable across models
     const response = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
       {
@@ -40,50 +43,25 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
+          model: "google/gemini-2.5-flash",
           messages: [
             {
               role: "system",
-              content: `You are a professional translator. Translate the provided UI strings from English to ${langName}. Maintain the same tone, formality, and context. Keep technical terms, brand names, and currency abbreviations (XAF, USD) unchanged. Return ONLY a valid JSON object mapping each key to its translated value. Do not add explanations.`,
+              content: `You are a professional translator. Translate the provided JSON object values from English to ${langName}. Keep all keys exactly the same. Keep technical terms, brand names, and currency abbreviations (XAF, USD) unchanged. Return ONLY a valid JSON object with the same keys and translated values. No markdown, no code blocks, no explanations.`,
             },
             {
               role: "user",
-              content: JSON.stringify(
-                Object.fromEntries(stringsMap.map((s: any) => [s.key, s.value]))
-              ),
+              content: JSON.stringify(inputObj),
             },
           ],
-          tools: [
-            {
-              type: "function",
-              function: {
-                name: "return_translations",
-                description: "Return translated strings",
-                parameters: {
-                  type: "object",
-                  properties: {
-                    translations: {
-                      type: "object",
-                      description:
-                        "Object mapping string keys to their translated values",
-                      additionalProperties: { type: "string" },
-                    },
-                  },
-                  required: ["translations"],
-                  additionalProperties: false,
-                },
-              },
-            },
-          ],
-          tool_choice: {
-            type: "function",
-            function: { name: "return_translations" },
-          },
+          temperature: 0.1,
         }),
       }
     );
 
     if (!response.ok) {
+      const t = await response.text();
+      console.error("AI gateway error:", response.status, t);
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limit exceeded, please try again later." }),
@@ -96,19 +74,44 @@ serve(async (req) => {
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
       throw new Error(`AI gateway error: ${response.status}`);
     }
 
     const data = await response.json();
-    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     let translations: Record<string, string> = {};
 
+    // Try tool_calls first
+    const toolCall = data.choices?.[0]?.message?.tool_calls?.[0];
     if (toolCall?.function?.arguments) {
-      const parsed = JSON.parse(toolCall.function.arguments);
-      translations = parsed.translations || parsed;
+      try {
+        const parsed = JSON.parse(toolCall.function.arguments);
+        translations = parsed.translations || parsed;
+      } catch (e) {
+        console.error("Failed to parse tool_call arguments:", e);
+      }
     }
+
+    // Fallback: parse from message content
+    if (Object.keys(translations).length === 0) {
+      const content = data.choices?.[0]?.message?.content;
+      if (content) {
+        try {
+          // Strip markdown code blocks if present
+          let cleaned = content.trim();
+          if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "").trim();
+          }
+          const parsed = JSON.parse(cleaned);
+          translations = parsed.translations || parsed;
+        } catch (e) {
+          console.error("Failed to parse content as JSON:", e, "Content:", content.substring(0, 200));
+        }
+      } else {
+        console.error("No content or tool_calls in response. Full response:", JSON.stringify(data).substring(0, 500));
+      }
+    }
+
+    console.log(`Translated ${Object.keys(translations).length}/${strings.length} strings to ${langName}`);
 
     return new Response(JSON.stringify({ translations }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
