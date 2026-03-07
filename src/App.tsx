@@ -10,6 +10,7 @@ import { RoleGuard } from "@/components/RoleGuard";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
+import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PWARouteGuard } from "@/components/pwa/PWARouteGuard";
@@ -423,7 +424,7 @@ function App() {
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/fund-account" element={<Layout><ProtectedRoute><CustomerFundAccount /></ProtectedRoute></Layout>} />
+            <Route path="/fund-account" element={<Layout><ProtectedRoute><NonInstitutionRoute><CustomerFundAccount /></NonInstitutionRoute></ProtectedRoute></Layout>} />
             {/* Institution Portal Routes - Nested with InstitutionLayout */}
             <Route path="/fi-portal" element={<ProtectedRoute><RoleGuard allowedRoles={['institution', 'staff']} redirectTo="/dashboard"><InstitutionLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<FIPortal />} />
@@ -495,8 +496,8 @@ function App() {
               <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
             </Route>
-            <Route path="/merchant-register" element={<ProtectedRoute><MerchantRegister /></ProtectedRoute>} />
-            <Route path="/loans" element={<Layout><ProtectedRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></ProtectedRoute></Layout>} />
+            <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/loans" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><Loans /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
             
             {/* Admin Routes - Nested with AdminLayout */}
             <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminLayout /></ProtectedRoute>}>
@@ -565,7 +566,7 @@ function App() {
             <Route path="/compliance-dashboard" element={<Navigate to="/admin/compliance-dashboard" replace />} />
             
             {/* New Developer Portal */}
-            <Route path="/developer" element={<DeveloperLayout />}>
+            <Route path="/developer" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
               <Route index element={<DeveloperHome />} />
               <Route path="getting-started" element={<GettingStarted />} />
               <Route path="getting-started/authentication" element={<GettingStarted />} />
@@ -666,32 +667,32 @@ function App() {
             <Route path="/monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
             
             {/* User Dashboard Routes - Nested with DashboardLayout */}
-            <Route path="/dashboard" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></ProtectedRoute>}>
+            <Route path="/dashboard" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
             </Route>
-            <Route path="/security" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/mobile-money" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/payments" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><Payments /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/personal-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><PersonalAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/business-accounts" element={<Layout><ProtectedRoute><PersonalAccountRoute><BusinessAccounts /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/savings" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><Savings /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/virtual-cards" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><VirtualCards /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
+            <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/notifications" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/mobile-money" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/payments" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><Payments /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/personal-accounts" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><PersonalAccounts /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/business-accounts" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><BusinessAccounts /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/savings" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><Savings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/virtual-cards" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><VirtualCards /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             
             {/* CrediQ Routes */}
             <Route path="/crediq" element={<CrediQ />} />
             <Route path="/crediq/info" element={<CrediQInfo />} />
-            <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><CrediQOnboarding /></ProtectedRoute></Layout>} />
-            <Route path="/crediq/dashboard" element={<ProtectedRoute><DashboardLayout><CrediQDashboard /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/crediq/settings" element={<Layout><ProtectedRoute><CrediQSettings /></ProtectedRoute></Layout>} />
-            <Route path="/credit-score" element={<ProtectedRoute><DashboardLayout><CreditScore /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/credit-report" element={<ProtectedRoute><DashboardLayout><CreditReport /></DashboardLayout></ProtectedRoute>} />
+            <Route path="/crediq/onboarding" element={<Layout><ProtectedRoute><NonInstitutionRoute><CrediQOnboarding /></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/crediq/dashboard" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CrediQDashboard /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/crediq/settings" element={<Layout><ProtectedRoute><NonInstitutionRoute><CrediQSettings /></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/credit-score" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CreditScore /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/credit-report" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><CreditReport /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/credit-scores-info" element={<Layout><CreditScoresInfo /></Layout>} />
             <Route path="/credit-api-docs" element={<Layout><CreditAPIDocumentation /></Layout>} />
-            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></ProtectedRoute></Layout>} />
-            <Route path="/banking-ops" element={<ProtectedRoute><PersonalAccountRoute><DashboardLayout><BankingOps /></DashboardLayout></PersonalAccountRoute></ProtectedRoute>} />
-            <Route path="/profile" element={<ProtectedRoute><DashboardLayout><ProfileSettings /></DashboardLayout></ProtectedRoute>} />
-            <Route path="/profile-settings" element={<Layout><ProtectedRoute><ProfileSettings /></ProtectedRoute></Layout>} />
+            <Route path="/kyc-verification" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><KYCVerification /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
+            <Route path="/banking-ops" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><BankingOps /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/profile" element={<ProtectedRoute><NonInstitutionRoute><DashboardLayout><ProfileSettings /></DashboardLayout></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/profile-settings" element={<Layout><ProtectedRoute><NonInstitutionRoute><ProfileSettings /></NonInstitutionRoute></ProtectedRoute></Layout>} />
             <Route path="/privacy" element={<Layout><Privacy /></Layout>} />
             <Route path="/terms" element={<Layout><Terms /></Layout>} />
             <Route path="/cookies" element={<Layout><Cookies /></Layout>} />
