@@ -40,6 +40,34 @@ serve(async (req) => {
 
     console.log('Generating invoice:', { institution_id, billing_cycle, period_start, period_end });
 
+    // Pre-check: verify there are pending transaction fees for this period
+    const { count: pendingCount, error: countError } = await supabase
+      .from('transaction_fees')
+      .select('id', { count: 'exact', head: true })
+      .eq('institution_id', institution_id)
+      .eq('billing_status', 'pending')
+      .gte('transaction_date', period_start)
+      .lte('transaction_date', period_end);
+
+    if (countError) {
+      console.error('Error checking pending fees:', countError);
+    }
+
+    if (!pendingCount || pendingCount === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'No pending transaction fees found for this institution and period. Invoices can only be generated when there are billable fees.'
+        }),
+        { 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 422
+        }
+      );
+    }
+
+    console.log(`Found ${pendingCount} pending fees for invoicing`);
+
     // Generate invoice using database function
     const { data: invoiceId, error: invoiceError } = await supabase.rpc('generate_institution_invoice', {
       _institution_id: institution_id,

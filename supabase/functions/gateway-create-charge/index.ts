@@ -214,6 +214,24 @@ serve(async (req) => {
       performed_by: user.id, details: { merchant_id, amount, channel, status: charge.status, tx_ref, payment_link_id, settlement_currency, save_token },
     }).then(() => {}).catch(() => {});
 
+    // Record transaction fee for billing/invoicing
+    if (charge.status !== 'failed') {
+      const merchantInstitution = merchant.institution_id || null;
+      recordTransactionFee({
+        supabase,
+        institutionId: merchantInstitution,
+        transactionType: `gateway_charge_${channel}`,
+        transactionRef: tx_ref,
+        transactionAmount: amount,
+        transactionCurrency: currency,
+        feeModel: 'hybrid',
+        calculatedFee: fee,
+        finalFee: fee,
+        feeBreakdown: { fee_amount: fee, net_amount: net, channel, provider },
+        metadata: { charge_id: charge.id, merchant_id },
+      }).catch(() => {});
+    }
+
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
