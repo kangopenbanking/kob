@@ -261,7 +261,7 @@ serve(async (req) => {
       amount, currency, method, provider: resolvedProvider, status,
       reference: txRef, idempotency_key: idempotencyKey || null,
       provider_reference: providerRef, fee_amount: fee, net_amount: net,
-      next_action: nextAction, return_url, metadata,
+      next_action: nextAction, return_url, metadata: { ...(metadata || {}), fee_components: components || null, commissions: commissions || null, limits: limits || null },
       expires_at: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString(),
       funding_scope: fundingScope,
       merchant_id: merchantId,
