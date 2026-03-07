@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2 } from "lucide-react";
+import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Sliders } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateFeeStructureForm } from "@/components/fee-management/CreateFeeStructureForm";
 import { FeeStructuresTable } from "@/components/fee-management/FeeStructuresTable";
@@ -12,6 +12,7 @@ import { TransactionFeesTable } from "@/components/fee-management/TransactionFee
 import { InvoicesTable } from "@/components/fee-management/InvoicesTable";
 import { WaiversManagement } from "@/components/fee-management/WaiversManagement";
 import { FeeAnalytics } from "@/components/fee-management/FeeAnalytics";
+import { LimitsChargesTab } from "@/components/fee-management/LimitsChargesTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
@@ -198,6 +199,7 @@ export default function FeeManagement() {
           <TabsTrigger value="invoices" className="rounded-lg gap-1.5"><FileText className="h-3.5 w-3.5" /> Invoices</TabsTrigger>
           <TabsTrigger value="waivers" className="rounded-lg gap-1.5"><Gift className="h-3.5 w-3.5" /> Waivers</TabsTrigger>
           <TabsTrigger value="analytics" className="rounded-lg gap-1.5"><BarChart3 className="h-3.5 w-3.5" /> Analytics</TabsTrigger>
+          <TabsTrigger value="limits" className="rounded-lg gap-1.5"><Sliders className="h-3.5 w-3.5" /> Limits & Charges</TabsTrigger>
         </TabsList>
 
         <TabsContent value="structures" className="space-y-4">
@@ -236,6 +238,10 @@ export default function FeeManagement() {
 
         <TabsContent value="analytics">
           <FeeAnalytics transactionFees={filteredFees} feeStructures={filteredStructures} />
+        </TabsContent>
+
+        <TabsContent value="limits">
+          <LimitsChargesTab />
         </TabsContent>
       </Tabs>
 
