@@ -592,7 +592,6 @@ export type Database = {
       api_credentials: {
         Row: {
           api_key: string
-          api_secret: string
           api_secret_hash: string | null
           created_at: string
           environment: string
@@ -603,7 +602,6 @@ export type Database = {
         }
         Insert: {
           api_key: string
-          api_secret: string
           api_secret_hash?: string | null
           created_at?: string
           environment?: string
@@ -614,7 +612,6 @@ export type Database = {
         }
         Update: {
           api_key?: string
-          api_secret?: string
           api_secret_hash?: string | null
           created_at?: string
           environment?: string
@@ -12784,7 +12781,6 @@ export type Database = {
         Row: {
           client_id: string
           client_name: string
-          client_secret: string
           client_secret_hash: string | null
           created_at: string | null
           environment: string
@@ -12809,7 +12805,6 @@ export type Database = {
         Insert: {
           client_id: string
           client_name: string
-          client_secret: string
           client_secret_hash?: string | null
           created_at?: string | null
           environment?: string
@@ -12834,7 +12829,6 @@ export type Database = {
         Update: {
           client_id?: string
           client_name?: string
-          client_secret?: string
           client_secret_hash?: string | null
           created_at?: string | null
           environment?: string
@@ -14314,7 +14308,6 @@ export type Database = {
           store_url: string
           updated_at: string | null
           user_id: string
-          webhook_secret: string | null
           webhook_secret_hash: string | null
           webhook_url: string | null
         }
@@ -14332,7 +14325,6 @@ export type Database = {
           store_url: string
           updated_at?: string | null
           user_id: string
-          webhook_secret?: string | null
           webhook_secret_hash?: string | null
           webhook_url?: string | null
         }
@@ -14350,7 +14342,6 @@ export type Database = {
           store_url?: string
           updated_at?: string | null
           user_id?: string
-          webhook_secret?: string | null
           webhook_secret_hash?: string | null
           webhook_url?: string | null
         }
