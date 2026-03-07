@@ -4582,13 +4582,16 @@ export type Database = {
           effective_from: string
           effective_until: string | null
           fee_model: string
+          fee_scope: string
           fixed_amount: number | null
           id: string
-          institution_id: string
+          institution_id: string | null
           is_active: boolean | null
           max_fee_amount: number | null
+          merchant_id: string | null
           min_fee_amount: number | null
           percentage_rate: number | null
+          target_entity_id: string | null
           tiered_rates: Json | null
           transaction_type: string
           updated_at: string | null
@@ -4600,13 +4603,16 @@ export type Database = {
           effective_from?: string
           effective_until?: string | null
           fee_model: string
+          fee_scope?: string
           fixed_amount?: number | null
           id?: string
-          institution_id: string
+          institution_id?: string | null
           is_active?: boolean | null
           max_fee_amount?: number | null
+          merchant_id?: string | null
           min_fee_amount?: number | null
           percentage_rate?: number | null
+          target_entity_id?: string | null
           tiered_rates?: Json | null
           transaction_type: string
           updated_at?: string | null
@@ -4618,13 +4624,16 @@ export type Database = {
           effective_from?: string
           effective_until?: string | null
           fee_model?: string
+          fee_scope?: string
           fixed_amount?: number | null
           id?: string
-          institution_id?: string
+          institution_id?: string | null
           is_active?: boolean | null
           max_fee_amount?: number | null
+          merchant_id?: string | null
           min_fee_amount?: number | null
           percentage_rate?: number | null
+          target_entity_id?: string | null
           tiered_rates?: Json | null
           transaction_type?: string
           updated_at?: string | null
@@ -4636,6 +4645,13 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fee_structures_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]
