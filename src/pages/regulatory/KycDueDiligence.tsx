@@ -152,8 +152,7 @@ export default function KycDueDiligence() {
   const next = useCallback(() => { setDirection(1); setStep(s => Math.min(s + 1, totalSteps - 1)); }, [totalSteps]);
   const prev = useCallback(() => { setDirection(-1); setStep(s => Math.max(s - 1, 0)); }, []);
 
-  // Return the storage path directly (bucket is private, no public URLs)
-  const getStoragePath = (path: string) => path || "";
+  // Documents are stored as storage paths (private bucket, signed URLs used for viewing)
 
   const handleSubmit = async () => {
     if (!form.accuracyDeclaration) { toast.error("You must confirm the accuracy declaration."); return; }
