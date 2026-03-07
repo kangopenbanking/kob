@@ -99,8 +99,11 @@ export function CreateFeeStructureForm({ institutions, onSubmit, onCancel, initi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const isPlatform = formData.fee_scope === 'platform';
     onSubmit({
       ...formData,
+      institution_id: isPlatform ? null : formData.institution_id,
+      fee_scope: formData.fee_scope,
       tiered_rates: formData.fee_model === 'tiered' ? tiers : null,
       effective_until: formData.effective_until || null,
     });
