@@ -124,8 +124,52 @@ serve(async (req) => {
       }
     }
 
-    // Fee calculation per scope
-    const { fee, net } = await calculateScopedFee(amount, method, fundingScope, supabase, { merchantId, institutionId: null });
+    // Fee calculation per scope (institution-aware)
+    const feeResult = await calculateScopedFee(amount, method, fundingScope, supabase, { merchantId, institutionId: institutionId || undefined });
+    const { fee, net, limits, commissions, components } = feeResult;
+
+    const rangeError = validateAmountRange(amount, limits);
+    if (rangeError) {
+      return new Response(JSON.stringify({ error: 'amount_limit_violation', message: rangeError, limits }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (limits?.daily_limit && limits.daily_limit > 0) {
+      const dailyTotal = await sumUsageForPeriod({
+        supabase,
+        table: 'funding_intents',
+        filters: {
+          funding_scope: fundingScope,
+          ...(accountId ? { account_id: accountId } : {}),
+          ...(merchantId ? { merchant_id: merchantId } : {}),
+          ...(apiClientId ? { api_client_id: apiClientId } : {}),
+        },
+        statuses: ['created', 'pending_provider', 'pending_customer_action', 'pending_verification', 'succeeded'],
+        period: 'day',
+      });
+
+      if (dailyTotal + amount > limits.daily_limit) {
+        return new Response(JSON.stringify({ error: 'daily_limit_exceeded', message: `Daily limit of ${limits.daily_limit} exceeded`, limits }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
+
+    if (limits?.monthly_limit && limits.monthly_limit > 0) {
+      const monthlyTotal = await sumUsageForPeriod({
+        supabase,
+        table: 'funding_intents',
+        filters: {
+          funding_scope: fundingScope,
+          ...(accountId ? { account_id: accountId } : {}),
+          ...(merchantId ? { merchant_id: merchantId } : {}),
+          ...(apiClientId ? { api_client_id: apiClientId } : {}),
+        },
+        statuses: ['created', 'pending_provider', 'pending_customer_action', 'pending_verification', 'succeeded'],
+        period: 'month',
+      });
+
+      if (monthlyTotal + amount > limits.monthly_limit) {
+        return new Response(JSON.stringify({ error: 'monthly_limit_exceeded', message: `Monthly limit of ${limits.monthly_limit} exceeded`, limits }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    }
 
     const txRef = `fi_${(accountId || merchantId || 'api').toString().slice(0, 8)}_${Date.now()}`;
     let providerRef = '';
