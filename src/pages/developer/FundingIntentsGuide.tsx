@@ -70,7 +70,7 @@ const FundingIntentsGuide = () => (
             <p className="text-sm text-muted-foreground">Institution owners or staff fund internal clearing/float accounts. Validates ownership via <code>institutions.user_id</code> or <code>staff_assignments</code>.</p>
             <p className="text-sm text-muted-foreground"><strong>Auth:</strong> Bearer JWT token (institution owner or staff)</p>
             <p className="text-sm text-muted-foreground"><strong>Credits:</strong> <code>account_balances</code> (institution-scoped account)</p>
-            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution tier (1.5%)</p>
+            <p className="text-sm text-muted-foreground"><strong>Fees:</strong> Institution-scope fees from <code>fee_structures</code>. Use <code>/gateway-fee-estimate?amount=X&channel=bank_transfer&institution_id=UUID</code> to preview.</p>
             <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">
 {`{
   "amount": 1000000,
