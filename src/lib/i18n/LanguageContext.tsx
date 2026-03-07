@@ -50,25 +50,35 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   // Load translations from DB
   const loadDbTranslations = useCallback(async (lang: Language) => {
     try {
-      const { data, error } = await supabase
-        .from('translation_values')
-        .select('value, string_id, translation_strings!inner(string_key)')
-        .eq('language', lang);
+      // Paginate to handle >1000 rows
+      const PAGE_SIZE = 1000;
+      let allData: any[] = [];
+      let from = 0;
+      let hasMore = true;
 
-      if (error) {
-        console.warn('Failed to load DB translations:', error);
-        return;
+      while (hasMore) {
+        const { data, error } = await supabase
+          .from('translation_values')
+          .select('value, string_id, translation_strings!inner(string_key)')
+          .eq('language', lang)
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) {
+          console.warn('Failed to load DB translations:', error);
+          break;
+        }
+        if (data) allData = allData.concat(data);
+        hasMore = data && data.length === PAGE_SIZE;
+        from += PAGE_SIZE;
       }
 
       const map: Record<string, string> = {};
       const keys = new Set<string>();
-      if (data) {
-        for (const row of data) {
-          const key = (row as any).translation_strings?.string_key;
-          if (key) {
-            map[key] = row.value;
-            keys.add(key);
-          }
+      for (const row of allData) {
+        const key = (row as any).translation_strings?.string_key;
+        if (key) {
+          map[key] = row.value;
+          keys.add(key);
         }
       }
       setDbTranslations(map);
