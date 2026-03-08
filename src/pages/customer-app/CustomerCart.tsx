@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Wallet, Loader2, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Trash2, Plus, Minus, ShoppingBag, Wallet, Loader2, CheckCircle2, XCircle, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -19,6 +19,7 @@ const CustomerCart: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState(false);
   const [orderComplete, setOrderComplete] = useState<any>(null);
+  const [orderFailed, setOrderFailed] = useState(false);
 
   const walletBalance = balances.find((b: any) => b.balance_type === 'ClosingAvailable')?.amount || 0;
 
@@ -31,7 +32,7 @@ const CustomerCart: React.FC = () => {
     setLoading(true);
     try {
       const { data } = await supabase.from('pos_consumer_carts')
-        .select('*, pos_consumer_cart_items(*, pos_product_variants(id, name, price, pos_products(name)))')
+        .select('*, pos_consumer_cart_items(*, pos_product_variants(id, name, price, pos_products(name, pos_product_images(image_url))))')
         .eq('user_id', user.id)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -46,7 +47,9 @@ const CustomerCart: React.FC = () => {
   };
 
   const items = cart?.pos_consumer_cart_items || [];
-  const total = items.reduce((s: number, i: any) => s + i.unit_price * i.quantity, 0);
+  const subtotal = items.reduce((s: number, i: any) => s + i.unit_price * i.quantity, 0);
+  const taxes = Math.round(subtotal * 0.0); // No tax for now
+  const total = subtotal + taxes;
 
   const updateQuantity = async (itemId: string, newQty: number) => {
     try {
@@ -64,6 +67,7 @@ const CustomerCart: React.FC = () => {
   const handleCheckout = async () => {
     if (!cart) return;
     setCheckingOut(true);
+    setOrderFailed(false);
     try {
       const { data, error } = await supabase.functions.invoke('pos-consumer-checkout', {
         body: { cart_id: cart.id },
@@ -71,30 +75,92 @@ const CustomerCart: React.FC = () => {
       });
       if (error) throw error;
       if (data?.error) {
-        toast.error(data.error === 'insufficient_balance' ? `Insufficient balance. You need ${data.required?.toLocaleString()} XAF` : data.message || data.error);
+        if (data.error === 'insufficient_balance') {
+          toast.error(`Insufficient balance. You need ${data.required?.toLocaleString()} XAF`);
+          setOrderFailed(true);
+        } else {
+          toast.error(data.message || data.error);
+          setOrderFailed(true);
+        }
         return;
       }
       setOrderComplete(data);
-      toast.success('Payment successful!');
     } catch (err: any) {
       toast.error(err.message || 'Checkout failed');
+      setOrderFailed(true);
     } finally {
       setCheckingOut(false);
     }
   };
 
+  /* ─── Payment Success Screen ─── */
   if (orderComplete) {
     return (
-      <div className="px-4 pt-16 text-center">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring' }}>
-          <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
+      <div className="flex flex-col items-center justify-center min-h-[70vh] px-6">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', damping: 12 }}
+          className="w-20 h-20 rounded-full bg-[hsl(150,60%,50%)] flex items-center justify-center mb-6"
+        >
+          <CheckCircle2 className="w-10 h-10 text-[hsl(0,0%,10%)]" strokeWidth={2.5} />
         </motion.div>
-        <h2 className="text-xl font-bold text-foreground">Payment Successful!</h2>
-        <p className="text-sm text-muted-foreground mt-2">Order #{orderComplete.order_number}</p>
-        <p className="text-lg font-bold text-primary mt-1">{orderComplete.total?.toLocaleString()} XAF</p>
-        <Button onClick={() => navigate('/app/stores')} className="mt-8 rounded-xl">
-          Continue Shopping
-        </Button>
+        <h2 className="text-2xl font-bold text-foreground">Payment successful</h2>
+        <p className="text-sm text-muted-foreground mt-2">
+          A payment of {orderComplete.total?.toLocaleString()} {orderComplete.currency || 'XAF'} was successfully made.
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">Order #{orderComplete.order_number}</p>
+
+        <div className="w-full max-w-xs mt-8 space-y-3">
+          <Button
+            onClick={() => { setOrderComplete(null); navigate('/app/stores'); }}
+            className="w-full h-12 rounded-2xl font-semibold"
+          >
+            New order
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => toast.success('Receipt will be sent to your email')}
+            className="w-full h-12 rounded-2xl font-semibold"
+          >
+            <Receipt className="w-4 h-4 mr-2" />
+            Email receipt
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  /* ─── Payment Failed Screen ─── */
+  if (orderFailed && !checkingOut) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[70vh] px-6">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', damping: 12 }}
+          className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mb-6"
+        >
+          <XCircle className="w-10 h-10 text-primary" strokeWidth={2} />
+        </motion.div>
+        <h2 className="text-2xl font-bold text-foreground">Payment failed</h2>
+        <p className="text-sm text-muted-foreground mt-2">Unfortunately, this payment has been declined.</p>
+
+        <div className="w-full max-w-xs mt-8 space-y-3">
+          <Button
+            onClick={() => { setOrderFailed(false); handleCheckout(); }}
+            className="w-full h-12 rounded-2xl font-semibold"
+          >
+            Try another payment method
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => { setOrderFailed(false); navigate('/app/stores'); }}
+            className="w-full h-12 rounded-2xl font-semibold"
+          >
+            Exit order
+          </Button>
+        </div>
       </div>
     );
   }
@@ -102,11 +168,16 @@ const CustomerCart: React.FC = () => {
   return (
     <div className="px-4 pt-6 pb-32">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-muted">
-          <ArrowLeft className="w-4 h-4 text-foreground" />
-        </button>
-        <h1 className="text-lg font-bold text-foreground">Shopping Cart</h1>
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <button onClick={() => navigate(-1)} className="p-2 rounded-full bg-muted">
+            <ArrowLeft className="w-4 h-4 text-foreground" />
+          </button>
+          <h1 className="text-lg font-bold text-foreground">Cart</h1>
+        </div>
+        {items.length > 0 && (
+          <span className="text-xs text-muted-foreground">{items.length} items</span>
+        )}
       </div>
 
       {loading ? (
@@ -122,68 +193,88 @@ const CustomerCart: React.FC = () => {
           </Button>
         </div>
       ) : (
-        <>
-          {/* Items */}
-          <div className="space-y-3">
-            {items.map((item: any) => {
+        <div className="flex flex-col lg:flex-row gap-6">
+          {/* Items list */}
+          <div className="flex-1 space-y-2.5">
+            {items.map((item: any, idx: number) => {
               const variant = item.pos_product_variants;
               const productName = variant?.pos_products?.name || '';
               const variantName = variant?.name || '';
+              const image = variant?.pos_products?.pos_product_images?.[0]?.image_url;
               return (
-                <div key={item.id} className="bg-card border border-border/50 rounded-xl p-3 flex items-center gap-3">
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.04 }}
+                  className="bg-card border border-border/50 rounded-xl p-3 flex items-center gap-3"
+                >
+                  {/* Product image */}
+                  {image ? (
+                    <img src={image} alt="" className="w-14 h-14 rounded-lg object-cover flex-shrink-0 border-l-2 border-primary" />
+                  ) : (
+                    <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 border-l-2 border-primary">
+                      <ShoppingBag className="w-5 h-5 text-muted-foreground/40" />
+                    </div>
+                  )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground truncate">
-                      {productName}{variantName ? ` - ${variantName}` : ''}
-                    </p>
-                    <p className="text-xs text-primary font-semibold mt-0.5">
+                    <p className="text-sm font-medium text-foreground truncate">{productName}</p>
+                    <p className="text-[10px] text-muted-foreground">{variantName}</p>
+                    <p className="text-xs font-bold text-primary mt-0.5">
                       {item.unit_price.toLocaleString()} XAF
                     </p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="p-1 rounded-lg bg-muted hover:bg-muted/80"
+                  {/* Quantity control */}
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value={item.quantity}
+                      onChange={(e) => updateQuantity(item.id, Number(e.target.value))}
+                      className="h-7 w-12 text-xs rounded-lg border border-border bg-background text-center focus:outline-none"
                     >
-                      {item.quantity === 1 ? <Trash2 className="w-3.5 h-3.5 text-destructive" /> : <Minus className="w-3.5 h-3.5" />}
-                    </button>
-                    <span className="text-sm font-semibold w-6 text-center">{item.quantity}</span>
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
                     <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="p-1 rounded-lg bg-muted hover:bg-muted/80"
+                      onClick={() => updateQuantity(item.id, 0)}
+                      className="p-1.5 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                     >
-                      <Plus className="w-3.5 h-3.5" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <p className="text-sm font-bold text-foreground w-20 text-right">
-                    {(item.unit_price * item.quantity).toLocaleString()}
-                  </p>
-                </div>
+                </motion.div>
               );
             })}
           </div>
 
-          {/* Summary */}
-          <div className="mt-6 bg-card border border-border/50 rounded-xl p-4 space-y-3">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Subtotal</span>
-              <span className="font-semibold text-foreground">{total.toLocaleString()} XAF</span>
+          {/* Summary panel */}
+          <div className="lg:w-72">
+            <div className="bg-card border border-border/50 rounded-2xl p-4 space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-semibold text-foreground">{subtotal.toLocaleString()} XAF</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Taxes</span>
+                <span className="font-semibold text-foreground">{taxes.toLocaleString()} XAF</span>
+              </div>
+              <div className="border-t border-border/50 pt-3 flex justify-between">
+                <span className="text-base font-bold text-foreground">Total</span>
+                <span className="text-base font-bold text-primary">{total.toLocaleString()} XAF</span>
+              </div>
             </div>
-            <div className="border-t border-border/50 pt-3 flex justify-between text-base">
-              <span className="font-bold text-foreground">Total</span>
-              <span className="font-bold text-primary">{total.toLocaleString()} XAF</span>
-            </div>
-          </div>
 
-          {/* Wallet balance */}
-          <div className="mt-4 flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
-            <Wallet className="w-4 h-4 text-primary" />
-            <span className="text-xs text-muted-foreground">Wallet Balance:</span>
-            <span className="text-xs font-bold text-foreground">{walletBalance.toLocaleString()} XAF</span>
-            {walletBalance < total && (
-              <span className="text-[10px] text-destructive ml-auto">Insufficient</span>
-            )}
+            {/* Wallet balance */}
+            <div className="mt-3 flex items-center gap-2 p-3 bg-muted/50 rounded-xl">
+              <Wallet className="w-4 h-4 text-primary" />
+              <span className="text-xs text-muted-foreground">Wallet Balance:</span>
+              <span className="text-xs font-bold text-foreground">{walletBalance.toLocaleString()} XAF</span>
+              {walletBalance < total && (
+                <span className="text-[10px] text-destructive ml-auto font-medium">Insufficient</span>
+              )}
+            </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Checkout button */}
@@ -196,12 +287,12 @@ const CustomerCart: React.FC = () => {
           <Button
             onClick={handleCheckout}
             disabled={checkingOut || walletBalance < total}
-            className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg"
+            className="w-full h-12 rounded-2xl font-semibold shadow-lg"
           >
             {checkingOut ? (
               <><Loader2 className="w-4 h-4 animate-spin mr-2" />Processing...</>
             ) : (
-              <><Wallet className="w-4 h-4 mr-2" />Pay {total.toLocaleString()} XAF with Wallet</>
+              <><Wallet className="w-4 h-4 mr-2" />Pay {total.toLocaleString()} XAF</>
             )}
           </Button>
         </motion.div>
