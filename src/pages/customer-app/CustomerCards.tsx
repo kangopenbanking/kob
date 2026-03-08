@@ -131,7 +131,7 @@ const CustomerCards: React.FC = () => {
             )}
           </div>
 
-          <Button variant="outline" className="w-full rounded-2xl">
+          <Button variant="outline" className="w-full rounded-2xl" onClick={() => toast.info('Virtual card creation coming soon')}>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </>

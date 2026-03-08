@@ -113,7 +113,7 @@ const CustomerHelp: React.FC = () => {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick Links</h2>
         <div className="rounded-2xl border border-border bg-card">
           {quickLinks.map((link, i) => (
-            <button key={i} onClick={() => toast.info(link.label)} className="flex w-full items-center justify-between border-b border-border/50 px-4 py-3 last:border-0">
+            <button key={i} onClick={() => link.path ? navigate(link.path) : toast.info(`${link.label} coming soon`)} className="flex w-full items-center justify-between border-b border-border/50 px-4 py-3 last:border-0">
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground">{link.icon}</span>
                 <span className="text-sm font-medium text-foreground">{link.label}</span>
