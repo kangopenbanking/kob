@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CreditCard, Plus, Snowflake, ArrowUpCircle, Eye, EyeOff, Settings, Loader2, PlayCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
