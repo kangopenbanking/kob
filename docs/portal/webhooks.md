@@ -6,22 +6,22 @@
 
 ## Overview
 
-KOB delivers webhook notifications via HTTPS POST to your registered endpoint whenever key events occur — payment completions, consent changes, transfer status updates, and more. All webhooks are signed, deduplicated, and retried on failure.
+KOB delivers webhook notifications via HTTPS POST to your registered endpoint whenever key events occur — charge completions, payout status changes, consent updates, and more. All webhooks are signed with HMAC-SHA256, deduplicated, and retried on failure.
 
 ---
 
-## Subscribing to Webhooks
+## Managing Webhook Endpoints
 
 ### Register a Webhook Endpoint
 
 ```bash
-curl -X POST https://api.kangopenbanking.com/v1/webhooks/subscribe \
+curl -X POST https://api.kangopenbanking.com/v1/gateway/webhooks \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Idempotency-Key: $(uuidgen)" \
   -d '{
     "url": "https://yourapp.com/webhooks/kob",
-    "events": ["payment.completed", "payment.failed", "consent.revoked"],
+    "events": ["charge.successful", "charge.failed", "consent.revoked"],
     "secret": "whsec_your_signing_secret_here"
   }'
 ```
@@ -29,30 +29,44 @@ curl -X POST https://api.kangopenbanking.com/v1/webhooks/subscribe \
 **Response:**
 ```json
 {
-  "id": "wh_sub_abc123",
+  "webhook_id": "wh_abc123",
   "url": "https://yourapp.com/webhooks/kob",
-  "events": ["payment.completed", "payment.failed", "consent.revoked"],
-  "status": "active",
+  "events": ["charge.successful", "charge.failed", "consent.revoked"],
+  "is_active": true,
   "created_at": "2026-02-16T10:00:00Z"
 }
 ```
 
-### Update Subscription
+### List Webhook Endpoints
 
 ```bash
-curl -X PUT https://api.kangopenbanking.com/v1/webhooks/subscribe/wh_sub_abc123 \
+curl https://api.kangopenbanking.com/v1/gateway/webhooks \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+### Get Webhook Deliveries
+
+```bash
+curl https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId}/deliveries \
+  -H "Authorization: Bearer ACCESS_TOKEN"
+```
+
+### Update a Webhook Endpoint
+
+```bash
+curl -X PUT https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId} \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
-    "events": ["payment.completed", "payment.failed", "consent.revoked", "transfer.completed"],
+    "events": ["charge.successful", "charge.failed", "payout.completed", "consent.revoked"],
     "url": "https://yourapp.com/webhooks/kob-v2"
   }'
 ```
 
-### Delete Subscription
+### Delete a Webhook Endpoint
 
 ```bash
-curl -X DELETE https://api.kangopenbanking.com/v1/webhooks/subscribe/wh_sub_abc123 \
+curl -X DELETE https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId} \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
@@ -64,17 +78,17 @@ Every webhook delivery follows this envelope:
 
 ```json
 {
-  "event": "payment.completed",
+  "event": "charge.successful",
   "event_id": "evt_a1b2c3d4e5f6",
   "timestamp": "2026-02-16T10:05:00Z",
   "data": {
-    "payment_id": "pay_xyz789",
-    "amount": "50000.00",
+    "charge_id": "ch_xyz789",
+    "amount": 50000,
     "currency": "XAF",
-    "status": "completed",
-    "debtor_account": "677987654",
-    "creditor_account": "677123456",
-    "end_to_end_id": "ref_001"
+    "status": "successful",
+    "channel": "mobile_money_mtn",
+    "tx_ref": "ref_001",
+    "merchant_id": "mer_abc123"
   }
 }
 ```
@@ -92,7 +106,7 @@ Every webhook delivery follows this envelope:
 
 ## Signature Verification
 
-Every webhook is signed using HMAC-SHA256 with the secret you provided during subscription. **Always verify signatures before processing.**
+Every webhook is signed using HMAC-SHA256 with the secret you provided during registration. **Always verify signatures before processing.**
 
 ### Algorithm
 
@@ -225,7 +239,7 @@ KOB retries failed webhook deliveries using exponential backoff:
 ### Monitoring Failed Deliveries
 
 ```bash
-curl https://api.kangopenbanking.com/v1/webhooks/deliveries?status=failed \
+curl https://api.kangopenbanking.com/v1/gateway/webhooks/{webhookId}/deliveries?status=failed \
   -H "Authorization: Bearer ACCESS_TOKEN"
 ```
 
@@ -233,59 +247,66 @@ curl https://api.kangopenbanking.com/v1/webhooks/deliveries?status=failed \
 
 ## Event Types
 
-### Payment Events
+KOB supports **24 canonical event types** across 7 domains. When registering a webhook endpoint, use these exact event names in the `events` array.
+
+### Charge Events
 
 | Event | Trigger |
 |---|---|
-| `payment.created` | Domestic payment created |
-| `payment.authorized` | Payment authorized by customer |
-| `payment.submitted` | Payment submitted for processing |
-| `payment.completed` | Payment settled successfully |
-| `payment.failed` | Payment failed |
-| `payment.cancelled` | Payment cancelled by customer or TPP |
+| `charge.created` | A new charge has been created |
+| `charge.processing` | Charge is being processed by the payment provider |
+| `charge.successful` | Charge completed successfully — funds collected |
+| `charge.failed` | Charge attempt failed |
+| `charge.cancelled` | Charge was cancelled before completion |
+| `charge.voided` | Pre-authorized charge was voided |
+| `charge.captured` | Pre-authorized charge was captured |
+| `charge.refunded` | Charge was fully or partially refunded |
+
+### Payout Events
+
+| Event | Trigger |
+|---|---|
+| `payout.created` | A new payout (bank transfer or MoMo disbursement) was created |
+| `payout.processing` | Payout is being processed |
+| `payout.completed` | Payout settled successfully |
+| `payout.failed` | Payout attempt failed |
+
+### Refund Events
+
+| Event | Trigger |
+|---|---|
+| `refund.created` | A refund was initiated |
+| `refund.completed` | Refund processed successfully |
+| `refund.failed` | Refund attempt failed |
+
+### Dispute Events
+
+| Event | Trigger |
+|---|---|
+| `dispute.created` | A new chargeback/dispute was filed |
+| `dispute.won` | Dispute resolved in merchant's favor |
+| `dispute.lost` | Dispute resolved in customer's favor |
+
+### Settlement Events
+
+| Event | Trigger |
+|---|---|
+| `settlement.paid` | Merchant settlement was paid out |
 
 ### Consent Events
 
 | Event | Trigger |
 |---|---|
 | `consent.created` | AISP or PISP consent created |
-| `consent.authorized` | Customer authorized the consent |
+| `consent.authorised` | Customer authorized the consent |
 | `consent.revoked` | Consent revoked by customer or TPP |
 | `consent.expired` | Consent reached expiration date |
-
-### Transfer Events
-
-| Event | Trigger |
-|---|---|
-| `transfer.initiated` | Bank transfer initiated |
-| `transfer.completed` | Bank transfer settled |
-| `transfer.failed` | Bank transfer failed |
-
-### Mobile Money Events
-
-| Event | Trigger |
-|---|---|
-| `mobilemoney.charge.pending` | Charge awaiting customer authorization |
-| `mobilemoney.charge.completed` | Mobile money charge successful |
-| `mobilemoney.charge.failed` | Mobile money charge failed |
-| `mobilemoney.transfer.completed` | Mobile money disbursement successful |
-| `mobilemoney.transfer.failed` | Mobile money disbursement failed |
 
 ### Account Events
 
 | Event | Trigger |
 |---|---|
-| `account.updated` | Account details changed |
-| `account.closed` | Account closed |
-| `balance.updated` | Account balance changed |
-
-### Settlement Events
-
-| Event | Trigger |
-|---|---|
-| `settlement.initiated` | Institutional settlement initiated |
-| `settlement.completed` | Settlement processed successfully |
-| `settlement.failed` | Settlement processing failed |
+| `account.updated` | Account details or status changed |
 
 ---
 
@@ -326,8 +347,8 @@ async function handleWebhook(event) {
 | WH_002 | Webhook delivery failed (all retries exhausted) |
 | WH_003 | Unsupported event type in subscription |
 | WH_004 | Webhook endpoint unreachable |
-| WH_005 | Subscription not found |
-| WH_006 | Maximum subscriptions limit reached |
+| WH_005 | Webhook endpoint not found |
+| WH_006 | Maximum webhook endpoints limit reached |
 
 ---
 
@@ -337,15 +358,15 @@ async function handleWebhook(event) {
 2. **Return 200 quickly** — do heavy processing asynchronously after acknowledging receipt
 3. **Idempotent handlers** — use `event_id` to prevent duplicate processing
 4. **Use HTTPS** — plaintext HTTP endpoints will be rejected
-5. **Monitor delivery failures** — poll `/v1/webhooks/deliveries?status=failed` regularly
+5. **Monitor delivery failures** — check `/v1/gateway/webhooks/{webhookId}/deliveries?status=failed` regularly
 6. **Rotate secrets periodically** — update your webhook secret and re-register
 
 ---
 
 ## Next Steps
 
-- [Quick Start](quickstart.md) — Get your first API call running
-- [Authentication](authentication.md) — OAuth grants and DCR
-- [PISP Guide](pisp-guide.md) — Payment initiation lifecycle
-- [Error Reference](error-reference.md) — Complete error code catalogue
-- [Flutterwave Setup](flutterwave-setup.md) — Mobile money integration
+- [Quick Start](/developer/getting-started) — Get your first API call running
+- [Authentication](/developer/authentication) — OAuth grants, DCR, and PKCE
+- [PISP Guide](/developer/guides/pisp) — Payment initiation lifecycle
+- [Error Reference](/developer/guides/error-reference) — Complete error code catalogue
+- [Gateway Guide](/developer/gateway) — Payment gateway integration
