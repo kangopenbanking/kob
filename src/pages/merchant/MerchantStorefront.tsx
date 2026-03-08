@@ -409,7 +409,7 @@ export default function MerchantStorefront() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-5">
             {subscription ? (
               <Card className="border-0 shadow-sm overflow-hidden">
-                <div className="p-1" style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(290 70% 50%))' }}>
+                <div className="p-1 bg-[hsl(var(--fi-purple))]">
                   <div className="bg-card rounded-xl p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
