@@ -167,7 +167,7 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   });
 
   const data = await res.json();
-  console.log('[Flutterwave] Response:', JSON.stringify(data).substring(0, 500));
+  console.log('[Flutterwave] Response status:', data.status, 'ref:', data.data?.flw_ref || 'n/a');
 
   if (data.status === 'error') {
     throw new Error(`Flutterwave error: ${data.message || JSON.stringify(data)}`);
