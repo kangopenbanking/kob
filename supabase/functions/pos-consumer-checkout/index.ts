@@ -141,7 +141,7 @@ Deno.serve(async (req) => {
 
     // Credit merchant wallet
     const { data: merchantWallet } = await supabase.from('gateway_merchant_wallets')
-      .select('id, available_balance')
+      .select('id, available_balance, ledger_balance')
       .eq('merchant_id', cart.merchant_id)
       .eq('currency', 'XAF')
       .maybeSingle();
@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
     if (merchantWallet) {
       await supabase.from('gateway_merchant_wallets').update({
         available_balance: (merchantWallet.available_balance || 0) + total,
-        ledger_balance: (merchantWallet.available_balance || 0) + total,
+        ledger_balance: (merchantWallet.ledger_balance || 0) + total,
         updated_at: new Date().toISOString(),
       }).eq('id', merchantWallet.id);
     } else {
