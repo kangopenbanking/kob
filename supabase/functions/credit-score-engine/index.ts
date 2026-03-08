@@ -156,6 +156,10 @@ Deno.serve(async (req) => {
         case 'RENT_PAYMENT_MISSED':
           points = rule.min; // -30
           break;
+        // PostiQ
+        case 'POSTIQ_VERIFIED':
+          points = rule.max; // +50
+          break;
       }
 
       score += points;

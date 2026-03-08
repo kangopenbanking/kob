@@ -244,6 +244,8 @@ Deno.serve(async (req) => {
           latitude: parsedLat,
           longitude: parsedLng,
           credit_score_boost: 50,
+          score_delta: scoreResult?.delta || 50,
+          new_score: scoreResult?.score || null,
           message: 'Address verified successfully! Your credit score will increase by 50 points.'
         }
       }),
