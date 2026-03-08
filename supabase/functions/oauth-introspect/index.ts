@@ -50,11 +50,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Hash the token before lookup (tokens are stored as SHA-256 hashes)
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token as string));
+    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
     // Check if token exists and is valid
     const { data: accessToken, error: tokenError } = await supabase
       .from('access_tokens')
       .select('*')
-      .eq('token_hash', token)
+      .eq('token_hash', tokenHash)
       .eq('is_revoked', false)
       .single();
 

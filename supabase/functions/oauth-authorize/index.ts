@@ -183,8 +183,10 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('Error in oauth-authorize:', error);
+    console.error('[SECURE] OAuth authorize error:', error instanceof Error ? error.message : String(error));
+    const errorId = `ERR-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     return new Response(
-      JSON.stringify({ error: 'server_error', error_description: error instanceof Error ? error.message : 'Unknown error' }),
+      JSON.stringify({ error: 'server_error', error_description: 'Unable to process authorization request. Please contact support.', error_id: errorId }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

@@ -203,11 +203,9 @@ Deno.serve(async (req) => {
     });
   } catch (error) {
     console.error('Error validating sandbox API key:', error);
+    console.error('[SECURE] Sandbox API key validation error:', error instanceof Error ? error.message : String(error));
     return new Response(
-      JSON.stringify({ 
-        error: 'Failed to validate API key',
-        details: error instanceof Error ? error.message : String(error)
-      }),
+      JSON.stringify({ error: 'Failed to validate API key' }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500 
