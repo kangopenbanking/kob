@@ -67,31 +67,21 @@ const Dashboard = () => {
   const [activityFeed, setActivityFeed] = useState<any[]>([]);
 
   useEffect(() => {
-    checkAuth();
-    loadWidgets();
+    loadDashboardData();
   }, []);
 
-  useEffect(() => {
-    const checkPersonalAccount = async () => {
+  const loadDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: isPersonal } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "personal",
-      });
-      if (isPersonal) {
-        toast({ title: "Personal Account Detected", description: "Redirecting to your credit score dashboard..." });
-        navigate("/credit-score");
-      }
-    };
-    if (user) checkPersonalAccount();
-  }, [user, navigate, toast]);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate("/auth"); return; }
-    setUser(user);
-    await fetchAllData(user.id);
-    setLoading(false);
+      setUser(user);
+      await fetchAllData(user.id);
+    } catch (error) {
+      console.error("Dashboard load error:", error);
+      toast({ title: "Error", description: "Failed to load dashboard data. Please refresh.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadWidgets = async () => {
