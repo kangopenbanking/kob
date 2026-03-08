@@ -155,10 +155,8 @@ export default function MerchantStorefront() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
-        style={{ background: 'linear-gradient(135deg, hsl(267 84% 38%), hsl(267 84% 52%), hsl(290 70% 50%))' }}
+        className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-[hsl(var(--fi-purple))]"
       >
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -195,8 +193,7 @@ export default function MerchantStorefront() {
           </div>
           <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
             <motion.div
-              className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, hsl(142 76% 50%), hsl(142 76% 65%))' }}
+              className="h-full rounded-full bg-secondary"
               initial={{ width: 0 }}
               animate={{ width: `${completionPct}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -362,8 +359,7 @@ export default function MerchantStorefront() {
                     <Button
                       onClick={handleSave}
                       disabled={saving || !storeName}
-                      className="w-full gap-2 rounded-lg h-10 text-xs font-semibold"
-                      style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(267 84% 52%))' }}
+                      className="w-full gap-2 rounded-lg h-10 text-xs font-semibold bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white"
                     >
                       {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" strokeWidth={1.5} />}
                       Save Changes
@@ -375,7 +371,7 @@ export default function MerchantStorefront() {
                 <Card className="border-0 shadow-sm overflow-hidden">
                   <div className="relative">
                     <img src={posKob} alt="KOB POS Terminal" className="w-full h-40 object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-black/40" />
                     <div className="absolute bottom-3 left-3">
                       <p className="text-white text-xs font-bold">KOB POS Terminal</p>
                       <p className="text-white/70 text-[10px]">Accept payments in-store</p>
@@ -413,11 +409,11 @@ export default function MerchantStorefront() {
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-5">
             {subscription ? (
               <Card className="border-0 shadow-sm overflow-hidden">
-                <div className="p-1" style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(290 70% 50%))' }}>
+                <div className="p-1 bg-[hsl(var(--fi-purple))]">
                   <div className="bg-card rounded-xl p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(290 70% 50%))' }}>
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[hsl(var(--fi-purple))]">
                           <Crown className="w-6 h-6 text-white" strokeWidth={1.5} />
                         </div>
                         <div>
@@ -464,11 +460,11 @@ export default function MerchantStorefront() {
                       <motion.div key={plan.id} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
                         <Card className={`border-0 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-lg relative ${isPremium ? 'ring-2 ring-[hsl(var(--fi-purple))]/30' : ''}`}>
                           {isPremium && (
-                            <div className="absolute top-0 inset-x-0 h-1" style={{ background: 'linear-gradient(90deg, hsl(267 84% 42%), hsl(290 70% 50%))' }} />
+                            <div className="absolute top-0 inset-x-0 h-1 bg-[hsl(var(--fi-purple))]" />
                           )}
                           <CardContent className="p-6">
                             <div className="flex items-center gap-2 mb-4">
-                              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: isPremium ? 'linear-gradient(135deg, hsl(267 84% 42%), hsl(290 70% 50%))' : 'hsl(var(--muted))' }}>
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isPremium ? 'bg-[hsl(var(--fi-purple))]' : 'bg-muted'}`}>
                                 {isPremium
                                   ? <Sparkles className="w-4.5 h-4.5 text-white" strokeWidth={1.5} />
                                   : <Shield className="w-4.5 h-4.5 text-muted-foreground" strokeWidth={1.5} />}
@@ -491,10 +487,9 @@ export default function MerchantStorefront() {
                               </ul>
                             )}
                             <Button
-                              className="w-full mt-5 rounded-lg h-10 text-xs font-semibold gap-2"
+                              className={`w-full mt-5 rounded-lg h-10 text-xs font-semibold gap-2 ${isPremium ? 'bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white' : ''}`}
                               disabled={subscribing}
                               onClick={() => handleSubscribe(plan.id)}
-                              style={isPremium ? { background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(267 84% 52%))' } : undefined}
                               variant={isPremium ? 'default' : 'outline'}
                             >
                               {subscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Get Started <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} /></>}
@@ -587,7 +582,7 @@ export default function MerchantStorefront() {
                         { step: '4', text: 'Funds are instantly credited to your account', icon: CreditCard },
                       ].map((s) => (
                         <div key={s.step} className="flex items-start gap-3">
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(267 84% 52%))' }}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-[hsl(var(--fi-purple))]">
                             <span className="text-[10px] font-bold text-white">{s.step}</span>
                           </div>
                           <div className="flex items-center gap-2 pt-1">
