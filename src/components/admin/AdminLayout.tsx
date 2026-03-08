@@ -85,6 +85,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Breadcrumbs />
             </div>
             <div className="flex items-center gap-2">
+              <AdminCommandPalette />
               <NotificationCenter />
               <UserProfileMenu variant="admin" />
             </div>
