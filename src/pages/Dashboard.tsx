@@ -111,6 +111,7 @@ const Dashboard = () => {
       fetchCreditScore(userId),
       fetchSavingsGoals(userId),
       fetchActivityFeed(userId),
+      loadWidgets(),
     ]);
   };
 
