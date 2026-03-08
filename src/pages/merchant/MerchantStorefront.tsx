@@ -583,7 +583,7 @@ export default function MerchantStorefront() {
                         { step: '4', text: 'Funds are instantly credited to your account', icon: CreditCard },
                       ].map((s) => (
                         <div key={s.step} className="flex items-start gap-3">
-                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(267 84% 52%))' }}>
+                          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 bg-[hsl(var(--fi-purple))]">
                             <span className="text-[10px] font-bold text-white">{s.step}</span>
                           </div>
                           <div className="flex items-center gap-2 pt-1">
