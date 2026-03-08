@@ -32,6 +32,7 @@ import { ImageUpload } from '@/components/storefront/ImageUpload';
 import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
 import { ShippingForm } from '@/components/storefront/ShippingForm';
 import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
+import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeaturesTab';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
