@@ -122,7 +122,7 @@ export default function KobPOS() {
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="ghost" className="bg-transparent border-0 text-white hover:bg-white/10 rounded-xl px-8 py-6 text-lg" asChild>
+                <Button size="lg" variant="ghost" className="bg-gradient-to-r from-fi-purple to-fi-blue text-white hover:opacity-90 border-0 rounded-xl px-8 py-6 text-lg" asChild>
                   <Link to="/merchant/storefront">
                     Open Storefront
                     <Store className="ml-2 h-5 w-5" />
