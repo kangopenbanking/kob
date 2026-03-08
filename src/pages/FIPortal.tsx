@@ -89,11 +89,12 @@ export default function FIPortal() {
     if (accountIds.length > 0) {
       const { data: transactions } = await supabase
         .from("transactions")
-        .select("amount")
+        .select("amount, created_at")
         .in("account_id", accountIds)
         .gte("created_at", thirtyDaysAgo);
       txCount = transactions?.length || 0;
       totalVolume = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      setRevenueTransactions(transactions?.map(t => ({ amount: Number(t.amount), created_at: t.created_at })) || []);
     }
     
     const { data: apiUsage } = await supabase
