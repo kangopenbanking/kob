@@ -1893,6 +1893,11 @@ export default function CustomerAppManagement() {
                 <TabsContent value="travel-card">
                   <TravelCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
                 </TabsContent>
+
+                {/* Storefront Tab */}
+                <TabsContent value="storefront">
+                  <AdminStorefrontSlider />
+                </TabsContent>
               </Tabs>
             </>
           )}
