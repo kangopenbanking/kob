@@ -107,6 +107,7 @@ const CustomerHome: React.FC = () => {
   const { data: balances = [] } = useAccountBalances(accountIds);
   const { data: recentTxns = [], isLoading: txnLoading } = useCustomerTransactions(user?.id, undefined, 5);
   const { data: summary } = useSpendingSummary(user?.id, undefined, period);
+  const { data: creditData } = useCustomerCreditScore(user?.id);
 
   // Build account cards from live data
   const accountCards = accounts.map((acct: any, i: number) => {
