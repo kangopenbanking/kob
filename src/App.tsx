@@ -330,6 +330,7 @@ import MerchantTravelStaffRoles from "./pages/merchant/MerchantTravelStaffRoles"
 import StaffLogin from "./pages/merchant/StaffLogin";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
+import AdminMarketplace from "./pages/admin/AdminMarketplace";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
