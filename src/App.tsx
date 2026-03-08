@@ -320,6 +320,7 @@ import MerchantTravelSeating from "./pages/merchant/MerchantTravelSeating";
 import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
 import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
 import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
+import MerchantStorefront from "./pages/merchant/MerchantStorefront";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
 import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
 import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
@@ -329,6 +330,7 @@ import MerchantTravelStaffRoles from "./pages/merchant/MerchantTravelStaffRoles"
 import StaffLogin from "./pages/merchant/StaffLogin";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
+import AdminMarketplace from "./pages/admin/AdminMarketplace";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
@@ -499,6 +501,7 @@ function App() {
               <Route path="travel-notifications" element={<MerchantTravelNotifications />} />
               <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
+              <Route path="storefront" element={<MerchantStorefront />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/loans" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><Loans /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
@@ -562,6 +565,7 @@ function App() {
               <Route path="translations" element={<TranslationManager />} />
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
+              <Route path="marketplace" element={<AdminMarketplace />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />

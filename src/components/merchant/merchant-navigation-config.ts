@@ -59,6 +59,12 @@ export const merchantNavigation = [
     ],
   },
   {
+    title: "Storefront",
+    items: [
+      { title: "Store & Marketplace", path: "/merchant/storefront", icon: Store },
+    ],
+  },
+  {
     title: "Settings",
     items: [
       { title: "Business Profile", path: "/merchant/profile", icon: Store },
