@@ -285,6 +285,9 @@ export default function MerchantStorefront() {
           <TabsTrigger value="demo" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Demo Store
           </TabsTrigger>
+          <TabsTrigger value="enterprise" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Crown className="w-3.5 h-3.5" strokeWidth={1.5} /> Enterprise
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Setup Guide ── */}
