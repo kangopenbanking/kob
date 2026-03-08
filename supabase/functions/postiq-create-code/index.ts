@@ -183,17 +183,44 @@ Deno.serve(async (req) => {
       ip_address: req.headers.get('x-forwarded-for') || null
     });
 
-    // Trigger credit score recalculation
-    console.log('Triggering credit score recalculation for user:', user.id);
-    const { error: scoreError } = await supabase.functions.invoke('credit-score-calculate', {
-      body: { 
-        user_id: user.id,
-        trigger_event: 'postiq_verification'
-      }
+    // Emit credit event for PostiQ verification (event-sourced system)
+    console.log('Emitting POSTIQ_VERIFIED credit event for user:', user.id);
+    await supabase.from('credit_events').insert({
+      user_id: user.id,
+      event_type: 'POSTIQ_VERIFIED',
+      event_time: new Date().toISOString(),
+      value_numeric: 1,
+      description: `PostiQ address verified: ${postiqData.data.postiq_code}`,
+      metadata: {
+        postiq_code: postiqData.data.postiq_code,
+        full_address: postiqData.data.full_address,
+        verification_id: verification.id,
+      },
+      source: 'postiq_service',
     });
 
-    if (scoreError) {
-      console.error('Error triggering score recalculation:', scoreError);
+    // Trigger event-sourced credit score recomputation
+    let scoreResult = null;
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+      const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const scoreRes = await fetch(`${supabaseUrl}/functions/v1/credit-score-engine`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+        body: JSON.stringify({ user_id: user.id }),
+      });
+      scoreResult = await scoreRes.json();
+    } catch (scoreError) {
+      console.error('Error triggering score recomputation:', scoreError);
+    }
+
+    // Also update legacy system for backward compatibility
+    try {
+      await supabase.functions.invoke('credit-score-calculate', {
+        body: { user_id: user.id, trigger_event: 'postiq_verification' }
+      });
+    } catch (legacyErr) {
+      console.error('Legacy score calc failed (non-blocking):', legacyErr);
     }
 
     // Create audit log
@@ -217,6 +244,8 @@ Deno.serve(async (req) => {
           latitude: parsedLat,
           longitude: parsedLng,
           credit_score_boost: 50,
+          score_delta: scoreResult?.delta || 50,
+          new_score: scoreResult?.score || null,
           message: 'Address verified successfully! Your credit score will increase by 50 points.'
         }
       }),

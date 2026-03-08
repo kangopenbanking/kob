@@ -98,12 +98,22 @@ Deno.serve(async (req) => {
     }
 
     // Emit credit event
+    // value_numeric: days late for late events (engine uses it for penalty scaling), amount for on-time
+    const daysLate = isLate ? Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
     const { data: creditEvent } = await supabase.from('credit_events').insert({
       user_id: user.id,
       event_type: eventType,
-      value_numeric: group.contribution_amount + lateInterest,
-      description: `Njangi contribution ${isLate ? '(late)' : '(on-time)'} - ${group.name} cycle ${group.current_cycle}`,
+      value_numeric: isLate ? daysLate : group.contribution_amount,
+      description: `Njangi contribution ${isLate ? `(late by ${daysLate} days)` : '(on-time)'} - ${group.name} cycle ${group.current_cycle}`,
       event_time: now.toISOString(),
+      metadata: {
+        group_id,
+        cycle_number: group.current_cycle,
+        amount: group.contribution_amount,
+        late_interest: lateInterest,
+        days_late: daysLate,
+      },
+      source: 'njangi_service',
     }).select('id').single();
 
     // Link credit event to contribution

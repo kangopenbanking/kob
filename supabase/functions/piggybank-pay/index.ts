@@ -53,14 +53,24 @@ Deno.serve(async (req) => {
       .eq('id', payment_id);
 
     // Emit credit event
+    // value_numeric: days late for late events (engine uses it for penalty scaling), amount for on-time
+    const daysLate = isLate ? Math.floor((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)) : 0;
     const { data: creditEvent } = await supabase
       .from('credit_events')
       .insert({
         user_id: user.id,
         event_type: eventType,
-        value_numeric: payment.amount,
-        description: `${isRent ? 'Rent' : 'Piggy bank'} payment ${isLate ? '(late)' : '(on-time)'} - ${plan.plan_name}`,
+        value_numeric: isLate ? daysLate : payment.amount,
+        description: `${isRent ? 'Rent' : 'Piggy bank'} payment ${isLate ? `(late by ${daysLate} days)` : '(on-time)'} - ${plan.plan_name}`,
         event_time: now.toISOString(),
+        metadata: {
+          payment_id,
+          plan_id: plan.id,
+          plan_type: plan.plan_type,
+          amount: payment.amount,
+          days_late: daysLate,
+        },
+        source: isRent ? 'rent_service' : 'piggybank_service',
       })
       .select('id')
       .single();
