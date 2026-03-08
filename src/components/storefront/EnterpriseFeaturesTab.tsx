@@ -183,7 +183,7 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
     if (!profile?.id) return;
     setSavingBrand(true);
     try {
-      await supabase.from('pos_store_profiles').update({
+      await (supabase.from('pos_store_profiles') as any).update({
         custom_brand_json: { primary_color: primaryColor, secondary_color: secondaryColor, font: brandFont, receipt_header: receiptHeader, receipt_footer: receiptFooter },
       }).eq('id', profile.id);
       toast.success('Branding saved');

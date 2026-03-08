@@ -10815,47 +10815,59 @@ export type Database = {
       }
       pos_store_profiles: {
         Row: {
+          account_manager_id: string | null
+          api_access_enabled: boolean | null
           banner_url: string | null
           category: string | null
           city: string | null
           country: string
           created_at: string
+          custom_brand_json: Json | null
           description: string | null
           id: string
           is_published: boolean
           logo_url: string | null
           merchant_id: string
           rating: number | null
+          sla_tier: string | null
           store_name: string
           updated_at: string
         }
         Insert: {
+          account_manager_id?: string | null
+          api_access_enabled?: boolean | null
           banner_url?: string | null
           category?: string | null
           city?: string | null
           country?: string
           created_at?: string
+          custom_brand_json?: Json | null
           description?: string | null
           id?: string
           is_published?: boolean
           logo_url?: string | null
           merchant_id: string
           rating?: number | null
+          sla_tier?: string | null
           store_name: string
           updated_at?: string
         }
         Update: {
+          account_manager_id?: string | null
+          api_access_enabled?: boolean | null
           banner_url?: string | null
           category?: string | null
           city?: string | null
           country?: string
           created_at?: string
+          custom_brand_json?: Json | null
           description?: string | null
           id?: string
           is_published?: boolean
           logo_url?: string | null
           merchant_id?: string
           rating?: number | null
+          sla_tier?: string | null
           store_name?: string
           updated_at?: string
         }
@@ -10925,6 +10937,7 @@ export type Database = {
           is_active: boolean
           name: string
           price: number
+          tier: string
           updated_at: string
         }
         Insert: {
@@ -10937,6 +10950,7 @@ export type Database = {
           is_active?: boolean
           name: string
           price?: number
+          tier?: string
           updated_at?: string
         }
         Update: {
@@ -10949,6 +10963,7 @@ export type Database = {
           is_active?: boolean
           name?: string
           price?: number
+          tier?: string
           updated_at?: string
         }
         Relationships: []
