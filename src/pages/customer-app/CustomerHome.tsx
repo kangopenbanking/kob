@@ -56,6 +56,7 @@ interface FeatureItem {
 const moneyMovement: FeatureItem[] = [
   { label: 'Add Money', description: 'Deposit from linked accounts', icon: Download, path: 'fund', color: 'bg-[hsl(150,40%,90%)]', iconColor: 'text-[hsl(150,40%,35%)]', borderColor: 'border-[hsl(150,40%,35%)]' },
   { label: 'Transfer', description: 'Send money to anyone instantly', icon: Send, path: 'transfer', color: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,60%,45%)]', borderColor: 'border-[hsl(210,60%,45%)]', featureKey: 'transfer' },
+  { label: 'Stores', description: 'Browse & shop local merchants', icon: ShoppingBag, path: 'stores', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]', borderColor: 'border-[hsl(270,50%,45%)]' },
 ];
 
 const paymentsBills: FeatureItem[] = [

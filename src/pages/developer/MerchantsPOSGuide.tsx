@@ -398,7 +398,46 @@ export default function MerchantsPOSGuide() {
         </Card>
       </section>
 
-      {/* Section 10: Expansion Readiness */}
+      {/* Section 10: QR Code Payments */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">QR Code Payments</h2>
+        <Card className="p-6 space-y-4">
+          <p className="text-muted-foreground">Merchants can generate QR codes for in-store or remote payments. Consumers scan and pay from their wallet.</p>
+          <h3 className="font-semibold">Generate QR Payload</h3>
+          <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">{`POST /pos-qr-payment?action=generate
+{ "merchant_id": "...", "amount": 5000, "description": "Coffee" }
+
+Response:
+{ "qr_payload": "{...}", "decoded": { "type": "kob_pos_pay", "merchant_id": "...", "amount": 5000, "currency": "XAF" } }`}</pre>
+          <h3 className="font-semibold">Consumer Scan &amp; Pay</h3>
+          <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">{`POST /pos-qr-payment?action=pay
+Idempotency-Key: unique-key
+{ "merchant_id": "...", "amount": 5000 }
+
+→ Debits consumer wallet, credits merchant, creates order (channel=consumer_app)`}</pre>
+        </Card>
+      </section>
+
+      {/* Section 11: Consumer Marketplace */}
+      <section>
+        <h2 className="text-2xl font-bold mb-4">Consumer Marketplace</h2>
+        <Card className="p-6 space-y-4">
+          <p className="text-muted-foreground">Merchants with active subscriptions can publish their storefront to the consumer app.</p>
+          <h3 className="font-semibold">Store Discovery</h3>
+          <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">{`GET /pos-store-browse?action=stores&city=Douala&category=Food
+→ Returns published stores with active subscriptions`}</pre>
+          <h3 className="font-semibold">Wallet Checkout</h3>
+          <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">{`POST /pos-consumer-checkout
+Idempotency-Key: unique-key
+{ "cart_id": "..." }
+→ Validates stock, debits wallet, credits merchant, creates paid order`}</pre>
+          <h3 className="font-semibold">Subscription Plans</h3>
+          <pre className="bg-muted p-4 rounded-lg text-sm overflow-x-auto">{`GET /pos-store-subscription → List plans
+POST /pos-store-subscription → Subscribe { "merchant_id": "...", "plan_id": "..." }`}</pre>
+        </Card>
+      </section>
+
+      {/* Section 12: Expansion Readiness */}
       <section>
         <h2 className="text-2xl font-bold mb-4">Expansion Readiness</h2>
         <Card className="p-6">
@@ -410,6 +449,8 @@ export default function MerchantsPOSGuide() {
             <li><strong>Staff &amp; PIN login</strong> — Cashier roles with PIN-based quick auth for POS terminals.</li>
             <li><strong>Device registry</strong> — Future table for physical terminals, card readers, barcode scanners.</li>
             <li><strong>Multi-currency</strong> — Currency is stored per product/order. Capability-flagged for non-XAF.</li>
+            <li><strong>QR Payments</strong> — Static and dynamic QR codes for in-store and remote wallet payments.</li>
+            <li><strong>Consumer Marketplace</strong> — Subscription-gated storefront with wallet-based checkout.</li>
             <li><strong>Additional integrations</strong> — Integration type enum supports future connectors beyond WooCommerce.</li>
           </ul>
         </Card>

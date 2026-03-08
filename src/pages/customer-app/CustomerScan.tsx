@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
+import { supabase } from '@/integrations/supabase/client';
 /* ─── QR Matrix Generator (same as BankQRPay) ─── */
 function generateQRMatrix(data: string): boolean[][] {
   const size = 21;
@@ -74,6 +75,7 @@ const CustomerScan: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [scanResult, setScanResult] = useState<{ account: string; amount?: number } | null>(null);
   const [payAmount, setPayAmount] = useState('');
+  const [merchantQR, setMerchantQR] = useState<any>(null);
 
   // Camera state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -144,9 +146,16 @@ const CustomerScan: React.FC = () => {
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
     stopCamera();
-    if (data.type === 'kob_pay' && data.account) {
+    if (data.type === 'kob_pos_pay' && data.merchant_id) {
+      // POS merchant QR — navigate to payment confirmation
+      setScanResult({ account: data.merchant_id, amount: data.amount });
+      setPayAmount(data.amount ? String(data.amount) : '');
+      setMerchantQR(data);
+      toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
+    } else if (data.type === 'kob_pay' && data.account) {
       setScanResult({ account: data.account, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
+      setMerchantQR(null);
       toast.success('QR Code scanned successfully!');
     } else {
       toast.error('Invalid QR code format');
@@ -164,9 +173,33 @@ const CustomerScan: React.FC = () => {
     }, 1200);
   };
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
+    
+    if (merchantQR) {
+      // POS QR payment via wallet
+      setProcessing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('pos-qr-payment?action=pay', {
+          body: { merchant_id: merchantQR.merchant_id, amount: finalAmount, order_id: merchantQR.order_id },
+          headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
+        });
+        if (error) throw error;
+        if (data?.error) {
+          toast.error(data.message || data.error);
+          return;
+        }
+        toast.success(`Paid ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name}`);
+        resetScan();
+      } catch (err: any) {
+        toast.error(err.message || 'Payment failed');
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
     navigate('/app/transfer', {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });

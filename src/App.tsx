@@ -393,6 +393,9 @@ import CustomerHelp from "./pages/customer-app/CustomerHelp";
 import CustomerAppManagement from "./pages/admin/CustomerAppManagement";
 import CustomerFundAccount from "./pages/CustomerFundAccount";
 import InstitutionFundAccount from "./pages/institution/InstitutionFundAccount";
+import CustomerStores from "./pages/customer-app/CustomerStores";
+import CustomerStoreDetail from "./pages/customer-app/CustomerStoreDetail";
+import CustomerCart from "./pages/customer-app/CustomerCart";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -833,6 +836,9 @@ function App() {
               <Route path="travel/:category/:serviceId/trips/:tripId" element={<CustomerTravelBooking />} />
               <Route path="travel/ticket/:bookingId" element={<CustomerTravelTicket />} />
               <Route path="travel/history" element={<CustomerTravelHistory />} />
+              <Route path="stores" element={<CustomerStores />} />
+              <Route path="stores/:merchantId" element={<CustomerStoreDetail />} />
+              <Route path="cart" element={<CustomerCart />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />

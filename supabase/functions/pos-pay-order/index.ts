@@ -151,8 +151,69 @@ Deno.serve(async (req) => {
         instructions = 'Complete payment via PayPal';
         break;
       }
+      case 'wallet': {
+        // Direct wallet payment — debit consumer, credit merchant, finalize immediately
+        const consumerUserId = customer?.user_id || user.id;
+        const { data: consumerAccounts } = await supabase.from('accounts')
+          .select('id').eq('user_id', consumerUserId).limit(1);
+        if (!consumerAccounts?.length) {
+          return new Response(JSON.stringify({ error: 'no_consumer_wallet' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+        const consumerAccountId = consumerAccounts[0].id;
+        const { data: bal } = await supabase.from('account_balances')
+          .select('amount').eq('account_id', consumerAccountId).eq('balance_type', 'ClosingAvailable').maybeSingle();
+        const available = bal?.amount || 0;
+        if (available < amount) {
+          return new Response(JSON.stringify({ error: 'insufficient_balance', available, required: amount }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        // Debit consumer
+        await supabase.from('account_balances').upsert({
+          account_id: consumerAccountId, balance_type: 'ClosingAvailable',
+          amount: available - amount, currency, credit_debit_indicator: 'Debit',
+          balance_datetime: new Date().toISOString(),
+        }, { onConflict: 'account_id,balance_type' });
+        // Credit merchant
+        const { data: mw } = await supabase.from('gateway_merchant_wallets')
+          .select('id, available_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
+        if (mw) {
+          await supabase.from('gateway_merchant_wallets').update({
+            available_balance: (mw.available_balance || 0) + amount,
+            ledger_balance: (mw.available_balance || 0) + amount,
+          }).eq('id', mw.id);
+        } else {
+          await supabase.from('gateway_merchant_wallets').insert({
+            merchant_id: order.merchant_id, currency, available_balance: amount, pending_balance: 0, ledger_balance: amount,
+          });
+        }
+        // Update order to paid immediately
+        await supabase.from('pos_orders').update({ status: 'paid' }).eq('id', order.id);
+        // Create payment record and return
+        const { data: walletPayment } = await supabase.from('pos_order_payments').insert({
+          order_id: order.id, merchant_id: order.merchant_id,
+          status: 'succeeded', amount, currency, provider: 'wallet', method: 'wallet',
+          provider_reference: `wallet_${idempotencyKey}`,
+        }).select().single();
+        // Inventory decrement
+        for (const item of order.pos_order_items || []) {
+          await supabase.rpc('pos_adjust_inventory', {
+            p_merchant_id: order.merchant_id, p_variant_id: item.variant_id,
+            p_location_id: order.location_id, p_quantity_delta: -item.quantity,
+            p_movement_type: 'sale', p_reference_id: order.id, p_note: `Wallet payment order ${order.order_number}`,
+          }).catch(() => {});
+        }
+        await supabase.from('pos_order_status_history').insert({
+          order_id: order.id, status: 'paid', note: 'Wallet payment completed', created_by: user.id,
+        });
+        return new Response(JSON.stringify({
+          success: true, order_id: order.id, order_number: order.order_number,
+          payment_id: walletPayment?.id, method: 'wallet', status: 'succeeded',
+          amount, currency, instructions: 'Payment completed from wallet balance',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
       default:
-        return new Response(JSON.stringify({ error: 'unsupported_method', message: `Method ${method} not supported. Use: mobile_money, card, bank_transfer, paypal` }), {
+        return new Response(JSON.stringify({ error: 'unsupported_method', message: `Method ${method} not supported. Use: mobile_money, card, bank_transfer, paypal, wallet` }), {
           status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
         });
     }
