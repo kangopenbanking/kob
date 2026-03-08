@@ -271,6 +271,7 @@ export default function FIPortal() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          <FIPortalRevenueChart transactions={revenueTransactions} />
           <div className="grid gap-4 md:grid-cols-2">
             <Card className="border-border/60">
               <CardHeader className="pb-3">
