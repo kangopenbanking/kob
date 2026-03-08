@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
+import { supabase } from '@/integrations/supabase/client';
 /* ─── QR Matrix Generator (same as BankQRPay) ─── */
 function generateQRMatrix(data: string): boolean[][] {
   const size = 21;
