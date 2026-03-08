@@ -35,6 +35,25 @@
       "migrations_added": [],
       "tests_added": [],
       "breaking_changes": "NONE"
+    },
+    {
+      "version": "1.5.0",
+      "date": "2026-03-08",
+      "title": "OpenAPI + Postman + Frontend Docs",
+      "endpoints_added": [],
+      "migrations_added": [],
+      "tests_added": [],
+      "breaking_changes": "NONE",
+      "details": "Added POS/Catalog/Inventory/Payments/Refunds/WooCommerce Integration tags to OpenAPI spec. Created Merchants → POS developer guide page."
+    },
+    {
+      "version": "1.6.0",
+      "date": "2026-03-08",
+      "title": "Inventory Sync Jobs + Conflict Handling",
+      "endpoints_added": ["pos-inventory-sync"],
+      "migrations_added": [],
+      "tests_added": ["pos-inventory-sync/index.test.ts"],
+      "breaking_changes": "NONE"
     }
   ]
 }

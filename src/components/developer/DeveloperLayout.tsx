@@ -149,9 +149,10 @@ const navSections = [
     ],
   },
   {
-    title: "E-Commerce",
+    title: "E-Commerce & POS",
     icon: ShoppingCart,
     items: [
+      { title: "Merchants → POS", path: "/developer/merchants-pos" },
       { title: "WooCommerce Plugin", path: "/woo-for-kang" },
       { title: "Register Store", path: "/integrations/woocommerce-merchant-register" },
       { title: "Plugin Docs", path: "/integrations/woocommerce-docs" },

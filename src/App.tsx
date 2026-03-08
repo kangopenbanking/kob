@@ -236,6 +236,7 @@ import FintechDevelopers from "./pages/solutions/FintechDevelopers";
 import MobileMoneyIntegration from "./pages/solutions/MobileMoneyIntegration";
 import CreditScoring from "./pages/solutions/CreditScoring";
 import AIIntegrationGuide from "./pages/developer/AIIntegrationGuide";
+import MerchantsPOSGuide from "./pages/developer/MerchantsPOSGuide";
 import ApiDirectorySubmissions from "./pages/developer/ApiDirectorySubmissions";
 import SecurityDashboard from "./pages/admin/SecurityDashboard";
 import NoCodeIndex from "./pages/integrations/NoCodeIndex";
@@ -639,6 +640,7 @@ function App() {
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
+              <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />
