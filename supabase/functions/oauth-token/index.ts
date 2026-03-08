@@ -353,7 +353,8 @@ Deno.serve(async (req) => {
 
       return new Response(JSON.stringify(ccResponse), {
         status: 200,
-        headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json' }, 100, rateLimit.remaining, rateLimit.reset),
+        headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Pragma': 'no-cache' }, 100, rateLimit.remaining, rateLimit.reset),
+      });
       });
     }
 

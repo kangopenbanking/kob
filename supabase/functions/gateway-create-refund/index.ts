@@ -101,6 +101,11 @@ serve(async (req) => {
         status: 'pending', next_retry_at: new Date().toISOString(),
       });
     }
+    // M8 FIX: Audit trail for refunds
+    await supabase.from('audit_logs').insert({
+      action_type: 'gateway_refund_created', entity_type: 'gateway_refund', entity_id: refund.id,
+      performed_by: user.id, details: { charge_id, merchant_id: charge.merchant_id, amount: refundAmount, currency: charge.currency, status: refund.status, reason },
+    }).then(() => {}).catch(() => {});
 
     return new Response(JSON.stringify(refund), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

@@ -255,16 +255,16 @@ serve(async (req) => {
   }
 });
 
-// CSV Parser
+// M2 FIX: CSV Parser with proper quoting support
 function parseCSV(csv: string): BulkTransferRow[] {
   const lines = csv.trim().split('\n');
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
   const rows: BulkTransferRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim());
+    const values = parseCsvLine(lines[i]).map(v => v.trim());
     const row: any = {};
     
     headers.forEach((header, index) => {
@@ -275,4 +275,30 @@ function parseCSV(csv: string): BulkTransferRow[] {
   }
 
   return rows;
+}
+
+// Parse a single CSV line respecting quoted fields
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
 }

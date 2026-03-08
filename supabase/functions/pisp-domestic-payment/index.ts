@@ -70,11 +70,13 @@ serve(async (req) => {
       );
     }
     
-    if (instructed_amount.currency !== 'XAF') {
+    // M3 FIX: Support multi-currency (XAF, EUR, USD)
+    const supportedCurrencies = ['XAF', 'EUR', 'USD'];
+    if (!supportedCurrencies.includes(instructed_amount.currency)) {
       return new Response(
         JSON.stringify({
           error: 'invalid_request',
-          error_description: 'Only XAF currency is supported'
+          error_description: `Currency ${instructed_amount.currency} not supported. Supported: ${supportedCurrencies.join(', ')}`
         }),
         { 
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
