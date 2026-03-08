@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { SessionGuard } from "@/components/auth/SessionGuard";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { Button } from "@/components/ui/button";
 import {
