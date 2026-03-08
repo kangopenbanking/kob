@@ -182,6 +182,7 @@ import GatewayCustomers from "./pages/institution/GatewayCustomers";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
 import WooForKang from "./pages/WooForKang";
+import KobPOS from "./pages/KobPOS";
 import PaymentFacilitation from "./pages/PaymentFacilitation";
 import PaymentFacilitationDev from "./pages/developer/PaymentFacilitation";
 import DisputeManagement from "./pages/admin/DisputeManagement";
@@ -663,7 +664,8 @@ function App() {
             <Route path="/integrations/woocommerce-merchant-register" element={<Layout><WooCommerceMerchantRegister /></Layout>} />
             <Route path="/integrations/woocommerce-plugin-code" element={<Layout><WooCommercePluginCode /></Layout>} />
             <Route path="/woo-for-kang" element={<Layout><WooForKang /></Layout>} />
-            
+            <Route path="/kob-pos" element={<Layout><KobPOS /></Layout>} />
+
             {/* Solution Pages */}
             <Route path="/solutions/fintech-developers" element={<Layout><FintechDevelopers /></Layout>} />
             <Route path="/solutions/mobile-money-integration" element={<Layout><MobileMoneyIntegration /></Layout>} />

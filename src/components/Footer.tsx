@@ -21,6 +21,8 @@ const footerSections = [
   {
     title: "Products",
     links: [
+      { label: "KOB POS", to: "/kob-pos" },
+      { label: "Storefront", to: "/merchant/storefront" },
       { label: "Piggy Bank", to: "/piggybank" },
       { label: "Njangi (Money Pot)", to: "/njangi" },
       { label: "Rent Reporting", to: "/rent-reporting" },

@@ -517,7 +517,41 @@ const WooForKang = () => {
           </div>
         </section>
 
-        {/* Developer Resources */}
+        {/* KOB POS Storefront Section */}
+        <section className="py-24 bg-background border-t border-border">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="max-w-4xl mx-auto"
+            >
+              <Card className="rounded-3xl border-l-4 border-l-[hsl(var(--fi-purple))] shadow-xl overflow-hidden">
+                <CardContent className="p-10 md:p-12">
+                  <div className="flex flex-col md:flex-row items-center gap-8">
+                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center">
+                      <ShoppingCart className="w-8 h-8 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                    </div>
+                    <div className="flex-1 text-center md:text-left">
+                      <h3 className="text-2xl font-bold mb-2 text-foreground">Also Accept In-Store Payments with KOB POS</h3>
+                      <p className="text-muted-foreground leading-relaxed">
+                        Complement your WooCommerce online store with in-person QR payments, inventory management, and marketplace discovery. Sync products and orders between your online and physical stores.
+                      </p>
+                    </div>
+                    <Button size="lg" className="bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white rounded-xl px-8 flex-shrink-0" asChild>
+                      <Link to="/kob-pos">
+                        Explore KOB POS
+                        <ArrowRight className="ml-2 h-5 w-5" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        </section>
+
         <section className="py-24 bg-muted/30">
           <div className="container mx-auto px-4">
             <motion.div
