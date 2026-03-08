@@ -413,7 +413,7 @@ export default function MerchantStorefront() {
                   <div className="bg-card rounded-xl p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(290 70% 50%))' }}>
+                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-[hsl(var(--fi-purple))]">
                           <Crown className="w-6 h-6 text-white" strokeWidth={1.5} />
                         </div>
                         <div>
