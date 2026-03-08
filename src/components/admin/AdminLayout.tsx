@@ -20,6 +20,7 @@ import {
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { adminNavigation } from "@/components/admin/admin-navigation-config";
+import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 import { Badge } from "@/components/ui/badge";
 
 interface AdminLayoutProps {
