@@ -42,6 +42,7 @@ export default function MerchantDashboard() {
   const [chartData, setChartData] = useState<{ day: string; revenue: number }[]>([]);
   const [disputeCount, setDisputeCount] = useState(0);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [showWalletBalances, setShowWalletBalances] = useState(true);
 
   useEffect(() => { loadData(); }, []);
 
