@@ -399,18 +399,20 @@ serve(async (req) => {
     }
 
     // ══════════════════════════════════════════════
-    // STEP 5: Ledger integration (non-blocking)
+    // STEP 5: Ledger integration (non-blocking) — M1 FIX: correct double-entry for internal transfers
+    // For internal transfers between deposit accounts, debit source deposits sub-account and credit destination
     // ══════════════════════════════════════════════
     try {
       const { data: ledgerAccounts } = await supabase
         .from('ledger_accounts')
         .select('id, account_code')
-        .in('account_code', ['1000', '2000']);
+        .in('account_code', ['2001', '2002', '2000']);
 
-      const cashAcct = ledgerAccounts?.find(a => a.account_code === '1000');
-      const depositsAcct = ledgerAccounts?.find(a => a.account_code === '2000');
+      // Use sub-accounts 2001 (source deposits) and 2002 (dest deposits) if available, else skip ledger
+      const srcDepositsAcct = ledgerAccounts?.find(a => a.account_code === '2001') || ledgerAccounts?.find(a => a.account_code === '2000');
+      const dstDepositsAcct = ledgerAccounts?.find(a => a.account_code === '2002') || ledgerAccounts?.find(a => a.account_code === '2000');
 
-      if (cashAcct && depositsAcct) {
+      if (srcDepositsAcct && dstDepositsAcct && srcDepositsAcct.id !== dstDepositsAcct.id) {
         const entryNumber = `TFR-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
         const { data: journalEntry } = await supabase
@@ -428,8 +430,8 @@ serve(async (req) => {
 
         if (journalEntry) {
           await supabase.from('journal_lines').insert([
-            { journal_entry_id: journalEntry.id, ledger_account_id: cashAcct.id, debit: transferAmount, credit: 0 },
-            { journal_entry_id: journalEntry.id, ledger_account_id: depositsAcct.id, debit: 0, credit: transferAmount },
+            { journal_entry_id: journalEntry.id, ledger_account_id: srcDepositsAcct.id, debit: transferAmount, credit: 0 },
+            { journal_entry_id: journalEntry.id, ledger_account_id: dstDepositsAcct.id, debit: 0, credit: transferAmount },
           ]);
         }
       }

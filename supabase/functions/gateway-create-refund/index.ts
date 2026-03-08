@@ -57,7 +57,7 @@ serve(async (req) => {
     try {
       let result;
       if (charge.provider === 'stripe') {
-        result = await createStripeRefund({ provider_ref: charge.provider_ref, amount: refundAmount, reason: `${reason || ''} currency:${charge.currency}` });
+        result = await createStripeRefund({ provider_ref: charge.provider_ref, amount: refundAmount, currency: charge.currency, reason: reason || undefined });
       } else {
         // MoMo: compensation payout
         result = await createFlutterwavePayout({
