@@ -336,7 +336,7 @@ serve(async (req) => {
       details: { amount, fee, net_amount: netAmount, destination_type, provider: providerName, tx_ref: txRef, status: payoutStatus },
     });
 
-    return new Response(JSON.stringify({
+    const responseBody = {
       success: true,
       amount,
       fee_amount: fee,
@@ -348,7 +348,19 @@ serve(async (req) => {
       provider_ref: providerResult?.provider_ref,
       tx_ref: txRef,
       destination_type,
-    }), {
+    };
+
+    // Store idempotency key to prevent double-debit on retries
+    if (idempotencyKey) {
+      await supabase.from('idempotency_keys').insert({
+        idempotency_key: idempotencyKey,
+        response_body: responseBody,
+        response_status: 201,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }).then(() => {}).catch(() => {});
+    }
+
+    return new Response(JSON.stringify(responseBody), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
