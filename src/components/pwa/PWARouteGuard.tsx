@@ -11,6 +11,7 @@ const PWA_ALLOWED_PREFIXES = [
   '/bank/',
   '/pay/',
   '/setup-pin',
+  '/biz',
 ] as const;
 
 /**
