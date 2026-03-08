@@ -484,32 +484,22 @@ export default function MerchantStorefront() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">Logo URL</Label>
-                        <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://your-logo.png" className="h-10 rounded-lg border-border/60" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">Banner URL</Label>
-                        <Input value={bannerUrl} onChange={e => setBannerUrl(e.target.value)} placeholder="https://your-banner.jpg" className="h-10 rounded-lg border-border/60" />
-                      </div>
-                    </div>
-                    {(logoUrl || bannerUrl) && (
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        {logoUrl && (
-                          <div className="rounded-xl border border-border/40 p-3 bg-muted/20">
-                            <p className="text-[10px] text-muted-foreground mb-2 font-medium uppercase tracking-wider">Logo Preview</p>
-                            <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-                          </div>
-                        )}
-                        {bannerUrl && (
-                          <div className="rounded-xl border border-border/40 p-3 bg-muted/20">
-                            <p className="text-[10px] text-muted-foreground mb-2 font-medium uppercase tracking-wider">Banner Preview</p>
-                            <img src={bannerUrl} alt="Banner" className="w-full h-20 rounded-lg object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <ImageUpload
+                      label="Store Logo"
+                      value={logoUrl}
+                      onChange={setLogoUrl}
+                      folder="logos"
+                      placeholder="Upload logo or paste URL"
+                      previewClass="w-16 h-16 rounded-xl object-cover"
+                    />
+                    <ImageUpload
+                      label="Cover / Banner Image"
+                      value={bannerUrl}
+                      onChange={setBannerUrl}
+                      folder="banners"
+                      placeholder="Upload banner or paste URL"
+                      previewClass="w-full h-24 rounded-lg object-cover"
+                    />
                   </CardContent>
                 </Card>
               </div>
