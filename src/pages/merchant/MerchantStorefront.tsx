@@ -33,6 +33,7 @@ import { StorePreview, StorePreviewDialog } from '@/components/storefront/StoreP
 import { ShippingForm } from '@/components/storefront/ShippingForm';
 import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
 import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeaturesTab';
+import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgradeModal';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -61,6 +62,8 @@ export default function MerchantStorefront() {
   const [qrAmount, setQrAmount] = useState('');
   const [qrCopied, setQrCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('guide');
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
   // Profile form
   const [storeName, setStoreName] = useState('');
@@ -776,7 +779,7 @@ export default function MerchantStorefront() {
                             )}
                             <Button
                               className={`w-full mt-5 rounded-lg h-10 text-xs font-semibold gap-2 ${isPremium ? 'bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white' : ''}`}
-                              disabled={subscribing} onClick={() => handleSubscribe(plan.id)} variant={isPremium ? 'default' : 'outline'}>
+                              disabled={subscribing} onClick={() => { setSelectedPlan(plan); setUpgradeModalOpen(true); }} variant={isPremium ? 'default' : 'outline'}>
                               {subscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Get Started <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} /></>}
                             </Button>
                           </CardContent>
@@ -1073,6 +1076,20 @@ export default function MerchantStorefront() {
           />
         </TabsContent>
       </Tabs>
+
+      <EnterpriseUpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        plan={selectedPlan}
+        currency={currency}
+        subscribing={subscribing}
+        onConfirm={() => {
+          if (selectedPlan) {
+            handleSubscribe(selectedPlan.id);
+            setUpgradeModalOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }
