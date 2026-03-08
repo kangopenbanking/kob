@@ -79,17 +79,35 @@ const CustomerScan: React.FC = () => {
     return () => stopCamera();
   }, [activeTab, showManualEntry, scanResult, startCamera, stopCamera]);
 
-  /* ─── Simulated QR Scan Detection ─── */
+  /* ─── QR Scan Detection via BarcodeDetector API ─── */
   useEffect(() => {
-    if (!cameraActive) return;
-    // In a real implementation, you'd use a library like @aspect-build/web-qr-scanner or BarcodeDetector API
-    // For now, simulate a scan after 5 seconds of camera being active
-    const timeout = setTimeout(() => {
-      if (cameraActive && !scanResult) {
-        handleScanDetected({ type: 'kob_pay', account: 'KOB-7721-3384-5502' });
+    if (!cameraActive || !videoRef.current) return;
+    // Use BarcodeDetector API where available (Chrome, Edge, Samsung Internet)
+    if (!('BarcodeDetector' in window)) return;
+    const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
+    let cancelled = false;
+    const scan = async () => {
+      if (cancelled || !videoRef.current || videoRef.current.readyState < 2) {
+        if (!cancelled) requestAnimationFrame(scan);
+        return;
       }
-    }, 6000);
-    return () => clearTimeout(timeout);
+      try {
+        const barcodes = await detector.detect(videoRef.current);
+        if (barcodes.length > 0 && !scanResult) {
+          try {
+            const parsed = JSON.parse(barcodes[0].rawValue);
+            handleScanDetected(parsed);
+          } catch {
+            // Not a JSON QR — treat raw value as account code
+            handleScanDetected({ type: 'kob_pay', account: barcodes[0].rawValue });
+          }
+          return;
+        }
+      } catch { /* detection frame error — continue */ }
+      if (!cancelled) requestAnimationFrame(scan);
+    };
+    requestAnimationFrame(scan);
+    return () => { cancelled = true; };
   }, [cameraActive, scanResult]);
 
   /* ─── Handlers ─── */

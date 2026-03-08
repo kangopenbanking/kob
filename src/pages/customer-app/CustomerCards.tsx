@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
@@ -34,7 +35,7 @@ const CustomerCards: React.FC = () => {
           </div>
           <p className="text-sm font-semibold text-muted-foreground">No cards yet</p>
           <p className="text-xs text-muted-foreground text-center">Add a virtual card to start making payments</p>
-          <Button variant="outline" className="rounded-2xl">
+          <Button variant="outline" className="rounded-2xl" onClick={() => toast.info('Virtual card creation coming soon')}>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </div>
@@ -90,13 +91,17 @@ const CustomerCards: React.FC = () => {
               </div>
               <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Show'}</span>
             </button>
-            <button className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4">
+            <button onClick={() => {
+              if (!card) return;
+              const action = card.status === 'frozen' ? 'unfreeze' : 'freeze';
+              toast.info(`Card ${action} is managed from your card issuer's portal.`);
+            }} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(200,60%,82%)]">
                 <Snowflake className="h-5 w-5 text-[hsl(200,50%,38%)]" strokeWidth={1.5} />
               </div>
               <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+            <button onClick={() => toast.info('Card settings coming soon')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
                 <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
               </div>
@@ -126,7 +131,7 @@ const CustomerCards: React.FC = () => {
             )}
           </div>
 
-          <Button variant="outline" className="w-full rounded-2xl">
+          <Button variant="outline" className="w-full rounded-2xl" onClick={() => toast.info('Virtual card creation coming soon')}>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </>

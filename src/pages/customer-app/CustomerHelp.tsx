@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, MessageCircle, Mail, Phone, Send, FileText, Users, ExternalLink } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
@@ -24,9 +25,9 @@ const contactOptions = [
 ];
 
 const quickLinks = [
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service' },
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy' },
-  { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum' },
+  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
+  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
+  { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
 ];
 
 const CustomerHelp: React.FC = () => {
@@ -35,15 +36,29 @@ const CustomerHelp: React.FC = () => {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!subject || !description) { toast.error('Please fill in all fields'); return; }
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Please sign in first'); setSubmitting(false); return; }
+      const { error } = await supabase.from('app_notifications').insert({
+        user_id: user.id,
+        type: 'system',
+        title: `Support: ${subject}`,
+        message: description,
+        icon: 'help',
+        metadata: { source: 'help_form', subject },
+      });
+      if (error) throw error;
       setSubject('');
       setDescription('');
       toast.success('Report submitted. We\'ll get back to you soon.');
-    }, 1200);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit report');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -98,7 +113,7 @@ const CustomerHelp: React.FC = () => {
         <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quick Links</h2>
         <div className="rounded-2xl border border-border bg-card">
           {quickLinks.map((link, i) => (
-            <button key={i} onClick={() => toast.info(link.label)} className="flex w-full items-center justify-between border-b border-border/50 px-4 py-3 last:border-0">
+            <button key={i} onClick={() => link.path ? navigate(link.path) : toast.info(`${link.label} coming soon`)} className="flex w-full items-center justify-between border-b border-border/50 px-4 py-3 last:border-0">
               <div className="flex items-center gap-3">
                 <span className="text-muted-foreground">{link.icon}</span>
                 <span className="text-sm font-medium text-foreground">{link.label}</span>
