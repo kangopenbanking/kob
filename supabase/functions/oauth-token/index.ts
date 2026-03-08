@@ -260,6 +260,11 @@ Deno.serve(async (req) => {
       const access_token = generateSecureToken();
       const expires_in = 3600;
 
+      // H8 FIX: Hash token before storage
+      const rtEncoder = new TextEncoder();
+      const rtHashBuf = await crypto.subtle.digest('SHA-256', rtEncoder.encode(access_token));
+      const rtAccessHash = Array.from(new Uint8Array(rtHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
       // Inherit certificate binding from refresh token
       await supabase
         .from('access_tokens')
