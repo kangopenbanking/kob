@@ -442,6 +442,8 @@ function App() {
               <Route path="transactions" element={<InstitutionTransactions />} />
               <Route path="analytics" element={<InstitutionAnalytics />} />
               <Route path="api-clients" element={<InstitutionApiClients />} />
+              <Route path="api-keys" element={<InstitutionApiKeys />} />
+              <Route path="api-docs" element={<InstitutionApiDocs />} />
               <Route path="woocommerce" element={<WooCommerceDashboard />} />
               <Route path="settlement" element={<InstitutionSettlement />} />
               <Route path="payments" element={<InstitutionPayments />} />
