@@ -408,7 +408,7 @@ export default function MerchantDashboard() {
                       <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{w.currency} Balance</span>
                       <Badge variant="outline" className="text-[10px]">Available</Badge>
                     </div>
-                    <p className="text-xl font-bold tracking-tight">{Number(w.available_balance || 0).toLocaleString()}<span className="text-sm font-medium text-muted-foreground ml-1">{w.currency}</span></p>
+                    <p className="text-xl font-bold tracking-tight">{showWalletBalances ? `${Number(w.available_balance || 0).toLocaleString()}` : '••••••'}<span className="text-sm font-medium text-muted-foreground ml-1">{w.currency}</span></p>
                     {(Number(w.pending_balance) > 0) && (
                       <p className="text-xs text-amber-600 dark:text-amber-400">
                         +{Number(w.pending_balance).toLocaleString()} pending
