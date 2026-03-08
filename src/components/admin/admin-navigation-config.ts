@@ -118,6 +118,12 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "E-Commerce & POS",
+    items: [
+      { title: "Marketplace", path: "/admin/marketplace", icon: Store },
+    ],
+  },
+  {
     title: "Transport & Tourism",
     items: [
       { title: "Travel Management", path: "/admin/travel-management", icon: Activity },

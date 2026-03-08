@@ -563,6 +563,7 @@ function App() {
               <Route path="translations" element={<TranslationManager />} />
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
+              <Route path="marketplace" element={<AdminMarketplace />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
