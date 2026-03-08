@@ -553,9 +553,9 @@ const Dashboard = () => {
                         <div className="col-span-2">
                           <p className="text-xs text-muted-foreground mb-1">Permissions</p>
                           <div className="flex flex-wrap gap-1">
-                            {consent.permissions.map((perm: string, i: number) => (
+                            {Array.isArray(consent.permissions) ? consent.permissions.map((perm: string, i: number) => (
                               <Badge key={i} variant="outline" className="text-[10px]">{perm}</Badge>
-                            ))}
+                            )) : <Badge variant="outline" className="text-[10px]">N/A</Badge>}
                           </div>
                         </div>
                       </div>
