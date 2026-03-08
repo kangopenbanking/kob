@@ -44,6 +44,8 @@ serve(async (req) => {
       narration,
     } = body;
 
+    const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
+
     if (!amount || !account_id || !destination_type) {
       return new Response(JSON.stringify({
         error: 'invalid_request',
@@ -57,13 +59,27 @@ serve(async (req) => {
       });
     }
 
-    // Verify account ownership
+    // Idempotency check — prevent double-debit on network retries
+    if (idempotencyKey) {
+      const { data: existing } = await supabase
+        .from('idempotency_keys')
+        .select('response_body')
+        .eq('idempotency_key', idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        return new Response(JSON.stringify(existing.response_body), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' },
+        });
+      }
+    }
+
+    // Verify account ownership (must be active)
     const { data: account } = await supabase
       .from('accounts').select('*')
-      .eq('id', account_id).eq('user_id', user.id).single();
+      .eq('id', account_id).eq('user_id', user.id).eq('is_active', true).single();
 
     if (!account) {
-      return new Response(JSON.stringify({ error: 'account_not_found' }), {
+      return new Response(JSON.stringify({ error: 'account_not_found', message: 'Account not found or inactive' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
