@@ -639,6 +639,7 @@ function App() {
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
+              <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />
