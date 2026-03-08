@@ -663,7 +663,8 @@ function App() {
             <Route path="/integrations/woocommerce-merchant-register" element={<Layout><WooCommerceMerchantRegister /></Layout>} />
             <Route path="/integrations/woocommerce-plugin-code" element={<Layout><WooCommercePluginCode /></Layout>} />
             <Route path="/woo-for-kang" element={<Layout><WooForKang /></Layout>} />
-            
+            <Route path="/kob-pos" element={<Layout><KobPOS /></Layout>} />
+
             {/* Solution Pages */}
             <Route path="/solutions/fintech-developers" element={<Layout><FintechDevelopers /></Layout>} />
             <Route path="/solutions/mobile-money-integration" element={<Layout><MobileMoneyIntegration /></Layout>} />
