@@ -1,5 +1,15 @@
 # POS Commerce Layer Changelog
 
+## [2.0.0] — 2026-03-08 — QR Payments, Consumer Marketplace & Wallet Integration
+- **New Tables**: `pos_store_profiles`, `pos_subscription_plans`, `pos_store_subscriptions`, `pos_consumer_carts`, `pos_consumer_cart_items`
+- **Enum**: Added `consumer_app` to `pos_order_channel`
+- **Edge Functions (New)**: `pos-store-browse`, `pos-consumer-cart`, `pos-consumer-checkout`, `pos-qr-payment`, `pos-store-subscription`
+- **Edge Functions (Updated)**: `pos-pay-order` now supports `wallet` payment method with direct balance debit/credit
+- **Consumer App**: New `/app/stores`, `/app/stores/:merchantId`, `/app/cart` pages; updated `CustomerScan` for `kob_pos_pay` QR codes; added "Stores" feature card to home
+- **Features**: Merchant marketplace with subscription-gated storefront visibility, QR code generation/scanning for POS payments, wallet-to-wallet checkout, consumer cart management
+- **RLS**: Full row-level security on all new tables with merchant ownership and consumer isolation policies
+- **Breaking changes**: NONE
+
 ## [1.6.0] — 2026-03-08 — Inventory Sync Jobs + Conflict Handling
 - **Endpoints**: `pos-inventory-sync` (POST)
 - **Features**: Background inventory sync from KOB→WooCommerce, aggregates net stock deltas per variant, supports woo_source_of_truth and kob_source_of_truth strategies, records sync runs with full audit trail
