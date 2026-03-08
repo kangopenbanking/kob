@@ -39,16 +39,17 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'account_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Check balance
-    const { data: balances } = await supabase.from('account_balances')
-      .select('amount, credit_debit_indicator')
+    // Check balance — use platform standard: read latest Credit ClosingAvailable/InterimAvailable
+    const { data: balanceRecord } = await supabase.from('account_balances')
+      .select('*')
       .eq('account_id', account_id)
+      .eq('credit_debit_indicator', 'Credit')
+      .in('balance_type', ['ClosingAvailable', 'InterimAvailable'])
       .order('balance_datetime', { ascending: false })
-      .limit(10);
+      .limit(1)
+      .maybeSingle();
 
-    const availableBalance = (balances || []).reduce((sum: number, b: any) => {
-      return b.credit_debit_indicator === 'Credit' ? sum + b.amount : sum - b.amount;
-    }, 0);
+    const availableBalance = balanceRecord?.amount || 0;
 
     // Fee calculation
     const { fee, net } = await calculateGatewayFee(amount, channel, supabase);
@@ -70,13 +71,10 @@ serve(async (req) => {
 
     const txRef = `withdraw_${account_id.substring(0, 8)}_${Date.now()}`;
 
-    // Debit user's account immediately (will reverse if payout fails)
-    await supabase.from('account_balances').insert({
-      account_id, balance_type: 'InterimAvailable',
-      amount: totalDebit, currency: account.currency,
-      credit_debit_indicator: 'Debit',
-      balance_datetime: new Date().toISOString(),
-    });
+    // Debit user's account immediately by updating balance row (platform standard)
+    await supabase.from('account_balances')
+      .update({ amount: availableBalance - totalDebit, balance_datetime: new Date().toISOString() })
+      .eq('id', balanceRecord.id);
 
     // Record debit transaction
     await supabase.from('transactions').insert({
