@@ -17,10 +17,15 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'rate_limit_exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Verify Flutterwave hash
+    // Verify Flutterwave hash — MANDATORY (C7 fix)
     const verifHash = req.headers.get('verif-hash');
     const FLW_HASH = Deno.env.get('FLUTTERWAVE_ENCRYPTION_KEY');
-    if (FLW_HASH && verifHash !== FLW_HASH) {
+    if (!FLW_HASH) {
+      console.error('FLUTTERWAVE_ENCRYPTION_KEY not configured — rejecting webhook');
+      return new Response(JSON.stringify({ error: 'webhook_not_configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!verifHash || verifHash !== FLW_HASH) {
+      console.error('Invalid or missing Flutterwave verif-hash — rejecting');
       return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
