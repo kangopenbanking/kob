@@ -35,15 +35,29 @@ const CustomerHelp: React.FC = () => {
   const [description, setDescription] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!subject || !description) { toast.error('Please fill in all fields'); return; }
     setSubmitting(true);
-    setTimeout(() => {
-      setSubmitting(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Please sign in first'); setSubmitting(false); return; }
+      const { error } = await supabase.from('app_notifications').insert({
+        user_id: user.id,
+        type: 'system',
+        title: `Support: ${subject}`,
+        message: description,
+        icon: 'help',
+        metadata: { source: 'help_form', subject },
+      });
+      if (error) throw error;
       setSubject('');
       setDescription('');
       toast.success('Report submitted. We\'ll get back to you soon.');
-    }, 1200);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit report');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
