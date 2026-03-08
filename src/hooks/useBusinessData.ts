@@ -1,0 +1,106 @@
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+
+export const useBusinessData = (merchantId?: string) => {
+  // Fetch merchant info
+  const { data: merchant, isLoading: merchantLoading } = useQuery({
+    queryKey: ['merchant', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return null;
+      const { data, error } = await supabase
+        .from('gateway_merchants')
+        .select('*')
+        .eq('id', merchantId)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!merchantId,
+  });
+
+  // Fetch wallet balances
+  const { data: wallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
+    queryKey: ['merchant-wallets', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return [];
+      const { data, error } = await supabase.functions.invoke('gateway-get-merchant-balance', {
+        body: { merchant_id: merchantId },
+      });
+      if (error) throw error;
+      return data?.data || [];
+    },
+    enabled: !!merchantId,
+  });
+
+  // Fetch recent settlements
+  const { data: settlementsData, isLoading: settlementsLoading } = useQuery({
+    queryKey: ['merchant-settlements', merchantId],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('gateway-list-settlements', {
+        body: { limit: 10, offset: 0 },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Fetch recent charges (revenue)
+  const { data: charges, isLoading: chargesLoading } = useQuery({
+    queryKey: ['merchant-charges', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return [];
+      const { data, error } = await supabase
+        .from('gateway_charges')
+        .select('*')
+        .eq('merchant_id', merchantId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!merchantId,
+  });
+
+  // Fetch payouts
+  const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
+    queryKey: ['merchant-payouts', merchantId],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('gateway-list-payouts', {
+        body: { merchant_id: merchantId, limit: 10, offset: 0 },
+      });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  // Calculate metrics
+  const xafWallet = wallets?.find((w: any) => w.currency === 'XAF');
+  const availableBalance = xafWallet?.available_balance || 0;
+  const pendingBalance = xafWallet?.pending_balance || 0;
+
+  const todayCharges = charges?.filter((c: any) => {
+    const today = new Date().toDateString();
+    return new Date(c.created_at).toDateString() === today && c.status === 'successful';
+  }) || [];
+
+  const todayRevenue = todayCharges.reduce((sum: number, c: any) => sum + (c.amount || 0), 0);
+
+  return {
+    merchant,
+    merchantLoading,
+    wallets,
+    walletsLoading,
+    refetchWallets,
+    settlements: settlementsData?.data || [],
+    settlementsLoading,
+    charges,
+    chargesLoading,
+    payouts: payoutsData?.data || [],
+    payoutsLoading,
+    availableBalance,
+    pendingBalance,
+    todayRevenue,
+    todayOrders: todayCharges.length,
+    isLoading: merchantLoading || walletsLoading,
+  };
+};
