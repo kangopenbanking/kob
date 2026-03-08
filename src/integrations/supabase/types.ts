@@ -10097,6 +10097,83 @@ export type Database = {
           },
         ]
       }
+      pos_consumer_cart_items: {
+        Row: {
+          cart_id: string
+          created_at: string
+          id: string
+          quantity: number
+          unit_price: number
+          variant_id: string
+        }
+        Insert: {
+          cart_id: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          unit_price: number
+          variant_id: string
+        }
+        Update: {
+          cart_id?: string
+          created_at?: string
+          id?: string
+          quantity?: number
+          unit_price?: number
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_consumer_cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "pos_consumer_carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_consumer_cart_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "pos_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_consumer_carts: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_consumer_carts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pos_inventory_items: {
         Row: {
           id: string
@@ -10735,6 +10812,146 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pos_store_profiles: {
+        Row: {
+          banner_url: string | null
+          category: string | null
+          city: string | null
+          country: string
+          created_at: string
+          description: string | null
+          id: string
+          is_published: boolean
+          logo_url: string | null
+          merchant_id: string
+          rating: number | null
+          store_name: string
+          updated_at: string
+        }
+        Insert: {
+          banner_url?: string | null
+          category?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          logo_url?: string | null
+          merchant_id: string
+          rating?: number | null
+          store_name: string
+          updated_at?: string
+        }
+        Update: {
+          banner_url?: string | null
+          category?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          logo_url?: string | null
+          merchant_id?: string
+          rating?: number | null
+          store_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_store_profiles_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_store_subscriptions: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          merchant_id: string
+          plan_id: string
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          id?: string
+          merchant_id: string
+          plan_id: string
+          starts_at?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          merchant_id?: string
+          plan_id?: string
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_store_subscriptions_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_store_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "pos_subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_subscription_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          duration_days: number
+          features_json: Json | null
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_days?: number
+          features_json?: Json | null
+          id?: string
+          is_active?: boolean
+          name: string
+          price?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          duration_days?: number
+          features_json?: Json | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       postiq_address_verifications: {
         Row: {
@@ -15831,7 +16048,7 @@ export type Database = {
       piggybank_payment_status: "pending" | "paid" | "missed" | "late"
       piggybank_plan_status: "active" | "paused" | "completed" | "cancelled"
       piggybank_plan_type: "savings" | "rent"
-      pos_order_channel: "pos" | "woocommerce" | "api"
+      pos_order_channel: "pos" | "woocommerce" | "api" | "consumer_app"
       pos_order_status:
         | "draft"
         | "pending_payment"
@@ -16122,7 +16339,7 @@ export const Constants = {
       piggybank_payment_status: ["pending", "paid", "missed", "late"],
       piggybank_plan_status: ["active", "paused", "completed", "cancelled"],
       piggybank_plan_type: ["savings", "rent"],
-      pos_order_channel: ["pos", "woocommerce", "api"],
+      pos_order_channel: ["pos", "woocommerce", "api", "consumer_app"],
       pos_order_status: [
         "draft",
         "pending_payment",
