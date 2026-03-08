@@ -463,11 +463,11 @@ export default function KobPOS() {
         <section className="py-20 bg-muted/30 border-t border-border">
           <div className="container mx-auto px-4">
             <ScrollReveal>
-              <Card className="max-w-4xl mx-auto rounded-3xl border-l-4 border-l-[#96588a] shadow-xl overflow-hidden">
+              <Card className="max-w-4xl mx-auto rounded-3xl border-l-4 border-l-fi-purple shadow-xl overflow-hidden">
                 <CardContent className="p-10 md:p-12">
                   <div className="flex flex-col md:flex-row items-center gap-8">
-                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-[#96588a]/10 flex items-center justify-center">
-                      <ShoppingCart className="w-8 h-8 text-[#96588a]" strokeWidth={1.5} />
+                    <div className="flex-shrink-0 w-16 h-16 rounded-2xl bg-fi-purple/10 flex items-center justify-center">
+                      <ShoppingCart className="w-8 h-8 text-fi-purple" strokeWidth={1.5} />
                     </div>
                     <div className="flex-1 text-center md:text-left">
                       <h3 className="text-2xl font-bold mb-2 text-foreground">Also Sell Online with WooCommerce</h3>
@@ -475,7 +475,7 @@ export default function KobPOS() {
                         Install the Woo for Kang plugin to accept Mobile Money, Card, and Bank Transfer payments on your WordPress store. Sync inventory and orders with your POS.
                       </p>
                     </div>
-                    <Button size="lg" className="bg-[#96588a] hover:bg-[#7a466f] text-white rounded-xl px-8 flex-shrink-0" asChild>
+                    <Button size="lg" className="bg-fi-purple hover:bg-fi-purple/90 text-white rounded-xl px-8 flex-shrink-0" asChild>
                       <Link to="/woo-for-kang">
                         Learn More
                         <ArrowRight className="ml-2 h-5 w-5" />
