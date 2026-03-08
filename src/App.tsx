@@ -875,6 +875,10 @@ function App() {
             <Route path="/biz/reset-password" element={<ResetPassword />} />
             <Route path="/biz" element={<BusinessAppLayout />}>
               <Route path="home" element={<BusinessHome />} />
+              <Route path="wallet" element={<BusinessWallet />} />
+              <Route path="receive" element={<BusinessReceive />} />
+              <Route path="orders" element={<BusinessOrders />} />
+              <Route path="more" element={<BusinessMore />} />
             </Route>
 
             <Route path="/biz/:merchantId" element={<BusinessSplash />} />
@@ -882,6 +886,10 @@ function App() {
             <Route path="/biz/:merchantId/reset-password" element={<ResetPassword />} />
             <Route path="/biz/:merchantId" element={<BusinessAppLayout />}>
               <Route path="home" element={<BusinessHome />} />
+              <Route path="wallet" element={<BusinessWallet />} />
+              <Route path="receive" element={<BusinessReceive />} />
+              <Route path="orders" element={<BusinessOrders />} />
+              <Route path="more" element={<BusinessMore />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
