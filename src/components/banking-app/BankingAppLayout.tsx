@@ -9,6 +9,7 @@ import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
 import { useEffect, useState } from 'react';
 import { BankingAppAuthGuard } from '@/components/auth/BankingAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
