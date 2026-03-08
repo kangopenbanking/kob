@@ -74,6 +74,7 @@ const CustomerScan: React.FC = () => {
   const [processing, setProcessing] = useState(false);
   const [scanResult, setScanResult] = useState<{ account: string; amount?: number } | null>(null);
   const [payAmount, setPayAmount] = useState('');
+  const [merchantQR, setMerchantQR] = useState<any>(null);
 
   // Camera state
   const videoRef = useRef<HTMLVideoElement>(null);
