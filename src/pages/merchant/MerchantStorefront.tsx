@@ -551,6 +551,7 @@ export default function MerchantStorefront() {
                     <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-2">Quick Actions</p>
                     {[
                       { label: 'Setup Guide', action: () => setActiveTab('guide'), icon: BookOpen },
+                      { label: 'Store Preview', action: () => setActiveTab('preview'), icon: Monitor },
                       { label: 'Generate QR Code', action: () => setActiveTab('qr'), icon: QrCode },
                       { label: 'Manage Subscription', action: () => setActiveTab('subscription'), icon: Crown },
                       { label: 'POS Attributes', action: () => setActiveTab('attributes'), icon: Package },
