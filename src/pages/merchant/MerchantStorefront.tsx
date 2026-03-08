@@ -1051,6 +1051,11 @@ export default function MerchantStorefront() {
             </div>
           </motion.div>
         </TabsContent>
+
+        {/* ── Demo Store ── */}
+        <TabsContent value="demo">
+          <DemoStoreTab merchantId={merchantId} onDataChanged={loadData} />
+        </TabsContent>
       </Tabs>
     </div>
   );
