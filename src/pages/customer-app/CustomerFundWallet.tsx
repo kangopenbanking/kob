@@ -58,6 +58,7 @@ const CustomerFundWallet: React.FC = () => {
   const navigate = useNavigate();
   const { user } = useCustomerAuth();
   const queryClient = useQueryClient();
+  const [searchParams] = useSearchParams();
   const [amount, setAmount] = useState('');
   const [selectedAccountId, setSelectedAccountId] = useState<string | null>(null);
   const [phone, setPhone] = useState('');
@@ -65,12 +66,24 @@ const CustomerFundWallet: React.FC = () => {
   const [step, setStep] = useState<'source' | 'bank_select' | 'amount' | 'processing' | 'result'>('source');
   const [processing, setProcessing] = useState(false);
   const [fundingResult, setFundingResult] = useState<any>(null);
+  const [showPin, setShowPin] = useState(false);
 
   // Bank selection state (for bank_transfer method)
   const [banks, setBanks] = useState<BankOption[]>([]);
   const [banksLoading, setBanksLoading] = useState(false);
   const [selectedBank, setSelectedBank] = useState<BankOption | null>(null);
   const [bankSearch, setBankSearch] = useState('');
+
+  // Invalidate caches on redirect return (e.g. after Flutterwave/PayPal redirect)
+  useEffect(() => {
+    const status = searchParams.get('status') || searchParams.get('transaction_status');
+    if (status) {
+      queryClient.invalidateQueries({ queryKey: ['customer-accounts'] });
+      queryClient.invalidateQueries({ queryKey: ['account-balances'] });
+      queryClient.invalidateQueries({ queryKey: ['customer-transactions'] });
+      toast.info('Checking payment status...');
+    }
+  }, [searchParams, queryClient]);
 
   const { account: primaryAccount, loading: accountLoading } = useEnsureWalletAccount(user?.id);
 
