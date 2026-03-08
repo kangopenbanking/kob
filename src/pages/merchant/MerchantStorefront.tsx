@@ -912,6 +912,82 @@ export default function MerchantStorefront() {
             </div>
           </motion.div>
         </TabsContent>
+
+        {/* ── Store Preview ── */}
+        <TabsContent value="preview">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div className="space-y-5">
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Consumer App Preview
+                    </CardTitle>
+                    <CardDescription className="text-xs">This is how your store appears to customers on the KOB marketplace</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <StorePreview
+                      storeName={storeName}
+                      description={description}
+                      category={category}
+                      city={city}
+                      country={country}
+                      currency={currency}
+                      logoUrl={logoUrl}
+                      bannerUrl={bannerUrl}
+                      isPublished={isPublished}
+                      rating={profile?.rating}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-foreground">Preview Tips</p>
+                    </div>
+                    <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+                      <p>• The preview shows how your store card looks in the consumer app homepage slider.</p>
+                      <p>• <strong>Banner image</strong> is the large cover photo at the top — use a high-quality wide image (1200×400px).</p>
+                      <p>• <strong>Logo</strong> appears as a small icon overlaying the banner — use a square image (200×200px minimum).</p>
+                      <p>• Fill in your <strong>category</strong> and <strong>location</strong> for better discoverability.</p>
+                      <p>• A compelling <strong>description</strong> helps customers decide to visit your store.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5 space-y-3">
+                    <p className="text-xs font-semibold text-foreground">Store Checklist</p>
+                    {[
+                      { done: !!storeName, label: 'Store name set' },
+                      { done: !!description, label: 'Description added' },
+                      { done: !!category, label: 'Category selected' },
+                      { done: !!city, label: 'Location configured' },
+                      { done: !!logoUrl, label: 'Logo uploaded' },
+                      { done: !!bannerUrl, label: 'Cover image uploaded' },
+                      { done: !!subscription, label: 'Subscription active' },
+                      { done: isPublished, label: 'Store published' },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-2.5">
+                        <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${item.done ? 'text-emerald-500' : 'text-muted-foreground/30'}`} strokeWidth={1.5} />
+                        <span className={`text-xs ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Button onClick={() => setActiveTab('profile')} variant="outline" className="w-full gap-2 text-xs rounded-lg">
+                  <Settings className="w-3.5 h-3.5" strokeWidth={1.5} /> Edit Store Profile
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </TabsContent>
       </Tabs>
     </div>
   );
