@@ -7097,6 +7097,149 @@ export type Database = {
           },
         ]
       }
+      integration_events_inbox: {
+        Row: {
+          error_message: string | null
+          event_type: string
+          id: string
+          integration_id: string
+          payload_json: Json
+          processed_at: string | null
+          provider_event_id: string
+          received_at: string
+          status: Database["public"]["Enums"]["inbox_event_status"]
+        }
+        Insert: {
+          error_message?: string | null
+          event_type: string
+          id?: string
+          integration_id: string
+          payload_json?: Json
+          processed_at?: string | null
+          provider_event_id: string
+          received_at?: string
+          status?: Database["public"]["Enums"]["inbox_event_status"]
+        }
+        Update: {
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          integration_id?: string
+          payload_json?: Json
+          processed_at?: string | null
+          provider_event_id?: string
+          received_at?: string
+          status?: Database["public"]["Enums"]["inbox_event_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_events_inbox_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_integrations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_mappings: {
+        Row: {
+          created_at: string
+          entity_type: Database["public"]["Enums"]["integration_entity_type"]
+          external_id: string
+          id: string
+          integration_id: string
+          kob_id: string
+          merchant_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_type: Database["public"]["Enums"]["integration_entity_type"]
+          external_id: string
+          id?: string
+          integration_id: string
+          kob_id: string
+          merchant_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_type?: Database["public"]["Enums"]["integration_entity_type"]
+          external_id?: string
+          id?: string
+          integration_id?: string
+          kob_id?: string
+          merchant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_mappings_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integration_mappings_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      integration_sync_runs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          integration_id: string
+          merchant_id: string
+          mode: string
+          started_at: string
+          status: Database["public"]["Enums"]["sync_run_status"]
+          summary_json: Json | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          integration_id: string
+          merchant_id: string
+          mode?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["sync_run_status"]
+          summary_json?: Json | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          integration_id?: string
+          merchant_id?: string
+          mode?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["sync_run_status"]
+          summary_json?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "integration_sync_runs_integration_id_fkey"
+            columns: ["integration_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_integrations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "integration_sync_runs_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       interest_accruals: {
         Row: {
           accrual_date: string
@@ -8589,6 +8732,147 @@ export type Database = {
         }
         Relationships: []
       }
+      merchant_integrations: {
+        Row: {
+          base_url: string | null
+          created_at: string
+          credentials_json: Json | null
+          id: string
+          last_sync_at: string | null
+          merchant_id: string
+          settings_json: Json | null
+          status: Database["public"]["Enums"]["integration_status"]
+          type: Database["public"]["Enums"]["integration_type"]
+          updated_at: string
+          webhook_secret: string | null
+        }
+        Insert: {
+          base_url?: string | null
+          created_at?: string
+          credentials_json?: Json | null
+          id?: string
+          last_sync_at?: string | null
+          merchant_id: string
+          settings_json?: Json | null
+          status?: Database["public"]["Enums"]["integration_status"]
+          type?: Database["public"]["Enums"]["integration_type"]
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Update: {
+          base_url?: string | null
+          created_at?: string
+          credentials_json?: Json | null
+          id?: string
+          last_sync_at?: string | null
+          merchant_id?: string
+          settings_json?: Json | null
+          status?: Database["public"]["Enums"]["integration_status"]
+          type?: Database["public"]["Enums"]["integration_type"]
+          updated_at?: string
+          webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_integrations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_locations: {
+        Row: {
+          address_json: Json | null
+          city: string | null
+          country: string
+          created_at: string
+          currency_default: string
+          id: string
+          is_active: boolean
+          merchant_id: string
+          name: string
+          timezone: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_json?: Json | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          currency_default?: string
+          id?: string
+          is_active?: boolean
+          merchant_id: string
+          name: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_json?: Json | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          currency_default?: string
+          id?: string
+          is_active?: boolean
+          merchant_id?: string
+          name?: string
+          timezone?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_locations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      merchant_pos_staff: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: string
+          pin_hash: string | null
+          role: Database["public"]["Enums"]["pos_staff_role"]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: string
+          pin_hash?: string | null
+          role?: Database["public"]["Enums"]["pos_staff_role"]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          pin_hash?: string | null
+          role?: Database["public"]["Enums"]["pos_staff_role"]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_pos_staff_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_staff_roles: {
         Row: {
           created_at: string | null
@@ -9771,6 +10055,684 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tpp_registrations"
             referencedColumns: ["client_id"]
+          },
+        ]
+      }
+      pos_categories: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: string
+          name: string
+          parent_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: string
+          name: string
+          parent_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          name?: string
+          parent_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_categories_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "pos_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_inventory_items: {
+        Row: {
+          id: string
+          location_id: string
+          merchant_id: string
+          quantity_on_hand: number
+          reorder_level: number | null
+          updated_at: string
+          variant_id: string
+        }
+        Insert: {
+          id?: string
+          location_id: string
+          merchant_id: string
+          quantity_on_hand?: number
+          reorder_level?: number | null
+          updated_at?: string
+          variant_id: string
+        }
+        Update: {
+          id?: string
+          location_id?: string
+          merchant_id?: string
+          quantity_on_hand?: number
+          reorder_level?: number | null
+          updated_at?: string
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_inventory_items_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_inventory_items_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_inventory_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "pos_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_inventory_movements: {
+        Row: {
+          created_at: string
+          id: string
+          location_id: string
+          merchant_id: string
+          quantity_delta: number
+          reason: string | null
+          reference_id: string | null
+          reference_type: string | null
+          type: Database["public"]["Enums"]["inventory_movement_type"]
+          variant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          location_id: string
+          merchant_id: string
+          quantity_delta: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          type: Database["public"]["Enums"]["inventory_movement_type"]
+          variant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          location_id?: string
+          merchant_id?: string
+          quantity_delta?: number
+          reason?: string | null
+          reference_id?: string | null
+          reference_type?: string | null
+          type?: Database["public"]["Enums"]["inventory_movement_type"]
+          variant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_inventory_movements_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_inventory_movements_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_inventory_movements_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "pos_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_order_items: {
+        Row: {
+          created_at: string
+          discount_amount: number
+          id: string
+          line_total: number
+          merchant_id: string
+          name_snapshot: string
+          order_id: string
+          product_id: string | null
+          quantity: number
+          sku_snapshot: string | null
+          tax_amount: number
+          unit_price: number
+          variant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          line_total?: number
+          merchant_id: string
+          name_snapshot: string
+          order_id: string
+          product_id?: string | null
+          quantity?: number
+          sku_snapshot?: string | null
+          tax_amount?: number
+          unit_price?: number
+          variant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          discount_amount?: number
+          id?: string
+          line_total?: number
+          merchant_id?: string
+          name_snapshot?: string
+          order_id?: string
+          product_id?: string | null
+          quantity?: number
+          sku_snapshot?: string | null
+          tax_amount?: number
+          unit_price?: number
+          variant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_order_items_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pos_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_items_variant_id_fkey"
+            columns: ["variant_id"]
+            isOneToOne: false
+            referencedRelation: "pos_product_variants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_order_payments: {
+        Row: {
+          amount: number
+          charge_id: string | null
+          created_at: string
+          currency: string
+          id: string
+          merchant_id: string
+          method: string | null
+          order_id: string
+          provider: string | null
+          provider_reference: string | null
+          status: Database["public"]["Enums"]["pos_payment_status"]
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          charge_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          merchant_id: string
+          method?: string | null
+          order_id: string
+          provider?: string | null
+          provider_reference?: string | null
+          status?: Database["public"]["Enums"]["pos_payment_status"]
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          charge_id?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          merchant_id?: string
+          method?: string | null
+          order_id?: string
+          provider?: string | null
+          provider_reference?: string | null
+          status?: Database["public"]["Enums"]["pos_payment_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_order_payments_charge_id_fkey"
+            columns: ["charge_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_charges"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_payments_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_order_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_order_status_history: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          note: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["pos_order_status"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id: string
+          status: Database["public"]["Enums"]["pos_order_status"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_order_status_history_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_orders: {
+        Row: {
+          channel: Database["public"]["Enums"]["pos_order_channel"]
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
+          discount_total: number
+          external_reference: string | null
+          id: string
+          location_id: string | null
+          merchant_id: string
+          metadata_json: Json | null
+          order_number: string
+          status: Database["public"]["Enums"]["pos_order_status"]
+          subtotal: number
+          tax_total: number
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          channel?: Database["public"]["Enums"]["pos_order_channel"]
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_total?: number
+          external_reference?: string | null
+          id?: string
+          location_id?: string | null
+          merchant_id: string
+          metadata_json?: Json | null
+          order_number?: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+          subtotal?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["pos_order_channel"]
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
+          discount_total?: number
+          external_reference?: string | null
+          id?: string
+          location_id?: string | null
+          merchant_id?: string
+          metadata_json?: Json | null
+          order_number?: string
+          status?: Database["public"]["Enums"]["pos_order_status"]
+          subtotal?: number
+          tax_total?: number
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_orders_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "merchant_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_orders_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_product_category_links: {
+        Row: {
+          category_id: string
+          product_id: string
+        }
+        Insert: {
+          category_id: string
+          product_id: string
+        }
+        Update: {
+          category_id?: string
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_product_category_links_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "pos_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_product_category_links_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pos_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_product_images: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_product_images_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pos_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_product_variants: {
+        Row: {
+          attributes_json: Json | null
+          barcode: string | null
+          compare_at_price: number | null
+          cost_price: number | null
+          created_at: string
+          id: string
+          merchant_id: string
+          name: string
+          price: number
+          product_id: string
+          sku: string | null
+          track_inventory: boolean
+          updated_at: string
+        }
+        Insert: {
+          attributes_json?: Json | null
+          barcode?: string | null
+          compare_at_price?: number | null
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          merchant_id: string
+          name?: string
+          price?: number
+          product_id: string
+          sku?: string | null
+          track_inventory?: boolean
+          updated_at?: string
+        }
+        Update: {
+          attributes_json?: Json | null
+          barcode?: string | null
+          compare_at_price?: number | null
+          cost_price?: number | null
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          name?: string
+          price?: number
+          product_id?: string
+          sku?: string | null
+          track_inventory?: boolean
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_product_variants_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_product_variants_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "pos_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_products: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          merchant_id: string
+          name: string
+          source: Database["public"]["Enums"]["pos_product_source"]
+          status: string
+          tax_class: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          merchant_id: string
+          name: string
+          source?: Database["public"]["Enums"]["pos_product_source"]
+          status?: string
+          tax_class?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          merchant_id?: string
+          name?: string
+          source?: Database["public"]["Enums"]["pos_product_source"]
+          status?: string
+          tax_class?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_products_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_return_items: {
+        Row: {
+          amount: number
+          id: string
+          order_item_id: string
+          quantity: number
+          restock: boolean
+          return_id: string
+        }
+        Insert: {
+          amount?: number
+          id?: string
+          order_item_id: string
+          quantity?: number
+          restock?: boolean
+          return_id: string
+        }
+        Update: {
+          amount?: number
+          id?: string
+          order_item_id?: string
+          quantity?: number
+          restock?: boolean
+          return_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_return_items_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "pos_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_return_items_return_id_fkey"
+            columns: ["return_id"]
+            isOneToOne: false
+            referencedRelation: "pos_returns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_returns: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: string
+          order_id: string
+          reason: string | null
+          refund_id: string | null
+          status: Database["public"]["Enums"]["pos_return_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: string
+          order_id: string
+          reason?: string | null
+          refund_id?: string | null
+          status?: Database["public"]["Enums"]["pos_return_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          order_id?: string
+          reason?: string | null
+          refund_id?: string | null
+          status?: Database["public"]["Enums"]["pos_return_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_returns_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_returns_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_returns_refund_id_fkey"
+            columns: ["refund_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_refunds"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -14643,8 +15605,16 @@ export type Database = {
         Args: { _institution_id: string; _user_id: string }
         Returns: boolean
       }
+      is_merchant_owner: {
+        Args: { _merchant_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_njangi_group_member: {
         Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_pos_staff: {
+        Args: { _merchant_id: string; _user_id: string }
         Returns: boolean
       }
       is_travel_service_owner: {
@@ -14683,6 +15653,19 @@ export type Database = {
         Returns: string
       }
       make_user_admin: { Args: { _user_id: string }; Returns: undefined }
+      pos_adjust_inventory: {
+        Args: {
+          _location_id: string
+          _merchant_id: string
+          _quantity_delta: number
+          _reason?: string
+          _reference_id?: string
+          _reference_type?: string
+          _type: Database["public"]["Enums"]["inventory_movement_type"]
+          _variant_id: string
+        }
+        Returns: Json
+      }
       record_transaction_fee: {
         Args: {
           _institution_id: string
@@ -14783,8 +15766,19 @@ export type Database = {
         | "SAVINGS_WITHDRAWAL"
         | "SAVINGS_BALANCE_STABLE"
       credit_score_band: "A" | "B" | "C" | "D" | "F"
+      inbox_event_status: "received" | "processed" | "ignored" | "failed"
       institution_status: "pending" | "approved" | "rejected" | "suspended"
       institution_type: "bank" | "credit_union" | "fintech" | "developer"
+      integration_entity_type: "product" | "variant" | "order" | "customer"
+      integration_status: "connected" | "disconnected" | "error"
+      integration_type: "woocommerce"
+      inventory_movement_type:
+        | "sale"
+        | "refund"
+        | "manual_adjust"
+        | "sync_adjust"
+        | "transfer_in"
+        | "transfer_out"
       loan_status:
         | "draft"
         | "submitted"
@@ -14837,6 +15831,28 @@ export type Database = {
       piggybank_payment_status: "pending" | "paid" | "missed" | "late"
       piggybank_plan_status: "active" | "paused" | "completed" | "cancelled"
       piggybank_plan_type: "savings" | "rent"
+      pos_order_channel: "pos" | "woocommerce" | "api"
+      pos_order_status:
+        | "draft"
+        | "pending_payment"
+        | "paid"
+        | "processing"
+        | "completed"
+        | "cancelled"
+        | "refunded"
+        | "partially_refunded"
+        | "failed"
+      pos_payment_status:
+        | "initiated"
+        | "pending"
+        | "succeeded"
+        | "failed"
+        | "cancelled"
+        | "refunded"
+        | "partial_refund"
+      pos_product_source: "manual" | "woocommerce"
+      pos_return_status: "requested" | "approved" | "rejected" | "processed"
+      pos_staff_role: "merchant_admin" | "merchant_manager" | "cashier"
       repayment_frequency:
         | "daily"
         | "weekly"
@@ -14857,6 +15873,7 @@ export type Database = {
         | "monthly"
         | "yearly"
         | "all_time"
+      sync_run_status: "running" | "success" | "failed"
       template_category:
         | "user_auth"
         | "institution_management"
@@ -15034,8 +16051,20 @@ export const Constants = {
         "SAVINGS_BALANCE_STABLE",
       ],
       credit_score_band: ["A", "B", "C", "D", "F"],
+      inbox_event_status: ["received", "processed", "ignored", "failed"],
       institution_status: ["pending", "approved", "rejected", "suspended"],
       institution_type: ["bank", "credit_union", "fintech", "developer"],
+      integration_entity_type: ["product", "variant", "order", "customer"],
+      integration_status: ["connected", "disconnected", "error"],
+      integration_type: ["woocommerce"],
+      inventory_movement_type: [
+        "sale",
+        "refund",
+        "manual_adjust",
+        "sync_adjust",
+        "transfer_in",
+        "transfer_out",
+      ],
       loan_status: [
         "draft",
         "submitted",
@@ -15093,6 +16122,30 @@ export const Constants = {
       piggybank_payment_status: ["pending", "paid", "missed", "late"],
       piggybank_plan_status: ["active", "paused", "completed", "cancelled"],
       piggybank_plan_type: ["savings", "rent"],
+      pos_order_channel: ["pos", "woocommerce", "api"],
+      pos_order_status: [
+        "draft",
+        "pending_payment",
+        "paid",
+        "processing",
+        "completed",
+        "cancelled",
+        "refunded",
+        "partially_refunded",
+        "failed",
+      ],
+      pos_payment_status: [
+        "initiated",
+        "pending",
+        "succeeded",
+        "failed",
+        "cancelled",
+        "refunded",
+        "partial_refund",
+      ],
+      pos_product_source: ["manual", "woocommerce"],
+      pos_return_status: ["requested", "approved", "rejected", "processed"],
+      pos_staff_role: ["merchant_admin", "merchant_manager", "cashier"],
       repayment_frequency: [
         "daily",
         "weekly",
@@ -15116,6 +16169,7 @@ export const Constants = {
         "yearly",
         "all_time",
       ],
+      sync_run_status: ["running", "success", "failed"],
       template_category: [
         "user_auth",
         "institution_management",
