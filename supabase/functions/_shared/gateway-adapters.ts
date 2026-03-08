@@ -371,7 +371,7 @@ export async function createPayPalPayout(req: PayoutRequest): Promise<PayoutResu
 export async function getPayPalPayoutStatus(batchId: string): Promise<PayoutResult> {
   const token = await getPayPalAccessToken();
 
-  const res = await fetch(`https://api-m.paypal.com/v1/payments/payouts/${batchId}`, {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/payments/payouts/${batchId}`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
 
