@@ -100,13 +100,10 @@ serve(async (req) => {
         tx_ref: txRef,
       });
     } catch (payoutErr: any) {
-      // Reverse debit on provider failure
-      await supabase.from('account_balances').insert({
-        account_id, balance_type: 'InterimAvailable',
-        amount: totalDebit, currency: account.currency,
-        credit_debit_indicator: 'Credit',
-        balance_datetime: new Date().toISOString(),
-      });
+      // Reverse debit on provider failure — restore original balance
+      await supabase.from('account_balances')
+        .update({ amount: availableBalance, balance_datetime: new Date().toISOString() })
+        .eq('id', balanceRecord.id);
 
       await supabase.from('audit_logs').insert({
         action_type: 'gateway_withdraw_failed_reversed', entity_type: 'account', entity_id: account_id,
