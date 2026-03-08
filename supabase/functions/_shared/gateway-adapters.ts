@@ -349,7 +349,7 @@ export async function createPayPalPayout(req: PayoutRequest): Promise<PayoutResu
     }],
   };
 
-  const res = await fetch('https://api-m.paypal.com/v1/payments/payouts', {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/payments/payouts`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
