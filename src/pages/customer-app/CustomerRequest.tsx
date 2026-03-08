@@ -137,7 +137,7 @@ const CustomerRequest: React.FC = () => {
           <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col items-center gap-5">
             {/* QR Code */}
             <div className="rounded-3xl border-2 border-border bg-card p-6 shadow-sm">
-              <QRCodeSVG data={paymentData} size={220} />
+              <QRCodeSVG value={paymentData} size={220} />
             </div>
 
             {/* Request Details */}

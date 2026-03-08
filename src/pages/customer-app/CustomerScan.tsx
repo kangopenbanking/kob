@@ -361,7 +361,7 @@ const CustomerScan: React.FC = () => {
           >
             {/* QR Code Display */}
             <div className="rounded-3xl border-2 border-border bg-card p-6 shadow-sm">
-              <QRCodeSVG data={qrData} size={220} />
+              <QRCodeSVG value={qrData} size={220} />
             </div>
 
             <div className="text-center">
