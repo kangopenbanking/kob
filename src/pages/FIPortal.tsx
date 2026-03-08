@@ -41,6 +41,7 @@ export default function FIPortal() {
     activeAccounts: 0,
     apiCalls: 0,
   });
+  const [revenueTransactions, setRevenueTransactions] = useState<{ amount: number; created_at: string }[]>([]);
 
   useEffect(() => { checkAuthAndInstitution(); }, []);
 
