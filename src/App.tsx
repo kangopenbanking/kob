@@ -562,6 +562,7 @@ function App() {
               {/* Phase 2: New critical pages */}
               <Route path="disputes" element={<DisputeManagement />} />
               <Route path="reconciliation" element={<ReconciliationDashboard />} />
+              <Route path="business-app-management" element={<BusinessAppManagement />} />
               <Route path="payouts" element={<PayoutManagement />} />
               <Route path="funding" element={<FundingManagement />} />
               <Route path="linked-account-requests" element={<LinkedAccountRequests />} />
