@@ -25,6 +25,7 @@ import { toast } from "sonner";
 import { API_CONFIG } from "@/config/api";
 import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
 import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
+import { AdminStorefrontSlider } from "@/components/storefront/AdminStorefrontSlider";
 
 // ─── Types ───
 interface RewardsConfig {
