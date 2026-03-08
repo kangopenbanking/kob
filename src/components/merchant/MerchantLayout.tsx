@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { SessionGuard } from "@/components/auth/SessionGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Store } from "lucide-react";
