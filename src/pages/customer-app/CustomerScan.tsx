@@ -144,9 +144,16 @@ const CustomerScan: React.FC = () => {
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
     stopCamera();
-    if (data.type === 'kob_pay' && data.account) {
+    if (data.type === 'kob_pos_pay' && data.merchant_id) {
+      // POS merchant QR — navigate to payment confirmation
+      setScanResult({ account: data.merchant_id, amount: data.amount });
+      setPayAmount(data.amount ? String(data.amount) : '');
+      setMerchantQR(data);
+      toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
+    } else if (data.type === 'kob_pay' && data.account) {
       setScanResult({ account: data.account, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
+      setMerchantQR(null);
       toast.success('QR Code scanned successfully!');
     } else {
       toast.error('Invalid QR code format');
