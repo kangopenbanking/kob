@@ -308,7 +308,10 @@ export async function getPayPalAccessToken(): Promise<string> {
   const secret = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_SECRET') : undefined;
   if (!clientId || !secret) throw new Error('PayPal credentials not configured');
 
-  const res = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
+  const paypalEnv = typeof Deno !== "undefined" ? (Deno.env.get('PAYPAL_ENVIRONMENT') || 'production') : 'production';
+  const paypalBaseUrl = paypalEnv === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+
+  const res = await fetch(`${paypalBaseUrl}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${btoa(`${clientId}:${secret}`)}`,

@@ -106,8 +106,8 @@ serve(async (req) => {
           }).then(() => {}).catch(() => {});
         }
 
-        // ─── ATOMIC: Credit merchant wallet on successful charge ───
-        if (newStatus === 'successful' && charge.merchant_id) {
+        // ─── ATOMIC: Credit merchant wallet on successful charge (C5 fix: skip fund_account) ───
+        if (newStatus === 'successful' && charge.merchant_id && !charge.metadata?.fund_account) {
           await supabase.rpc('atomic_charge_wallet_credit', {
             _charge_id: charge.id,
             _new_status: newStatus,

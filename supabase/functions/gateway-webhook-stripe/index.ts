@@ -20,26 +20,33 @@ serve(async (req) => {
     const rawBody = await req.text();
     const signature = req.headers.get('stripe-signature');
 
-    // Stripe signature verification — ENFORCED
+    // Stripe signature verification — MANDATORY (C6 fix)
     const STRIPE_WEBHOOK_SECRET = Deno.env.get('STRIPE_WEBSECRET_KEY');
-    if (STRIPE_WEBHOOK_SECRET && signature) {
-      const sigParts = signature.split(',').reduce((acc: Record<string, string>, part: string) => {
-        const [key, val] = part.split('=');
-        acc[key] = val;
-        return acc;
-      }, {});
+    if (!STRIPE_WEBHOOK_SECRET) {
+      console.error('STRIPE_WEBSECRET_KEY not configured — rejecting webhook');
+      return new Response(JSON.stringify({ error: 'webhook_not_configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!signature) {
+      console.error('Missing stripe-signature header — rejecting');
+      return new Response(JSON.stringify({ error: 'missing_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
-      const timestamp = sigParts['t'];
-      const signedPayload = `${timestamp}.${rawBody}`;
-      const encoder = new TextEncoder();
-      const key = await crypto.subtle.importKey('raw', encoder.encode(STRIPE_WEBHOOK_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-      const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
-      const expectedSig = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const sigParts = signature.split(',').reduce((acc: Record<string, string>, part: string) => {
+      const [key, val] = part.split('=');
+      acc[key] = val;
+      return acc;
+    }, {});
 
-      if (sigParts['v1'] !== expectedSig) {
-        console.error('Stripe webhook signature verification FAILED — rejecting');
-        return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
+    const timestamp = sigParts['t'];
+    const signedPayload = `${timestamp}.${rawBody}`;
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey('raw', encoder.encode(STRIPE_WEBHOOK_SECRET), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', key, encoder.encode(signedPayload));
+    const expectedSig = Array.from(new Uint8Array(sig)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (sigParts['v1'] !== expectedSig) {
+      console.error('Stripe webhook signature verification FAILED — rejecting');
+      return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const event = JSON.parse(rawBody);
