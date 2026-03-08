@@ -42,6 +42,7 @@ export interface PayoutResult {
 export interface RefundRequest {
   provider_ref: string;
   amount: number;
+  currency?: string;
   reason?: string;
 }
 
