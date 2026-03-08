@@ -155,10 +155,8 @@ export default function MerchantStorefront() {
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-2xl p-6 sm:p-8"
-        style={{ background: 'linear-gradient(135deg, hsl(267 84% 38%), hsl(267 84% 52%), hsl(290 70% 50%))' }}
+        className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-[hsl(var(--fi-purple))]"
       >
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 20% 80%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
