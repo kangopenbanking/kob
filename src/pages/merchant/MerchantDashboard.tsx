@@ -11,7 +11,7 @@ import {
   Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2,
   Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet,
   Link2, FileText, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
-  Clock, Zap, Users, Globe,
+  Clock, Zap, Users, Globe, Eye, EyeOff,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Area, AreaChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
