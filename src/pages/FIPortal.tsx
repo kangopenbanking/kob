@@ -1,5 +1,6 @@
 import { FacilitatedPaymentsCard } from "@/components/institution/FacilitatedPaymentsCard";
 import { CreditApiIntegrationWidget } from "@/components/credit-api/CreditApiIntegrationWidget";
+import { FIPortalRevenueChart } from "@/components/institution/FIPortalRevenueChart";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";

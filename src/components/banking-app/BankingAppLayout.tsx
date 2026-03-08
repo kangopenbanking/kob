@@ -27,6 +27,7 @@ const BankingAppInner: React.FC = () => {
       className="mx-auto flex min-h-screen max-w-lg flex-col bg-background pwa-large-text"
       style={{ '--pwa-font-multiplier': tenant.fontSizeMultiplier } as React.CSSProperties}
     >
+      <OfflineIndicator />
       <PullToRefresh onRefresh={handleRefresh}>
         <div className="flex-1 pb-16">
           <Outlet />
