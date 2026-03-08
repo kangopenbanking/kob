@@ -15907,7 +15907,7 @@ export type Database = {
           _transaction_ref: string
           _transaction_type: string
         }
-        Returns: string
+        Returns: undefined
       }
       trigger_webhooks: {
         Args: { _client_id?: string; _event_data: Json; _event_type: string }
