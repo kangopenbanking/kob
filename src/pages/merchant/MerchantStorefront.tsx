@@ -992,6 +992,61 @@ export default function MerchantStorefront() {
             </div>
           </motion.div>
         </TabsContent>
+
+        {/* ── Shipping Management ── */}
+        <TabsContent value="shipping">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2 space-y-5">
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Confirm Shipping
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Notify customers that their order has been shipped. A shipping confirmation email will be sent automatically.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ShippingForm storeName={storeName} currency={currency} merchantId={merchantId} />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-foreground">Shipping Guide</p>
+                    </div>
+                    <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+                      <p>• Enter the order ID and the customer will receive an email and in-app notification.</p>
+                      <p>• Add a tracking number and carrier so customers can follow their package.</p>
+                      <p>• Provide an estimated delivery date to manage expectations.</p>
+                      <p>• Shipping confirmations build trust and reduce "where is my order?" inquiries.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <p className="text-xs font-semibold text-foreground mb-3">Supported Carriers</p>
+                    <div className="space-y-2">
+                      {['DHL Express', 'EMS Cameroon', 'CamPost', 'FedEx', 'Aramex', 'Custom / Local'].map(c => (
+                        <div key={c} className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Truck className="w-3 h-3 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                          {c}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        </TabsContent>
       </Tabs>
     </div>
   );
