@@ -1,82 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, QrCode, Camera, Share2, Download } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ArrowLeft, QrCode, Camera, Share2 } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-// Simple QR code generator using SVG
-function generateQRMatrix(data: string): boolean[][] {
-  // Simple QR-like encoding for display purposes
-  const size = 21;
-  const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-  
-  // Finder patterns (top-left, top-right, bottom-left)
-  const addFinder = (row: number, col: number) => {
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        const isOuter = r === 0 || r === 6 || c === 0 || c === 6;
-        const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-        matrix[row + r][col + c] = isOuter || isInner;
-      }
-    }
-  };
-  addFinder(0, 0);
-  addFinder(0, size - 7);
-  addFinder(size - 7, 0);
-
-  // Timing patterns
-  for (let i = 8; i < size - 8; i++) {
-    matrix[6][i] = i % 2 === 0;
-    matrix[i][6] = i % 2 === 0;
-  }
-
-  // Data encoding (simplified hash-based)
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    hash = ((hash << 5) - hash + data.charCodeAt(i)) | 0;
-  }
-  
-  for (let r = 8; r < size; r++) {
-    for (let c = 8; c < size; c++) {
-      if (r < size - 7 || c < size - 7) {
-        const bit = ((hash >> ((r * size + c) % 31)) & 1) === 1;
-        const alt = (r + c) % 3 === 0;
-        matrix[r][c] = bit !== alt;
-      }
-    }
-  }
-  
-  return matrix;
-}
-
-function QRCodeSVG({ data, size = 200 }: { data: string; size?: number }) {
-  const matrix = generateQRMatrix(data);
-  const cellSize = size / matrix.length;
-
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-xl">
-      <rect width={size} height={size} fill="white" rx={8} />
-      {matrix.map((row, r) =>
-        row.map((cell, c) =>
-          cell ? (
-            <rect
-              key={`${r}-${c}`}
-              x={c * cellSize}
-              y={r * cellSize}
-              width={cellSize}
-              height={cellSize}
-              fill="#1a1a2e"
-              rx={cellSize * 0.15}
-            />
-          ) : null
-        )
-      )}
-    </svg>
-  );
-}
+import { QRCodeSVG } from 'qrcode.react';
 
 const BankQRPay: React.FC = () => {
   const navigate = useNavigate();
@@ -151,7 +81,7 @@ const BankQRPay: React.FC = () => {
               <QrCode className="h-12 w-12 animate-pulse text-muted-foreground/40" strokeWidth={1} />
             </div>
           ) : accountId ? (
-            <QRCodeSVG data={qrData} size={200} />
+            <QRCodeSVG value={qrData} size={200} />
           ) : (
             <div className="flex h-[200px] w-[200px] items-center justify-center text-center">
               <p className="text-xs text-muted-foreground">No account found</p>

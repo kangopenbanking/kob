@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CreditCard, Plus, Snowflake, ArrowUpCircle, Eye, EyeOff, Settings, Loader2, PlayCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,6 +148,7 @@ const BankCards: React.FC = () => {
 
               <motion.button
                 whileTap={{ scale: 0.95 }}
+                onClick={() => toast.info('Card management settings coming soon')}
                 className="flex flex-col items-center gap-2 rounded-2xl bg-[hsl(var(--bank-amber))] p-4"
               >
                 <Settings className="h-6 w-6 text-[hsl(var(--bank-amber-fg))]" strokeWidth={1.5} />
