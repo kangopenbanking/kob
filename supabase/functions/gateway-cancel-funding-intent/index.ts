@@ -22,7 +22,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { id, account_id } = body;
+    const { id } = body;
 
     if (!id) return new Response(JSON.stringify({ error: 'missing_id' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
