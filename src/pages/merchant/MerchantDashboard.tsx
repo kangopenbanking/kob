@@ -54,9 +54,12 @@ export default function MerchantDashboard() {
       setMerchant(m);
 
       if (m) {
-        const [chargesRes, allChRes, apiKeysRes, webhooksRes, settlementRes, walletsRes, disputesRes] = await Promise.all([
+        const [chargesRes, successCountRes, totalCountRes, failedCountRes, pendingCountRes, apiKeysRes, webhooksRes, settlementRes, walletsRes, disputesRes] = await Promise.all([
           supabase.from("gateway_charges").select("*").eq("merchant_id", m.id).order("created_at", { ascending: false }).limit(10),
-          supabase.from("gateway_charges").select("amount, status, currency, created_at").eq("merchant_id", m.id),
+          supabase.from("gateway_charges").select("amount", { count: "exact" }).eq("merchant_id", m.id).eq("status", "successful"),
+          supabase.from("gateway_charges").select("id", { count: "exact", head: true }).eq("merchant_id", m.id),
+          supabase.from("gateway_charges").select("id", { count: "exact", head: true }).eq("merchant_id", m.id).eq("status", "failed"),
+          supabase.from("gateway_charges").select("id", { count: "exact", head: true }).eq("merchant_id", m.id).eq("status", "pending"),
           supabase.from("gateway_merchant_api_keys").select("id").eq("merchant_id", m.id).limit(1),
           supabase.from("gateway_merchant_webhooks").select("id").eq("merchant_id", m.id).limit(1),
           supabase.from("gateway_merchant_settlement_accounts").select("id").eq("merchant_id", m.id).limit(1),
