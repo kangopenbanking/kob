@@ -1,5 +1,17 @@
 # POS Commerce Layer Changelog
 
+## [1.6.0] — 2026-03-08 — Inventory Sync Jobs + Conflict Handling
+- **Endpoints**: `pos-inventory-sync` (POST)
+- **Features**: Background inventory sync from KOB→WooCommerce, aggregates net stock deltas per variant, supports woo_source_of_truth and kob_source_of_truth strategies, records sync runs with full audit trail
+- **Tests**: E2E edge function tests for all POS endpoints (auth guards, idempotency, webhook ingestion)
+- **Breaking changes**: NONE
+
+## [1.5.0] — 2026-03-08 — OpenAPI + Postman + Frontend Docs
+- **Tags added**: POS, Catalog, Inventory, POS Payments, POS Refunds/Returns, WooCommerce Integration
+- **Frontend**: Developer portal "Merchants → POS" guide with full API reference (10 sections, code samples, XAF examples)
+- **Navigation**: E-Commerce sidebar section renamed to "E-Commerce & POS" with Merchants → POS link
+- **Breaking changes**: NONE
+
 ## [1.4.0] — 2026-03-08 — Refunds/Returns + Restock + Woo Sync
 - **Endpoints**: `pos-refunds` (POST/GET)
 - **Features**: Full/partial refund with gateway refund integration, automatic inventory restock, WooCommerce refund sync for Woo-channel orders
