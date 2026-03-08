@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
       await supabase
         .from('access_tokens')
         .insert({
-          token_hash: access_token,
+          token_hash: rtAccessHash,
           user_id: refreshData.user_id,
           client_id: client_id,
           scope: refreshData.scope,
