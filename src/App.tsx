@@ -149,6 +149,8 @@ import FIPortal from "./pages/FIPortal";
 import InstitutionTransactions from "./pages/institution/InstitutionTransactions";
 import InstitutionAnalytics from "./pages/institution/InstitutionAnalytics";
 import InstitutionApiClients from "./pages/institution/InstitutionApiClients";
+import InstitutionApiKeys from "./pages/institution/InstitutionApiKeys";
+import InstitutionApiDocs from "./pages/institution/InstitutionApiDocs";
 import WooCommerceDashboard from "./pages/institution/WooCommerceDashboard";
 import InstitutionSettlement from "./pages/institution/InstitutionSettlement";
 import InstitutionPayments from "./pages/institution/InstitutionPayments";
