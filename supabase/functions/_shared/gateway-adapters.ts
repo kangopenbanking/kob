@@ -303,6 +303,12 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
 
 // ─── PayPal Adapter ───
 
+// M4 FIX: PayPal sandbox/production toggle
+function getPayPalBaseUrl(): string {
+  const paypalEnv = typeof Deno !== "undefined" ? (Deno.env.get('PAYPAL_ENVIRONMENT') || 'production') : 'production';
+  return paypalEnv === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+}
+
 export async function getPayPalAccessToken(): Promise<string> {
   const clientId = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_ID') : undefined;
   const secret = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_SECRET') : undefined;
