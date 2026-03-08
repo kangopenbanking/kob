@@ -5,7 +5,7 @@ import {
   Download, Printer, Sparkles, Shield, Zap, Users, BarChart3,
   ArrowRight, CreditCard, Smartphone, Wallet, RefreshCw, Copy, Check,
   BookOpen, ChevronRight, Circle, Plus, X, Package, Settings, HelpCircle,
-  ListChecks, Layers, DollarSign, Monitor
+  ListChecks, Layers, DollarSign, Monitor, Truck, Hash, Clock, MapPinIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
