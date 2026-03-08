@@ -435,9 +435,9 @@ const CustomerHome: React.FC = () => {
             {/* Credit Score Card with Doughnut */}
             {visibleHealth.find(i => i.featureKey === 'credit_score') && (() => {
               const item = visibleHealth.find(i => i.featureKey === 'credit_score')!;
-              const scoreVal = 720;
+              const scoreVal = creditData?.score ?? 0;
               const maxVal = 850;
-              const pct = scoreVal / maxVal;
+              const pct = maxVal > 0 ? scoreVal / maxVal : 0;
               const r = 40;
               const circ = 2 * Math.PI * r;
               const offset = circ * (1 - pct);
@@ -459,7 +459,7 @@ const CustomerHome: React.FC = () => {
                         transition={{ duration: 1.5, ease: 'easeOut' }}
                       />
                     </svg>
-                    <span className="absolute text-lg font-black text-[hsl(150,40%,35%)]">{scoreVal}</span>
+                    <span className="absolute text-lg font-black text-[hsl(150,40%,35%)]">{scoreVal || '—'}</span>
                   </div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(150,40%,35%)]">{item.label}</p>
                   <span className="rounded-full bg-[hsl(150,40%,35%)] px-4 py-1.5 text-[11px] font-bold text-white">Check Now</span>

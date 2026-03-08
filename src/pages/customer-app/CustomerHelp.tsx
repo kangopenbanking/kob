@@ -18,9 +18,9 @@ const faqs = [
 ];
 
 const contactOptions = [
-  { icon: <MessageCircle className="h-6 w-6" strokeWidth={1.5} />, label: 'Live Chat', desc: 'Chat with an agent', color: 'hsl(160,60%,88%)', action: () => toast.info('Live chat opening...') },
-  { icon: <Mail className="h-6 w-6" strokeWidth={1.5} />, label: 'Email', desc: 'support@kangopenbanking.com', color: 'hsl(210,80%,90%)', action: () => toast.info('Opening email client...') },
-  { icon: <Phone className="h-6 w-6" strokeWidth={1.5} />, label: 'Call Us', desc: '+237 233 XXX XXX', color: 'hsl(25,80%,90%)', action: () => toast.info('Initiating call...') },
+  { icon: <MessageCircle className="h-6 w-6" strokeWidth={1.5} />, label: 'Live Chat', desc: 'Chat with an agent', color: 'hsl(160,60%,88%)', action: () => toast.info('Live chat coming soon') },
+  { icon: <Mail className="h-6 w-6" strokeWidth={1.5} />, label: 'Email', desc: 'support@kangopenbanking.com', color: 'hsl(210,80%,90%)', action: () => { window.location.href = 'mailto:support@kangopenbanking.com'; } },
+  { icon: <Phone className="h-6 w-6" strokeWidth={1.5} />, label: 'Call Us', desc: '+237 233 432 100', color: 'hsl(25,80%,90%)', action: () => { window.location.href = 'tel:+237233432100'; } },
 ];
 
 const quickLinks = [

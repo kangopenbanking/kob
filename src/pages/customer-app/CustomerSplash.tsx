@@ -56,7 +56,8 @@ const CustomerSplashInner: React.FC = () => {
         .select('linked_account_type')
         .eq('id', session.user.id)
         .maybeSingle();
-      if (profile && (profile as any).linked_account_type) {
+      const lat = (profile as any)?.linked_account_type;
+      if (lat && lat !== 'none') {
         navigate('/app/home', { replace: true });
       } else {
         navigate('/app/onboarding', { replace: true });
