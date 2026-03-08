@@ -2,10 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createFlutterwavePayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, idempotency-key',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -42,16 +39,17 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'account_not_found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Check balance
-    const { data: balances } = await supabase.from('account_balances')
-      .select('amount, credit_debit_indicator')
+    // Check balance — use platform standard: read latest Credit ClosingAvailable/InterimAvailable
+    const { data: balanceRecord } = await supabase.from('account_balances')
+      .select('*')
       .eq('account_id', account_id)
+      .eq('credit_debit_indicator', 'Credit')
+      .in('balance_type', ['ClosingAvailable', 'InterimAvailable'])
       .order('balance_datetime', { ascending: false })
-      .limit(10);
+      .limit(1)
+      .maybeSingle();
 
-    const availableBalance = (balances || []).reduce((sum: number, b: any) => {
-      return b.credit_debit_indicator === 'Credit' ? sum + b.amount : sum - b.amount;
-    }, 0);
+    const availableBalance = balanceRecord?.amount || 0;
 
     // Fee calculation
     const { fee, net } = await calculateGatewayFee(amount, channel, supabase);
@@ -73,13 +71,10 @@ serve(async (req) => {
 
     const txRef = `withdraw_${account_id.substring(0, 8)}_${Date.now()}`;
 
-    // Debit user's account immediately (will reverse if payout fails)
-    await supabase.from('account_balances').insert({
-      account_id, balance_type: 'InterimAvailable',
-      amount: totalDebit, currency: account.currency,
-      credit_debit_indicator: 'Debit',
-      balance_datetime: new Date().toISOString(),
-    });
+    // Debit user's account immediately by updating balance row (platform standard)
+    await supabase.from('account_balances')
+      .update({ amount: availableBalance - totalDebit, balance_datetime: new Date().toISOString() })
+      .eq('id', balanceRecord.id);
 
     // Record debit transaction
     await supabase.from('transactions').insert({
@@ -105,13 +100,10 @@ serve(async (req) => {
         tx_ref: txRef,
       });
     } catch (payoutErr: any) {
-      // Reverse debit on provider failure
-      await supabase.from('account_balances').insert({
-        account_id, balance_type: 'InterimAvailable',
-        amount: totalDebit, currency: account.currency,
-        credit_debit_indicator: 'Credit',
-        balance_datetime: new Date().toISOString(),
-      });
+      // Reverse debit on provider failure — restore original balance
+      await supabase.from('account_balances')
+        .update({ amount: availableBalance, balance_datetime: new Date().toISOString() })
+        .eq('id', balanceRecord.id);
 
       await supabase.from('audit_logs').insert({
         action_type: 'gateway_withdraw_failed_reversed', entity_type: 'account', entity_id: account_id,
