@@ -570,6 +570,7 @@ function App() {
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
               <Route path="marketplace" element={<AdminMarketplace />} />
+              <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
