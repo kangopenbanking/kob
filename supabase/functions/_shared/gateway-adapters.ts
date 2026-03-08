@@ -396,7 +396,7 @@ export async function verifyPayPalWebhookSignature(headers: Record<string, strin
     webhook_event: JSON.parse(body),
   };
 
-  const res = await fetch('https://api-m.paypal.com/v1/notifications/verify-webhook-signature', {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/notifications/verify-webhook-signature`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
