@@ -49,10 +49,18 @@ const countries = [
   { flag: "🇸🇳", name: "Senegal", currency: "XOF (FCFA)" },
 ];
 
+const ENTERPRISE_FEATURES = [
+  { icon: Image, title: "Custom Branding", description: "Fully branded receipts, customisable colours, fonts, and storefront theming that reflects your business identity." },
+  { icon: Settings, title: "API Access", description: "Programmatic access to your POS data, orders, and inventory. Build custom integrations and automate workflows." },
+  { icon: MapPin, title: "Multi-location Inventory", description: "Manage stock across multiple physical locations. Per-location tracking, transfers, and consolidated reporting." },
+  { icon: Users, title: "Dedicated Account Manager", description: "A personal point of contact for onboarding, strategy, and priority support — assigned within 24 hours." },
+  { icon: Shield, title: "SLA Guarantee", description: "99.9% uptime, <2hr support response, <4hr incident resolution. Service credits applied automatically." },
+];
+
 const pricingPlans = [
-  { name: "Starter", price: "Free", period: "", features: ["Basic store listing", "QR code payments", "Up to 50 products", "Email support"], highlight: false },
-  { name: "Professional", price: "5,000 XAF", period: "/month", features: ["Priority marketplace listing", "Unlimited products", "Sales analytics", "Multi-cashier support", "WooCommerce sync", "Priority support"], highlight: true },
-  { name: "Enterprise", price: "15,000 XAF", period: "/month", features: ["Everything in Professional", "Custom branding", "API access", "Multi-location inventory", "Dedicated account manager", "SLA guarantee"], highlight: false },
+  { name: "Starter", price: "Free", period: "", features: ["Basic store listing", "QR code payments", "Up to 50 products", "Email support"], highlight: false, tier: 'standard' },
+  { name: "Professional", price: "5,000 XAF", period: "/month", features: ["Priority marketplace listing", "Unlimited products", "Sales analytics", "Multi-cashier support", "WooCommerce sync", "Priority support"], highlight: true, tier: 'standard' },
+  { name: "Enterprise", price: "15,000 XAF", period: "/month", features: ["Everything in Professional", "Custom branding", "API access", "Multi-location inventory", "Dedicated account manager", "SLA guarantee"], highlight: false, tier: 'enterprise' },
 ];
 
 export default function KobPOS() {

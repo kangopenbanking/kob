@@ -1061,6 +1061,17 @@ export default function MerchantStorefront() {
         <TabsContent value="demo">
           <DemoStoreTab merchantId={merchantId} onDataChanged={loadData} />
         </TabsContent>
+
+        {/* ── Enterprise ── */}
+        <TabsContent value="enterprise">
+          <EnterpriseFeaturesTab
+            isEnterprise={((subscription as any)?.pos_subscription_plans?.tier === 'enterprise') || ((subscription as any)?.pos_subscription_plans?.name || '').toLowerCase().includes('enterprise')}
+            merchantId={merchantId}
+            profile={profile}
+            onUpgrade={() => setActiveTab('subscription')}
+            onProfileUpdate={loadData}
+          />
+        </TabsContent>
       </Tabs>
     </div>
   );
