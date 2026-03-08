@@ -82,8 +82,11 @@ const CustomerAuth: React.FC = () => {
       .select('linked_account_type')
       .eq('id', id)
       .maybeSingle();
-    if (profile && (profile as any).linked_account_type) {
+    const lat = (profile as any)?.linked_account_type;
+    if (lat && lat !== 'none') {
       navigate('/app/home', { replace: true });
+    } else if (lat === 'none') {
+      navigate('/app/onboarding', { replace: true });
     } else {
       navigate('/app/register', { replace: true });
     }

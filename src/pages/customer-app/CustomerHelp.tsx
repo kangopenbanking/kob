@@ -25,9 +25,9 @@ const contactOptions = [
 ];
 
 const quickLinks = [
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service' },
-  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy' },
-  { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum' },
+  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Terms of Service', path: '/app/settings' },
+  { icon: <FileText className="h-4 w-4" strokeWidth={1.5} />, label: 'Privacy Policy', path: '/app/settings' },
+  { icon: <Users className="h-4 w-4" strokeWidth={1.5} />, label: 'Community Forum', path: null },
 ];
 
 const CustomerHelp: React.FC = () => {
