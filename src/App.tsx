@@ -403,6 +403,14 @@ import InstitutionFundAccount from "./pages/institution/InstitutionFundAccount";
 import CustomerStores from "./pages/customer-app/CustomerStores";
 import CustomerStoreDetail from "./pages/customer-app/CustomerStoreDetail";
 import CustomerCart from "./pages/customer-app/CustomerCart";
+
+// Phase 3 — Business App
+import { BusinessAppLayout } from "./components/business-app/BusinessAppLayout";
+import BusinessSplash from "./pages/business-app/BusinessSplash";
+import BusinessAuth from "./pages/business-app/BusinessAuth";
+import BusinessHome from "./pages/business-app/BusinessHome";
+import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
