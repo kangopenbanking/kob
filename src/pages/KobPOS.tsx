@@ -342,12 +342,22 @@ export default function KobPOS() {
                     </CardHeader>
                     <CardContent className="pt-4">
                       <div className="space-y-3">
-                        {plan.features.map((f, j) => (
-                          <div key={j} className="flex items-center gap-3">
-                            <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] flex-shrink-0" strokeWidth={1.5} />
-                            <span className="text-sm text-foreground">{f}</span>
-                          </div>
-                        ))}
+                        {plan.features.map((f, j) => {
+                          const isEnterpriseLocked = plan.tier !== 'enterprise' && ['Custom branding', 'API access', 'Multi-location inventory', 'Dedicated account manager', 'SLA guarantee'].some(ef => f.toLowerCase().includes(ef.toLowerCase()));
+                          return (
+                            <div key={j} className="flex items-center gap-3">
+                              {isEnterpriseLocked ? (
+                                <Lock className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" strokeWidth={1.5} />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] flex-shrink-0" strokeWidth={1.5} />
+                              )}
+                              <span className={`text-sm ${isEnterpriseLocked ? 'text-muted-foreground/50' : 'text-foreground'}`}>{f}</span>
+                              {plan.tier === 'enterprise' && ['Custom branding', 'API access', 'Multi-location inventory', 'Dedicated account manager', 'SLA guarantee'].some(ef => f.toLowerCase().includes(ef.toLowerCase())) && (
+                                <Badge className="bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-0 text-[9px] px-1.5 py-0">Enterprise</Badge>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                       <Button
                         className={`w-full mt-6 rounded-xl ${plan.highlight ? 'bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white' : ''}`}
