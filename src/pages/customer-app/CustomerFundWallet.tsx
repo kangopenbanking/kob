@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Building2, Smartphone, Wallet, CreditCard, CheckCircle2, Loader2, ArrowDownLeft, Shield, Globe, Search, ChevronRight, AlertCircle, LinkIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -12,6 +12,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useEnsureWalletAccount } from '@/hooks/useEnsureWalletAccount';
 import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { FundingResult } from '@/components/funding/FundingResult';
+import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { cn } from '@/lib/utils';
 
 const quickAmounts = [5000, 10000, 25000, 50000, 100000];
