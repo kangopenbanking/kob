@@ -193,8 +193,7 @@ export default function MerchantStorefront() {
           </div>
           <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
             <motion.div
-              className="h-full rounded-full"
-              style={{ background: 'linear-gradient(90deg, hsl(142 76% 50%), hsl(142 76% 65%))' }}
+              className="h-full rounded-full bg-secondary"
               initial={{ width: 0 }}
               animate={{ width: `${completionPct}%` }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
