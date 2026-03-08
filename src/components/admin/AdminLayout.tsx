@@ -20,6 +20,7 @@ import {
 import { Breadcrumbs } from "@/components/Breadcrumbs";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { adminNavigation } from "@/components/admin/admin-navigation-config";
+import { AdminCommandPalette } from "@/components/admin/AdminCommandPalette";
 import { Badge } from "@/components/ui/badge";
 
 interface AdminLayoutProps {
@@ -84,6 +85,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
               <Breadcrumbs />
             </div>
             <div className="flex items-center gap-2">
+              <AdminCommandPalette />
               <NotificationCenter />
               <UserProfileMenu variant="admin" />
             </div>

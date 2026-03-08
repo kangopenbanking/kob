@@ -1,5 +1,6 @@
 import { FacilitatedPaymentsCard } from "@/components/institution/FacilitatedPaymentsCard";
 import { CreditApiIntegrationWidget } from "@/components/credit-api/CreditApiIntegrationWidget";
+import { FIPortalRevenueChart } from "@/components/institution/FIPortalRevenueChart";
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,6 +41,7 @@ export default function FIPortal() {
     activeAccounts: 0,
     apiCalls: 0,
   });
+  const [revenueTransactions, setRevenueTransactions] = useState<{ amount: number; created_at: string }[]>([]);
 
   useEffect(() => { checkAuthAndInstitution(); }, []);
 
@@ -87,11 +89,12 @@ export default function FIPortal() {
     if (accountIds.length > 0) {
       const { data: transactions } = await supabase
         .from("transactions")
-        .select("amount")
+        .select("amount, created_at")
         .in("account_id", accountIds)
         .gte("created_at", thirtyDaysAgo);
       txCount = transactions?.length || 0;
       totalVolume = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+      setRevenueTransactions(transactions?.map(t => ({ amount: Number(t.amount), created_at: t.created_at })) || []);
     }
     
     const { data: apiUsage } = await supabase
@@ -268,6 +271,7 @@ export default function FIPortal() {
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
+          <FIPortalRevenueChart transactions={revenueTransactions} />
           <div className="grid gap-4 md:grid-cols-2">
             <Card className="border-border/60">
               <CardHeader className="pb-3">
