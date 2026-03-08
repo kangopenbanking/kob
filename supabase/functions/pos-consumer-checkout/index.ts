@@ -162,17 +162,23 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Decrement inventory for each item
-    for (const item of items) {
-      await supabase.rpc('pos_adjust_inventory', {
-        p_merchant_id: cart.merchant_id,
-        p_variant_id: item.variant_id,
-        p_location_id: null,
-        p_quantity_delta: -item.quantity,
-        p_movement_type: 'sale',
-        p_reference_id: order.id,
-        p_note: `Consumer app order ${order.order_number}`,
-      }).catch(() => { /* inventory optional */ });
+    // Decrement inventory for each item — find default location for merchant
+    const { data: defaultLocation } = await supabase.from('merchant_locations')
+      .select('id').eq('merchant_id', cart.merchant_id).limit(1).maybeSingle();
+
+    if (defaultLocation) {
+      for (const item of items) {
+        await supabase.rpc('pos_adjust_inventory', {
+          _merchant_id: cart.merchant_id,
+          _variant_id: item.variant_id,
+          _location_id: defaultLocation.id,
+          _quantity_delta: -item.quantity,
+          _type: 'sale',
+          _reason: `Consumer app order ${order.order_number}`,
+          _reference_type: 'pos_order',
+          _reference_id: order.id,
+        }).catch(() => { /* inventory optional */ });
+      }
     }
 
     // Status history

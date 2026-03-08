@@ -176,11 +176,11 @@ Deno.serve(async (req) => {
         }, { onConflict: 'account_id,balance_type' });
         // Credit merchant
         const { data: mw } = await supabase.from('gateway_merchant_wallets')
-          .select('id, available_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
+          .select('id, available_balance, ledger_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
         if (mw) {
           await supabase.from('gateway_merchant_wallets').update({
             available_balance: (mw.available_balance || 0) + amount,
-            ledger_balance: (mw.available_balance || 0) + amount,
+            ledger_balance: (mw.ledger_balance || 0) + amount,
           }).eq('id', mw.id);
         } else {
           await supabase.from('gateway_merchant_wallets').insert({
