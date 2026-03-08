@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Store, Eye, EyeOff, QrCode, Save, Loader2, CheckCircle2,
   Crown, AlertCircle, Globe, MapPin, Tag, Image, FileText,
   Download, Printer, Sparkles, Shield, Zap, Users, BarChart3,
-  ArrowRight, CreditCard, Smartphone, Wallet, RefreshCw, Copy, Check
+  ArrowRight, CreditCard, Smartphone, Wallet, RefreshCw, Copy, Check,
+  BookOpen, ChevronRight, Circle, Plus, X, Package, Settings, HelpCircle,
+  ListChecks, Layers, DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,19 +20,30 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { motion } from 'framer-motion';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
+import {
+  STORE_CATEGORIES, getAllCitiesForCountry, getCitiesByRegion,
+  POS_PRODUCT_ATTRIBUTES, COUNTRY_CURRENCIES, type POSAttribute,
+} from '@/lib/storefront-data';
 
 import posKob from '@/assets/pos-kob.webp';
-import posMobile from '@/assets/pos-mobile.webp';
 import posPaymentSuccess from '@/assets/pos-payment-success.webp';
-import posCardReader from '@/assets/pos-card-reader.webp';
-
-const CATEGORIES = ['Food & Beverages', 'Fashion & Apparel', 'Electronics', 'Beauty & Cosmetics', 'Health & Wellness', 'Home & Living', 'Services', 'Other'];
-const CITIES = ['Douala', 'Yaoundé', 'Bamenda', 'Bafoussam', 'Buea', 'Limbe', 'Kribi', 'Garoua', 'Maroua'];
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.07, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] } }),
 };
+
+// ─── Guide Steps ───
+const GUIDE_STEPS = [
+  { id: 'profile', title: 'Set Up Your Store Profile', icon: Store, description: 'Enter your store name, description, category, and location. This is how customers will find and recognise you on the marketplace.', tips: ['Choose a clear, memorable store name', 'Write a short description that highlights what makes you unique', 'Pick the correct category so customers can find you easily'] },
+  { id: 'brand', title: 'Upload Brand Assets', icon: Image, description: 'Add your logo and a banner image to make your storefront stand out. Professional visuals build customer trust.', tips: ['Use a square logo (min 200×200px)', 'Banner should be wide (1200×400px recommended)', 'Use high-quality images with good lighting'] },
+  { id: 'country', title: 'Select Country & Currency', icon: Globe, description: 'Choose your country and operating currency. Cameroon (XAF) is the default but you can serve customers in other supported countries.', tips: ['Currency determines how prices display to customers', 'You can change this anytime before going live'] },
+  { id: 'category', title: 'Choose Category & Sub-Category', icon: Tag, description: 'Select a main category and optional sub-category that best describes your business. This helps the marketplace organise stores for customers.', tips: ['You can add a custom sub-category if none fits', 'Categories affect search ranking and discoverability'] },
+  { id: 'attributes', title: 'Configure Product Attributes', icon: Package, description: 'Set up the product attributes you\'ll use in your POS system: SKU, barcode, weight, unit, pricing, stock levels, and more.', tips: ['Attributes help you track inventory accurately', 'Set low-stock alerts to avoid running out', 'Use SKU codes for easy product identification'] },
+  { id: 'subscribe', title: 'Subscribe to a Plan', icon: Crown, description: 'Choose a subscription plan to publish your store on the KOB consumer marketplace and start receiving orders.', tips: ['You can upgrade or change plans anytime', 'Premium plans include analytics and priority placement'] },
+  { id: 'publish', title: 'Publish & Go Live', icon: Eye, description: 'Toggle your store to "Published" and you\'re live! Customers can now discover your store, browse products, and pay via wallet or QR.', tips: ['Make sure your profile is 100% complete before publishing', 'Share your QR code at your physical store counter'] },
+];
 
 export default function MerchantStorefront() {
   const [profile, setProfile] = useState<any>(null);
@@ -42,30 +55,52 @@ export default function MerchantStorefront() {
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [qrAmount, setQrAmount] = useState('');
   const [qrCopied, setQrCopied] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  const [activeTab, setActiveTab] = useState('guide');
 
+  // Profile form
   const [storeName, setStoreName] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('');
+  const [subCategory, setSubCategory] = useState('');
+  const [customSubCategory, setCustomSubCategory] = useState('');
+  const [showCustomSub, setShowCustomSub] = useState(false);
   const [city, setCity] = useState('');
   const [logoUrl, setLogoUrl] = useState('');
   const [bannerUrl, setBannerUrl] = useState('');
   const [isPublished, setIsPublished] = useState(false);
+  const [country, setCountry] = useState('CM');
+  const [currency, setCurrency] = useState('XAF');
+
+  // POS attributes
+  const [customAttributes, setCustomAttributes] = useState<{ key: string; label: string }[]>([]);
+  const [newAttrLabel, setNewAttrLabel] = useState('');
+
+  // Guide
+  const [expandedStep, setExpandedStep] = useState<string | null>('profile');
+
+  const { data: supportedCountries = [] } = useSupportedCountries();
+
+  // Derived
+  const cities = useMemo(() => getAllCitiesForCountry(country), [country]);
+  const cityRegions = useMemo(() => getCitiesByRegion(country), [country]);
+  const selectedCategoryObj = useMemo(() => STORE_CATEGORIES.find(c => c.name === category), [category]);
+  const currencyInfo = COUNTRY_CURRENCIES[country] || { currency: 'XAF', symbol: 'FCFA' };
 
   useEffect(() => { loadData(); }, []);
+  useEffect(() => {
+    const info = COUNTRY_CURRENCIES[country];
+    if (info) setCurrency(info.currency);
+  }, [country]);
 
   const loadData = async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: merchant } = await supabase.from('gateway_merchants')
-        .select('id').eq('user_id', user.id).maybeSingle();
+      const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('user_id', user.id).maybeSingle();
       if (!merchant) { setLoading(false); return; }
       setMerchantId(merchant.id);
-
-      const { data: sp } = await supabase.from('pos_store_profiles')
-        .select('*').eq('merchant_id', merchant.id).maybeSingle();
+      const { data: sp } = await supabase.from('pos_store_profiles').select('*').eq('merchant_id', merchant.id).maybeSingle();
       if (sp) {
         setProfile(sp);
         setStoreName(sp.store_name || '');
@@ -75,15 +110,11 @@ export default function MerchantStorefront() {
         setLogoUrl(sp.logo_url || '');
         setBannerUrl(sp.banner_url || '');
         setIsPublished(sp.is_published || false);
+        setCountry(sp.country || 'CM');
       }
-
-      const { data: sub } = await supabase.from('pos_store_subscriptions')
-        .select('*, pos_subscription_plans(*)')
-        .eq('merchant_id', merchant.id).eq('status', 'active').maybeSingle();
+      const { data: sub } = await supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(*)').eq('merchant_id', merchant.id).eq('status', 'active').maybeSingle();
       setSubscription(sub);
-
-      const { data: p } = await supabase.from('pos_subscription_plans')
-        .select('*').eq('is_active', true).order('price');
+      const { data: p } = await supabase.from('pos_subscription_plans').select('*').eq('is_active', true).order('price');
       setPlans(p || []);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -94,9 +125,9 @@ export default function MerchantStorefront() {
     setSaving(true);
     try {
       const payload = {
-        merchant_id: merchantId, store_name: storeName, description, category, city,
-        logo_url: logoUrl, banner_url: bannerUrl, is_published: isPublished,
-        country: 'CM', updated_at: new Date().toISOString(),
+        merchant_id: merchantId, store_name: storeName, description, category,
+        city, logo_url: logoUrl, banner_url: bannerUrl, is_published: isPublished,
+        country, updated_at: new Date().toISOString(),
       };
       if (profile) {
         await supabase.from('pos_store_profiles').update(payload).eq('id', profile.id);
@@ -113,9 +144,7 @@ export default function MerchantStorefront() {
     if (!merchantId) return;
     setSubscribing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('pos-store-subscription', {
-        body: { merchant_id: merchantId, plan_id: planId },
-      });
+      const { data, error } = await supabase.functions.invoke('pos-store-subscription', { body: { merchant_id: merchantId, plan_id: planId } });
       if (error) throw error;
       if (data?.error) throw new Error(data.message || data.error);
       toast.success('Subscription activated!');
@@ -124,10 +153,20 @@ export default function MerchantStorefront() {
     finally { setSubscribing(false); }
   };
 
+  const addCustomAttribute = () => {
+    if (!newAttrLabel.trim()) return;
+    setCustomAttributes(prev => [...prev, { key: `custom_${Date.now()}`, label: newAttrLabel.trim() }]);
+    setNewAttrLabel('');
+  };
+
+  const removeCustomAttribute = (key: string) => {
+    setCustomAttributes(prev => prev.filter(a => a.key !== key));
+  };
+
   const qrPayload = merchantId ? JSON.stringify({
     type: 'kob_pos_pay', merchant_id: merchantId,
     amount: qrAmount ? Number(qrAmount) : undefined,
-    currency: 'XAF', store_name: storeName,
+    currency, store_name: storeName,
   }) : '';
 
   const copyQr = () => {
@@ -147,16 +186,13 @@ export default function MerchantStorefront() {
 
   const profileComplete = storeName && category && city && description;
   const completionPct = [storeName, category, city, description, logoUrl, bannerUrl].filter(Boolean).length / 6 * 100;
+  const resolvedSubCategory = showCustomSub ? customSubCategory : subCategory;
 
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       {/* Hero Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-[hsl(var(--fi-purple))]"
-      >
+      <motion.div initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-[hsl(var(--fi-purple))]">
         <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
@@ -173,9 +209,7 @@ export default function MerchantStorefront() {
                 <Crown className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} /> Active Plan
               </Badge>
             ) : (
-              <Badge variant="outline" className="border-white/30 text-white/80 px-3 py-1.5 text-xs">
-                No Subscription
-              </Badge>
+              <Badge variant="outline" className="border-white/30 text-white/80 px-3 py-1.5 text-xs">No Subscription</Badge>
             )}
             {isPublished && (
               <Badge className="bg-emerald-500/30 text-white border-emerald-400/30 backdrop-blur-sm px-3 py-1.5 text-xs">
@@ -184,20 +218,13 @@ export default function MerchantStorefront() {
             )}
           </div>
         </div>
-
-        {/* Completion bar */}
         <div className="relative mt-6">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-white/60 font-medium">Profile completeness</span>
             <span className="text-xs text-white font-semibold">{Math.round(completionPct)}%</span>
           </div>
           <div className="w-full h-1.5 bg-white/15 rounded-full overflow-hidden">
-            <motion.div
-              className="h-full rounded-full bg-secondary"
-              initial={{ width: 0 }}
-              animate={{ width: `${completionPct}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-            />
+            <motion.div className="h-full rounded-full bg-secondary" initial={{ width: 0 }} animate={{ width: `${completionPct}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} />
           </div>
         </div>
       </motion.div>
@@ -208,7 +235,7 @@ export default function MerchantStorefront() {
           { label: 'Status', value: isPublished ? 'Published' : 'Draft', icon: isPublished ? Eye : EyeOff, color: isPublished ? 'hsl(var(--fi-green))' : 'hsl(var(--muted-foreground))' },
           { label: 'Subscription', value: subscription ? 'Active' : 'None', icon: Crown, color: subscription ? 'hsl(var(--fi-amber))' : 'hsl(var(--muted-foreground))' },
           { label: 'Category', value: category || 'Not set', icon: Tag, color: 'hsl(var(--fi-purple))' },
-          { label: 'Location', value: city || 'Not set', icon: MapPin, color: 'hsl(var(--fi-blue))' },
+          { label: 'Location', value: city ? `${city}, ${country}` : 'Not set', icon: MapPin, color: 'hsl(var(--fi-blue))' },
         ].map((stat, i) => (
           <motion.div key={stat.label} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
             <Card className="border-0 shadow-sm hover:shadow-md transition-shadow duration-200">
@@ -228,9 +255,15 @@ export default function MerchantStorefront() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-        <TabsList className="bg-muted/60 p-1 rounded-xl h-auto">
+        <TabsList className="bg-muted/60 p-1 rounded-xl h-auto flex-wrap">
+          <TabsTrigger value="guide" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <BookOpen className="w-3.5 h-3.5" strokeWidth={1.5} /> Setup Guide
+          </TabsTrigger>
           <TabsTrigger value="profile" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Store className="w-3.5 h-3.5" strokeWidth={1.5} /> Store Profile
+          </TabsTrigger>
+          <TabsTrigger value="attributes" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Package className="w-3.5 h-3.5" strokeWidth={1.5} /> POS Attributes
           </TabsTrigger>
           <TabsTrigger value="subscription" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Crown className="w-3.5 h-3.5" strokeWidth={1.5} /> Subscription
@@ -240,12 +273,107 @@ export default function MerchantStorefront() {
           </TabsTrigger>
         </TabsList>
 
+        {/* ── Setup Guide ── */}
+        <TabsContent value="guide">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2 space-y-3">
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Storefront Setup Guide
+                    </CardTitle>
+                    <CardDescription className="text-xs">Follow these steps to set up your store and start selling on KOB</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-2 pb-5">
+                    {GUIDE_STEPS.map((step, i) => {
+                      const isExpanded = expandedStep === step.id;
+                      const StepIcon = step.icon;
+                      return (
+                        <div key={step.id} className="rounded-xl border border-border/50 overflow-hidden">
+                          <button
+                            onClick={() => setExpandedStep(isExpanded ? null : step.id)}
+                            className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/30 transition-colors"
+                          >
+                            <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 bg-[hsl(var(--fi-purple))]/10">
+                              <span className="text-xs font-bold text-[hsl(var(--fi-purple))]">{i + 1}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                            </div>
+                            <StepIcon className="w-4 h-4 text-muted-foreground flex-shrink-0" strokeWidth={1.5} />
+                            <ChevronRight className={`w-4 h-4 text-muted-foreground flex-shrink-0 transition-transform ${isExpanded ? 'rotate-90' : ''}`} strokeWidth={1.5} />
+                          </button>
+                          {isExpanded && (
+                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} transition={{ duration: 0.2 }}
+                              className="px-4 pb-4 border-t border-border/30">
+                              <p className="text-xs text-muted-foreground mt-3 leading-relaxed">{step.description}</p>
+                              {step.tips.length > 0 && (
+                                <ul className="mt-3 space-y-1.5">
+                                  {step.tips.map((tip, j) => (
+                                    <li key={j} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                      <CheckCircle2 className="w-3.5 h-3.5 text-[hsl(var(--fi-purple))] mt-0.5 flex-shrink-0" strokeWidth={1.5} />
+                                      <span>{tip}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                              <Button variant="outline" size="sm" className="mt-3 text-xs gap-1.5 rounded-lg h-8"
+                                onClick={() => {
+                                  if (step.id === 'subscribe') setActiveTab('subscription');
+                                  else if (step.id === 'publish' || step.id === 'profile' || step.id === 'brand' || step.id === 'country' || step.id === 'category') setActiveTab('profile');
+                                  else if (step.id === 'attributes') setActiveTab('attributes');
+                                }}>
+                                Go to this step <ArrowRight className="w-3 h-3" strokeWidth={1.5} />
+                              </Button>
+                            </motion.div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Guide Sidebar */}
+              <div className="space-y-4">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-foreground">Quick Tips</p>
+                    </div>
+                    <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+                      <p>• Complete all profile fields for better marketplace visibility.</p>
+                      <p>• A subscription is required to appear in the consumer app.</p>
+                      <p>• Print your QR code and place it at your checkout counter.</p>
+                      <p>• Set accurate product attributes for reliable POS inventory.</p>
+                      <p>• Default currency is <strong>XAF</strong> (Cameroon). Change it under Store Profile.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-sm overflow-hidden">
+                  <div className="relative">
+                    <img src={posKob} alt="KOB POS Terminal" className="w-full h-40 object-cover" />
+                    <div className="absolute inset-0 bg-black/40" />
+                    <div className="absolute bottom-3 left-3">
+                      <p className="text-white text-xs font-bold">KOB POS Terminal</p>
+                      <p className="text-white/70 text-[10px]">Accept payments in-store</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        </TabsContent>
+
         {/* ── Store Profile ── */}
         <TabsContent value="profile">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             <div className="grid lg:grid-cols-3 gap-5">
-              {/* Form */}
               <div className="lg:col-span-2 space-y-5">
+                {/* Basic Info */}
                 <Card className="border-0 shadow-sm">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -257,40 +385,95 @@ export default function MerchantStorefront() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5">
                         <Label className="text-xs font-medium text-muted-foreground">Store Name</Label>
-                        <Input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="e.g. Chez Marie" className="h-10 rounded-lg border-border/60 focus:border-[hsl(var(--fi-purple))] focus:ring-[hsl(var(--fi-purple))]" />
+                        <Input value={storeName} onChange={e => setStoreName(e.target.value)} placeholder="e.g. Chez Marie" className="h-10 rounded-lg border-border/60" />
                       </div>
                       <div className="space-y-1.5">
                         <Label className="text-xs font-medium text-muted-foreground">Category</Label>
-                        <Select value={category} onValueChange={setCategory}>
+                        <Select value={category} onValueChange={v => { setCategory(v); setSubCategory(''); setShowCustomSub(false); }}>
                           <SelectTrigger className="h-10 rounded-lg border-border/60"><SelectValue placeholder="Select category" /></SelectTrigger>
                           <SelectContent>
-                            {CATEGORIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            {STORE_CATEGORIES.map(c => <SelectItem key={c.name} value={c.name}>{c.name}</SelectItem>)}
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
+
+                    {/* Sub-Category */}
+                    {selectedCategoryObj && selectedCategoryObj.subs.length > 0 && (
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium text-muted-foreground">Sub-Category</Label>
+                        {!showCustomSub ? (
+                          <div className="flex gap-2">
+                            <Select value={subCategory} onValueChange={setSubCategory}>
+                              <SelectTrigger className="h-10 rounded-lg border-border/60 flex-1"><SelectValue placeholder="Select sub-category (optional)" /></SelectTrigger>
+                              <SelectContent>
+                                {selectedCategoryObj.subs.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <Button variant="outline" size="icon" className="h-10 w-10 rounded-lg flex-shrink-0" onClick={() => setShowCustomSub(true)} title="Add custom">
+                              <Plus className="w-4 h-4" strokeWidth={1.5} />
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="flex gap-2">
+                            <Input value={customSubCategory} onChange={e => setCustomSubCategory(e.target.value)} placeholder="Enter custom sub-category" className="h-10 rounded-lg border-border/60 flex-1" />
+                            <Button variant="outline" size="icon" className="h-10 w-10 rounded-lg flex-shrink-0" onClick={() => { setShowCustomSub(false); setCustomSubCategory(''); }} title="Back to list">
+                              <X className="w-4 h-4" strokeWidth={1.5} />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium text-muted-foreground">Description</Label>
                       <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Tell customers what makes your store special..." rows={3} className="rounded-lg border-border/60 resize-none" />
                     </div>
-                    <div className="grid sm:grid-cols-2 gap-4">
+
+                    {/* Country & Currency */}
+                    <div className="grid sm:grid-cols-3 gap-4">
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">City</Label>
-                        <Select value={city} onValueChange={setCity}>
-                          <SelectTrigger className="h-10 rounded-lg border-border/60"><SelectValue placeholder="Select city" /></SelectTrigger>
+                        <Label className="text-xs font-medium text-muted-foreground">Country</Label>
+                        <Select value={country} onValueChange={v => { setCountry(v); setCity(''); }}>
+                          <SelectTrigger className="h-10 rounded-lg border-border/60"><SelectValue placeholder="Select country" /></SelectTrigger>
                           <SelectContent>
-                            {CITIES.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            {supportedCountries.length > 0 ? (
+                              supportedCountries.map(c => (
+                                <SelectItem key={`${c.code}-${c.country}`} value={c.code}>{c.flag} {c.country}</SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="CM">🇨🇲 Cameroon</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">Country</Label>
-                        <Input value="Cameroon" disabled className="h-10 rounded-lg bg-muted/40" />
+                        <Label className="text-xs font-medium text-muted-foreground">Currency</Label>
+                        <Input value={`${currencyInfo.currency} (${currencyInfo.symbol})`} disabled className="h-10 rounded-lg bg-muted/40" />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-medium text-muted-foreground">City / Town</Label>
+                        {cities.length > 0 ? (
+                          <Select value={city} onValueChange={setCity}>
+                            <SelectTrigger className="h-10 rounded-lg border-border/60"><SelectValue placeholder="Select city" /></SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(cityRegions).map(([region, regionCities]) => (
+                                <React.Fragment key={region}>
+                                  <div className="px-2 py-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{region}</div>
+                                  {regionCities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                                </React.Fragment>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        ) : (
+                          <Input value={city} onChange={e => setCity(e.target.value)} placeholder="Enter city name" className="h-10 rounded-lg border-border/60" />
+                        )}
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
+                {/* Brand Assets */}
                 <Card className="border-0 shadow-sm">
                   <CardHeader className="pb-4">
                     <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -331,43 +514,32 @@ export default function MerchantStorefront() {
 
               {/* Sidebar */}
               <div className="space-y-5">
-                {/* Publish Card */}
                 <Card className="border-0 shadow-sm overflow-hidden">
                   <div className="p-5 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        {isPublished
-                          ? <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                          : <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />}
+                        {isPublished ? <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" /> : <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/40" />}
                         <span className="text-sm font-semibold text-foreground">{isPublished ? 'Published' : 'Draft'}</span>
                       </div>
                       <Switch checked={isPublished} onCheckedChange={setIsPublished} />
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
-                      {isPublished
-                        ? 'Your store is visible on the KOB consumer marketplace.'
-                        : 'Toggle to publish your store and start receiving orders.'}
+                      {isPublished ? 'Your store is visible on the KOB consumer marketplace.' : 'Toggle to publish your store and start receiving orders.'}
                     </p>
                     {isPublished && !subscription && (
                       <div className="flex items-start gap-2 p-3 rounded-lg bg-amber-500/8 border border-amber-500/20">
                         <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" strokeWidth={1.5} />
-                        <p className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">
-                          Subscribe to a plan to appear on the marketplace.
-                        </p>
+                        <p className="text-[11px] text-amber-700 dark:text-amber-300 leading-relaxed">Subscribe to a plan to appear on the marketplace.</p>
                       </div>
                     )}
-                    <Button
-                      onClick={handleSave}
-                      disabled={saving || !storeName}
-                      className="w-full gap-2 rounded-lg h-10 text-xs font-semibold bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white"
-                    >
+                    <Button onClick={handleSave} disabled={saving || !storeName}
+                      className="w-full gap-2 rounded-lg h-10 text-xs font-semibold bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white">
                       {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" strokeWidth={1.5} />}
                       Save Changes
                     </Button>
                   </div>
                 </Card>
 
-                {/* POS Preview */}
                 <Card className="border-0 shadow-sm overflow-hidden">
                   <div className="relative">
                     <img src={posKob} alt="KOB POS Terminal" className="w-full h-40 object-cover" />
@@ -379,24 +551,142 @@ export default function MerchantStorefront() {
                   </div>
                 </Card>
 
-                {/* Quick Links */}
                 <Card className="border-0 shadow-sm">
                   <CardContent className="p-4 space-y-1.5">
                     <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-2">Quick Actions</p>
                     {[
+                      { label: 'Setup Guide', action: () => setActiveTab('guide'), icon: BookOpen },
                       { label: 'Generate QR Code', action: () => setActiveTab('qr'), icon: QrCode },
                       { label: 'Manage Subscription', action: () => setActiveTab('subscription'), icon: Crown },
+                      { label: 'POS Attributes', action: () => setActiveTab('attributes'), icon: Package },
                     ].map((item) => (
-                      <button
-                        key={item.label}
-                        onClick={item.action}
-                        className="w-full flex items-center gap-2.5 p-2.5 rounded-lg text-xs text-foreground hover:bg-muted/50 transition-colors text-left"
-                      >
+                      <button key={item.label} onClick={item.action}
+                        className="w-full flex items-center gap-2.5 p-2.5 rounded-lg text-xs text-foreground hover:bg-muted/50 transition-colors text-left">
                         <item.icon className="w-3.5 h-3.5 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
                         {item.label}
                         <ArrowRight className="w-3 h-3 text-muted-foreground ml-auto" strokeWidth={1.5} />
                       </button>
                     ))}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        </TabsContent>
+
+        {/* ── POS Attributes ── */}
+        <TabsContent value="attributes">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }} className="space-y-5">
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2 space-y-5">
+                {/* Built-in Attributes */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <ListChecks className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Standard Product Attributes
+                    </CardTitle>
+                    <CardDescription className="text-xs">These are the built-in attributes available for every product in your POS system.</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      {POS_PRODUCT_ATTRIBUTES.map((attr) => (
+                        <div key={attr.key} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-muted/10">
+                          <div className="w-8 h-8 rounded-lg bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center flex-shrink-0">
+                            {attr.type === 'number' ? <DollarSign className="w-3.5 h-3.5 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} /> :
+                             attr.type === 'select' ? <Layers className="w-3.5 h-3.5 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} /> :
+                             <Tag className="w-3.5 h-3.5 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold text-foreground">{attr.label}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {attr.type === 'select' ? `Options: ${attr.options?.join(', ')}` : `Type: ${attr.type} ${attr.placeholder ? `• e.g. ${attr.placeholder}` : ''}`}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Custom Attributes */}
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Settings className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Custom Attributes
+                    </CardTitle>
+                    <CardDescription className="text-xs">Add your own product attributes to support your specific business needs.</CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="flex gap-2">
+                      <Input value={newAttrLabel} onChange={e => setNewAttrLabel(e.target.value)} placeholder="e.g. Origin Country, Fabric Type..."
+                        className="h-10 rounded-lg border-border/60 flex-1" onKeyDown={e => e.key === 'Enter' && addCustomAttribute()} />
+                      <Button onClick={addCustomAttribute} disabled={!newAttrLabel.trim()}
+                        className="h-10 gap-1.5 rounded-lg text-xs bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white">
+                        <Plus className="w-4 h-4" strokeWidth={1.5} /> Add
+                      </Button>
+                    </div>
+                    {customAttributes.length > 0 ? (
+                      <div className="space-y-2">
+                        {customAttributes.map(attr => (
+                          <div key={attr.key} className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-muted/10">
+                            <div className="flex items-center gap-2.5">
+                              <div className="w-7 h-7 rounded-lg bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center">
+                                <Tag className="w-3 h-3 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                              </div>
+                              <span className="text-xs font-medium text-foreground">{attr.label}</span>
+                              <Badge variant="outline" className="text-[10px]">Custom</Badge>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => removeCustomAttribute(attr.key)}>
+                              <X className="w-3.5 h-3.5" strokeWidth={1.5} />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-6 text-xs text-muted-foreground">
+                        <Package className="w-8 h-8 mx-auto mb-2 text-muted-foreground/40" strokeWidth={1.5} />
+                        No custom attributes yet. Add one above.
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Attributes Sidebar */}
+              <div className="space-y-4">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-foreground">About Attributes</p>
+                    </div>
+                    <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+                      <p>Attributes define the data fields available for each product you create in the POS system.</p>
+                      <p><strong>Standard attributes</strong> (SKU, price, stock, etc.) are always available for all products.</p>
+                      <p><strong>Custom attributes</strong> let you track additional info specific to your business, such as origin, material, or certification.</p>
+                      <p>Attributes are used during product creation and appear on receipts and inventory reports.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <p className="text-xs font-semibold text-foreground mb-2">Summary</p>
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Standard attributes</span>
+                        <span className="font-semibold text-foreground">{POS_PRODUCT_ATTRIBUTES.length}</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-muted-foreground">Custom attributes</span>
+                        <span className="font-semibold text-foreground">{customAttributes.length}</span>
+                      </div>
+                      <div className="border-t border-border/40 pt-2 flex justify-between text-xs">
+                        <span className="text-muted-foreground font-medium">Total</span>
+                        <span className="font-bold text-foreground">{POS_PRODUCT_ATTRIBUTES.length + customAttributes.length}</span>
+                      </div>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -419,7 +709,7 @@ export default function MerchantStorefront() {
                         <div>
                           <p className="text-lg font-bold text-foreground">{subscription.pos_subscription_plans?.name}</p>
                           <p className="text-sm text-muted-foreground">
-                            {subscription.pos_subscription_plans?.price?.toLocaleString()} XAF / {subscription.pos_subscription_plans?.duration_days} days
+                            {subscription.pos_subscription_plans?.price?.toLocaleString()} {currency} / {subscription.pos_subscription_plans?.duration_days} days
                           </p>
                         </div>
                       </div>
@@ -428,15 +718,11 @@ export default function MerchantStorefront() {
                     <div className="grid grid-cols-2 gap-4 mt-6">
                       <div className="p-3 rounded-lg bg-muted/30">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Started</p>
-                        <p className="text-sm font-semibold text-foreground mt-1">
-                          {new Date(subscription.starts_at).toLocaleDateString()}
-                        </p>
+                        <p className="text-sm font-semibold text-foreground mt-1">{new Date(subscription.starts_at).toLocaleDateString()}</p>
                       </div>
                       <div className="p-3 rounded-lg bg-muted/30">
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Expires</p>
-                        <p className="text-sm font-semibold text-foreground mt-1">
-                          {new Date(subscription.expires_at).toLocaleDateString()}
-                        </p>
+                        <p className="text-sm font-semibold text-foreground mt-1">{new Date(subscription.expires_at).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <Button variant="outline" className="mt-4 gap-2 text-xs rounded-lg" onClick={loadData}>
@@ -447,34 +733,28 @@ export default function MerchantStorefront() {
               </Card>
             ) : (
               <>
-                {/* Plans Header */}
                 <div className="text-center max-w-lg mx-auto">
                   <h2 className="text-xl font-bold text-foreground">Choose Your Plan</h2>
                   <p className="text-sm text-muted-foreground mt-1">Get listed on the KOB consumer marketplace and start receiving orders</p>
                 </div>
-
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {plans.map((plan, i) => {
                     const isPremium = i === plans.length - 1;
                     return (
                       <motion.div key={plan.id} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
                         <Card className={`border-0 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-lg relative ${isPremium ? 'ring-2 ring-[hsl(var(--fi-purple))]/30' : ''}`}>
-                          {isPremium && (
-                            <div className="absolute top-0 inset-x-0 h-1 bg-[hsl(var(--fi-purple))]" />
-                          )}
+                          {isPremium && <div className="absolute top-0 inset-x-0 h-1 bg-[hsl(var(--fi-purple))]" />}
                           <CardContent className="p-6">
                             <div className="flex items-center gap-2 mb-4">
                               <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isPremium ? 'bg-[hsl(var(--fi-purple))]' : 'bg-muted'}`}>
-                                {isPremium
-                                  ? <Sparkles className="w-4.5 h-4.5 text-white" strokeWidth={1.5} />
-                                  : <Shield className="w-4.5 h-4.5 text-muted-foreground" strokeWidth={1.5} />}
+                                {isPremium ? <Sparkles className="w-4.5 h-4.5 text-white" strokeWidth={1.5} /> : <Shield className="w-4.5 h-4.5 text-muted-foreground" strokeWidth={1.5} />}
                               </div>
                               {isPremium && <Badge className="text-[10px] bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-[hsl(var(--fi-purple))]/20">Popular</Badge>}
                             </div>
                             <h3 className="text-base font-bold text-foreground">{plan.name}</h3>
                             <div className="mt-2 flex items-baseline gap-1">
                               <span className="text-2xl font-extrabold text-foreground">{plan.price?.toLocaleString()}</span>
-                              <span className="text-xs text-muted-foreground">XAF / {plan.duration_days}d</span>
+                              <span className="text-xs text-muted-foreground">{currency} / {plan.duration_days}d</span>
                             </div>
                             {plan.features_json && (
                               <ul className="mt-4 space-y-2">
@@ -488,10 +768,7 @@ export default function MerchantStorefront() {
                             )}
                             <Button
                               className={`w-full mt-5 rounded-lg h-10 text-xs font-semibold gap-2 ${isPremium ? 'bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white' : ''}`}
-                              disabled={subscribing}
-                              onClick={() => handleSubscribe(plan.id)}
-                              variant={isPremium ? 'default' : 'outline'}
-                            >
+                              disabled={subscribing} onClick={() => handleSubscribe(plan.id)} variant={isPremium ? 'default' : 'outline'}>
                               {subscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Get Started <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} /></>}
                             </Button>
                           </CardContent>
@@ -512,7 +789,6 @@ export default function MerchantStorefront() {
               </>
             )}
 
-            {/* Features Grid */}
             <div className="grid sm:grid-cols-3 gap-4 mt-2">
               {[
                 { icon: Users, title: 'Consumer Visibility', desc: 'Appear in the KOB marketplace for thousands of consumers', color: 'hsl(var(--fi-blue))' },
@@ -539,7 +815,6 @@ export default function MerchantStorefront() {
         <TabsContent value="qr">
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
             <div className="grid lg:grid-cols-2 gap-5">
-              {/* QR Configuration */}
               <div className="space-y-5">
                 <Card className="border-0 shadow-sm">
                   <CardHeader className="pb-4">
@@ -551,17 +826,9 @@ export default function MerchantStorefront() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium text-muted-foreground">Payment Amount (XAF)</Label>
-                      <Input
-                        type="number"
-                        value={qrAmount}
-                        onChange={e => setQrAmount(e.target.value)}
-                        placeholder="Leave empty for flexible amount"
-                        className="h-10 rounded-lg border-border/60"
-                      />
-                      <p className="text-[10px] text-muted-foreground">
-                        Empty = customer enters their own amount at scan time
-                      </p>
+                      <Label className="text-xs font-medium text-muted-foreground">Payment Amount ({currency})</Label>
+                      <Input type="number" value={qrAmount} onChange={e => setQrAmount(e.target.value)} placeholder="Leave empty for flexible amount" className="h-10 rounded-lg border-border/60" />
+                      <p className="text-[10px] text-muted-foreground">Empty = customer enters their own amount at scan time</p>
                     </div>
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium text-muted-foreground">Store</Label>
@@ -570,7 +837,6 @@ export default function MerchantStorefront() {
                   </CardContent>
                 </Card>
 
-                {/* How it works */}
                 <Card className="border-0 shadow-sm">
                   <CardContent className="p-5">
                     <p className="text-xs font-semibold text-foreground mb-3">How QR Payments Work</p>
@@ -596,7 +862,6 @@ export default function MerchantStorefront() {
                 </Card>
               </div>
 
-              {/* QR Preview */}
               <div className="space-y-5">
                 <Card className="border-0 shadow-sm">
                   <CardContent className="p-6">
@@ -604,18 +869,12 @@ export default function MerchantStorefront() {
                       {merchantId ? (
                         <>
                           <div className="p-6 rounded-2xl bg-white border border-border/30 shadow-sm">
-                            <QRCodeSVG
-                              value={qrPayload}
-                              size={200}
-                              level="M"
-                              fgColor="hsl(267, 84%, 42%)"
-                              bgColor="white"
-                            />
+                            <QRCodeSVG value={qrPayload} size={200} level="M" fgColor="hsl(267, 84%, 42%)" bgColor="white" />
                           </div>
                           <div className="text-center mt-4 space-y-1">
                             <p className="text-sm font-semibold text-foreground">{storeName || 'Your Store'}</p>
                             <p className="text-xs text-muted-foreground">
-                              {qrAmount ? `${Number(qrAmount).toLocaleString()} XAF` : 'Flexible amount'}
+                              {qrAmount ? `${Number(qrAmount).toLocaleString()} ${currency}` : 'Flexible amount'}
                             </p>
                           </div>
                           <div className="flex items-center gap-2 mt-4 w-full">
@@ -644,11 +903,10 @@ export default function MerchantStorefront() {
                   </CardContent>
                 </Card>
 
-                {/* POS Image Card */}
                 <Card className="border-0 shadow-sm overflow-hidden">
                   <div className="relative">
                     <img src={posPaymentSuccess} alt="POS Payment" className="w-full h-44 object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-black/40" />
                     <div className="absolute bottom-4 left-4 right-4">
                       <p className="text-white text-sm font-bold">Seamless POS Payments</p>
                       <p className="text-white/70 text-[11px] mt-0.5">Accept mobile, card, and QR payments at your store</p>
