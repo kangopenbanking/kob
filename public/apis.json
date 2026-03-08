@@ -12,6 +12,7 @@
       "image": "https://kangopenbanking.com/kob-logo.png",
       "baseURL": "https://api.kangopenbanking.com/v1",
       "humanURL": "https://kangopenbanking.com/developer",
+      "version": "3.0.0",
       "tags": [
         "banking",
         "payments",

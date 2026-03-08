@@ -2,8 +2,8 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "2.1.0",
-    "description": "COBAC-compliant Open Banking API for Cameroon and the CEMAC region. Enables account information (AISP), payment initiation (PISP), refunds, credit scoring, mobile money integration (MTN, Orange), virtual cards, settlements, disputes, transaction exports, risk management, audit trails, ISO 20022 messaging, payment links, recurring subscriptions, split payments, customer tokenization, and charge event timelines. Full dynamic specification available at the x-full-spec-url below.",
+    "version": "3.0.0",
+    "description": "This is a summary specification. The full dynamic OpenAPI specification with 250+ endpoints is available at the x-full-spec-url below. AI agents and tooling should fetch the full spec for complete coverage.",
     "x-full-spec-url": "https://api.kangopenbanking.com/functions/v1/public-api-spec",
     "contact": {
       "name": "Kang Open Banking Developer Support",
@@ -18,14 +18,19 @@
   "servers": [
     {
       "url": "https://api.kangopenbanking.com/v1",
-      "description": "Production"
+      "description": "Production",
+      "x-environment": "production"
     },
     {
       "url": "https://api.kangopenbanking.com/v1",
-      "description": "Sandbox (use sandbox API keys)",
+      "description": "Sandbox — use sandbox API keys obtained from the developer portal at https://kangopenbanking.com/developer/sandbox",
       "x-environment": "sandbox"
     }
   ],
+  "externalDocs": {
+    "description": "Full dynamic OpenAPI specification (250+ endpoints)",
+    "url": "https://api.kangopenbanking.com/functions/v1/public-api-spec"
+  },
   "security": [
     { "oauth2": ["accounts", "payments"] },
     { "bearerAuth": [] }
@@ -38,7 +43,7 @@
         "tags": ["System"],
         "security": [],
         "responses": {
-          "200": { "description": "API is healthy" }
+          "200": { "description": "API is healthy", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/HealthStatus" } } } }
         }
       }
     },
@@ -55,1178 +60,239 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "grant_type": { "type": "string", "enum": ["client_credentials", "authorization_code"] },
+                  "grant_type": { "type": "string", "enum": ["client_credentials", "authorization_code", "refresh_token"] },
                   "client_id": { "type": "string" },
-                  "client_secret": { "type": "string" }
+                  "client_secret": { "type": "string" },
+                  "code": { "type": "string" },
+                  "redirect_uri": { "type": "string" },
+                  "code_verifier": { "type": "string" },
+                  "refresh_token": { "type": "string" }
                 },
-                "required": ["grant_type", "client_id", "client_secret"]
+                "required": ["grant_type", "client_id"]
               }
             }
           }
         },
         "responses": {
-          "200": { "description": "Access token issued" }
+          "200": { "description": "Access token issued" },
+          "400": { "description": "Invalid request", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "401": { "description": "Authentication failed", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/aisp/accounts": {
       "get": {
-        "summary": "List Accounts",
+        "summary": "List Accounts (AISP)",
         "operationId": "listAccounts",
-        "tags": ["AISP"],
+        "tags": ["AISP — Account Information"],
         "parameters": [
           { "name": "x-consent-id", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "200": { "description": "List of accounts" }
+          "200": { "description": "List of accounts" },
+          "401": { "description": "Unauthorized", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "403": { "description": "Forbidden — insufficient scope", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
     "/pisp/domestic-payments": {
       "post": {
-        "summary": "Initiate Domestic Payment",
+        "summary": "Initiate Domestic Payment (PISP)",
         "operationId": "createDomesticPayment",
-        "tags": ["PISP"],
+        "tags": ["PISP — Payment Initiation"],
         "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } },
+          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string", "format": "uuid" } },
           { "name": "x-consent-id", "in": "header", "required": true, "schema": { "type": "string" } }
         ],
         "responses": {
-          "201": { "description": "Payment initiated" }
+          "201": { "description": "Payment initiated" },
+          "400": { "description": "Validation error", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } },
+          "422": { "description": "Business rule violation", "content": { "application/problem+json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
         }
       }
     },
-    "/payments/refund": {
+    "/gateway/charges": {
       "post": {
-        "summary": "Initiate Refund",
-        "operationId": "createRefund",
-        "tags": ["Refunds"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Refund initiated" }
-        }
-      }
-    },
-    "/payments/refunds/{refundId}": {
-      "get": {
-        "summary": "Get Refund Status",
-        "operationId": "getRefund",
-        "tags": ["Refunds"],
-        "parameters": [
-          { "name": "refundId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Refund details" }
-        }
-      }
-    },
-    "/payments/refunds": {
-      "get": {
-        "summary": "List Refunds",
-        "operationId": "listRefunds",
-        "tags": ["Refunds"],
-        "responses": {
-          "200": { "description": "List of refunds" }
-        }
-      }
-    },
-    "/payments/split": {
-      "post": {
-        "summary": "Split Payment",
-        "operationId": "createSplitPayment",
-        "tags": ["Settlements"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Split payment created" }
-        }
-      }
-    },
-    "/mobile-money/charge": {
-      "post": {
-        "summary": "Charge Mobile Money",
-        "operationId": "chargeMobileMoney",
-        "tags": ["Mobile Money"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Charge initiated" }
-        }
-      }
-    },
-    "/mobile-money/reverse": {
-      "post": {
-        "summary": "Reverse Mobile Money Charge",
-        "operationId": "reverseMobileMoney",
-        "tags": ["Refunds"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Reversal initiated" }
-        }
-      }
-    },
-    "/credit/query": {
-      "post": {
-        "summary": "Query Credit Score",
-        "operationId": "queryCreditScore",
-        "tags": ["Credit Scoring"],
-        "responses": {
-          "200": { "description": "Credit score result" }
-        }
-      }
-    },
-    "/banks": {
-      "get": {
-        "summary": "List Supported Banks",
-        "operationId": "listBanks",
-        "tags": ["Beneficiaries"],
-        "parameters": [
-          { "name": "country", "in": "query", "required": false, "schema": { "type": "string", "default": "CM" } }
-        ],
-        "responses": {
-          "200": { "description": "List of supported banks" }
-        }
-      }
-    },
-    "/banks/validate-account": {
-      "post": {
-        "summary": "Validate Bank Account",
-        "operationId": "validateBankAccount",
-        "tags": ["Beneficiaries"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Account validation result" }
-        }
-      }
-    },
-    "/beneficiaries": {
-      "get": {
-        "summary": "List Beneficiaries",
-        "operationId": "listBeneficiaries",
-        "tags": ["Beneficiaries"],
-        "responses": {
-          "200": { "description": "List of saved beneficiaries" }
-        }
+        "summary": "Create Charge",
+        "operationId": "gatewayCreateCharge",
+        "tags": ["Payment Gateway"],
+        "responses": { "201": { "description": "Charge created" } }
       },
+      "get": {
+        "summary": "List Charges",
+        "operationId": "gatewayListCharges",
+        "tags": ["Payment Gateway"],
+        "responses": { "200": { "description": "Charges list" } }
+      }
+    },
+    "/gateway/payouts": {
       "post": {
-        "summary": "Create Beneficiary",
-        "operationId": "createBeneficiary",
-        "tags": ["Beneficiaries"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Beneficiary created" }
-        }
+        "summary": "Create Payout",
+        "operationId": "gatewayCreatePayout",
+        "tags": ["Payment Gateway"],
+        "responses": { "201": { "description": "Payout created" } }
       }
     },
-    "/beneficiaries/{beneficiaryId}": {
-      "delete": {
-        "summary": "Delete Beneficiary",
-        "operationId": "deleteBeneficiary",
-        "tags": ["Beneficiaries"],
-        "parameters": [
-          { "name": "beneficiaryId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "204": { "description": "Beneficiary deactivated" }
-        }
+    "/gateway/refunds": {
+      "post": {
+        "summary": "Create Refund",
+        "operationId": "gatewayCreateRefund",
+        "tags": ["Payment Gateway"],
+        "responses": { "201": { "description": "Refund created" } }
       }
     },
-    "/settlements/schedule": {
-      "get": {
-        "summary": "Get Settlement Schedule",
-        "operationId": "getSettlementSchedule",
-        "tags": ["Settlements"],
-        "responses": {
-          "200": { "description": "Settlement schedule" }
-        }
-      }
-    },
-    "/settlements/reports": {
-      "get": {
-        "summary": "Get Settlement Reports",
-        "operationId": "getSettlementReports",
-        "tags": ["Settlements"],
-        "responses": {
-          "200": { "description": "Settlement reports" }
-        }
-      }
-    },
-    "/fees/schedule": {
-      "get": {
-        "summary": "Get Fee Schedule",
-        "operationId": "getFeeSchedule",
-        "tags": ["Settlements"],
-        "responses": {
-          "200": { "description": "Fee schedule" }
-        }
-      }
-    },
-    "/disputes": {
+    "/gateway/disputes": {
       "get": {
         "summary": "List Disputes",
-        "operationId": "listDisputes",
-        "tags": ["Disputes"],
-        "responses": {
-          "200": { "description": "List of disputes" }
-        }
-      }
-    },
-    "/disputes/{disputeId}": {
-      "get": {
-        "summary": "Get Dispute Details",
-        "operationId": "getDispute",
-        "tags": ["Disputes"],
-        "parameters": [
-          { "name": "disputeId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Dispute details" }
-        }
-      }
-    },
-    "/disputes/{disputeId}/evidence": {
-      "post": {
-        "summary": "Submit Dispute Evidence",
-        "operationId": "submitDisputeEvidence",
-        "tags": ["Disputes"],
-        "parameters": [
-          { "name": "disputeId", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Evidence submitted" }
-        }
-      }
-    },
-    "/exports/transactions": {
-      "post": {
-        "summary": "Request Transaction Export",
-        "operationId": "createExport",
-        "tags": ["Exports"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Export request created" }
-        }
-      }
-    },
-    "/exports/{exportId}": {
-      "get": {
-        "summary": "Get Export Status",
-        "operationId": "getExport",
-        "tags": ["Exports"],
-        "parameters": [
-          { "name": "exportId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Export details with download URL" }
-        }
-      }
-    },
-    "/exports": {
-      "get": {
-        "summary": "List Exports",
-        "operationId": "listExports",
-        "tags": ["Exports"],
-        "responses": {
-          "200": { "description": "List of exports" }
-        }
-      }
-    },
-    "/risk/limits": {
-      "get": {
-        "summary": "Get Transaction Limits",
-        "operationId": "getRiskLimits",
-        "tags": ["Risk & Operations"],
-        "responses": {
-          "200": { "description": "Transaction limits" }
-        }
-      },
-      "put": {
-        "summary": "Update Transaction Limits",
-        "operationId": "updateRiskLimits",
-        "tags": ["Risk & Operations"],
-        "responses": {
-          "200": { "description": "Limits updated" }
-        }
-      }
-    },
-    "/risk/rules": {
-      "get": {
-        "summary": "List Risk Rules",
-        "operationId": "listRiskRules",
-        "tags": ["Risk & Operations"],
-        "responses": {
-          "200": { "description": "List of risk rules" }
-        }
-      },
-      "post": {
-        "summary": "Create Risk Rule",
-        "operationId": "createRiskRule",
-        "tags": ["Risk & Operations"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "Risk rule created" }
-        }
-      }
-    },
-    "/audit/logs": {
-      "get": {
-        "summary": "Query Audit Trail",
-        "operationId": "getAuditLogs",
-        "tags": ["Risk & Operations"],
-        "responses": {
-          "200": { "description": "Audit log entries" }
-        }
-      }
-    },
-    "/admin/create-user": {
-      "post": {
-        "summary": "Create Platform User",
-        "operationId": "adminCreateUser",
-        "tags": ["Admin"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "User created" }
-        }
-      }
-    },
-    "/admin/create-client": {
-      "post": {
-        "summary": "Create API Client",
-        "operationId": "adminCreateClient",
-        "tags": ["Admin"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "201": { "description": "API client created" }
-        }
+        "operationId": "gatewayListDisputes",
+        "tags": ["Payment Gateway"],
+        "responses": { "200": { "description": "Disputes list" } }
       }
     },
     "/gateway/merchants": {
       "post": {
         "summary": "Register Merchant",
-        "operationId": "registerMerchant",
+        "operationId": "gatewayRegisterMerchant",
         "tags": ["Merchants"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "business_name": { "type": "string" },
-                  "business_email": { "type": "string", "format": "email" },
-                  "business_phone": { "type": "string" },
-                  "business_type": { "type": "string", "enum": ["sole_proprietorship", "partnership", "limited_company", "ngo", "cooperative", "freelancer", "e_commerce", "saas", "marketplace", "other"] },
-                  "country": { "type": "string", "default": "CM" },
-                  "default_currency": { "type": "string", "default": "XAF" },
-                  "website_url": { "type": "string", "format": "uri" },
-                  "callback_url": { "type": "string", "format": "uri" }
-                },
-                "required": ["business_name", "business_email"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Merchant account created. Starts in sandbox/draft mode." },
-          "409": { "description": "Merchant account already exists for this user" }
-        }
-      },
-      "get": {
-        "summary": "Get Current Merchant",
-        "operationId": "getCurrentMerchant",
-        "tags": ["Merchants"],
-        "description": "Returns the authenticated merchant's profile and configuration",
-        "responses": {
-          "200": { "description": "Merchant profile" },
-          "404": { "description": "No merchant account found" }
-        }
+        "responses": { "201": { "description": "Merchant registered" } }
       }
     },
-    "/gateway/merchants/{merchantId}": {
-      "put": {
-        "summary": "Update Merchant Profile",
-        "operationId": "updateMerchant",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "business_name": { "type": "string" },
-                  "business_email": { "type": "string" },
-                  "business_phone": { "type": "string" },
-                  "webhook_url": { "type": "string", "format": "uri" },
-                  "callback_url": { "type": "string", "format": "uri" },
-                  "metadata": { "type": "object" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Merchant updated" }
-        }
-      },
-      "get": {
-        "summary": "Get Merchant by ID",
-        "operationId": "getMerchantById",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": { "description": "Merchant details" }
-        }
-      }
-    },
-    "/gateway/merchants/{merchantId}/kyb": {
+    "/gateway/webhooks": {
       "post": {
-        "summary": "Submit KYB Verification",
-        "operationId": "submitMerchantKyb",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "registration_number": { "type": "string" },
-                  "tax_id": { "type": "string" },
-                  "registration_certificate_url": { "type": "string", "format": "uri" },
-                  "proof_of_address_url": { "type": "string", "format": "uri" },
-                  "directors": { "type": "array", "items": { "type": "object" } }
-                },
-                "required": ["registration_number"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "KYB submitted for review" }
-        }
+        "summary": "Register Webhook Endpoint",
+        "operationId": "gatewayRegisterWebhook",
+        "tags": ["Webhooks"],
+        "responses": { "201": { "description": "Webhook registered" } }
       },
       "get": {
-        "summary": "Get KYB Status",
-        "operationId": "getMerchantKybStatus",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": { "description": "KYB verification status and details" }
-        }
+        "summary": "List Webhook Endpoints",
+        "operationId": "gatewayListWebhooks",
+        "tags": ["Webhooks"],
+        "responses": { "200": { "description": "Webhook endpoints" } }
       }
     },
-    "/gateway/merchants/{merchantId}/api-keys": {
+    "/loans/apply": {
       "post": {
-        "summary": "Generate Merchant API Key",
-        "operationId": "generateMerchantApiKey",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "label": { "type": "string" },
-                  "environment": { "type": "string", "enum": ["sandbox", "production"] }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "API key generated. Full key returned only once." }
-        }
-      },
-      "get": {
-        "summary": "List Merchant API Keys",
-        "operationId": "listMerchantApiKeys",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": { "description": "List of API keys (prefixes only)" }
-        }
+        "summary": "Apply for Loan",
+        "operationId": "loansApply",
+        "tags": ["Loans"],
+        "responses": { "201": { "description": "Application submitted" } }
       }
     },
-    "/gateway/merchants/{merchantId}/webhooks": {
+    "/savings/create": {
       "post": {
-        "summary": "Add Merchant Webhook Endpoint",
-        "operationId": "addMerchantWebhook",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "url": { "type": "string", "format": "uri" },
-                  "events": { "type": "array", "items": { "type": "string" } }
-                },
-                "required": ["url"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Webhook endpoint created with signing secret" }
-        }
-      },
-      "get": {
-        "summary": "List Merchant Webhooks",
-        "operationId": "listMerchantWebhooks",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": { "description": "List of webhook endpoints" }
-        }
+        "summary": "Create Savings Account",
+        "operationId": "savingsCreate",
+        "tags": ["Savings"],
+        "responses": { "201": { "description": "Savings account created" } }
       }
     },
-    "/gateway/merchants/{merchantId}/settlement-accounts": {
+    "/ledger/journal": {
       "post": {
-        "summary": "Add Settlement Account",
-        "operationId": "addMerchantSettlementAccount",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } },
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "account_type": { "type": "string", "enum": ["bank_account", "mobile_money"] },
-                  "bank_name": { "type": "string" },
-                  "account_number": { "type": "string" },
-                  "account_name": { "type": "string" },
-                  "momo_provider": { "type": "string", "enum": ["mtn", "orange"] },
-                  "momo_number": { "type": "string" },
-                  "currency": { "type": "string", "default": "XAF" }
-                },
-                "required": ["account_type", "currency"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": { "description": "Settlement account added" }
-        }
-      },
-      "get": {
-        "summary": "List Settlement Accounts",
-        "operationId": "listMerchantSettlementAccounts",
-        "tags": ["Merchants"],
-        "parameters": [
-          { "name": "merchantId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }
-        ],
-        "responses": {
-          "200": { "description": "List of settlement accounts" }
-        }
+        "summary": "Post Journal Entry",
+        "operationId": "ledgerJournal",
+        "tags": ["Ledger"],
+        "responses": { "201": { "description": "Journal entry posted" } }
       }
     },
-    "/gateway/payment-links": {
+    "/cards/create": {
       "post": {
-        "summary": "Create Payment Link",
-        "operationId": "createPaymentLink",
-        "tags": ["Payment Links"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "merchant_id": { "type": "string", "format": "uuid" },
-                  "title": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "currency": { "type": "string", "default": "XAF" },
-                  "description": { "type": "string" },
-                  "redirect_url": { "type": "string", "format": "uri" },
-                  "max_uses": { "type": "integer" },
-                  "expires_at": { "type": "string", "format": "date-time" }
-                },
-                "required": ["merchant_id", "title", "amount"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Payment link created" }
-        }
-      },
-      "get": {
-        "summary": "List Payment Links",
-        "operationId": "listPaymentLinks",
-        "tags": ["Payment Links"],
-        "parameters": [
-          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "List of payment links" }
-        }
+        "summary": "Create Virtual Card",
+        "operationId": "cardsCreate",
+        "tags": ["Virtual Cards"],
+        "responses": { "201": { "description": "Virtual card created" } }
       }
     },
-    "/gateway/payment-links/{linkId}": {
-      "get": {
-        "summary": "Get Payment Link",
-        "operationId": "getPaymentLink",
-        "tags": ["Payment Links"],
-        "security": [],
-        "parameters": [
-          { "name": "linkId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Payment link details" }
-        }
-      },
-      "put": {
-        "summary": "Update Payment Link",
-        "operationId": "updatePaymentLink",
-        "tags": ["Payment Links"],
-        "parameters": [
-          { "name": "linkId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "title": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "status": { "type": "string", "enum": ["active", "inactive", "expired"] },
-                  "expires_at": { "type": "string", "format": "date-time" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Payment link updated" }
-        }
-      },
-      "delete": {
-        "summary": "Delete Payment Link",
-        "operationId": "deletePaymentLink",
-        "tags": ["Payment Links"],
-        "parameters": [
-          { "name": "linkId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "204": { "description": "Payment link deleted" }
-        }
-      }
-    },
-    "/gateway/payment-plans": {
+    "/standards/validate-iban": {
       "post": {
-        "summary": "Create Payment Plan",
-        "operationId": "createPaymentPlan",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "merchant_id": { "type": "string", "format": "uuid" },
-                  "name": { "type": "string" },
-                  "amount": { "type": "number" },
-                  "currency": { "type": "string", "default": "XAF" },
-                  "interval": { "type": "string", "enum": ["daily", "weekly", "monthly", "yearly"] },
-                  "interval_count": { "type": "integer", "default": 1 },
-                  "duration": { "type": "integer" }
-                },
-                "required": ["merchant_id", "name", "amount"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Payment plan created" }
-        }
-      },
-      "get": {
-        "summary": "List Payment Plans",
-        "operationId": "listPaymentPlans",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "List of payment plans" }
-        }
+        "summary": "Validate IBAN",
+        "operationId": "validateIban",
+        "tags": ["Standards & Directory"],
+        "responses": { "200": { "description": "Validation result" } }
       }
     },
-    "/gateway/payment-plans/{planId}": {
-      "get": {
-        "summary": "Get Payment Plan",
-        "operationId": "getPaymentPlan",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "planId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Payment plan details" }
-        }
-      },
-      "put": {
-        "summary": "Update Payment Plan",
-        "operationId": "updatePaymentPlan",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "planId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "status": { "type": "string", "enum": ["active", "inactive"] }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Payment plan updated" }
-        }
-      }
-    },
-    "/gateway/subscriptions": {
+    "/kyc/submit": {
       "post": {
-        "summary": "Create Subscription",
-        "operationId": "createSubscription",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "merchant_id": { "type": "string", "format": "uuid" },
-                  "plan_id": { "type": "string", "format": "uuid" },
-                  "customer_email": { "type": "string", "format": "email" },
-                  "customer_phone": { "type": "string" },
-                  "customer_name": { "type": "string" }
-                },
-                "required": ["merchant_id", "plan_id", "customer_email"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Subscription created" }
-        }
-      },
-      "get": {
-        "summary": "List Subscriptions",
-        "operationId": "listSubscriptions",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "List of subscriptions" }
-        }
+        "summary": "Submit KYC Documents",
+        "operationId": "kycSubmit",
+        "tags": ["KYC & Compliance"],
+        "responses": { "201": { "description": "KYC submission accepted" } }
       }
     },
-    "/gateway/subscriptions/{subscriptionId}": {
-      "get": {
-        "summary": "Get Subscription",
-        "operationId": "getSubscription",
-        "tags": ["Subscriptions"],
-        "parameters": [
-          { "name": "subscriptionId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Subscription details" }
-        }
-      }
-    },
-    "/gateway/subscriptions/cancel": {
+    "/mobile-money/charge": {
       "post": {
-        "summary": "Cancel Subscription",
-        "operationId": "cancelSubscription",
-        "tags": ["Subscriptions"],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "subscription_id": { "type": "string", "format": "uuid" },
-                  "reason": { "type": "string" }
-                },
-                "required": ["subscription_id"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Subscription cancelled" }
-        }
+        "summary": "Initiate Mobile Money Charge",
+        "operationId": "mobileMoneyCharge",
+        "tags": ["Mobile Money"],
+        "responses": { "201": { "description": "Charge initiated" } }
       }
     },
-    "/gateway/subaccounts": {
+    "/certificates/upload": {
       "post": {
-        "summary": "Create Subaccount",
-        "operationId": "createSubaccount",
-        "tags": ["Split Payments"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "merchant_id": { "type": "string", "format": "uuid" },
-                  "subaccount_name": { "type": "string" },
-                  "settlement_bank": { "type": "string" },
-                  "account_number": { "type": "string" },
-                  "split_type": { "type": "string", "enum": ["percentage", "flat"] },
-                  "split_value": { "type": "number" }
-                },
-                "required": ["merchant_id", "subaccount_name", "split_value"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Subaccount created" }
-        }
-      },
-      "get": {
-        "summary": "List Subaccounts",
-        "operationId": "listSubaccounts",
-        "tags": ["Split Payments"],
-        "parameters": [
-          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "List of subaccounts" }
-        }
-      }
-    },
-    "/gateway/subaccounts/{subaccountId}": {
-      "get": {
-        "summary": "Get Subaccount",
-        "operationId": "getSubaccount",
-        "tags": ["Split Payments"],
-        "parameters": [
-          { "name": "subaccountId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Subaccount details" }
-        }
-      },
-      "put": {
-        "summary": "Update Subaccount",
-        "operationId": "updateSubaccount",
-        "tags": ["Split Payments"],
-        "parameters": [
-          { "name": "subaccountId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "subaccount_name": { "type": "string" },
-                  "split_type": { "type": "string", "enum": ["percentage", "flat"] },
-                  "split_value": { "type": "number" },
-                  "is_active": { "type": "boolean" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Subaccount updated" }
-        }
-      },
-      "delete": {
-        "summary": "Delete Subaccount",
-        "operationId": "deleteSubaccount",
-        "tags": ["Split Payments"],
-        "parameters": [
-          { "name": "subaccountId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "204": { "description": "Subaccount deleted" }
-        }
-      }
-    },
-    "/gateway/customers": {
-      "get": {
-        "summary": "List Customers",
-        "operationId": "listCustomers",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "merchant_id", "in": "query", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "List of customers" }
-        }
-      },
-      "post": {
-        "summary": "Create Customer",
-        "operationId": "createCustomer",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "merchant_id": { "type": "string", "format": "uuid" },
-                  "email": { "type": "string", "format": "email" },
-                  "name": { "type": "string" },
-                  "phone": { "type": "string" }
-                },
-                "required": ["merchant_id", "email"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Customer created" }
-        }
-      }
-    },
-    "/gateway/customers/{customerId}": {
-      "get": {
-        "summary": "Get Customer",
-        "operationId": "getCustomer",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Customer details" }
-        }
-      },
-      "put": {
-        "summary": "Update Customer",
-        "operationId": "updateCustomer",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "name": { "type": "string" },
-                  "phone": { "type": "string" },
-                  "metadata": { "type": "object" }
-                }
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Customer updated" }
-        }
-      }
-    },
-    "/gateway/customers/{customerId}/tokens": {
-      "get": {
-        "summary": "List Customer Tokens",
-        "operationId": "listCustomerTokens",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "List of saved payment tokens" }
-        }
-      }
-    },
-    "/gateway/customers/{customerId}/tokens/{tokenId}": {
-      "delete": {
-        "summary": "Revoke Customer Token",
-        "operationId": "revokeCustomerToken",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "customerId", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "tokenId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Token revoked" }
-        }
-      }
-    },
-    "/gateway/exchange-rate": {
-      "get": {
-        "summary": "Get Exchange Rate",
-        "operationId": "getGatewayExchangeRate",
-        "tags": ["Payment Gateway"],
-        "parameters": [
-          { "name": "from", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "to", "in": "query", "required": true, "schema": { "type": "string" } },
-          { "name": "amount", "in": "query", "required": false, "schema": { "type": "number" } }
-        ],
-        "responses": {
-          "200": { "description": "Exchange rate result" }
-        }
-      }
-    },
-    "/gateway/payouts/{payoutId}/retry": {
-      "post": {
-        "summary": "Retry Failed Payout",
-        "operationId": "retryPayout",
-        "tags": ["Payment Gateway"],
-        "parameters": [
-          { "name": "payoutId", "in": "path", "required": true, "schema": { "type": "string" } },
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Payout retried" }
-        }
-      }
-    },
-    "/gateway/charges/token": {
-      "post": {
-        "summary": "Charge Saved Token",
-        "operationId": "chargeToken",
-        "tags": ["Tokenization"],
-        "parameters": [
-          { "name": "Idempotency-Key", "in": "header", "required": true, "schema": { "type": "string" } }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "merchant_id": { "type": "string", "format": "uuid" },
-                  "token_id": { "type": "string", "format": "uuid" },
-                  "amount": { "type": "number" },
-                  "currency": { "type": "string", "default": "XAF" },
-                  "tx_ref": { "type": "string" }
-                },
-                "required": ["merchant_id", "token_id", "amount", "tx_ref"]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": { "description": "Token charge result" }
-        }
-      }
-    },
-    "/gateway/charges/{chargeId}/events": {
-      "get": {
-        "summary": "Get Charge Events",
-        "operationId": "getChargeEvents",
-        "tags": ["Charge Events"],
-        "parameters": [
-          { "name": "chargeId", "in": "path", "required": true, "schema": { "type": "string" } }
-        ],
-        "responses": {
-          "200": { "description": "Charge event timeline" }
-        }
+        "summary": "Upload mTLS Certificate",
+        "operationId": "certificatesUpload",
+        "tags": ["Certificates"],
+        "responses": { "201": { "description": "Certificate uploaded" } }
       }
     }
   },
   "components": {
+    "schemas": {
+      "Error": {
+        "type": "object",
+        "required": ["error", "error_code", "message", "error_id", "timestamp"],
+        "properties": {
+          "error": { "type": "string", "description": "Machine-readable error code (snake_case)", "example": "invalid_request" },
+          "error_code": { "type": "string", "description": "Domain-prefixed error code", "example": "AUTH_001" },
+          "message": { "type": "string", "description": "Human-readable description" },
+          "details": { "type": "object", "additionalProperties": true },
+          "error_id": { "type": "string", "example": "err_a1b2c3d4" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "HealthStatus": {
+        "type": "object",
+        "properties": {
+          "status": { "type": "string", "enum": ["healthy", "degraded", "unhealthy"] },
+          "version": { "type": "string" },
+          "timestamp": { "type": "string", "format": "date-time" }
+        }
+      },
+      "WebhookEventType": {
+        "type": "string",
+        "enum": [
+          "charge.created", "charge.processing", "charge.successful", "charge.failed",
+          "charge.cancelled", "charge.voided", "charge.captured", "charge.refunded",
+          "payout.created", "payout.processing", "payout.completed", "payout.failed",
+          "refund.created", "refund.completed", "refund.failed",
+          "dispute.created", "dispute.won", "dispute.lost",
+          "settlement.paid",
+          "consent.created", "consent.authorised", "consent.revoked", "consent.expired",
+          "account.updated"
+        ],
+        "description": "All 24 supported webhook event types"
+      }
+    },
     "securitySchemes": {
       "oauth2": {
         "type": "oauth2",
         "flows": {
-          "clientCredentials": {
-            "tokenUrl": "https://api.kangopenbanking.com/functions/v1/oauth-token",
-            "scopes": {
-              "accounts": "Access account information",
-              "balances": "Access account balances",
-              "transactions": "Access transaction history",
-              "payments": "Initiate payments"
-            }
-          },
           "authorizationCode": {
             "authorizationUrl": "https://api.kangopenbanking.com/functions/v1/oauth-authorize",
             "tokenUrl": "https://api.kangopenbanking.com/functions/v1/oauth-token",
             "scopes": {
-              "openid": "OpenID Connect",
-              "accounts": "Access account information",
+              "openid": "OpenID Connect identity",
+              "accounts": "Read account information (AISP)",
+              "balances": "Read account balances",
+              "transactions": "Read transaction history",
+              "payments": "Initiate payments (PISP)",
+              "offline_access": "Refresh token grant"
+            }
+          },
+          "clientCredentials": {
+            "tokenUrl": "https://api.kangopenbanking.com/functions/v1/oauth-token",
+            "scopes": {
+              "accounts": "Read account information",
               "payments": "Initiate payments"
             }
           }
@@ -1236,28 +302,29 @@
         "type": "http",
         "scheme": "bearer",
         "bearerFormat": "JWT"
+      },
+      "mtls": {
+        "type": "mutualTLS",
+        "description": "mTLS client certificate authentication for FAPI 1.0 Advanced flows"
       }
     }
   },
   "tags": [
     { "name": "System", "description": "Health and status endpoints" },
-    { "name": "Authentication", "description": "OAuth 2.0 token management" },
-    { "name": "AISP", "description": "Account Information Service Provider" },
-    { "name": "PISP", "description": "Payment Initiation Service Provider" },
-    { "name": "Refunds", "description": "Payment refunds and reversals" },
-    { "name": "Mobile Money", "description": "MTN and Orange Money integration" },
-    { "name": "Beneficiaries", "description": "Bank lists, account validation, and saved beneficiaries" },
-    { "name": "Settlements", "description": "Settlement schedules, reports, fees, and split payments" },
-    { "name": "Disputes", "description": "Card payment disputes and chargebacks" },
-    { "name": "Exports", "description": "Transaction data exports in CSV, JSON, PDF" },
-    { "name": "Credit Scoring", "description": "Credit score queries and reports" },
-    { "name": "Risk & Operations", "description": "Risk rules, transaction limits, and audit trails" },
-    { "name": "Admin", "description": "Platform administration endpoints" },
-    { "name": "Payment Links", "description": "No-code shareable payment links with hosted checkout" },
-    { "name": "Subscriptions", "description": "Recurring billing plans and customer subscriptions" },
-    { "name": "Split Payments", "description": "Marketplace subaccounts and charge split distribution" },
-    { "name": "Tokenization", "description": "Customer profiles and saved payment method tokens" },
-    { "name": "Charge Events", "description": "Granular charge lifecycle event timeline" },
-    { "name": "Payment Gateway", "description": "Exchange rates and payout management" }
+    { "name": "Authentication", "description": "OAuth 2.0, OIDC, DCR, PKCE" },
+    { "name": "AISP — Account Information", "description": "Account information services (read-only)" },
+    { "name": "PISP — Payment Initiation", "description": "Payment initiation services" },
+    { "name": "Payment Gateway", "description": "Charges, payouts, refunds, disputes, settlements, payment links, subscriptions, split payments" },
+    { "name": "Merchants", "description": "Merchant registration, KYB, API keys, webhooks" },
+    { "name": "Webhooks", "description": "Webhook endpoint management and delivery monitoring" },
+    { "name": "Loans", "description": "Loan applications, approvals, disbursements, repayments" },
+    { "name": "Savings", "description": "Savings products, accounts, deposits, withdrawals, interest" },
+    { "name": "Ledger", "description": "Chart of accounts, journal entries, trial balance" },
+    { "name": "Virtual Cards", "description": "Virtual card issuance, funding, transactions" },
+    { "name": "Mobile Money", "description": "MTN and Orange Money charges and transfers" },
+    { "name": "KYC & Compliance", "description": "Identity verification, sanctions screening, CDD" },
+    { "name": "Standards & Directory", "description": "IBAN/BIC/RIB validation, bank directory, ISO 20022, SWIFT" },
+    { "name": "Certificates", "description": "mTLS certificate management" },
+    { "name": "Consumer Tools", "description": "Piggy Bank savings goals, Njangi group savings" }
   ]
 }
