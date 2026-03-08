@@ -409,6 +409,10 @@ import { BusinessAppLayout } from "./components/business-app/BusinessAppLayout";
 import BusinessSplash from "./pages/business-app/BusinessSplash";
 import BusinessAuth from "./pages/business-app/BusinessAuth";
 import BusinessHome from "./pages/business-app/BusinessHome";
+import BusinessWallet from "./pages/business-app/BusinessWallet";
+import BusinessReceive from "./pages/business-app/BusinessReceive";
+import BusinessOrders from "./pages/business-app/BusinessOrders";
+import BusinessMore from "./pages/business-app/BusinessMore";
 import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
 
 const queryClient = new QueryClient({
