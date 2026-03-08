@@ -93,9 +93,16 @@ serve(async (req) => {
       .in('balance_type', ['ClosingAvailable', 'InterimAvailable'])
       .order('balance_datetime', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    const currentBalance = balanceRecord?.amount || 0;
+    if (!balanceRecord) {
+      return new Response(JSON.stringify({
+        error: 'no_balance_record',
+        message: 'No balance record found for this account. Please fund your wallet first.',
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const currentBalance = balanceRecord.amount || 0;
 
     // Fetch admin fee structure
     const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
