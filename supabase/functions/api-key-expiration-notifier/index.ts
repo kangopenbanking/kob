@@ -1,6 +1,6 @@
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { corsHeaders } from "../_shared/cors.ts";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
 function problem(status: number, title: string, detail: string) {
   return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
@@ -10,6 +10,10 @@ function problem(status: number, title: string, detail: string) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  // Require cron auth — prevents unauthenticated invocation
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
 
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -25,6 +29,6 @@ Deno.serve(async (req) => {
     );
   } catch (error: any) {
     console.error('Error checking API key expiration:', error);
-    return problem(500, 'Internal Server Error', error.message);
+    return problem(500, 'Internal Server Error', 'Expiration check failed');
   }
 });

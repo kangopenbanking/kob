@@ -240,11 +240,16 @@ Deno.serve(async (req) => {
       );
 
     } else if (grant_type === 'refresh_token') {
+      // Hash the refresh token before lookup (tokens stored as SHA-256 hashes)
+      const rtLookupEncoder = new TextEncoder();
+      const rtLookupHashBuf = await crypto.subtle.digest('SHA-256', rtLookupEncoder.encode(refresh_token as string));
+      const rtLookupHash = Array.from(new Uint8Array(rtLookupHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
       // Refresh token flow
       const { data: refreshData, error: refreshError } = await supabase
         .from('refresh_tokens')
         .select('*')
-        .eq('token_hash', refresh_token)
+        .eq('token_hash', rtLookupHash)
         .eq('client_id', client_id)
         .eq('is_revoked', false)
         .single();

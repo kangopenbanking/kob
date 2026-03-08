@@ -48,12 +48,17 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Hash the token before lookup (tokens are stored as SHA-256 hashes)
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
+    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+
     // Try to revoke as access token
     if (!token_type_hint || token_type_hint === 'access_token') {
       const { error } = await supabase
         .from('access_tokens')
         .update({ is_revoked: true, revoked_at: new Date().toISOString() })
-        .eq('token_hash', token)
+        .eq('token_hash', tokenHash)
         .eq('client_id', client_id);
 
       if (!error) {
@@ -66,7 +71,7 @@ Deno.serve(async (req) => {
       const { error } = await supabase
         .from('refresh_tokens')
         .update({ is_revoked: true, revoked_at: new Date().toISOString() })
-        .eq('token_hash', token)
+        .eq('token_hash', tokenHash)
         .eq('client_id', client_id);
 
       if (!error) {
