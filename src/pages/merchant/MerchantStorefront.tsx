@@ -779,7 +779,7 @@ export default function MerchantStorefront() {
                             )}
                             <Button
                               className={`w-full mt-5 rounded-lg h-10 text-xs font-semibold gap-2 ${isPremium ? 'bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white' : ''}`}
-                              disabled={subscribing} onClick={() => handleSubscribe(plan.id)} variant={isPremium ? 'default' : 'outline'}>
+                              disabled={subscribing} onClick={() => { setSelectedPlan(plan); setUpgradeModalOpen(true); }} variant={isPremium ? 'default' : 'outline'}>
                               {subscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <>Get Started <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.5} /></>}
                             </Button>
                           </CardContent>
