@@ -81,7 +81,7 @@ const BankQRPay: React.FC = () => {
               <QrCode className="h-12 w-12 animate-pulse text-muted-foreground/40" strokeWidth={1} />
             </div>
           ) : accountId ? (
-            <QRCodeSVG data={qrData} size={200} />
+            <QRCodeSVG value={qrData} size={200} />
           ) : (
             <div className="flex h-[200px] w-[200px] items-center justify-center text-center">
               <p className="text-xs text-muted-foreground">No account found</p>

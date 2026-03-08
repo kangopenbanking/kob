@@ -59,15 +59,30 @@ const BankHelp: React.FC = () => {
     }
   };
 
-  const handleSendChat = () => {
+  const handleSendChat = async () => {
     if (!chatSubject.trim() || !chatMessage.trim()) {
       toast.error('Please fill in subject and message');
       return;
     }
-    toast.success('Message sent! Our team will respond within 24 hours.');
-    setChatMessage('');
-    setChatSubject('');
-    setShowChat(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error('Please sign in first'); return; }
+      const { error } = await supabase.from('app_notifications').insert({
+        user_id: user.id,
+        type: 'info',
+        title: `Support: ${chatSubject.trim()}`,
+        message: chatMessage.trim(),
+        icon: 'support',
+        metadata: { source: 'bank_help_chat', subject: chatSubject.trim() },
+      });
+      if (error) throw error;
+      toast.success('Message sent! Our team will respond within 24 hours.');
+      setChatMessage('');
+      setChatSubject('');
+      setShowChat(false);
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to send message');
+    }
   };
 
   const helpActions = [
