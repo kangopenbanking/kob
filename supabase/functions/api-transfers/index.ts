@@ -356,6 +356,7 @@ serve(async (req) => {
           destination_account_holder: destAccount.account_holder_name,
           transfer_type: transferRail,
           rail: transferRail,
+          ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
         },
       })
       .select('id')

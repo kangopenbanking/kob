@@ -145,74 +145,16 @@ serve(async (req) => {
           transferRail = 'domestic_interbank';
         }
 
-        // ═══ STEP 1: Debit source balance ═══
-        const newSourceAmount = parseFloat(sourceBalance.amount) - amount;
-        const { error: debitBalErr } = await supabase
-          .from('account_balances')
-          .update({ amount: newSourceAmount, balance_datetime: now })
-          .eq('id', sourceBalance.id);
+        // ═══ C2 FIX: Atomic transfer via PL/pgSQL with row locks ═══
+        const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
+          _source_balance_id: sourceBalance.id,
+          _dest_account_id: destAccount.id,
+          _amount: amount,
+          _currency: txCurrency,
+        });
 
-        if (debitBalErr) {
-          throw new Error('Failed to debit source balance');
-        }
-
-        // ═══ STEP 2: Credit destination balance ═══
-        let destBalance: any = null;
-        const { data: destInterimBal } = await supabase
-          .from('account_balances')
-          .select('id, amount, balance_type')
-          .eq('account_id', destAccount.id)
-          .eq('balance_type', 'InterimAvailable')
-          .eq('credit_debit_indicator', 'Credit')
-          .maybeSingle();
-
-        if (destInterimBal) {
-          destBalance = destInterimBal;
-        } else {
-          const { data: destClosingBal } = await supabase
-            .from('account_balances')
-            .select('id, amount, balance_type')
-            .eq('account_id', destAccount.id)
-            .eq('balance_type', 'ClosingAvailable')
-            .eq('credit_debit_indicator', 'Credit')
-            .maybeSingle();
-          destBalance = destClosingBal;
-        }
-
-        if (destBalance) {
-          const newDestAmount = parseFloat(destBalance.amount) + amount;
-          const { error: creditBalErr } = await supabase
-            .from('account_balances')
-            .update({ amount: newDestAmount, balance_datetime: now })
-            .eq('id', destBalance.id);
-
-          if (creditBalErr) {
-            // Rollback source debit
-            await supabase.from('account_balances')
-              .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
-              .eq('id', sourceBalance.id);
-            throw new Error('Failed to credit destination balance');
-          }
-        } else {
-          // Create new balance record for destination
-          const { error: insertBalErr } = await supabase
-            .from('account_balances')
-            .insert({
-              account_id: destAccount.id,
-              balance_type: 'ClosingAvailable',
-              credit_debit_indicator: 'Credit',
-              amount: amount,
-              currency: txCurrency,
-              balance_datetime: now,
-            });
-
-          if (insertBalErr) {
-            // Rollback source debit
-            await supabase.from('account_balances')
-              .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
-              .eq('id', sourceBalance.id);
-            throw new Error('Failed to create destination balance');
-          }
+        if (atomicError) {
+          throw new Error(atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer');
         }
 
         // ═══ STEP 3: Create debit transaction (sender) ═══

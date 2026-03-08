@@ -86,21 +86,44 @@ serve(async (req) => {
           })
           .eq('id', payoutRecord.id);
 
-        // Handle withdrawal reversal on failure
+        // Handle withdrawal reversal on failure (H2 fix: check both balance types)
         if (kobStatus === 'failed' && payoutRecord.metadata?.withdrawal_account_id) {
           const accountId = payoutRecord.metadata.withdrawal_account_id;
-          const { data: balance } = await supabase
+          // Try ClosingAvailable first (primary), then InterimAvailable
+          let balance = null;
+          const { data: closingBal } = await supabase
             .from('account_balances')
             .select('*')
             .eq('account_id', accountId)
-            .eq('balance_type', 'InterimAvailable')
-            .single();
+            .eq('balance_type', 'ClosingAvailable')
+            .eq('credit_debit_indicator', 'Credit')
+            .maybeSingle();
+          balance = closingBal;
+
+          if (!balance) {
+            const { data: interimBal } = await supabase
+              .from('account_balances')
+              .select('*')
+              .eq('account_id', accountId)
+              .eq('balance_type', 'InterimAvailable')
+              .eq('credit_debit_indicator', 'Credit')
+              .maybeSingle();
+            balance = interimBal;
+          }
 
           if (balance) {
             await supabase
               .from('account_balances')
               .update({ amount: balance.amount + payoutRecord.amount })
               .eq('id', balance.id);
+          } else {
+            // Create new balance record if neither exists
+            await supabase.from('account_balances').insert({
+              account_id: accountId, balance_type: 'ClosingAvailable',
+              credit_debit_indicator: 'Credit', amount: payoutRecord.amount,
+              currency: payoutRecord.currency || 'USD',
+              balance_datetime: new Date().toISOString(),
+            });
           }
         }
 
