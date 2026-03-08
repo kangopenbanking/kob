@@ -31,11 +31,11 @@
       "properties": [
         {
           "type": "X-openapi",
-          "url": "https://kangopenbanking.com/openapi.json"
+          "url": "https://api.kangopenbanking.com/functions/v1/public-api-spec"
         },
         {
-          "type": "X-openapi-dynamic",
-          "url": "https://api.kangopenbanking.com/functions/v1/public-api-spec"
+          "type": "X-openapi-static",
+          "url": "https://kangopenbanking.com/openapi.json"
         },
         {
           "type": "X-postman-collection",
