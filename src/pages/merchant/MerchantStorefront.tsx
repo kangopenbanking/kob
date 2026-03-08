@@ -371,7 +371,7 @@ export default function MerchantStorefront() {
                 <Card className="border-0 shadow-sm overflow-hidden">
                   <div className="relative">
                     <img src={posKob} alt="KOB POS Terminal" className="w-full h-40 object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div className="absolute inset-0 bg-black/40" />
                     <div className="absolute bottom-3 left-3">
                       <p className="text-white text-xs font-bold">KOB POS Terminal</p>
                       <p className="text-white/70 text-[10px]">Accept payments in-store</p>
