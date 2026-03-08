@@ -1622,6 +1622,7 @@ export default function CustomerAppManagement() {
                   <TabsTrigger value="hero" className="gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Hero Section</TabsTrigger>
                   <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Typography</TabsTrigger>
                   <TabsTrigger value="travel-card" className="gap-1.5"><Plane className="h-3.5 w-3.5" /> Travel Card</TabsTrigger>
+                  <TabsTrigger value="storefront" className="gap-1.5"><Store className="h-3.5 w-3.5" /> Storefronts</TabsTrigger>
                 </TabsList>
 
                 {/* Linked Accounts Tab */}
