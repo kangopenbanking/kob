@@ -154,7 +154,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </header>
 
             <main className="flex-1 p-6">
-              {children || <Outlet />}
+              <PortalErrorBoundary portalName="Dashboard" fallbackPath="/dashboard">
+                {children || <Outlet />}
+              </PortalErrorBoundary>
             </main>
           </div>
         </div>

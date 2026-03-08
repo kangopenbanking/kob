@@ -270,8 +270,10 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
           </header>
 
           <main className="flex-1 p-6">
-            <DeveloperBreadcrumb />
-            {children || <Outlet />}
+            <PortalErrorBoundary portalName="Developer Portal" fallbackPath="/developer">
+              <DeveloperBreadcrumb />
+              {children || <Outlet />}
+            </PortalErrorBoundary>
           </main>
         </div>
       </div>

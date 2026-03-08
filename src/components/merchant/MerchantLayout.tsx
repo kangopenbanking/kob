@@ -133,7 +133,9 @@ export function MerchantLayout() {
           </header>
 
           <main className="flex-1 p-6">
-            <Outlet />
+            <PortalErrorBoundary portalName="Merchant Portal" fallbackPath="/merchant">
+              <Outlet />
+            </PortalErrorBoundary>
           </main>
         </div>
       </div>
