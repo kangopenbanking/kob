@@ -28,6 +28,8 @@ import {
 
 import posKob from '@/assets/pos-kob.webp';
 import posPaymentSuccess from '@/assets/pos-payment-success.webp';
+import { ImageUpload } from '@/components/storefront/ImageUpload';
+import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
