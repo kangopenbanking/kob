@@ -33,6 +33,7 @@ import { StorePreview, StorePreviewDialog } from '@/components/storefront/StoreP
 import { ShippingForm } from '@/components/storefront/ShippingForm';
 import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
 import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeaturesTab';
+import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgradeModal';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
