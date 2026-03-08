@@ -75,7 +75,7 @@ export async function checkRateLimit(
 
   if (error) {
     console.error('Rate limit check failed:', error);
-    return true; // Fail open to avoid blocking legitimate requests
+    return false; // Fail closed for banking API security
   }
 
   return allowed;

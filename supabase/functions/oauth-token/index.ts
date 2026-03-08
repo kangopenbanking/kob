@@ -173,11 +173,18 @@ Deno.serve(async (req) => {
       const new_refresh_token = generateSecureToken();
       const expires_in = 3600; // 1 hour
 
+      // H8 FIX: Hash tokens before storage (SHA-256)
+      const encoder = new TextEncoder();
+      const accessTokenHashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(access_token));
+      const accessTokenHash = Array.from(new Uint8Array(accessTokenHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      const refreshTokenHashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(new_refresh_token));
+      const refreshTokenHash = Array.from(new Uint8Array(refreshTokenHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
       // Store refresh token with certificate binding
       const { data: refreshTokenData } = await supabase
         .from('refresh_tokens')
         .insert({
-          token_hash: new_refresh_token,
+          token_hash: refreshTokenHash,
           user_id: authCode.user_id,
           client_id: client_id,
           scope: authCode.scope,
@@ -188,11 +195,11 @@ Deno.serve(async (req) => {
         .select()
         .single();
 
-      // Store access token with certificate binding (RFC 8705)
+      // Store access token hash with certificate binding (RFC 8705)
       await supabase
         .from('access_tokens')
         .insert({
-          token_hash: access_token,
+          token_hash: accessTokenHash,
           user_id: authCode.user_id,
           client_id: client_id,
           scope: authCode.scope,
@@ -221,7 +228,7 @@ Deno.serve(async (req) => {
       }
 
       const responseHeaders = addRateLimitHeaders(
-        { ...corsHeaders, 'Content-Type': 'application/json' },
+        { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Pragma': 'no-cache' },
         100,
         rateLimit.remaining,
         rateLimit.reset
@@ -253,11 +260,16 @@ Deno.serve(async (req) => {
       const access_token = generateSecureToken();
       const expires_in = 3600;
 
+      // H8 FIX: Hash token before storage
+      const rtEncoder = new TextEncoder();
+      const rtHashBuf = await crypto.subtle.digest('SHA-256', rtEncoder.encode(access_token));
+      const rtAccessHash = Array.from(new Uint8Array(rtHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
       // Inherit certificate binding from refresh token
       await supabase
         .from('access_tokens')
         .insert({
-          token_hash: access_token,
+          token_hash: rtAccessHash,
           user_id: refreshData.user_id,
           client_id: client_id,
           scope: refreshData.scope,
@@ -283,7 +295,7 @@ Deno.serve(async (req) => {
       }
 
       const refreshResponseHeaders = addRateLimitHeaders(
-        { ...corsHeaders, 'Content-Type': 'application/json' },
+        { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Pragma': 'no-cache' },
         100,
         rateLimit.remaining,
         rateLimit.reset
@@ -319,8 +331,13 @@ Deno.serve(async (req) => {
       const access_token = generateSecureToken();
       const expires_in = 3600;
 
+      // H8 FIX: Hash token before storage
+      const ccEncoder = new TextEncoder();
+      const ccHashBuf = await crypto.subtle.digest('SHA-256', ccEncoder.encode(access_token));
+      const ccAccessHash = Array.from(new Uint8Array(ccHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
       await supabase.from('access_tokens').insert({
-        token_hash: access_token,
+        token_hash: ccAccessHash,
         user_id: null,
         client_id: client_id,
         scope: requestedScope,
@@ -336,7 +353,8 @@ Deno.serve(async (req) => {
 
       return new Response(JSON.stringify(ccResponse), {
         status: 200,
-        headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json' }, 100, rateLimit.remaining, rateLimit.reset),
+        headers: addRateLimitHeaders({ ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Pragma': 'no-cache' }, 100, rateLimit.remaining, rateLimit.reset),
+      });
       });
     }
 

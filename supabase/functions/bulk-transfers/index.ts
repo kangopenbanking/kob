@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -145,74 +145,16 @@ serve(async (req) => {
           transferRail = 'domestic_interbank';
         }
 
-        // ═══ STEP 1: Debit source balance ═══
-        const newSourceAmount = parseFloat(sourceBalance.amount) - amount;
-        const { error: debitBalErr } = await supabase
-          .from('account_balances')
-          .update({ amount: newSourceAmount, balance_datetime: now })
-          .eq('id', sourceBalance.id);
+        // ═══ C2 FIX: Atomic transfer via PL/pgSQL with row locks ═══
+        const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
+          _source_balance_id: sourceBalance.id,
+          _dest_account_id: destAccount.id,
+          _amount: amount,
+          _currency: txCurrency,
+        });
 
-        if (debitBalErr) {
-          throw new Error('Failed to debit source balance');
-        }
-
-        // ═══ STEP 2: Credit destination balance ═══
-        let destBalance: any = null;
-        const { data: destInterimBal } = await supabase
-          .from('account_balances')
-          .select('id, amount, balance_type')
-          .eq('account_id', destAccount.id)
-          .eq('balance_type', 'InterimAvailable')
-          .eq('credit_debit_indicator', 'Credit')
-          .maybeSingle();
-
-        if (destInterimBal) {
-          destBalance = destInterimBal;
-        } else {
-          const { data: destClosingBal } = await supabase
-            .from('account_balances')
-            .select('id, amount, balance_type')
-            .eq('account_id', destAccount.id)
-            .eq('balance_type', 'ClosingAvailable')
-            .eq('credit_debit_indicator', 'Credit')
-            .maybeSingle();
-          destBalance = destClosingBal;
-        }
-
-        if (destBalance) {
-          const newDestAmount = parseFloat(destBalance.amount) + amount;
-          const { error: creditBalErr } = await supabase
-            .from('account_balances')
-            .update({ amount: newDestAmount, balance_datetime: now })
-            .eq('id', destBalance.id);
-
-          if (creditBalErr) {
-            // Rollback source debit
-            await supabase.from('account_balances')
-              .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
-              .eq('id', sourceBalance.id);
-            throw new Error('Failed to credit destination balance');
-          }
-        } else {
-          // Create new balance record for destination
-          const { error: insertBalErr } = await supabase
-            .from('account_balances')
-            .insert({
-              account_id: destAccount.id,
-              balance_type: 'ClosingAvailable',
-              credit_debit_indicator: 'Credit',
-              amount: amount,
-              currency: txCurrency,
-              balance_datetime: now,
-            });
-
-          if (insertBalErr) {
-            // Rollback source debit
-            await supabase.from('account_balances')
-              .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
-              .eq('id', sourceBalance.id);
-            throw new Error('Failed to create destination balance');
-          }
+        if (atomicError) {
+          throw new Error(atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer');
         }
 
         // ═══ STEP 3: Create debit transaction (sender) ═══
@@ -313,16 +255,16 @@ serve(async (req) => {
   }
 });
 
-// CSV Parser
+// M2 FIX: CSV Parser with proper quoting support
 function parseCSV(csv: string): BulkTransferRow[] {
   const lines = csv.trim().split('\n');
   if (lines.length < 2) return [];
 
-  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const headers = parseCsvLine(lines[0]).map(h => h.trim().toLowerCase());
   const rows: BulkTransferRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const values = lines[i].split(',').map(v => v.trim());
+    const values = parseCsvLine(lines[i]).map(v => v.trim());
     const row: any = {};
     
     headers.forEach((header, index) => {
@@ -333,4 +275,30 @@ function parseCSV(csv: string): BulkTransferRow[] {
   }
 
   return rows;
+}
+
+// Parse a single CSV line respecting quoted fields
+function parseCsvLine(line: string): string[] {
+  const result: string[] = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        current += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
 }

@@ -42,6 +42,7 @@ export interface PayoutResult {
 export interface RefundRequest {
   provider_ref: string;
   amount: number;
+  currency?: string;
   reason?: string;
 }
 
@@ -166,7 +167,7 @@ export async function createFlutterwaveCharge(req: ChargeRequest): Promise<Charg
   });
 
   const data = await res.json();
-  console.log('[Flutterwave] Response:', JSON.stringify(data).substring(0, 500));
+  console.log('[Flutterwave] Response status:', data.status, 'ref:', data.data?.flw_ref || 'n/a');
 
   if (data.status === 'error') {
     throw new Error(`Flutterwave error: ${data.message || JSON.stringify(data)}`);
@@ -278,7 +279,7 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
 
   const params = new URLSearchParams();
   params.append('payment_intent', req.provider_ref);
-  params.append('amount', Math.round(req.amount * 100).toString());
+  params.append('amount', toStripeAmount(req.amount, req.currency || 'XAF').toString());
   if (req.reason) params.append('reason', 'requested_by_customer');
 
   const res = await fetch('https://api.stripe.com/v1/refunds', {
@@ -302,12 +303,18 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
 
 // ─── PayPal Adapter ───
 
+// M4 FIX: PayPal sandbox/production toggle
+function getPayPalBaseUrl(): string {
+  const paypalEnv = typeof Deno !== "undefined" ? (Deno.env.get('PAYPAL_ENVIRONMENT') || 'production') : 'production';
+  return paypalEnv === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com';
+}
+
 export async function getPayPalAccessToken(): Promise<string> {
   const clientId = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_ID') : undefined;
   const secret = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_SECRET') : undefined;
   if (!clientId || !secret) throw new Error('PayPal credentials not configured');
 
-  const res = await fetch('https://api-m.paypal.com/v1/oauth2/token', {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/oauth2/token`, {
     method: 'POST',
     headers: {
       'Authorization': `Basic ${btoa(`${clientId}:${secret}`)}`,
@@ -339,7 +346,7 @@ export async function createPayPalPayout(req: PayoutRequest): Promise<PayoutResu
     }],
   };
 
-  const res = await fetch('https://api-m.paypal.com/v1/payments/payouts', {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/payments/payouts`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
@@ -361,7 +368,7 @@ export async function createPayPalPayout(req: PayoutRequest): Promise<PayoutResu
 export async function getPayPalPayoutStatus(batchId: string): Promise<PayoutResult> {
   const token = await getPayPalAccessToken();
 
-  const res = await fetch(`https://api-m.paypal.com/v1/payments/payouts/${batchId}`, {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/payments/payouts/${batchId}`, {
     headers: { 'Authorization': `Bearer ${token}` },
   });
 
@@ -386,7 +393,7 @@ export async function verifyPayPalWebhookSignature(headers: Record<string, strin
     webhook_event: JSON.parse(body),
   };
 
-  const res = await fetch('https://api-m.paypal.com/v1/notifications/verify-webhook-signature', {
+  const res = await fetch(`${getPayPalBaseUrl()}/v1/notifications/verify-webhook-signature`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

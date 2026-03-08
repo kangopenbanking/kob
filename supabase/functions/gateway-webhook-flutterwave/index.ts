@@ -3,10 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { mapFlutterwaveStatus } from "../_shared/gateway-adapters.ts";
 import { creditFundingIntent } from "../_shared/funding-scope-creditor.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, verif-hash',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -20,10 +17,15 @@ serve(async (req) => {
       return new Response(JSON.stringify({ error: 'rate_limit_exceeded' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    // Verify Flutterwave hash
+    // Verify Flutterwave hash — MANDATORY (C7 fix)
     const verifHash = req.headers.get('verif-hash');
     const FLW_HASH = Deno.env.get('FLUTTERWAVE_ENCRYPTION_KEY');
-    if (FLW_HASH && verifHash !== FLW_HASH) {
+    if (!FLW_HASH) {
+      console.error('FLUTTERWAVE_ENCRYPTION_KEY not configured — rejecting webhook');
+      return new Response(JSON.stringify({ error: 'webhook_not_configured' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    if (!verifHash || verifHash !== FLW_HASH) {
+      console.error('Invalid or missing Flutterwave verif-hash — rejecting');
       return new Response(JSON.stringify({ error: 'invalid_signature' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -104,8 +106,8 @@ serve(async (req) => {
           }).then(() => {}).catch(() => {});
         }
 
-        // ─── ATOMIC: Credit merchant wallet on successful charge ───
-        if (newStatus === 'successful' && charge.merchant_id) {
+        // ─── ATOMIC: Credit merchant wallet on successful charge (C5 fix: skip fund_account) ───
+        if (newStatus === 'successful' && charge.merchant_id && !charge.metadata?.fund_account) {
           await supabase.rpc('atomic_charge_wallet_credit', {
             _charge_id: charge.id,
             _new_status: newStatus,

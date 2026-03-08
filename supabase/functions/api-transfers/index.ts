@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -289,97 +289,43 @@ serve(async (req) => {
     const now = new Date().toISOString();
 
     // ══════════════════════════════════════════════
-    // STEP 1: Debit source account balance
+    // H1 FIX: Idempotency check
     // ══════════════════════════════════════════════
-    const newSourceAmount = parseFloat(sourceBalance.amount) - transferAmount;
+    const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
+    if (idempotencyKey) {
+      const { data: existingTx } = await supabase.rpc('check_transfer_idempotency', {
+        _idempotency_key: idempotencyKey,
+        _user_id: user.id,
+      });
+      if (existingTx?.exists) {
+        return new Response(JSON.stringify({
+          success: true,
+          ...existingTx,
+          idempotent_replayed: true,
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' },
+        });
+      }
+    }
 
-    const { error: debitBalErr } = await supabase
-      .from('account_balances')
-      .update({
-        amount: newSourceAmount,
-        balance_datetime: now,
-      })
-      .eq('id', sourceBalance.id);
+    // ══════════════════════════════════════════════
+    // C1 FIX: Atomic debit-credit via PL/pgSQL with row locks
+    // ══════════════════════════════════════════════
+    const { data: atomicResult, error: atomicError } = await supabase.rpc('execute_atomic_transfer', {
+      _source_balance_id: sourceBalance.id,
+      _dest_account_id: destAccount.id,
+      _amount: transferAmount,
+      _currency: txCurrency,
+    });
 
-    if (debitBalErr) {
-      console.error('Failed to debit source balance:', debitBalErr);
-      return new Response(JSON.stringify({ error: 'Failed to process transfer' }), {
-        status: 500,
+    if (atomicError) {
+      console.error('Atomic transfer failed:', atomicError);
+      const errMsg = atomicError.message?.includes('Insufficient funds') ? 'Insufficient funds' : 'Failed to process transfer';
+      return new Response(JSON.stringify({ error: errMsg }), {
+        status: atomicError.message?.includes('Insufficient funds') ? 400 : 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
-    }
-
-    // ══════════════════════════════════════════════
-    // STEP 2: Credit destination account balance
-    // ══════════════════════════════════════════════
-    // Try InterimAvailable first, then ClosingAvailable (filter by Credit indicator)
-    let destBalance = null;
-    const { data: destInterimBal } = await supabase
-      .from('account_balances')
-      .select('id, amount, balance_type')
-      .eq('account_id', destAccount.id)
-      .eq('balance_type', 'InterimAvailable')
-      .eq('credit_debit_indicator', 'Credit')
-      .maybeSingle();
-
-    if (destInterimBal) {
-      destBalance = destInterimBal;
-    } else {
-      const { data: destClosingBal } = await supabase
-        .from('account_balances')
-        .select('id, amount, balance_type')
-        .eq('account_id', destAccount.id)
-        .eq('balance_type', 'ClosingAvailable')
-        .eq('credit_debit_indicator', 'Credit')
-        .maybeSingle();
-      destBalance = destClosingBal;
-    }
-
-    if (destBalance) {
-      const newDestAmount = parseFloat(destBalance.amount) + transferAmount;
-      const { error: creditBalErr } = await supabase
-        .from('account_balances')
-        .update({
-          amount: newDestAmount,
-          balance_datetime: now,
-        })
-        .eq('id', destBalance.id);
-
-      if (creditBalErr) {
-        // Rollback source debit
-        await supabase.from('account_balances')
-          .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
-          .eq('id', sourceBalance.id);
-        console.error('Failed to credit destination balance:', creditBalErr);
-        return new Response(JSON.stringify({ error: 'Failed to process transfer' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
-    } else {
-      // Create a new balance record for destination
-      const { error: insertBalErr } = await supabase
-        .from('account_balances')
-        .insert({
-          account_id: destAccount.id,
-          balance_type: 'ClosingAvailable',
-          credit_debit_indicator: 'Credit',
-          amount: transferAmount,
-          currency: txCurrency,
-          balance_datetime: now,
-        });
-
-    if (insertBalErr) {
-        // Rollback source debit
-        await supabase.from('account_balances')
-          .update({ amount: parseFloat(sourceBalance.amount), balance_datetime: now })
-          .eq('id', sourceBalance.id);
-        console.error('Failed to create destination balance:', insertBalErr);
-        return new Response(JSON.stringify({ error: 'Failed to process transfer' }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
-      }
     }
 
     // Use resolved destination account ID for all subsequent operations
@@ -410,6 +356,7 @@ serve(async (req) => {
           destination_account_holder: destAccount.account_holder_name,
           transfer_type: transferRail,
           rail: transferRail,
+          ...(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
         },
       })
       .select('id')
@@ -452,18 +399,20 @@ serve(async (req) => {
     }
 
     // ══════════════════════════════════════════════
-    // STEP 5: Ledger integration (non-blocking)
+    // STEP 5: Ledger integration (non-blocking) — M1 FIX: correct double-entry for internal transfers
+    // For internal transfers between deposit accounts, debit source deposits sub-account and credit destination
     // ══════════════════════════════════════════════
     try {
       const { data: ledgerAccounts } = await supabase
         .from('ledger_accounts')
         .select('id, account_code')
-        .in('account_code', ['1000', '2000']);
+        .in('account_code', ['2001', '2002', '2000']);
 
-      const cashAcct = ledgerAccounts?.find(a => a.account_code === '1000');
-      const depositsAcct = ledgerAccounts?.find(a => a.account_code === '2000');
+      // Use sub-accounts 2001 (source deposits) and 2002 (dest deposits) if available, else skip ledger
+      const srcDepositsAcct = ledgerAccounts?.find(a => a.account_code === '2001') || ledgerAccounts?.find(a => a.account_code === '2000');
+      const dstDepositsAcct = ledgerAccounts?.find(a => a.account_code === '2002') || ledgerAccounts?.find(a => a.account_code === '2000');
 
-      if (cashAcct && depositsAcct) {
+      if (srcDepositsAcct && dstDepositsAcct && srcDepositsAcct.id !== dstDepositsAcct.id) {
         const entryNumber = `TFR-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
 
         const { data: journalEntry } = await supabase
@@ -481,8 +430,8 @@ serve(async (req) => {
 
         if (journalEntry) {
           await supabase.from('journal_lines').insert([
-            { journal_entry_id: journalEntry.id, ledger_account_id: cashAcct.id, debit: transferAmount, credit: 0 },
-            { journal_entry_id: journalEntry.id, ledger_account_id: depositsAcct.id, debit: 0, credit: transferAmount },
+            { journal_entry_id: journalEntry.id, ledger_account_id: srcDepositsAcct.id, debit: transferAmount, credit: 0 },
+            { journal_entry_id: journalEntry.id, ledger_account_id: dstDepositsAcct.id, debit: 0, credit: transferAmount },
           ]);
         }
       }

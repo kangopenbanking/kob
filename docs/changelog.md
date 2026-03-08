@@ -1,5 +1,42 @@
 # Changelog
 
+## [3.5.0] - 2026-03-08 — Go-Live Security Audit: 29 Fixes Across Critical/High/Medium/Low
+
+### Critical Fixes (C1-C7)
+- **Atomic Transfer Engine (C1/C2)**: Replaced non-atomic balance updates in `api-transfers` and `bulk-transfers` with `execute_atomic_transfer` PL/pgSQL function using `SELECT ... FOR UPDATE` row locks to prevent double-spend race conditions.
+- **Stripe Refund Currency Bug (C3/C4)**: Added `currency` field to `RefundRequest` interface and replaced hardcoded `* 100` with `toStripeAmount()` in `createStripeRefund`, preventing 100x over-refunds for zero-decimal currencies (XAF).
+- **Flutterwave Double Wallet Credit (C5)**: Added `!charge.metadata?.fund_account` guard to `gateway-webhook-flutterwave` to prevent merchant wallet credit on fund_account charges.
+- **Mandatory Webhook Signatures (C6/C7)**: Made Stripe and Flutterwave webhook signature verification mandatory — requests with missing secrets or signatures are now rejected with 401/500.
+
+### High Priority Fixes (H1-H9)
+- **Transfer Idempotency (H1)**: Added `check_transfer_idempotency` RPC and idempotency-key support to `api-transfers`.
+- **PayPal Balance Type Fix (H2)**: Payout failure reversal now checks `ClosingAvailable` first, then `InterimAvailable`, with fallback insert.
+- **CORS Standardization (H3-H5)**: Replaced local `corsHeaders` in `gateway-webhook-flutterwave`, `gateway-create-payout`, and `gateway-preauth-charge` with shared `_shared/cors.ts`.
+- **mTLS Certificate Parsing (H7)**: Replaced placeholder `extractCertificateDetails()` with real ASN.1 DER parsing for serial numbers and validity dates.
+- **Token Hashing (H8)**: OAuth access tokens and refresh tokens are now SHA-256 hashed before storage in `access_tokens` and `refresh_tokens` tables.
+- **Rate Limiter Fail-Closed (H9)**: `checkRateLimit` in `_shared/security.ts` now returns `false` on DB errors instead of `true`.
+
+### Medium Priority Fixes (M1-M8)
+- **Ledger Entry Fix (M1)**: Internal transfers now correctly debit/credit deposit sub-accounts instead of Cash→Deposits.
+- **CSV Parser Quoting (M2)**: Bulk transfer CSV parser now properly handles quoted fields containing commas.
+- **Multi-Currency PISP (M3)**: `pisp-domestic-payment` now supports XAF, EUR, and USD.
+- **PayPal Sandbox Toggle (M4)**: All PayPal API calls use `PAYPAL_ENVIRONMENT` env var to switch between sandbox and production.
+- **Transaction Fee RPC (M7)**: Created `record_transaction_fee` PL/pgSQL function matching the RPC signature expected by `api-transfers`.
+- **Refund Audit Trail (M8)**: Added audit log entry to `gateway-create-refund`.
+- **Refund Currency Passthrough**: `gateway-create-refund` now passes `charge.currency` to `createStripeRefund`.
+
+### Low Priority Fixes (L1-L5)
+- **Version Pinning (L1)**: Standardized `@supabase/supabase-js@2` imports across `api-transfers`, `bulk-transfers`, and `stripe-confirm-payment`.
+- **Sensitive Data Logging (L4)**: Removed raw Flutterwave response body logging, replaced with status-only logging.
+- **Cache-Control Headers (L5)**: Added `Cache-Control: no-store` and `Pragma: no-cache` to all OAuth token responses.
+
+### Database Migrations
+- `execute_atomic_transfer` — Row-locked atomic balance transfer function
+- `check_transfer_idempotency` — Transfer idempotency lookup
+- `record_transaction_fee` — RPC for fee recording from transfer engine
+
+
+
 ## [3.4.0] - 2026-03-04 — End-to-End Audit, Bug Fixes & Full Documentation
 
 ### Fixed
