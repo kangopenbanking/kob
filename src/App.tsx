@@ -12,6 +12,8 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
+import { NestedNotFound } from "@/components/NestedNotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PWARouteGuard } from "@/components/pwa/PWARouteGuard";
 import Index from "./pages/Index";
