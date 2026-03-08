@@ -121,7 +121,7 @@ const CustomerActivity: React.FC = () => {
                 const time = tx.booking_datetime ? format(new Date(tx.booking_datetime), 'h:mm a') : '';
                 return (
                   <motion.div key={tx.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card p-3 group">
+                    transition={{ delay: i * 0.03 }} className="flex items-center gap-3 rounded-2xl bg-card p-3">
                     <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${iconInfo.color}`}>
                       <TxIcon className={`h-5 w-5 ${iconInfo.iconColor}`} strokeWidth={1.5} />
                     </div>
@@ -134,7 +134,7 @@ const CustomerActivity: React.FC = () => {
                     </p>
                     <button
                       onClick={() => handleDelete(tx)}
-                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-xl hover:bg-destructive/10 active:scale-95"
+                      className="shrink-0 p-1.5 rounded-xl hover:bg-destructive/10 active:scale-95 opacity-50 hover:opacity-100 transition-opacity"
                       aria-label="Delete transaction"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" strokeWidth={1.5} />

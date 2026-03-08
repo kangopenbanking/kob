@@ -58,7 +58,7 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
               key={item.path}
               onClick={() => navigate(item.path)}
               className={cn(
-                'flex flex-1 flex-col items-center justify-center py-1.5 transition-opacity',
+                'flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 transition-opacity',
                 active ? 'opacity-100' : 'opacity-40'
               )}
             >
@@ -67,6 +67,7 @@ export const CustomerBottomNav: React.FC<CustomerBottomNavProps> = ({ basePath }
                 alt={item.label}
                 className="h-6 w-6"
               />
+              <span className="text-[10px] font-medium text-foreground">{item.label}</span>
             </button>
           );
         })}

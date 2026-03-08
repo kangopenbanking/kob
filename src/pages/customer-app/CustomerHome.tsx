@@ -15,7 +15,7 @@ import travelCardBg from '@/assets/travel-card-bg.png';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useNotifications } from '@/hooks/useNotifications';
-import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSpendingSummary } from '@/hooks/useCustomerData';
+import { useCustomerAccounts, useAccountBalances, useCustomerTransactions, useSpendingSummary, useCustomerCreditScore } from '@/hooks/useCustomerData';
 import { MediaBanner } from '@/components/pwa/MediaBanner';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -107,6 +107,7 @@ const CustomerHome: React.FC = () => {
   const { data: balances = [] } = useAccountBalances(accountIds);
   const { data: recentTxns = [], isLoading: txnLoading } = useCustomerTransactions(user?.id, undefined, 5);
   const { data: summary } = useSpendingSummary(user?.id, undefined, period);
+  const { data: creditData } = useCustomerCreditScore(user?.id);
 
   // Build account cards from live data
   const accountCards = accounts.map((acct: any, i: number) => {
@@ -246,7 +247,7 @@ const CustomerHome: React.FC = () => {
                 transition={{ delay: 0.2 }}
                 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary-foreground/50 mb-1.5"
               >
-                Getting funds
+                Total Balance
               </motion.p>
               {acctLoading ? (
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
@@ -434,9 +435,9 @@ const CustomerHome: React.FC = () => {
             {/* Credit Score Card with Doughnut */}
             {visibleHealth.find(i => i.featureKey === 'credit_score') && (() => {
               const item = visibleHealth.find(i => i.featureKey === 'credit_score')!;
-              const scoreVal = 720;
+              const scoreVal = creditData?.score ?? 0;
               const maxVal = 850;
-              const pct = scoreVal / maxVal;
+              const pct = maxVal > 0 ? scoreVal / maxVal : 0;
               const r = 40;
               const circ = 2 * Math.PI * r;
               const offset = circ * (1 - pct);
@@ -458,7 +459,7 @@ const CustomerHome: React.FC = () => {
                         transition={{ duration: 1.5, ease: 'easeOut' }}
                       />
                     </svg>
-                    <span className="absolute text-lg font-black text-[hsl(150,40%,35%)]">{scoreVal}</span>
+                    <span className="absolute text-lg font-black text-[hsl(150,40%,35%)]">{scoreVal || '—'}</span>
                   </div>
                   <p className="text-[10px] font-semibold uppercase tracking-wider text-[hsl(150,40%,35%)]">{item.label}</p>
                   <span className="rounded-full bg-[hsl(150,40%,35%)] px-4 py-1.5 text-[11px] font-bold text-white">Check Now</span>

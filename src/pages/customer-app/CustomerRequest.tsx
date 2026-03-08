@@ -7,59 +7,7 @@ import { toast } from 'sonner';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
 import { API_CONFIG } from '@/config/api';
-
-/* ─── QR Matrix Generator ─── */
-function generateQRMatrix(data: string): boolean[][] {
-  const size = 21;
-  const matrix: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-  const addFinder = (row: number, col: number) => {
-    for (let r = 0; r < 7; r++) {
-      for (let c = 0; c < 7; c++) {
-        const isOuter = r === 0 || r === 6 || c === 0 || c === 6;
-        const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-        matrix[row + r][col + c] = isOuter || isInner;
-      }
-    }
-  };
-  addFinder(0, 0);
-  addFinder(0, size - 7);
-  addFinder(size - 7, 0);
-  for (let i = 8; i < size - 8; i++) {
-    matrix[6][i] = i % 2 === 0;
-    matrix[i][6] = i % 2 === 0;
-  }
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    hash = ((hash << 5) - hash + data.charCodeAt(i)) | 0;
-  }
-  for (let r = 8; r < size; r++) {
-    for (let c = 8; c < size; c++) {
-      if (r < size - 7 || c < size - 7) {
-        const bit = ((hash >> ((r * size + c) % 31)) & 1) === 1;
-        const alt = (r + c) % 3 === 0;
-        matrix[r][c] = bit !== alt;
-      }
-    }
-  }
-  return matrix;
-}
-
-function QRCodeSVG({ data, size = 200 }: { data: string; size?: number }) {
-  const matrix = generateQRMatrix(data);
-  const cellSize = size / matrix.length;
-  return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="rounded-xl">
-      <rect width={size} height={size} fill="white" rx={8} />
-      {matrix.map((row, r) =>
-        row.map((cell, c) =>
-          cell ? (
-            <rect key={`${r}-${c}`} x={c * cellSize} y={r * cellSize} width={cellSize} height={cellSize} fill="hsl(var(--primary))" rx={cellSize * 0.15} />
-          ) : null
-        )
-      )}
-    </svg>
-  );
-}
+import { QRCodeSVG } from 'qrcode.react';
 
 const CustomerRequest: React.FC = () => {
   const navigate = useNavigate();
@@ -189,7 +137,7 @@ const CustomerRequest: React.FC = () => {
           <motion.div key="result" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="flex flex-col items-center gap-5">
             {/* QR Code */}
             <div className="rounded-3xl border-2 border-border bg-card p-6 shadow-sm">
-              <QRCodeSVG data={paymentData} size={220} />
+              <QRCodeSVG value={paymentData} size={220} />
             </div>
 
             {/* Request Details */}
