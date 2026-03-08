@@ -9,7 +9,7 @@ import {
   Store, QrCode, Smartphone, CreditCard, BarChart3, Shield, Package, Users,
   Globe, Tag, ArrowRight, CheckCircle, Layers, Settings, Eye, Crown,
   MapPin, Image, FileText, BookOpen, Zap, Wallet, RefreshCw, ShoppingCart,
-  ListChecks, DollarSign, Printer, Download, ChevronRight
+  ListChecks, DollarSign, Printer, Download, ChevronRight, Lock
 } from "lucide-react";
 
 const posFeatures = [
