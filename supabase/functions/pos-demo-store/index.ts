@@ -236,6 +236,19 @@ async function handleCreate(supabase: any, merchantId: string, businessName: str
     });
   }
 
+  // 5. Seed subscription plans if none exist
+  const { data: existingPlans } = await supabase.from('pos_subscription_plans')
+    .select('id').eq('is_active', true).limit(1);
+
+  if (!existingPlans || existingPlans.length === 0) {
+    await supabase.from('pos_subscription_plans').insert([
+      { name: 'Starter', price: 0, duration_days: 30, tier: 'standard', is_active: true, features_json: ['Basic store listing', 'QR code payments', 'Up to 50 products', 'Email support'] },
+      { name: 'Professional', price: 5000, duration_days: 30, tier: 'standard', is_active: true, features_json: ['Priority marketplace listing', 'Unlimited products', 'Sales analytics', 'Multi-cashier support', 'WooCommerce sync', 'Priority support'] },
+      { name: 'Enterprise', price: 15000, duration_days: 30, tier: 'enterprise', is_active: true, features_json: ['Everything in Professional', 'Custom branding', 'API access', 'Multi-location inventory', 'Dedicated account manager', 'SLA guarantee'] },
+    ]);
+    stats.plans_seeded = 3;
+  }
+
   return new Response(JSON.stringify({
     success: true,
     message: 'Demo store created with sample products and inventory',
