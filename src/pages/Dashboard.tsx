@@ -195,11 +195,11 @@ const Dashboard = () => {
   const formatCurrency = (amount: number, currency: string = "XAF") => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 
   const getAccountBalance = (accountId: string) => {
-    const balance = balances.find(b => b.account_id === accountId && b.balance_type === "InterimAvailable");
+    const balance = balances.find(b => b.account_id === accountId && b.balance_type === "ClosingAvailable");
     return balance ? parseFloat(balance.amount) : 0;
   };
 
-  const getTotalBalance = () => balances.filter(b => b.balance_type === "InterimAvailable").reduce((sum, b) => sum + parseFloat(b.amount), 0);
+  const getTotalBalance = () => balances.filter(b => b.balance_type === "ClosingAvailable").reduce((sum, b) => sum + parseFloat(b.amount), 0);
 
   if (loading) {
     return (
