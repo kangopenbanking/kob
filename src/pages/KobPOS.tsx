@@ -376,8 +376,58 @@ export default function KobPOS() {
           </div>
         </section>
 
-        {/* QR Payment Flow */}
+        {/* Enterprise Features Detail */}
         <section className="py-24 bg-background">
+          <div className="container mx-auto px-4">
+            <ScrollReveal className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <Badge className="bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-[hsl(var(--fi-purple))]/20 px-4 py-1.5">
+                  <Crown className="w-4 h-4 mr-2" /> Enterprise Package
+                </Badge>
+              </div>
+              <h2 className="text-4xl font-bold mb-4 text-foreground">Enterprise-Grade Features</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Unlock the full power of KOB POS with custom branding, API access, multi-location management, and dedicated support.
+              </p>
+            </ScrollReveal>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {ENTERPRISE_FEATURES.map((feat, i) => (
+                <ScrollReveal key={i} delay={i * 0.08}>
+                  <Card className="h-full rounded-2xl border-2 border-[hsl(var(--fi-purple))]/10 hover:border-[hsl(var(--fi-purple))]/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <CardHeader>
+                      <div className="w-12 h-12 rounded-xl bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center mb-4">
+                        <feat.icon className="w-6 h-6 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      </div>
+                      <CardTitle className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        {feat.title}
+                        <Badge className="bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-0 text-[10px]">Enterprise</Badge>
+                      </CardTitle>
+                      <CardDescription className="text-sm leading-relaxed">{feat.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </ScrollReveal>
+              ))}
+              <ScrollReveal delay={0.5}>
+                <Card className="h-full rounded-2xl border-2 border-dashed border-[hsl(var(--fi-purple))]/20 flex items-center justify-center hover:shadow-md transition-all duration-300">
+                  <CardContent className="text-center py-12">
+                    <Crown className="w-10 h-10 text-[hsl(var(--fi-purple))] mx-auto mb-4" strokeWidth={1.5} />
+                    <p className="text-lg font-semibold text-foreground mb-2">Ready to Scale?</p>
+                    <p className="text-sm text-muted-foreground mb-5">Get all enterprise features with one subscription.</p>
+                    <Button className="bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white rounded-xl" asChild>
+                      <Link to="/merchant/storefront">
+                        Subscribe Now <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
+            </div>
+          </div>
+        </section>
+
+        {/* QR Payment Flow */}
+        <section className="py-24 bg-muted/30 border-t border-b border-border">
           <div className="container mx-auto px-4">
             <ScrollReveal className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4 text-foreground">Accept Payments in Seconds</h2>
