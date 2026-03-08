@@ -279,7 +279,7 @@ export async function createStripeRefund(req: RefundRequest): Promise<RefundResu
 
   const params = new URLSearchParams();
   params.append('payment_intent', req.provider_ref);
-  params.append('amount', Math.round(req.amount * 100).toString());
+  params.append('amount', toStripeAmount(req.amount, req.currency || 'XAF').toString());
   if (req.reason) params.append('reason', 'requested_by_customer');
 
   const res = await fetch('https://api.stripe.com/v1/refunds', {
