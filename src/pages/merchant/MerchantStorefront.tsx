@@ -460,7 +460,7 @@ export default function MerchantStorefront() {
                       <motion.div key={plan.id} custom={i} initial="hidden" animate="visible" variants={fadeUp}>
                         <Card className={`border-0 shadow-sm overflow-hidden transition-all duration-200 hover:shadow-lg relative ${isPremium ? 'ring-2 ring-[hsl(var(--fi-purple))]/30' : ''}`}>
                           {isPremium && (
-                            <div className="absolute top-0 inset-x-0 h-1" style={{ background: 'linear-gradient(90deg, hsl(267 84% 42%), hsl(290 70% 50%))' }} />
+                            <div className="absolute top-0 inset-x-0 h-1 bg-[hsl(var(--fi-purple))]" />
                           )}
                           <CardContent className="p-6">
                             <div className="flex items-center gap-2 mb-4">
