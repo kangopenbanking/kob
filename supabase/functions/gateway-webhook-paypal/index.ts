@@ -183,7 +183,7 @@ serve(async (req) => {
             try {
               const { getPayPalAccessToken: getPPToken } = await import("../_shared/gateway-adapters.ts");
               const ppToken = await getPPToken();
-              await fetch(`https://api-m.paypal.com/v2/checkout/orders/${orderId}/capture`, {
+              await fetch(`${typeof Deno !== "undefined" && Deno.env.get('PAYPAL_ENVIRONMENT') === 'sandbox' ? 'https://api-m.sandbox.paypal.com' : 'https://api-m.paypal.com'}/v2/checkout/orders/${orderId}/capture`, {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${ppToken}`, 'Content-Type': 'application/json' },
               });
