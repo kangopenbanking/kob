@@ -403,6 +403,14 @@ import InstitutionFundAccount from "./pages/institution/InstitutionFundAccount";
 import CustomerStores from "./pages/customer-app/CustomerStores";
 import CustomerStoreDetail from "./pages/customer-app/CustomerStoreDetail";
 import CustomerCart from "./pages/customer-app/CustomerCart";
+
+// Phase 3 — Business App
+import { BusinessAppLayout } from "./components/business-app/BusinessAppLayout";
+import BusinessSplash from "./pages/business-app/BusinessSplash";
+import BusinessAuth from "./pages/business-app/BusinessAuth";
+import BusinessHome from "./pages/business-app/BusinessHome";
+import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -554,6 +562,7 @@ function App() {
               {/* Phase 2: New critical pages */}
               <Route path="disputes" element={<DisputeManagement />} />
               <Route path="reconciliation" element={<ReconciliationDashboard />} />
+              <Route path="business-app-management" element={<BusinessAppManagement />} />
               <Route path="payouts" element={<PayoutManagement />} />
               <Route path="funding" element={<FundingManagement />} />
               <Route path="linked-account-requests" element={<LinkedAccountRequests />} />
@@ -854,6 +863,21 @@ function App() {
               <Route path="stores" element={<CustomerStores />} />
               <Route path="stores/:merchantId" element={<CustomerStoreDetail />} />
               <Route path="cart" element={<CustomerCart />} />
+            </Route>
+
+            {/* Business App PWA Routes */}
+            <Route path="/biz" element={<BusinessSplash />} />
+            <Route path="/biz/auth" element={<BusinessAuth />} />
+            <Route path="/biz/reset-password" element={<ResetPassword />} />
+            <Route path="/biz" element={<BusinessAppLayout />}>
+              <Route path="home" element={<BusinessHome />} />
+            </Route>
+
+            <Route path="/biz/:merchantId" element={<BusinessSplash />} />
+            <Route path="/biz/:merchantId/auth" element={<BusinessAuth />} />
+            <Route path="/biz/:merchantId/reset-password" element={<ResetPassword />} />
+            <Route path="/biz/:merchantId" element={<BusinessAppLayout />}>
+              <Route path="home" element={<BusinessHome />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
