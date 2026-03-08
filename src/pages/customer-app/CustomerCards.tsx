@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { CreditCard, Plus, Lock, Snowflake, Eye, EyeOff, Settings, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
