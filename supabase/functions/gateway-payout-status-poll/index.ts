@@ -7,10 +7,7 @@ import {
 } from "../_shared/gateway-adapters.ts";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-cron-secret',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 /**
  * Automated Payout Status Poller

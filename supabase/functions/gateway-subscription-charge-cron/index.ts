@@ -69,14 +69,17 @@ serve(async (req) => {
 
         if (chargeErr) { failed++; continue; }
 
-        // Call provider
+        // Call provider — route to correct adapter based on channel
         try {
-          const result = await createFlutterwaveCharge({
+          const chargeReq = {
             amount: plan.amount, currency: plan.currency, channel,
             customer_email: sub.customer_email, customer_phone: sub.customer_phone,
             customer_name: sub.customer_name, tx_ref,
             metadata: { subscription_id: sub.id },
-          });
+          };
+          const result = provider === 'stripe'
+            ? await createStripeCharge(chargeReq)
+            : await createFlutterwaveCharge(chargeReq);
 
           await supabase.from('gateway_charges').update({
             status: result.status, provider_ref: result.provider_ref, provider_raw: result.provider_raw,

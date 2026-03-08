@@ -31,7 +31,7 @@ serve(async (req) => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${stripeKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        amount: Math.round(amount * 100).toString(),
+        amount: toStripeAmount(amount, currency).toString(),
         currency: currency.toLowerCase(),
         capture_method: 'manual',
         ...(customer_email ? { receipt_email: customer_email } : {}),

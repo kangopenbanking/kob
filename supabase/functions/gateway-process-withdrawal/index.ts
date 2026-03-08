@@ -233,18 +233,16 @@ serve(async (req) => {
         if (!paypalEmail) throw new Error('PayPal email not found on linked account');
 
         const ppResult = await createPayPalPayout({
-          sender_batch_id: `KOB-WD-${txRef}`,
-          items: [{
-            recipient_type: 'EMAIL',
-            receiver: paypalEmail,
-            amount: netAmount,
-            currency: currency === 'XAF' ? 'USD' : currency,
-            note: narration || 'Automated withdrawal from Kang wallet',
-            sender_item_id: txRef,
-          }],
+          amount: netAmount,
+          currency: currency === 'XAF' ? 'USD' : currency,
+          channel: 'paypal',
+          beneficiary_account: paypalEmail,
+          beneficiary_name: linkedAccount?.account_name || user.email || 'Customer',
+          narration: narration || 'Automated withdrawal from Kang wallet',
+          tx_ref: `KOB-WD-${txRef}`,
         });
-        providerResult = { provider_ref: ppResult.batch_id, status: 'processing', provider_raw: ppResult.provider_raw };
-        payoutStatus = ppResult.batch_status === 'SUCCESS' ? 'completed' : 'processing';
+        providerResult = { provider_ref: ppResult.provider_ref, status: ppResult.status, provider_raw: ppResult.provider_raw };
+        payoutStatus = ppResult.status === 'successful' ? 'completed' : 'processing';
 
       } else {
         throw new Error(`Unsupported destination type: ${destination_type}`);

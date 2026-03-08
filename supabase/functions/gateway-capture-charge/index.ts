@@ -31,7 +31,7 @@ serve(async (req) => {
     const stripeRes = await fetch(`https://api.stripe.com/v1/payment_intents/${charge.provider_ref}/capture`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${stripeKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ amount_to_capture: Math.round(captureAmount * 100).toString() }),
+      body: new URLSearchParams({ amount_to_capture: toStripeAmount(captureAmount, charge.currency).toString() }),
     });
     const piData = await stripeRes.json();
 
