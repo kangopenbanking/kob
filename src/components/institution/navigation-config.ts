@@ -56,10 +56,10 @@ export const institutionNavigation = [
     title: "API Management",
     items: [
       { title: "API Clients", path: "/fi-portal/api-clients", icon: Key, sectionKey: "api-clients" },
-      { title: "API Keys", path: "/developer/api-keys", icon: Key, sectionKey: "api-clients" },
+      { title: "API Keys", path: "/fi-portal/api-keys", icon: Key, sectionKey: "api-clients" },
       { title: "Webhooks", path: "/fi-portal/webhooks", icon: Webhook, sectionKey: "webhooks" },
       { title: "Credit API", path: "/fi-portal/credit-api", icon: TrendingUp, sectionKey: "credit-api" },
-      { title: "Documentation", path: "/documentation", icon: FileText, sectionKey: "api-clients" },
+      { title: "Documentation", path: "/fi-portal/api-docs", icon: FileText, sectionKey: "api-clients" },
     ]
   },
   {
