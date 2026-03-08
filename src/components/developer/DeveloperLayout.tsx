@@ -1,5 +1,6 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale } from "lucide-react";
 import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
