@@ -27,6 +27,8 @@ const SCORING_RULES: Record<string, { min: number; max: number }> = {
   RENT_PAYMENT_ON_TIME: { min: 5, max: 10 },
   RENT_PAYMENT_LATE: { min: -25, max: -10 },
   RENT_PAYMENT_MISSED: { min: -30, max: -30 },
+  // PostiQ address verification
+  POSTIQ_VERIFIED: { min: 50, max: 50 },
 };
 
 const BASELINE = 500;
