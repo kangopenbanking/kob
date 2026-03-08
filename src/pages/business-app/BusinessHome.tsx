@@ -25,7 +25,7 @@ const BusinessHome: React.FC = () => {
         
         <Card className="border-0 shadow-md">
           <CardContent className="p-4 space-y-2">
-            <div className="h-8 w-8 rounded-full bg-amber-500/10 flex items-center justify-center text-amber-500">
+            <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary-foreground">
               <Clock className="h-4 w-4" />
             </div>
             <div>

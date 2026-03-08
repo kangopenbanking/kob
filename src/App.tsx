@@ -865,6 +865,21 @@ function App() {
               <Route path="cart" element={<CustomerCart />} />
             </Route>
 
+            {/* Business App PWA Routes */}
+            <Route path="/biz" element={<BusinessSplash />} />
+            <Route path="/biz/auth" element={<BusinessAuth />} />
+            <Route path="/biz/reset-password" element={<ResetPassword />} />
+            <Route path="/biz" element={<BusinessAppLayout />}>
+              <Route path="home" element={<BusinessHome />} />
+            </Route>
+
+            <Route path="/biz/:merchantId" element={<BusinessSplash />} />
+            <Route path="/biz/:merchantId/auth" element={<BusinessAuth />} />
+            <Route path="/biz/:merchantId/reset-password" element={<ResetPassword />} />
+            <Route path="/biz/:merchantId" element={<BusinessAppLayout />}>
+              <Route path="home" element={<BusinessHome />} />
+            </Route>
+
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>
