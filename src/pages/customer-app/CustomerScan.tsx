@@ -172,9 +172,33 @@ const CustomerScan: React.FC = () => {
     }, 1200);
   };
 
-  const handlePayNow = () => {
+  const handlePayNow = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
+    
+    if (merchantQR) {
+      // POS QR payment via wallet
+      setProcessing(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('pos-qr-payment?action=pay', {
+          body: { merchant_id: merchantQR.merchant_id, amount: finalAmount, order_id: merchantQR.order_id },
+          headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
+        });
+        if (error) throw error;
+        if (data?.error) {
+          toast.error(data.message || data.error);
+          return;
+        }
+        toast.success(`Paid ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name}`);
+        resetScan();
+      } catch (err: any) {
+        toast.error(err.message || 'Payment failed');
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
+
     navigate('/app/transfer', {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
