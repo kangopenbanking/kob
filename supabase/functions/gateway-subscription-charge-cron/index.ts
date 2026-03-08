@@ -53,9 +53,10 @@ serve(async (req) => {
         }
 
         const tx_ref = `sub-${sub.id}-${Date.now()}`;
-        const channel = 'mobile_money'; // default for subscriptions
+        // Determine channel: use subscription's preferred channel or derive from plan
+        const channel = sub.channel || plan.channel || 'mobile_money';
         const { fee, net } = await calculateGatewayFee(plan.amount, channel, supabase);
-        const provider = 'flutterwave';
+        const provider = channel === 'card' ? 'stripe' : 'flutterwave';
 
         // Create charge
         const { data: charge, error: chargeErr } = await supabase.from('gateway_charges').insert({
@@ -68,14 +69,17 @@ serve(async (req) => {
 
         if (chargeErr) { failed++; continue; }
 
-        // Call provider
+        // Call provider — route to correct adapter based on channel
         try {
-          const result = await createFlutterwaveCharge({
+          const chargeReq = {
             amount: plan.amount, currency: plan.currency, channel,
             customer_email: sub.customer_email, customer_phone: sub.customer_phone,
             customer_name: sub.customer_name, tx_ref,
             metadata: { subscription_id: sub.id },
-          });
+          };
+          const result = provider === 'stripe'
+            ? await createStripeCharge(chargeReq)
+            : await createFlutterwaveCharge(chargeReq);
 
           await supabase.from('gateway_charges').update({
             status: result.status, provider_ref: result.provider_ref, provider_raw: result.provider_raw,

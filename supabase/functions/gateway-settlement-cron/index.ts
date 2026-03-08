@@ -1,11 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
 
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-cron-secret",
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 /**
  * Settlement Cron — Automated 24/7 settlement processor

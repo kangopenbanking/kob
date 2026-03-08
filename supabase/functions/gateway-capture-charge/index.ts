@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { toStripeAmount } from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -30,7 +31,7 @@ serve(async (req) => {
     const stripeRes = await fetch(`https://api.stripe.com/v1/payment_intents/${charge.provider_ref}/capture`, {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${stripeKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({ amount_to_capture: Math.round(captureAmount * 100).toString() }),
+      body: new URLSearchParams({ amount_to_capture: toStripeAmount(captureAmount, charge.currency).toString() }),
     });
     const piData = await stripeRes.json();
 

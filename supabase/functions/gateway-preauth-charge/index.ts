@@ -1,6 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { calculateGatewayFee } from "../_shared/gateway-adapters.ts";
+import { calculateGatewayFee, toStripeAmount } from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
@@ -31,7 +31,7 @@ serve(async (req) => {
       method: 'POST',
       headers: { 'Authorization': `Bearer ${stripeKey}`, 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        amount: Math.round(amount * 100).toString(),
+        amount: toStripeAmount(amount, currency).toString(),
         currency: currency.toLowerCase(),
         capture_method: 'manual',
         ...(customer_email ? { receipt_email: customer_email } : {}),

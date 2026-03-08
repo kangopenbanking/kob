@@ -1,7 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyCronAuth } from "../_shared/cron-auth.ts";
+
+import { corsHeaders } from "../_shared/cors.ts";
 
 serve(async (req) => {
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+
+  // Security: require cron auth (service_role JWT or x-cron-secret)
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) return auth.response!;
+
   try {
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
 
@@ -125,12 +134,12 @@ serve(async (req) => {
     console.log('Stuck transaction reconciliation completed:', results);
 
     return new Response(JSON.stringify({ success: true, results }), {
-      headers: { 'Content-Type': 'application/json' },
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
     console.error('Reconciliation error:', err);
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500, headers: { 'Content-Type': 'application/json' },
+    return new Response(JSON.stringify({ error: 'Processing error occurred' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
 });
