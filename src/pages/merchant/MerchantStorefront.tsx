@@ -31,6 +31,7 @@ import posPaymentSuccess from '@/assets/pos-payment-success.webp';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
 import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
 import { ShippingForm } from '@/components/storefront/ShippingForm';
+import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
