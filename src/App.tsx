@@ -236,6 +236,7 @@ import FintechDevelopers from "./pages/solutions/FintechDevelopers";
 import MobileMoneyIntegration from "./pages/solutions/MobileMoneyIntegration";
 import CreditScoring from "./pages/solutions/CreditScoring";
 import AIIntegrationGuide from "./pages/developer/AIIntegrationGuide";
+import MerchantsPOSGuide from "./pages/developer/MerchantsPOSGuide";
 import ApiDirectorySubmissions from "./pages/developer/ApiDirectorySubmissions";
 import SecurityDashboard from "./pages/admin/SecurityDashboard";
 import NoCodeIndex from "./pages/integrations/NoCodeIndex";
