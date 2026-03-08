@@ -6,6 +6,28 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "3.7.0",
+      date: "2026-03-08",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "POS Consumer Marketplace — merchants publish storefronts via subscription; consumers browse, cart, and buy with wallet balance" },
+        { type: "feature", description: "QR Code Payments — merchant QR generation (static/dynamic) and consumer scan-to-pay via kob_pos_pay payload" },
+        { type: "feature", description: "Wallet payment method added to pos-pay-order — atomic consumer debit + merchant credit with inventory decrement" },
+        { type: "feature", description: "pos-store-browse edge function — paginated store discovery with city/category filters" },
+        { type: "feature", description: "pos-consumer-cart edge function — full cart management (add/update/remove/clear)" },
+        { type: "feature", description: "pos-consumer-checkout edge function — idempotent wallet-to-wallet checkout with order creation" },
+        { type: "feature", description: "pos-qr-payment edge function — QR payload generation and scan-to-pay processing" },
+        { type: "feature", description: "pos-store-subscription edge function — plan listing and merchant subscription activation" },
+        { type: "feature", description: "Consumer App: /app/stores marketplace with filters, favourites, grid view; /app/stores/:merchantId product browsing; /app/cart with payment success/failure screens" },
+        { type: "feature", description: "Merchant Portal: Storefront settings page with store profile editor, subscription management, and QR code generator" },
+        { type: "feature", description: "Admin Portal: Marketplace management — subscription plan CRUD, merchant subscription oversight, store visibility toggle" },
+        { type: "improvement", description: "CustomerScan updated to recognize kob_pos_pay QR codes and route to merchant payment flow" },
+        { type: "improvement", description: "CustomerHome: 'Stores' feature card added to Money Movement section" },
+        { type: "improvement", description: "New tables: pos_store_profiles, pos_subscription_plans, pos_store_subscriptions, pos_consumer_carts, pos_consumer_cart_items with full RLS" },
+        { type: "improvement", description: "consumer_app added to pos_order_channel enum for marketplace order tracking" },
+      ]
+    },
+    {
       version: "3.6.0",
       date: "2026-03-06",
       type: "minor",
