@@ -388,7 +388,9 @@ export default function MerchantDashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Wallets</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowWalletBalances(!showWalletBalances)}>
+                  {showWalletBalances ? <Eye className="h-3.5 w-3.5 text-muted-foreground" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
