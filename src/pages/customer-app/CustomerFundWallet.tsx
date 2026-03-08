@@ -490,7 +490,7 @@ const CustomerFundWallet: React.FC = () => {
               </div>
             )}
 
-            <Button onClick={handleSubmit} disabled={processing || !numAmount || numAmount <= 0}
+            <Button onClick={() => setShowPin(true)} disabled={processing || !numAmount || numAmount <= 0}
               className="w-full rounded-2xl h-12 text-sm font-bold">
               {processing ? (
                 <span className="flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" /> Processing...</span>
@@ -505,6 +505,8 @@ const CustomerFundWallet: React.FC = () => {
           </motion.div>
         ) : null}
       </AnimatePresence>
+
+      <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleSubmit} />
     </div>
   );
 };
