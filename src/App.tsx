@@ -409,6 +409,10 @@ import { BusinessAppLayout } from "./components/business-app/BusinessAppLayout";
 import BusinessSplash from "./pages/business-app/BusinessSplash";
 import BusinessAuth from "./pages/business-app/BusinessAuth";
 import BusinessHome from "./pages/business-app/BusinessHome";
+import BusinessWallet from "./pages/business-app/BusinessWallet";
+import BusinessReceive from "./pages/business-app/BusinessReceive";
+import BusinessOrders from "./pages/business-app/BusinessOrders";
+import BusinessMore from "./pages/business-app/BusinessMore";
 import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
 
 const queryClient = new QueryClient({
@@ -871,6 +875,10 @@ function App() {
             <Route path="/biz/reset-password" element={<ResetPassword />} />
             <Route path="/biz" element={<BusinessAppLayout />}>
               <Route path="home" element={<BusinessHome />} />
+              <Route path="wallet" element={<BusinessWallet />} />
+              <Route path="receive" element={<BusinessReceive />} />
+              <Route path="orders" element={<BusinessOrders />} />
+              <Route path="more" element={<BusinessMore />} />
             </Route>
 
             <Route path="/biz/:merchantId" element={<BusinessSplash />} />
@@ -878,6 +886,10 @@ function App() {
             <Route path="/biz/:merchantId/reset-password" element={<ResetPassword />} />
             <Route path="/biz/:merchantId" element={<BusinessAppLayout />}>
               <Route path="home" element={<BusinessHome />} />
+              <Route path="wallet" element={<BusinessWallet />} />
+              <Route path="receive" element={<BusinessReceive />} />
+              <Route path="orders" element={<BusinessOrders />} />
+              <Route path="more" element={<BusinessMore />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />

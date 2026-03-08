@@ -1,53 +1,79 @@
 import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Wallet, TrendingUp, ShoppingBag, Clock } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { StatCard } from '@/components/ui/stat-card';
+import { Wallet, Clock, ShoppingBag, TrendingUp } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useBusinessData } from '@/hooks/useBusinessData';
 
 const BusinessHome: React.FC = () => {
+  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { 
+    merchant, 
+    availableBalance, 
+    pendingBalance, 
+    todayRevenue, 
+    todayOrders,
+    isLoading 
+  } = useBusinessData(merchantId);
+
+  if (isLoading) {
+    return (
+      <div className="p-4 space-y-6">
+        <header className="space-y-1">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+        </header>
+        <div className="grid grid-cols-2 gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-32 rounded-2xl" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const formatXAF = (amount: number) => {
+    return new Intl.NumberFormat('fr-CM', {
+      style: 'currency',
+      currency: 'XAF',
+      minimumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <div className="p-4 space-y-6">
       <header className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
-        <p className="text-sm text-muted-foreground">Welcome to your business dashboard.</p>
+        <p className="text-sm text-muted-foreground">
+          {merchant?.business_name || 'Welcome to your business dashboard'}
+        </p>
       </header>
 
       <div className="grid grid-cols-2 gap-4">
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4 space-y-2">
-            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-              <Wallet className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Available</p>
-              <p className="text-xl font-bold">XAF 0</p>
-            </div>
-          </CardContent>
-        </Card>
+        <StatCard
+          title="Available"
+          value={formatXAF(availableBalance)}
+          icon={<Wallet className="h-5 w-5" />}
+        />
         
-        <Card className="border-0 shadow-md">
-          <CardContent className="p-4 space-y-2">
-            <div className="h-8 w-8 rounded-full bg-secondary/10 flex items-center justify-center text-secondary-foreground">
-              <Clock className="h-4 w-4" />
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Pending</p>
-              <p className="text-xl font-bold">XAF 0</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <StatCard
+          title="Pending"
+          value={formatXAF(pendingBalance)}
+          icon={<Clock className="h-5 w-5" />}
+        />
 
-      <div className="space-y-4">
-        <h2 className="text-lg font-bold">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-4">
-          <button className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl gap-2 hover:bg-muted/50 transition-colors">
-            <ShoppingBag className="h-6 w-6 text-primary" />
-            <span className="text-sm font-medium">New Order</span>
-          </button>
-          <button className="flex flex-col items-center justify-center p-4 bg-muted/30 rounded-2xl gap-2 hover:bg-muted/50 transition-colors">
-            <TrendingUp className="h-6 w-6 text-primary" />
-            <span className="text-sm font-medium">Analytics</span>
-          </button>
-        </div>
+        <StatCard
+          title="Today's Revenue"
+          value={formatXAF(todayRevenue)}
+          icon={<TrendingUp className="h-5 w-5" />}
+          trend={todayRevenue > 0 ? { value: 100, label: 'vs yesterday' } : undefined}
+        />
+
+        <StatCard
+          title="Today's Orders"
+          value={todayOrders.toString()}
+          icon={<ShoppingBag className="h-5 w-5" />}
+        />
       </div>
     </div>
   );
