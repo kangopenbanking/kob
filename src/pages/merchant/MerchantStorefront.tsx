@@ -1076,6 +1076,20 @@ export default function MerchantStorefront() {
           />
         </TabsContent>
       </Tabs>
+
+      <EnterpriseUpgradeModal
+        open={upgradeModalOpen}
+        onOpenChange={setUpgradeModalOpen}
+        plan={selectedPlan}
+        currency={currency}
+        subscribing={subscribing}
+        onConfirm={() => {
+          if (selectedPlan) {
+            handleSubscribe(selectedPlan.id);
+            setUpgradeModalOpen(false);
+          }
+        }}
+      />
     </div>
   );
 }
