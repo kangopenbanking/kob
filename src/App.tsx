@@ -320,6 +320,7 @@ import MerchantTravelSeating from "./pages/merchant/MerchantTravelSeating";
 import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
 import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
 import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
+import MerchantStorefront from "./pages/merchant/MerchantStorefront";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
 import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
 import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
