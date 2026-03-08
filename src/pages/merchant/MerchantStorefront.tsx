@@ -464,7 +464,7 @@ export default function MerchantStorefront() {
                           )}
                           <CardContent className="p-6">
                             <div className="flex items-center gap-2 mb-4">
-                              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: isPremium ? 'linear-gradient(135deg, hsl(267 84% 42%), hsl(290 70% 50%))' : 'hsl(var(--muted))' }}>
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isPremium ? 'bg-[hsl(var(--fi-purple))]' : 'bg-muted'}`}>
                                 {isPremium
                                   ? <Sparkles className="w-4.5 h-4.5 text-white" strokeWidth={1.5} />
                                   : <Shield className="w-4.5 h-4.5 text-muted-foreground" strokeWidth={1.5} />}
