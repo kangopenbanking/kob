@@ -359,8 +359,7 @@ export default function MerchantStorefront() {
                     <Button
                       onClick={handleSave}
                       disabled={saving || !storeName}
-                      className="w-full gap-2 rounded-lg h-10 text-xs font-semibold"
-                      style={{ background: 'linear-gradient(135deg, hsl(267 84% 42%), hsl(267 84% 52%))' }}
+                      className="w-full gap-2 rounded-lg h-10 text-xs font-semibold bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white"
                     >
                       {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" strokeWidth={1.5} />}
                       Save Changes
