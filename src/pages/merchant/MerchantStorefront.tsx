@@ -276,6 +276,9 @@ export default function MerchantStorefront() {
           <TabsTrigger value="preview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Monitor className="w-3.5 h-3.5" strokeWidth={1.5} /> Store Preview
           </TabsTrigger>
+          <TabsTrigger value="shipping" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Truck className="w-3.5 h-3.5" strokeWidth={1.5} /> Shipping
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Setup Guide ── */}
