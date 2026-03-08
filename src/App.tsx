@@ -182,6 +182,7 @@ import GatewayCustomers from "./pages/institution/GatewayCustomers";
 import FeeManagement from "./pages/FeeManagement";
 import CreditManagement from "./pages/admin/CreditManagement";
 import WooForKang from "./pages/WooForKang";
+import KobPOS from "./pages/KobPOS";
 import PaymentFacilitation from "./pages/PaymentFacilitation";
 import PaymentFacilitationDev from "./pages/developer/PaymentFacilitation";
 import DisputeManagement from "./pages/admin/DisputeManagement";
