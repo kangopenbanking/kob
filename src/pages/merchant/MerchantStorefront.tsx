@@ -5,7 +5,7 @@ import {
   Download, Printer, Sparkles, Shield, Zap, Users, BarChart3,
   ArrowRight, CreditCard, Smartphone, Wallet, RefreshCw, Copy, Check,
   BookOpen, ChevronRight, Circle, Plus, X, Package, Settings, HelpCircle,
-  ListChecks, Layers, DollarSign, Monitor
+  ListChecks, Layers, DollarSign, Monitor, Truck, Hash, Clock, MapPinIcon
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -30,6 +30,7 @@ import posKob from '@/assets/pos-kob.webp';
 import posPaymentSuccess from '@/assets/pos-payment-success.webp';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
 import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
+import { ShippingForm } from '@/components/storefront/ShippingForm';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -275,6 +276,9 @@ export default function MerchantStorefront() {
           </TabsTrigger>
           <TabsTrigger value="preview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Monitor className="w-3.5 h-3.5" strokeWidth={1.5} /> Store Preview
+          </TabsTrigger>
+          <TabsTrigger value="shipping" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Truck className="w-3.5 h-3.5" strokeWidth={1.5} /> Shipping
           </TabsTrigger>
         </TabsList>
 
@@ -985,6 +989,61 @@ export default function MerchantStorefront() {
                 <Button onClick={() => setActiveTab('profile')} variant="outline" className="w-full gap-2 text-xs rounded-lg">
                   <Settings className="w-3.5 h-3.5" strokeWidth={1.5} /> Edit Store Profile
                 </Button>
+              </div>
+            </div>
+          </motion.div>
+        </TabsContent>
+
+        {/* ── Shipping Management ── */}
+        <TabsContent value="shipping">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div className="grid lg:grid-cols-3 gap-5">
+              <div className="lg:col-span-2 space-y-5">
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Truck className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Confirm Shipping
+                    </CardTitle>
+                    <CardDescription className="text-xs">
+                      Notify customers that their order has been shipped. A shipping confirmation email will be sent automatically.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ShippingForm storeName={storeName} currency={currency} merchantId={merchantId} />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-foreground">Shipping Guide</p>
+                    </div>
+                    <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+                      <p>• Enter the order ID and the customer will receive an email and in-app notification.</p>
+                      <p>• Add a tracking number and carrier so customers can follow their package.</p>
+                      <p>• Provide an estimated delivery date to manage expectations.</p>
+                      <p>• Shipping confirmations build trust and reduce "where is my order?" inquiries.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <p className="text-xs font-semibold text-foreground mb-3">Supported Carriers</p>
+                    <div className="space-y-2">
+                      {['DHL Express', 'EMS Cameroon', 'CamPost', 'FedEx', 'Aramex', 'Custom / Local'].map(c => (
+                        <div key={c} className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Truck className="w-3 h-3 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                          {c}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </motion.div>
