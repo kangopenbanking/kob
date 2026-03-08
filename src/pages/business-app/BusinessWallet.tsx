@@ -78,13 +78,13 @@ const BusinessWallet: React.FC = () => {
           <div className="grid grid-cols-2 gap-4 pt-4 border-t">
             <div>
               <p className="text-xs text-muted-foreground mb-1">Available</p>
-              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">
+              <p className="text-lg font-bold text-emerald-600">
                 {showBalance ? formatXAF(availableBalance) : '••••••'}
               </p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground mb-1">Pending</p>
-              <p className="text-lg font-bold text-amber-600 dark:text-amber-400">
+              <p className="text-lg font-bold text-amber-600">
                 {showBalance ? formatXAF(pendingBalance) : '••••••'}
               </p>
             </div>
