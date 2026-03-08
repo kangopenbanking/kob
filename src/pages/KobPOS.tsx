@@ -9,7 +9,7 @@ import {
   Store, QrCode, Smartphone, CreditCard, BarChart3, Shield, Package, Users,
   Globe, Tag, ArrowRight, CheckCircle, Layers, Settings, Eye, Crown,
   MapPin, Image, FileText, BookOpen, Zap, Wallet, RefreshCw, ShoppingCart,
-  ListChecks, DollarSign, Printer, Download, ChevronRight
+  ListChecks, DollarSign, Printer, Download, ChevronRight, Lock
 } from "lucide-react";
 
 const posFeatures = [
@@ -49,10 +49,18 @@ const countries = [
   { flag: "🇸🇳", name: "Senegal", currency: "XOF (FCFA)" },
 ];
 
+const ENTERPRISE_FEATURES = [
+  { icon: Image, title: "Custom Branding", description: "Fully branded receipts, customisable colours, fonts, and storefront theming that reflects your business identity." },
+  { icon: Settings, title: "API Access", description: "Programmatic access to your POS data, orders, and inventory. Build custom integrations and automate workflows." },
+  { icon: MapPin, title: "Multi-location Inventory", description: "Manage stock across multiple physical locations. Per-location tracking, transfers, and consolidated reporting." },
+  { icon: Users, title: "Dedicated Account Manager", description: "A personal point of contact for onboarding, strategy, and priority support — assigned within 24 hours." },
+  { icon: Shield, title: "SLA Guarantee", description: "99.9% uptime, <2hr support response, <4hr incident resolution. Service credits applied automatically." },
+];
+
 const pricingPlans = [
-  { name: "Starter", price: "Free", period: "", features: ["Basic store listing", "QR code payments", "Up to 50 products", "Email support"], highlight: false },
-  { name: "Professional", price: "5,000 XAF", period: "/month", features: ["Priority marketplace listing", "Unlimited products", "Sales analytics", "Multi-cashier support", "WooCommerce sync", "Priority support"], highlight: true },
-  { name: "Enterprise", price: "15,000 XAF", period: "/month", features: ["Everything in Professional", "Custom branding", "API access", "Multi-location inventory", "Dedicated account manager", "SLA guarantee"], highlight: false },
+  { name: "Starter", price: "Free", period: "", features: ["Basic store listing", "QR code payments", "Up to 50 products", "Email support"], highlight: false, tier: 'standard' },
+  { name: "Professional", price: "5,000 XAF", period: "/month", features: ["Priority marketplace listing", "Unlimited products", "Sales analytics", "Multi-cashier support", "WooCommerce sync", "Priority support"], highlight: true, tier: 'standard' },
+  { name: "Enterprise", price: "15,000 XAF", period: "/month", features: ["Everything in Professional", "Custom branding", "API access", "Multi-location inventory", "Dedicated account manager", "SLA guarantee"], highlight: false, tier: 'enterprise' },
 ];
 
 export default function KobPOS() {
@@ -334,12 +342,22 @@ export default function KobPOS() {
                     </CardHeader>
                     <CardContent className="pt-4">
                       <div className="space-y-3">
-                        {plan.features.map((f, j) => (
-                          <div key={j} className="flex items-center gap-3">
-                            <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] flex-shrink-0" strokeWidth={1.5} />
-                            <span className="text-sm text-foreground">{f}</span>
-                          </div>
-                        ))}
+                        {plan.features.map((f, j) => {
+                          const isEnterpriseLocked = plan.tier !== 'enterprise' && ['Custom branding', 'API access', 'Multi-location inventory', 'Dedicated account manager', 'SLA guarantee'].some(ef => f.toLowerCase().includes(ef.toLowerCase()));
+                          return (
+                            <div key={j} className="flex items-center gap-3">
+                              {isEnterpriseLocked ? (
+                                <Lock className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" strokeWidth={1.5} />
+                              ) : (
+                                <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] flex-shrink-0" strokeWidth={1.5} />
+                              )}
+                              <span className={`text-sm ${isEnterpriseLocked ? 'text-muted-foreground/50' : 'text-foreground'}`}>{f}</span>
+                              {plan.tier === 'enterprise' && ['Custom branding', 'API access', 'Multi-location inventory', 'Dedicated account manager', 'SLA guarantee'].some(ef => f.toLowerCase().includes(ef.toLowerCase())) && (
+                                <Badge className="bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-0 text-[9px] px-1.5 py-0">Enterprise</Badge>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
                       <Button
                         className={`w-full mt-6 rounded-xl ${plan.highlight ? 'bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white' : ''}`}
@@ -358,8 +376,58 @@ export default function KobPOS() {
           </div>
         </section>
 
-        {/* QR Payment Flow */}
+        {/* Enterprise Features Detail */}
         <section className="py-24 bg-background">
+          <div className="container mx-auto px-4">
+            <ScrollReveal className="text-center mb-16">
+              <div className="inline-flex items-center gap-2 mb-4">
+                <Badge className="bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-[hsl(var(--fi-purple))]/20 px-4 py-1.5">
+                  <Crown className="w-4 h-4 mr-2" /> Enterprise Package
+                </Badge>
+              </div>
+              <h2 className="text-4xl font-bold mb-4 text-foreground">Enterprise-Grade Features</h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Unlock the full power of KOB POS with custom branding, API access, multi-location management, and dedicated support.
+              </p>
+            </ScrollReveal>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
+              {ENTERPRISE_FEATURES.map((feat, i) => (
+                <ScrollReveal key={i} delay={i * 0.08}>
+                  <Card className="h-full rounded-2xl border-2 border-[hsl(var(--fi-purple))]/10 hover:border-[hsl(var(--fi-purple))]/30 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
+                    <CardHeader>
+                      <div className="w-12 h-12 rounded-xl bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center mb-4">
+                        <feat.icon className="w-6 h-6 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      </div>
+                      <CardTitle className="text-lg font-semibold mb-2 flex items-center gap-2">
+                        {feat.title}
+                        <Badge className="bg-[hsl(var(--fi-purple))]/10 text-[hsl(var(--fi-purple))] border-0 text-[10px]">Enterprise</Badge>
+                      </CardTitle>
+                      <CardDescription className="text-sm leading-relaxed">{feat.description}</CardDescription>
+                    </CardHeader>
+                  </Card>
+                </ScrollReveal>
+              ))}
+              <ScrollReveal delay={0.5}>
+                <Card className="h-full rounded-2xl border-2 border-dashed border-[hsl(var(--fi-purple))]/20 flex items-center justify-center hover:shadow-md transition-all duration-300">
+                  <CardContent className="text-center py-12">
+                    <Crown className="w-10 h-10 text-[hsl(var(--fi-purple))] mx-auto mb-4" strokeWidth={1.5} />
+                    <p className="text-lg font-semibold text-foreground mb-2">Ready to Scale?</p>
+                    <p className="text-sm text-muted-foreground mb-5">Get all enterprise features with one subscription.</p>
+                    <Button className="bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white rounded-xl" asChild>
+                      <Link to="/merchant/storefront">
+                        Subscribe Now <ArrowRight className="ml-2 w-4 h-4" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
+            </div>
+          </div>
+        </section>
+
+        {/* QR Payment Flow */}
+        <section className="py-24 bg-muted/30 border-t border-b border-border">
           <div className="container mx-auto px-4">
             <ScrollReveal className="text-center mb-16">
               <h2 className="text-4xl font-bold mb-4 text-foreground">Accept Payments in Seconds</h2>

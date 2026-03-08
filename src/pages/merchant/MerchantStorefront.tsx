@@ -32,6 +32,7 @@ import { ImageUpload } from '@/components/storefront/ImageUpload';
 import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
 import { ShippingForm } from '@/components/storefront/ShippingForm';
 import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
+import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeaturesTab';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -283,6 +284,9 @@ export default function MerchantStorefront() {
           </TabsTrigger>
           <TabsTrigger value="demo" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Demo Store
+          </TabsTrigger>
+          <TabsTrigger value="enterprise" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Crown className="w-3.5 h-3.5" strokeWidth={1.5} /> Enterprise
           </TabsTrigger>
         </TabsList>
 
@@ -1056,6 +1060,17 @@ export default function MerchantStorefront() {
         {/* ── Demo Store ── */}
         <TabsContent value="demo">
           <DemoStoreTab merchantId={merchantId} onDataChanged={loadData} />
+        </TabsContent>
+
+        {/* ── Enterprise ── */}
+        <TabsContent value="enterprise">
+          <EnterpriseFeaturesTab
+            isEnterprise={((subscription as any)?.pos_subscription_plans?.tier === 'enterprise') || ((subscription as any)?.pos_subscription_plans?.name || '').toLowerCase().includes('enterprise')}
+            merchantId={merchantId}
+            profile={profile}
+            onUpgrade={() => setActiveTab('subscription')}
+            onProfileUpdate={loadData}
+          />
         </TabsContent>
       </Tabs>
     </div>
