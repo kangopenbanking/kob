@@ -62,6 +62,8 @@ export default function MerchantStorefront() {
   const [qrAmount, setQrAmount] = useState('');
   const [qrCopied, setQrCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('guide');
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<any>(null);
 
   // Profile form
   const [storeName, setStoreName] = useState('');
