@@ -173,11 +173,18 @@ Deno.serve(async (req) => {
       const new_refresh_token = generateSecureToken();
       const expires_in = 3600; // 1 hour
 
+      // H8 FIX: Hash tokens before storage (SHA-256)
+      const encoder = new TextEncoder();
+      const accessTokenHashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(access_token));
+      const accessTokenHash = Array.from(new Uint8Array(accessTokenHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+      const refreshTokenHashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(new_refresh_token));
+      const refreshTokenHash = Array.from(new Uint8Array(refreshTokenHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
       // Store refresh token with certificate binding
       const { data: refreshTokenData } = await supabase
         .from('refresh_tokens')
         .insert({
-          token_hash: new_refresh_token,
+          token_hash: refreshTokenHash,
           user_id: authCode.user_id,
           client_id: client_id,
           scope: authCode.scope,
@@ -188,11 +195,11 @@ Deno.serve(async (req) => {
         .select()
         .single();
 
-      // Store access token with certificate binding (RFC 8705)
+      // Store access token hash with certificate binding (RFC 8705)
       await supabase
         .from('access_tokens')
         .insert({
-          token_hash: access_token,
+          token_hash: accessTokenHash,
           user_id: authCode.user_id,
           client_id: client_id,
           scope: authCode.scope,
