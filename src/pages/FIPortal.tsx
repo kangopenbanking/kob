@@ -55,23 +55,72 @@ export default function FIPortal() {
   const loadInstitution = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data } = await supabase.from("institutions").select("*").eq("user_id", user.id).maybeSingle();
-    if (!data) { navigate('/register'); return; }
-    if (data.status === 'pending' || data.status === 'rejected') { navigate('/pending-approval'); return; }
-    setInstitution(data);
+    
+    // Check ownership first
+    let inst = null;
+    const { data: ownedInst } = await supabase.from("institutions").select("*").eq("user_id", user.id).maybeSingle();
+    
+    if (ownedInst) {
+      inst = ownedInst;
+    } else {
+      // Check staff assignment via RPC
+      const { data: staffInstId } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
+      if (staffInstId) {
+        const { data: staffInst } = await supabase.from("institutions").select("*").eq("id", staffInstId).maybeSingle();
+        inst = staffInst;
+      }
+    }
+    
+    if (!inst) { navigate('/register'); return; }
+    if (inst.status === 'pending' || inst.status === 'rejected') { navigate('/pending-approval'); return; }
+    setInstitution(inst);
   };
 
   const loadMetrics = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-    if (!inst) return;
+    
+    // Resolve institution ID (owner or staff)
+    let instId: string | null = null;
+    const { data: ownedInst } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
+    if (ownedInst) {
+      instId = ownedInst.id;
+    } else {
+      const { data: staffInstId } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
+      instId = staffInstId;
+    }
+    if (!instId) return;
+    
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: transactions } = await supabase.from("transactions").select("amount", { count: "exact" }).gte("created_at", thirtyDaysAgo);
-    const { data: accounts } = await supabase.from("accounts").select("id", { count: "exact" }).eq("is_active", true);
-    const { data: apiUsage } = await supabase.from("api_usage_metrics").select("id", { count: "exact" }).eq("institution_id", inst.id).gte("created_at", thirtyDaysAgo);
-    const totalVolume = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
-    setMetrics({ totalTransactions: transactions?.length || 0, totalVolume, activeAccounts: accounts?.length || 0, apiCalls: apiUsage?.length || 0 });
+    
+    // Get institution's accounts first, then scope queries
+    const { data: instAccounts } = await supabase.from("accounts").select("id").eq("institution_id", instId).eq("is_active", true);
+    const accountIds = instAccounts?.map(a => a.id) || [];
+    
+    let txCount = 0;
+    let totalVolume = 0;
+    if (accountIds.length > 0) {
+      const { data: transactions } = await supabase
+        .from("transactions")
+        .select("amount")
+        .in("account_id", accountIds)
+        .gte("created_at", thirtyDaysAgo);
+      txCount = transactions?.length || 0;
+      totalVolume = transactions?.reduce((sum, t) => sum + Number(t.amount), 0) || 0;
+    }
+    
+    const { data: apiUsage } = await supabase
+      .from("api_usage_metrics")
+      .select("id", { count: "exact" })
+      .eq("institution_id", instId)
+      .gte("created_at", thirtyDaysAgo);
+    
+    setMetrics({
+      totalTransactions: txCount,
+      totalVolume,
+      activeAccounts: accountIds.length,
+      apiCalls: apiUsage?.length || 0,
+    });
   };
 
   if (!institution && !loading) {

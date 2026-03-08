@@ -54,9 +54,12 @@ export default function MerchantDashboard() {
       setMerchant(m);
 
       if (m) {
-        const [chargesRes, allChRes, apiKeysRes, webhooksRes, settlementRes, walletsRes, disputesRes] = await Promise.all([
+        const [chargesRes, successCountRes, totalCountRes, failedCountRes, pendingCountRes, apiKeysRes, webhooksRes, settlementRes, walletsRes, disputesRes] = await Promise.all([
           supabase.from("gateway_charges").select("*").eq("merchant_id", m.id).order("created_at", { ascending: false }).limit(10),
-          supabase.from("gateway_charges").select("amount, status, currency, created_at").eq("merchant_id", m.id),
+          supabase.from("gateway_charges").select("amount", { count: "exact" }).eq("merchant_id", m.id).eq("status", "successful"),
+          supabase.from("gateway_charges").select("id", { count: "exact", head: true }).eq("merchant_id", m.id),
+          supabase.from("gateway_charges").select("id", { count: "exact", head: true }).eq("merchant_id", m.id).eq("status", "failed"),
+          supabase.from("gateway_charges").select("id", { count: "exact", head: true }).eq("merchant_id", m.id).eq("status", "pending"),
           supabase.from("gateway_merchant_api_keys").select("id").eq("merchant_id", m.id).limit(1),
           supabase.from("gateway_merchant_webhooks").select("id").eq("merchant_id", m.id).limit(1),
           supabase.from("gateway_merchant_settlement_accounts").select("id").eq("merchant_id", m.id).limit(1),
@@ -68,32 +71,43 @@ export default function MerchantDashboard() {
         setWallets(walletsRes.data || []);
         setDisputeCount(disputesRes.count || 0);
 
-        if (allChRes.data) {
-          const allCh = allChRes.data;
-          const successful = allCh.filter(c => c.status === "successful");
-          const total = successful.reduce((s, c) => s + Number(c.amount), 0);
-          const failed = allCh.filter(c => c.status === "failed").length;
-          const pending = allCh.filter(c => c.status === "pending").length;
-          setStats({
-            totalRevenue: total,
-            txCount: allCh.length,
-            successRate: allCh.length > 0 ? Math.round((successful.length / allCh.length) * 100) : 0,
-            failedCount: failed,
-            pendingCount: pending,
-          });
+        // Compute stats from count-based queries (no 1000-row limit)
+        const successfulData = successCountRes.data || [];
+        const totalRevenue = successfulData.reduce((s, c) => s + Number(c.amount), 0);
+        const totalTx = totalCountRes.count || 0;
+        const successCount = successCountRes.count || 0;
+        const failedCount = failedCountRes.count || 0;
+        const pendingCount = pendingCountRes.count || 0;
+        
+        setStats({
+          totalRevenue,
+          txCount: totalTx,
+          successRate: totalTx > 0 ? Math.round((successCount / totalTx) * 100) : 0,
+          failedCount,
+          pendingCount,
+        });
 
-          const daily: Record<string, number> = {};
-          successful.forEach(c => {
-            const day = c.created_at?.split("T")[0] || "";
-            daily[day] = (daily[day] || 0) + Number(c.amount);
-          });
-          setChartData(
-            Object.entries(daily).sort().slice(-14).map(([day, revenue]) => ({
-              day: format(new Date(day), "MMM d"),
-              revenue,
-            }))
-          );
-        }
+        // Build chart data from recent successful charges (limited to last 14 days for chart)
+        const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
+        const { data: recentSuccessful } = await supabase
+          .from("gateway_charges")
+          .select("amount, created_at")
+          .eq("merchant_id", m.id)
+          .eq("status", "successful")
+          .gte("created_at", fourteenDaysAgo)
+          .order("created_at", { ascending: true });
+        
+        const daily: Record<string, number> = {};
+        (recentSuccessful || []).forEach(c => {
+          const day = c.created_at?.split("T")[0] || "";
+          daily[day] = (daily[day] || 0) + Number(c.amount);
+        });
+        setChartData(
+          Object.entries(daily).sort().slice(-14).map(([day, revenue]) => ({
+            day: format(new Date(day), "MMM d"),
+            revenue,
+          }))
+        );
 
         setSetupSteps([
           { key: "kyb", title: "Complete KYB Verification", description: "Submit business documents to go live", icon: ShieldCheck, completed: m.kyb_status === "verified" || m.status === "active", path: "/merchant/kyb" },

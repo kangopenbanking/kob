@@ -67,31 +67,21 @@ const Dashboard = () => {
   const [activityFeed, setActivityFeed] = useState<any[]>([]);
 
   useEffect(() => {
-    checkAuth();
-    loadWidgets();
+    loadDashboardData();
   }, []);
 
-  useEffect(() => {
-    const checkPersonalAccount = async () => {
+  const loadDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
-      const { data: isPersonal } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "personal",
-      });
-      if (isPersonal) {
-        toast({ title: "Personal Account Detected", description: "Redirecting to your credit score dashboard..." });
-        navigate("/credit-score");
-      }
-    };
-    if (user) checkPersonalAccount();
-  }, [user, navigate, toast]);
-
-  const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate("/auth"); return; }
-    setUser(user);
-    await fetchAllData(user.id);
-    setLoading(false);
+      setUser(user);
+      await fetchAllData(user.id);
+    } catch (error) {
+      console.error("Dashboard load error:", error);
+      toast({ title: "Error", description: "Failed to load dashboard data. Please refresh.", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadWidgets = async () => {
@@ -121,6 +111,7 @@ const Dashboard = () => {
       fetchCreditScore(userId),
       fetchSavingsGoals(userId),
       fetchActivityFeed(userId),
+      loadWidgets(),
     ]);
   };
 
@@ -195,11 +186,11 @@ const Dashboard = () => {
   const formatCurrency = (amount: number, currency: string = "XAF") => new Intl.NumberFormat("en-US", { style: "currency", currency }).format(amount);
 
   const getAccountBalance = (accountId: string) => {
-    const balance = balances.find(b => b.account_id === accountId && b.balance_type === "InterimAvailable");
+    const balance = balances.find(b => b.account_id === accountId && b.balance_type === "ClosingAvailable");
     return balance ? parseFloat(balance.amount) : 0;
   };
 
-  const getTotalBalance = () => balances.filter(b => b.balance_type === "InterimAvailable").reduce((sum, b) => sum + parseFloat(b.amount), 0);
+  const getTotalBalance = () => balances.filter(b => b.balance_type === "ClosingAvailable").reduce((sum, b) => sum + parseFloat(b.amount), 0);
 
   if (loading) {
     return (
@@ -562,9 +553,9 @@ const Dashboard = () => {
                         <div className="col-span-2">
                           <p className="text-xs text-muted-foreground mb-1">Permissions</p>
                           <div className="flex flex-wrap gap-1">
-                            {consent.permissions.map((perm: string, i: number) => (
+                            {Array.isArray(consent.permissions) ? consent.permissions.map((perm: string, i: number) => (
                               <Badge key={i} variant="outline" className="text-[10px]">{perm}</Badge>
-                            ))}
+                            )) : <Badge variant="outline" className="text-[10px]">N/A</Badge>}
                           </div>
                         </div>
                       </div>
