@@ -11,7 +11,7 @@ import {
   Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2,
   Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet,
   Link2, FileText, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
-  Clock, Zap, Users, Globe,
+  Clock, Zap, Users, Globe, Eye, EyeOff,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Area, AreaChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
@@ -42,6 +42,7 @@ export default function MerchantDashboard() {
   const [chartData, setChartData] = useState<{ day: string; revenue: number }[]>([]);
   const [disputeCount, setDisputeCount] = useState(0);
   const [selectedTx, setSelectedTx] = useState<any>(null);
+  const [showWalletBalances, setShowWalletBalances] = useState(true);
 
   useEffect(() => { loadData(); }, []);
 
@@ -387,7 +388,9 @@ export default function MerchantDashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base">Wallets</CardTitle>
-                <Wallet className="h-4 w-4 text-muted-foreground" />
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowWalletBalances(!showWalletBalances)}>
+                  {showWalletBalances ? <Eye className="h-3.5 w-3.5 text-muted-foreground" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
@@ -405,7 +408,7 @@ export default function MerchantDashboard() {
                       <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{w.currency} Balance</span>
                       <Badge variant="outline" className="text-[10px]">Available</Badge>
                     </div>
-                    <p className="text-xl font-bold tracking-tight">{Number(w.available_balance || 0).toLocaleString()}<span className="text-sm font-medium text-muted-foreground ml-1">{w.currency}</span></p>
+                    <p className="text-xl font-bold tracking-tight">{showWalletBalances ? `${Number(w.available_balance || 0).toLocaleString()}` : '••••••'}<span className="text-sm font-medium text-muted-foreground ml-1">{w.currency}</span></p>
                     {(Number(w.pending_balance) > 0) && (
                       <p className="text-xs text-amber-600 dark:text-amber-400">
                         +{Number(w.pending_balance).toLocaleString()} pending

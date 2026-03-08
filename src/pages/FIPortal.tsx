@@ -43,53 +43,38 @@ export default function FIPortal() {
 
   useEffect(() => { checkAuthAndInstitution(); }, []);
 
+  const resolveInstitution = async (userId: string) => {
+    // Check ownership first
+    const { data: ownedInst } = await supabase.from("institutions").select("*").eq("user_id", userId).maybeSingle();
+    if (ownedInst) return ownedInst;
+    // Check staff assignment via RPC
+    const { data: staffInstId } = await supabase.rpc("get_staff_institution_id", { _user_id: userId });
+    if (staffInstId) {
+      const { data: staffInst } = await supabase.from("institutions").select("*").eq("id", staffInstId).maybeSingle();
+      return staffInst;
+    }
+    return null;
+  };
+
   const checkAuthAndInstitution = async () => {
     setLoading(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) { navigate('/auth'); return; }
-    await loadInstitution();
-    await loadMetrics();
-    setLoading(false);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { navigate('/auth'); return; }
+
+      const inst = await resolveInstitution(user.id);
+      if (!inst) { navigate('/register'); return; }
+      if (inst.status === 'pending' || inst.status === 'rejected') { navigate('/pending-approval'); return; }
+      setInstitution(inst);
+      await loadMetrics(inst.id);
+    } catch (error) {
+      console.error("FI Portal load error:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const loadInstitution = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    // Check ownership first
-    let inst = null;
-    const { data: ownedInst } = await supabase.from("institutions").select("*").eq("user_id", user.id).maybeSingle();
-    
-    if (ownedInst) {
-      inst = ownedInst;
-    } else {
-      // Check staff assignment via RPC
-      const { data: staffInstId } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
-      if (staffInstId) {
-        const { data: staffInst } = await supabase.from("institutions").select("*").eq("id", staffInstId).maybeSingle();
-        inst = staffInst;
-      }
-    }
-    
-    if (!inst) { navigate('/register'); return; }
-    if (inst.status === 'pending' || inst.status === 'rejected') { navigate('/pending-approval'); return; }
-    setInstitution(inst);
-  };
-
-  const loadMetrics = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    
-    // Resolve institution ID (owner or staff)
-    let instId: string | null = null;
-    const { data: ownedInst } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-    if (ownedInst) {
-      instId = ownedInst.id;
-    } else {
-      const { data: staffInstId } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
-      instId = staffInstId;
-    }
-    if (!instId) return;
+  const loadMetrics = async (instId: string) => {
     
     const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
     

@@ -1,7 +1,9 @@
 import { ReactNode, useState, useEffect } from "react";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Code, Home, Zap, Shield, Puzzle, CreditCard, Wallet, FileText, BookOpen, ShoppingCart, Database, Smartphone, Globe, Terminal, Activity, Scale } from "lucide-react";
+import { DeveloperBreadcrumb } from "./DeveloperBreadcrumb";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { NotificationCenter } from "@/components/NotificationCenter";
 import { supabase } from "@/integrations/supabase/client";
@@ -268,7 +270,10 @@ export function DeveloperLayout({ children }: DeveloperLayoutProps) {
           </header>
 
           <main className="flex-1 p-6">
-            {children || <Outlet />}
+            <PortalErrorBoundary portalName="Developer Portal" fallbackPath="/developer">
+              <DeveloperBreadcrumb />
+              {children || <Outlet />}
+            </PortalErrorBoundary>
           </main>
         </div>
       </div>

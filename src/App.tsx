@@ -12,6 +12,8 @@ import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
+import { NestedNotFound } from "@/components/NestedNotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PWARouteGuard } from "@/components/pwa/PWARouteGuard";
 import Index from "./pages/Index";
@@ -503,6 +505,7 @@ function App() {
               <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
               <Route path="storefront" element={<MerchantStorefront />} />
+              <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/loans" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><Loans /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
@@ -567,6 +570,7 @@ function App() {
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
               <Route path="marketplace" element={<AdminMarketplace />} />
+              <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
             <Route path="/system-monitoring" element={<Navigate to="/admin/system-monitoring" replace />} />
@@ -649,6 +653,7 @@ function App() {
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
+              <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />
@@ -671,7 +676,7 @@ function App() {
             <Route path="/solutions/mobile-money-integration" element={<Layout><MobileMoneyIntegration /></Layout>} />
             <Route path="/solutions/credit-scoring" element={<Layout><CreditScoring /></Layout>} />
             
-            <Route path="/developer-old" element={<Layout><ProtectedRoute><Developer /></ProtectedRoute></Layout>} />
+            <Route path="/developer-old" element={<Navigate to="/developer" replace />} />
             <Route path="/tpp-registration" element={<Layout><ProtectedRoute><TPPRegistration /></ProtectedRoute></Layout>} />
             <Route path="/consents" element={<Layout><ProtectedRoute><ConsentManagement /></ProtectedRoute></Layout>} />
             <Route path="/analytics" element={<Layout><ProtectedRoute><Analytics /></ProtectedRoute></Layout>} />

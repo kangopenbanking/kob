@@ -1,4 +1,5 @@
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { SessionGuard } from "@/components/auth/SessionGuard";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Store } from "lucide-react";
@@ -132,7 +133,9 @@ export function MerchantLayout() {
           </header>
 
           <main className="flex-1 p-6">
-            <Outlet />
+            <PortalErrorBoundary portalName="Merchant Portal" fallbackPath="/merchant">
+              <Outlet />
+            </PortalErrorBoundary>
           </main>
         </div>
       </div>

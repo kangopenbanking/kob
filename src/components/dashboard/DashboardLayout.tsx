@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { Outlet, useNavigate, useLocation, Link } from "react-router-dom";
 import { SessionGuard } from "@/components/auth/SessionGuard";
+import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { UserProfileMenu } from "@/components/UserProfileMenu";
 import { Button } from "@/components/ui/button";
 import {
@@ -153,7 +154,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             </header>
 
             <main className="flex-1 p-6">
-              {children || <Outlet />}
+              <PortalErrorBoundary portalName="Dashboard" fallbackPath="/dashboard">
+                {children || <Outlet />}
+              </PortalErrorBoundary>
             </main>
           </div>
         </div>
