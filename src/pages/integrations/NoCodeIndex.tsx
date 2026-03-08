@@ -13,7 +13,7 @@ const NoCodeIndex = () => {
       difficulty: "Beginner",
       useCases: ["E-commerce payments", "Mobile Money checkout", "XAF transactions"],
       link: "/woo-for-kang",
-      color: "text-[#96588a]",
+      color: "text-fi-purple",
       status: "Production Ready" // New status field
     },
     {

@@ -336,11 +336,11 @@ export const Navigation = () => {
                     
                     <Link 
                       to="/woo-for-kang" 
-                      className="group flex items-start gap-3 rounded-lg border border-[#96588a]/30 bg-gradient-to-br from-[#96588a]/10 to-card p-4 hover:bg-accent transition-colors"
+                      className="group flex items-start gap-3 rounded-lg border border-fi-purple/30 bg-gradient-to-br from-fi-purple/10 to-card p-4 hover:bg-accent transition-colors"
                     >
-                      <Package className="h-5 w-5 text-[#96588a] mt-0.5" />
+                      <Package className="h-5 w-5 text-fi-purple mt-0.5" />
                       <div>
-                        <h3 className="font-semibold mb-1 text-[#96588a] group-hover:text-[#96588a]/80 transition-colors">
+                        <h3 className="font-semibold mb-1 text-fi-purple group-hover:text-fi-purple/80 transition-colors">
                           WooCommerce Plugin
                         </h3>
                         <p className="text-sm text-muted-foreground">
