@@ -1,20 +1,41 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-
 import { corsHeaders } from "../_shared/cors.ts";
 
+function problem(status: number, title: string, detail: string) {
+  return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
+    status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
+  });
+}
+
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
+    // Admin authentication required
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) return problem(401, 'Unauthorized', 'Missing Authorization header');
+
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    if (userError || !user) return problem(401, 'Unauthorized', 'Invalid or expired token');
+
+    const { data: hasAdminRole } = await supabase.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'admin'
+    });
+    if (!hasAdminRole) return problem(403, 'Forbidden', 'Admin access required');
+
     const { endpoint, concurrent_requests, duration_seconds, payload } = await req.json();
 
-    console.log(`Starting load test for ${endpoint}: ${concurrent_requests} concurrent requests for ${duration_seconds}s`);
+    // Safety limits
+    const safeConcurrent = Math.min(concurrent_requests || 5, 50);
+    const safeDuration = Math.min(duration_seconds || 5, 30);
+
+    console.log(`[Load Test] Admin ${user.email} started: ${endpoint}, ${safeConcurrent} concurrent, ${safeDuration}s`);
 
     const startTime = Date.now();
     const results = {
@@ -46,26 +67,24 @@ Deno.serve(async (req) => {
           results.successful_requests++;
         } else {
           results.failed_requests++;
-          results.errors.push(`Status ${response.status}: ${await response.text()}`);
+          results.errors.push(`Status ${response.status}`);
         }
-
         results.status_codes[response.status] = (results.status_codes[response.status] || 0) + 1;
+        await response.text().catch(() => null);
       } catch (error) {
         results.total_requests++;
         results.failed_requests++;
-        results.errors.push(error instanceof Error ? error.message : String(error));
+        results.errors.push('Request failed');
       }
     };
 
-    // Run load test
-    const endTime = startTime + (duration_seconds * 1000);
+    const endTime = startTime + (safeDuration * 1000);
     const workers: Promise<void>[] = [];
 
-    for (let i = 0; i < concurrent_requests; i++) {
+    for (let i = 0; i < safeConcurrent; i++) {
       workers.push((async () => {
         while (Date.now() < endTime) {
           await makeRequest();
-          // Small delay to prevent overwhelming the system
           await new Promise(resolve => setTimeout(resolve, 10));
         }
       })());
@@ -73,68 +92,48 @@ Deno.serve(async (req) => {
 
     await Promise.all(workers);
 
-    // Calculate statistics
-    const avgResponseTime = results.response_times.length > 0
-      ? results.response_times.reduce((a, b) => a + b, 0) / results.response_times.length
-      : 0;
-
-    const minResponseTime = results.response_times.length > 0
-      ? Math.min(...results.response_times)
-      : 0;
-
-    const maxResponseTime = results.response_times.length > 0
-      ? Math.max(...results.response_times)
-      : 0;
-
-    const p95ResponseTime = results.response_times.length > 0
-      ? results.response_times.sort((a, b) => a - b)[Math.floor(results.response_times.length * 0.95)]
-      : 0;
-
-    const requestsPerSecond = results.total_requests / duration_seconds;
-    const successRate = (results.successful_requests / results.total_requests) * 100;
-
+    const sorted = [...results.response_times].sort((a, b) => a - b);
+    const len = sorted.length;
     const summary = {
       endpoint,
-      concurrent_requests,
-      duration_seconds,
+      concurrent_requests: safeConcurrent,
+      duration_seconds: safeDuration,
       total_requests: results.total_requests,
       successful_requests: results.successful_requests,
       failed_requests: results.failed_requests,
-      requests_per_second: requestsPerSecond.toFixed(2),
-      success_rate: successRate.toFixed(2),
-      avg_response_time: avgResponseTime.toFixed(2),
-      min_response_time: minResponseTime,
-      max_response_time: maxResponseTime,
-      p95_response_time: p95ResponseTime,
+      requests_per_second: len > 0 ? (results.total_requests / safeDuration).toFixed(2) : '0',
+      success_rate: results.total_requests > 0 ? ((results.successful_requests / results.total_requests) * 100).toFixed(2) : '0',
+      avg_response_time: len > 0 ? (sorted.reduce((a, b) => a + b, 0) / len).toFixed(2) : '0',
+      min_response_time: len > 0 ? sorted[0] : 0,
+      max_response_time: len > 0 ? sorted[len - 1] : 0,
+      p95_response_time: len > 0 ? sorted[Math.floor(len * 0.95)] : 0,
       status_codes: results.status_codes,
       sample_errors: results.errors.slice(0, 5),
+      run_by: user.email,
     };
 
-    // Log the test results
+    // Log results
     await supabase.from('load_test_results').insert([{
       endpoint,
-      concurrent_requests,
-      duration_seconds,
+      concurrent_requests: safeConcurrent,
+      duration_seconds: safeDuration,
       results: summary,
-    }]);
+    }]).catch(() => null);
 
-    console.log('Load test completed:', summary);
+    // Audit log
+    await supabase.from('audit_logs').insert({
+      action_type: 'load_test_executed',
+      entity_type: 'load_test',
+      entity_id: crypto.randomUUID(),
+      performed_by: user.id,
+      details: { endpoint, concurrent_requests: safeConcurrent, duration_seconds: safeDuration, total_requests: results.total_requests },
+    }).catch(() => null);
 
     return new Response(JSON.stringify(summary), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
     });
   } catch (error) {
-    console.error('Load test error:', error);
-    return new Response(
-      JSON.stringify({ 
-        error: 'Failed to run load test',
-        details: error instanceof Error ? error.message : String(error)
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 500 
-      }
-    );
+    console.error('[SECURE] Load test error:', error instanceof Error ? error.message : String(error));
+    return problem(500, 'Internal Server Error', 'Load test execution failed');
   }
 });
