@@ -44,6 +44,8 @@ serve(async (req) => {
       narration,
     } = body;
 
+    const idempotencyKey = req.headers.get('idempotency-key') || body.idempotency_key;
+
     if (!amount || !account_id || !destination_type) {
       return new Response(JSON.stringify({
         error: 'invalid_request',
@@ -57,13 +59,27 @@ serve(async (req) => {
       });
     }
 
-    // Verify account ownership
+    // Idempotency check — prevent double-debit on network retries
+    if (idempotencyKey) {
+      const { data: existing } = await supabase
+        .from('idempotency_keys')
+        .select('response_body')
+        .eq('idempotency_key', idempotencyKey)
+        .maybeSingle();
+      if (existing) {
+        return new Response(JSON.stringify(existing.response_body), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json', 'X-Idempotent-Replayed': 'true' },
+        });
+      }
+    }
+
+    // Verify account ownership (must be active)
     const { data: account } = await supabase
       .from('accounts').select('*')
-      .eq('id', account_id).eq('user_id', user.id).single();
+      .eq('id', account_id).eq('user_id', user.id).eq('is_active', true).single();
 
     if (!account) {
-      return new Response(JSON.stringify({ error: 'account_not_found' }), {
+      return new Response(JSON.stringify({ error: 'account_not_found', message: 'Account not found or inactive' }), {
         status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
@@ -77,9 +93,16 @@ serve(async (req) => {
       .in('balance_type', ['ClosingAvailable', 'InterimAvailable'])
       .order('balance_datetime', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    const currentBalance = balanceRecord?.amount || 0;
+    if (!balanceRecord) {
+      return new Response(JSON.stringify({
+        error: 'no_balance_record',
+        message: 'No balance record found for this account. Please fund your wallet first.',
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const currentBalance = balanceRecord.amount || 0;
 
     // Fetch admin fee structure
     const KANG_PLATFORM_ID = 'f493095b-037a-40cf-82bc-3a3ab74550dd';
@@ -313,7 +336,7 @@ serve(async (req) => {
       details: { amount, fee, net_amount: netAmount, destination_type, provider: providerName, tx_ref: txRef, status: payoutStatus },
     });
 
-    return new Response(JSON.stringify({
+    const responseBody = {
       success: true,
       amount,
       fee_amount: fee,
@@ -325,7 +348,19 @@ serve(async (req) => {
       provider_ref: providerResult?.provider_ref,
       tx_ref: txRef,
       destination_type,
-    }), {
+    };
+
+    // Store idempotency key to prevent double-debit on retries
+    if (idempotencyKey) {
+      await supabase.from('idempotency_keys').insert({
+        idempotency_key: idempotencyKey,
+        response_body: responseBody,
+        response_status: 201,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+      }).then(() => {}).catch(() => {});
+    }
+
+    return new Response(JSON.stringify(responseBody), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
