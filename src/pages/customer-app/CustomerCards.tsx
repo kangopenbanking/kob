@@ -90,13 +90,17 @@ const CustomerCards: React.FC = () => {
               </div>
               <span className="text-[10px] font-bold text-foreground">{showNumber ? 'Hide' : 'Show'}</span>
             </button>
-            <button className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4">
+            <button onClick={() => {
+              if (!card) return;
+              const action = card.status === 'frozen' ? 'unfreeze' : 'freeze';
+              toast.info(`Card ${action} is managed from your card issuer's portal.`);
+            }} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(200,70%,92%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(200,60%,82%)]">
                 <Snowflake className="h-5 w-5 text-[hsl(200,50%,38%)]" strokeWidth={1.5} />
               </div>
               <span className="text-[10px] font-bold text-foreground">{card?.status === 'frozen' ? 'Unfreeze' : 'Freeze'}</span>
             </button>
-            <button className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
+            <button onClick={() => toast.info('Card settings coming soon')} className="flex flex-col items-center gap-2.5 rounded-2xl bg-[hsl(255,50%,93%)] p-4">
               <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(255,40%,84%)]">
                 <Settings className="h-5 w-5 text-[hsl(255,40%,42%)]" strokeWidth={1.5} />
               </div>
