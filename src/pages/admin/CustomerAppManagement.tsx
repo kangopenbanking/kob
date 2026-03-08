@@ -18,13 +18,14 @@ import {
   Search, Loader2, Building2, Wallet, Settings2, GripVertical, ArrowUp, ArrowDown,
   Eye, Send, QrCode, ScanLine, ChevronRight, BarChart3, Monitor, ExternalLink,
   Plus, Trash2, Image, Video, BookOpen, Palette, Shield, UserCheck, Phone,
-  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock, Upload, ImageIcon, Plane
+  Home, Calendar, Receipt, Split, Link2, Banknote, RefreshCw, Gift, Lock, Upload, ImageIcon, Plane, Store
 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { API_CONFIG } from "@/config/api";
 import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
 import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
+import { AdminStorefrontSlider } from "@/components/storefront/AdminStorefrontSlider";
 
 // ─── Types ───
 interface RewardsConfig {
@@ -1622,6 +1623,7 @@ export default function CustomerAppManagement() {
                   <TabsTrigger value="hero" className="gap-1.5"><ImageIcon className="h-3.5 w-3.5" /> Hero Section</TabsTrigger>
                   <TabsTrigger value="typography" className="gap-1.5"><Palette className="h-3.5 w-3.5" /> Typography</TabsTrigger>
                   <TabsTrigger value="travel-card" className="gap-1.5"><Plane className="h-3.5 w-3.5" /> Travel Card</TabsTrigger>
+                  <TabsTrigger value="storefront" className="gap-1.5"><Store className="h-3.5 w-3.5" /> Storefronts</TabsTrigger>
                 </TabsList>
 
                 {/* Linked Accounts Tab */}
@@ -1891,6 +1893,11 @@ export default function CustomerAppManagement() {
                 {/* Travel Card Tab */}
                 <TabsContent value="travel-card">
                   <TravelCardPanel institutionId={selectedInstitution!} appConfig={selectedAppConfig} />
+                </TabsContent>
+
+                {/* Storefront Tab */}
+                <TabsContent value="storefront">
+                  <AdminStorefrontSlider />
                 </TabsContent>
               </Tabs>
             </>

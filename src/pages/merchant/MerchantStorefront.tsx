@@ -5,7 +5,7 @@ import {
   Download, Printer, Sparkles, Shield, Zap, Users, BarChart3,
   ArrowRight, CreditCard, Smartphone, Wallet, RefreshCw, Copy, Check,
   BookOpen, ChevronRight, Circle, Plus, X, Package, Settings, HelpCircle,
-  ListChecks, Layers, DollarSign
+  ListChecks, Layers, DollarSign, Monitor
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,8 @@ import {
 
 import posKob from '@/assets/pos-kob.webp';
 import posPaymentSuccess from '@/assets/pos-payment-success.webp';
+import { ImageUpload } from '@/components/storefront/ImageUpload';
+import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -271,6 +273,9 @@ export default function MerchantStorefront() {
           <TabsTrigger value="qr" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <QrCode className="w-3.5 h-3.5" strokeWidth={1.5} /> QR Payments
           </TabsTrigger>
+          <TabsTrigger value="preview" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Monitor className="w-3.5 h-3.5" strokeWidth={1.5} /> Store Preview
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Setup Guide ── */}
@@ -482,32 +487,22 @@ export default function MerchantStorefront() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">Logo URL</Label>
-                        <Input value={logoUrl} onChange={e => setLogoUrl(e.target.value)} placeholder="https://your-logo.png" className="h-10 rounded-lg border-border/60" />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-medium text-muted-foreground">Banner URL</Label>
-                        <Input value={bannerUrl} onChange={e => setBannerUrl(e.target.value)} placeholder="https://your-banner.jpg" className="h-10 rounded-lg border-border/60" />
-                      </div>
-                    </div>
-                    {(logoUrl || bannerUrl) && (
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        {logoUrl && (
-                          <div className="rounded-xl border border-border/40 p-3 bg-muted/20">
-                            <p className="text-[10px] text-muted-foreground mb-2 font-medium uppercase tracking-wider">Logo Preview</p>
-                            <img src={logoUrl} alt="Logo" className="w-16 h-16 rounded-xl object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-                          </div>
-                        )}
-                        {bannerUrl && (
-                          <div className="rounded-xl border border-border/40 p-3 bg-muted/20">
-                            <p className="text-[10px] text-muted-foreground mb-2 font-medium uppercase tracking-wider">Banner Preview</p>
-                            <img src={bannerUrl} alt="Banner" className="w-full h-20 rounded-lg object-cover" onError={e => (e.currentTarget.style.display = 'none')} />
-                          </div>
-                        )}
-                      </div>
-                    )}
+                    <ImageUpload
+                      label="Store Logo"
+                      value={logoUrl}
+                      onChange={setLogoUrl}
+                      folder="logos"
+                      placeholder="Upload logo or paste URL"
+                      previewClass="w-16 h-16 rounded-xl object-cover"
+                    />
+                    <ImageUpload
+                      label="Cover / Banner Image"
+                      value={bannerUrl}
+                      onChange={setBannerUrl}
+                      folder="banners"
+                      placeholder="Upload banner or paste URL"
+                      previewClass="w-full h-24 rounded-lg object-cover"
+                    />
                   </CardContent>
                 </Card>
               </div>
@@ -556,6 +551,7 @@ export default function MerchantStorefront() {
                     <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider mb-2">Quick Actions</p>
                     {[
                       { label: 'Setup Guide', action: () => setActiveTab('guide'), icon: BookOpen },
+                      { label: 'Store Preview', action: () => setActiveTab('preview'), icon: Monitor },
                       { label: 'Generate QR Code', action: () => setActiveTab('qr'), icon: QrCode },
                       { label: 'Manage Subscription', action: () => setActiveTab('subscription'), icon: Crown },
                       { label: 'POS Attributes', action: () => setActiveTab('attributes'), icon: Package },
@@ -913,6 +909,82 @@ export default function MerchantStorefront() {
                     </div>
                   </div>
                 </Card>
+              </div>
+            </div>
+          </motion.div>
+        </TabsContent>
+
+        {/* ── Store Preview ── */}
+        <TabsContent value="preview">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+            <div className="grid lg:grid-cols-2 gap-6">
+              <div className="space-y-5">
+                <Card className="border-0 shadow-sm">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-base font-semibold flex items-center gap-2">
+                      <Monitor className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      Consumer App Preview
+                    </CardTitle>
+                    <CardDescription className="text-xs">This is how your store appears to customers on the KOB marketplace</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <StorePreview
+                      storeName={storeName}
+                      description={description}
+                      category={category}
+                      city={city}
+                      country={country}
+                      currency={currency}
+                      logoUrl={logoUrl}
+                      bannerUrl={bannerUrl}
+                      isPublished={isPublished}
+                      rating={profile?.rating}
+                    />
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div className="space-y-4">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <HelpCircle className="w-4 h-4 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-foreground">Preview Tips</p>
+                    </div>
+                    <div className="space-y-3 text-xs text-muted-foreground leading-relaxed">
+                      <p>• The preview shows how your store card looks in the consumer app homepage slider.</p>
+                      <p>• <strong>Banner image</strong> is the large cover photo at the top — use a high-quality wide image (1200×400px).</p>
+                      <p>• <strong>Logo</strong> appears as a small icon overlaying the banner — use a square image (200×200px minimum).</p>
+                      <p>• Fill in your <strong>category</strong> and <strong>location</strong> for better discoverability.</p>
+                      <p>• A compelling <strong>description</strong> helps customers decide to visit your store.</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-5 space-y-3">
+                    <p className="text-xs font-semibold text-foreground">Store Checklist</p>
+                    {[
+                      { done: !!storeName, label: 'Store name set' },
+                      { done: !!description, label: 'Description added' },
+                      { done: !!category, label: 'Category selected' },
+                      { done: !!city, label: 'Location configured' },
+                      { done: !!logoUrl, label: 'Logo uploaded' },
+                      { done: !!bannerUrl, label: 'Cover image uploaded' },
+                      { done: !!subscription, label: 'Subscription active' },
+                      { done: isPublished, label: 'Store published' },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center gap-2.5">
+                        <CheckCircle2 className={`w-4 h-4 flex-shrink-0 ${item.done ? 'text-emerald-500' : 'text-muted-foreground/30'}`} strokeWidth={1.5} />
+                        <span className={`text-xs ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+
+                <Button onClick={() => setActiveTab('profile')} variant="outline" className="w-full gap-2 text-xs rounded-lg">
+                  <Settings className="w-3.5 h-3.5" strokeWidth={1.5} /> Edit Store Profile
+                </Button>
               </div>
             </div>
           </motion.div>
