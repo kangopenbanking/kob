@@ -247,7 +247,7 @@ const CustomerHome: React.FC = () => {
                 transition={{ delay: 0.2 }}
                 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-primary-foreground/50 mb-1.5"
               >
-                Getting funds
+                Total Balance
               </motion.p>
               {acctLoading ? (
                 <Loader2 className="mx-auto h-8 w-8 animate-spin text-primary-foreground/50" />
