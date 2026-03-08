@@ -295,7 +295,7 @@ Deno.serve(async (req) => {
       }
 
       const refreshResponseHeaders = addRateLimitHeaders(
-        { ...corsHeaders, 'Content-Type': 'application/json' },
+        { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'Pragma': 'no-cache' },
         100,
         rateLimit.remaining,
         rateLimit.reset
