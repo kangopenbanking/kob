@@ -35,7 +35,7 @@ const CustomerCards: React.FC = () => {
           </div>
           <p className="text-sm font-semibold text-muted-foreground">No cards yet</p>
           <p className="text-xs text-muted-foreground text-center">Add a virtual card to start making payments</p>
-          <Button variant="outline" className="rounded-2xl">
+          <Button variant="outline" className="rounded-2xl" onClick={() => toast.info('Virtual card creation coming soon')}>
             <Plus className="mr-2 h-4 w-4" strokeWidth={1.5} /> Add New Card
           </Button>
         </div>
