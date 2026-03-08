@@ -176,11 +176,11 @@ Deno.serve(async (req) => {
         }, { onConflict: 'account_id,balance_type' });
         // Credit merchant
         const { data: mw } = await supabase.from('gateway_merchant_wallets')
-          .select('id, available_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
+          .select('id, available_balance, ledger_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
         if (mw) {
           await supabase.from('gateway_merchant_wallets').update({
             available_balance: (mw.available_balance || 0) + amount,
-            ledger_balance: (mw.available_balance || 0) + amount,
+            ledger_balance: (mw.ledger_balance || 0) + amount,
           }).eq('id', mw.id);
         } else {
           await supabase.from('gateway_merchant_wallets').insert({
@@ -196,12 +196,15 @@ Deno.serve(async (req) => {
           provider_reference: `wallet_${idempotencyKey}`,
         }).select().single();
         // Inventory decrement
-        for (const item of order.pos_order_items || []) {
-          await supabase.rpc('pos_adjust_inventory', {
-            p_merchant_id: order.merchant_id, p_variant_id: item.variant_id,
-            p_location_id: order.location_id, p_quantity_delta: -item.quantity,
-            p_movement_type: 'sale', p_reference_id: order.id, p_note: `Wallet payment order ${order.order_number}`,
-          }).catch(() => {});
+        if (order.location_id) {
+          for (const item of order.pos_order_items || []) {
+            await supabase.rpc('pos_adjust_inventory', {
+              _merchant_id: order.merchant_id, _variant_id: item.variant_id,
+              _location_id: order.location_id, _quantity_delta: -item.quantity,
+              _type: 'sale', _reason: `Wallet payment order ${order.order_number}`,
+              _reference_type: 'pos_order', _reference_id: order.id,
+            }).catch(() => {});
+          }
         }
         await supabase.from('pos_order_status_history').insert({
           order_id: order.id, status: 'paid', note: 'Wallet payment completed', created_by: user.id,

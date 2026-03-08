@@ -31,6 +31,7 @@ import posPaymentSuccess from '@/assets/pos-payment-success.webp';
 import { ImageUpload } from '@/components/storefront/ImageUpload';
 import { StorePreview, StorePreviewDialog } from '@/components/storefront/StorePreview';
 import { ShippingForm } from '@/components/storefront/ShippingForm';
+import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -279,6 +280,9 @@ export default function MerchantStorefront() {
           </TabsTrigger>
           <TabsTrigger value="shipping" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Truck className="w-3.5 h-3.5" strokeWidth={1.5} /> Shipping
+          </TabsTrigger>
+          <TabsTrigger value="demo" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Demo Store
           </TabsTrigger>
         </TabsList>
 
@@ -1047,6 +1051,11 @@ export default function MerchantStorefront() {
               </div>
             </div>
           </motion.div>
+        </TabsContent>
+
+        {/* ── Demo Store ── */}
+        <TabsContent value="demo">
+          <DemoStoreTab merchantId={merchantId} onDataChanged={loadData} />
         </TabsContent>
       </Tabs>
     </div>
