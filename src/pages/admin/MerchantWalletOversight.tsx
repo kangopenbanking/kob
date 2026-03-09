@@ -83,15 +83,18 @@ const MerchantWalletOversight: React.FC = () => {
       if (walletError) throw walletError;
 
       // Update payout status to processing (ready for provider execution)
+      const updatedMetadata = typeof payout.metadata === 'object' && payout.metadata !== null
+        ? { ...(payout.metadata as Record<string, any>) }
+        : {};
+        
+      updatedMetadata.approved_at = new Date().toISOString();
+      updatedMetadata.approved_by = (await supabase.auth.getUser()).data.user?.id;
+
       const { error: payoutError } = await supabase
         .from('gateway_payouts')
         .update({
           status: 'processing',
-          metadata: {
-            ...(payout.metadata || {}),
-            approved_at: new Date().toISOString(),
-            approved_by: (await supabase.auth.getUser()).data.user?.id,
-          },
+          metadata: updatedMetadata,
         })
         .eq('id', payoutId);
 
