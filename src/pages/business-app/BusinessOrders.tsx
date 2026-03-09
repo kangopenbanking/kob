@@ -89,9 +89,9 @@ const BusinessOrders: React.FC = () => {
         .from('pos_order_status_history')
         .insert({
           order_id: orderId,
-          previous_status: previousStatus,
-          new_status: newStatus,
-          changed_by: user?.id,
+          status: newStatus as any,
+          created_by: user?.id,
+          note: `Changed from ${previousStatus} to ${newStatus}`,
         });
       if (historyError) throw historyError;
     },
