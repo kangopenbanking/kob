@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 interface PinConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmed: () => void;
+  onConfirmed: (pin: string) => void;
   title?: string;
   description?: string;
 }
