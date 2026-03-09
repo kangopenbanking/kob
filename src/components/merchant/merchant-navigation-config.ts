@@ -68,10 +68,8 @@ export const merchantNavigation = [
     title: "Storefront",
     items: [
       { title: "Store & Marketplace", path: "/merchant/storefront", icon: Store },
-      { title: "Products", path: "/merchant/storefront", icon: Package, hash: "products" },
       { title: "Payment Plans", path: "/merchant/plans", icon: CreditCard },
       { title: "WooCommerce Sync", path: "/merchant/woo-sync", icon: ShoppingCart },
-      { title: "Integrations", path: "/merchant/storefront", icon: Plug, hash: "integrations" },
     ],
   },
   {
