@@ -72,7 +72,7 @@ export default function BusinessAnalytics() {
       dailyData[date] = { date, revenue: 0, orders: 0 };
     }
 
-    dailyData[date].revenue += order.total_amount || 0;
+    dailyData[date].revenue += order.total || 0;
     dailyData[date].orders += 1;
   });
 

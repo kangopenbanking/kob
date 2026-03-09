@@ -96,18 +96,21 @@ export default function BusinessStorefront() {
         .from('pos_store_profiles')
         .upsert({
           merchant_id: merchantId,
-          tagline,
+          store_name: tagline || businessName,
           description,
           logo_url: logoUrl,
-          cover_image_url: coverUrl,
-          brand_primary_color: primaryColor,
-          brand_accent_color: accentColor,
-          region,
+          banner_url: coverUrl,
           city,
-          address,
-          phone,
-          email,
-          operating_hours: hours,
+          country: 'CM',
+          custom_brand_json: {
+            primary_color: primaryColor,
+            accent_color: accentColor,
+            region,
+            address,
+            phone,
+            email,
+            operating_hours: hours,
+          },
         });
 
       if (error) throw error;

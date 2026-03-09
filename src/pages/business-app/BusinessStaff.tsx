@@ -208,7 +208,7 @@ export default function BusinessStaff() {
                         : 'bg-gray-100 text-gray-700'
                     }`}
                   >
-                    {member.is_active ? 'Active' : 'Inactive'}
+                    {member.status === 'active' ? 'Active' : 'Inactive'}
                   </span>
                 </div>
 
