@@ -74,31 +74,20 @@ export default function BusinessStaff() {
       if (!merchantId) throw new Error('Merchant not found');
       if (!inviteEmail || !invitePin) throw new Error('Email and PIN required');
 
-      // First create staff record
+      // Create staff record with role
       const { data: staffData, error: staffError } = await supabase
         .from('merchant_pos_staff')
         .insert({
           merchant_id: merchantId,
-          email: inviteEmail.toLowerCase(),
+          user_id: (await supabase.auth.getUser()).data.user?.id || merchantId,
+          role: inviteRole as any,
           pin_hash: invitePin, // In production, hash this properly
-          is_active: true,
-          invited_by: (await supabase.auth.getUser()).data.user?.id,
+          status: 'active',
         })
         .select()
         .single();
 
       if (staffError) throw staffError;
-
-      // Then create role assignment
-      const { error: roleError } = await supabase
-        .from('merchant_staff_roles')
-        .insert({
-          staff_id: staffData.id,
-          merchant_id: merchantId,
-          role: inviteRole as any,
-        });
-
-      if (roleError) throw roleError;
 
       return staffData;
     },
