@@ -31,6 +31,8 @@ serve(async (req) => {
       phone_number: data.data.phone_number,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'bvn_resolution_failed', message: err.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] bvn-resolve error:`, err);
+    return new Response(JSON.stringify({ error: 'bvn_resolution_failed', error_id: errorId }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
