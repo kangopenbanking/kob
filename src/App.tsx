@@ -604,6 +604,8 @@ function App() {
               {/* Phase 2: Financial Operations */}
               <Route path="settlement-approval" element={<SettlementApproval />} />
               <Route path="invoice-management" element={<InvoiceManagement />} />
+              {/* Phase 3: Advanced Commerce */}
+              <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
