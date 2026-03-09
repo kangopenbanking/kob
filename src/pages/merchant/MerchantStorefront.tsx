@@ -1008,6 +1008,42 @@ export default function MerchantStorefront() {
                 <Button onClick={() => setActiveTab('profile')} variant="outline" className="w-full gap-2 text-xs rounded-lg">
                   <Settings className="w-3.5 h-3.5" strokeWidth={1.5} /> Edit Store Profile
                 </Button>
+
+                {isPublished && merchantId && (
+                  <Card className="border-0 shadow-sm">
+                    <CardContent className="p-4">
+                      <p className="text-xs font-semibold text-foreground mb-2 flex items-center gap-1.5">
+                        <Globe className="w-3.5 h-3.5 text-primary" /> Public Store Link
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          readOnly
+                          value={`${window.location.origin}/store/${merchantId}`}
+                          className="h-8 text-[11px] font-mono bg-muted/40 rounded-lg"
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-xs shrink-0 gap-1"
+                          onClick={() => {
+                            navigator.clipboard.writeText(`${window.location.origin}/store/${merchantId}`);
+                            toast.success('Store URL copied!');
+                          }}
+                        >
+                          <Copy className="w-3 h-3" /> Copy
+                        </Button>
+                      </div>
+                      <a
+                        href={`/store/${merchantId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-primary hover:underline mt-2 inline-flex items-center gap-1"
+                      >
+                        Open store page <ArrowRight className="w-3 h-3" />
+                      </a>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </motion.div>
