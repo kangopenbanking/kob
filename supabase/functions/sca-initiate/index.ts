@@ -43,7 +43,12 @@ Deno.serve(async (req) => {
     const otp = generateOTP();
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    // Create SCA challenge
+    // Hash OTP before storage (SHA-256)
+    const encoder = new TextEncoder();
+    const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(otp));
+    const otpHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Create SCA challenge with hashed code
     const { data: challenge, error: challengeError } = await supabase
       .from('sca_challenges')
       .insert({
@@ -51,7 +56,7 @@ Deno.serve(async (req) => {
         challenge_type,
         operation_type,
         operation_id,
-        challenge_code: otp,
+        challenge_code: otpHash,
         expires_at: expiresAt.toISOString(),
         ip_address: req.headers.get('x-forwarded-for') || 'unknown',
         user_agent: req.headers.get('user-agent') || 'unknown'
@@ -67,7 +72,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Send OTP based on challenge type
+    // Send OTP based on challenge type (send plaintext to user, store hash)
     if (challenge_type === 'otp_email') {
       await supabase.functions.invoke('send-communication', {
         body: {
@@ -80,7 +85,7 @@ Deno.serve(async (req) => {
       });
     } else if (challenge_type === 'otp_sms') {
       // SMS implementation would go here
-      console.log('SMS OTP:', otp);
+      console.log('SMS OTP challenge initiated for user:', user.id);
     }
 
     return new Response(

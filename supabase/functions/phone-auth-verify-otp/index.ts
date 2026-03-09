@@ -87,8 +87,12 @@ serve(async (req) => {
       );
     }
 
-    // Now compare the OTP code using timing-safe comparison
-    const codeMatch = otpRecord.otp_code === otp_code;
+    // Hash the submitted OTP and compare against stored hash
+    const encoder = new TextEncoder();
+    const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(otp_code));
+    const inputHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    const codeMatch = otpRecord.otp_code === inputHash;
     if (!codeMatch) {
       const remaining = (otpRecord.max_attempts || 5) - newAttempts;
       return new Response(

@@ -249,12 +249,17 @@ serve(async (req) => {
       );
     }
 
-    // Store OTP in database
+    // Hash OTP before storage (SHA-256)
+    const encoder = new TextEncoder();
+    const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(otpCode));
+    const otpHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    // Store hashed OTP in database
     const { data: otpRecord, error: insertError } = await supabase
       .from('phone_otp_codes')
       .insert({
         phone_number,
-        otp_code: otpCode,
+        otp_code: otpHash,
         otp_type,
         delivery_method: actualDeliveryMethod,
         expires_at: expiresAt,
@@ -273,7 +278,7 @@ serve(async (req) => {
       throw new Error('Failed to store OTP record');
     }
 
-    console.log(`OTP sent to ${phone_number} via ${delivery_method}: ${otpCode}`);
+    console.log(`OTP sent to ${phone_number} via ${delivery_method}: [REDACTED]`);
 
     return new Response(
       JSON.stringify({

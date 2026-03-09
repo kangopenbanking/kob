@@ -73,8 +73,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Verify code
-    if (challenge.challenge_code !== code) {
+    // Hash submitted code and compare against stored hash
+    const encoder = new TextEncoder();
+    const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(code));
+    const inputHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (challenge.challenge_code !== inputHash) {
       await supabase
         .from('sca_challenges')
         .update({ 
