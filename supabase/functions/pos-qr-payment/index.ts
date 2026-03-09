@@ -190,6 +190,39 @@ Deno.serve(async (req) => {
         order_id: orderId, status: 'paid', note: 'QR wallet payment', created_by: user.id,
       });
 
+      // Insert consumer transaction record for ledger history
+      try {
+        // Get merchant's institution_id for the transaction record
+        const { data: merchantData } = await supabase.from('gateway_merchants')
+          .select('institution_id, business_name').eq('id', merchant_id).maybeSingle();
+        
+        const { data: consumerAccount } = await supabase.from('accounts')
+          .select('institution_id').eq('id', consumerAccountId).maybeSingle();
+
+        const txInstitutionId = consumerAccount?.institution_id || merchantData?.institution_id;
+        
+        if (txInstitutionId) {
+          await supabase.from('transactions').insert({
+            user_id: user.id,
+            account_id: consumerAccountId,
+            institution_id: txInstitutionId,
+            transaction_type: 'Payment',
+            amount: total,
+            currency: 'XAF',
+            credit_debit_indicator: 'Debit',
+            status: 'Booked',
+            booking_datetime: new Date().toISOString(),
+            value_datetime: new Date().toISOString(),
+            transaction_information: `QR payment to ${merchantData?.business_name || 'Merchant'}`,
+            merchant_details: { transaction_id: orderId, merchant_name: merchantData?.business_name, merchant_id, order_number: orderNumber },
+            metadata: { payment_method: 'wallet_qr', order_id: orderId, idempotency_key: idempotencyKey },
+          });
+        }
+      } catch (txErr) {
+        console.error('Failed to insert transaction record:', txErr);
+        // Non-critical — payment already succeeded
+      }
+
       return new Response(JSON.stringify({
         success: true,
         order_id: orderId,
