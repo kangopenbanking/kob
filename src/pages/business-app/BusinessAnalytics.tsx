@@ -52,12 +52,12 @@ export default function BusinessAnalytics() {
   });
 
   // Calculate metrics
-  const totalRevenue = orders?.reduce((sum, o) => sum + (o.total_amount || 0), 0) || 0;
+  const totalRevenue = orders?.reduce((sum, o) => sum + (o.total || 0), 0) || 0;
   const totalOrders = orders?.length || 0;
   const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0;
 
-  const paidOrders = orders?.filter(o => o.payment_status === 'succeeded') || [];
-  const conversionRate = totalOrders > 0 ? (paidOrders.length / totalOrders) * 100 : 0;
+  const completedOrders = orders?.filter(o => o.status === 'completed') || [];
+  const conversionRate = totalOrders > 0 ? (completedOrders.length / totalOrders) * 100 : 0;
 
   // Group by date for chart
   const dailyData: Record<string, { date: string; revenue: number; orders: number }> = {};
