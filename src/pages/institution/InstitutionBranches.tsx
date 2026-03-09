@@ -279,7 +279,31 @@ export default function InstitutionBranches() {
 
       {/* Edit Dialog */}
       <Dialog open={!!editBranch} onOpenChange={o => { if (!o) { setEditBranch(null); resetForm(); } }}>
-        <DialogContent className="sm:max-w-[550px]"><DialogHeader><DialogTitle>Edit Branch</DialogTitle></DialogHeader><BranchForm onSubmit={handleEdit} isEdit={true} /></DialogContent>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader><DialogTitle>Edit Branch</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Branch Name *</Label><Input value={form.branch_name} onChange={e => setForm(f => ({ ...f, branch_name: e.target.value }))} placeholder="Main Branch" /></div>
+              <div className="space-y-2"><Label>Branch Code *</Label><Input value={form.branch_code} onChange={e => setForm(f => ({ ...f, branch_code: e.target.value }))} placeholder="BR001" disabled /></div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>Type</Label>
+                <Select value={form.branch_type} onValueChange={v => setForm(f => ({ ...f, branch_type: v }))}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent><SelectItem value="main">Main</SelectItem><SelectItem value="branch">Branch</SelectItem><SelectItem value="agency">Agency</SelectItem><SelectItem value="atm">ATM</SelectItem></SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+237..." /></div>
+            </div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} placeholder="branch@bank.com" /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2"><Label>Address</Label><Input value={form.address_line} onChange={e => setForm(f => ({ ...f, address_line: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>City</Label><Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} /></div>
+              <div className="space-y-2"><Label>Country</Label><Input value={form.country} onChange={e => setForm(f => ({ ...f, country: e.target.value }))} /></div>
+            </div>
+            <DialogFooter><Button onClick={handleEdit} disabled={saving || !form.branch_name || !form.branch_code}>{saving ? "Saving..." : "Update Branch"}</Button></DialogFooter>
+          </div>
+        </DialogContent>
       </Dialog>
     </motion.div>
   );
