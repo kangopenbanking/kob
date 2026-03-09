@@ -639,14 +639,18 @@ export default function Auth() {
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number *</Label>
                 <div className="flex gap-2">
-                  <Select value={countryCode} onValueChange={setCountryCode}>
+                  <Select value={countryCode} onValueChange={(val) => setCountryCode(val.split('|')[0])}>
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue />
+                      <SelectValue>
+                        {(() => { const cc = COUNTRY_CODES.find(c => c.code === countryCode); return cc ? `${cc.flag} ${cc.code}` : countryCode; })()}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {COUNTRY_CODES.map((cc) => (
-                        <SelectItem key={cc.code} value={cc.code}>
-                          {cc.flag} {cc.code}
+                        <SelectItem key={`${cc.code}-${cc.country}`} value={`${cc.code}|${cc.country}`}>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span>{cc.flag}</span> <span>{cc.code}</span> <span className="text-muted-foreground text-xs">{cc.country}</span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
