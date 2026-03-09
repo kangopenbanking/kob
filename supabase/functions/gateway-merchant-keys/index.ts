@@ -1,10 +1,5 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { corsHeaders } from "../_shared/cors.ts";
 
 function problem(status: number, title: string, detail: string) {
   return new Response(JSON.stringify({ type: 'about:blank', title, status, detail }), {
@@ -12,7 +7,7 @@ function problem(status: number, title: string, detail: string) {
   });
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -23,91 +18,133 @@ serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser(authHeader.replace('Bearer ', ''));
     if (!user) return problem(401, 'Unauthorized', 'Invalid or expired token');
 
-    const url = new URL(req.url);
     const method = req.method;
+    const body = method !== 'GET' ? await req.json() : {};
+    const action = body.action;
 
-    if (method === 'POST') {
-      const { merchant_id, environment = 'sandbox', label } = await req.json();
+    // Support both REST-style methods and action-based invocation
+    if (method === 'POST' && (!action || action === 'create')) {
+      const { merchant_id, environment = 'sandbox', label } = body;
       if (!merchant_id) return problem(400, 'Bad Request', 'merchant_id is required');
 
       const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).eq('user_id', user.id).single();
       if (!merchant) return problem(404, 'Not Found', 'Merchant not found or not authorized');
 
-      const rawKey = crypto.randomUUID() + '-' + crypto.randomUUID();
-      const prefix = environment === 'sandbox' ? `sk_test_${rawKey.slice(0, 8)}` : `sk_live_${rawKey.slice(0, 8)}`;
-      const fullKey = `${prefix}_${rawKey}`;
+      const env = environment;
+      const prefix = env === 'live' ? 'pk_live_' : 'pk_test_';
+      const secretPrefix = env === 'live' ? 'sk_live_' : 'sk_test_';
+      const publicKey = prefix + crypto.randomUUID().replace(/-/g, '');
+      const secretKey = secretPrefix + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 16);
 
       const encoder = new TextEncoder();
-      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(fullKey));
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(secretKey));
       const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const { data: apiKey, error } = await supabase.from('gateway_merchant_api_keys').insert({
-        merchant_id, environment, api_key_prefix: prefix, api_key_hash: hashHex, label,
-      }).select('id, merchant_id, environment, api_key_prefix, label, is_active, created_at').single();
+      // Insert into gateway_merchant_keys (new table)
+      const { data: apiKey, error } = await supabase.from('gateway_merchant_keys').insert({
+        merchant_id,
+        environment: env,
+        public_key: publicKey,
+        secret_key_hash: hashHex,
+        label: label || 'Unnamed Key',
+      }).select().single();
 
       if (error) throw error;
 
-      return new Response(JSON.stringify({ ...apiKey, api_key: fullKey, warning: 'Store this key securely. It will not be shown again.' }), {
-        status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Also insert into legacy table for backward compat
+      await supabase.from('gateway_merchant_api_keys').insert({
+        merchant_id,
+        environment: env,
+        api_key_prefix: publicKey.slice(0, 16),
+        api_key_hash: hashHex,
+        label: label || 'Unnamed Key',
+      }).catch(() => {});
+
+      // Update count
+      const { count } = await supabase
+        .from('gateway_merchant_keys')
+        .select('id', { count: 'exact', head: true })
+        .eq('merchant_id', merchant_id)
+        .eq('is_active', true);
+
+      await supabase
+        .from('gateway_merchants')
+        .update({ api_keys_count: count || 0 })
+        .eq('id', merchant_id);
+
+      return new Response(JSON.stringify({
+        ...apiKey,
+        secret_key: secretKey,
+        warning: 'Store this key securely. It will not be shown again.',
+      }), {
+        status: 201,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    if (method === 'GET') {
-      const merchantId = url.searchParams.get('merchant_id');
-      if (!merchantId) return problem(400, 'Bad Request', 'merchant_id query parameter required');
+    if (action === 'revoke' || method === 'DELETE') {
+      const { key_id, merchant_id } = body;
+      if (!key_id || !merchant_id) return problem(400, 'Bad Request', 'key_id and merchant_id are required');
+
+      const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).eq('user_id', user.id).single();
+      if (!merchant) return problem(404, 'Not Found', 'Merchant not found or not authorized');
+
+      await supabase.from('gateway_merchant_keys')
+        .update({ is_active: false, revoked_at: new Date().toISOString() })
+        .eq('id', key_id)
+        .eq('merchant_id', merchant_id);
+
+      return new Response(JSON.stringify({ status: 'revoked' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    if (action === 'list' || method === 'GET') {
+      const merchantId = body.merchant_id || new URL(req.url).searchParams.get('merchant_id');
+      if (!merchantId) return problem(400, 'Bad Request', 'merchant_id required');
 
       const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchantId).eq('user_id', user.id).single();
       if (!merchant) return problem(404, 'Not Found', 'Merchant not found or not authorized');
 
-      const { data: keys } = await supabase.from('gateway_merchant_api_keys')
-        .select('id, merchant_id, environment, api_key_prefix, label, is_active, last_used_at, created_at')
+      const { data: keys } = await supabase.from('gateway_merchant_keys')
+        .select('*')
         .eq('merchant_id', merchantId)
         .order('created_at', { ascending: false });
 
       return new Response(JSON.stringify({ data: keys || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (method === 'DELETE') {
-      const { key_id, merchant_id } = await req.json();
+    if (method === 'PATCH' && action === 'rotate') {
+      const { key_id, merchant_id, environment, label } = body;
       if (!key_id || !merchant_id) return problem(400, 'Bad Request', 'key_id and merchant_id are required');
 
       const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).eq('user_id', user.id).single();
       if (!merchant) return problem(404, 'Not Found', 'Merchant not found or not authorized');
 
-      await supabase.from('gateway_merchant_api_keys').update({ is_active: false }).eq('id', key_id).eq('merchant_id', merchant_id);
+      // Revoke old key
+      await supabase.from('gateway_merchant_keys').update({ is_active: false, revoked_at: new Date().toISOString() }).eq('id', key_id).eq('merchant_id', merchant_id);
 
-      return new Response(JSON.stringify({ status: 'revoked' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
-
-    if (method === 'PATCH') {
-      const { key_id, merchant_id, environment, label } = await req.json();
-      if (!key_id || !merchant_id) return problem(400, 'Bad Request', 'key_id and merchant_id are required');
-
-      const { data: merchant } = await supabase.from('gateway_merchants').select('id').eq('id', merchant_id).eq('user_id', user.id).single();
-      if (!merchant) return problem(404, 'Not Found', 'Merchant not found or not authorized');
-
-      await supabase.from('gateway_merchant_api_keys').update({ is_active: false }).eq('id', key_id).eq('merchant_id', merchant_id);
-
+      // Create new key
       const env = environment || 'sandbox';
-      const rawKey = crypto.randomUUID() + '-' + crypto.randomUUID();
-      const prefix = env === 'sandbox' ? `sk_test_${rawKey.slice(0, 8)}` : `sk_live_${rawKey.slice(0, 8)}`;
-      const fullKey = `${prefix}_${rawKey}`;
+      const prefix = env === 'live' ? 'pk_live_' : 'pk_test_';
+      const secretPrefix = env === 'live' ? 'sk_live_' : 'sk_test_';
+      const publicKey = prefix + crypto.randomUUID().replace(/-/g, '');
+      const secretKey = secretPrefix + crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, '').slice(0, 16);
       const encoder = new TextEncoder();
-      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(fullKey));
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(secretKey));
       const hashHex = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const { data: newKey, error } = await supabase.from('gateway_merchant_api_keys').insert({
-        merchant_id, environment: env, api_key_prefix: prefix, api_key_hash: hashHex, label: label || 'Rotated key',
-      }).select('id, merchant_id, environment, api_key_prefix, label, is_active, created_at').single();
+      const { data: newKey, error } = await supabase.from('gateway_merchant_keys').insert({
+        merchant_id, environment: env, public_key: publicKey, secret_key_hash: hashHex, label: label || 'Rotated key',
+      }).select().single();
       if (error) throw error;
 
-      return new Response(JSON.stringify({ ...newKey, api_key: fullKey, revoked_key_id: key_id, warning: 'Store this key securely. It will not be shown again.' }), {
-        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      return new Response(JSON.stringify({ ...newKey, secret_key: secretKey, revoked_key_id: key_id, warning: 'Store this key securely.' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    return problem(405, 'Method Not Allowed', `${method} is not supported`);
+    return problem(405, 'Method Not Allowed', `Unsupported action: ${action || method}`);
   } catch (err) {
+    console.error('gateway-merchant-keys error:', err);
     return problem(500, 'Internal Server Error', err.message);
   }
 });
