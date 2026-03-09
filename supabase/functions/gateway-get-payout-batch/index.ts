@@ -27,6 +27,8 @@ serve(async (req) => {
     const { gateway_merchants, ...batchData } = batch;
     return new Response(JSON.stringify({ ...batchData, items: items || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'internal_error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] get-payout-batch error:`, err);
+    return new Response(JSON.stringify({ error: 'internal_error', error_id: errorId }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
