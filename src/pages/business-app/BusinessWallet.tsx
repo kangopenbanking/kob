@@ -7,12 +7,16 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const BusinessWallet: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
-  const { wallets, availableBalance, pendingBalance, settlements, isLoading } = useBusinessData(merchantId);
+  const { wallets, availableBalance, pendingBalance, settlements, isLoading, refetchWallets } = useBusinessData(merchantId);
   const [showBalance, setShowBalance] = useState(true);
-  const [pinDialog, setPinDialog] = useState<{ open: boolean; action: string }>({ 
+  const [showLedger, setShowLedger] = useState(false);
+  const [pinDialog, setPinDialog] = useState<{ open: boolean; action: string; amount?: number }>({ 
     open: false, 
     action: '' 
   });
