@@ -88,7 +88,7 @@ const MerchantWalletOversight: React.FC = () => {
         .update({
           status: 'processing',
           metadata: {
-            ...payout.metadata,
+            ...(payout.metadata || {}),
             approved_at: new Date().toISOString(),
             approved_by: (await supabase.auth.getUser()).data.user?.id,
           },
