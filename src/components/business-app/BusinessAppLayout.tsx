@@ -15,8 +15,8 @@ const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   const items = [
     { label: 'Home', icon: Home, path: `${basePath}/home` },
     { label: 'Wallet', icon: Wallet, path: `${basePath}/wallet` },
+    { label: 'Till', icon: Monitor, path: `${basePath}/till` },
     { label: 'Scan', icon: ScanLine, path: `${basePath}/receive` },
-    { label: 'Orders', icon: ShoppingBag, path: `${basePath}/orders` },
     { label: 'More', icon: MoreHorizontal, path: `${basePath}/more` },
   ];
 
