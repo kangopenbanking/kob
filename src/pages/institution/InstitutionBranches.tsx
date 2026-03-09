@@ -122,7 +122,7 @@ export default function InstitutionBranches() {
 
   const openEdit = (branch: any) => {
     const addr = branch.address || {};
-    setForm({ branch_name: branch.branch_name, branch_code: branch.branch_code, branch_type: branch.branch_type, phone: branch.phone || "", email: branch.email || "", address_line: addr.line || "", city: addr.city || "", country: addr.country || "Cameroon" });
+    setForm({ branch_name: branch.branch_name, branch_code: branch.branch_code, branch_type: branch.branch_type, phone: branch.phone || "", email: branch.email || "", address_line: addr.street || "", city: addr.city || "", country: addr.country || "Cameroon" });
     setEditBranch(branch);
   };
 
