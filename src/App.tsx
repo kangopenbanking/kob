@@ -531,6 +531,10 @@ function App() {
               <Route path="storefront" element={<MerchantStorefront />} />
               {/* Phase 2: Financial Operations */}
               <Route path="fees" element={<MerchantFees />} />
+              {/* Phase 3: Advanced Commerce */}
+              <Route path="plans" element={<MerchantPlans />} />
+              <Route path="locations" element={<MerchantLocations />} />
+              <Route path="woo-sync" element={<MerchantWooSync />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
