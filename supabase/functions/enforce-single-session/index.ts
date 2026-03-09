@@ -66,16 +66,28 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Insert the new session record - use user_id,app_context as conflict target
+    // 4. Delete any existing row for this user+context, then insert fresh
+    await adminClient
+      .from('user_active_sessions')
+      .delete()
+      .eq('user_id', userId)
+      .eq('app_context', ctx)
+
+    // Also delete any stale row with the same session_id (cross-context reuse)
+    await adminClient
+      .from('user_active_sessions')
+      .delete()
+      .eq('session_id', session_id)
+
     const { error: insertError } = await adminClient
       .from('user_active_sessions')
-      .upsert({
+      .insert({
         user_id: userId,
         session_id,
         device_info: device_info || null,
         last_active_at: new Date().toISOString(),
         app_context: ctx,
-      }, { onConflict: 'user_id,app_context' })
+      })
 
     if (insertError) {
       console.error('Failed to insert session:', insertError)
