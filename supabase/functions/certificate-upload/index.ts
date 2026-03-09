@@ -1,7 +1,7 @@
 // Phase 5: Certificate Upload Function
 // Handles X.509 client certificate uploads for mTLS authentication
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { calculateCertificateFingerprint, extractCertificateDetails, hexToBase64Url } from '../_shared/mtls.ts';
 
 import { corsHeaders } from "../_shared/cors.ts";
