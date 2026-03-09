@@ -186,7 +186,7 @@ export default function BusinessStaff() {
           </Card>
         ) : (
           staff?.map((member: any) => {
-            const role = STAFF_ROLES.find(r => r.value === member.merchant_staff_roles?.role);
+            const role = STAFF_ROLES.find(r => r.value === member.role);
             return (
               <Card key={member.id} className="p-4">
                 <div className="flex items-start justify-between mb-3">
