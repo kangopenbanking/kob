@@ -44,12 +44,6 @@ export function usePOSTill(merchantId: string | undefined) {
     queryKey: ['pos-till-products', merchantId],
     queryFn: async () => {
       if (!merchantId) return [];
-      const { data } = await supabase.functions.invoke('pos-catalog-products', {
-        body: null,
-        headers: { 'Content-Type': 'application/json' },
-        method: 'GET',
-      });
-      // Fallback: query directly
       const { data: prods } = await supabase
         .from('pos_products')
         .select('*, pos_product_variants(*)')
@@ -188,8 +182,10 @@ export function usePOSTill(merchantId: string | undefined) {
       });
 
       // 3. Pay order
+      const idempotencyKey = `${order.id}-${Date.now()}`;
       const payRes = await supabase.functions.invoke('pos-pay-order', {
         body: { order_id: order.id, payment_method: paymentMethod },
+        headers: { 'Idempotency-Key': idempotencyKey },
       });
       if (payRes.error) throw new Error(payRes.error.message || 'Payment failed');
 
