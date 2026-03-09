@@ -167,7 +167,7 @@ export default function BusinessRefunds() {
                   <CardDescription className="text-xs">
                     {charge.customer_email || charge.customer_phone}
                   </CardDescription>
-                  <p className="text-xs text-muted-foreground font-mono">{charge.charge_ref}</p>
+                  <p className="text-xs text-muted-foreground font-mono">{charge.tx_ref}</p>
                 </div>
                 <Badge variant="default">Successful</Badge>
               </div>
