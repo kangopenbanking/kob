@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 
 export default function BusinessProducts() {
   const navigate = useNavigate();
+  const { merchantId: paramMerchantId } = useParams<{ merchantId?: string }>();
+  const basePath = paramMerchantId ? `/biz/${paramMerchantId}` : '/biz';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all');
   const [merchantId, setMerchantId] = useState<string | null>(null);
