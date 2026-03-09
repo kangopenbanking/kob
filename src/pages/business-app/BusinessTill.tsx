@@ -250,6 +250,13 @@ const BusinessTill: React.FC = () => {
       {isEnterprise && (
         <BarcodeScanner isOpen={scannerOpen} onOpenChange={setScannerOpen} onScan={till.lookupByBarcode} />
       )}
+
+      {/* Wallet QR Payment Dialog */}
+      <WalletQRDialog
+        qrData={till.walletQR}
+        onClose={till.cancelWalletQR}
+        onCheckPayment={till.checkWalletPayment}
+      />
     </Tabs>
   );
 };
