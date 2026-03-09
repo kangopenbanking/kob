@@ -430,6 +430,15 @@ import BusinessMore from "./pages/business-app/BusinessMore";
 import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
 import MerchantPOSTill from "./pages/merchant/MerchantPOSTill";
 import BusinessTill from "./pages/business-app/BusinessTill";
+import BusinessCustomers from "./pages/business-app/BusinessCustomers";
+import BusinessCoupons from "./pages/business-app/BusinessCoupons";
+import BusinessReviews from "./pages/business-app/BusinessReviews";
+import BusinessQuickOrder from "./pages/business-app/BusinessQuickOrder";
+import BusinessProducts from "./pages/business-app/BusinessProducts";
+import BusinessAnalytics from "./pages/business-app/BusinessAnalytics";
+import BusinessStaff from "./pages/business-app/BusinessStaff";
+import BusinessStorefront from "./pages/business-app/BusinessStorefront";
+import BusinessInventory from "./pages/business-app/BusinessInventory";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -917,6 +926,15 @@ function App() {
               <Route path="fees" element={<MerchantFees />} />
               <Route path="till" element={<BusinessTill />} />
               <Route path="more" element={<BusinessMore />} />
+              <Route path="customers" element={<BusinessCustomers />} />
+              <Route path="coupons" element={<BusinessCoupons />} />
+              <Route path="reviews" element={<BusinessReviews />} />
+              <Route path="quick-order" element={<BusinessQuickOrder />} />
+              <Route path="products" element={<BusinessProducts />} />
+              <Route path="analytics" element={<BusinessAnalytics />} />
+              <Route path="staff" element={<BusinessStaff />} />
+              <Route path="storefront" element={<BusinessStorefront />} />
+              <Route path="inventory" element={<BusinessInventory />} />
             </Route>
 
             <Route path="/biz/:merchantId" element={<BusinessSplash />} />
@@ -931,6 +949,15 @@ function App() {
               <Route path="fees" element={<MerchantFees />} />
               <Route path="till" element={<BusinessTill />} />
               <Route path="more" element={<BusinessMore />} />
+              <Route path="customers" element={<BusinessCustomers />} />
+              <Route path="coupons" element={<BusinessCoupons />} />
+              <Route path="reviews" element={<BusinessReviews />} />
+              <Route path="quick-order" element={<BusinessQuickOrder />} />
+              <Route path="products" element={<BusinessProducts />} />
+              <Route path="analytics" element={<BusinessAnalytics />} />
+              <Route path="staff" element={<BusinessStaff />} />
+              <Route path="storefront" element={<BusinessStorefront />} />
+              <Route path="inventory" element={<BusinessInventory />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
