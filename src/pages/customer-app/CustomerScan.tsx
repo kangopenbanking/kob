@@ -79,7 +79,7 @@ const CustomerScan: React.FC = () => {
       stopCamera();
     }
     return () => stopCamera();
-  }, [activeTab, showManualEntry, scanResult, startCamera, stopCamera]);
+  }, [activeTab, showManualEntry, scanResult, paymentSuccess, startCamera, stopCamera]);
 
   /* ─── QR Scan Detection via BarcodeDetector API ─── */
   useEffect(() => {
