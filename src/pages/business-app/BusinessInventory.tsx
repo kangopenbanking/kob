@@ -282,7 +282,7 @@ export default function BusinessInventory() {
                 </p>
               )}
             </div>
-          </DialogContent>
+          </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setSelectedItem(null)}>
               Cancel
