@@ -418,9 +418,9 @@ export default function InstitutionCustomerOnboarding() {
                     </Select>
                   </div>
                   <div className="space-y-1.5"><Label className="text-xs font-medium">Account Subtype</Label>
-                    <Select value={acct.account_subtype} onValueChange={v => setAcct(a => ({...a, account_subtype: v as "Current" | "Savings"}))}>
+                    <Select value={acct.account_subtype} onValueChange={v => setAcct(a => ({...a, account_subtype: v as "CurrentAccount" | "Savings"}))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="Current">Current Account</SelectItem><SelectItem value="Savings">Savings Account</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="CurrentAccount">Current Account</SelectItem><SelectItem value="Savings">Savings Account</SelectItem></SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-1.5"><Label className="text-xs font-medium">Currency</Label>
