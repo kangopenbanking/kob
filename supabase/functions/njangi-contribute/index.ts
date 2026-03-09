@@ -144,7 +144,8 @@ Deno.serve(async (req) => {
       score_delta: scoreResult?.delta || 0,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('njangi-contribute error:', err);
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }
