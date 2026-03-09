@@ -53,16 +53,14 @@ const BusinessWallet: React.FC = () => {
         const amount = pinDialog.amount || availableBalance;
         
         // Get first active settlement account (in production, show selection UI)
-        const response = await supabase
-          .from('gateway_settlement_accounts')
+        const { data: settlementAccounts, error: accountsError } = await supabase
+          .from('gateway_settlement_accounts' as any)
           .select('*')
           .eq('merchant_id', merchantId!)
           .eq('is_active', true)
           .limit(1);
 
-        if (response.error) throw response.error;
-
-        const settlementAccounts = response.data;
+        if (accountsError) throw accountsError;
 
         if (!settlementAccounts || settlementAccounts.length === 0) {
           toast.error('No settlement account configured');
