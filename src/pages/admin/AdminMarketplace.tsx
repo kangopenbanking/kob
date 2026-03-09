@@ -36,7 +36,7 @@ export default function AdminMarketplace() {
     try {
       const [plansRes, subsRes, storesRes] = await Promise.all([
         supabase.from('pos_subscription_plans').select('*').order('price'),
-        supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(name, price)').order('created_at', { ascending: false }),
+        supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(name, price), pos_store_profiles!pos_store_subscriptions_merchant_id_fkey(store_name, is_published, status)').order('created_at', { ascending: false }),
         supabase.from('pos_store_profiles').select('*').order('created_at', { ascending: false }),
       ]);
       setPlans(plansRes.data || []);
