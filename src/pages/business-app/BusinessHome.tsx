@@ -104,6 +104,7 @@ const BusinessHome: React.FC = () => {
           value={todayOrders.toString()}
           icon={<ShoppingBag className="h-5 w-5" />}
         />
+        </div>
       </div>
     </div>
   );
