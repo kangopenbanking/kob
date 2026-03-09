@@ -5062,6 +5062,59 @@ export type Database = {
           },
         ]
       }
+      gateway_bulk_operations: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          error_details: Json | null
+          failed_records: number
+          file_name: string | null
+          id: string
+          merchant_id: string
+          metadata: Json | null
+          processed_records: number
+          status: string
+          total_records: number
+          type: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          error_details?: Json | null
+          failed_records?: number
+          file_name?: string | null
+          id?: string
+          merchant_id: string
+          metadata?: Json | null
+          processed_records?: number
+          status?: string
+          total_records?: number
+          type: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          error_details?: Json | null
+          failed_records?: number
+          file_name?: string | null
+          id?: string
+          merchant_id?: string
+          metadata?: Json | null
+          processed_records?: number
+          status?: string
+          total_records?: number
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_bulk_operations_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_charge_events: {
         Row: {
           charge_id: string
@@ -5458,6 +5511,56 @@ export type Database = {
           },
         ]
       }
+      gateway_merchant_keys: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          is_active: boolean
+          label: string | null
+          last_used_at: string | null
+          merchant_id: string
+          public_key: string
+          revoked_at: string | null
+          secret_key_hash: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          last_used_at?: string | null
+          merchant_id: string
+          public_key: string
+          revoked_at?: string | null
+          secret_key_hash?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          last_used_at?: string | null
+          merchant_id?: string
+          public_key?: string
+          revoked_at?: string | null
+          secret_key_hash?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gateway_merchant_keys_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gateway_merchant_settlement_accounts: {
         Row: {
           account_name: string | null
@@ -5610,10 +5713,13 @@ export type Database = {
       }
       gateway_merchants: {
         Row: {
+          api_keys_count: number
+          branding_config: Json | null
           business_email: string | null
           business_name: string
           business_phone: string | null
           created_at: string
+          custom_domain: string | null
           daily_charge_limit: number | null
           daily_payout_limit: number | null
           environment: string
@@ -5623,6 +5729,7 @@ export type Database = {
           kyb_status: string
           metadata: Json | null
           monthly_volume_limit: number | null
+          plan_tier: string
           single_charge_limit: number | null
           status: string
           updated_at: string
@@ -5632,12 +5739,16 @@ export type Database = {
           webhook_secret: string | null
           webhook_secret_hash: string | null
           webhook_url: string | null
+          white_label_config: Json | null
         }
         Insert: {
+          api_keys_count?: number
+          branding_config?: Json | null
           business_email?: string | null
           business_name: string
           business_phone?: string | null
           created_at?: string
+          custom_domain?: string | null
           daily_charge_limit?: number | null
           daily_payout_limit?: number | null
           environment?: string
@@ -5647,6 +5758,7 @@ export type Database = {
           kyb_status?: string
           metadata?: Json | null
           monthly_volume_limit?: number | null
+          plan_tier?: string
           single_charge_limit?: number | null
           status?: string
           updated_at?: string
@@ -5656,12 +5768,16 @@ export type Database = {
           webhook_secret?: string | null
           webhook_secret_hash?: string | null
           webhook_url?: string | null
+          white_label_config?: Json | null
         }
         Update: {
+          api_keys_count?: number
+          branding_config?: Json | null
           business_email?: string | null
           business_name?: string
           business_phone?: string | null
           created_at?: string
+          custom_domain?: string | null
           daily_charge_limit?: number | null
           daily_payout_limit?: number | null
           environment?: string
@@ -5671,6 +5787,7 @@ export type Database = {
           kyb_status?: string
           metadata?: Json | null
           monthly_volume_limit?: number | null
+          plan_tier?: string
           single_charge_limit?: number | null
           status?: string
           updated_at?: string
@@ -5680,6 +5797,7 @@ export type Database = {
           webhook_secret?: string | null
           webhook_secret_hash?: string | null
           webhook_url?: string | null
+          white_label_config?: Json | null
         }
         Relationships: [
           {
