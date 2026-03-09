@@ -73,6 +73,12 @@ export const merchantNavigation = [
     ],
   },
   {
+    title: "Point of Sale",
+    items: [
+      { title: "POS Till", path: "/merchant/pos-till", icon: Monitor },
+    ],
+  },
+  {
     title: "Operations",
     items: [
       { title: "Locations & Staff", path: "/merchant/locations", icon: MapPin },
