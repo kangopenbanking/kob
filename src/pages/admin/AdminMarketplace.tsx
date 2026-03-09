@@ -218,12 +218,13 @@ export default function AdminMarketplace() {
               <CardDescription>View all merchant marketplace subscriptions</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
+             <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Merchant ID</TableHead>
+                    <TableHead>Store</TableHead>
                     <TableHead>Plan</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Store Published</TableHead>
                     <TableHead>Starts</TableHead>
                     <TableHead>Expires</TableHead>
                   </TableRow>
@@ -231,21 +232,40 @@ export default function AdminMarketplace() {
                 <TableBody>
                   {subscriptions.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">No subscriptions yet</TableCell>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground py-8">No subscriptions yet</TableCell>
                     </TableRow>
-                  ) : subscriptions.map(sub => (
-                    <TableRow key={sub.id}>
-                      <TableCell className="font-mono text-xs">{sub.merchant_id?.slice(0, 8)}...</TableCell>
-                      <TableCell>{sub.pos_subscription_plans?.name || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Badge variant={sub.status === 'active' ? 'default' : 'secondary'}>
-                          {sub.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs">{new Date(sub.starts_at).toLocaleDateString()}</TableCell>
-                      <TableCell className="text-xs">{new Date(sub.expires_at).toLocaleDateString()}</TableCell>
-                    </TableRow>
-                  ))}
+                  ) : subscriptions.map(sub => {
+                    const isExpired = new Date(sub.expires_at) < new Date();
+                    const storeProfile = sub.pos_store_profiles;
+                    return (
+                      <TableRow key={sub.id}>
+                        <TableCell className="font-medium text-sm">
+                          {storeProfile?.store_name || (
+                            <span className="text-muted-foreground italic text-xs">No store profile</span>
+                          )}
+                        </TableCell>
+                        <TableCell>{sub.pos_subscription_plans?.name || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge variant={isExpired ? 'destructive' : sub.status === 'active' ? 'default' : 'secondary'}>
+                            {isExpired ? 'Expired' : sub.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {storeProfile ? (
+                            <Badge variant={storeProfile.is_published ? 'default' : 'secondary'}>
+                              {storeProfile.is_published ? 'Yes' : 'No'}
+                            </Badge>
+                          ) : '—'}
+                        </TableCell>
+                        <TableCell className="text-xs">{new Date(sub.starts_at).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-xs">
+                          <span className={isExpired ? 'text-destructive font-medium' : ''}>
+                            {new Date(sub.expires_at).toLocaleDateString()}
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             </CardContent>
