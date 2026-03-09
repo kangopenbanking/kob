@@ -326,6 +326,7 @@ import MerchantTravelRoutes from "./pages/merchant/MerchantTravelRoutes";
 import MerchantTravelBookings from "./pages/merchant/MerchantTravelBookings";
 import MerchantTravelScanner from "./pages/merchant/MerchantTravelScanner";
 import MerchantStorefront from "./pages/merchant/MerchantStorefront";
+import PublicStorefront from "./pages/PublicStorefront";
 import MerchantTravelTimetable from "./pages/merchant/MerchantTravelTimetable";
 import MerchantTravelGuide from "./pages/merchant/MerchantTravelGuide";
 import MerchantTravelCounterBooking from "./pages/merchant/MerchantTravelCounterBooking";
@@ -458,6 +459,7 @@ function App() {
             <Route path="/guides/certificates" element={<Layout><Certificates /></Layout>} />
             <Route path="/register" element={<Layout><Register /></Layout>} />
             <Route path="/apps" element={<Layout><Apps /></Layout>} />
+            <Route path="/store/:merchantId" element={<PublicStorefront />} />
             <Route path="/pending-approval" element={<Layout><ProtectedRoute><PersonalAccountRoute><PendingApproval /></PersonalAccountRoute></ProtectedRoute></Layout>} />
             <Route path="/business-kyb-submission" element={<ProtectedRoute><DashboardLayout><BusinessKYBSubmission /></DashboardLayout></ProtectedRoute>} />
             <Route path="/fund-account" element={<Layout><ProtectedRoute><NonInstitutionRoute><CustomerFundAccount /></NonInstitutionRoute></ProtectedRoute></Layout>} />
