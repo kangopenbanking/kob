@@ -25,21 +25,42 @@ export function CustomerOrderTracking() {
     queryKey: ['customer-orders', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      // Get user email for matching
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser?.email) return [];
 
-      const { data, error } = await (supabase as any)
+      // Fetch orders matching by email OR by consumer_user_id in metadata
+      const { data: byEmail, error: e1 } = await (supabase as any)
         .from('pos_orders')
-        .select('id, order_number, status, total, created_at, updated_at, merchant_id, customer_name, customer_email')
+        .select('id, order_number, status, total, created_at, updated_at, merchant_id, customer_name, customer_email, metadata_json')
         .eq('customer_email', authUser.email)
         .order('created_at', { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (e1) throw e1;
+
+      // Also fetch orders where metadata_json->consumer_user_id matches current user
+      const { data: byUserId } = await (supabase as any)
+        .from('pos_orders')
+        .select('id, order_number, status, total, created_at, updated_at, merchant_id, customer_name, customer_email, metadata_json')
+        .filter('metadata_json->>consumer_user_id', 'eq', authUser.id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      // Merge and deduplicate
+      const allOrders = [...(byEmail || [])];
+      const existingIds = new Set(allOrders.map((o: any) => o.id));
+      for (const o of (byUserId || [])) {
+        if (!existingIds.has(o.id)) {
+          allOrders.push(o);
+          existingIds.add(o.id);
+        }
+      }
+
+      // Sort by created_at descending
+      allOrders.sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
       // Fetch merchant details
-      const merchantIds = [...new Set((data || []).map((o: any) => o.merchant_id).filter(Boolean))] as string[];
+      const merchantIds = [...new Set(allOrders.map((o: any) => o.merchant_id).filter(Boolean))] as string[];
       let merchants: any[] = [];
       if (merchantIds.length > 0) {
         const { data: m } = await supabase
@@ -50,7 +71,7 @@ export function CustomerOrderTracking() {
       }
 
       // Fetch order items
-      const orderIds = (data || []).map((o: any) => o.id);
+      const orderIds = allOrders.map((o: any) => o.id);
       let items: any[] = [];
       if (orderIds.length > 0) {
         const { data: i } = await (supabase as any)
@@ -60,7 +81,7 @@ export function CustomerOrderTracking() {
         items = i || [];
       }
 
-      return (data || []).map((order: any) => ({
+      return allOrders.map((order: any) => ({
         ...order,
         merchant: merchants.find(m => m.id === order.merchant_id),
         pos_order_items: items.filter((i: any) => i.order_id === order.id),
