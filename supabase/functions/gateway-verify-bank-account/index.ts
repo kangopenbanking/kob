@@ -24,6 +24,8 @@ serve(async (req) => {
 
     return new Response(JSON.stringify({ account_name: data.data.account_name, account_number: data.data.account_number }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'verification_failed', message: err.message }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] verify-bank-account error:`, err);
+    return new Response(JSON.stringify({ error: 'verification_failed', error_id: errorId }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });
