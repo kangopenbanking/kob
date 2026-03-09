@@ -161,8 +161,7 @@ Deno.serve(async (req) => {
       console.error('Failed to insert certificate:', insertError);
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to upload certificate',
-          details: insertError.message
+          error: 'Failed to upload certificate'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
