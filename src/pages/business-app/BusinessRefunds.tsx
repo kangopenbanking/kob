@@ -247,9 +247,9 @@ export default function BusinessRefunds() {
                 placeholder="Enter your 6-digit PIN"
               />
             </div>
-            <div className="rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3 flex gap-2">
-              <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5 flex-shrink-0" />
-              <p className="text-xs text-yellow-800 dark:text-yellow-200">
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3 flex gap-2">
+              <AlertCircle className="h-4 w-4 text-destructive mt-0.5 flex-shrink-0" />
+              <p className="text-xs text-destructive">
                 This action will deduct the refund amount from your available balance.
               </p>
             </div>
