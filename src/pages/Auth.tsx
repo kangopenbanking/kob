@@ -638,17 +638,15 @@ export default function Auth() {
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number *</Label>
                 <div className="flex gap-2">
-                  <Select value={countryCode} onValueChange={(val) => setCountryCode(val.split('|')[0])}>
+                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                     <SelectTrigger className="w-[140px]">
-                      <SelectValue>
-                        {(() => { const cc = COUNTRY_CODES.find(c => c.code === countryCode); return cc ? `${cc.flag} ${cc.code}` : countryCode; })()}
-                      </SelectValue>
+                      <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {COUNTRY_CODES.map((cc) => (
-                        <SelectItem key={`${cc.code}-${cc.country}`} value={`${cc.code}|${cc.country}`}>
+                        <SelectItem key={cc.country} value={cc.country}>
                           <span className="inline-flex items-center gap-1.5">
-                            <span>{cc.flag}</span> <span>{cc.code}</span> <span className="text-muted-foreground text-xs">{cc.country}</span>
+                            <span>{cc.flag}</span> <span>{cc.code}</span>
                           </span>
                         </SelectItem>
                       ))}
