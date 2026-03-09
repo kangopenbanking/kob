@@ -248,7 +248,17 @@ const CustomerScan: React.FC = () => {
         {/* ─── SCAN TAB ─── */}
         {activeTab === 'scan' && (
           <motion.div key="scan" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col">
-            {scanResult ? (
+            {paymentSuccess ? (
+              <QRPaymentSuccess
+                merchantName={paymentSuccess.merchantName}
+                amount={paymentSuccess.amount}
+                currency={paymentSuccess.currency}
+                orderNumber={paymentSuccess.orderNumber}
+                orderId={paymentSuccess.orderId}
+                timestamp={paymentSuccess.timestamp}
+                onDone={resetScan}
+              />
+            ) : scanResult ? (
               /* ─── Scan Result ─── */
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-1 flex-col items-center justify-center gap-5 p-8">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(150,40%,90%)]">
