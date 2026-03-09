@@ -32,7 +32,7 @@ export function StatCard({ title, value, icon, trend, sparklineData, className, 
   return (
     <Card
       className={cn(
-        "transition-all duration-200 hover:shadow-md",
+        "transition-all duration-300 border-0 shadow-sm hover:shadow-md bg-card group",
         onClick && "cursor-pointer",
         className
       )}
@@ -41,19 +41,19 @@ export function StatCard({ title, value, icon, trend, sparklineData, className, 
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0 space-y-1">
-            <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground truncate">{title}</p>
             <p className="text-2xl font-bold tracking-tight text-foreground">{value}</p>
             {trend && (
-              <div className={cn("flex items-center gap-1 text-xs font-medium", trendColor)}>
-                {TrendIcon && <TrendIcon className="h-3.5 w-3.5" />}
+              <div className={cn("flex items-center gap-1 text-[11px] font-bold mt-1", trendColor)}>
+                {TrendIcon && <TrendIcon className="h-3.5 w-3.5" strokeWidth={2.5} />}
                 <span>{trend.value > 0 ? "+" : ""}{trend.value}%</span>
-                {trend.label && <span className="text-muted-foreground font-normal">{trend.label}</span>}
+                {trend.label && <span className="text-muted-foreground font-medium ml-1">{trend.label}</span>}
               </div>
             )}
           </div>
           {icon && (
-            <div className="shrink-0 rounded-lg bg-primary/10 p-2.5 text-primary">
-              {icon}
+            <div className="shrink-0 flex items-center justify-center h-12 w-12 rounded-2xl bg-primary/10 text-primary group-hover:scale-105 transition-transform duration-300">
+              {React.cloneElement(icon as React.ReactElement, { strokeWidth: 2, className: "h-6 w-6" })}
             </div>
           )}
         </div>

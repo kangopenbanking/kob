@@ -70,15 +70,16 @@ const BusinessHome: React.FC = () => {
   };
 
   return (
-    <div className="p-4 space-y-6">
-      <header className="space-y-1">
+    <div className="flex min-h-screen flex-col bg-background pb-20">
+      <header className="bg-primary px-4 pt-6 pb-8 text-primary-foreground rounded-b-[2rem]">
         <h1 className="text-2xl font-bold tracking-tight">Overview</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-primary-foreground/80 font-medium mt-1">
           {merchant?.business_name || 'Welcome to your business dashboard'}
         </p>
       </header>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="p-4 -mt-6 space-y-4">
+        <div className="grid grid-cols-2 gap-4">
         <StatCard
           title="Available"
           value={formatXAF(availableBalance)}
@@ -103,6 +104,7 @@ const BusinessHome: React.FC = () => {
           value={todayOrders.toString()}
           icon={<ShoppingBag className="h-5 w-5" />}
         />
+        </div>
       </div>
     </div>
   );

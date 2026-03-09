@@ -125,89 +125,94 @@ const BusinessOrders: React.FC = () => {
   const nextStatuses = selectedOrder ? (STATUS_TRANSITIONS[selectedOrder.status] || []) : [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background p-4">
-      <header className="mb-4 flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-          <p className="text-sm text-muted-foreground">
-            {orders?.length ?? 0} order{(orders?.length ?? 0) !== 1 ? 's' : ''}
-          </p>
+    <div className="flex min-h-screen flex-col bg-background pb-20">
+      {/* Header */}
+      <header className="bg-primary px-4 pt-6 pb-8 text-primary-foreground rounded-b-[2rem]">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
+            <p className="text-sm text-primary-foreground/80 font-medium mt-1">
+              {orders?.length ?? 0} order{(orders?.length ?? 0) !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <Button size="icon" variant="ghost" className="rounded-2xl text-primary-foreground hover:bg-white/10 h-11 w-11" onClick={() => refetch()}>
+            <RefreshCw className="h-5 w-5" strokeWidth={2} />
+          </Button>
         </div>
-        <Button size="icon" variant="ghost" className="rounded-xl" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4" strokeWidth={1.5} />
-        </Button>
+
+        {/* Filters */}
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+          {filters.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
+                filter === key ? 'bg-white text-primary shadow-sm' : 'bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </header>
 
-      {/* Filters */}
-      <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-        {filters.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-              filter === key ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
       {/* Orders List */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
-        </div>
-      ) : !orders?.length ? (
-        <Card className="border-0 shadow-md">
-          <CardContent className="flex flex-col items-center justify-center gap-4 p-12">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-              <ShoppingBag className="h-8 w-8 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground text-center">
-              {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <AnimatePresence>
+      <div className="p-4 -mt-6">
+        {isLoading ? (
           <div className="space-y-3">
-            {orders.map((order: any, i: number) => {
-              const sc = statusConfig[order.status] || statusConfig.draft;
-              return (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                >
-                  <Card className="border-0 shadow-sm cursor-pointer" onClick={() => setSelectedOrder(order)}>
-                    <CardContent className="flex items-center gap-4 p-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-bold text-foreground">
-                            {order.order_number || `#${order.id.slice(0, 8)}`}
-                          </p>
-                          <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${sc.color}`}>
-                            {sc.icon} {sc.label}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>{formatTime(order.created_at)}</span>
-                          {order.customer_name && <span>· {order.customer_name}</span>}
-                          {order.channel && <span>· {order.channel}</span>}
-                        </div>
-                      </div>
-                      <p className="text-sm font-bold text-foreground">{formatXAF(order.total || 0)}</p>
-                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" strokeWidth={1.5} />
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 rounded-3xl" />)}
           </div>
-        </AnimatePresence>
-      )}
+        ) : !orders?.length ? (
+          <Card className="border-0 shadow-md">
+            <CardContent className="flex flex-col items-center justify-center gap-4 p-12">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
+                <ShoppingBag className="h-10 w-10 text-primary" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <AnimatePresence>
+            <div className="space-y-3">
+              {orders.map((order: any, i: number) => {
+                const sc = statusConfig[order.status] || statusConfig.draft;
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                  >
+                    <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-all" onClick={() => setSelectedOrder(order)}>
+                      <CardContent className="flex items-center gap-4 p-5">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-bold text-foreground">
+                              {order.order_number || `#${order.id.slice(0, 8)}`}
+                            </p>
+                            <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${sc.color}`}>
+                              {sc.icon} {sc.label}
+                            </span>
+                          </div>
+                          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{formatTime(order.created_at)}</span>
+                            {order.customer_name && <span>· {order.customer_name}</span>}
+                            {order.channel && <span>· {order.channel}</span>}
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{formatXAF(order.total || 0)}</p>
+                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" strokeWidth={2} />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </AnimatePresence>
+        )}
+      </div>
 
       {/* Order Detail Sheet */}
       <Sheet open={!!selectedOrder} onOpenChange={open => !open && setSelectedOrder(null)}>
