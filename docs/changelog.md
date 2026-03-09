@@ -1,5 +1,39 @@
 # Changelog
 
+## [5.0.0] - 2026-03-09 — Phase 1-5 Production Audit & Enterprise Gap Closure
+
+### Database Migrations
+- Added `branding_config` (jsonb), `white_label_config` (jsonb), `plan_tier` (text), `custom_domain` (text), `api_keys_count` (integer) columns to `gateway_merchants`
+- Created `gateway_merchant_keys` table with RLS for API key management (public_key, secret_key_hash, environment, label)
+- Created `gateway_bulk_operations` table with RLS for bulk payouts, refunds, and customer imports
+
+### Edge Functions
+- **gateway-merchant-keys**: Rewritten to use `gateway_merchant_keys` table with create/revoke/list/rotate actions, shared CORS, and backward-compatible legacy table writes
+- **gateway-bulk-operations**: New edge function for initiating and tracking bulk operations (payouts, refunds, customer imports)
+
+### Frontend (Phase 3 — Advanced Commerce)
+- `MerchantPlans.tsx`: Subscription plan CRUD with subscriber counts ✅
+- `MerchantLocations.tsx`: Multi-location + POS staff management ✅
+- `MerchantWooSync.tsx`: WooCommerce sync dashboard ✅
+
+### Frontend (Phase 4 — Enterprise Features)
+- `MerchantBranding.tsx`: Custom branding with live checkout preview ✅
+- `MerchantApiKeyManagement.tsx`: API key lifecycle (create, view, revoke) ✅
+- `MerchantBulkOperations.tsx`: CSV upload for bulk payouts/refunds/imports ✅
+- `MerchantWhiteLabel.tsx`: Custom domain, branding removal, email config ✅
+- `MerchantAdvancedAnalytics.tsx`: Revenue trends, payment methods, status charts ✅
+
+### Documentation
+- Created `docs/merchant-store-guide.md` — Comprehensive merchant user guide covering all 12 sections including Enterprise features
+
+### Audit Findings & Fixes
+- Fixed missing `gateway_bulk_operations` table (BulkOperations page was non-functional)
+- Fixed missing enterprise columns on `gateway_merchants` (branding/white-label pages would error)
+- Updated `gateway-merchant-keys` edge function to use shared CORS headers
+- All Phase 1-5 routes verified in App.tsx routing table
+- All navigation items verified in merchant-navigation-config.ts
+
+
 ## [3.5.0] - 2026-03-08 — Go-Live Security Audit: 29 Fixes Across Critical/High/Medium/Low
 
 ### Critical Fixes (C1-C7)
