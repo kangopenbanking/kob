@@ -126,7 +126,6 @@ serve(async (req) => {
               JSON.stringify({
                 error: 'phone_exists',
                 message: 'This phone number is already registered. Please switch to Login.',
-                details: signupError.message,
               }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
             );
@@ -136,13 +135,12 @@ serve(async (req) => {
               JSON.stringify({
                 error: 'email_exists',
                 message: 'This email is already registered. Please use a different email or log in.',
-                details: signupError.message,
               }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 409 }
             );
           }
           return new Response(
-            JSON.stringify({ error: 'Failed to create user', details: signupError.message }),
+            JSON.stringify({ error: 'Failed to create user' }),
             { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
           );
         }
@@ -236,7 +234,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('OTP verification error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to verify OTP', details: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

@@ -176,8 +176,7 @@ Deno.serve(async (req) => {
     console.error('Error in woocommerce-transaction-sync:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Internal server error',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Internal server error'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

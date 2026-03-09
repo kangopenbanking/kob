@@ -235,8 +235,7 @@ Deno.serve(async (req) => {
     console.error('Error generating sandbox data:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to generate sandbox data',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to generate sandbox data. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

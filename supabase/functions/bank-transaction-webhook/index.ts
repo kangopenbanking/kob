@@ -166,8 +166,7 @@ serve(async (req) => {
     console.error('Bank transaction webhook error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to process webhook',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to process webhook'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

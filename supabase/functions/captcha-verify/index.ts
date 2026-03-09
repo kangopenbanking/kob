@@ -144,8 +144,7 @@ serve(async (req) => {
     console.error('Captcha verification error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to verify captcha',
-        details: error instanceof Error ? error.message : String(error),
+        error: 'Failed to verify captcha. Please try again.',
         verified: false 
       }),
       { 

@@ -2091,7 +2091,6 @@ serve(async (req) => {
         error: 'internal_error',
         error_code: 'SPEC_001',
         message: 'Failed to generate OpenAPI specification',
-        details: error instanceof Error ? error.message : 'Unknown error',
         error_id: `err_${Date.now()}`,
         timestamp: new Date().toISOString(),
       }),

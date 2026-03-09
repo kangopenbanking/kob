@@ -114,8 +114,7 @@ Deno.serve(async (req) => {
     console.error('Error triggering webhooks:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to trigger webhooks',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to trigger webhooks. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

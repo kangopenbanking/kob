@@ -74,8 +74,7 @@ Deno.serve(async (req) => {
     console.error('Error creating sandbox account:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to create sandbox account',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to create sandbox account. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

@@ -65,8 +65,7 @@ serve(async (req) => {
     console.error('Captcha generation error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to generate captcha',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to generate captcha. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

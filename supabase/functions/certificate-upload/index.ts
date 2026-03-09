@@ -114,8 +114,7 @@ Deno.serve(async (req) => {
       console.error('Certificate parsing failed:', error);
       return new Response(
         JSON.stringify({ 
-          error: 'Invalid certificate format',
-          details: error instanceof Error ? error.message : 'Unknown error'
+          error: 'Invalid certificate format'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -162,8 +161,7 @@ Deno.serve(async (req) => {
       console.error('Failed to insert certificate:', insertError);
       return new Response(
         JSON.stringify({ 
-          error: 'Failed to upload certificate',
-          details: insertError.message
+          error: 'Failed to upload certificate'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );

@@ -216,8 +216,7 @@ serve(async (req) => {
     console.error('PIN login error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to process PIN login', 
-        details: error instanceof Error ? error.message : String(error) 
+        error: 'An internal error occurred. Please try again.' 
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );

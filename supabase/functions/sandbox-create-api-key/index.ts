@@ -124,8 +124,7 @@ Deno.serve(async (req) => {
     console.error('Error creating sandbox API key:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to create API key',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to create API key. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
