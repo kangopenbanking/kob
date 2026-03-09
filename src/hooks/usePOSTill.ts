@@ -226,6 +226,7 @@ export function usePOSTill(merchantId: string | undefined) {
     removeItem,
     updateQuantity,
     clearCart,
+    lookupByBarcode,
     customerName,
     setCustomerName,
     customerPhone,
