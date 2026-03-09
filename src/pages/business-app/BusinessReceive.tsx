@@ -150,14 +150,16 @@ const BusinessReceive: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-background p-4">
+    <div className="flex min-h-screen flex-col bg-background pb-20">
       {/* Header */}
-      <header className="mb-4 space-y-1">
+      <header className="bg-primary px-4 pt-6 pb-8 text-primary-foreground rounded-b-[2rem]">
         <h1 className="text-2xl font-bold tracking-tight">Receive Payment</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-sm text-primary-foreground/80 font-medium mt-1">
           {merchant?.business_name || 'Generate QR codes or payment links'}
         </p>
       </header>
+
+      <div className="p-4 -mt-6 flex flex-1 flex-col">
 
       {/* Tab Switcher */}
       <div className="mb-5 flex rounded-2xl bg-muted p-1">
