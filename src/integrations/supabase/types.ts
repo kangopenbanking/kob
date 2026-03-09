@@ -12963,6 +12963,47 @@ export type Database = {
         }
         Relationships: []
       }
+      settlement_reviews: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          metadata: Json | null
+          review_notes: string | null
+          reviewed_at: string
+          reviewed_by: string
+          settlement_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          review_notes?: string | null
+          reviewed_at?: string
+          reviewed_by: string
+          settlement_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+          review_notes?: string | null
+          reviewed_at?: string
+          reviewed_by?: string
+          settlement_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "settlement_reviews_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "settlement_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       settlement_runs: {
         Row: {
           completed_at: string | null
@@ -13027,10 +13068,14 @@ export type Database = {
           net_settlement_amount: number
           period_end: string
           period_start: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
           settlement_destination: Json
           settlement_method: string
           settlement_ref: string
           settlement_status: string | null
+          status: string | null
           total_inflows: number
           total_outflows: number
           updated_at: string | null
@@ -13047,10 +13092,14 @@ export type Database = {
           net_settlement_amount?: number
           period_end: string
           period_start: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           settlement_destination: Json
           settlement_method: string
           settlement_ref: string
           settlement_status?: string | null
+          status?: string | null
           total_inflows?: number
           total_outflows?: number
           updated_at?: string | null
@@ -13067,10 +13116,14 @@ export type Database = {
           net_settlement_amount?: number
           period_end?: string
           period_start?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
           settlement_destination?: Json
           settlement_method?: string
           settlement_ref?: string
           settlement_status?: string | null
+          status?: string | null
           total_inflows?: number
           total_outflows?: number
           updated_at?: string | null
