@@ -189,7 +189,7 @@ const BusinessWallet: React.FC = () => {
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className={`text-sm font-bold ${entry.direction === 'credit' ? 'text-emerald-600' : 'text-red-600'}`}>
+                        <p className={`text-sm font-bold ${entry.direction === 'credit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                           {entry.direction === 'credit' ? '+' : '-'}{formatXAF(entry.amount)}
                         </p>
                         <p className="text-xs capitalize text-muted-foreground">{entry.status}</p>
