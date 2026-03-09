@@ -182,8 +182,10 @@ export function usePOSTill(merchantId: string | undefined) {
       });
 
       // 3. Pay order
+      const idempotencyKey = `${order.id}-${Date.now()}`;
       const payRes = await supabase.functions.invoke('pos-pay-order', {
         body: { order_id: order.id, payment_method: paymentMethod },
+        headers: { 'Idempotency-Key': idempotencyKey },
       });
       if (payRes.error) throw new Error(payRes.error.message || 'Payment failed');
 
