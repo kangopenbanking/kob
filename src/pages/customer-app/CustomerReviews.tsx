@@ -96,22 +96,36 @@ export function CustomerReviews() {
     queryKey: ['pending-reviews', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: orders, error } = await supabase
         .from('pos_orders')
-        .select(`
-          id,
-          order_number,
-          merchant_id,
-          merchant:gateway_merchants(business_name, logo_url),
-          created_at
-        `)
+        .select('id, order_number, merchant_id, created_at')
         .eq('customer_id', user!.id)
         .eq('status', 'completed')
-        .is('pos_order_reviews.id', null)
         .limit(10);
 
       if (error) throw error;
-      return data;
+      
+      // Check which orders have reviews
+      const orderIds = orders?.map(o => o.id) || [];
+      const { data: reviews } = await supabase
+        .from('pos_order_reviews')
+        .select('order_id')
+        .in('order_id', orderIds);
+      
+      const reviewedOrderIds = reviews?.map(r => r.order_id) || [];
+      const pendingOrders = orders?.filter(o => !reviewedOrderIds.includes(o.id));
+      
+      // Fetch merchant details
+      const merchantIds = [...new Set(pendingOrders?.map(o => o.merchant_id).filter(Boolean))];
+      const { data: merchants } = await supabase
+        .from('gateway_merchants')
+        .select('id, business_name, logo_url')
+        .in('id', merchantIds);
+      
+      return pendingOrders?.map(order => ({
+        ...order,
+        merchant: merchants?.find(m => m.id === order.merchant_id)
+      }));
     },
   });
 
