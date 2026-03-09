@@ -69,8 +69,8 @@ const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
 
   return (
     <>
-      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-2">
+      <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-border/50 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
+        <div className="mx-auto flex h-[4.5rem] max-w-lg items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
           {items.map((item) => {
             if (item.isFab) {
               return (
@@ -79,8 +79,8 @@ const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
                   onClick={() => setShowActions(true)}
                   className="flex flex-col items-center justify-center gap-1 py-1.5"
                 >
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg">
-                    <Plus className="h-6 w-6" strokeWidth={2} />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl transition-shadow">
+                    <Plus className="h-6 w-6" strokeWidth={2.5} />
                   </div>
                 </button>
               );
@@ -92,18 +92,18 @@ const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
                 key={item.path}
                 onClick={() => navigate(item.path)}
                 className={cn(
-                  'flex flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-colors',
+                  'flex flex-1 flex-col items-center justify-center gap-1 py-1.5 transition-all duration-200',
                   active ? 'text-primary' : 'text-muted-foreground'
                 )}
               >
                 {active ? (
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 transition-all">
                     <Icon className="h-5 w-5" strokeWidth={2} />
                   </div>
                 ) : (
                   <Icon className="h-5 w-5" strokeWidth={1.5} />
                 )}
-                <span className={cn("text-[11px]", active ? "font-bold" : "font-medium")}>{item.label}</span>
+                <span className={cn("text-[10px] tracking-wide", active ? "font-bold" : "font-medium")}>{item.label}</span>
               </button>
             );
           })}
