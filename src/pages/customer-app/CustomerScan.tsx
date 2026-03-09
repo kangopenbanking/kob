@@ -115,8 +115,13 @@ const CustomerScan: React.FC = () => {
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
     stopCamera();
+    if (data.type === 'kob_store' && data.merchant_id) {
+      // Deep-link to merchant storefront
+      toast.success(`Opening store...`);
+      navigate(`/app/stores/${data.merchant_id}`);
+      return;
+    }
     if (data.type === 'kob_pos_pay' && data.merchant_id) {
-      // POS merchant QR — navigate to payment confirmation
       setScanResult({ account: data.merchant_id, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
