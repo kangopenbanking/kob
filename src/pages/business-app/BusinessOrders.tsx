@@ -256,7 +256,7 @@ const BusinessOrders: React.FC = () => {
                   <h3 className="text-sm font-bold mb-2">Update Status</h3>
                   <div className="flex gap-2 flex-wrap">
                     {nextStatuses.map(ns => {
-                      const sc = statusConfig[ns] || { label: ns, color: 'bg-muted text-muted-foreground' };
+                      const sc = statusConfig[ns] || { label: ns, color: 'bg-muted text-muted-foreground', icon: null };
                       return (
                         <Button
                           key={ns}
@@ -270,7 +270,7 @@ const BusinessOrders: React.FC = () => {
                             previousStatus: selectedOrder.status,
                           })}
                         >
-                          {sc.icon} {sc.label}
+                          {'icon' in sc && sc.icon} {sc.label}
                         </Button>
                       );
                     })}
