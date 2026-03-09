@@ -136,12 +136,12 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    console.error('PayPal withdrawal error:', err);
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] PayPal withdrawal error:`, err);
     return new Response(JSON.stringify({
       error: 'internal_error',
       error_code: 'PAYPAL_WD_500',
-      message: err.message || 'Internal server error',
-      error_id: `err_${Date.now()}`,
+      error_id: errorId,
       timestamp: new Date().toISOString(),
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
