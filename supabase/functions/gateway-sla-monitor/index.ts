@@ -241,6 +241,8 @@ serve(async (req) => {
 
     return problem(405, 'Method Not Allowed', `${req.method} with action=${action} not supported`);
   } catch (err) {
-    return problem(500, 'Internal Server Error', err.message);
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] sla-monitor error:`, err);
+    return problem(500, 'Internal Server Error', `An unexpected error occurred. Reference: ${errorId}`);
   }
 });
