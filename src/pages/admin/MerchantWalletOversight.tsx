@@ -139,7 +139,7 @@ const MerchantWalletOversight: React.FC = () => {
         .update({
           status: 'rejected',
           metadata: {
-            ...payout.metadata,
+            ...(payout.metadata || {}),
             rejected_at: new Date().toISOString(),
             rejected_by: (await supabase.auth.getUser()).data.user?.id,
           },
