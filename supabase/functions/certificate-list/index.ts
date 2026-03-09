@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     if (certError) {
       console.error('Failed to fetch certificates:', certError);
       return new Response(
-        JSON.stringify({ error: 'Failed to fetch certificates', details: certError.message }),
+        JSON.stringify({ error: 'Failed to fetch certificates. Please try again.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

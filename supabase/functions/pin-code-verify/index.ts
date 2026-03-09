@@ -160,7 +160,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('PIN verification error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to verify PIN', details: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }

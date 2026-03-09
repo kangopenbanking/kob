@@ -292,7 +292,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Send OTP error:', error);
     return new Response(
-      JSON.stringify({ error: 'Failed to send OTP', details: error instanceof Error ? error.message : String(error) }),
+      JSON.stringify({ error: 'Failed to send OTP. Please try again.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
