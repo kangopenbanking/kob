@@ -3,6 +3,7 @@ import {
   Wallet, DollarSign, Undo2, Key, Webhook, Building2, GitBranch,
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
+  MapPin, ShoppingCart, CreditCard,
 } from "lucide-react";
 
 export const merchantNavigation = [
