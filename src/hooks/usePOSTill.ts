@@ -67,7 +67,7 @@ export function usePOSTill(merchantId: string | undefined) {
       if (!merchantId) return null;
       const { data } = await supabase
         .from('gateway_merchants')
-        .select('business_name, currency')
+        .select('id, business_name')
         .eq('id', merchantId)
         .single();
       return data;
