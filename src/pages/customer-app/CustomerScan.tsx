@@ -238,24 +238,65 @@ const CustomerScan: React.FC = () => {
                   <CheckCircle2 className="h-10 w-10 text-[hsl(150,40%,35%)]" strokeWidth={1.5} />
                 </div>
                 <div className="text-center">
-                  <p className="text-lg font-bold text-foreground">QR Code Scanned</p>
-                  <p className="mt-1 font-mono text-sm text-muted-foreground">{scanResult.account}</p>
+                  {merchantQR ? (
+                    <>
+                      <p className="text-lg font-bold text-foreground">{merchantQR.merchant_name || 'Merchant'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {merchantQR.description || `Order Payment`}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-lg font-bold text-foreground">QR Code Scanned</p>
+                      <p className="mt-1 font-mono text-sm text-muted-foreground">{scanResult.account}</p>
+                    </>
+                  )}
                 </div>
+
+                {/* Amount Display */}
                 <div className="w-full">
-                  <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                    Amount to Pay
-                  </label>
-                  <Input
-                    type="number"
-                    placeholder="Enter amount in XAF"
-                    value={payAmount}
-                    onChange={(e) => setPayAmount(e.target.value)}
-                    className="h-12 rounded-2xl text-center text-lg font-bold"
-                  />
+                  {merchantQR && merchantQR.amount > 0 ? (
+                    <div className="rounded-2xl border-2 border-primary/20 bg-primary/5 p-5 text-center">
+                      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Total to Pay</p>
+                      <p className="text-3xl font-black tabular-nums text-foreground">
+                        {Number(merchantQR.amount).toLocaleString('fr-CM')} <span className="text-lg font-bold text-muted-foreground">XAF</span>
+                      </p>
+                      {merchantQR.order_id && (
+                        <p className="mt-1.5 text-[11px] text-muted-foreground">
+                          Order #{merchantQR.order_id.slice(0, 8).toUpperCase()}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <>
+                      <label className="mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                        Amount to Pay
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="Enter amount in XAF"
+                        value={payAmount}
+                        onChange={(e) => setPayAmount(e.target.value)}
+                        className="h-12 rounded-2xl text-center text-lg font-bold"
+                      />
+                    </>
+                  )}
                 </div>
+
                 <div className="flex w-full flex-col gap-3 pt-4">
-                  <Button className="w-full rounded-2xl h-12 text-sm font-bold" disabled={!payAmount} onClick={handlePayNow}>
-                    Pay Now
+                  <Button
+                    className="w-full rounded-2xl h-12 text-sm font-bold"
+                    disabled={!payAmount || processing}
+                    onClick={handlePayNow}
+                  >
+                    {processing ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                        Processing...
+                      </span>
+                    ) : (
+                      `Pay ${payAmount ? `${Number(payAmount).toLocaleString('fr-CM')} XAF` : 'Now'}`
+                    )}
                   </Button>
                   <Button variant="outline" className="w-full rounded-2xl h-12 text-sm font-bold" onClick={resetScan}>
                     <RefreshCw className="mr-2 h-4 w-4" strokeWidth={1.5} /> Scan Again
