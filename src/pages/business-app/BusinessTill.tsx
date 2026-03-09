@@ -36,7 +36,7 @@ const BusinessTill: React.FC = () => {
         const { data } = await supabase.from('gateway_merchants').select('id, business_name').eq('id', staff.merchant_id).maybeSingle();
         return data;
       }
-      const { data } = await supabase.from('gateway_merchants').select('id, business_name, currency').eq('user_id', user.id).maybeSingle();
+      const { data } = await supabase.from('gateway_merchants').select('id, business_name').eq('user_id', user.id).maybeSingle();
       return data;
     },
   });

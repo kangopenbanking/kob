@@ -141,7 +141,7 @@ export function usePOSTill(merchantId: string | undefined) {
         body: {
           merchant_id: merchantId,
           channel: 'pos',
-          currency: merchantData?.currency || 'XAF',
+          currency: 'XAF',
           customer_name: customerName || undefined,
           customer_phone: customerPhone || undefined,
           items: cart.map(i => ({

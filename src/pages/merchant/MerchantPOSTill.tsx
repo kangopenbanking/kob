@@ -26,7 +26,7 @@ const MerchantPOSTill: React.FC = () => {
       if (!user) return null;
       const { data } = await supabase
         .from('gateway_merchants')
-        .select('id, business_name, currency')
+        .select('id, business_name')
         .eq('user_id', user.id)
         .maybeSingle();
       return data;
