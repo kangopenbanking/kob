@@ -78,6 +78,47 @@ Deno.serve(async (req) => {
     };
 
     switch (method) {
+      case 'cash': {
+        // Cash payment — finalize immediately, no external provider
+        await supabase.from('pos_orders').update({ status: 'paid' }).eq('id', order.id);
+        const { data: cashPayment } = await supabase.from('pos_order_payments').insert({
+          order_id: order.id, merchant_id: order.merchant_id,
+          status: 'succeeded', amount, currency, provider: 'cash', method: 'cash',
+          provider_reference: `cash_${idempotencyKey}`,
+        }).select().single();
+        // Credit merchant wallet
+        const { data: mw } = await supabase.from('gateway_merchant_wallets')
+          .select('id, available_balance, ledger_balance').eq('merchant_id', order.merchant_id).eq('currency', currency).maybeSingle();
+        if (mw) {
+          await supabase.from('gateway_merchant_wallets').update({
+            available_balance: (mw.available_balance || 0) + amount,
+            ledger_balance: (mw.ledger_balance || 0) + amount,
+          }).eq('id', mw.id);
+        } else {
+          await supabase.from('gateway_merchant_wallets').insert({
+            merchant_id: order.merchant_id, currency, available_balance: amount, pending_balance: 0, ledger_balance: amount,
+          });
+        }
+        // Inventory decrement
+        if (order.location_id) {
+          for (const item of order.pos_order_items || []) {
+            await supabase.rpc('pos_adjust_inventory', {
+              _merchant_id: order.merchant_id, _variant_id: item.variant_id,
+              _location_id: order.location_id, _quantity_delta: -item.quantity,
+              _type: 'sale', _reason: `Cash payment order ${order.order_number}`,
+              _reference_type: 'pos_order', _reference_id: order.id,
+            }).catch(() => {});
+          }
+        }
+        await supabase.from('pos_order_status_history').insert({
+          order_id: order.id, status: 'paid', note: 'Cash payment completed', created_by: user.id,
+        });
+        return new Response(JSON.stringify({
+          success: true, order_id: order.id, order_number: order.order_number,
+          payment_id: cashPayment?.id, method: 'cash', status: 'succeeded',
+          amount, currency, instructions: 'Cash payment recorded',
+        }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
       case 'mobile_money': {
         const { data, error } = await supabase.functions.invoke('gateway-create-charge', {
           body: {

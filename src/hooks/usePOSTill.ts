@@ -155,6 +155,37 @@ export function usePOSTill(merchantId: string | undefined) {
   const taxAmount = useMemo(() => (subtotal - discountAmount) * taxRate, [subtotal, discountAmount, taxRate]);
   const total = useMemo(() => Math.max(subtotal - discountAmount + taxAmount, 0), [subtotal, discountAmount, taxAmount]);
 
+  const createOrderAndSubmit = useCallback(async () => {
+    if (!merchantId || cart.length === 0) return null;
+
+    const orderRes = await supabase.functions.invoke('pos-orders', {
+      body: {
+        merchant_id: merchantId,
+        channel: 'pos',
+        currency: 'XAF',
+        customer_name: customerName || undefined,
+        customer_phone: customerPhone || undefined,
+        items: cart.map(i => ({
+          variant_id: i.variant_id,
+          product_id: i.product_id,
+          name: `${i.name}${i.variant_name !== 'Default' ? ` - ${i.variant_name}` : ''}`,
+          quantity: i.quantity,
+          unit_price: i.price,
+          discount: i.discount,
+        })),
+        discount_amount: discountAmount,
+      },
+    });
+    if (orderRes.error) throw new Error(orderRes.error.message || 'Order creation failed');
+    const order = orderRes.data;
+
+    await supabase.functions.invoke('pos-submit-order', {
+      body: { order_id: order.id },
+    });
+
+    return order;
+  }, [merchantId, cart, customerName, customerPhone, discountAmount]);
+
   const checkout = useCallback(async (paymentMethod: 'cash' | 'wallet' | 'mobile_money') => {
     if (!merchantId || cart.length === 0) return;
     setIsCheckingOut(true);
@@ -163,37 +194,36 @@ export function usePOSTill(merchantId: string | undefined) {
       const token = session.data.session?.access_token;
       if (!token) throw new Error('Not authenticated');
 
-      // 1. Create order
-      const orderRes = await supabase.functions.invoke('pos-orders', {
-        body: {
-          merchant_id: merchantId,
-          channel: 'pos',
-          currency: 'XAF',
-          customer_name: customerName || undefined,
-          customer_phone: customerPhone || undefined,
-          items: cart.map(i => ({
-            variant_id: i.variant_id,
-            product_id: i.product_id,
-            name: `${i.name}${i.variant_name !== 'Default' ? ` - ${i.variant_name}` : ''}`,
-            quantity: i.quantity,
-            unit_price: i.price,
-            discount: i.discount,
-          })),
-          discount_amount: discountAmount,
-        },
-      });
-      if (orderRes.error) throw new Error(orderRes.error.message || 'Order creation failed');
-      const order = orderRes.data;
+      const order = await createOrderAndSubmit();
+      if (!order) throw new Error('Failed to create order');
 
-      // 2. Submit order
-      await supabase.functions.invoke('pos-submit-order', {
-        body: { order_id: order.id },
-      });
+      // Wallet: generate QR code for customer to scan & pay
+      if (paymentMethod === 'wallet') {
+        const qrRes = await supabase.functions.invoke('pos-qr-payment?action=generate', {
+          body: {
+            merchant_id: merchantId,
+            amount: total,
+            order_id: order.id,
+            description: `Order ${order.order_number || order.id.slice(0, 8)}`,
+          },
+        });
+        if (qrRes.error) throw new Error(qrRes.error.message || 'QR generation failed');
 
-      // 3. Pay order
+        setWalletQR({
+          qr_payload: qrRes.data.qr_payload,
+          order_id: order.id,
+          order_number: order.order_number || order.id.slice(0, 8).toUpperCase(),
+          amount: total,
+          merchant_name: merchantData?.business_name || 'Merchant',
+        });
+        toast.success('QR code generated — customer can scan to pay');
+        return;
+      }
+
+      // Cash & MoMo: proceed through pos-pay-order
       const idempotencyKey = `${order.id}-${Date.now()}`;
       const payRes = await supabase.functions.invoke('pos-pay-order', {
-        body: { order_id: order.id, payment_method: paymentMethod },
+        body: { order_id: order.id, method: paymentMethod },
         headers: { 'Idempotency-Key': idempotencyKey },
       });
       if (payRes.error) throw new Error(payRes.error.message || 'Payment failed');
@@ -220,7 +250,42 @@ export function usePOSTill(merchantId: string | undefined) {
     } finally {
       setIsCheckingOut(false);
     }
-  }, [merchantId, cart, customerName, customerPhone, discountAmount, subtotal, taxAmount, total, merchantData]);
+  }, [merchantId, cart, customerName, customerPhone, discountAmount, subtotal, taxAmount, total, merchantData, createOrderAndSubmit]);
+
+  // Poll for wallet QR payment completion
+  const checkWalletPayment = useCallback(async () => {
+    if (!walletQR) return;
+    const { data: order } = await supabase
+      .from('pos_orders')
+      .select('status, order_number')
+      .eq('id', walletQR.order_id)
+      .single();
+
+    if (order?.status === 'paid') {
+      setReceipt({
+        order_id: walletQR.order_id,
+        order_number: walletQR.order_number,
+        items: [...cart],
+        subtotal,
+        discount: discountAmount,
+        tax: taxAmount,
+        total: walletQR.amount,
+        payment_method: 'wallet_qr',
+        merchant_name: walletQR.merchant_name,
+        created_at: new Date().toISOString(),
+        customer_name: customerName || undefined,
+        customer_phone: customerPhone || undefined,
+      });
+      setWalletQR(null);
+      toast.success('Customer payment received!');
+      return true;
+    }
+    return false;
+  }, [walletQR, cart, subtotal, discountAmount, taxAmount, customerName, customerPhone]);
+
+  const cancelWalletQR = useCallback(() => {
+    setWalletQR(null);
+  }, []);
 
   return {
     products: filteredProducts,
