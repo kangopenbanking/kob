@@ -241,8 +241,7 @@ Deno.serve(async (req) => {
     console.error('Error in woocommerce-process-payment:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Payment processing failed',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Payment processing failed. Please try again.'
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
