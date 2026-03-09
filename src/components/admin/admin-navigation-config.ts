@@ -74,6 +74,8 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Payout Management", path: "/admin/payouts", icon: Banknote },
       { title: "Funding Management", path: "/admin/funding", icon: Banknote },
       { title: "Reconciliation", path: "/admin/reconciliation", icon: RefreshCw },
+      { title: "Settlement Approval", path: "/admin/settlement-approval", icon: CheckCircle2 },
+      { title: "Invoice Management", path: "/admin/invoice-management", icon: Receipt },
     ],
   },
   {
