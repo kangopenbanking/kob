@@ -122,6 +122,30 @@ export function usePOSTill(merchantId: string | undefined) {
     setReceipt(null);
   }, []);
 
+  const lookupByBarcode = useCallback((code: string) => {
+    // Search variants by barcode or SKU
+    for (const product of products) {
+      const variants = product.pos_product_variants || [];
+      const matchedVariant = variants.find((v: any) =>
+        v.barcode === code || v.sku === code
+      );
+      if (matchedVariant) {
+        addItem(product, matchedVariant);
+        toast.success(`Added: ${product.name}`);
+        return true;
+      }
+    }
+    // Fallback: search by product name partial match
+    const nameMatch = products.find((p: any) => p.name?.toLowerCase().includes(code.toLowerCase()));
+    if (nameMatch) {
+      addItem(nameMatch);
+      toast.success(`Added: ${nameMatch.name}`);
+      return true;
+    }
+    toast.error(`No product found for "${code}"`);
+    return false;
+  }, [products, addItem]);
+
   const subtotal = useMemo(() => cart.reduce((s, i) => s + (i.price * i.quantity - i.discount), 0), [cart]);
   const discountAmount = useMemo(() => discountType === 'percent' ? subtotal * globalDiscount / 100 : globalDiscount, [subtotal, globalDiscount, discountType]);
   const taxRate = 0; // configurable per merchant later
@@ -202,6 +226,7 @@ export function usePOSTill(merchantId: string | undefined) {
     removeItem,
     updateQuantity,
     clearCart,
+    lookupByBarcode,
     customerName,
     setCustomerName,
     customerPhone,

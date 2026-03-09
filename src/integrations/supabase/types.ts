@@ -10251,6 +10251,54 @@ export type Database = {
           },
         ]
       }
+      pos_cash_movements: {
+        Row: {
+          amount: number
+          created_at: string | null
+          created_by: string
+          id: string
+          merchant_id: string
+          reason: string | null
+          shift_id: string
+          type: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          created_by: string
+          id?: string
+          merchant_id: string
+          reason?: string | null
+          shift_id: string
+          type: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          merchant_id?: string
+          reason?: string | null
+          shift_id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_cash_movements_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_cash_movements_shift_id_fkey"
+            columns: ["shift_id"]
+            isOneToOne: false
+            referencedRelation: "pos_shifts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pos_categories: {
         Row: {
           created_at: string
@@ -11044,6 +11092,71 @@ export type Database = {
             columns: ["refund_id"]
             isOneToOne: false
             referencedRelation: "gateway_refunds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_shifts: {
+        Row: {
+          cash_difference: number | null
+          cashier_id: string
+          closing_cash: number | null
+          created_at: string | null
+          ended_at: string | null
+          expected_cash: number | null
+          id: string
+          merchant_id: string
+          notes: string | null
+          opening_cash: number
+          started_at: string
+          status: string
+          total_refunds: number | null
+          total_sales: number | null
+          total_transactions: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          cash_difference?: number | null
+          cashier_id: string
+          closing_cash?: number | null
+          created_at?: string | null
+          ended_at?: string | null
+          expected_cash?: number | null
+          id?: string
+          merchant_id: string
+          notes?: string | null
+          opening_cash?: number
+          started_at?: string
+          status?: string
+          total_refunds?: number | null
+          total_sales?: number | null
+          total_transactions?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          cash_difference?: number | null
+          cashier_id?: string
+          closing_cash?: number | null
+          created_at?: string | null
+          ended_at?: string | null
+          expected_cash?: number | null
+          id?: string
+          merchant_id?: string
+          notes?: string | null
+          opening_cash?: number
+          started_at?: string
+          status?: string
+          total_refunds?: number | null
+          total_sales?: number | null
+          total_transactions?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_shifts_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
             referencedColumns: ["id"]
           },
         ]
