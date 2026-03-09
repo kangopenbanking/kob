@@ -1,0 +1,183 @@
+import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Ticket, Plus, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+
+const BusinessCoupons: React.FC = () => {
+  const { merchantId } = useParams<{ merchantId?: string }>();
+  const queryClient = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
+  const [code, setCode] = useState('');
+  const [type, setType] = useState<'percentage' | 'fixed'>('percentage');
+  const [value, setValue] = useState('');
+  const [minOrder, setMinOrder] = useState('');
+  const [maxUses, setMaxUses] = useState('');
+
+  const { data: coupons, isLoading } = useQuery({
+    queryKey: ['biz-coupons', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return [];
+      const { data, error } = await supabase
+        .from('pos_coupons')
+        .select('*')
+        .eq('merchant_id', merchantId)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!merchantId,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('pos_coupons').insert({
+        merchant_id: merchantId!,
+        code: code.toUpperCase().trim(),
+        type,
+        value: parseFloat(value),
+        min_order_amount: minOrder ? parseFloat(minOrder) : 0,
+        max_uses: maxUses ? parseInt(maxUses) : null,
+      });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['biz-coupons'] });
+      toast.success('Coupon created');
+      setShowCreate(false);
+      setCode(''); setValue(''); setMinOrder(''); setMaxUses('');
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, is_active }: { id: string; is_active: boolean }) => {
+      const { error } = await supabase.from('pos_coupons').update({ is_active: !is_active }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['biz-coupons'] }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('pos_coupons').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['biz-coupons'] });
+      toast.success('Coupon deleted');
+    },
+  });
+
+  const formatXAF = (n: number) =>
+    new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(n);
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background p-4">
+      <header className="mb-4 flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold tracking-tight">Coupons</h1>
+          <p className="text-sm text-muted-foreground">{coupons?.length ?? 0} coupon{(coupons?.length ?? 0) !== 1 ? 's' : ''}</p>
+        </div>
+        <Button size="sm" className="rounded-xl gap-1.5" onClick={() => setShowCreate(true)}>
+          <Plus className="h-4 w-4" /> New
+        </Button>
+      </header>
+
+      {isLoading ? (
+        <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-20 rounded-2xl" />)}</div>
+      ) : !coupons?.length ? (
+        <Card className="border-0 shadow-md">
+          <CardContent className="flex flex-col items-center gap-4 p-12">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
+              <Ticket className="h-8 w-8 text-primary" />
+            </div>
+            <p className="text-sm text-muted-foreground text-center">No coupons yet. Create one to offer discounts.</p>
+          </CardContent>
+        </Card>
+      ) : (
+        <AnimatePresence>
+          <div className="space-y-3">
+            {coupons.map((c: any, i: number) => (
+              <motion.div key={c.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-mono text-sm font-bold text-foreground">{c.code}</p>
+                          <Badge variant={c.is_active ? 'default' : 'secondary'} className="text-[10px]">
+                            {c.is_active ? 'Active' : 'Inactive'}
+                          </Badge>
+                        </div>
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {c.type === 'percentage' ? `${c.value}% off` : `${formatXAF(c.value)} off`}
+                          {c.min_order_amount > 0 && ` · Min ${formatXAF(c.min_order_amount)}`}
+                          {c.max_uses && ` · ${c.current_uses || 0}/${c.max_uses} used`}
+                        </p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button
+                          size="icon" variant="ghost" className="h-8 w-8"
+                          onClick={() => toggleMutation.mutate({ id: c.id, is_active: c.is_active })}
+                        >
+                          {c.is_active ? <ToggleRight className="h-4 w-4 text-primary" /> : <ToggleLeft className="h-4 w-4" />}
+                        </Button>
+                        <Button
+                          size="icon" variant="ghost" className="h-8 w-8 text-destructive"
+                          onClick={() => deleteMutation.mutate(c.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </AnimatePresence>
+      )}
+
+      {/* Create Coupon Dialog */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle>New Coupon</DialogTitle></DialogHeader>
+          <div className="space-y-4 py-2">
+            <Input placeholder="Coupon Code (e.g. SAVE10)" value={code} onChange={e => setCode(e.target.value)} className="font-mono uppercase" />
+            <Select value={type} onValueChange={(v: 'percentage' | 'fixed') => setType(v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percentage">Percentage (%)</SelectItem>
+                <SelectItem value="fixed">Fixed Amount (XAF)</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input placeholder={type === 'percentage' ? 'Discount %' : 'Amount (XAF)'} type="number" value={value} onChange={e => setValue(e.target.value)} />
+            <Input placeholder="Min order amount (optional)" type="number" value={minOrder} onChange={e => setMinOrder(e.target.value)} />
+            <Input placeholder="Max uses (optional)" type="number" value={maxUses} onChange={e => setMaxUses(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button className="w-full rounded-xl" onClick={() => createMutation.mutate()} disabled={!code || !value || createMutation.isPending}>
+              {createMutation.isPending ? 'Creating...' : 'Create Coupon'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default BusinessCoupons;
