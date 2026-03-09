@@ -1068,6 +1068,16 @@ export default function MerchantStorefront() {
           </motion.div>
         </TabsContent>
 
+        {/* ── Products ── */}
+        <TabsContent value="products">
+          <ProductsTab merchantId={merchantId} currency={currency} />
+        </TabsContent>
+
+        {/* ── WooCommerce Integration ── */}
+        <TabsContent value="woo-connect">
+          <WooConnectTab merchantId={merchantId} />
+        </TabsContent>
+
         {/* ── Demo Store ── */}
         <TabsContent value="demo">
           <DemoStoreTab merchantId={merchantId} onDataChanged={loadData} />
