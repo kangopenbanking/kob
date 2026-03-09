@@ -1,243 +1,338 @@
 
 
-# KOB Payment Infrastructure — Deep Technical & Product Capability Audit
+# Phase 2: Financial Operations - Implementation Plan
+
+## Current State Analysis
+
+### ✅ Already Implemented
+1. **Merchant Refunds** (`src/pages/merchant/MerchantRefunds.tsx`)
+   - Lists refunds with filtering
+   - Shows refund statistics
+   - Connected to `gateway_refunds` table
+   
+2. **Transaction Reconciliation** (`src/pages/admin/ReconciliationDashboard.tsx`)
+   - Cross-channel reconciliation for Mobile Money, Cards, and Bank Transfers
+   - Multi-method matching algorithms (exact reference, amount+date, fuzzy description)
+   - Edge function: `bank-reconcile`
+   
+3. **Invoice Generation System**
+   - Edge function: `generate-invoice` (institution-level invoicing)
+   - Edge function: `send-invoice-email`
+   - Database function: `generate_institution_invoice`
+   - Table: `institution_invoices`
+
+4. **Settlement Infrastructure**
+   - `SettlementManagement` component in admin
+   - Edge functions: `settlement-calculate`, `settlement-process`
+   - Automated settlement cron: `automated-settlement-cron`
+
+### ❌ Missing Components
+
+1. **Business App Refunds Page**
+   - No `/business-app/refunds` route
+   - Business users need to initiate refunds on charges collected through their wallet
+
+2. **Fee Transparency Dashboard**
+   - No dedicated fee breakdown visualization for merchants
+   - No real-time fee estimator widget
+   - Missing per-transaction fee disclosure for business users
+
+3. **Admin Settlement Approval Workflow**
+   - `SettlementManagement` exists but lacks approval/rejection UI
+   - No audit trail for settlement decisions
+   - Missing manual intervention controls
+
+4. **Admin Invoice Management UI**
+   - Invoice generation exists, but no admin page to:
+     - Browse all institution invoices
+     - Manually generate invoices
+     - Mark invoices as paid/overdue
+     - Send reminder emails
 
 ---
 
-## CLASSIFICATION
+## Implementation Plan
 
-**KOB is Category B: Wallet support with programmatic outbound payouts, but NO instant payout rails (no Visa Direct, Mastercard Send, or real-time bank push).**
+### 1. Business App Refunds (`src/pages/business-app/BusinessRefunds.tsx`)
+
+**Purpose**: Allow business users to process refunds for wallet-funded charges.
+
+**Features**:
+- Search charges by reference or customer phone
+- Display charge details with refund eligibility
+- Initiate full/partial refunds
+- Track refund status (pending → processing → completed/failed)
+- PIN confirmation before refund execution
+
+**Technical Approach**:
+- Query `gateway_charges` where `merchant_id` matches business user
+- Call `gateway-create-refund` edge function
+- Real-time status updates via polling or Supabase realtime
+
+**Database Integration**:
+- Read from: `gateway_charges`, `gateway_refunds`, `gateway_merchants`
+- RLS: Only show charges belonging to user's merchant account
 
 ---
 
-## SECTION A — WALLET / STORED VALUE
+### 2. Fee Transparency Dashboard (`src/pages/merchant/MerchantFees.tsx`)
 
-### Current State: IMPLEMENTED (85%)
+**Purpose**: Transparent fee breakdown and cost analysis for merchants.
 
-KOB has a functional custodial wallet system:
+**Features**:
+- **Summary Cards**:
+  - Total fees paid (this month, last month, YTD)
+  - Fee-to-revenue ratio
+  - Average fee per transaction
+  
+- **Fee Breakdown Chart** (Pie/Bar):
+  - By transaction type (card, mobile money, bank transfer)
+  - By fee component (fixed, percentage, platform fee)
+  
+- **Transaction Fee History Table**:
+  - Date, transaction ref, type, amount, fee charged
+  - Filterable by date range and transaction type
+  
+- **Fee Estimator Widget**:
+  - Input: transaction type + amount
+  - Output: estimated fee breakdown
 
-| Capability | Status | Implementation |
-|---|---|---|
-| User wallet accounts | Yes | `accounts` table + `account_balances` (ClosingAvailable/InterimAvailable) |
-| Ledger-based balance tracking | Yes | `account_balances` with credit/debit indicators, datetime tracking |
-| Programmatic credit | Yes | `funding-scope-creditor.ts` upserts balances; `gateway-fund-account` credits via charges |
-| Programmatic debit | Yes | `gateway-process-withdrawal` debits balance atomically with rollback |
-| Sub-accounts / Escrow | Partial | `gateway_merchant_wallets` (3-balance model: available/pending/ledger) per merchant per currency; no formal escrow API |
-| Segregated fund structure | Not implemented | No dedicated safeguarding ledger or trust account segregation |
-| Transaction history | Yes | `transactions` table with full metadata, per-account filtering |
+**Technical Approach**:
+- Query `transaction_fees` table filtered by `merchant_id` via institution
+- Use `calculate_transaction_fee` database function for estimates
+- Visualizations using `recharts` (already in dependencies)
 
-### Missing: Dedicated Wallet REST API Surface
+**Database Integration**:
+- Read from: `transaction_fees`, `fee_structures`
+- Edge function: `gateway-fee-estimate` (already exists)
 
-KOB has the underlying infrastructure but lacks a **formal `/v1/wallets/*` namespace**. Currently wallet operations are scattered across `gateway-fund-account`, `gateway-process-withdrawal`, and direct balance queries. Required new endpoints:
+---
 
-```text
-POST   /v1/wallets                      — Create wallet (maps to account creation)
-GET    /v1/wallets/{id}                  — Get wallet with balances
-POST   /v1/wallets/{id}/credit           — Programmatic credit (wraps funding-scope-creditor)
-POST   /v1/wallets/{id}/debit            — Programmatic debit (wraps withdrawal logic)
-GET    /v1/wallets/{id}/transactions     — Transaction history for wallet
-GET    /v1/wallets/{id}/statement        — Generate statement (wraps generate-bank-statement)
-POST   /v1/wallets/{id}/freeze           — Freeze/unfreeze wallet (compliance)
+### 3. Admin Settlement Approval (`src/pages/admin/SettlementApproval.tsx`)
+
+**Purpose**: Manual approval workflow for institutional settlements before disbursement.
+
+**Features**:
+- **Pending Settlements Queue**:
+  - Institution name, settlement amount, period, transaction count
+  - "View Details" button expands breakdown
+  
+- **Settlement Details Modal**:
+  - Inflows (by channel), outflows, fees collected, net amount
+  - Transaction list (paginated)
+  - Settlement recipient bank details
+  
+- **Approval Actions**:
+  - Approve → triggers bank transfer
+  - Reject → marks settlement as rejected, requires reason
+  - Hold → pauses settlement, flags for investigation
+  
+- **Audit Trail**:
+  - All approval/rejection decisions logged with admin user ID, timestamp, reason
+  
+**Technical Approach**:
+- Query `settlement_transactions` with `status = 'pending_approval'`
+- New edge function: `admin-approve-settlement` (approve/reject/hold actions)
+- Update settlement status atomically with audit log entry
+
+**Database Changes**:
+- Add `status` enum to `settlement_transactions`: `pending_approval`, `approved`, `rejected`, `on_hold`, `completed`
+- Add `reviewed_by`, `reviewed_at`, `review_notes` columns
+- Create `settlement_reviews` audit table
+
+---
+
+### 4. Admin Invoice Management (`src/pages/admin/InvoiceManagement.tsx`)
+
+**Purpose**: Centralized admin interface for institution invoicing.
+
+**Features**:
+- **Invoice List Table**:
+  - Invoice number, institution, billing period, amount, status, due date
+  - Filters: status (pending/sent/paid/overdue), date range, institution
+  
+- **Manual Invoice Generation**:
+  - Select institution, billing cycle, period
+  - Preview fee breakdown before generating
+  - One-click generate & send
+  
+- **Invoice Actions**:
+  - View PDF (export)
+  - Mark as paid (manual override)
+  - Send reminder email
+  - Void/cancel invoice
+  
+- **Statistics Cards**:
+  - Total invoiced (current month)
+  - Outstanding amount
+  - Collection rate %
+
+**Technical Approach**:
+- Query `institution_invoices` with institution join
+- Call existing `generate-invoice` edge function
+- New edge function: `admin-invoice-actions` (mark paid, send reminder, void)
+- PDF generation using existing `useRegulatoryPdfExport` hook pattern
+
+**Database Integration**:
+- Read/Write: `institution_invoices`, `transaction_fees`
+- Update invoice `status` and `paid_at` timestamp
+
+---
+
+## Routing Integration
+
+### Admin Routes (in `src/App.tsx`)
+```typescript
+// Inside AdminLayout routes (~line 540)
+<Route path="settlement-approval" element={<SettlementApproval />} />
+<Route path="invoice-management" element={<InvoiceManagement />} />
 ```
 
-**Required additions:**
-- Idempotency-Key header support (already pattern exists in `gateway-fund-account`)
-- Webhook events: `wallet.credited`, `wallet.debited`, `wallet.frozen`
-- Escrow sub-wallet creation for marketplace holds
+### Merchant Routes
+```typescript
+// Inside MerchantLayout routes (~line 500)
+<Route path="fees" element={<MerchantFees />} />
+```
 
-**Effort**: 1 new edge function (multi-method router), ~200 lines. No DB migration needed — uses existing `accounts` + `account_balances` tables.
-
----
-
-## SECTION B — OUTBOUND PAYOUTS
-
-### Current State: IMPLEMENTED (90%)
-
-KOB has a comprehensive outbound payout system:
-
-| Capability | Status | Provider |
-|---|---|---|
-| Payouts to bank accounts | Yes | Flutterwave `/v3/transfers` |
-| Payouts to mobile money (MoMo) | Yes | Flutterwave MPS (MTN/Orange) |
-| Payouts to debit cards | Partial | Stripe Refund-based (requires prior card deposit) |
-| Payouts to PayPal | Yes | PayPal Batch Payouts API |
-| Batch payouts | Yes | `gateway-create-payout-batch` (up to 15k items via PayPal) |
-| Merchant-initiated payouts | Yes | `gateway-create-payout` (merchant wallet debit) |
-| Consumer-initiated withdrawals | Yes | `gateway-process-withdrawal` (account balance debit) |
-| Payout status polling | Yes | `gateway-payout-status-poll` |
-| Async webhook updates | Yes | `gateway-payout-webhook` (Stripe/Flutterwave/PayPal) |
-| Failed payout reversal | Yes | Automatic balance restoration on failure |
-| Admin manual reversal | Yes | `gateway-admin-reverse-withdrawal` |
-| Retry mechanism | Yes | `gateway-retry-payout` |
-| Daily payout limits | Yes | Per-merchant `daily_payout_limit` enforcement |
-| Idempotency | Yes | `idempotency-key` header on `gateway-create-payout` |
-
-### Missing / Gaps
-
-1. **True push-to-card payouts**: Current card withdrawal is a Stripe Refund against a prior PaymentIntent. This is NOT a true payout — it requires a prior deposit, has refund-window limitations (180 days), and doesn't support arbitrary card destinations. For true instant card payouts, KOB needs Visa Direct / Mastercard Send integration.
-
-2. **Instant vs Standard payout parameter**: No `speed` parameter (`instant` | `standard`) on payout endpoints. All payouts use the provider's default speed.
-
-3. **Formal `/v1/payouts/cancel` endpoint**: Cancellation is not exposed as a standalone API. Only failed payouts can be retried.
-
-4. **Payout to arbitrary bank account** (non-linked): Currently requires a `linked_account_id` for consumer withdrawals. Merchant payouts accept direct beneficiary details but consumer withdrawals do not.
-
-### Required Endpoint Additions
-
-```text
-POST   /v1/payouts/{id}/cancel          — Cancel pending payout before provider submission
-PATCH  /v1/payouts                      — Add `speed: 'instant' | 'standard'` parameter
-POST   /v1/payouts/card                 — True push-to-card (requires Visa Direct integration)
+### Business App Routes
+```typescript
+// Inside BusinessAppLayout routes (~line 850)
+<Route path="refunds" element={<BusinessRefunds />} />
+<Route path="fees" element={<BusinessFees />} /> {/* Reuse MerchantFees with slight adjustments */}
 ```
 
 ---
 
-## SECTION C — INSTANT RAILS SUPPORT
+## Database Schema Updates
 
-### Current State: NOT IMPLEMENTED
-
-| Rail | Status |
-|---|---|
-| Visa Direct | Not integrated |
-| Mastercard Send | Not integrated |
-| SEPA Instant / FPS / RTP | Not integrated |
-| CEMAC real-time clearing (SYSTAC) | Not integrated |
-| 24/7 settlement processing | No — relies on provider business hours |
-| Push-to-card | Not available (Stripe refund ≠ push-to-card) |
-| Prefunding / liquidity pool | Not implemented |
-
-### Required Architecture for Instant Payouts
-
-```text
-┌─────────────────────────────────────────────┐
-│            KOB Instant Payout Engine         │
-├─────────────────────────────────────────────┤
-│  1. Prefunding Pool (Float Management)       │
-│     - Dedicated settlement account per rail  │
-│     - Real-time float monitoring API         │
-│     - Auto-replenishment triggers            │
-├─────────────────────────────────────────────┤
-│  2. Rail Router                              │
-│     - Visa Direct (card payouts)             │
-│     - Flutterwave Instant (MoMo already ~OK) │
-│     - CEMAC RTGS / SYSTAC (bank-to-bank)    │
-│     - Fallback: standard ACH-equivalent     │
-├─────────────────────────────────────────────┤
-│  3. Risk & Fraud Layer                       │
-│     - Pre-payout risk scoring                │
-│     - Velocity checks (existing)             │
-│     - Amount limits per rail per user tier   │
-│     - ML anomaly detection (ai-anomaly exists)│
-├─────────────────────────────────────────────┤
-│  4. Liquidity Management API                 │
-│     GET  /v1/treasury/float-balance          │
-│     POST /v1/treasury/replenish              │
-│     GET  /v1/treasury/utilization            │
-└─────────────────────────────────────────────┘
+### 1. Settlement Reviews Table
+```sql
+CREATE TABLE settlement_reviews (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  settlement_id UUID NOT NULL REFERENCES settlement_transactions(id),
+  reviewed_by UUID NOT NULL REFERENCES auth.users(id),
+  action TEXT NOT NULL CHECK (action IN ('approved', 'rejected', 'on_hold')),
+  review_notes TEXT,
+  reviewed_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  metadata JSONB
+);
 ```
 
-**Required new endpoints:**
-
-```text
-POST   /v1/payouts/instant              — Instant payout (auto-routes to fastest rail)
-GET    /v1/payouts/rails                — List available rails + current speed + fees
-POST   /v1/payouts/card/push            — Visa Direct push-to-card
-GET    /v1/treasury/float               — Float balance per rail (admin)
-POST   /v1/risk/pre-check               — Pre-payout risk assessment
+### 2. Update Settlement Transactions
+```sql
+ALTER TABLE settlement_transactions 
+  ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'pending_approval' 
+    CHECK (status IN ('pending_approval', 'approved', 'rejected', 'on_hold', 'processing', 'completed', 'failed')),
+  ADD COLUMN IF NOT EXISTS reviewed_by UUID REFERENCES auth.users(id),
+  ADD COLUMN IF NOT EXISTS reviewed_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS review_notes TEXT;
 ```
 
-**Estimated effort**: 3-5 new edge functions + Visa Direct API integration + prefunding account infrastructure. This is the largest gap.
+### 3. RLS Policies
+- `settlement_reviews`: Admin-only read/write
+- Merchants can read their own `transaction_fees` records
+- Business users inherit merchant permissions via `gateway_merchants` relationship
 
 ---
 
-## SECTION D — LICENSING & COMPLIANCE
+## Edge Functions
 
-### Current State: PARTIAL
+### New Functions Required
 
-| Capability | Status |
-|---|---|
-| KYC verification | Yes — `kyc-submit`, `kyc_verifications` table, document upload |
-| KYB (merchant) | Yes — `gateway-merchant-kyb` (submit/review workflow) |
-| AML sanctions screening | Yes — `sanctions-screen` edge function |
-| Transaction monitoring | Yes — `transaction-monitor` + `ai-anomaly-detection` |
-| CDD (Customer Due Diligence) | Yes — `customer_due_diligence` table, PEP checks, risk scoring |
-| Risk scoring | Yes — `calculate_kyc_risk_score` DB function |
-| Data retention | Yes — 7-year COBAC compliance policy |
-| License type | Unclear — no EMI/MTL documentation found in codebase |
+1. **`admin-approve-settlement`**
+   - Input: `{ settlement_id, action: 'approved' | 'rejected' | 'on_hold', notes }`
+   - Validates admin role via `has_role(auth.uid(), 'admin')`
+   - Updates settlement status
+   - Inserts audit record in `settlement_reviews`
+   - If approved: triggers bank transfer via `settlement-process`
 
-### Missing
+2. **`admin-invoice-actions`**
+   - Input: `{ invoice_id, action: 'mark_paid' | 'send_reminder' | 'void', metadata }`
+   - Validates admin role
+   - Updates invoice status
+   - For `send_reminder`: calls `send-invoice-email`
+   - Logs action in `audit_logs`
 
-1. **Formal EMI or Money Transmitter license documentation**: The platform operates as a wallet/payment processor but the licensing basis is not codified in the API. This is a business/legal gap, not a technical one.
-
-2. **Real-time transaction screening for outbound payouts**: `transaction-monitor` exists but it's not inline (pre-payout). Payouts execute first, monitor after.
-
-3. **Required compliance endpoints** (partially exist):
-
-```text
-POST   /v1/compliance/payout-screen     — Pre-payout AML/sanctions check (MISSING)
-GET    /v1/compliance/user-risk/{id}     — User risk profile (exists via calculate_kyc_risk_score)
-POST   /v1/compliance/sar               — Suspicious Activity Report submission (MISSING)
-```
+### Existing Functions to Leverage
+- ✅ `gateway-create-refund` (for Business Refunds)
+- ✅ `gateway-fee-estimate` (for Fee Transparency)
+- ✅ `generate-invoice` (for Invoice Management)
+- ✅ `settlement-calculate` & `settlement-process`
 
 ---
 
-## SECTION E — TECHNICAL READINESS
+## UI/UX Patterns
 
-### Current State: PRODUCTION-GRADE (85%)
+### Navigation Updates
 
-| Feature | Status | Details |
-|---|---|---|
-| Idempotency-Key | Yes | Supported on charges, payouts, funding intents via header + DB dedup |
-| Webhook system | Mature | HMAC-SHA256 signing, 7-retry exponential backoff, delivery logging, 24 event types |
-| Rate limiting | Yes | DB-backed (`check_rate_limit` RPC), per-provider webhook limits, per-user API limits |
-| Error format | Partial | Consistent `{error, message}` but NOT RFC 7807 `problem+json` everywhere |
-| Sandbox simulation | Yes | `sandbox-*` functions for data generation, API key creation, webhook testing |
-| API versioning | Yes | `/v1/` prefix on all endpoints |
-| OpenAPI spec | Yes | `public-api-spec` (OpenAPI 3.1.0, 245+ endpoints documented) |
-| Postman collection | Yes | `postman-collection` auto-generated |
+**Admin Command Palette** (⌘K):
+- Add: "Settlement Approval", "Invoice Management"
 
-### Missing
+**Merchant Sidebar**:
+- New section: "Financial Insights" → Fees, Invoices (if applicable)
 
-1. **RFC 7807 error responses** are not consistently used (some functions return `{error, message}`, not `{type, title, status, detail}`)
-2. **SLA guarantees** are not programmatically documented (only operational: 15-min critical response)
-3. **Payout sandbox simulation** — sandbox exists for charges but payout simulation with realistic delays is not confirmed
+**Business App Bottom Nav**:
+- Add: "Refunds" icon in More menu
 
----
+### Shared Components to Create
 
-## COMPLETE GAP SUMMARY
-
-### To compete with Stripe-style instant payouts, KOB needs:
-
-| # | Gap | Priority | Effort |
-|---|---|---|---|
-| 1 | **Visa Direct integration** (true push-to-card) | CRITICAL | 1 edge function + Visa API onboarding |
-| 2 | **Formal `/v1/wallets/*` REST namespace** | HIGH | 1 edge function (router) |
-| 3 | **Instant payout rail router** with `speed` parameter | HIGH | 1 edge function + rail selection logic |
-| 4 | **Prefunding / float management API** | HIGH | 1 edge function + treasury tables |
-| 5 | **Pre-payout compliance screening** (inline) | HIGH | 1 edge function |
-| 6 | **Payout cancellation endpoint** | MEDIUM | Add to existing payout function |
-| 7 | **RFC 7807 error standardization** | MEDIUM | Update all edge functions |
-| 8 | **Escrow / hold sub-wallets** | MEDIUM | 1 migration + 1 function |
-| 9 | **Safeguarded fund segregation ledger** | MEDIUM | 1 migration |
-| 10 | **SAR submission endpoint** | LOW | 1 edge function |
+1. **`<FeeBreakdownCard />`** - Reusable fee visualization
+2. **`<SettlementDetailsSheet />`** - Slide-out panel for settlement breakdown
+3. **`<InvoicePdfViewer />`** - PDF preview modal with download
+4. **`<RefundConfirmDialog />`** - PIN-protected refund confirmation
 
 ---
 
-## FINAL ANSWERS
+## Security Considerations
 
-| Question | Answer |
-|---|---|
-| Can KOB support instant wallet-to-bank withdrawals? | **Partially** — Flutterwave MoMo is near-instant; bank transfers are T+1 to T+3. No real-time bank rail (RTGS/SYSTAC) integration. |
-| Can KOB support instant wallet-to-card withdrawals? | **No** — Current implementation uses Stripe Refunds (requires prior deposit, 5-10 day processing). True push-to-card requires Visa Direct/Mastercard Send. |
-| Can KOB support 24/7 real-time payout infrastructure? | **No** — Dependent on provider business hours. No prefunding pool, no instant rail router, no 24/7 settlement engine. |
-| Production readiness for high-risk instant payout fintech? | **Not yet.** The wallet + standard payout infrastructure is solid (~90%), but instant rails, prefunding, and inline compliance screening are required before production deployment for an instant payout platform. |
+1. **Settlement Approval**:
+   - Require `admin` role via `has_role()` function
+   - Dual approval for settlements > threshold (e.g., 10M XAF)
+   - IP address logging in audit trail
 
-### Recommended Upgrade Roadmap
+2. **Refund Processing**:
+   - PIN verification before refund creation
+   - Refund amount cannot exceed original charge
+   - Rate limiting: max 5 refunds per merchant per hour
 
-```text
-Phase 1 (4-6 weeks): Wallet API namespace + inline compliance screening + payout cancel
-Phase 2 (6-10 weeks): Visa Direct integration + instant rail router + speed parameter
-Phase 3 (4-6 weeks): Prefunding/treasury API + float monitoring + 24/7 settlement cron
-Phase 4 (2-4 weeks): Escrow sub-wallets + safeguarding ledger + SAR endpoint
-```
+3. **Fee Transparency**:
+   - Merchants can only view their own fees
+   - No exposure of platform's cost structure (only final fee shown)
+
+---
+
+## Testing Strategy
+
+### Unit Tests (Vitest)
+- Fee calculation logic
+- Settlement approval state transitions
+- Invoice status updates
+
+### Edge Function Tests
+- `admin-approve-settlement`: Test all actions (approve/reject/hold)
+- Verify RLS prevents non-admins from calling sensitive functions
+
+### Integration Tests
+- End-to-end refund flow (search charge → initiate refund → verify status)
+- Settlement approval → bank transfer trigger
+- Invoice generation → email delivery
+
+---
+
+## Rollout Plan
+
+### Phase 2a (Week 1)
+1. Business App Refunds page
+2. Merchant Fee Transparency Dashboard
+3. Database schema updates for settlements
+
+### Phase 2b (Week 2)
+1. Admin Settlement Approval UI
+2. Admin Invoice Management UI
+3. New edge functions deployment
+
+### Phase 2c (Week 3)
+1. Navigation/routing integration
+2. Testing & QA
+3. Documentation updates
 
