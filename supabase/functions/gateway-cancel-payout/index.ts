@@ -138,7 +138,8 @@ serve(async (req) => {
     });
 
   } catch (err: any) {
-    console.error('[gateway-cancel-payout] Error:', err);
-    return rfc7807('internal_error', 'Internal Server Error', 500, err.message || 'Unexpected error');
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] [gateway-cancel-payout] Error:`, err);
+    return rfc7807('internal_error', 'Internal Server Error', 500, `An unexpected error occurred. Reference: ${errorId}`);
   }
 });
