@@ -525,6 +525,8 @@ function App() {
               <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
               <Route path="storefront" element={<MerchantStorefront />} />
+              {/* Phase 2: Financial Operations */}
+              <Route path="fees" element={<MerchantFees />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
