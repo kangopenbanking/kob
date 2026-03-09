@@ -1,9 +1,9 @@
 import {
-  LayoutDashboard, Activity, ArrowUpDown, Link2, RefreshCw, Users,
+  LayoutDashboard, ArrowUpDown, Link2, RefreshCw, Users,
   Wallet, DollarSign, Undo2, Key, Webhook, Building2, GitBranch,
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
-  MapPin, ShoppingCart, CreditCard,
+  MapPin, ShoppingCart, CreditCard, Palette, Globe, FileSpreadsheet, LineChart,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -12,6 +12,7 @@ export const merchantNavigation = [
     items: [
       { title: "Dashboard", path: "/merchant", icon: LayoutDashboard },
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
+      { title: "Advanced Analytics", path: "/merchant/advanced-analytics", icon: LineChart },
       { title: "Fees", path: "/merchant/fees", icon: Receipt },
     ],
   },
@@ -31,12 +32,14 @@ export const merchantNavigation = [
       { title: "Payouts", path: "/merchant/payouts", icon: Wallet },
       { title: "Settlements", path: "/merchant/settlements", icon: DollarSign },
       { title: "Refunds", path: "/merchant/refunds", icon: Undo2 },
+      { title: "Bulk Operations", path: "/merchant/bulk-operations", icon: FileSpreadsheet },
     ],
   },
   {
     title: "Configuration",
     items: [
       { title: "API Keys", path: "/merchant/api-keys", icon: Key },
+      { title: "API Key Management", path: "/merchant/api-key-management", icon: Key },
       { title: "Webhooks", path: "/merchant/webhooks", icon: Webhook },
       { title: "Settlement Accounts", path: "/merchant/settlement-accounts", icon: Building2 },
       { title: "Subaccounts", path: "/merchant/subaccounts", icon: GitBranch },
@@ -72,6 +75,13 @@ export const merchantNavigation = [
     title: "Operations",
     items: [
       { title: "Locations & Staff", path: "/merchant/locations", icon: MapPin },
+    ],
+  },
+  {
+    title: "Enterprise",
+    items: [
+      { title: "Custom Branding", path: "/merchant/branding", icon: Palette },
+      { title: "White-Label", path: "/merchant/white-label", icon: Globe },
     ],
   },
   {

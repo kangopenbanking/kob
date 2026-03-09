@@ -342,6 +342,11 @@ import MerchantFees from "./pages/merchant/MerchantFees";
 import MerchantPlans from "./pages/merchant/MerchantPlans";
 import MerchantLocations from "./pages/merchant/MerchantLocations";
 import MerchantWooSync from "./pages/merchant/MerchantWooSync";
+import MerchantBranding from "./pages/merchant/MerchantBranding";
+import MerchantApiKeyManagement from "./pages/merchant/MerchantApiKeyManagement";
+import MerchantBulkOperations from "./pages/merchant/MerchantBulkOperations";
+import MerchantWhiteLabel from "./pages/merchant/MerchantWhiteLabel";
+import MerchantAdvancedAnalytics from "./pages/merchant/MerchantAdvancedAnalytics";
 import AdminMarketplaceModeration from "./pages/admin/AdminMarketplaceModeration";
 import BusinessRefunds from "./pages/business-app/BusinessRefunds";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
@@ -535,6 +540,12 @@ function App() {
               <Route path="plans" element={<MerchantPlans />} />
               <Route path="locations" element={<MerchantLocations />} />
               <Route path="woo-sync" element={<MerchantWooSync />} />
+              {/* Phase 4: Enterprise Features */}
+              <Route path="branding" element={<MerchantBranding />} />
+              <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
+              <Route path="bulk-operations" element={<MerchantBulkOperations />} />
+              <Route path="white-label" element={<MerchantWhiteLabel />} />
+              <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
