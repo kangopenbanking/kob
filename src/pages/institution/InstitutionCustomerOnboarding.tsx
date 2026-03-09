@@ -46,7 +46,7 @@ export default function InstitutionCustomerOnboarding() {
   const [kyc, setKyc] = useState({ verification_type: "identity", document_type: "national_id", document_number: "", risk_level: "low" });
   const [cdd, setCdd] = useState({ occupation: "", source_of_income: "", annual_income: "", pep_status: false, expected_monthly_volume: "", country_of_residence: "" });
   const [sanctions, setSanctions] = useState({ entity_type: "individual", lists_checked: ["OFAC", "EU", "UN"] });
-  const [acct, setAcct] = useState({ account_type: "Personal" as "Personal" | "Business", account_subtype: "Current" as "Current" | "Savings", currency: "XAF" });
+  const [acct, setAcct] = useState({ account_type: "Personal" as "Personal" | "Business", account_subtype: "CurrentAccount" as "CurrentAccount" | "Savings", currency: "XAF" });
   const [biz, setBiz] = useState({ business_name: "", registration_number: "", business_type: "limited_company", industry: "", tax_id: "", vat_number: "" });
 
   useEffect(() => {

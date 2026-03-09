@@ -263,7 +263,7 @@ export default function InstitutionBranches() {
                 <div className="space-y-3">
                   {detailBranch.phone && <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{detailBranch.phone}</span></div>}
                   {detailBranch.email && <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{detailBranch.email}</span></div>}
-                  {(addr.line || addr.city) && <div className="flex items-center gap-3"><Globe className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{[addr.line, addr.city, addr.country].filter(Boolean).join(', ')}</span></div>}
+                  {(addr.street || addr.city) && <div className="flex items-center gap-3"><Globe className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{[addr.street, addr.city, addr.country].filter(Boolean).join(', ')}</span></div>}
                   <div className="flex items-center gap-3"><Users className="h-4 w-4 text-muted-foreground" /><span className="text-sm font-medium">{staffCounts[detailBranch.id] || 0} staff assigned</span></div>
                 </div>
                 <Separator />
