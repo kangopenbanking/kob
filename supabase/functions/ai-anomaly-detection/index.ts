@@ -206,8 +206,7 @@ Provide actionable recommendations for each issue found.`;
     console.error('Anomaly detection error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to run anomaly detection',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to run anomaly detection. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

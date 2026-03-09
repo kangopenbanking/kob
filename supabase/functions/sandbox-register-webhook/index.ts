@@ -85,8 +85,7 @@ Deno.serve(async (req) => {
     console.error('Error registering webhook:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to register webhook',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to register webhook. Please try again.'
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

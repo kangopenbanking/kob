@@ -141,8 +141,7 @@ Deno.serve(async (req) => {
     console.error('Certificate expiry monitor error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'Failed to process certificate expiry monitoring',
-        details: error instanceof Error ? error.message : String(error)
+        error: 'Failed to process certificate expiry monitoring'
       }),
       { 
         status: 500, 
