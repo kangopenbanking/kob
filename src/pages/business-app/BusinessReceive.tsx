@@ -378,6 +378,7 @@ const BusinessReceive: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </div>
     </div>
   );
 };
