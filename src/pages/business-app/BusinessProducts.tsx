@@ -97,18 +97,18 @@ export default function BusinessProducts() {
           </div>
 
           {/* Search & Filters */}
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
               <Input
                 placeholder="Search products..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-10 bg-white"
+                className="pl-11 h-12 bg-white text-foreground rounded-2xl border-0 shadow-sm"
               />
             </div>
-            <Button variant="outline" className="bg-white">
-              <Filter className="h-4 w-4" />
+            <Button variant="outline" className="bg-white text-foreground h-12 w-12 rounded-2xl border-0 shadow-sm p-0 flex items-center justify-center">
+              <Filter className="h-5 w-5" strokeWidth={1.5} />
             </Button>
           </div>
 
