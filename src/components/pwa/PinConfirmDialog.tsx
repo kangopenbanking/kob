@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 interface PinConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onConfirmed: () => void;
+  onConfirmed: (pin: string) => void;
   title?: string;
   description?: string;
 }
@@ -54,10 +54,11 @@ export const PinConfirmDialog: React.FC<PinConfirmDialogProps> = ({
 
       if (data?.verified) {
         sounds.success();
+        const verifiedPin = pin;
         setPin('');
         setRemainingAttempts(null);
         onOpenChange(false);
-        onConfirmed();
+        onConfirmed(verifiedPin);
       } else {
         sounds.error();
         setRemainingAttempts(data?.remaining_attempts ?? null);

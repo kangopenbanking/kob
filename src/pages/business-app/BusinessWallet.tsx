@@ -7,14 +7,32 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { toast } from 'sonner';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 const BusinessWallet: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
-  const { wallets, availableBalance, pendingBalance, settlements, isLoading } = useBusinessData(merchantId);
+  const { wallets, availableBalance, pendingBalance, settlements, isLoading, refetchWallets } = useBusinessData(merchantId);
   const [showBalance, setShowBalance] = useState(true);
-  const [pinDialog, setPinDialog] = useState<{ open: boolean; action: string }>({ 
+  const [showLedger, setShowLedger] = useState(false);
+  const [pinDialog, setPinDialog] = useState<{ open: boolean; action: string; amount?: number }>({ 
     open: false, 
     action: '' 
+  });
+
+  // Fetch wallet ledger
+  const { data: ledgerData, isLoading: ledgerLoading } = useQuery({
+    queryKey: ['wallet-ledger', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return { data: [], total: 0 };
+      const { data, error } = await supabase.functions.invoke('gateway-list-wallet-ledger', {
+        method: 'GET',
+      });
+      if (error) throw error;
+      return data || { data: [], total: 0 };
+    },
+    enabled: !!merchantId && showLedger,
   });
 
   const formatXAF = (amount: number) => {
@@ -25,14 +43,47 @@ const BusinessWallet: React.FC = () => {
     }).format(amount);
   };
 
-  const handlePayout = () => {
-    setPinDialog({ open: true, action: 'payout' });
+  const handlePayout = (amount?: number) => {
+    setPinDialog({ open: true, action: 'payout', amount });
   };
 
-  const handlePinConfirmed = () => {
+  const handlePinConfirmed = async (pin: string) => {
     if (pinDialog.action === 'payout') {
-      // TODO: Implement payout logic
-      toast.success('Payout request submitted');
+      try {
+        const amount = pinDialog.amount || availableBalance;
+        
+        // Get first active settlement account (in production, show selection UI)
+        const { data: settlementAccounts, error: accountsError }: any = await supabase
+          .from('gateway_settlement_accounts' as any)
+          .select('*')
+          .eq('merchant_id', merchantId!)
+          .eq('is_active', true)
+          .limit(1);
+
+        if (accountsError) throw accountsError;
+
+        if (!settlementAccounts || settlementAccounts.length === 0) {
+          toast.error('No settlement account configured');
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke('gateway-request-payout', {
+          body: {
+            merchant_id: merchantId,
+            amount,
+            currency: 'XAF',
+            settlement_account_id: settlementAccounts[0].id,
+            pin,
+          },
+        });
+
+        if (error) throw error;
+        
+        toast.success('Payout request submitted for approval');
+        refetchWallets();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to request payout');
+      }
     }
   };
 
@@ -94,20 +145,64 @@ const BusinessWallet: React.FC = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <Button
-          onClick={handlePayout}
+          onClick={() => handlePayout()}
           disabled={availableBalance < 1000}
           className="h-auto py-4 flex-col gap-2 rounded-2xl"
         >
           <ArrowUpRight className="h-5 w-5" />
           <span className="text-sm font-medium">Request Payout</span>
         </Button>
-        <Button
-          variant="outline"
-          className="h-auto py-4 flex-col gap-2 rounded-2xl"
-        >
-          <History className="h-5 w-5" />
-          <span className="text-sm font-medium">History</span>
-        </Button>
+        <Sheet open={showLedger} onOpenChange={setShowLedger}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex-col gap-2 rounded-2xl"
+            >
+              <History className="h-5 w-5" />
+              <span className="text-sm font-medium">Transaction History</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[80vh]">
+            <SheetHeader>
+              <SheetTitle>Transaction Ledger</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-2 overflow-auto max-h-[calc(80vh-100px)]">
+              {ledgerLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+                </div>
+              ) : ledgerData?.data && ledgerData.data.length > 0 ? (
+                ledgerData.data.map((entry: any) => (
+                  <Card key={entry.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium capitalize">{entry.type}</p>
+                        <p className="text-xs text-muted-foreground">{entry.reference}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(entry.created_at).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-bold ${entry.direction === 'credit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
+                          {entry.direction === 'credit' ? '+' : '-'}{formatXAF(entry.amount)}
+                        </p>
+                        <p className="text-xs capitalize text-muted-foreground">{entry.status}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {settlements && settlements.length > 0 && (
@@ -138,8 +233,8 @@ const BusinessWallet: React.FC = () => {
         open={pinDialog.open}
         onOpenChange={(open) => setPinDialog({ ...pinDialog, open })}
         onConfirmed={handlePinConfirmed}
-        title="Confirm Payout"
-        description="Enter your PIN to request a payout"
+        title="Confirm Payout Request"
+        description={`Enter your PIN to request payout of ${formatXAF(pinDialog.amount || availableBalance)}`}
       />
     </div>
   );

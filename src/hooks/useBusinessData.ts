@@ -24,7 +24,10 @@ export const useBusinessData = (merchantId?: string) => {
     queryFn: async () => {
       if (!merchantId) return [];
       const { data, error } = await supabase.functions.invoke('gateway-get-merchant-balance', {
-        body: { merchant_id: merchantId },
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       if (error) throw error;
       return data?.data || [];
