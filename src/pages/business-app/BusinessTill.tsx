@@ -33,7 +33,7 @@ const BusinessTill: React.FC = () => {
       // Check staff assignment
       const { data: staff } = await supabase.from('merchant_pos_staff').select('merchant_id').eq('user_id', user.id).eq('status', 'active').maybeSingle();
       if (staff) {
-        const { data } = await supabase.from('gateway_merchants').select('id, business_name, currency').eq('id', staff.merchant_id).maybeSingle();
+        const { data } = await supabase.from('gateway_merchants').select('id, business_name').eq('id', staff.merchant_id).maybeSingle();
         return data;
       }
       const { data } = await supabase.from('gateway_merchants').select('id, business_name, currency').eq('user_id', user.id).maybeSingle();
