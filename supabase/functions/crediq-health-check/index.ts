@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.email_service = {
         status: 'unhealthy',
-        details: { error: e instanceof Error ? e.message : String(e) }
+        details: { error: 'Email service check failed' }
       };
     }
 
