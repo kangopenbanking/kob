@@ -11565,7 +11565,7 @@ export type Database = {
       postiq_api_keys: {
         Row: {
           api_key: string
-          api_secret: string
+          api_secret_hash: string
           created_at: string | null
           credits_remaining: number | null
           expires_at: string | null
@@ -11578,7 +11578,7 @@ export type Database = {
         }
         Insert: {
           api_key: string
-          api_secret: string
+          api_secret_hash: string
           created_at?: string | null
           credits_remaining?: number | null
           expires_at?: string | null
@@ -11591,7 +11591,7 @@ export type Database = {
         }
         Update: {
           api_key?: string
-          api_secret?: string
+          api_secret_hash?: string
           created_at?: string | null
           credits_remaining?: number | null
           expires_at?: string | null
@@ -16527,6 +16527,10 @@ export type Database = {
       }
       verify_api_credential: {
         Args: { p_api_key: string; p_candidate_secret: string }
+        Returns: boolean
+      }
+      verify_postiq_credential: {
+        Args: { _api_key: string; _api_secret: string; _institution_id: string }
         Returns: boolean
       }
       verify_sandbox_credentials: {
