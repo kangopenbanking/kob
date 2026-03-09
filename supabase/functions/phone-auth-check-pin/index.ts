@@ -13,12 +13,75 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { phone_number } = await req.json();
+    const { phone_number, captcha_session_id, captcha_answer } = await req.json();
 
     if (!phone_number) {
       return new Response(
         JSON.stringify({ error: 'phone_number is required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Validate phone number format
+    const phoneRegex = /^\+?[1-9]\d{6,14}$/;
+    if (!phoneRegex.test(phone_number.replace(/\s/g, ''))) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid phone number format' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Require CAPTCHA verification
+    if (!captcha_session_id || captcha_answer === undefined) {
+      return new Response(
+        JSON.stringify({ error: 'CAPTCHA verification required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Verify CAPTCHA
+    const { data: captcha, error: captchaError } = await supabase
+      .from('captcha_challenges')
+      .select('*')
+      .eq('session_id', captcha_session_id)
+      .eq('status', 'pending')
+      .single();
+
+    if (captchaError || !captcha || captcha.expires_at < new Date().toISOString()) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired CAPTCHA' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    const isCorrect = Number(captcha_answer) === captcha.challenge_answer;
+    await supabase.from('captcha_challenges').update({
+      status: isCorrect ? 'verified' : 'failed',
+      verified_at: isCorrect ? new Date().toISOString() : null,
+      attempts: (captcha.attempts || 0) + 1,
+    }).eq('id', captcha.id);
+
+    if (!isCorrect) {
+      return new Response(
+        JSON.stringify({ error: 'Incorrect CAPTCHA answer' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Rate limit: 5 checks per minute per IP (via DB)
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitKey = `pin-check:${clientIp}`;
+    const { data: allowed } = await supabase.rpc('check_rate_limit', {
+      _client_id: rateLimitKey,
+      _endpoint: 'phone-auth-check-pin',
+      _limit: 5,
+      _window_minutes: 1,
+    });
+
+    if (allowed === false) {
+      return new Response(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
       );
     }
 
@@ -32,22 +95,21 @@ serve(async (req) => {
     const hasPIN = !error && profile && profile.pin_code_hash ? true : false;
     const userExists = !error && profile ? true : false;
 
-    console.log(`PIN check for ${phone_number}: exists=${userExists}, hasPIN=${hasPIN}`);
-
+    // Normalize response: always return check_complete with consistent timing
+    // to prevent enumeration via response differences
     return new Response(
       JSON.stringify({
-        user_exists: userExists,
-        has_pin: hasPIN,
+        check_complete: true,
+        has_pin: userExists ? hasPIN : false,
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
     );
 
   } catch (error) {
-    console.error('PIN check error:', error);
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] PIN check error:`, error);
     return new Response(
-      JSON.stringify({ 
-        error: 'An internal error occurred. Please try again.'
-      }),
+      JSON.stringify({ error: 'An internal error occurred. Please try again.' }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
     );
   }
