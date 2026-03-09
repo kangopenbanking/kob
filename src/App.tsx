@@ -428,6 +428,8 @@ import BusinessReceive from "./pages/business-app/BusinessReceive";
 import BusinessOrders from "./pages/business-app/BusinessOrders";
 import BusinessMore from "./pages/business-app/BusinessMore";
 import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
+import MerchantPOSTill from "./pages/merchant/MerchantPOSTill";
+import BusinessTill from "./pages/business-app/BusinessTill";
 
 const queryClient = new QueryClient({
   defaultOptions: {
