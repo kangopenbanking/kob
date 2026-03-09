@@ -535,6 +535,12 @@ function App() {
               <Route path="plans" element={<MerchantPlans />} />
               <Route path="locations" element={<MerchantLocations />} />
               <Route path="woo-sync" element={<MerchantWooSync />} />
+              {/* Phase 4: Enterprise Features */}
+              <Route path="branding" element={<MerchantBranding />} />
+              <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
+              <Route path="bulk-operations" element={<MerchantBulkOperations />} />
+              <Route path="white-label" element={<MerchantWhiteLabel />} />
+              <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
