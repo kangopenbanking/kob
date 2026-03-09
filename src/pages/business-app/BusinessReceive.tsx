@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Copy, Share2, Link2, Plus, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { useParams } from 'react-router-dom';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { supabase } from '@/integrations/supabase/client';
+import { sounds } from '@/lib/sounds';
 
 type Tab = 'qr' | 'links';
 
@@ -35,6 +36,28 @@ const BusinessReceive: React.FC = () => {
 
   const formatXAF = (amount: number) =>
     new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
+
+  // Realtime payment notification for this merchant
+  useEffect(() => {
+    if (!merchantId) return;
+    const channel = supabase
+      .channel(`receive-payments-${merchantId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'pos_order_payments',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, (payload: any) => {
+        if (payload.new?.status === 'succeeded') {
+          sounds.success();
+          toast.success(`Payment received: ${formatXAF(payload.new.amount)}`, {
+            description: `Via ${payload.new.method || 'wallet'}`,
+          });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [merchantId]);
 
   /* ─── QR Generation ─── */
   const handleGenerateQR = async () => {

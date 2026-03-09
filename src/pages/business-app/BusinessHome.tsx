@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { StatCard } from '@/components/ui/stat-card';
 import { Wallet, Clock, ShoppingBag, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { sounds } from '@/lib/sounds';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BusinessHome: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
@@ -15,7 +19,32 @@ const BusinessHome: React.FC = () => {
     todayOrders,
     isLoading 
   } = useBusinessData(merchantId);
+  const queryClient = useQueryClient();
 
+  // Realtime payment notifications
+  useEffect(() => {
+    if (!merchantId) return;
+    const channel = supabase
+      .channel(`biz-payments-${merchantId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'pos_order_payments',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, (payload: any) => {
+        if (payload.new?.status === 'succeeded') {
+          const amount = payload.new.amount;
+          sounds.success();
+          toast.success(`Payment received: ${new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount)}`, {
+            description: `Via ${payload.new.method || 'wallet'}`,
+          });
+          // Refresh dashboard data
+          queryClient.invalidateQueries({ queryKey: ['business-data', merchantId] });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [merchantId, queryClient]);
   if (isLoading) {
     return (
       <div className="p-4 space-y-6">

@@ -43,9 +43,19 @@ export default function PaymentCheckout() {
   const [name, setName] = useState("");
   const [channel, setChannel] = useState("mobile_money");
 
+  // Wallet payment state (must be before early returns)
+  const [walletSession, setWalletSession] = useState<any>(null);
+  const [payingWithWallet, setPayingWithWallet] = useState(false);
+
   useEffect(() => {
     if (slug) fetchLink();
   }, [slug]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setWalletSession(session);
+    });
+  }, []);
 
   const fetchLink = async () => {
     try {
@@ -256,6 +266,34 @@ export default function PaymentCheckout() {
 
   const displayAmount = getDisplayAmount();
 
+  const handleWalletPay = async () => {
+    if (!link || !walletSession) return;
+    setPayingWithWallet(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('pos-qr-payment?action=pay', {
+        body: { merchant_id: link.merchant_id, amount: link.amount },
+        headers: { 'Idempotency-Key': `paylink_${link.id}_${Date.now()}` },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        if (data.error === 'insufficient_balance') {
+          toast({ title: "Insufficient Balance", description: `You need ${new Intl.NumberFormat('fr-FR').format(data.required)} XAF but have ${new Intl.NumberFormat('fr-FR').format(data.available)} XAF`, variant: "destructive" });
+        } else {
+          toast({ title: "Payment Failed", description: data.message || data.error, variant: "destructive" });
+        }
+        return;
+      }
+      setResult('success');
+      if (link.redirect_url) {
+        setTimeout(() => window.location.href = link.redirect_url!, 2000);
+      }
+    } catch (err: any) {
+      toast({ title: "Payment Failed", description: err.message || 'Something went wrong', variant: "destructive" });
+    } finally {
+      setPayingWithWallet(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
@@ -275,6 +313,30 @@ export default function PaymentCheckout() {
           )}
         </CardHeader>
         <CardContent>
+          {/* Wallet payment option for authenticated users */}
+          {walletSession && (
+            <div className="mb-6">
+              <Button
+                className="w-full h-12 rounded-2xl text-sm font-bold"
+                onClick={handleWalletPay}
+                disabled={payingWithWallet}
+              >
+                {payingWithWallet ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Paying with Wallet...</>
+                ) : (
+                  `Pay with Kang Wallet — ${new Intl.NumberFormat('fr-FR').format(displayAmount)} ${link.currency}`
+                )}
+              </Button>
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-background px-2 text-muted-foreground">or pay with</span>
+                </div>
+              </div>
+            </div>
+          )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <Label htmlFor="name">Full Name</Label>

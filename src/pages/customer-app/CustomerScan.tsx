@@ -9,6 +9,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
 import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
+import { QRPaymentSuccess } from '@/components/customer-app/QRPaymentSuccess';
 
 type Tab = 'scan' | 'receive';
 
@@ -25,6 +26,7 @@ const CustomerScan: React.FC = () => {
   const [scanResult, setScanResult] = useState<{ account: string; amount?: number } | null>(null);
   const [payAmount, setPayAmount] = useState('');
   const [merchantQR, setMerchantQR] = useState<any>(null);
+  const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
 
   // Camera state
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -71,13 +73,13 @@ const CustomerScan: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'scan' && !showManualEntry && !scanResult) {
+    if (activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess) {
       startCamera();
     } else {
       stopCamera();
     }
     return () => stopCamera();
-  }, [activeTab, showManualEntry, scanResult, startCamera, stopCamera]);
+  }, [activeTab, showManualEntry, scanResult, paymentSuccess, startCamera, stopCamera]);
 
   /* ─── QR Scan Detection via BarcodeDetector API ─── */
   useEffect(() => {
@@ -113,8 +115,13 @@ const CustomerScan: React.FC = () => {
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
     stopCamera();
+    if (data.type === 'kob_store' && data.merchant_id) {
+      // Deep-link to merchant storefront
+      toast.success(`Opening store...`);
+      navigate(`/app/stores/${data.merchant_id}`);
+      return;
+    }
     if (data.type === 'kob_pos_pay' && data.merchant_id) {
-      // POS merchant QR — navigate to payment confirmation
       setScanResult({ account: data.merchant_id, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
@@ -157,8 +164,16 @@ const CustomerScan: React.FC = () => {
           toast.error(data.message || data.error);
           return;
         }
-        toast.success(`Paid ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name}`);
-        resetScan();
+        // Show success receipt screen
+        setPaymentSuccess({
+          merchantName: merchantQR.merchant_name || 'Merchant',
+          amount: finalAmount || data.amount,
+          currency: data.currency || 'XAF',
+          orderNumber: data.order_number,
+          orderId: data.order_id,
+          timestamp: new Date().toISOString(),
+        });
+        setScanResult(null);
       } catch (err: any) {
         toast.error(err.message || 'Payment failed');
       } finally {
@@ -191,6 +206,8 @@ const CustomerScan: React.FC = () => {
     setScanResult(null);
     setManualCode('');
     setPayAmount('');
+    setPaymentSuccess(null);
+    setMerchantQR(null);
   };
 
   const qrData = JSON.stringify({
@@ -231,7 +248,17 @@ const CustomerScan: React.FC = () => {
         {/* ─── SCAN TAB ─── */}
         {activeTab === 'scan' && (
           <motion.div key="scan" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col">
-            {scanResult ? (
+            {paymentSuccess ? (
+              <QRPaymentSuccess
+                merchantName={paymentSuccess.merchantName}
+                amount={paymentSuccess.amount}
+                currency={paymentSuccess.currency}
+                orderNumber={paymentSuccess.orderNumber}
+                orderId={paymentSuccess.orderId}
+                timestamp={paymentSuccess.timestamp}
+                onDone={resetScan}
+              />
+            ) : scanResult ? (
               /* ─── Scan Result ─── */
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-1 flex-col items-center justify-center gap-5 p-8">
                 <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[hsl(150,40%,90%)]">
