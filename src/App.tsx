@@ -915,6 +915,7 @@ function App() {
               <Route path="orders" element={<BusinessOrders />} />
               <Route path="refunds" element={<BusinessRefunds />} />
               <Route path="fees" element={<MerchantFees />} />
+              <Route path="till" element={<BusinessTill />} />
               <Route path="more" element={<BusinessMore />} />
             </Route>
 
