@@ -78,21 +78,21 @@ export default function BusinessProducts() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 via-background to-accent/5 pb-24">
+    <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="bg-gradient-to-r from-primary to-primary/80 text-primary-foreground">
+      <div className="bg-primary text-primary-foreground rounded-b-3xl">
         <div className="p-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold">Products</h1>
-              <p className="text-primary-foreground/80 text-sm">Manage your catalog</p>
+              <h1 className="text-2xl font-bold tracking-tight">Products</h1>
+              <p className="text-primary-foreground/80 text-sm mt-1">Manage your catalog</p>
             </div>
             <Button
               onClick={() => navigate('/business/products/new')}
-              className="bg-white text-primary hover:bg-white/90"
+              className="bg-white text-primary hover:bg-white/90 rounded-2xl h-11 px-5 shadow-sm"
             >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Product
+              <Plus className="h-5 w-5 mr-2" strokeWidth={2} />
+              Add
             </Button>
           </div>
 
