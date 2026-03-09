@@ -42,7 +42,7 @@ const BusinessAppManagement: React.FC = () => {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('gateway_merchants')
-        .select('id, business_name, user_id, created_at, is_active')
+        .select('id, business_name, user_id, created_at, status')
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
