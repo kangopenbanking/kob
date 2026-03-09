@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Insert the new session record
+    // 4. Insert the new session record - use user_id,app_context as conflict target
     const { error: insertError } = await adminClient
       .from('user_active_sessions')
       .upsert({
@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
         device_info: device_info || null,
         last_active_at: new Date().toISOString(),
         app_context: ctx,
-      }, { onConflict: 'session_id' })
+      }, { onConflict: 'user_id,app_context' })
 
     if (insertError) {
       console.error('Failed to insert session:', insertError)
