@@ -6,24 +6,13 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { 
-  User, 
-  Mail, 
-  Phone, 
-  Calendar, 
-  Shield, 
-  Edit, 
-  Save, 
-  X,
-  CheckCircle,
-  XCircle,
-  Clock,
-  Building2,
-  MapPin
+  User, Mail, Phone, Calendar, Shield, Edit, Save, X,
+  CheckCircle, XCircle, Clock, Building2, MapPin, KeyRound
 } from 'lucide-react';
 
 interface UserProfile {
@@ -35,6 +24,16 @@ interface UserProfile {
   phone_verified_at?: string;
   country_code?: string;
   preferred_otp_method?: string;
+  address?: string;
+  city?: string;
+  date_of_birth?: string;
+  gender?: string;
+  occupation?: string;
+  account_type?: string;
+  linked_account_name?: string;
+  linked_account_number?: string;
+  linked_account_type?: string;
+  pin_code_set_at?: string;
   created_at: string;
   updated_at: string;
   roles: string[];
@@ -53,17 +52,29 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
   const [staffAssignments, setStaffAssignments] = useState<any[]>([]);
+  const [pinCode, setPinCode] = useState('');
+  const [settingPin, setSettingPin] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone_number: '',
     country_code: '',
-    preferred_otp_method: ''
+    preferred_otp_method: '',
+    address: '',
+    city: '',
+    date_of_birth: '',
+    gender: '',
+    occupation: '',
+    account_type: '',
+    linked_account_name: '',
+    linked_account_number: '',
+    linked_account_type: '',
   });
 
   useEffect(() => {
     if (userId && open) {
       loadUserDetails();
+      setPinCode('');
     }
   }, [userId, open]);
 
@@ -73,7 +84,6 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
     try {
       setLoading(true);
       
-      // Get profile data
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -82,7 +92,6 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
 
       if (profileError) throw profileError;
 
-      // Get roles
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('role')
@@ -90,7 +99,7 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
 
       if (rolesError) throw rolesError;
 
-      const userData = {
+      const userData: UserProfile = {
         ...profile,
         roles: userRoles?.map(r => r.role) || [],
         status: 'active'
@@ -102,17 +111,21 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
         email: profile.email || '',
         phone_number: profile.phone_number || '',
         country_code: profile.country_code || '',
-        preferred_otp_method: profile.preferred_otp_method || ''
+        preferred_otp_method: profile.preferred_otp_method || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        date_of_birth: profile.date_of_birth || '',
+        gender: profile.gender || '',
+        occupation: profile.occupation || '',
+        account_type: profile.account_type || '',
+        linked_account_name: profile.linked_account_name || '',
+        linked_account_number: profile.linked_account_number || '',
+        linked_account_type: profile.linked_account_type || '',
       });
 
-      // Load staff assignments
       const { data: assignments } = await supabase
         .from('staff_assignments')
-        .select(`
-          *,
-          institutions(institution_name),
-          branches(branch_name)
-        `)
+        .select(`*, institutions(institution_name), branches(branch_name)`)
         .eq('user_id', userId)
         .eq('is_active', true);
       
@@ -138,7 +151,16 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
           email: formData.email,
           phone_number: formData.phone_number,
           country_code: formData.country_code,
-          preferred_otp_method: formData.preferred_otp_method,
+          preferred_otp_method: formData.preferred_otp_method || null,
+          address: formData.address || null,
+          city: formData.city || null,
+          date_of_birth: formData.date_of_birth || null,
+          gender: formData.gender || null,
+          occupation: formData.occupation || null,
+          account_type: formData.account_type || null,
+          linked_account_name: formData.linked_account_name || null,
+          linked_account_number: formData.linked_account_number || null,
+          linked_account_type: formData.linked_account_type || null,
           updated_at: new Date().toISOString()
         })
         .eq('id', userId);
@@ -157,6 +179,33 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
     }
   };
 
+  const handleSetPin = async () => {
+    if (!userId) return;
+    if (!/^\d{6}$/.test(pinCode)) {
+      toast.error('PIN must be exactly 6 digits');
+      return;
+    }
+
+    try {
+      setSettingPin(true);
+      const { data, error } = await supabase.functions.invoke('admin-set-pin', {
+        body: { user_id: userId, pin_code: pinCode },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('PIN code assigned successfully');
+      setPinCode('');
+      loadUserDetails();
+    } catch (error: any) {
+      logger.error('Error setting PIN:', error);
+      toast.error(error.message || 'Failed to set PIN code');
+    } finally {
+      setSettingPin(false);
+    }
+  };
+
   const getRoleBadgeVariant = (role: string) => {
     switch (role) {
       case 'admin': return 'destructive';
@@ -165,6 +214,26 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
       default: return 'outline';
     }
   };
+
+  const renderField = (label: string, id: string, value: string, icon?: React.ReactNode, type?: string, placeholder?: string) => (
+    <div className="space-y-2">
+      <Label htmlFor={id}>{label}</Label>
+      {editing ? (
+        <Input
+          id={id}
+          type={type || 'text'}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => setFormData({ ...formData, [id]: e.target.value })}
+        />
+      ) : (
+        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+          {icon}
+          {value || 'Not provided'}
+        </div>
+      )}
+    </div>
+  );
 
   if (!user) {
     return (
@@ -222,12 +291,8 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
                         Save
                       </Button>
                       <Button 
-                        onClick={() => {
-                          setEditing(false);
-                          loadUserDetails();
-                        }} 
-                        size="sm" 
-                        variant="outline"
+                        onClick={() => { setEditing(false); loadUserDetails(); }} 
+                        size="sm" variant="outline"
                       >
                         <X className="h-4 w-4 mr-2" />
                         Cancel
@@ -252,39 +317,9 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
                     </div>
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="full_name">Full Name</Label>
-                    {editing ? (
-                      <Input
-                        id="full_name"
-                        value={formData.full_name}
-                        onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                        <User className="h-4 w-4 text-muted-foreground" />
-                        {user.full_name || 'Not provided'}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address</Label>
-                    {editing ? (
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      />
-                    ) : (
-                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        {user.email}
-                      </div>
-                    )}
-                  </div>
-
+                  {renderField('Full Name', 'full_name', formData.full_name, <User className="h-4 w-4 text-muted-foreground" />)}
+                  {renderField('Email Address', 'email', formData.email, <Mail className="h-4 w-4 text-muted-foreground" />, 'email')}
+                  
                   <div className="space-y-2">
                     <Label htmlFor="phone_number">Phone Number</Label>
                     {editing ? (
@@ -304,22 +339,102 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
                     )}
                   </div>
 
+                  {renderField('Country Code', 'country_code', formData.country_code, undefined, 'text', 'CM')}
+                  {renderField('Address', 'address', formData.address, <MapPin className="h-4 w-4 text-muted-foreground" />)}
+                  {renderField('City', 'city', formData.city)}
+                  {renderField('Date of Birth', 'date_of_birth', formData.date_of_birth, <Calendar className="h-4 w-4 text-muted-foreground" />, 'date')}
+                  
                   <div className="space-y-2">
-                    <Label htmlFor="country_code">Country Code</Label>
+                    <Label htmlFor="gender">Gender</Label>
                     {editing ? (
-                      <Input
-                        id="country_code"
-                        value={formData.country_code}
-                        onChange={(e) => setFormData({ ...formData, country_code: e.target.value })}
-                        placeholder="CM"
-                      />
+                      <Select value={formData.gender} onValueChange={(v) => setFormData({ ...formData, gender: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select gender" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="male">Male</SelectItem>
+                          <SelectItem value="female">Female</SelectItem>
+                          <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
                     ) : (
                       <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
-                        {user.country_code || 'Not provided'}
+                        {formData.gender ? formData.gender.charAt(0).toUpperCase() + formData.gender.slice(1) : 'Not provided'}
                       </div>
                     )}
                   </div>
 
+                  {renderField('Occupation', 'occupation', formData.occupation)}
+
+                  <div className="space-y-2">
+                    <Label htmlFor="account_type">Account Type</Label>
+                    {editing ? (
+                      <Select value={formData.account_type} onValueChange={(v) => setFormData({ ...formData, account_type: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select account type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="personal">Personal</SelectItem>
+                          <SelectItem value="business">Business</SelectItem>
+                          <SelectItem value="institution">Institution</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        {formData.account_type ? formData.account_type.charAt(0).toUpperCase() + formData.account_type.slice(1) : 'Not provided'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="preferred_otp_method">Preferred OTP Method</Label>
+                    {editing ? (
+                      <Select value={formData.preferred_otp_method} onValueChange={(v) => setFormData({ ...formData, preferred_otp_method: v })}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select OTP method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="sms">SMS</SelectItem>
+                          <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    ) : (
+                      <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                        {formData.preferred_otp_method || 'Not set'}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Linked Account Section */}
+                <div className="pt-4 border-t">
+                  <h4 className="text-sm font-semibold mb-3">Linked Account</h4>
+                  <div className="grid gap-4 md:grid-cols-3">
+                    {renderField('Account Name', 'linked_account_name', formData.linked_account_name)}
+                    {renderField('Account Number', 'linked_account_number', formData.linked_account_number)}
+                    
+                    <div className="space-y-2">
+                      <Label htmlFor="linked_account_type">Account Type</Label>
+                      {editing ? (
+                        <Select value={formData.linked_account_type} onValueChange={(v) => setFormData({ ...formData, linked_account_type: v })}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="momo">Mobile Money</SelectItem>
+                            <SelectItem value="bank">Bank Account</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
+                          {formData.linked_account_type || 'Not provided'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2 pt-4 border-t">
                   <div className="space-y-2">
                     <Label>Created At</Label>
                     <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
@@ -327,7 +442,6 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
                       {new Date(user.created_at).toLocaleString()}
                     </div>
                   </div>
-
                   <div className="space-y-2">
                     <Label>Last Updated</Label>
                     <div className="flex items-center gap-2 p-2 bg-muted rounded-md">
@@ -464,6 +578,20 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
 
                   <div className="flex items-center justify-between p-4 border rounded-lg">
                     <div>
+                      <div className="font-medium">PIN Code</div>
+                      <div className="text-sm text-muted-foreground">
+                        {user.pin_code_set_at ? `Set on ${new Date(user.pin_code_set_at).toLocaleDateString()}` : 'Not set'}
+                      </div>
+                    </div>
+                    {user.pin_code_set_at ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <XCircle className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-between p-4 border rounded-lg">
+                    <div>
                       <div className="font-medium">Preferred OTP Method</div>
                       <div className="text-sm text-muted-foreground">
                         {user.preferred_otp_method || 'Not set'}
@@ -471,6 +599,48 @@ export function UserDetailsDialog({ open, onOpenChange, userId, onUpdate }: User
                     </div>
                   </div>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Admin PIN Assignment */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <KeyRound className="h-5 w-5" />
+                  Assign PIN Code
+                </CardTitle>
+                <CardDescription>Set or reset a 6-digit PIN code for this user</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-end gap-3">
+                  <div className="flex-1 space-y-2">
+                    <Label htmlFor="pin_code">6-Digit PIN</Label>
+                    <Input
+                      id="pin_code"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={6}
+                      placeholder="Enter 6-digit PIN"
+                      value={pinCode}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                        setPinCode(val);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    onClick={handleSetPin}
+                    disabled={pinCode.length !== 6 || settingPin}
+                  >
+                    <KeyRound className="h-4 w-4 mr-2" />
+                    {settingPin ? 'Setting...' : 'Set PIN'}
+                  </Button>
+                </div>
+                {user.pin_code_set_at && (
+                  <p className="text-sm text-muted-foreground mt-2">
+                    ⚠️ This user already has a PIN set. Setting a new one will replace it.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
