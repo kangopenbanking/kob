@@ -152,7 +152,7 @@ export default function InstitutionBranches() {
                   <div className="space-y-2"><Label>Type</Label>
                     <Select value={form.branch_type} onValueChange={v => setForm(f => ({ ...f, branch_type: v }))}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent><SelectItem value="main">Main</SelectItem><SelectItem value="branch">Branch</SelectItem><SelectItem value="agency">Agency</SelectItem><SelectItem value="atm">ATM</SelectItem></SelectContent>
+                      <SelectContent><SelectItem value="main">Main</SelectItem><SelectItem value="regional">Regional</SelectItem><SelectItem value="local">Local</SelectItem></SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+237..." /></div>
@@ -290,7 +290,7 @@ export default function InstitutionBranches() {
               <div className="space-y-2"><Label>Type</Label>
                 <Select value={form.branch_type} onValueChange={v => setForm(f => ({ ...f, branch_type: v }))}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent><SelectItem value="main">Main</SelectItem><SelectItem value="branch">Branch</SelectItem><SelectItem value="agency">Agency</SelectItem><SelectItem value="atm">ATM</SelectItem></SelectContent>
+                  <SelectContent><SelectItem value="main">Main</SelectItem><SelectItem value="regional">Regional</SelectItem><SelectItem value="local">Local</SelectItem></SelectContent>
                 </Select>
               </div>
               <div className="space-y-2"><Label>Phone</Label><Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} placeholder="+237..." /></div>
