@@ -39,8 +39,7 @@ export default function InstitutionRegulatory() {
       }
       if (!instId) { navigate('/register'); return; }
       setInstitutionId(instId);
-      const query = supabase.from("regulatory_reports").select("*");
-      const { data } = await query.eq("institution_id", instId).order("created_at", { ascending: false }).limit(100);
+      const { data } = await supabase.from("regulatory_reports").select("*").eq("created_by", user.id).order("created_at", { ascending: false }).limit(100);
       setReports(data || []);
     } catch (error) { console.error("Error:", error); }
     finally { setLoading(false); }
