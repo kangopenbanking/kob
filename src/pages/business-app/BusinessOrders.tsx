@@ -125,33 +125,36 @@ const BusinessOrders: React.FC = () => {
   const nextStatuses = selectedOrder ? (STATUS_TRANSITIONS[selectedOrder.status] || []) : [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background p-4">
-      <header className="mb-4 flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-          <p className="text-sm text-muted-foreground">
-            {orders?.length ?? 0} order{(orders?.length ?? 0) !== 1 ? 's' : ''}
-          </p>
+    <div className="flex min-h-screen flex-col bg-background pb-20">
+      {/* Header */}
+      <header className="bg-primary px-4 pt-6 pb-8 text-primary-foreground rounded-b-[2rem]">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
+            <p className="text-sm text-primary-foreground/80 font-medium mt-1">
+              {orders?.length ?? 0} order{(orders?.length ?? 0) !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <Button size="icon" variant="ghost" className="rounded-2xl text-primary-foreground hover:bg-white/10 h-11 w-11" onClick={() => refetch()}>
+            <RefreshCw className="h-5 w-5" strokeWidth={2} />
+          </Button>
         </div>
-        <Button size="icon" variant="ghost" className="rounded-xl" onClick={() => refetch()}>
-          <RefreshCw className="h-4 w-4" strokeWidth={1.5} />
-        </Button>
-      </header>
 
-      {/* Filters */}
-      <div className="mb-5 flex gap-2 overflow-x-auto pb-1">
-        {filters.map(({ key, label }) => (
-          <button
-            key={key}
-            onClick={() => setFilter(key)}
-            className={`whitespace-nowrap rounded-xl px-4 py-2 text-xs font-bold transition-all ${
-              filter === key ? 'bg-primary text-primary-foreground shadow-sm' : 'bg-muted text-muted-foreground'
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+        {/* Filters */}
+        <div className="mt-5 flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+          {filters.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => setFilter(key)}
+              className={`whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
+                filter === key ? 'bg-white text-primary shadow-sm' : 'bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </header>
 
       {/* Orders List */}
       {isLoading ? (
