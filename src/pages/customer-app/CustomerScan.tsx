@@ -164,8 +164,16 @@ const CustomerScan: React.FC = () => {
           toast.error(data.message || data.error);
           return;
         }
-        toast.success(`Paid ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name}`);
-        resetScan();
+        // Show success receipt screen
+        setPaymentSuccess({
+          merchantName: merchantQR.merchant_name || 'Merchant',
+          amount: finalAmount || data.amount,
+          currency: data.currency || 'XAF',
+          orderNumber: data.order_number,
+          orderId: data.order_id,
+          timestamp: new Date().toISOString(),
+        });
+        setScanResult(null);
       } catch (err: any) {
         toast.error(err.message || 'Payment failed');
       } finally {
