@@ -46,7 +46,8 @@ export default function Auth() {
   const [captchaSessionId, setCaptchaSessionId] = useState('');
 
   // Form state
-  const [countryCode, setCountryCode] = useState('+237');
+  const [selectedCountry, setSelectedCountry] = useState('Cameroon');
+  const countryCode = COUNTRY_CODES.find(c => c.country === selectedCountry)?.code || '+237';
   const [phoneNumber, setPhoneNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
