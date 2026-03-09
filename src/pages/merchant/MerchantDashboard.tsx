@@ -11,7 +11,7 @@ import {
   Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2,
   Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet,
   Link2, FileText, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
-  Clock, Zap, Users, Globe, Eye, EyeOff,
+  Clock, Eye, EyeOff, ChevronRight,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Area, AreaChart, ResponsiveContainer, CartesianGrid, XAxis, YAxis, Tooltip } from "recharts";
@@ -72,7 +72,6 @@ export default function MerchantDashboard() {
         setWallets(walletsRes.data || []);
         setDisputeCount(disputesRes.count || 0);
 
-        // Compute stats from count-based queries (no 1000-row limit)
         const successfulData = successCountRes.data || [];
         const totalRevenue = successfulData.reduce((s, c) => s + Number(c.amount), 0);
         const totalTx = totalCountRes.count || 0;
@@ -88,7 +87,6 @@ export default function MerchantDashboard() {
           pendingCount,
         });
 
-        // Build chart data from recent successful charges (limited to last 14 days for chart)
         const fourteenDaysAgo = new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString();
         const { data: recentSuccessful } = await supabase
           .from("gateway_charges")
@@ -130,17 +128,17 @@ export default function MerchantDashboard() {
 
   if (!merchant) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-lg mx-auto text-center">
-        <div className="h-16 w-16 rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Rocket className="h-8 w-8 text-primary" />
+      <div className="flex flex-col items-center justify-center py-16 space-y-6 max-w-lg mx-auto text-center px-4">
+        <div className="h-20 w-20 rounded-3xl bg-primary/10 flex items-center justify-center">
+          <Rocket className="h-10 w-10 text-primary" strokeWidth={1.5} />
         </div>
         <div>
-          <h2 className="text-2xl font-bold">Welcome to the Merchant Portal</h2>
-          <p className="text-muted-foreground mt-2">
+          <h2 className="text-2xl font-bold tracking-tight">Welcome to the Merchant Portal</h2>
+          <p className="text-muted-foreground mt-2 text-sm">
             Get started in minutes and begin accepting payments across Africa.
           </p>
         </div>
-        <Button size="lg" onClick={() => navigate("/merchant-register")} className="gap-2">
+        <Button size="lg" onClick={() => navigate("/merchant-register")} className="gap-2 rounded-2xl h-12 px-6 font-bold">
           Create Your Merchant Account <ArrowRight className="h-4 w-4" />
         </Button>
       </div>
@@ -153,15 +151,15 @@ export default function MerchantDashboard() {
   const currency = (merchant.metadata as any)?.default_currency || "XAF";
 
   const statusColor = (s: string) =>
-    s === "successful" ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+    s === "successful" ? "bg-[hsl(150,40%,92%)] text-[hsl(150,40%,28%)] border-[hsl(150,40%,80%)]"
     : s === "failed" ? "bg-destructive/10 text-destructive border-destructive/20"
-    : "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20";
+    : "bg-[hsl(40,80%,92%)] text-[hsl(40,60%,28%)] border-[hsl(40,80%,75%)]";
 
   const quickActions = [
-    { label: "Payment Link", icon: Link2, path: "/merchant/payment-links", color: "bg-sky-500/10 text-sky-600 dark:text-sky-400" },
-    { label: "Send Invoice", icon: FileText, path: "/merchant/invoices", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
-    { label: "API Keys", icon: Key, path: "/merchant/api-keys", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
-    { label: "New Charge", icon: CreditCard, path: "/merchant/charges", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+    { label: "Payment Link", icon: Link2, path: "/merchant/payment-links", color: "bg-[hsl(200,80%,94%)] text-[hsl(200,80%,35%)]" },
+    { label: "Send Invoice", icon: FileText, path: "/merchant/invoices", color: "bg-[hsl(260,60%,94%)] text-[hsl(260,60%,40%)]" },
+    { label: "API Keys", icon: Key, path: "/merchant/api-keys", color: "bg-[hsl(40,80%,92%)] text-[hsl(40,70%,35%)]" },
+    { label: "New Charge", icon: CreditCard, path: "/merchant/charges", color: "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]" },
   ];
 
   return (
@@ -171,44 +169,65 @@ export default function MerchantDashboard() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        className="bg-primary text-primary-foreground rounded-3xl p-6 sm:p-8"
       >
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">{merchant.business_name}</h1>
-          <p className="text-muted-foreground text-sm mt-0.5">
-            Overview of your payment operations · <span className="text-foreground/70">{format(new Date(), "EEEE, MMMM d")}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          {disputeCount > 0 && (
-            <Button variant="outline" size="sm" onClick={() => navigate("/merchant/disputes")} className="gap-2 border-destructive/30 text-destructive hover:bg-destructive/5">
-              <AlertCircle className="h-4 w-4" />
-              {disputeCount} Open Dispute{disputeCount > 1 ? "s" : ""}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{merchant.business_name}</h1>
+            <p className="text-primary-foreground/70 text-sm mt-1">
+              {format(new Date(), "EEEE, MMMM d")}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            {disputeCount > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/merchant/disputes")}
+                className="gap-2 bg-white/10 border-white/20 text-primary-foreground hover:bg-white/20 rounded-xl"
+              >
+                <AlertCircle className="h-4 w-4" />
+                {disputeCount} Dispute{disputeCount > 1 ? "s" : ""}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              onClick={() => navigate("/merchant/analytics")}
+              className="gap-2 bg-white/15 text-primary-foreground hover:bg-white/25 border-0 rounded-xl"
+            >
+              <BarChart3 className="h-4 w-4" strokeWidth={2} /> Analytics
             </Button>
-          )}
-          <Button size="sm" onClick={() => navigate("/merchant/analytics")} className="gap-2">
-            <BarChart3 className="h-4 w-4" /> Analytics
-          </Button>
+          </div>
         </div>
+
+        {/* Inline Revenue Highlight */}
+        <div className="mt-6 flex items-end gap-2">
+          <span className="text-4xl sm:text-5xl font-bold tracking-tighter">
+            {stats.totalRevenue.toLocaleString()}
+          </span>
+          <span className="text-primary-foreground/60 text-lg font-medium mb-1">{currency}</span>
+        </div>
+        <p className="text-primary-foreground/60 text-xs mt-1 uppercase tracking-widest font-bold">Total Revenue</p>
       </motion.div>
 
       {/* KYB Banner */}
       {merchant.kyb_status !== "verified" && merchant.status !== "active" && (
         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}>
-          <Card className="border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/10 overflow-hidden">
+          <Card className="border-[hsl(40,80%,75%)] bg-[hsl(40,80%,96%)] dark:bg-[hsl(40,30%,10%)] overflow-hidden">
             <CardContent className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
-                  <ShieldCheck className="h-5 w-5 text-amber-600 dark:text-amber-400" />
+                <div className="h-11 w-11 rounded-2xl bg-[hsl(40,80%,88%)] flex items-center justify-center shrink-0">
+                  <ShieldCheck className="h-5 w-5 text-[hsl(40,70%,35%)]" strokeWidth={2} />
                 </div>
                 <div>
-                  <p className="font-semibold text-sm">
-                    KYB Verification: <Badge variant="secondary" className="ml-1">{merchant.kyb_status?.replace(/_/g, " ").toUpperCase()}</Badge>
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm">KYB Verification</span>
+                    <Badge variant="secondary" className="text-[10px] font-bold">{merchant.kyb_status?.replace(/_/g, " ").toUpperCase()}</Badge>
+                  </div>
                   <p className="text-xs text-muted-foreground mt-0.5">Complete your KYB to accept live payments.</p>
                 </div>
               </div>
-              <Button size="sm" onClick={() => navigate("/merchant/kyb")}>Complete KYB</Button>
+              <Button size="sm" onClick={() => navigate("/merchant/kyb")} className="rounded-xl font-bold">Complete KYB</Button>
             </CardContent>
           </Card>
         </motion.div>
@@ -221,12 +240,10 @@ export default function MerchantDashboard() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base">Getting Started</CardTitle>
+                  <CardTitle className="text-base font-bold">Getting Started</CardTitle>
                   <CardDescription className="mt-0.5">{completedSteps} of {setupSteps.length} steps completed</CardDescription>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-primary">{setupProgress}%</span>
-                </div>
+                <span className="text-sm font-bold text-primary">{setupProgress}%</span>
               </div>
               <Progress value={setupProgress} className="mt-3 h-2" />
             </CardHeader>
@@ -238,17 +255,17 @@ export default function MerchantDashboard() {
                   variants={fadeUp}
                   initial="hidden"
                   animate="visible"
-                  className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all hover:shadow-sm hover:bg-muted/40 ${s.completed ? "opacity-50" : ""}`}
+                  className={`flex items-center gap-3 p-3.5 rounded-2xl border border-border/60 cursor-pointer transition-all hover:shadow-sm hover:bg-muted/40 ${s.completed ? "opacity-50" : ""}`}
                   onClick={() => navigate(s.path)}
                 >
-                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${s.completed ? "bg-primary/10" : "bg-muted"}`}>
+                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${s.completed ? "bg-primary/10" : "bg-muted"}`}>
                     {s.completed
-                      ? <CheckCircle2 className="h-4.5 w-4.5 text-primary" />
-                      : <s.icon className="h-4.5 w-4.5 text-muted-foreground" />
+                      ? <CheckCircle2 className="h-5 w-5 text-primary" strokeWidth={2} />
+                      : <s.icon className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                     }
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium ${s.completed ? "line-through" : ""}`}>{s.title}</p>
+                    <p className={`text-sm font-bold ${s.completed ? "line-through" : ""}`}>{s.title}</p>
                     <p className="text-xs text-muted-foreground truncate">{s.description}</p>
                   </div>
                   {!s.completed && <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0" />}
@@ -260,30 +277,21 @@ export default function MerchantDashboard() {
       )}
 
       {/* Stats Grid */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
         {[
-          {
-            title: "Total Revenue",
-            value: `${stats.totalRevenue.toLocaleString()}`,
-            suffix: currency,
-            icon: DollarSign,
-            iconBg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-            change: stats.successRate >= 90 ? "+12%" : undefined,
-            changeUp: true,
-          },
           {
             title: "Transactions",
             value: stats.txCount.toLocaleString(),
             icon: ArrowUpDown,
-            iconBg: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+            iconBg: "bg-[hsl(200,80%,94%)] text-[hsl(200,80%,35%)]",
           },
           {
             title: "Success Rate",
             value: `${stats.successRate}%`,
             icon: TrendingUp,
             iconBg: stats.successRate >= 90
-              ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-              : "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+              ? "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]"
+              : "bg-[hsl(40,80%,92%)] text-[hsl(40,70%,35%)]",
             change: stats.successRate >= 90 ? "Healthy" : "Needs attention",
             changeUp: stats.successRate >= 90,
           },
@@ -291,28 +299,31 @@ export default function MerchantDashboard() {
             title: "Pending",
             value: stats.pendingCount.toLocaleString(),
             icon: Clock,
-            iconBg: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+            iconBg: "bg-[hsl(40,80%,92%)] text-[hsl(40,70%,35%)]",
+          },
+          {
+            title: "Failed",
+            value: stats.failedCount.toLocaleString(),
+            icon: AlertCircle,
+            iconBg: "bg-destructive/10 text-destructive",
           },
         ].map((stat, i) => (
           <motion.div key={stat.title} custom={i} variants={fadeUp} initial="hidden" animate="visible">
-            <Card className="hover:shadow-md transition-shadow">
-              <CardContent className="p-5">
+            <Card className="hover:shadow-md transition-all border-0 shadow-sm">
+              <CardContent className="p-4 sm:p-5">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1.5">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.title}</p>
-                    <p className="text-2xl font-bold tracking-tight text-foreground">
-                      {stat.value}
-                      {stat.suffix && <span className="text-sm font-medium text-muted-foreground ml-1">{stat.suffix}</span>}
-                    </p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{stat.title}</p>
+                    <p className="text-2xl font-bold tracking-tight text-foreground">{stat.value}</p>
                     {stat.change && (
-                      <div className={`flex items-center gap-1 text-xs font-medium ${stat.changeUp ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                      <div className={`flex items-center gap-1 text-[11px] font-bold ${stat.changeUp ? "text-[hsl(150,50%,30%)]" : "text-[hsl(40,70%,35%)]"}`}>
                         {stat.changeUp ? <ArrowUpRight className="h-3 w-3" /> : <ArrowDownRight className="h-3 w-3" />}
                         {stat.change}
                       </div>
                     )}
                   </div>
-                  <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${stat.iconBg}`}>
-                    <stat.icon className="h-5 w-5" />
+                  <div className={`h-11 w-11 rounded-2xl flex items-center justify-center ${stat.iconBg}`}>
+                    <stat.icon className="h-5 w-5" strokeWidth={2} />
                   </div>
                 </div>
               </CardContent>
@@ -325,14 +336,14 @@ export default function MerchantDashboard() {
       <div className="grid gap-4 lg:grid-cols-3">
         {/* Revenue Chart */}
         <motion.div className="lg:col-span-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-          <Card className="h-full">
+          <Card className="h-full border-0 shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base">Revenue Trend</CardTitle>
+                  <CardTitle className="text-base font-bold">Revenue Trend</CardTitle>
                   <CardDescription>Last 14 days</CardDescription>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/analytics")} className="text-xs gap-1">
+                <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/analytics")} className="text-xs gap-1 rounded-xl">
                   Details <ArrowRight className="h-3 w-3" />
                 </Button>
               </div>
@@ -355,7 +366,7 @@ export default function MerchantDashboard() {
                         contentStyle={{
                           background: "hsl(var(--card))",
                           border: "1px solid hsl(var(--border))",
-                          borderRadius: "8px",
+                          borderRadius: "12px",
                           fontSize: "12px",
                           boxShadow: "var(--shadow-medium)",
                         }}
@@ -384,33 +395,36 @@ export default function MerchantDashboard() {
 
         {/* Wallets */}
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }}>
-          <Card className="h-full">
+          <Card className="h-full border-0 shadow-sm">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Wallets</CardTitle>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowWalletBalances(!showWalletBalances)}>
-                  {showWalletBalances ? <Eye className="h-3.5 w-3.5 text-muted-foreground" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                <CardTitle className="text-base font-bold">Wallets</CardTitle>
+                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-xl" onClick={() => setShowWalletBalances(!showWalletBalances)}>
+                  {showWalletBalances ? <Eye className="h-4 w-4 text-muted-foreground" strokeWidth={2} /> : <EyeOff className="h-4 w-4 text-muted-foreground" strokeWidth={2} />}
                 </Button>
               </div>
             </CardHeader>
             <CardContent className="space-y-3">
               {wallets.length === 0 ? (
                 <div className="text-center py-8">
-                  <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mx-auto mb-3">
-                    <Wallet className="h-5 w-5 text-muted-foreground" />
+                  <div className="h-14 w-14 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+                    <Wallet className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />
                   </div>
                   <p className="text-sm text-muted-foreground">No wallet balances yet</p>
                 </div>
               ) : (
                 wallets.map(w => (
-                  <div key={w.id} className="p-3.5 rounded-xl bg-muted/40 border border-border/50 space-y-1.5">
+                  <div key={w.id} className="p-4 rounded-2xl bg-muted/40 border border-border/50 space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{w.currency} Balance</span>
-                      <Badge variant="outline" className="text-[10px]">Available</Badge>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{w.currency} Balance</span>
+                      <Badge variant="outline" className="text-[10px] font-bold rounded-lg">Available</Badge>
                     </div>
-                    <p className="text-xl font-bold tracking-tight">{showWalletBalances ? `${Number(w.available_balance || 0).toLocaleString()}` : '••••••'}<span className="text-sm font-medium text-muted-foreground ml-1">{w.currency}</span></p>
+                    <p className="text-2xl font-bold tracking-tight">
+                      {showWalletBalances ? `${Number(w.available_balance || 0).toLocaleString()}` : '------'}
+                      <span className="text-sm font-medium text-muted-foreground ml-1.5">{w.currency}</span>
+                    </p>
                     {(Number(w.pending_balance) > 0) && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400">
+                      <p className="text-xs font-bold text-[hsl(40,70%,35%)]">
                         +{Number(w.pending_balance).toLocaleString()} pending
                       </p>
                     )}
@@ -425,20 +439,21 @@ export default function MerchantDashboard() {
       {/* Quick Actions */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-          {quickActions.map((a, i) => (
+          {quickActions.map((a) => (
             <Card
               key={a.label}
-              className="cursor-pointer hover:shadow-md transition-all group border-border/60"
+              className="cursor-pointer hover:shadow-md transition-all group border-0 shadow-sm"
               onClick={() => navigate(a.path)}
             >
               <CardContent className="p-4 flex items-center gap-3">
-                <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${a.color} transition-transform group-hover:scale-110`}>
-                  <a.icon className="h-5 w-5" />
+                <div className={`h-11 w-11 rounded-2xl flex items-center justify-center shrink-0 ${a.color} transition-transform duration-300 group-hover:scale-110`}>
+                  <a.icon className="h-5 w-5" strokeWidth={2} />
                 </div>
-                <div>
-                  <p className="text-sm font-semibold">{a.label}</p>
-                  <p className="text-xs text-muted-foreground">Quick action</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold truncate">{a.label}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-bold">Quick action</p>
                 </div>
+                <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
               </CardContent>
             </Card>
           ))}
@@ -447,57 +462,95 @@ export default function MerchantDashboard() {
 
       {/* Recent Transactions */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.35 }}>
-        <Card>
+        <Card className="border-0 shadow-sm">
           <CardHeader className="flex flex-row items-center justify-between pb-3">
             <div>
-              <CardTitle className="text-base">Recent Transactions</CardTitle>
+              <CardTitle className="text-base font-bold">Recent Transactions</CardTitle>
               <CardDescription>Latest payment activity</CardDescription>
             </div>
-            <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/transactions")} className="gap-1 text-xs">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/merchant/transactions")} className="gap-1 text-xs rounded-xl">
               View All <ArrowRight className="h-3 w-3" />
             </Button>
           </CardHeader>
           <CardContent>
             {charges.length === 0 ? (
               <EmptyState
-                icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" />}
+                icon={<ArrowUpDown className="h-6 w-6 text-muted-foreground" strokeWidth={1.5} />}
                 title="No transactions yet"
                 description="Start integrating with our API to accept your first payment"
                 action={{ label: "View API Docs", onClick: () => navigate("/developer/gateway/charges") }}
               />
             ) : (
-              <div className="overflow-x-auto -mx-6">
-                <table className="w-full text-sm min-w-[600px]">
-                  <thead>
-                    <tr className="border-b border-border/60">
-                      <th className="text-left py-2.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reference</th>
-                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Amount</th>
-                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Status</th>
-                      <th className="text-left py-2.5 px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Channel</th>
-                      <th className="text-left py-2.5 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {charges.map(c => (
-                      <tr
-                        key={c.id}
-                        className="border-b border-border/40 last:border-0 cursor-pointer hover:bg-muted/30 transition-colors"
-                        onClick={() => setSelectedTx(c)}
-                      >
-                        <td className="py-3 px-6 font-mono text-xs text-foreground/80">{c.charge_ref?.slice(0, 18)}</td>
-                        <td className="py-3 px-3 font-semibold">{Number(c.amount).toLocaleString()} <span className="text-muted-foreground font-normal">{c.currency}</span></td>
-                        <td className="py-3 px-3">
-                          <Badge variant="outline" className={`text-[11px] font-medium border ${statusColor(c.status)}`}>
-                            {c.status}
-                          </Badge>
-                        </td>
-                        <td className="py-3 px-3 text-muted-foreground capitalize">{c.channel || "—"}</td>
-                        <td className="py-3 px-6 text-muted-foreground">{c.created_at ? format(new Date(c.created_at), "MMM d, HH:mm") : "—"}</td>
+              <>
+                {/* Mobile: Card-based list */}
+                <div className="space-y-2 sm:hidden">
+                  {charges.map(c => (
+                    <div
+                      key={c.id}
+                      className="flex items-center gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/40 cursor-pointer hover:bg-muted/50 transition-colors"
+                      onClick={() => setSelectedTx(c)}
+                    >
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
+                        c.status === "successful" ? "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]"
+                        : c.status === "failed" ? "bg-destructive/10 text-destructive"
+                        : "bg-[hsl(40,80%,92%)] text-[hsl(40,70%,35%)]"
+                      }`}>
+                        {c.status === "successful" ? <CheckCircle2 className="h-5 w-5" strokeWidth={2} /> 
+                         : c.status === "failed" ? <AlertCircle className="h-5 w-5" strokeWidth={2} />
+                         : <Clock className="h-5 w-5" strokeWidth={2} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate">{Number(c.amount).toLocaleString()} {c.currency}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {c.charge_ref?.slice(0, 16)} · {c.channel || "direct"}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <Badge variant="outline" className={`text-[10px] font-bold border ${statusColor(c.status)}`}>
+                          {c.status}
+                        </Badge>
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          {c.created_at ? format(new Date(c.created_at), "MMM d") : ""}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop: Table */}
+                <div className="overflow-x-auto -mx-6 hidden sm:block">
+                  <table className="w-full text-sm min-w-[600px]">
+                    <thead>
+                      <tr className="border-b border-border/60">
+                        <th className="text-left py-2.5 px-6 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Reference</th>
+                        <th className="text-left py-2.5 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Amount</th>
+                        <th className="text-left py-2.5 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Status</th>
+                        <th className="text-left py-2.5 px-3 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Channel</th>
+                        <th className="text-left py-2.5 px-6 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Date</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {charges.map(c => (
+                        <tr
+                          key={c.id}
+                          className="border-b border-border/40 last:border-0 cursor-pointer hover:bg-muted/30 transition-colors"
+                          onClick={() => setSelectedTx(c)}
+                        >
+                          <td className="py-3.5 px-6 font-mono text-xs text-foreground/80">{c.charge_ref?.slice(0, 18)}</td>
+                          <td className="py-3.5 px-3 font-bold">{Number(c.amount).toLocaleString()} <span className="text-muted-foreground font-normal">{c.currency}</span></td>
+                          <td className="py-3.5 px-3">
+                            <Badge variant="outline" className={`text-[10px] font-bold border ${statusColor(c.status)}`}>
+                              {c.status}
+                            </Badge>
+                          </td>
+                          <td className="py-3.5 px-3 text-muted-foreground capitalize">{c.channel || "--"}</td>
+                          <td className="py-3.5 px-6 text-muted-foreground">{c.created_at ? format(new Date(c.created_at), "MMM d, HH:mm") : "--"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
