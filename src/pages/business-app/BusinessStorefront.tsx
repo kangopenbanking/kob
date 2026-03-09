@@ -70,19 +70,19 @@ export default function BusinessStorefront() {
       .single();
 
     if (data) {
-      setTagline(data.tagline || '');
+      setTagline(data.store_name || '');
       setDescription(data.description || '');
       setLogoUrl(data.logo_url || '');
-      setCoverUrl(data.cover_image_url || '');
-      setPrimaryColor(data.brand_primary_color || '#7c3aed');
-      setAccentColor(data.brand_accent_color || '#c084fc');
-      setRegion(data.region || 'Centre');
+      setCoverUrl(data.banner_url || '');
+      const brandData = data.custom_brand_json as any;
+      setPrimaryColor(brandData?.primary_color || '#7c3aed');
+      setAccentColor(brandData?.accent_color || '#c084fc');
       setCity(data.city || '');
-      setAddress(data.address || '');
-      setPhone(data.phone || '');
-      setEmail(data.email || '');
-      if (data.operating_hours) {
-        setHours(data.operating_hours as any);
+      setAddress(brandData?.address || '');
+      setPhone(brandData?.phone || '');
+      setEmail(brandData?.email || '');
+      if (brandData?.operating_hours) {
+        setHours(brandData.operating_hours as any);
       }
     }
   };
