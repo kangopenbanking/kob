@@ -591,6 +591,9 @@ function App() {
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
               <Route path="marketplace" element={<AdminMarketplace />} />
+              {/* Phase 2: Financial Operations */}
+              <Route path="settlement-approval" element={<SettlementApproval />} />
+              <Route path="invoice-management" element={<InvoiceManagement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
