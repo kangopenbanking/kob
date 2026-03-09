@@ -39,7 +39,7 @@ export function CustomerOrderTracking() {
       if (error) throw error;
 
       // Fetch merchant details
-      const merchantIds = [...new Set((data || []).map((o: any) => o.merchant_id).filter(Boolean))];
+      const merchantIds = [...new Set((data || []).map((o: any) => o.merchant_id).filter(Boolean))] as string[];
       let merchants: any[] = [];
       if (merchantIds.length > 0) {
         const { data: m } = await supabase
