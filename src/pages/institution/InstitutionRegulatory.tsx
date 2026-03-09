@@ -56,7 +56,6 @@ export default function InstitutionRegulatory() {
         report_format: form.report_format,
         report_period_start: form.period_start,
         report_period_end: form.period_end,
-        institution_id: institutionId,
         created_by: user?.id,
         submission_status: "draft",
       });
