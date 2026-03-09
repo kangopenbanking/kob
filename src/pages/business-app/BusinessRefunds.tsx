@@ -210,7 +210,7 @@ export default function BusinessRefunds() {
           <DialogHeader>
             <DialogTitle>Process Refund</DialogTitle>
             <DialogDescription>
-              Refund for charge {selectedCharge?.charge_ref}
+              Refund for charge {selectedCharge?.tx_ref}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
