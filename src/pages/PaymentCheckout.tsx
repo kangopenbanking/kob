@@ -51,6 +51,12 @@ export default function PaymentCheckout() {
     if (slug) fetchLink();
   }, [slug]);
 
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setWalletSession(session);
+    });
+  }, []);
+
   const fetchLink = async () => {
     try {
       const res = await fetch(
