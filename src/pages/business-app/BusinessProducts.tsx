@@ -199,7 +199,7 @@ export default function BusinessProducts() {
                       size="sm"
                       variant="outline"
                       className="rounded-xl flex-1 h-9 font-bold text-xs"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/business/products/${product.id}`); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`${basePath}/products/${product.id}`); }}
                     >
                       <Edit className="h-3.5 w-3.5 mr-1.5" strokeWidth={2} />
                       Edit
