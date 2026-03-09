@@ -106,13 +106,7 @@ export default function BusinessStaff() {
   // Delete mutation
   const deleteMutation = useMutation({
     mutationFn: async (staffId: string) => {
-      // First delete role
-      await supabase
-        .from('merchant_staff_roles')
-        .delete()
-        .eq('staff_id', staffId);
-
-      // Then delete staff
+      // Delete staff
       const { error } = await supabase
         .from('merchant_pos_staff')
         .delete()
