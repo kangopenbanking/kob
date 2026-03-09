@@ -462,7 +462,7 @@ const ManagedEmailAdmin: React.FC = () => {
           {previewType && (
             <div className="space-y-3">
               <div className="text-sm"><strong>Subject:</strong> {previewType.default_subject}</div>
-              <div className="border rounded-lg p-4" dangerouslySetInnerHTML={{ __html: previewType.default_body_html }} />
+              <div className="border rounded-lg p-4" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(previewType.default_body_html) }} />
               <div className="text-xs text-muted-foreground">
                 <strong>Trigger:</strong> {previewType.trigger_event || 'Manual'} | <strong>Category:</strong> {previewType.category}
               </div>
