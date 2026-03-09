@@ -106,7 +106,7 @@ export function CustomerReviews() {
           created_at
         `)
         .eq('customer_id', user!.id)
-        .in('status', ['delivered', 'completed'])
+        .eq('status', 'completed')
         .is('pos_order_reviews.id', null)
         .limit(10);
 
