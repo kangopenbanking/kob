@@ -43,6 +43,10 @@ export default function PaymentCheckout() {
   const [name, setName] = useState("");
   const [channel, setChannel] = useState("mobile_money");
 
+  // Wallet payment state (must be before early returns)
+  const [walletSession, setWalletSession] = useState<any>(null);
+  const [payingWithWallet, setPayingWithWallet] = useState(false);
+
   useEffect(() => {
     if (slug) fetchLink();
   }, [slug]);
