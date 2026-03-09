@@ -124,7 +124,7 @@ export default function Auth() {
         body: { session_id: captchaSessionId, answer: parseInt(captchaAnswer) },
       });
 
-      if (error || !data.verified) {
+      if (error || !data?.verified) {
         throw new Error(data?.error || 'Captcha verification failed');
       }
 
