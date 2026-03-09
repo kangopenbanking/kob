@@ -102,7 +102,7 @@ export default function InstitutionBranches() {
     try {
       const { error } = await supabase.from("branches").update({
         branch_name: form.branch_name, branch_type: form.branch_type, phone: form.phone || null, email: form.email || null,
-        address: { line: form.address_line, city: form.city, country: form.country },
+        address: { street: form.address_line, city: form.city, country: form.country },
       }).eq("id", editBranch.id);
       if (error) throw error;
       toast({ title: "Branch updated successfully" });
@@ -122,7 +122,7 @@ export default function InstitutionBranches() {
 
   const openEdit = (branch: any) => {
     const addr = branch.address || {};
-    setForm({ branch_name: branch.branch_name, branch_code: branch.branch_code, branch_type: branch.branch_type, phone: branch.phone || "", email: branch.email || "", address_line: addr.line || "", city: addr.city || "", country: addr.country || "Cameroon" });
+    setForm({ branch_name: branch.branch_name, branch_code: branch.branch_code, branch_type: branch.branch_type, phone: branch.phone || "", email: branch.email || "", address_line: addr.street || "", city: addr.city || "", country: addr.country || "Cameroon" });
     setEditBranch(branch);
   };
 
@@ -263,7 +263,7 @@ export default function InstitutionBranches() {
                 <div className="space-y-3">
                   {detailBranch.phone && <div className="flex items-center gap-3"><Phone className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{detailBranch.phone}</span></div>}
                   {detailBranch.email && <div className="flex items-center gap-3"><Mail className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{detailBranch.email}</span></div>}
-                  {(addr.line || addr.city) && <div className="flex items-center gap-3"><Globe className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{[addr.line, addr.city, addr.country].filter(Boolean).join(', ')}</span></div>}
+                  {(addr.street || addr.city) && <div className="flex items-center gap-3"><Globe className="h-4 w-4 text-muted-foreground" /><span className="text-sm">{[addr.street, addr.city, addr.country].filter(Boolean).join(', ')}</span></div>}
                   <div className="flex items-center gap-3"><Users className="h-4 w-4 text-muted-foreground" /><span className="text-sm font-medium">{staffCounts[detailBranch.id] || 0} staff assigned</span></div>
                 </div>
                 <Separator />

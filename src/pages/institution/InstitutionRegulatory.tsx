@@ -19,6 +19,7 @@ export default function InstitutionRegulatory() {
   const [loading, setLoading] = useState(true);
   const [reports, setReports] = useState<any[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [institutionId, setInstitutionId] = useState<string | null>(null);
   const [form, setForm] = useState({ report_type: "anti_money_laundering", regulator: "COBAC", report_format: "xml", period_start: "", period_end: "" });
   const [saving, setSaving] = useState(false);
 
@@ -29,14 +30,23 @@ export default function InstitutionRegulatory() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
-      const { data } = await supabase.from("regulatory_reports").select("*").order("created_at", { ascending: false }).limit(100);
+      let instId: string | null = null;
+      const { data: institution } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
+      if (institution) { instId = institution.id; }
+      else {
+        const { data: staffInst } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
+        if (staffInst) instId = staffInst;
+      }
+      if (!instId) { navigate('/register'); return; }
+      setInstitutionId(instId);
+      const { data } = await supabase.from("regulatory_reports").select("*").eq("created_by", user.id).order("created_at", { ascending: false }).limit(100);
       setReports(data || []);
     } catch (error) { console.error("Error:", error); }
     finally { setLoading(false); }
   };
 
   const handleCreate = async () => {
-    if (!form.period_start || !form.period_end) return;
+    if (!form.period_start || !form.period_end || !institutionId) return;
     setSaving(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();

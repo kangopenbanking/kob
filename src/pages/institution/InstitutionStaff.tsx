@@ -38,12 +38,18 @@ export default function InstitutionStaff() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
+      let instId: string | null = null;
       const { data: institution } = await supabase.from("institutions").select("id").eq("user_id", user.id).maybeSingle();
-      if (!institution) { navigate('/register'); return; }
-      setInstitutionId(institution.id);
+      if (institution) { instId = institution.id; }
+      else {
+        const { data: staffInst } = await supabase.rpc("get_staff_institution_id", { _user_id: user.id });
+        if (staffInst) instId = staffInst;
+      }
+      if (!instId) { navigate('/register'); return; }
+      setInstitutionId(instId);
       const [staffRes, branchRes] = await Promise.all([
-        supabase.from("staff_assignments").select("*").eq("institution_id", institution.id).order("assigned_at", { ascending: false }),
-        supabase.from("branches").select("id, branch_name").eq("institution_id", institution.id),
+        supabase.from("staff_assignments").select("*").eq("institution_id", instId).order("assigned_at", { ascending: false }),
+        supabase.from("branches").select("id, branch_name").eq("institution_id", instId),
       ]);
       setStaff(staffRes.data || []);
       setBranches(branchRes.data || []);
