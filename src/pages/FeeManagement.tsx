@@ -358,7 +358,7 @@ export default function FeeManagement() {
                 <SelectContent>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="quarterly">Quarterly</SelectItem>
-                  <SelectItem value="annually">Annually</SelectItem>
+                  <SelectItem value="on_demand">On-Demand</SelectItem>
                 </SelectContent>
               </Select>
             </div>
