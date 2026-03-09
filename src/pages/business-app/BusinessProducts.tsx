@@ -5,11 +5,13 @@ import { Plus, Search, Filter, Package, Edit, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 
 export default function BusinessProducts() {
   const navigate = useNavigate();
+  const { merchantId: paramMerchantId } = useParams<{ merchantId?: string }>();
+  const basePath = paramMerchantId ? `/biz/${paramMerchantId}` : '/biz';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all');
   const [merchantId, setMerchantId] = useState<string | null>(null);
@@ -88,7 +90,7 @@ export default function BusinessProducts() {
               <p className="text-primary-foreground/80 text-sm mt-1">Manage your catalog</p>
             </div>
             <Button
-              onClick={() => navigate('/business/products/new')}
+              onClick={() => navigate(`${basePath}/products/new`)}
               className="bg-white text-primary hover:bg-white/90 rounded-2xl h-11 px-5 shadow-sm"
             >
               <Plus className="h-5 w-5 mr-2" strokeWidth={2} />
@@ -144,7 +146,7 @@ export default function BusinessProducts() {
             </div>
             <h3 className="text-xl font-bold mb-2">No products yet</h3>
             <p className="text-muted-foreground mb-8 text-sm">Start building your catalog</p>
-            <Button className="rounded-2xl h-12 px-6 font-bold" onClick={() => navigate('/business/products/new')}>
+            <Button className="rounded-2xl h-12 px-6 font-bold" onClick={() => navigate(`${basePath}/products/new`)}>
               <Plus className="h-5 w-5 mr-2" strokeWidth={2} />
               Add First Product
             </Button>
@@ -197,7 +199,7 @@ export default function BusinessProducts() {
                       size="sm"
                       variant="outline"
                       className="rounded-xl flex-1 h-9 font-bold text-xs"
-                      onClick={(e) => { e.stopPropagation(); navigate(`/business/products/${product.id}`); }}
+                      onClick={(e) => { e.stopPropagation(); navigate(`${basePath}/products/${product.id}`); }}
                     >
                       <Edit className="h-3.5 w-3.5 mr-1.5" strokeWidth={2} />
                       Edit
