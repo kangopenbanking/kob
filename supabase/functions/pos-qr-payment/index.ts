@@ -58,9 +58,9 @@ Deno.serve(async (req) => {
         type: 'kob_pos_pay',
         merchant_id,
         merchant_name: storeProfile?.store_name || merchant?.business_name || 'Unknown',
-        ...(amount ? { amount: Number(amount) } : {}),
-        ...(order_id ? { order_id } : {}),
-        ...(description ? { description } : {}),
+        amount: amount ? Number(amount) : 0,
+        order_id: order_id || null,
+        description: description || null,
         currency: 'XAF',
         generated_at: new Date().toISOString(),
       };
