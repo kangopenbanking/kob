@@ -45,6 +45,7 @@ export function usePOSTill(merchantId: string | undefined) {
   const [discountType, setDiscountType] = useState<'fixed' | 'percent'>('percent');
   const [isCheckingOut, setIsCheckingOut] = useState(false);
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const [walletQR, setWalletQR] = useState<WalletQRData | null>(null);
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
