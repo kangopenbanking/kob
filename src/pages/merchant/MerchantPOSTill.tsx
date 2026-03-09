@@ -50,6 +50,7 @@ const MerchantPOSTill: React.FC = () => {
     setCustomerPhone, globalDiscount, setGlobalDiscount, discountType, setDiscountType,
     subtotal, discountAmount, taxAmount, total,
     isCheckingOut, checkout, receipt, setReceipt, searchQuery, setSearchQuery,
+    walletQR, checkWalletPayment, cancelWalletQR,
   } = usePOSTill(merchantId);
 
   if (receipt) {
