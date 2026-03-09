@@ -89,7 +89,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ error: 'Invalid action. Use: initiate, status, list' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
-    console.error('gateway-bulk-operations error:', err);
-    return new Response(JSON.stringify({ error: 'Internal server error', message: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] gateway-bulk-operations error:`, err);
+    return new Response(JSON.stringify({ error: 'internal_error', error_id: errorId }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

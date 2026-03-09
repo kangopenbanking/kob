@@ -364,9 +364,11 @@ serve(async (req) => {
     });
   } catch (err: any) {
     console.error('Withdrawal error:', err);
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] process-withdrawal error:`, err);
     return new Response(JSON.stringify({
       error: 'internal_error',
-      message: err.message || 'Internal server error',
+      error_id: errorId,
     }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

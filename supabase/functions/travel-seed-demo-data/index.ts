@@ -151,6 +151,8 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true, ...results }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] travel-seed-demo-data error:`, err);
+    return new Response(JSON.stringify({ error: 'internal_error', error_id: errorId }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
 });

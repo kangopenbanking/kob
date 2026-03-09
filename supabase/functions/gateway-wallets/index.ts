@@ -64,8 +64,9 @@ serve(async (req) => {
 
     return rfc7807('not_found', 'Not Found', 404, `Route not matched: ${req.method} ${url.pathname}`);
   } catch (err: any) {
-    console.error('[gateway-wallets] Error:', err);
-    return rfc7807('internal_error', 'Internal Server Error', 500, err.message || 'Unexpected error');
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] [gateway-wallets] Error:`, err);
+    return rfc7807('internal_error', 'Internal Server Error', 500, `An unexpected error occurred. Reference: ${errorId}`);
   }
 });
 

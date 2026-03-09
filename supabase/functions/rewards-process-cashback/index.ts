@@ -138,7 +138,8 @@ Deno.serve(async (req) => {
 
     throw new Error('Invalid action. Use "cashback" or "referral".');
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('rewards-process-cashback error:', err);
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

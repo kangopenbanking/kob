@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
       offset,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('credit-events-list error:', err);
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

@@ -104,7 +104,8 @@ Deno.serve(async (req) => {
         : 'Your savings plan payments will be tracked for credit scoring. Consistent payments build your credit history.',
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('piggybank-create error:', err);
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

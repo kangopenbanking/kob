@@ -144,7 +144,8 @@ Deno.serve(async (req) => {
 
     return problem(405, 'Method Not Allowed', `Unsupported action: ${action || method}`);
   } catch (err) {
-    console.error('gateway-merchant-keys error:', err);
-    return problem(500, 'Internal Server Error', err.message);
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] gateway-merchant-keys error:`, err);
+    return problem(500, 'Internal Server Error', `An unexpected error occurred. Reference: ${errorId}`);
   }
 });

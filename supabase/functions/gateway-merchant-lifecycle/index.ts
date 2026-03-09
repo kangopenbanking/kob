@@ -185,7 +185,8 @@ serve(async (req) => {
 
     return rfc7807('method_not_allowed', 'Method Not Allowed', 405, 'Only POST supported');
   } catch (err: any) {
-    console.error('[gateway-merchant-lifecycle] Error:', err);
-    return rfc7807('internal_error', 'Internal Server Error', 500, err.message || 'Unexpected error');
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] [gateway-merchant-lifecycle] Error:`, err);
+    return rfc7807('internal_error', 'Internal Server Error', 500, `An unexpected error occurred. Reference: ${errorId}`);
   }
 });
