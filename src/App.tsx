@@ -339,6 +339,10 @@ import AdminMarketplace from "./pages/admin/AdminMarketplace";
 import SettlementApproval from "./pages/admin/SettlementApproval";
 import InvoiceManagement from "./pages/admin/InvoiceManagement";
 import MerchantFees from "./pages/merchant/MerchantFees";
+import MerchantPlans from "./pages/merchant/MerchantPlans";
+import MerchantLocations from "./pages/merchant/MerchantLocations";
+import MerchantWooSync from "./pages/merchant/MerchantWooSync";
+import AdminMarketplaceModeration from "./pages/admin/AdminMarketplaceModeration";
 import BusinessRefunds from "./pages/business-app/BusinessRefunds";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
@@ -527,6 +531,10 @@ function App() {
               <Route path="storefront" element={<MerchantStorefront />} />
               {/* Phase 2: Financial Operations */}
               <Route path="fees" element={<MerchantFees />} />
+              {/* Phase 3: Advanced Commerce */}
+              <Route path="plans" element={<MerchantPlans />} />
+              <Route path="locations" element={<MerchantLocations />} />
+              <Route path="woo-sync" element={<MerchantWooSync />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
@@ -596,6 +604,8 @@ function App() {
               {/* Phase 2: Financial Operations */}
               <Route path="settlement-approval" element={<SettlementApproval />} />
               <Route path="invoice-management" element={<InvoiceManagement />} />
+              {/* Phase 3: Advanced Commerce */}
+              <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}

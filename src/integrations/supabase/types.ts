@@ -10945,8 +10945,11 @@ export type Database = {
           is_published: boolean
           logo_url: string | null
           merchant_id: string
+          moderated_at: string | null
+          moderation_notes: string | null
           rating: number | null
           sla_tier: string | null
+          status: string | null
           store_name: string
           updated_at: string
         }
@@ -10964,8 +10967,11 @@ export type Database = {
           is_published?: boolean
           logo_url?: string | null
           merchant_id: string
+          moderated_at?: string | null
+          moderation_notes?: string | null
           rating?: number | null
           sla_tier?: string | null
+          status?: string | null
           store_name: string
           updated_at?: string
         }
@@ -10983,8 +10989,11 @@ export type Database = {
           is_published?: boolean
           logo_url?: string | null
           merchant_id?: string
+          moderated_at?: string | null
+          moderation_notes?: string | null
           rating?: number | null
           sla_tier?: string | null
+          status?: string | null
           store_name?: string
           updated_at?: string
         }

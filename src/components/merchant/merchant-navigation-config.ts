@@ -3,6 +3,7 @@ import {
   Wallet, DollarSign, Undo2, Key, Webhook, Building2, GitBranch,
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
   Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
+  MapPin, ShoppingCart, CreditCard,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -63,6 +64,14 @@ export const merchantNavigation = [
     title: "Storefront",
     items: [
       { title: "Store & Marketplace", path: "/merchant/storefront", icon: Store },
+      { title: "Payment Plans", path: "/merchant/plans", icon: CreditCard },
+      { title: "WooCommerce Sync", path: "/merchant/woo-sync", icon: ShoppingCart },
+    ],
+  },
+  {
+    title: "Operations",
+    items: [
+      { title: "Locations & Staff", path: "/merchant/locations", icon: MapPin },
     ],
   },
   {
