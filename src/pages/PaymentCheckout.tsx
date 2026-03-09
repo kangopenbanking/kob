@@ -260,16 +260,6 @@ export default function PaymentCheckout() {
 
   const displayAmount = getDisplayAmount();
 
-  // Check if user is authenticated for wallet payment
-  const [walletSession, setWalletSession] = useState<any>(null);
-  const [payingWithWallet, setPayingWithWallet] = useState(false);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setWalletSession(session);
-    });
-  }, []);
-
   const handleWalletPay = async () => {
     if (!link || !walletSession) return;
     setPayingWithWallet(true);
