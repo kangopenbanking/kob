@@ -9,6 +9,7 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData';
 import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
+import { QRPaymentSuccess } from '@/components/customer-app/QRPaymentSuccess';
 
 type Tab = 'scan' | 'receive';
 
