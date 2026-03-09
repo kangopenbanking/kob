@@ -73,7 +73,7 @@ const CustomerScan: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (activeTab === 'scan' && !showManualEntry && !scanResult) {
+    if (activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess) {
       startCamera();
     } else {
       stopCamera();
