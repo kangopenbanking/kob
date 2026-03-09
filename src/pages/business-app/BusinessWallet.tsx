@@ -21,6 +21,20 @@ const BusinessWallet: React.FC = () => {
     action: '' 
   });
 
+  // Fetch wallet ledger
+  const { data: ledgerData, isLoading: ledgerLoading } = useQuery({
+    queryKey: ['wallet-ledger', merchantId],
+    queryFn: async () => {
+      if (!merchantId) return { data: [], total: 0 };
+      const { data, error } = await supabase.functions.invoke('gateway-list-wallet-ledger', {
+        method: 'GET',
+      });
+      if (error) throw error;
+      return data || { data: [], total: 0 };
+    },
+    enabled: !!merchantId && showLedger,
+  });
+
   const formatXAF = (amount: number) => {
     return new Intl.NumberFormat('fr-CM', {
       style: 'currency',
@@ -29,14 +43,45 @@ const BusinessWallet: React.FC = () => {
     }).format(amount);
   };
 
-  const handlePayout = () => {
-    setPinDialog({ open: true, action: 'payout' });
+  const handlePayout = (amount?: number) => {
+    setPinDialog({ open: true, action: 'payout', amount });
   };
 
-  const handlePinConfirmed = () => {
+  const handlePinConfirmed = async (pin: string) => {
     if (pinDialog.action === 'payout') {
-      // TODO: Implement payout logic
-      toast.success('Payout request submitted');
+      try {
+        const amount = pinDialog.amount || availableBalance;
+        
+        // Get first active settlement account (in production, show selection UI)
+        const { data: settlementAccounts } = await supabase
+          .from('gateway_settlement_accounts')
+          .select('*')
+          .eq('merchant_id', merchantId)
+          .eq('is_active', true)
+          .limit(1);
+
+        if (!settlementAccounts || settlementAccounts.length === 0) {
+          toast.error('No settlement account configured');
+          return;
+        }
+
+        const { data, error } = await supabase.functions.invoke('gateway-request-payout', {
+          body: {
+            merchant_id: merchantId,
+            amount,
+            currency: 'XAF',
+            settlement_account_id: settlementAccounts[0].id,
+            pin,
+          },
+        });
+
+        if (error) throw error;
+        
+        toast.success('Payout request submitted for approval');
+        refetchWallets();
+      } catch (err: any) {
+        toast.error(err.message || 'Failed to request payout');
+      }
     }
   };
 
