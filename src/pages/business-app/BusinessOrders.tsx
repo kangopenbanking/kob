@@ -157,60 +157,62 @@ const BusinessOrders: React.FC = () => {
       </header>
 
       {/* Orders List */}
-      {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-2xl" />)}
-        </div>
-      ) : !orders?.length ? (
-        <Card className="border-0 shadow-md">
-          <CardContent className="flex flex-col items-center justify-center gap-4 p-12">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-              <ShoppingBag className="h-8 w-8 text-primary" />
-            </div>
-            <p className="text-sm text-muted-foreground text-center">
-              {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <AnimatePresence>
+      <div className="p-4 -mt-6">
+        {isLoading ? (
           <div className="space-y-3">
-            {orders.map((order: any, i: number) => {
-              const sc = statusConfig[order.status] || statusConfig.draft;
-              return (
-                <motion.div
-                  key={order.id}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.03 }}
-                >
-                  <Card className="border-0 shadow-sm cursor-pointer" onClick={() => setSelectedOrder(order)}>
-                    <CardContent className="flex items-center gap-4 p-4">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
-                          <p className="truncate text-sm font-bold text-foreground">
-                            {order.order_number || `#${order.id.slice(0, 8)}`}
-                          </p>
-                          <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${sc.color}`}>
-                            {sc.icon} {sc.label}
-                          </span>
-                        </div>
-                        <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                          <span>{formatTime(order.created_at)}</span>
-                          {order.customer_name && <span>· {order.customer_name}</span>}
-                          {order.channel && <span>· {order.channel}</span>}
-                        </div>
-                      </div>
-                      <p className="text-sm font-bold text-foreground">{formatXAF(order.total || 0)}</p>
-                      <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" strokeWidth={1.5} />
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              );
-            })}
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 rounded-3xl" />)}
           </div>
-        </AnimatePresence>
-      )}
+        ) : !orders?.length ? (
+          <Card className="border-0 shadow-md">
+            <CardContent className="flex flex-col items-center justify-center gap-4 p-12">
+              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
+                <ShoppingBag className="h-10 w-10 text-primary" strokeWidth={1.5} />
+              </div>
+              <p className="text-sm text-muted-foreground text-center">
+                {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
+              </p>
+            </CardContent>
+          </Card>
+        ) : (
+          <AnimatePresence>
+            <div className="space-y-3">
+              {orders.map((order: any, i: number) => {
+                const sc = statusConfig[order.status] || statusConfig.draft;
+                return (
+                  <motion.div
+                    key={order.id}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.03 }}
+                  >
+                    <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-all" onClick={() => setSelectedOrder(order)}>
+                      <CardContent className="flex items-center gap-4 p-5">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <p className="truncate text-sm font-bold text-foreground">
+                              {order.order_number || `#${order.id.slice(0, 8)}`}
+                            </p>
+                            <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${sc.color}`}>
+                              {sc.icon} {sc.label}
+                            </span>
+                          </div>
+                          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
+                            <span>{formatTime(order.created_at)}</span>
+                            {order.customer_name && <span>· {order.customer_name}</span>}
+                            {order.channel && <span>· {order.channel}</span>}
+                          </div>
+                        </div>
+                        <p className="text-sm font-bold text-foreground">{formatXAF(order.total || 0)}</p>
+                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" strokeWidth={2} />
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </AnimatePresence>
+        )}
+      </div>
 
       {/* Order Detail Sheet */}
       <Sheet open={!!selectedOrder} onOpenChange={open => !open && setSelectedOrder(null)}>

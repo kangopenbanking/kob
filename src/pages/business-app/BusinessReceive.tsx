@@ -162,12 +162,12 @@ const BusinessReceive: React.FC = () => {
       <div className="p-4 -mt-6 flex flex-1 flex-col">
 
       {/* Tab Switcher */}
-      <div className="mb-5 flex rounded-2xl bg-muted p-1">
+      <div className="mb-5 flex rounded-2xl bg-muted p-1.5">
         {([['qr', 'QR Code'], ['links', 'Payment Links']] as [Tab, string][]).map(([tab, label]) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
+            className={`flex-1 rounded-xl py-3 text-sm font-bold transition-all ${
               activeTab === tab ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground'
             }`}
           >
