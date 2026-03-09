@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.integrations = {
         status: 'unhealthy',
-        details: { error: e instanceof Error ? e.message : String(e) }
+        details: { error: 'Integrations check failed' }
       };
     }
 
