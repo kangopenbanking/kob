@@ -146,7 +146,7 @@ export default function BusinessProducts() {
             </div>
             <h3 className="text-xl font-bold mb-2">No products yet</h3>
             <p className="text-muted-foreground mb-8 text-sm">Start building your catalog</p>
-            <Button className="rounded-2xl h-12 px-6 font-bold" onClick={() => navigate('/business/products/new')}>
+            <Button className="rounded-2xl h-12 px-6 font-bold" onClick={() => navigate(`${basePath}/products/new`)}>
               <Plus className="h-5 w-5 mr-2" strokeWidth={2} />
               Add First Product
             </Button>
