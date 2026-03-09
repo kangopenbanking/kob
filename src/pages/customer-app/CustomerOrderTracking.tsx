@@ -8,14 +8,13 @@ import { Package, CheckCircle2, Clock, XCircle, Truck, Store } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 
-const ORDER_STATUS_CONFIG = {
-  pending: { label: 'Pending', icon: Clock, color: 'bg-yellow-500' },
-  confirmed: { label: 'Confirmed', icon: CheckCircle2, color: 'bg-blue-500' },
-  processing: { label: 'Processing', icon: Package, color: 'bg-purple-500' },
-  ready: { label: 'Ready', icon: CheckCircle2, color: 'bg-green-500' },
-  shipped: { label: 'Shipped', icon: Truck, color: 'bg-indigo-500' },
-  delivered: { label: 'Delivered', icon: CheckCircle2, color: 'bg-green-600' },
+const ORDER_STATUS_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
+  pending_payment: { label: 'Pending', icon: Clock, color: 'bg-yellow-500' },
+  processing: { label: 'Processing', icon: Package, color: 'bg-blue-500' },
+  paid: { label: 'Paid', icon: CheckCircle2, color: 'bg-green-500' },
+  completed: { label: 'Completed', icon: CheckCircle2, color: 'bg-green-600' },
   cancelled: { label: 'Cancelled', icon: XCircle, color: 'bg-red-500' },
+  refunded: { label: 'Refunded', icon: XCircle, color: 'bg-orange-500' },
 };
 
 export function CustomerOrderTracking() {
@@ -26,34 +25,45 @@ export function CustomerOrderTracking() {
     queryKey: ['customer-orders', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: orders, error } = await supabase
+      // Get user email for matching
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser?.email) return [];
+
+      const { data, error } = await (supabase as any)
         .from('pos_orders')
-        .select('id, order_number, status, total, created_at, updated_at, merchant_id, customer_id')
-        .eq('customer_id', user!.id)
+        .select('id, order_number, status, total, created_at, updated_at, merchant_id, customer_name, customer_email')
+        .eq('customer_email', authUser.email)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      
-      // Fetch merchant details separately
-      const merchantIds = [...new Set(orders?.map(o => o.merchant_id).filter(Boolean))];
-      const { data: merchants } = await supabase
-        .from('gateway_merchants')
-        .select('id, business_name, logo_url')
-        .in('id', merchantIds);
-      
+
+      // Fetch merchant details
+      const merchantIds = [...new Set((data || []).map((o: any) => o.merchant_id).filter(Boolean))];
+      let merchants: any[] = [];
+      if (merchantIds.length > 0) {
+        const { data: m } = await supabase
+          .from('gateway_merchants')
+          .select('id, business_name')
+          .in('id', merchantIds);
+        merchants = m || [];
+      }
+
       // Fetch order items
-      const orderIds = orders?.map(o => o.id) || [];
-      const { data: items } = await supabase
-        .from('pos_order_items')
-        .select('id, order_id, quantity')
-        .in('order_id', orderIds);
-      
-      // Combine data
-      return orders?.map(order => ({
+      const orderIds = (data || []).map((o: any) => o.id);
+      let items: any[] = [];
+      if (orderIds.length > 0) {
+        const { data: i } = await (supabase as any)
+          .from('pos_order_items')
+          .select('id, order_id, quantity')
+          .in('order_id', orderIds);
+        items = i || [];
+      }
+
+      return (data || []).map((order: any) => ({
         ...order,
-        merchant: merchants?.find(m => m.id === order.merchant_id),
-        pos_order_items: items?.filter(i => i.order_id === order.id) || []
+        merchant: merchants.find(m => m.id === order.merchant_id),
+        pos_order_items: items.filter((i: any) => i.order_id === order.id),
       }));
     },
   });
@@ -72,11 +82,11 @@ export function CustomerOrderTracking() {
   }
 
   const getStatusInfo = (status: string) => {
-    return ORDER_STATUS_CONFIG[status as keyof typeof ORDER_STATUS_CONFIG] || ORDER_STATUS_CONFIG.pending;
+    return ORDER_STATUS_CONFIG[status] || { label: status, icon: Clock, color: 'bg-muted' };
   };
 
   const getProgressPercentage = (status: string) => {
-    const steps = ['pending', 'confirmed', 'processing', 'ready', 'shipped', 'delivered'];
+    const steps = ['pending_payment', 'paid', 'processing', 'completed'];
     const currentIndex = steps.indexOf(status);
     if (currentIndex === -1) return 0;
     return ((currentIndex + 1) / steps.length) * 100;
@@ -102,26 +112,17 @@ export function CustomerOrderTracking() {
               const statusInfo = getStatusInfo(order.status);
               const StatusIcon = statusInfo.icon;
               const progress = getProgressPercentage(order.status);
-              const isCancelled = order.status === 'cancelled';
+              const isCancelled = order.status === 'cancelled' || order.status === 'refunded';
 
               return (
                 <Card key={order.id} className="p-6 space-y-4">
-                  {/* Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                        {order.merchant?.logo_url ? (
-                          <img
-                            src={order.merchant.logo_url}
-                            alt={order.merchant.business_name}
-                            className="h-full w-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <Store className="h-6 w-6 text-muted-foreground" />
-                        )}
+                        <Store className="h-6 w-6 text-muted-foreground" />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{order.merchant?.business_name}</h3>
+                        <h3 className="font-semibold">{order.merchant?.business_name || 'Store'}</h3>
                         <p className="text-sm text-muted-foreground">Order #{order.order_number}</p>
                       </div>
                     </div>
@@ -131,7 +132,6 @@ export function CustomerOrderTracking() {
                     </Badge>
                   </div>
 
-                  {/* Progress Bar */}
                   {!isCancelled && (
                     <div className="space-y-2">
                       <div className="h-2 bg-muted rounded-full overflow-hidden">
@@ -142,20 +142,17 @@ export function CustomerOrderTracking() {
                       </div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>Placed</span>
+                        <span>Paid</span>
                         <span>Processing</span>
-                        <span>Shipped</span>
-                        <span>Delivered</span>
+                        <span>Completed</span>
                       </div>
                     </div>
                   )}
 
-                  {/* Order Details */}
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Items</span>
-                      <span className="font-medium">
-                        {order.pos_order_items?.length || 0} item(s)
-                      </span>
+                      <span className="font-medium">{order.pos_order_items?.length || 0} item(s)</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total</span>
@@ -165,33 +162,6 @@ export function CustomerOrderTracking() {
                       <span className="text-muted-foreground">Ordered</span>
                       <span>{formatDistanceToNow(new Date(order.created_at), { addSuffix: true })}</span>
                     </div>
-                    {order.updated_at !== order.created_at && (
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Last updated</span>
-                        <span>{formatDistanceToNow(new Date(order.updated_at), { addSuffix: true })}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => navigate(`/app/order/${order.id}`)}
-                      className="flex-1"
-                    >
-                      View Details
-                    </Button>
-                    {!isCancelled && order.status !== 'delivered' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => navigate(`/app/store/${order.merchant?.id}`)}
-                      >
-                        Contact Store
-                      </Button>
-                    )}
                   </div>
                 </Card>
               );

@@ -45,12 +45,12 @@ export function CustomerMarketplace() {
       return;
     }
 
-    const { error } = await supabase.from('customer_favorite_merchants').insert({
+    const { error } = await (supabase as any).from('customer_favorite_merchants').insert({
       user_id: user.id,
       merchant_id: merchantId,
     });
 
-    if (error) {
+    if (error && error.code !== '23505') {
       toast({ title: 'Error', description: 'Could not save favorite', variant: 'destructive' });
     } else {
       toast({ title: 'Saved', description: 'Store added to favorites' });

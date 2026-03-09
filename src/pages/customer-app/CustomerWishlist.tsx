@@ -17,24 +17,27 @@ export function CustomerWishlist() {
     queryKey: ['favorite-stores', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: favorites, error } = await supabase
+      const { data: favorites, error } = await (supabase as any)
         .from('customer_favorite_merchants')
         .select('id, created_at, merchant_id')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Fetch merchant details
-      const merchantIds = favorites?.map(f => f.merchant_id).filter(Boolean) || [];
-      const { data: merchants } = await supabase
-        .from('gateway_merchants')
-        .select('id, business_name, description, logo_url')
-        .in('id', merchantIds);
-      
-      return favorites?.map(fav => ({
+
+      const merchantIds = (favorites || []).map((f: any) => f.merchant_id).filter(Boolean);
+      let merchants: any[] = [];
+      if (merchantIds.length > 0) {
+        const { data: m } = await supabase
+          .from('gateway_merchants')
+          .select('id, business_name')
+          .in('id', merchantIds);
+        merchants = m || [];
+      }
+
+      return (favorites || []).map((fav: any) => ({
         ...fav,
-        merchant: merchants?.find(m => m.id === fav.merchant_id)
+        merchant: merchants.find((m: any) => m.id === fav.merchant_id),
       }));
     },
   });
@@ -43,60 +46,60 @@ export function CustomerWishlist() {
     queryKey: ['wishlist-products', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: wishlist, error } = await supabase
+      const { data: wishlist, error } = await (supabase as any)
         .from('customer_wishlist_items')
         .select('id, created_at, product_id')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Fetch product details
-      const productIds = wishlist?.map(w => w.product_id).filter(Boolean) || [];
-      const { data: products } = await supabase
-        .from('pos_products')
-        .select('id, name, description, price, merchant_id')
-        .in('id', productIds);
-      
-      // Fetch product images
-      const { data: images } = await supabase
-        .from('pos_product_images')
-        .select('product_id, image_url')
-        .in('product_id', productIds);
-      
-      return wishlist?.map(item => ({
+
+      const productIds = (wishlist || []).map((w: any) => w.product_id).filter(Boolean);
+      let products: any[] = [];
+      let images: any[] = [];
+      if (productIds.length > 0) {
+        const { data: p } = await (supabase as any)
+          .from('pos_products')
+          .select('id, name, description, merchant_id')
+          .in('id', productIds);
+        products = p || [];
+
+        const { data: img } = await (supabase as any)
+          .from('pos_product_images')
+          .select('product_id, url')
+          .in('product_id', productIds);
+        images = img || [];
+      }
+
+      return (wishlist || []).map((item: any) => ({
         ...item,
         product: {
-          ...products?.find(p => p.id === item.product_id),
-          pos_product_images: images?.filter(img => img.product_id === item.product_id)
-        }
+          ...products.find((p: any) => p.id === item.product_id),
+          images: images.filter((img: any) => img.product_id === item.product_id),
+        },
       }));
     },
   });
 
   const handleRemoveStore = async (favoriteId: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('customer_favorite_merchants')
       .delete()
       .eq('id', favoriteId);
 
-    if (error) {
-      toast({ title: 'Error', description: 'Could not remove favorite', variant: 'destructive' });
-    } else {
+    if (!error) {
       toast({ title: 'Removed', description: 'Store removed from favorites' });
       refetchStores();
     }
   };
 
   const handleRemoveProduct = async (wishlistId: string) => {
-    const { error } = await supabase
+    const { error } = await (supabase as any)
       .from('customer_wishlist_items')
       .delete()
       .eq('id', wishlistId);
 
-    if (error) {
-      toast({ title: 'Error', description: 'Could not remove item', variant: 'destructive' });
-    } else {
+    if (!error) {
       toast({ title: 'Removed', description: 'Item removed from wishlist' });
       refetchProducts();
     }
@@ -141,12 +144,8 @@ export function CustomerWishlist() {
                 {wishlistProducts.map((item: any) => (
                   <Card key={item.id} className="overflow-hidden">
                     <div className="aspect-square bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
-                      {item.product?.pos_product_images?.[0]?.image_url ? (
-                        <img
-                          src={item.product.pos_product_images[0].image_url}
-                          alt={item.product.name}
-                          className="h-full w-full object-cover"
-                        />
+                      {item.product?.images?.[0]?.url ? (
+                        <img src={item.product.images[0].url} alt={item.product.name} className="h-full w-full object-cover" />
                       ) : (
                         <Package className="h-16 w-16 text-muted-foreground" />
                       )}
@@ -154,27 +153,15 @@ export function CustomerWishlist() {
                     <div className="p-4 space-y-3">
                       <div>
                         <h3 className="font-semibold">{item.product?.name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {item.product?.description}
-                        </p>
+                        <p className="text-sm text-muted-foreground line-clamp-2">{item.product?.description}</p>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-lg font-bold">
-                          {item.product?.price ? `XAF ${item.product.price.toLocaleString()}` : 'N/A'}
-                        </span>
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => navigate(`/app/product/${item.product?.id}`)}
-                          >
+                          <Button size="sm" onClick={() => navigate(`/app/product/${item.product?.id}`)}>
                             <ShoppingCart className="h-4 w-4 mr-1" />
                             View
                           </Button>
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            onClick={() => handleRemoveProduct(item.id)}
-                          >
+                          <Button size="sm" variant="ghost" onClick={() => handleRemoveProduct(item.id)}>
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
@@ -187,9 +174,7 @@ export function CustomerWishlist() {
               <Card className="p-12 text-center">
                 <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No products in your wishlist yet</p>
-                <Button className="mt-4" onClick={() => navigate('/app/marketplace')}>
-                  Browse Products
-                </Button>
+                <Button className="mt-4" onClick={() => navigate('/app/marketplace')}>Browse Products</Button>
               </Card>
             )}
           </TabsContent>
@@ -201,34 +186,14 @@ export function CustomerWishlist() {
                   <Card key={fav.id} className="p-4">
                     <div className="flex items-center gap-4">
                       <div className="h-16 w-16 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center flex-shrink-0">
-                        {fav.merchant?.logo_url ? (
-                          <img
-                            src={fav.merchant.logo_url}
-                            alt={fav.merchant.business_name}
-                            className="h-full w-full object-cover rounded-lg"
-                          />
-                        ) : (
-                          <Store className="h-8 w-8 text-muted-foreground" />
-                        )}
+                        <Store className="h-8 w-8 text-muted-foreground" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold">{fav.merchant?.business_name}</h3>
-                        <p className="text-sm text-muted-foreground line-clamp-1">
-                          {fav.merchant?.description}
-                        </p>
+                        <h3 className="font-semibold">{fav.merchant?.business_name || 'Store'}</h3>
                       </div>
                       <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => navigate(`/app/store/${fav.merchant?.id}`)}
-                        >
-                          Visit
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleRemoveStore(fav.id)}
-                        >
+                        <Button size="sm" onClick={() => navigate(`/app/store/${fav.merchant?.id}`)}>Visit</Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleRemoveStore(fav.id)}>
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
@@ -240,9 +205,7 @@ export function CustomerWishlist() {
               <Card className="p-12 text-center">
                 <Store className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                 <p className="text-muted-foreground">No favorite stores yet</p>
-                <Button className="mt-4" onClick={() => navigate('/app/marketplace')}>
-                  Discover Stores
-                </Button>
+                <Button className="mt-4" onClick={() => navigate('/app/marketplace')}>Discover Stores</Button>
               </Card>
             )}
           </TabsContent>

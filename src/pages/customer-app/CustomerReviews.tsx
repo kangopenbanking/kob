@@ -27,7 +27,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
     mutationFn: async () => {
       if (!user) throw new Error('Not authenticated');
 
-      const { error } = await supabase.from('pos_order_reviews').insert({
+      const { error } = await (supabase as any).from('pos_order_reviews').insert({
         order_id: orderId,
         customer_id: user.id,
         merchant_id: merchantId,
@@ -53,11 +53,7 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
         <h3 className="font-semibold mb-2">Rate your experience</h3>
         <div className="flex gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              onClick={() => setRating(star)}
-              className="focus:outline-none"
-            >
+            <button key={star} onClick={() => setRating(star)} className="focus:outline-none">
               <Star
                 className={`h-8 w-8 ${
                   star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'
@@ -68,20 +64,14 @@ function ReviewForm({ orderId, merchantId, onSuccess }: ReviewFormProps) {
         </div>
       </div>
 
-      <div>
-        <Textarea
-          placeholder="Share your experience (optional)"
-          value={comment}
-          onChange={(e) => setComment(e.target.value)}
-          rows={4}
-        />
-      </div>
+      <Textarea
+        placeholder="Share your experience (optional)"
+        value={comment}
+        onChange={(e) => setComment(e.target.value)}
+        rows={4}
+      />
 
-      <Button
-        onClick={() => submitReview.mutate()}
-        disabled={submitReview.isPending}
-        className="w-full"
-      >
+      <Button onClick={() => submitReview.mutate()} disabled={submitReview.isPending} className="w-full">
         {submitReview.isPending ? 'Submitting...' : 'Submit Review'}
       </Button>
     </Card>
@@ -96,35 +86,43 @@ export function CustomerReviews() {
     queryKey: ['pending-reviews', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: orders, error } = await supabase
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      if (!authUser?.email) return [];
+
+      const { data: orders, error } = await (supabase as any)
         .from('pos_orders')
         .select('id, order_number, merchant_id, created_at')
-        .eq('customer_id', user!.id)
+        .eq('customer_email', authUser.email)
         .eq('status', 'completed')
         .limit(10);
 
       if (error) throw error;
-      
-      // Check which orders have reviews
-      const orderIds = orders?.map(o => o.id) || [];
-      const { data: reviews } = await supabase
+      if (!orders?.length) return [];
+
+      // Check which have reviews
+      const orderIds = orders.map((o: any) => o.id);
+      const { data: reviews } = await (supabase as any)
         .from('pos_order_reviews')
         .select('order_id')
         .in('order_id', orderIds);
-      
-      const reviewedOrderIds = reviews?.map(r => r.order_id) || [];
-      const pendingOrders = orders?.filter(o => !reviewedOrderIds.includes(o.id));
-      
-      // Fetch merchant details
-      const merchantIds = [...new Set(pendingOrders?.map(o => o.merchant_id).filter(Boolean))];
-      const { data: merchants } = await supabase
-        .from('gateway_merchants')
-        .select('id, business_name, logo_url')
-        .in('id', merchantIds);
-      
-      return pendingOrders?.map(order => ({
+
+      const reviewedIds = (reviews || []).map((r: any) => r.order_id);
+      const pending = orders.filter((o: any) => !reviewedIds.includes(o.id));
+
+      // Fetch merchant names
+      const merchantIds = [...new Set(pending.map((o: any) => o.merchant_id).filter(Boolean))];
+      let merchants: any[] = [];
+      if (merchantIds.length > 0) {
+        const { data: m } = await supabase
+          .from('gateway_merchants')
+          .select('id, business_name')
+          .in('id', merchantIds as string[]);
+        merchants = m || [];
+      }
+
+      return pending.map((order: any) => ({
         ...order,
-        merchant: merchants?.find(m => m.id === order.merchant_id)
+        merchant: merchants.find((m: any) => m.id === order.merchant_id),
       }));
     },
   });
@@ -133,24 +131,28 @@ export function CustomerReviews() {
     queryKey: ['my-reviews', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data: reviews, error } = await supabase
+      const { data: reviews, error } = await (supabase as any)
         .from('pos_order_reviews')
         .select('id, rating, comment, created_at, helpful_count, merchant_id, order_id')
         .eq('customer_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
-      // Fetch merchant and order details
-      const merchantIds = [...new Set(reviews?.map(r => r.merchant_id).filter(Boolean))];
-      const { data: merchants } = await supabase
-        .from('gateway_merchants')
-        .select('id, business_name, logo_url')
-        .in('id', merchantIds);
-      
-      return reviews?.map(review => ({
+      if (!reviews?.length) return [];
+
+      const merchantIds = [...new Set(reviews.map((r: any) => r.merchant_id).filter(Boolean))];
+      let merchants: any[] = [];
+      if (merchantIds.length > 0) {
+        const { data: m } = await supabase
+          .from('gateway_merchants')
+          .select('id, business_name')
+          .in('id', merchantIds as string[]);
+        merchants = m || [];
+      }
+
+      return reviews.map((review: any) => ({
         ...review,
-        merchant: merchants?.find(m => m.id === review.merchant_id)
+        merchant: merchants.find((m: any) => m.id === review.merchant_id),
       }));
     },
   });
@@ -175,7 +177,6 @@ export function CustomerReviews() {
           <p className="text-muted-foreground">Share your shopping experiences</p>
         </div>
 
-        {/* Pending Reviews */}
         {pendingReviews && pendingReviews.length > 0 && (
           <div className="space-y-4">
             <h2 className="font-semibold">Waiting for your review</h2>
@@ -195,7 +196,7 @@ export function CustomerReviews() {
                           <MessageCircle className="h-6 w-6 text-muted-foreground" />
                         </div>
                         <div>
-                          <h3 className="font-semibold">{order.merchant?.business_name}</h3>
+                          <h3 className="font-semibold">{order.merchant?.business_name || 'Store'}</h3>
                           <p className="text-sm text-muted-foreground">Order #{order.order_number}</p>
                         </div>
                       </div>
@@ -208,7 +209,6 @@ export function CustomerReviews() {
           </div>
         )}
 
-        {/* My Reviews */}
         <div className="space-y-4">
           <h2 className="font-semibold">My Reviews ({myReviews?.length || 0})</h2>
           {myReviews && myReviews.length > 0 ? (
@@ -220,7 +220,7 @@ export function CustomerReviews() {
                       <AvatarFallback>{user.fullName?.[0] || 'U'}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <h4 className="font-semibold">{review.merchant?.business_name}</h4>
+                      <h4 className="font-semibold">{review.merchant?.business_name || 'Store'}</h4>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <div className="flex">
                           {[1, 2, 3, 4, 5].map((star) => (
@@ -232,17 +232,13 @@ export function CustomerReviews() {
                             />
                           ))}
                         </div>
-                        <span>•</span>
+                        <span>·</span>
                         <span>{formatDistanceToNow(new Date(review.created_at), { addSuffix: true })}</span>
                       </div>
                     </div>
                   </div>
                 </div>
-
-                {review.comment && (
-                  <p className="text-sm text-muted-foreground">{review.comment}</p>
-                )}
-
+                {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
                 <div className="flex items-center gap-4 text-sm text-muted-foreground">
                   <button className="flex items-center gap-1 hover:text-foreground">
                     <ThumbsUp className="h-4 w-4" />
