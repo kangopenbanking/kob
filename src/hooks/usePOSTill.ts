@@ -44,12 +44,6 @@ export function usePOSTill(merchantId: string | undefined) {
     queryKey: ['pos-till-products', merchantId],
     queryFn: async () => {
       if (!merchantId) return [];
-      const { data } = await supabase.functions.invoke('pos-catalog-products', {
-        body: null,
-        headers: { 'Content-Type': 'application/json' },
-        method: 'GET',
-      });
-      // Fallback: query directly
       const { data: prods } = await supabase
         .from('pos_products')
         .select('*, pos_product_variants(*)')
