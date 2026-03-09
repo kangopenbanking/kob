@@ -17,23 +17,25 @@ export function CustomerWishlist() {
     queryKey: ['favorite-stores', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: favorites, error } = await supabase
         .from('customer_favorite_merchants')
-        .select(`
-          id,
-          created_at,
-          merchant:gateway_merchants(
-            id,
-            business_name,
-            description,
-            logo_url
-          )
-        `)
+        .select('id, created_at, merchant_id')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Fetch merchant details
+      const merchantIds = favorites?.map(f => f.merchant_id).filter(Boolean) || [];
+      const { data: merchants } = await supabase
+        .from('gateway_merchants')
+        .select('id, business_name, description, logo_url')
+        .in('id', merchantIds);
+      
+      return favorites?.map(fav => ({
+        ...fav,
+        merchant: merchants?.find(m => m.id === fav.merchant_id)
+      }));
     },
   });
 
@@ -41,25 +43,34 @@ export function CustomerWishlist() {
     queryKey: ['wishlist-products', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: wishlist, error } = await supabase
         .from('customer_wishlist_items')
-        .select(`
-          id,
-          created_at,
-          product:pos_products(
-            id,
-            name,
-            description,
-            price,
-            merchant_id,
-            pos_product_images(image_url)
-          )
-        `)
+        .select('id, created_at, product_id')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Fetch product details
+      const productIds = wishlist?.map(w => w.product_id).filter(Boolean) || [];
+      const { data: products } = await supabase
+        .from('pos_products')
+        .select('id, name, description, price, merchant_id')
+        .in('id', productIds);
+      
+      // Fetch product images
+      const { data: images } = await supabase
+        .from('pos_product_images')
+        .select('product_id, image_url')
+        .in('product_id', productIds);
+      
+      return wishlist?.map(item => ({
+        ...item,
+        product: {
+          ...products?.find(p => p.id === item.product_id),
+          pos_product_images: images?.filter(img => img.product_id === item.product_id)
+        }
+      }));
     },
   });
 

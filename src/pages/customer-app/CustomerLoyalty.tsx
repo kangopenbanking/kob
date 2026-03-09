@@ -62,9 +62,9 @@ export function CustomerLoyalty() {
     );
   }
 
-  const totalPoints = rewards?.total_earned || 0;
-  const availablePoints = rewards?.current_balance || 0;
-  const redeemedPoints = rewards?.total_redeemed || 0;
+  const totalPoints = rewardSummary?.totalEarned || 0;
+  const availablePoints = rewardSummary?.currentBalance || 0;
+  const redeemedPoints = rewardSummary?.totalRedeemed || 0;
   const nextTier = 1000;
   const progressToNextTier = Math.min((totalPoints / nextTier) * 100, 100);
 

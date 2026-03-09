@@ -133,22 +133,25 @@ export function CustomerReviews() {
     queryKey: ['my-reviews', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: reviews, error } = await supabase
         .from('pos_order_reviews')
-        .select(`
-          id,
-          rating,
-          comment,
-          created_at,
-          helpful_count,
-          merchant:gateway_merchants(business_name, logo_url),
-          order:pos_orders(order_number)
-        `)
+        .select('id, rating, comment, created_at, helpful_count, merchant_id, order_id')
         .eq('customer_id', user!.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      
+      // Fetch merchant and order details
+      const merchantIds = [...new Set(reviews?.map(r => r.merchant_id).filter(Boolean))];
+      const { data: merchants } = await supabase
+        .from('gateway_merchants')
+        .select('id, business_name, logo_url')
+        .in('id', merchantIds);
+      
+      return reviews?.map(review => ({
+        ...review,
+        merchant: merchants?.find(m => m.id === review.merchant_id)
+      }));
     },
   });
 

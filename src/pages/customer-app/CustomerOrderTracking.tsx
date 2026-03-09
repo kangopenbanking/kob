@@ -26,32 +26,35 @@ export function CustomerOrderTracking() {
     queryKey: ['customer-orders', user?.id],
     enabled: !!user,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: orders, error } = await supabase
         .from('pos_orders')
-        .select(`
-          id,
-          order_number,
-          status,
-          total,
-          created_at,
-          updated_at,
-          merchant:gateway_merchants(
-            id,
-            business_name,
-            logo_url
-          ),
-          pos_order_items(
-            id,
-            quantity,
-            product:pos_products(name)
-          )
-        `)
+        .select('id, order_number, status, total, created_at, updated_at, merchant_id, customer_id')
         .eq('customer_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(50);
 
       if (error) throw error;
-      return data;
+      
+      // Fetch merchant details separately
+      const merchantIds = [...new Set(orders?.map(o => o.merchant_id).filter(Boolean))];
+      const { data: merchants } = await supabase
+        .from('gateway_merchants')
+        .select('id, business_name, logo_url')
+        .in('id', merchantIds);
+      
+      // Fetch order items
+      const orderIds = orders?.map(o => o.id) || [];
+      const { data: items } = await supabase
+        .from('pos_order_items')
+        .select('id, order_id, quantity')
+        .in('order_id', orderIds);
+      
+      // Combine data
+      return orders?.map(order => ({
+        ...order,
+        merchant: merchants?.find(m => m.id === order.merchant_id),
+        pos_order_items: items?.filter(i => i.order_id === order.id) || []
+      }));
     },
   });
 
