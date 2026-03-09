@@ -149,11 +149,11 @@ export default function SettlementApproval() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">KOB Fees</span>
-                  <span className="font-medium">{Number(settlement.total_kob_fees || 0).toLocaleString()}</span>
+                  <span className="font-medium">{Number(settlement.kob_fees_charged || 0).toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold border-t pt-2">
                   <span>Net Settlement</span>
-                  <span>{Number(settlement.net_settlement_amount || 0).toLocaleString()} {settlement.currency || "XAF"}</span>
+                  <span>{Number(settlement.net_settlement_amount || 0).toLocaleString()} XAF</span>
                 </div>
               </div>
 
