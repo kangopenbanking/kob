@@ -1620,6 +1620,38 @@ export type Database = {
           },
         ]
       }
+      business_app_feature_flags: {
+        Row: {
+          feature_key: string
+          id: string
+          is_enabled: boolean | null
+          merchant_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          feature_key: string
+          id?: string
+          is_enabled?: boolean | null
+          merchant_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          feature_key?: string
+          id?: string
+          is_enabled?: boolean | null
+          merchant_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "business_app_feature_flags_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       business_kyc: {
         Row: {
           account_id: string | null
@@ -9025,6 +9057,44 @@ export type Database = {
           },
         ]
       }
+      merchant_notification_preferences: {
+        Row: {
+          cha_ching_sound: boolean | null
+          id: string
+          low_stock_alert: boolean | null
+          merchant_id: string
+          new_order_alert: boolean | null
+          review_alert: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          cha_ching_sound?: boolean | null
+          id?: string
+          low_stock_alert?: boolean | null
+          merchant_id: string
+          new_order_alert?: boolean | null
+          review_alert?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          cha_ching_sound?: boolean | null
+          id?: string
+          low_stock_alert?: boolean | null
+          merchant_id?: string
+          new_order_alert?: boolean | null
+          review_alert?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "merchant_notification_preferences_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: true
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       merchant_pos_staff: {
         Row: {
           created_at: string
@@ -10415,6 +10485,56 @@ export type Database = {
           },
         ]
       }
+      pos_coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          current_uses: number | null
+          expires_at: string | null
+          id: string
+          is_active: boolean | null
+          max_uses: number | null
+          merchant_id: string
+          min_order_amount: number | null
+          type: string
+          value: number
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          merchant_id: string
+          min_order_amount?: number | null
+          type?: string
+          value?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          current_uses?: number | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          max_uses?: number | null
+          merchant_id?: string
+          min_order_amount?: number | null
+          type?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_coupons_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pos_inventory_items: {
         Row: {
           id: string
@@ -11234,6 +11354,57 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: true
             referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pos_store_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          customer_user_id: string
+          id: string
+          merchant_id: string
+          merchant_reply: string | null
+          order_id: string | null
+          rating: number
+          replied_at: string | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          customer_user_id: string
+          id?: string
+          merchant_id: string
+          merchant_reply?: string | null
+          order_id?: string | null
+          rating: number
+          replied_at?: string | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          customer_user_id?: string
+          id?: string
+          merchant_id?: string
+          merchant_reply?: string | null
+          order_id?: string | null
+          rating?: number
+          replied_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pos_store_reviews_merchant_id_fkey"
+            columns: ["merchant_id"]
+            isOneToOne: false
+            referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pos_store_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "pos_orders"
             referencedColumns: ["id"]
           },
         ]
