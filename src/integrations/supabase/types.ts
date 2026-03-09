@@ -3601,6 +3601,27 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_favorite_merchants: {
+        Row: {
+          created_at: string
+          id: string
+          merchant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          merchant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          merchant_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_invoices: {
         Row: {
           amount: number
@@ -3810,6 +3831,39 @@ export type Database = {
         }
         Relationships: []
       }
+      customer_reward_transactions: {
+        Row: {
+          balance_after: number
+          created_at: string
+          description: string | null
+          id: string
+          points_change: number
+          reference_id: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Insert: {
+          balance_after: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          points_change: number
+          reference_id?: string | null
+          transaction_type: string
+          user_id: string
+        }
+        Update: {
+          balance_after?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          points_change?: number
+          reference_id?: string | null
+          transaction_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       customer_rewards: {
         Row: {
           amount: number
@@ -3845,6 +3899,27 @@ export type Database = {
           reference_id?: string | null
           reward_type?: string
           status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      customer_wishlist_items: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
           user_id?: string
         }
         Relationships: []
@@ -10430,6 +10505,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pos_order_reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          helpful_count: number | null
+          id: string
+          merchant_id: string
+          merchant_responded_at: string | null
+          merchant_response: string | null
+          order_id: string
+          rating: number
+          updated_at: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          helpful_count?: number | null
+          id?: string
+          merchant_id: string
+          merchant_responded_at?: string | null
+          merchant_response?: string | null
+          order_id: string
+          rating: number
+          updated_at?: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          helpful_count?: number | null
+          id?: string
+          merchant_id?: string
+          merchant_responded_at?: string | null
+          merchant_response?: string | null
+          order_id?: string
+          rating?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       pos_order_status_history: {
         Row: {
