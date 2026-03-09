@@ -102,7 +102,7 @@ export default function InstitutionBranches() {
     try {
       const { error } = await supabase.from("branches").update({
         branch_name: form.branch_name, branch_type: form.branch_type, phone: form.phone || null, email: form.email || null,
-        address: { line: form.address_line, city: form.city, country: form.country },
+        address: { street: form.address_line, city: form.city, country: form.country },
       }).eq("id", editBranch.id);
       if (error) throw error;
       toast({ title: "Branch updated successfully" });
