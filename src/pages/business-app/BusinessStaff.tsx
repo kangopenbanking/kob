@@ -55,10 +55,7 @@ export default function BusinessStaff() {
 
       const { data, error } = await supabase
         .from('merchant_pos_staff')
-        .select(`
-          *,
-          merchant_staff_roles(role)
-        `)
+        .select('*')
         .eq('merchant_id', merchantId)
         .order('created_at', { ascending: false });
 
