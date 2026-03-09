@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     } catch (e) {
       healthChecks.edge_functions = {
         status: 'unhealthy',
-        details: { error: e instanceof Error ? e.message : String(e) }
+        details: { error: 'Edge functions check failed' }
       };
     }
 
