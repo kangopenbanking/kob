@@ -1,7 +1,7 @@
 // Phase 5: Certificate List Function
 // Lists all certificates for a TPP registration
 
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 import { corsHeaders } from "../_shared/cors.ts";
 

@@ -1,5 +1,5 @@
 // Phase 3: OAuth Token Endpoint with mTLS Support
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { generateSecureToken, verifySecret, checkRateLimit, rateLimitResponse, getRateLimitInfo, addRateLimitHeaders } from '../_shared/security.ts';
 import { extractClientCertificate, validateClientCertificate, recordCertificateUsage } from '../_shared/mtls.ts';
 
