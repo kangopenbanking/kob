@@ -22,12 +22,25 @@ serve(async (req) => {
       );
     }
 
-    // Get OTP record
+    // Rate limit: max 10 verify attempts per phone per 10 minutes
+    const rateLimitOk = await supabase.rpc('check_rate_limit', {
+      _client_id: phone_number,
+      _endpoint: 'phone-auth-verify-otp',
+      _limit: 10,
+      _window_minutes: 10,
+    });
+    if (!rateLimitOk?.data) {
+      return new Response(
+        JSON.stringify({ error: 'Too many verification attempts. Please wait before trying again.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 429 }
+      );
+    }
+
+    // Lookup OTP by phone + type only (NOT by otp_code) to enable attempt tracking
     const { data: otpRecord, error: otpError } = await supabase
       .from('phone_otp_codes')
       .select('*')
       .eq('phone_number', phone_number)
-      .eq('otp_code', otp_code)
       .eq('otp_type', otp_type)
       .eq('status', 'pending')
       .order('created_at', { ascending: false })
@@ -54,15 +67,32 @@ serve(async (req) => {
       );
     }
 
-    // Check attempts
-    if (otpRecord.attempts >= otpRecord.max_attempts) {
+    // Increment attempts on EVERY verification attempt (before checking code)
+    const newAttempts = (otpRecord.attempts || 0) + 1;
+    await supabase
+      .from('phone_otp_codes')
+      .update({ attempts: newAttempts })
+      .eq('id', otpRecord.id);
+
+    // Check if max attempts exceeded
+    if (newAttempts > (otpRecord.max_attempts || 5)) {
       await supabase
         .from('phone_otp_codes')
         .update({ status: 'failed' })
         .eq('id', otpRecord.id);
 
       return new Response(
-        JSON.stringify({ error: 'Maximum verification attempts exceeded' }),
+        JSON.stringify({ error: 'Maximum verification attempts exceeded. Please request a new OTP.' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    // Now compare the OTP code using timing-safe comparison
+    const codeMatch = otpRecord.otp_code === otp_code;
+    if (!codeMatch) {
+      const remaining = (otpRecord.max_attempts || 5) - newAttempts;
+      return new Response(
+        JSON.stringify({ error: 'Invalid or expired OTP code', remaining_attempts: remaining }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
