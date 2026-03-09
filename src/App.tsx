@@ -949,6 +949,15 @@ function App() {
               <Route path="fees" element={<MerchantFees />} />
               <Route path="till" element={<BusinessTill />} />
               <Route path="more" element={<BusinessMore />} />
+              <Route path="customers" element={<BusinessCustomers />} />
+              <Route path="coupons" element={<BusinessCoupons />} />
+              <Route path="reviews" element={<BusinessReviews />} />
+              <Route path="quick-order" element={<BusinessQuickOrder />} />
+              <Route path="products" element={<BusinessProducts />} />
+              <Route path="analytics" element={<BusinessAnalytics />} />
+              <Route path="staff" element={<BusinessStaff />} />
+              <Route path="storefront" element={<BusinessStorefront />} />
+              <Route path="inventory" element={<BusinessInventory />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
