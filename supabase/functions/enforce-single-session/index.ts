@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Delete any existing row for this user+context, then insert fresh
+    // 4. Delete any existing row for this user+context
     await adminClient
       .from('user_active_sessions')
       .delete()
@@ -79,18 +79,22 @@ Deno.serve(async (req) => {
       .delete()
       .eq('session_id', session_id)
 
-    const { error: insertError } = await adminClient
+    // 5. Upsert to handle any remaining race conditions on session_id uniqueness
+    const { error: upsertError } = await adminClient
       .from('user_active_sessions')
-      .insert({
-        user_id: userId,
-        session_id,
-        device_info: device_info || null,
-        last_active_at: new Date().toISOString(),
-        app_context: ctx,
-      })
+      .upsert(
+        {
+          user_id: userId,
+          session_id,
+          device_info: device_info || null,
+          last_active_at: new Date().toISOString(),
+          app_context: ctx,
+        },
+        { onConflict: 'session_id' }
+      )
 
-    if (insertError) {
-      console.error('Failed to insert session:', insertError)
+    if (upsertError) {
+      console.error('Failed to upsert session:', upsertError)
       return new Response(JSON.stringify({ error: 'Failed to register session' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
