@@ -27,7 +27,7 @@ const BusinessTill: React.FC = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return null;
       if (paramMerchantId) {
-        const { data } = await supabase.from('gateway_merchants').select('id, business_name, currency').eq('id', paramMerchantId).maybeSingle();
+        const { data } = await supabase.from('gateway_merchants').select('id, business_name').eq('id', paramMerchantId).maybeSingle();
         return data;
       }
       // Check staff assignment
