@@ -145,7 +145,7 @@ const BusinessWallet: React.FC = () => {
 
       <div className="grid grid-cols-2 gap-4">
         <Button
-          onClick={handlePayout}
+          onClick={() => handlePayout()}
           disabled={availableBalance < 1000}
           className="h-auto py-4 flex-col gap-2 rounded-2xl"
         >
