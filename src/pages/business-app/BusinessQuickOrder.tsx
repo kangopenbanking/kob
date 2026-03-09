@@ -65,15 +65,15 @@ const BusinessQuickOrder: React.FC = () => {
       const { data: order, error } = await supabase.from('pos_orders').insert({
         merchant_id: merchantId!,
         order_number: orderNumber,
-        status: 'pending_payment',
+        status: 'pending_payment' as any,
         subtotal: total,
         total,
-        tax: 0,
-        discount: 0,
-        items: cart.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, name: i.name, price: i.price, quantity: i.qty })),
+        tax_total: 0,
+        discount_total: 0,
+        metadata_json: { items: cart.map(i => ({ product_id: i.product_id, variant_id: i.variant_id, name: i.name, price: i.price, quantity: i.qty })) },
         customer_name: customerName || null,
         customer_phone: customerPhone || null,
-        channel: 'manual',
+        channel: 'pos',
       }).select('id').single();
       if (error) throw error;
       return order;
