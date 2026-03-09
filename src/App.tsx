@@ -336,6 +336,10 @@ import StaffLogin from "./pages/merchant/StaffLogin";
 import AdminTravelManagement from "./pages/admin/AdminTravelManagement";
 import AdminTravelGuide from "./pages/admin/AdminTravelGuide";
 import AdminMarketplace from "./pages/admin/AdminMarketplace";
+import SettlementApproval from "./pages/admin/SettlementApproval";
+import InvoiceManagement from "./pages/admin/InvoiceManagement";
+import MerchantFees from "./pages/merchant/MerchantFees";
+import BusinessRefunds from "./pages/business-app/BusinessRefunds";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
@@ -521,6 +525,8 @@ function App() {
               <Route path="travel-staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel-scanner" element={<MerchantTravelScanner />} />
               <Route path="storefront" element={<MerchantStorefront />} />
+              {/* Phase 2: Financial Operations */}
+              <Route path="fees" element={<MerchantFees />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
@@ -587,6 +593,9 @@ function App() {
               <Route path="travel-management" element={<AdminTravelManagement />} />
               <Route path="travel-guide" element={<AdminTravelGuide />} />
               <Route path="marketplace" element={<AdminMarketplace />} />
+              {/* Phase 2: Financial Operations */}
+              <Route path="settlement-approval" element={<SettlementApproval />} />
+              <Route path="invoice-management" element={<InvoiceManagement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -878,6 +887,8 @@ function App() {
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
               <Route path="orders" element={<BusinessOrders />} />
+              <Route path="refunds" element={<BusinessRefunds />} />
+              <Route path="fees" element={<MerchantFees />} />
               <Route path="more" element={<BusinessMore />} />
             </Route>
 
@@ -889,6 +900,8 @@ function App() {
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
               <Route path="orders" element={<BusinessOrders />} />
+              <Route path="refunds" element={<BusinessRefunds />} />
+              <Route path="fees" element={<MerchantFees />} />
               <Route path="more" element={<BusinessMore />} />
             </Route>
 

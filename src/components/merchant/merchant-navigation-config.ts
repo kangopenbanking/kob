@@ -2,7 +2,7 @@ import {
   LayoutDashboard, Activity, ArrowUpDown, Link2, RefreshCw, Users,
   Wallet, DollarSign, Undo2, Key, Webhook, Building2, GitBranch,
   ShieldCheck, AlertTriangle, Store, BarChart3, PlusCircle,
-  Bus, Map, Grid3X3, Calendar, BookOpen, QrCode,
+  Bus, Map, Grid3X3, Calendar, BookOpen, QrCode, Receipt,
 } from "lucide-react";
 
 export const merchantNavigation = [
@@ -11,6 +11,7 @@ export const merchantNavigation = [
     items: [
       { title: "Dashboard", path: "/merchant", icon: LayoutDashboard },
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
+      { title: "Fees", path: "/merchant/fees", icon: Receipt },
     ],
   },
   {
