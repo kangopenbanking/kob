@@ -88,8 +88,11 @@ serve(async (req) => {
       );
     }
 
-    // Verify answer
-    const isCorrect = parseInt(answer) === challenge.challenge_answer;
+    // Verify answer - ensure both are compared as numbers
+    const submittedAnswer = Number(answer);
+    const expectedAnswer = Number(challenge.challenge_answer);
+    console.log(`Captcha verify: submitted=${submittedAnswer} (type=${typeof answer}, raw=${JSON.stringify(answer)}), expected=${expectedAnswer}`);
+    const isCorrect = !isNaN(submittedAnswer) && submittedAnswer === expectedAnswer;
 
     if (isCorrect) {
       // Mark as verified
