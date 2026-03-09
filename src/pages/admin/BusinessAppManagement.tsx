@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Store, Globe, Settings2, ShoppingBag, DollarSign, Users, Search, ChevronRight, ToggleLeft, ToggleRight, TrendingUp } from 'lucide-react';
+import { Store, ShoppingBag, DollarSign, Search, ChevronRight, ToggleLeft, ToggleRight, TrendingUp, ExternalLink, Copy } from 'lucide-react';
 import { StatCard } from '@/components/ui/stat-card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -16,9 +16,6 @@ import {
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from 'recharts';
 
 const FEATURE_KEYS = [
@@ -35,6 +32,26 @@ const BusinessAppManagement: React.FC = () => {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
   const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
+
+  const getMerchantAppPath = (merchantId: string) => `/biz/${merchantId}/auth`;
+  const getMerchantAppUrl = (merchantId: string) => {
+    const path = getMerchantAppPath(merchantId);
+    if (typeof window === 'undefined') return path;
+    return `${window.location.origin}${path}`;
+  };
+
+  const openMerchantApp = (merchantId: string) => {
+    window.open(getMerchantAppPath(merchantId), '_blank', 'noopener,noreferrer');
+  };
+
+  const copyMerchantAppUrl = async (merchantId: string) => {
+    try {
+      await navigator.clipboard.writeText(getMerchantAppUrl(merchantId));
+      toast.success('Merchant app URL copied');
+    } catch {
+      toast.error('Could not copy URL');
+    }
+  };
 
   // KPI: Total merchants
   const { data: merchants, isLoading: merchantsLoading } = useQuery({
@@ -227,6 +244,7 @@ const BusinessAppManagement: React.FC = () => {
                   <TableHead className="text-right">Orders</TableHead>
                   <TableHead className="text-right">Revenue</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>App URL</TableHead>
                   <TableHead className="text-right">Joined</TableHead>
                   <TableHead />
                 </TableRow>
@@ -239,12 +257,14 @@ const BusinessAppManagement: React.FC = () => {
                       <TableCell><Skeleton className="h-4 w-12" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-16" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-36" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                       <TableCell />
                     </TableRow>
                   ))
                 ) : filteredMerchants?.map(m => {
                   const stats = merchantOrderCounts?.get(m.id);
+                  const appPath = getMerchantAppPath(m.id);
                   return (
                     <TableRow key={m.id} className="cursor-pointer" onClick={() => setSelectedMerchant(m)}>
                       <TableCell className="font-medium">{m.business_name || 'Unnamed'}</TableCell>
@@ -254,6 +274,18 @@ const BusinessAppManagement: React.FC = () => {
                         <Badge variant={m.status === 'active' ? 'default' : 'secondary'}>
                           {m.status === 'active' ? 'Active' : 'Inactive'}
                         </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          className="text-sm text-primary hover:underline"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openMerchantApp(m.id);
+                          }}
+                        >
+                          {appPath}
+                        </button>
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground text-sm">
                         {new Date(m.created_at).toLocaleDateString()}
@@ -361,6 +393,24 @@ const BusinessAppManagement: React.FC = () => {
               </div>
 
               <div>
+                <h3 className="text-sm font-bold mb-3">Merchant App Access</h3>
+                <Card className="border">
+                  <CardContent className="p-3 space-y-3">
+                    <p className="text-xs text-muted-foreground break-all">{getMerchantAppUrl(selectedMerchant.id)}</p>
+                    <div className="flex items-center gap-2">
+                      <Button className="flex-1" onClick={() => openMerchantApp(selectedMerchant.id)}>
+                        <ExternalLink className="h-4 w-4 mr-2" />
+                        Open App
+                      </Button>
+                      <Button variant="outline" size="icon" onClick={() => copyMerchantAppUrl(selectedMerchant.id)}>
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <div>
                 <h3 className="text-sm font-bold mb-3">Feature Toggles</h3>
                 <div className="space-y-2">
                   {FEATURE_KEYS.map(f => {
@@ -392,3 +442,4 @@ const BusinessAppManagement: React.FC = () => {
 };
 
 export default BusinessAppManagement;
+
