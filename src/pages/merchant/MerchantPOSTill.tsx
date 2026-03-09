@@ -287,6 +287,13 @@ const MerchantPOSTill: React.FC = () => {
           onScan={lookupByBarcode}
         />
       )}
+
+      {/* Wallet QR Payment Dialog */}
+      <WalletQRDialog
+        qrData={walletQR}
+        onClose={cancelWalletQR}
+        onCheckPayment={checkWalletPayment}
+      />
     </div>
   );
 };
