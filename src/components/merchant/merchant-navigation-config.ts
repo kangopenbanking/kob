@@ -11,6 +11,7 @@ export const merchantNavigation = [
     items: [
       { title: "Dashboard", path: "/merchant", icon: LayoutDashboard },
       { title: "Analytics", path: "/merchant/analytics", icon: BarChart3 },
+      { title: "Fees", path: "/merchant/fees", icon: Receipt },
     ],
   },
   {
