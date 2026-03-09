@@ -256,8 +256,9 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (err: any) {
-    console.error('travel-booking-notification error:', err)
-    return new Response(JSON.stringify({ error: err.message }), {
+    const errorId = crypto.randomUUID().slice(0, 8);
+    console.error(`[${errorId}] travel-booking-notification error:`, err)
+    return new Response(JSON.stringify({ error: 'An internal error occurred.', error_id: errorId }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })

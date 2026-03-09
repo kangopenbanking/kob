@@ -102,7 +102,8 @@ Deno.serve(async (req) => {
       new_score: scoreResult?.score || null,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('piggybank-pay error:', err);
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   }

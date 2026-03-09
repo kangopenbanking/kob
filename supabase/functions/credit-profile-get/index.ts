@@ -39,7 +39,8 @@ Deno.serve(async (req) => {
       latest_snapshot: latestSnapshot,
     }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err: any) {
-    return new Response(JSON.stringify({ error: err.message }), {
+    console.error('credit-profile-get error:', err);
+    return new Response(JSON.stringify({ error: 'An internal error occurred.' }), {
       status: 401,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
