@@ -90,7 +90,7 @@ export default function BusinessProducts() {
               <p className="text-primary-foreground/80 text-sm mt-1">Manage your catalog</p>
             </div>
             <Button
-              onClick={() => navigate('/business/products/new')}
+              onClick={() => navigate(`${basePath}/products/new`)}
               className="bg-white text-primary hover:bg-white/90 rounded-2xl h-11 px-5 shadow-sm"
             >
               <Plus className="h-5 w-5 mr-2" strokeWidth={2} />
