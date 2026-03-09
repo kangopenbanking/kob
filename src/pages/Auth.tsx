@@ -46,7 +46,8 @@ export default function Auth() {
   const [captchaSessionId, setCaptchaSessionId] = useState('');
 
   // Form state
-  const [countryCode, setCountryCode] = useState('+237');
+  const [selectedCountry, setSelectedCountry] = useState('Cameroon');
+  const countryCode = COUNTRY_CODES.find(c => c.country === selectedCountry)?.code || '+237';
   const [phoneNumber, setPhoneNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -552,14 +553,16 @@ export default function Auth() {
                   <div className="space-y-2">
                     <Label>Phone Number *</Label>
                     <div className="flex gap-2">
-                      <Select value={countryCode} onValueChange={setCountryCode}>
+                      <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                         <SelectTrigger className="w-[140px]">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
                           {COUNTRY_CODES.map((cc) => (
-                            <SelectItem key={cc.code} value={cc.code}>
-                              {cc.flag} {cc.code}
+                            <SelectItem key={cc.country} value={cc.country}>
+                              <span className="inline-flex items-center gap-1.5">
+                                <span>{cc.flag}</span> <span>{cc.code}</span>
+                              </span>
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -635,14 +638,16 @@ export default function Auth() {
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number *</Label>
                 <div className="flex gap-2">
-                  <Select value={countryCode} onValueChange={setCountryCode}>
+                  <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                     <SelectTrigger className="w-[140px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {COUNTRY_CODES.map((cc) => (
-                        <SelectItem key={cc.code} value={cc.code}>
-                          {cc.flag} {cc.code}
+                        <SelectItem key={cc.country} value={cc.country}>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span>{cc.flag}</span> <span>{cc.code}</span>
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
