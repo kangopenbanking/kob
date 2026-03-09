@@ -114,8 +114,7 @@ Deno.serve(async (req) => {
       console.error('Certificate parsing failed:', error);
       return new Response(
         JSON.stringify({ 
-          error: 'Invalid certificate format',
-          details: error instanceof Error ? error.message : 'Unknown error'
+          error: 'Invalid certificate format'
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
