@@ -138,12 +138,14 @@ export default function BusinessProducts() {
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
           </div>
         ) : products?.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Package className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No products yet</h3>
-            <p className="text-muted-foreground mb-6">Start building your catalog</p>
-            <Button onClick={() => navigate('/business/products/new')}>
-              <Plus className="h-4 w-4 mr-2" />
+          <Card className="p-12 text-center border-0 shadow-md">
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10 mx-auto mb-5">
+              <Package className="h-10 w-10 text-primary" strokeWidth={1.5} />
+            </div>
+            <h3 className="text-xl font-bold mb-2">No products yet</h3>
+            <p className="text-muted-foreground mb-8 text-sm">Start building your catalog</p>
+            <Button className="rounded-2xl h-12 px-6 font-bold" onClick={() => navigate('/business/products/new')}>
+              <Plus className="h-5 w-5 mr-2" strokeWidth={2} />
               Add First Product
             </Button>
           </Card>
