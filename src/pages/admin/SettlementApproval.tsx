@@ -129,7 +129,7 @@ export default function SettlementApproval() {
                       </span>
                       <span className="flex items-center gap-1">
                         <DollarSign className="h-4 w-4" />
-                        {Number(settlement.net_settlement_amount || 0).toLocaleString()} {settlement.currency || "XAF"}
+                        {Number(settlement.net_settlement_amount || 0).toLocaleString()} XAF
                       </span>
                     </div>
                   </CardDescription>

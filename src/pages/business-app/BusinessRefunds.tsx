@@ -60,7 +60,7 @@ export default function BusinessRefunds() {
         .limit(50);
       
       if (searchRef) {
-        query = query.or(`charge_ref.ilike.%${searchRef}%,customer_phone.ilike.%${searchRef}%`);
+        query = query.or(`tx_ref.ilike.%${searchRef}%,customer_phone.ilike.%${searchRef}%`);
       }
       
       const { data, error } = await query;

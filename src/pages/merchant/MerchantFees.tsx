@@ -54,21 +54,21 @@ export default function MerchantFees() {
       // Fetch fees via gateway_charges
       const { data: charges, error } = await supabase
         .from("gateway_charges")
-        .select("amount, gateway_fee, channel, created_at")
+        .select("amount, fee_amount, channel, created_at")
         .eq("merchant_id", merchant.id)
         .eq("status", "successful");
       
       if (error) throw error;
 
       const thisMonthFees = charges?.filter(c => new Date(c.created_at) >= thisMonthStart)
-        .reduce((sum, c) => sum + (Number(c.gateway_fee) || 0), 0) || 0;
+        .reduce((sum, c) => sum + (Number(c.fee_amount) || 0), 0) || 0;
       
       const lastMonthFees = charges?.filter(c => 
         new Date(c.created_at) >= lastMonthStart && new Date(c.created_at) <= lastMonthEnd)
-        .reduce((sum, c) => sum + (Number(c.gateway_fee) || 0), 0) || 0;
+        .reduce((sum, c) => sum + (Number(c.fee_amount) || 0), 0) || 0;
       
       const ytdFees = charges?.filter(c => new Date(c.created_at) >= ytdStart)
-        .reduce((sum, c) => sum + (Number(c.gateway_fee) || 0), 0) || 0;
+        .reduce((sum, c) => sum + (Number(c.fee_amount) || 0), 0) || 0;
 
       const totalRevenue = charges?.reduce((sum, c) => sum + (Number(c.amount) || 0), 0) || 0;
       const feeToRevenueRatio = totalRevenue > 0 ? (ytdFees / totalRevenue) * 100 : 0;
@@ -76,9 +76,9 @@ export default function MerchantFees() {
       const avgFeePerTx = charges?.length ? ytdFees / charges.length : 0;
 
       // Fee breakdown by channel
-      const channelBreakdown = charges?.reduce((acc: any, c) => {
+      const channelBreakdown = charges?.reduce((acc: Record<string, number>, c) => {
         const channel = c.channel || "unknown";
-        const fee = Number(c.gateway_fee) || 0;
+        const fee = Number(c.fee_amount) || 0;
         acc[channel] = (acc[channel] || 0) + fee;
         return acc;
       }, {});
@@ -99,7 +99,7 @@ export default function MerchantFees() {
           date: new Date(c.created_at).toLocaleDateString(),
           channel: c.channel,
           amount: Number(c.amount),
-          fee: Number(c.gateway_fee),
+          fee: Number(c.fee_amount),
         })) || [],
       };
     },
