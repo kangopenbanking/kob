@@ -430,6 +430,15 @@ import BusinessMore from "./pages/business-app/BusinessMore";
 import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
 import MerchantPOSTill from "./pages/merchant/MerchantPOSTill";
 import BusinessTill from "./pages/business-app/BusinessTill";
+import BusinessCustomers from "./pages/business-app/BusinessCustomers";
+import BusinessCoupons from "./pages/business-app/BusinessCoupons";
+import BusinessReviews from "./pages/business-app/BusinessReviews";
+import BusinessQuickOrder from "./pages/business-app/BusinessQuickOrder";
+import BusinessProducts from "./pages/business-app/BusinessProducts";
+import BusinessAnalytics from "./pages/business-app/BusinessAnalytics";
+import BusinessStaff from "./pages/business-app/BusinessStaff";
+import BusinessStorefront from "./pages/business-app/BusinessStorefront";
+import BusinessInventory from "./pages/business-app/BusinessInventory";
 
 const queryClient = new QueryClient({
   defaultOptions: {
