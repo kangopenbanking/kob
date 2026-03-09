@@ -251,8 +251,8 @@ const BusinessAppManagement: React.FC = () => {
                       <TableCell className="text-right">{stats?.count ?? 0}</TableCell>
                       <TableCell className="text-right">{formatXAF(stats?.revenue ?? 0)}</TableCell>
                       <TableCell>
-                        <Badge variant={m.is_active ? 'default' : 'secondary'}>
-                          {m.is_active ? 'Active' : 'Inactive'}
+                        <Badge variant={m.status === 'active' ? 'default' : 'secondary'}>
+                          {m.status === 'active' ? 'Active' : 'Inactive'}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right text-muted-foreground text-sm">
