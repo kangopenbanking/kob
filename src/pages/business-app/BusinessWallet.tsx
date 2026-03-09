@@ -150,13 +150,57 @@ const BusinessWallet: React.FC = () => {
           <ArrowUpRight className="h-5 w-5" />
           <span className="text-sm font-medium">Request Payout</span>
         </Button>
-        <Button
-          variant="outline"
-          className="h-auto py-4 flex-col gap-2 rounded-2xl"
-        >
-          <History className="h-5 w-5" />
-          <span className="text-sm font-medium">History</span>
-        </Button>
+        <Sheet open={showLedger} onOpenChange={setShowLedger}>
+          <SheetTrigger asChild>
+            <Button
+              variant="outline"
+              className="h-auto py-4 flex-col gap-2 rounded-2xl"
+            >
+              <History className="h-5 w-5" />
+              <span className="text-sm font-medium">Transaction History</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[80vh]">
+            <SheetHeader>
+              <SheetTitle>Transaction Ledger</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-2 overflow-auto max-h-[calc(80vh-100px)]">
+              {ledgerLoading ? (
+                <div className="space-y-2">
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+                </div>
+              ) : ledgerData?.data && ledgerData.data.length > 0 ? (
+                ledgerData.data.map((entry: any) => (
+                  <Card key={entry.id} className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-medium capitalize">{entry.type}</p>
+                        <p className="text-xs text-muted-foreground">{entry.reference}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(entry.created_at).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className={`text-sm font-bold ${entry.direction === 'credit' ? 'text-emerald-600' : 'text-red-600'}`}>
+                          {entry.direction === 'credit' ? '+' : '-'}{formatXAF(entry.amount)}
+                        </p>
+                        <p className="text-xs capitalize text-muted-foreground">{entry.status}</p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              ) : (
+                <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+              )}
+            </div>
+          </SheetContent>
+        </Sheet>
       </div>
 
       {settlements && settlements.length > 0 && (
@@ -187,8 +231,8 @@ const BusinessWallet: React.FC = () => {
         open={pinDialog.open}
         onOpenChange={(open) => setPinDialog({ ...pinDialog, open })}
         onConfirmed={handlePinConfirmed}
-        title="Confirm Payout"
-        description="Enter your PIN to request a payout"
+        title="Confirm Payout Request"
+        description={`Enter your PIN to request payout of ${formatXAF(pinDialog.amount || availableBalance)}`}
       />
     </div>
   );
