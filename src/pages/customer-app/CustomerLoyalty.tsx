@@ -12,18 +12,24 @@ export function CustomerLoyalty() {
   const { user } = useCustomerAuth();
   const navigate = useNavigate();
 
-  const { data: rewards } = useQuery({
-    queryKey: ['customer-rewards', user?.id],
+  const { data: rewardSummary } = useQuery({
+    queryKey: ['customer-rewards-summary', user?.id],
     enabled: !!user,
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('customer_rewards')
-        .select('*')
-        .eq('user_id', user!.id)
-        .single();
+        .from('customer_reward_transactions')
+        .select('points_change')
+        .eq('user_id', user!.id);
 
       if (error) throw error;
-      return data;
+      
+      const totalEarned = data?.filter(t => t.points_change > 0)
+        .reduce((sum, t) => sum + t.points_change, 0) || 0;
+      const totalRedeemed = Math.abs(data?.filter(t => t.points_change < 0)
+        .reduce((sum, t) => sum + t.points_change, 0) || 0);
+      const currentBalance = totalEarned - totalRedeemed;
+      
+      return { totalEarned, totalRedeemed, currentBalance };
     },
   });
 
@@ -33,7 +39,7 @@ export function CustomerLoyalty() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from('customer_reward_transactions')
-        .select('*')
+        .select('id, transaction_type, points_change, created_at')
         .eq('user_id', user!.id)
         .order('created_at', { ascending: false })
         .limit(10);
