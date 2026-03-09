@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
+import { WalletQRDialog } from '@/components/pos/WalletQRDialog';
 import { BarcodeScanner } from '@/components/pos/BarcodeScanner';
 import { ShiftManager } from '@/components/pos/ShiftManager';
 import { EnterpriseGate } from '@/components/storefront/EnterpriseGate';
@@ -249,6 +250,13 @@ const BusinessTill: React.FC = () => {
       {isEnterprise && (
         <BarcodeScanner isOpen={scannerOpen} onOpenChange={setScannerOpen} onScan={till.lookupByBarcode} />
       )}
+
+      {/* Wallet QR Payment Dialog */}
+      <WalletQRDialog
+        qrData={till.walletQR}
+        onClose={till.cancelWalletQR}
+        onCheckPayment={till.checkWalletPayment}
+      />
     </Tabs>
   );
 };

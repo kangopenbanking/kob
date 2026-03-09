@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
+import { WalletQRDialog } from '@/components/pos/WalletQRDialog';
 import { BarcodeScanner } from '@/components/pos/BarcodeScanner';
 import { ShiftManager } from '@/components/pos/ShiftManager';
 import { EnterpriseGate } from '@/components/storefront/EnterpriseGate';
@@ -49,6 +50,7 @@ const MerchantPOSTill: React.FC = () => {
     setCustomerPhone, globalDiscount, setGlobalDiscount, discountType, setDiscountType,
     subtotal, discountAmount, taxAmount, total,
     isCheckingOut, checkout, receipt, setReceipt, searchQuery, setSearchQuery,
+    walletQR, checkWalletPayment, cancelWalletQR,
   } = usePOSTill(merchantId);
 
   if (receipt) {
@@ -285,6 +287,13 @@ const MerchantPOSTill: React.FC = () => {
           onScan={lookupByBarcode}
         />
       )}
+
+      {/* Wallet QR Payment Dialog */}
+      <WalletQRDialog
+        qrData={walletQR}
+        onClose={cancelWalletQR}
+        onCheckPayment={checkWalletPayment}
+      />
     </div>
   );
 };
