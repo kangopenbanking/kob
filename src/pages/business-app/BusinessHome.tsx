@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { StatCard } from '@/components/ui/stat-card';
 import { Wallet, Clock, ShoppingBag, TrendingUp } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
+import { sounds } from '@/lib/sounds';
+import { useQueryClient } from '@tanstack/react-query';
 
 const BusinessHome: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
