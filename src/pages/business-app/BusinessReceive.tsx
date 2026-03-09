@@ -37,6 +37,28 @@ const BusinessReceive: React.FC = () => {
   const formatXAF = (amount: number) =>
     new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
 
+  // Realtime payment notification for this merchant
+  useEffect(() => {
+    if (!merchantId) return;
+    const channel = supabase
+      .channel(`receive-payments-${merchantId}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'pos_order_payments',
+        filter: `merchant_id=eq.${merchantId}`,
+      }, (payload: any) => {
+        if (payload.new?.status === 'succeeded') {
+          sounds.success();
+          toast.success(`Payment received: ${formatXAF(payload.new.amount)}`, {
+            description: `Via ${payload.new.method || 'wallet'}`,
+          });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [merchantId]);
+
   /* ─── QR Generation ─── */
   const handleGenerateQR = async () => {
     if (!merchantId) return;
