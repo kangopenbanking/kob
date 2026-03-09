@@ -4,7 +4,7 @@ import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
-import { Home, ScanLine, Wallet, ShoppingBag, MoreHorizontal } from 'lucide-react';
+import { Home, ScanLine, Wallet, Monitor, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 
