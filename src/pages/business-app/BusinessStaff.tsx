@@ -195,7 +195,7 @@ export default function BusinessStaff() {
                       <Shield className="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                      <p className="font-semibold">{member.email}</p>
+                      <p className="font-semibold">{member.user_id.substring(0, 8)}...</p>
                       <p className="text-xs text-muted-foreground">
                         {role?.label || 'Staff'}
                       </p>
@@ -203,7 +203,7 @@ export default function BusinessStaff() {
                   </div>
                   <span
                     className={`text-xs px-2 py-1 rounded-full ${
-                      member.is_active
+                      member.status === 'active'
                         ? 'bg-green-100 text-green-700'
                         : 'bg-gray-100 text-gray-700'
                     }`}
