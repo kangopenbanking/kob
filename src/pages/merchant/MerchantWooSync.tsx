@@ -44,14 +44,14 @@ export default function MerchantWooSync() {
     if (!merchant) return setLoading(false);
     setMerchantId(merchant.id);
 
-    const intRes: any = await supabase
+    const intRes = await (supabase as any)
       .from("merchant_integrations")
       .select("*")
       .eq("merchant_id", merchant.id)
       .eq("integration_type", "woocommerce")
       .order("created_at", { ascending: false });
 
-    const runRes: any = await supabase
+    const runRes = await (supabase as any)
       .from("integration_sync_runs")
       .select("*")
       .eq("merchant_id", merchant.id)
