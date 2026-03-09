@@ -287,6 +287,12 @@ export default function MerchantStorefront() {
           <TabsTrigger value="shipping" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Truck className="w-3.5 h-3.5" strokeWidth={1.5} /> Shipping
           </TabsTrigger>
+          <TabsTrigger value="products" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Layers className="w-3.5 h-3.5" strokeWidth={1.5} /> Products
+          </TabsTrigger>
+          <TabsTrigger value="woo-connect" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
+            <Settings className="w-3.5 h-3.5" strokeWidth={1.5} /> Integrations
+          </TabsTrigger>
           <TabsTrigger value="demo" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm px-4 py-2.5 text-xs font-medium gap-2">
             <Sparkles className="w-3.5 h-3.5" strokeWidth={1.5} /> Demo Store
           </TabsTrigger>
