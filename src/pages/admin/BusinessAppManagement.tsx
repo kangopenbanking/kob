@@ -183,7 +183,7 @@ const BusinessAppManagement: React.FC = () => {
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard
           title="Active Merchants"
-          value={merchants?.filter(m => m.is_active).length ?? 0}
+          value={merchants?.filter(m => m.status === 'active').length ?? 0}
           icon={<Store className="h-5 w-5" />}
         />
         <StatCard
