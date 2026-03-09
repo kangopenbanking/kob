@@ -158,7 +158,7 @@ export default function BusinessStaff() {
           <Card className="p-3 bg-white/10 border-white/20">
             <p className="text-xs text-primary-foreground/70 mb-1">Active</p>
             <p className="text-2xl font-bold">
-              {staff?.filter(s => s.is_active).length || 0}
+              {staff?.filter(s => s.status === 'active').length || 0}
             </p>
           </Card>
           <Card className="p-3 bg-white/10 border-white/20">
