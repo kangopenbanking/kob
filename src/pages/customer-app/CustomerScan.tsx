@@ -206,6 +206,8 @@ const CustomerScan: React.FC = () => {
     setScanResult(null);
     setManualCode('');
     setPayAmount('');
+    setPaymentSuccess(null);
+    setMerchantQR(null);
   };
 
   const qrData = JSON.stringify({
