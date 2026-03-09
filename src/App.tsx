@@ -887,6 +887,8 @@ function App() {
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
               <Route path="orders" element={<BusinessOrders />} />
+              <Route path="refunds" element={<BusinessRefunds />} />
+              <Route path="fees" element={<MerchantFees />} />
               <Route path="more" element={<BusinessMore />} />
             </Route>
 
