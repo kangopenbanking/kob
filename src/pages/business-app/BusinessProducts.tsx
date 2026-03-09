@@ -113,15 +113,15 @@ export default function BusinessProducts() {
           </div>
 
           {/* Status Tabs */}
-          <div className="flex gap-2 mt-4">
+          <div className="flex gap-2 mt-5 overflow-x-auto pb-1 hide-scrollbar">
             {['all', 'active', 'draft'].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status as any)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className={`whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-bold transition-all ${
                   statusFilter === status
-                    ? 'bg-white text-primary'
-                    : 'text-primary-foreground/70 hover:text-primary-foreground'
+                    ? 'bg-white text-primary shadow-sm'
+                    : 'bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20'
                 }`}
               >
                 {status.charAt(0).toUpperCase() + status.slice(1)}
