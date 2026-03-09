@@ -120,6 +120,7 @@ export default function FeeManagement() {
         periodStart = new Date(today.getFullYear(), qm, 1);
         periodEnd = new Date(today.getFullYear(), qm + 3, 0);
       } else {
+        // on_demand: default to last 30 days
         periodEnd = new Date();
         periodStart = new Date(Date.now() - 30 * 86400000);
       }
@@ -358,7 +359,7 @@ export default function FeeManagement() {
                 <SelectContent>
                   <SelectItem value="monthly">Monthly</SelectItem>
                   <SelectItem value="quarterly">Quarterly</SelectItem>
-                  <SelectItem value="annually">Annually</SelectItem>
+                  <SelectItem value="on_demand">On-Demand</SelectItem>
                 </SelectContent>
               </Select>
             </div>
