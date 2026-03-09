@@ -16160,6 +16160,7 @@ export type Database = {
         Returns: undefined
       }
       expire_old_consents: { Args: never; Returns: undefined }
+      expire_store_subscriptions: { Args: never; Returns: undefined }
       generate_compliance_report: {
         Args: { _end_date: string; _report_type: string; _start_date: string }
         Returns: string

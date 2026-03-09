@@ -31,9 +31,27 @@ const CustomerStores: React.FC = () => {
   const fetchStores = async () => {
     setLoading(true);
     try {
+      // Step 1: Get merchant_ids with active subscriptions
+      const { data: activeSubs } = await supabase
+        .from('pos_store_subscriptions')
+        .select('merchant_id')
+        .eq('status', 'active')
+        .gte('expires_at', new Date().toISOString());
+
+      const activeSubMerchantIds = (activeSubs || []).map(s => s.merchant_id);
+
+      if (activeSubMerchantIds.length === 0) {
+        setStores([]);
+        setLoading(false);
+        return;
+      }
+
+      // Step 2: Query stores that are published, approved, AND have active subscription
       let query = supabase.from('pos_store_profiles')
         .select('*')
-        .eq('is_published', true);
+        .eq('is_published', true)
+        .in('status', ['approved']) // only moderation-approved stores
+        .in('merchant_id', activeSubMerchantIds);
 
       if (search) query = query.or(`store_name.ilike.%${search}%,description.ilike.%${search}%`);
       if (selectedCategory !== 'All Categories') query = query.ilike('category', `%${selectedCategory}%`);
