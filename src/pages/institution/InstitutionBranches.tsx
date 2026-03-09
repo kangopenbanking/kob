@@ -86,7 +86,8 @@ export default function InstitutionBranches() {
       const { error } = await supabase.from("branches").insert({
         institution_id: institutionId, branch_name: form.branch_name, branch_code: form.branch_code,
         branch_type: form.branch_type, phone: form.phone || null, email: form.email || null,
-        address: { line: form.address_line, city: form.city, country: form.country },
+        address: { street: form.address_line, city: form.city, country: form.country },
+        is_active: true,
       });
       if (error) throw error;
       toast({ title: "Branch created successfully" });
