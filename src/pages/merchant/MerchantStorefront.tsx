@@ -34,6 +34,8 @@ import { ShippingForm } from '@/components/storefront/ShippingForm';
 import { DemoStoreTab } from '@/components/storefront/DemoStoreTab';
 import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeaturesTab';
 import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgradeModal';
+import { ProductsTab } from '@/components/storefront/ProductsTab';
+import { WooConnectTab } from '@/components/storefront/WooConnectTab';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
