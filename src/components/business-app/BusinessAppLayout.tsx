@@ -4,7 +4,7 @@ import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
-import { Home, ScanLine, Wallet, ShoppingBag, MoreHorizontal } from 'lucide-react';
+import { Home, ScanLine, Wallet, Monitor, MoreHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 
@@ -15,8 +15,8 @@ const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
   const items = [
     { label: 'Home', icon: Home, path: `${basePath}/home` },
     { label: 'Wallet', icon: Wallet, path: `${basePath}/wallet` },
+    { label: 'Till', icon: Monitor, path: `${basePath}/till` },
     { label: 'Scan', icon: ScanLine, path: `${basePath}/receive` },
-    { label: 'Orders', icon: ShoppingBag, path: `${basePath}/orders` },
     { label: 'More', icon: MoreHorizontal, path: `${basePath}/more` },
   ];
 

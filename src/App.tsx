@@ -428,6 +428,8 @@ import BusinessReceive from "./pages/business-app/BusinessReceive";
 import BusinessOrders from "./pages/business-app/BusinessOrders";
 import BusinessMore from "./pages/business-app/BusinessMore";
 import BusinessAppManagement from "./pages/admin/BusinessAppManagement";
+import MerchantPOSTill from "./pages/merchant/MerchantPOSTill";
+import BusinessTill from "./pages/business-app/BusinessTill";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -548,6 +550,7 @@ function App() {
               <Route path="bulk-operations" element={<MerchantBulkOperations />} />
               <Route path="white-label" element={<MerchantWhiteLabel />} />
               <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
+              <Route path="pos-till" element={<MerchantPOSTill />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
@@ -912,6 +915,7 @@ function App() {
               <Route path="orders" element={<BusinessOrders />} />
               <Route path="refunds" element={<BusinessRefunds />} />
               <Route path="fees" element={<MerchantFees />} />
+              <Route path="till" element={<BusinessTill />} />
               <Route path="more" element={<BusinessMore />} />
             </Route>
 
@@ -925,6 +929,7 @@ function App() {
               <Route path="orders" element={<BusinessOrders />} />
               <Route path="refunds" element={<BusinessRefunds />} />
               <Route path="fees" element={<MerchantFees />} />
+              <Route path="till" element={<BusinessTill />} />
               <Route path="more" element={<BusinessMore />} />
             </Route>
 
