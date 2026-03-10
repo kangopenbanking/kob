@@ -31,41 +31,36 @@ serve(async (req) => {
       );
     }
 
-    // Require CAPTCHA verification
-    if (!captcha_session_id || captcha_answer === undefined) {
-      return new Response(
-        JSON.stringify({ error: 'CAPTCHA verification required' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+    // Optional CAPTCHA verification (this endpoint is low-risk: only returns has_pin boolean)
+    // Rate limiting below provides sufficient protection against enumeration
+    if (captcha_session_id && captcha_answer !== undefined) {
+      const { data: captcha, error: captchaError } = await supabase
+        .from('captcha_challenges')
+        .select('*')
+        .eq('session_id', captcha_session_id)
+        .eq('status', 'pending')
+        .single();
 
-    // Verify CAPTCHA
-    const { data: captcha, error: captchaError } = await supabase
-      .from('captcha_challenges')
-      .select('*')
-      .eq('session_id', captcha_session_id)
-      .eq('status', 'pending')
-      .single();
+      if (captchaError || !captcha || captcha.expires_at < new Date().toISOString()) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid or expired CAPTCHA' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
 
-    if (captchaError || !captcha || captcha.expires_at < new Date().toISOString()) {
-      return new Response(
-        JSON.stringify({ error: 'Invalid or expired CAPTCHA' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
-    }
+      const isCorrect = Number(captcha_answer) === captcha.challenge_answer;
+      await supabase.from('captcha_challenges').update({
+        status: isCorrect ? 'verified' : 'failed',
+        verified_at: isCorrect ? new Date().toISOString() : null,
+        attempts: (captcha.attempts || 0) + 1,
+      }).eq('id', captcha.id);
 
-    const isCorrect = Number(captcha_answer) === captcha.challenge_answer;
-    await supabase.from('captcha_challenges').update({
-      status: isCorrect ? 'verified' : 'failed',
-      verified_at: isCorrect ? new Date().toISOString() : null,
-      attempts: (captcha.attempts || 0) + 1,
-    }).eq('id', captcha.id);
-
-    if (!isCorrect) {
-      return new Response(
-        JSON.stringify({ error: 'Incorrect CAPTCHA answer' }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
-      );
+      if (!isCorrect) {
+        return new Response(
+          JSON.stringify({ error: 'Incorrect CAPTCHA answer' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+        );
+      }
     }
 
     // Rate limit: 5 checks per minute per IP (via DB)
