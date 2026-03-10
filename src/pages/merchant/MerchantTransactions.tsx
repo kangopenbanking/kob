@@ -73,7 +73,7 @@ export default function MerchantTransactions() {
 
   const exportCSV = () => {
     const headers = ["Reference", "Amount", "Currency", "Status", "Channel", "Customer Email", "Date"];
-    const rows = filtered.map(c => [c.charge_ref, c.amount, c.currency, c.status, c.channel, c.customer_email || "", c.created_at]);
+    const rows = filtered.map(c => [c.tx_ref, c.amount, c.currency, c.status, c.channel, c.customer_email || "", c.created_at]);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
