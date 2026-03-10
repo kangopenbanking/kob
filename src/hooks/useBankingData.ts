@@ -151,8 +151,8 @@ export function useSavingsWithdraw() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ savings_account_id, amount }: { savings_account_id: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke('savings-withdraw', {
-        body: { savings_account_id, amount, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
+        body: { action: 'withdraw', savings_account_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
