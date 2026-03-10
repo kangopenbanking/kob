@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2,
   Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet,
-  Link2, FileText, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
+  Link2, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
   Clock, Eye, EyeOff, ChevronRight,
 } from "lucide-react";
 import { format } from "date-fns";
