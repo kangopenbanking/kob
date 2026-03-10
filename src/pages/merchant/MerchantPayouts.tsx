@@ -99,10 +99,10 @@ export default function MerchantPayouts() {
                 <tbody>
                   {filtered.map(p => (
                     <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedTx(p)}>
-                      <td className="py-3 px-4 font-mono text-xs">{p.payout_ref}</td>
+                      <td className="py-3 px-4 font-mono text-xs">{p.tx_ref}</td>
                       <td className="py-3 px-4 font-medium">{Number(p.amount).toLocaleString()} {p.currency}</td>
                       <td className="py-3 px-4"><Badge variant={p.status === "completed" ? "default" : p.status === "failed" ? "destructive" : "secondary"}>{p.status}</Badge></td>
-                      <td className="py-3 px-4">{p.destination_type}</td>
+                      <td className="py-3 px-4">{p.channel}</td>
                       <td className="py-3 px-4 text-muted-foreground">{p.created_at ? format(new Date(p.created_at), "MMM d, yyyy") : "-"}</td>
                     </tr>
                   ))}
