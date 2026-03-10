@@ -88,7 +88,7 @@ export default function MerchantRefunds() {
                     <tr key={r.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedTx(r)}>
                       <td className="py-3 px-4 font-mono text-xs">{r.provider_ref || r.id.slice(0, 8)}</td>
                       <td className="py-3 px-4 font-medium">{Number(r.amount).toLocaleString()} {r.currency}</td>
-                      <td className="py-3 px-4"><Badge variant={r.status === "completed" ? "default" : r.status === "failed" ? "destructive" : "secondary"}>{r.status}</Badge></td>
+                      <td className="py-3 px-4"><Badge variant={r.status === "completed" || r.status === "successful" ? "default" : r.status === "failed" ? "destructive" : "secondary"}>{r.status}</Badge></td>
                       <td className="py-3 px-4">{r.reason || "-"}</td>
                       <td className="py-3 px-4 text-muted-foreground">{r.created_at ? format(new Date(r.created_at), "MMM d, yyyy") : "-"}</td>
                     </tr>
