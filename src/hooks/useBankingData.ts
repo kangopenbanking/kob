@@ -341,8 +341,8 @@ export function useUpdateCardStatus() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ card_id, status }: { card_id: string; status: string }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-update-status', {
-        body: { card_id, status, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'update-status', card_id, status, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
