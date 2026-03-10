@@ -202,7 +202,7 @@ serve(async (req) => {
     let lastErrorCode: string | undefined;
     let lastErrorMessage: string | undefined;
 
-    if (delivery_method === 'sms' || delivery_method === 'auto') {
+    if (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both') {
       smsResult = await sendViaSMS(phone_number, otpCode);
       if (!smsResult.success) {
         lastErrorCode = smsResult.error_code;
@@ -210,7 +210,7 @@ serve(async (req) => {
       }
     }
 
-    if (delivery_method === 'whatsapp' || delivery_method === 'auto') {
+    if (delivery_method === 'whatsapp' || delivery_method === 'auto' || delivery_method === 'both') {
       whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
       if (!whatsappResult.success) {
         lastErrorCode = whatsappResult.error_code;
