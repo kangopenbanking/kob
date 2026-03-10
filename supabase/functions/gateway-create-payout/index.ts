@@ -42,6 +42,19 @@ serve(async (req) => {
     }
 
     const { fee } = await calculateGatewayFee(amount, channel, supabase);
+    const totalDebit = amount + fee;
+
+    // Balance check — prevent payouts exceeding available funds
+    const { data: wallet } = await supabase
+      .from('gateway_merchant_wallets')
+      .select('available_balance')
+      .eq('merchant_id', merchant_id)
+      .eq('currency', currency)
+      .maybeSingle();
+
+    if (!wallet || wallet.available_balance < totalDebit) {
+      return new Response(JSON.stringify({ error: 'insufficient_balance', message: `Requires ${totalDebit}, available: ${wallet?.available_balance || 0}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     const { data: payout, error: insertErr } = await supabase.from('gateway_payouts').insert({
       merchant_id, amount, currency, channel, status: 'pending', provider: 'flutterwave',
@@ -51,6 +64,14 @@ serve(async (req) => {
     }).select().single();
 
     if (insertErr) throw insertErr;
+
+    // Debit merchant wallet BEFORE calling provider (atomic debit-then-send pattern)
+    await supabase.rpc('update_merchant_wallet', {
+      _merchant_id: merchant_id,
+      _currency: currency,
+      _available_delta: -totalDebit,
+      _ledger_delta: -totalDebit,
+    });
 
     try {
       const result = await createFlutterwavePayout({ amount, currency, channel, beneficiary_account, beneficiary_bank, beneficiary_phone, beneficiary_name, narration, tx_ref });

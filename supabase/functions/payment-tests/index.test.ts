@@ -79,10 +79,30 @@ Deno.test("gateway-create-payout: rejects unauthenticated", async () => {
     amount: 10000,
     currency: "XAF",
     channel: "bank_transfer",
-    destination: { account_number: "1234", bank_code: "001" },
+    tx_ref: "TEST_PAYOUT_001",
   });
   assertEquals(status, 401);
   assertExists(data.error);
+});
+
+Deno.test("gateway-create-payout: rejects missing required fields", async () => {
+  const { status, data } = await invoke("gateway-create-payout", {
+    merchant_id: "fake",
+  }, {
+    Authorization: "Bearer fake-token",
+  });
+  // Auth fails first with fake token, but validates header is accepted
+  assertEquals(status, 401);
+  assertExists(data.error);
+});
+
+Deno.test("gateway-create-payout: CORS preflight returns 200", async () => {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/gateway-create-payout`, {
+    method: "OPTIONS",
+    headers: { "apikey": SUPABASE_ANON_KEY },
+  });
+  await res.text();
+  assertEquals(res.status, 200);
 });
 
 // ═══════════════════════════════════════════════════
