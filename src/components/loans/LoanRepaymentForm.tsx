@@ -38,11 +38,12 @@ export default function LoanRepaymentForm({ loan, onBack }: LoanRepaymentFormPro
   const repayMutation = useMutation({
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       const idempotencyKey = `loan-repay-${loan.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-      const { data, error } = await supabase.functions.invoke('loan-repay', {
+      const { data, error } = await supabase.functions.invoke('loan-ops', {
         headers: {
           'Idempotency-Key': idempotencyKey,
         },
         body: {
+          action: 'repay',
           loan_account_id: loan.id,
           amount: parseFloat(values.amount),
           payment_method: values.payment_method,

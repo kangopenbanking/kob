@@ -87,6 +87,7 @@ export default function LoanApplicationForm({ product, onBack }: LoanApplication
     mutationFn: async (values: z.infer<typeof formSchema>) => {
       const { data, error } = await supabase.functions.invoke('loan-ops', {
         body: {
+          action: 'apply',
           loan_product_id: product.id,
           requested_amount: parseFloat(values.requested_amount),
           tenure_months: parseInt(values.tenure_months),
