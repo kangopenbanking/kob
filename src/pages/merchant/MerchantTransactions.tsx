@@ -57,7 +57,7 @@ export default function MerchantTransactions() {
   };
 
   const filtered = charges.filter(c => {
-    if (search && !(c.charge_ref?.toLowerCase().includes(search.toLowerCase()) || c.customer_email?.toLowerCase().includes(search.toLowerCase()))) return false;
+    if (search && !(c.tx_ref?.toLowerCase().includes(search.toLowerCase()) || c.customer_email?.toLowerCase().includes(search.toLowerCase()))) return false;
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
     if (channelFilter !== "all" && c.channel !== channelFilter) return false;
     return true;
