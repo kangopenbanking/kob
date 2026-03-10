@@ -73,7 +73,9 @@ export function usePiggyBankPay() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { payment_id: string }) => {
-      const { data, error } = await supabase.functions.invoke('piggybank-pay', { body });
+      const { data, error } = await supabase.functions.invoke('piggybank', {
+        body: { action: 'pay', ...body },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;

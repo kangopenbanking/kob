@@ -108,7 +108,9 @@ export function useNjangiPayout() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { group_id: string; recipient_member_id?: string }) => {
-      const { data, error } = await supabase.functions.invoke('njangi-payout', { body });
+      const { data, error } = await supabase.functions.invoke('njangi-ops', {
+        body: { action: 'payout', ...body },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;

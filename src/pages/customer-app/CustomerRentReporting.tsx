@@ -107,8 +107,8 @@ const CustomerRentReporting: React.FC = () => {
   const handleRecordPayment = async (paymentId: string) => {
     setPayingId(paymentId);
     try {
-      const { data, error } = await supabase.functions.invoke('piggybank-pay', {
-        body: { payment_id: paymentId },
+      const { data, error } = await supabase.functions.invoke('piggybank', {
+        body: { action: 'pay', payment_id: paymentId },
       });
       if (error) throw error;
       toast.success(
