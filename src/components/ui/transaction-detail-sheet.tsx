@@ -33,7 +33,7 @@ function DetailRow({ label, value }: { label: string; value: React.ReactNode }) 
 export function TransactionDetailSheet({ open, onOpenChange, transaction: tx }: TransactionDetailSheetProps) {
   if (!tx) return null;
 
-  const ref = tx.charge_ref || tx.payout_ref || tx.settlement_ref || tx.refund_ref || tx.transaction_ref || tx.id;
+  const ref = tx.tx_ref || tx.charge_ref || tx.payout_ref || tx.settlement_ref || tx.refund_ref || tx.transaction_ref || tx.id;
   const status = tx.status || "unknown";
   const cfg = statusConfig[status] || { icon: Circle, color: "text-muted-foreground", variant: "secondary" as const };
   const StatusIcon = cfg.icon;

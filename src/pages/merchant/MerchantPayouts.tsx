@@ -38,7 +38,7 @@ export default function MerchantPayouts() {
   };
 
   const filtered = payouts.filter(p => {
-    if (search && !p.payout_ref?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !p.tx_ref?.toLowerCase().includes(search.toLowerCase())) return false;
     if (statusFilter !== "all" && p.status !== statusFilter) return false;
     return true;
   });
@@ -49,8 +49,8 @@ export default function MerchantPayouts() {
   const pendingCount = filtered.filter(p => p.status === "pending" || p.status === "processing").length;
 
   const exportCSV = () => {
-    const headers = ["Reference", "Amount", "Currency", "Status", "Destination", "Date"];
-    const rows = filtered.map(p => [p.payout_ref, p.amount, p.currency, p.status, p.destination_type, p.created_at]);
+    const headers = ["Reference", "Amount", "Currency", "Status", "Channel", "Date"];
+    const rows = filtered.map(p => [p.tx_ref, p.amount, p.currency, p.status, p.channel, p.created_at]);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -95,14 +95,14 @@ export default function MerchantPayouts() {
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead><tr className="border-b bg-muted/50"><th className="text-left py-3 px-4">Reference</th><th className="text-left py-3 px-4">Amount</th><th className="text-left py-3 px-4">Status</th><th className="text-left py-3 px-4">Destination</th><th className="text-left py-3 px-4">Date</th></tr></thead>
+                <thead><tr className="border-b bg-muted/50"><th className="text-left py-3 px-4">Reference</th><th className="text-left py-3 px-4">Amount</th><th className="text-left py-3 px-4">Status</th><th className="text-left py-3 px-4">Channel</th><th className="text-left py-3 px-4">Date</th></tr></thead>
                 <tbody>
                   {filtered.map(p => (
                     <tr key={p.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedTx(p)}>
-                      <td className="py-3 px-4 font-mono text-xs">{p.payout_ref}</td>
+                      <td className="py-3 px-4 font-mono text-xs">{p.tx_ref}</td>
                       <td className="py-3 px-4 font-medium">{Number(p.amount).toLocaleString()} {p.currency}</td>
                       <td className="py-3 px-4"><Badge variant={p.status === "completed" ? "default" : p.status === "failed" ? "destructive" : "secondary"}>{p.status}</Badge></td>
-                      <td className="py-3 px-4">{p.destination_type}</td>
+                      <td className="py-3 px-4">{p.channel}</td>
                       <td className="py-3 px-4 text-muted-foreground">{p.created_at ? format(new Date(p.created_at), "MMM d, yyyy") : "-"}</td>
                     </tr>
                   ))}

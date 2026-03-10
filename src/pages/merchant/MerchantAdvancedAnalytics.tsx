@@ -39,7 +39,7 @@ export default function MerchantAdvancedAnalytics() {
       const since = subDays(new Date(), periodDays).toISOString();
       const { data, error } = await (supabase as any)
         .from("gateway_charges")
-        .select("id, amount, currency, status, created_at, payment_method, customer_email")
+        .select("id, amount, currency, status, created_at, channel, customer_email")
         .eq("merchant_id", merchant.id)
         .gte("created_at", since)
         .order("created_at", { ascending: true })
@@ -97,7 +97,7 @@ export default function MerchantAdvancedAnalytics() {
     charges
       .filter((c: any) => c.status === "successful")
       .forEach((c: any) => {
-        const method = c.payment_method || "unknown";
+        const method = c.channel || "unknown";
         methodMap.set(method, (methodMap.get(method) || 0) + (c.amount || 0));
       });
     return Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));

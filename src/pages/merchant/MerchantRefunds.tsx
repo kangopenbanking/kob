@@ -37,14 +37,14 @@ export default function MerchantRefunds() {
   };
 
   const filtered = refunds.filter(r => {
-    if (search && !r.refund_ref?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !r.id?.toLowerCase().includes(search.toLowerCase()) && !r.provider_ref?.toLowerCase().includes(search.toLowerCase())) return false;
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     return true;
   });
 
   const statuses = [...new Set(refunds.map(r => r.status).filter(Boolean))];
   const totalAmount = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const completedCount = filtered.filter(r => r.status === "completed").length;
+  const completedCount = filtered.filter(r => r.status === "completed" || r.status === "successful").length;
   const pendingCount = filtered.filter(r => r.status === "pending" || r.status === "processing").length;
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -86,9 +86,9 @@ export default function MerchantRefunds() {
                 <tbody>
                   {filtered.map(r => (
                     <tr key={r.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedTx(r)}>
-                      <td className="py-3 px-4 font-mono text-xs">{r.refund_ref}</td>
+                      <td className="py-3 px-4 font-mono text-xs">{r.provider_ref || r.id.slice(0, 8)}</td>
                       <td className="py-3 px-4 font-medium">{Number(r.amount).toLocaleString()} {r.currency}</td>
-                      <td className="py-3 px-4"><Badge variant={r.status === "completed" ? "default" : r.status === "failed" ? "destructive" : "secondary"}>{r.status}</Badge></td>
+                      <td className="py-3 px-4"><Badge variant={r.status === "completed" || r.status === "successful" ? "default" : r.status === "failed" ? "destructive" : "secondary"}>{r.status}</Badge></td>
                       <td className="py-3 px-4">{r.reason || "-"}</td>
                       <td className="py-3 px-4 text-muted-foreground">{r.created_at ? format(new Date(r.created_at), "MMM d, yyyy") : "-"}</td>
                     </tr>

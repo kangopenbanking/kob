@@ -10,7 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import {
   Loader2, DollarSign, ArrowUpDown, TrendingUp, AlertCircle, CheckCircle2,
   Key, Webhook, Building2, ShieldCheck, ArrowRight, Rocket, Wallet,
-  Link2, FileText, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
+  Link2, CreditCard, BarChart3, ArrowUpRight, ArrowDownRight,
   Clock, Eye, EyeOff, ChevronRight,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -157,9 +157,9 @@ export default function MerchantDashboard() {
 
   const quickActions = [
     { label: "Payment Link", icon: Link2, path: "/merchant/payment-links", color: "bg-[hsl(200,80%,94%)] text-[hsl(200,80%,35%)]" },
-    { label: "Send Invoice", icon: FileText, path: "/merchant/invoices", color: "bg-[hsl(260,60%,94%)] text-[hsl(260,60%,40%)]" },
+    { label: "Fund Wallet", icon: Wallet, path: "/merchant/fund-wallet", color: "bg-[hsl(260,60%,94%)] text-[hsl(260,60%,40%)]" },
     { label: "API Keys", icon: Key, path: "/merchant/api-keys", color: "bg-[hsl(40,80%,92%)] text-[hsl(40,70%,35%)]" },
-    { label: "New Charge", icon: CreditCard, path: "/merchant/charges", color: "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]" },
+    { label: "Transactions", icon: CreditCard, path: "/merchant/transactions", color: "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]" },
   ];
 
   return (
@@ -502,7 +502,7 @@ export default function MerchantDashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{Number(c.amount).toLocaleString()} {c.currency}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {c.charge_ref?.slice(0, 16)} · {c.channel || "direct"}
+                          {c.tx_ref?.slice(0, 16)} · {c.channel || "direct"}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
@@ -536,7 +536,7 @@ export default function MerchantDashboard() {
                           className="border-b border-border/40 last:border-0 cursor-pointer hover:bg-muted/30 transition-colors"
                           onClick={() => setSelectedTx(c)}
                         >
-                          <td className="py-3.5 px-6 font-mono text-xs text-foreground/80">{c.charge_ref?.slice(0, 18)}</td>
+                          <td className="py-3.5 px-6 font-mono text-xs text-foreground/80">{c.tx_ref?.slice(0, 18)}</td>
                           <td className="py-3.5 px-3 font-bold">{Number(c.amount).toLocaleString()} <span className="text-muted-foreground font-normal">{c.currency}</span></td>
                           <td className="py-3.5 px-3">
                             <Badge variant="outline" className={`text-[10px] font-bold border ${statusColor(c.status)}`}>

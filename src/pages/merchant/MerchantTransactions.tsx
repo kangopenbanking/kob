@@ -57,7 +57,7 @@ export default function MerchantTransactions() {
   };
 
   const filtered = charges.filter(c => {
-    if (search && !(c.charge_ref?.toLowerCase().includes(search.toLowerCase()) || c.customer_email?.toLowerCase().includes(search.toLowerCase()))) return false;
+    if (search && !(c.tx_ref?.toLowerCase().includes(search.toLowerCase()) || c.customer_email?.toLowerCase().includes(search.toLowerCase()))) return false;
     if (statusFilter !== "all" && c.status !== statusFilter) return false;
     if (channelFilter !== "all" && c.channel !== channelFilter) return false;
     return true;
@@ -73,7 +73,7 @@ export default function MerchantTransactions() {
 
   const exportCSV = () => {
     const headers = ["Reference", "Amount", "Currency", "Status", "Channel", "Customer Email", "Date"];
-    const rows = filtered.map(c => [c.charge_ref, c.amount, c.currency, c.status, c.channel, c.customer_email || "", c.created_at]);
+    const rows = filtered.map(c => [c.tx_ref, c.amount, c.currency, c.status, c.channel, c.customer_email || "", c.created_at]);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
@@ -163,7 +163,7 @@ export default function MerchantTransactions() {
                   <tbody>
                     {filtered.map(c => (
                       <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedTx(c)}>
-                        <td className="py-3 px-4 font-mono text-xs">{c.charge_ref}</td>
+                        <td className="py-3 px-4 font-mono text-xs">{c.tx_ref}</td>
                         <td className="py-3 px-4 font-semibold">{Number(c.amount).toLocaleString()} {c.currency}</td>
                         <td className="py-3 px-4">
                           <Badge variant={c.status === "successful" ? "default" : c.status === "failed" ? "destructive" : "secondary"} className="text-xs">
