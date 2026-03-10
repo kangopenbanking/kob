@@ -68,8 +68,8 @@ export const useBusinessData = (merchantId?: string) => {
   const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
     queryKey: ['merchant-payouts', merchantId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('gateway-list-payouts', {
-        body: { merchant_id: merchantId, limit: 10, offset: 0 },
+      const { data, error } = await supabase.functions.invoke('gateway-query', {
+        body: { action: 'list-payouts', merchant_id: merchantId, limit: 10, offset: 0 },
       });
       if (error) throw error;
       return data;
