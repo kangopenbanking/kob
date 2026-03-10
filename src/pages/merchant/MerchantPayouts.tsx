@@ -49,8 +49,8 @@ export default function MerchantPayouts() {
   const pendingCount = filtered.filter(p => p.status === "pending" || p.status === "processing").length;
 
   const exportCSV = () => {
-    const headers = ["Reference", "Amount", "Currency", "Status", "Destination", "Date"];
-    const rows = filtered.map(p => [p.payout_ref, p.amount, p.currency, p.status, p.destination_type, p.created_at]);
+    const headers = ["Reference", "Amount", "Currency", "Status", "Channel", "Date"];
+    const rows = filtered.map(p => [p.tx_ref, p.amount, p.currency, p.status, p.channel, p.created_at]);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
