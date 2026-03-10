@@ -39,8 +39,8 @@ export const useBusinessData = (merchantId?: string) => {
   const { data: settlementsData, isLoading: settlementsLoading } = useQuery({
     queryKey: ['merchant-settlements', merchantId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('gateway-list-settlements', {
-        body: { limit: 10, offset: 0 },
+      const { data, error } = await supabase.functions.invoke('gateway-query', {
+        body: { action: 'list-settlements', limit: 10, offset: 0 },
       });
       if (error) throw error;
       return data;
