@@ -273,25 +273,37 @@ export default function Auth() {
       const { data, error } = await supabase.functions.invoke('phone-auth-pin-login', {
         body: { phone_number: fullPhone, pin_code: pinCode, captcha_session_id: captchaSessionId },
       });
-      if (error) throw error;
-      if (!data.success) {
-        if (data.locked) throw new Error(data.error || 'Account locked');
-        setPinLoginAttempts(data.remaining_attempts || 0);
-        throw new Error(data.error || 'Invalid PIN code');
-      }
 
-      if (data.magic_link) {
-        const url = new URL(data.magic_link);
-        const token = url.searchParams.get('token');
-        const type = url.searchParams.get('type');
-        if (token && type) {
-          const { error: verifyError } = await supabase.auth.verifyOtp({ token_hash: token, type: type as any });
-          if (verifyError) throw verifyError;
+      // Handle non-2xx responses (error contains the response body)
+      if (error) {
+        const errorBody = typeof error === 'object' && error.message ? error.message : String(error);
+        // Try to parse structured error from edge function
+        try {
+          const parsed = JSON.parse(errorBody);
+          if (parsed.locked) throw new Error(parsed.error || 'Account locked');
+          if (parsed.remaining_attempts !== undefined) setPinLoginAttempts(parsed.remaining_attempts);
+          throw new Error(parsed.error || 'Invalid PIN code');
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) throw new Error(errorBody);
+          throw parseErr;
         }
       }
 
+      if (!data?.success) {
+        if (data?.locked) throw new Error(data.error || 'Account locked');
+        setPinLoginAttempts(data?.remaining_attempts || 0);
+        throw new Error(data?.error || 'Invalid PIN code');
+      }
+
+      // Set session directly from server-verified session
+      if (data.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
+      }
+
       toast({ title: 'Success', description: 'Logged in successfully!' });
-      await supabase.auth.refreshSession();
       setAuthStep('complete');
       // Redirect via DashboardRouter which handles all role-based routing
       setTimeout(() => navigate('/dashboard'), 1000);
