@@ -37,7 +37,7 @@ export default function MerchantSettlements() {
   };
 
   const filtered = settlements.filter(s => {
-    if (search && !s.settlement_ref?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !s.id?.toLowerCase().includes(search.toLowerCase()) && !s.payout_ref?.toLowerCase().includes(search.toLowerCase())) return false;
     if (statusFilter !== "all" && s.status !== statusFilter) return false;
     return true;
   });
