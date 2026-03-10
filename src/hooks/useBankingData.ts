@@ -322,8 +322,8 @@ export function useTopUpCard() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ card_id, amount }: { card_id: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-topup', {
-        body: { card_id, amount, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'topup', card_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
