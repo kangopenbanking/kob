@@ -97,7 +97,7 @@ export default function MerchantAdvancedAnalytics() {
     charges
       .filter((c: any) => c.status === "successful")
       .forEach((c: any) => {
-        const method = c.payment_method || "unknown";
+        const method = c.channel || "unknown";
         methodMap.set(method, (methodMap.get(method) || 0) + (c.amount || 0));
       });
     return Array.from(methodMap.entries()).map(([name, value]) => ({ name, value }));

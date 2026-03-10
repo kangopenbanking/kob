@@ -157,9 +157,9 @@ export default function MerchantDashboard() {
 
   const quickActions = [
     { label: "Payment Link", icon: Link2, path: "/merchant/payment-links", color: "bg-[hsl(200,80%,94%)] text-[hsl(200,80%,35%)]" },
-    { label: "Send Invoice", icon: FileText, path: "/merchant/invoices", color: "bg-[hsl(260,60%,94%)] text-[hsl(260,60%,40%)]" },
+    { label: "Fund Wallet", icon: Wallet, path: "/merchant/fund-wallet", color: "bg-[hsl(260,60%,94%)] text-[hsl(260,60%,40%)]" },
     { label: "API Keys", icon: Key, path: "/merchant/api-keys", color: "bg-[hsl(40,80%,92%)] text-[hsl(40,70%,35%)]" },
-    { label: "New Charge", icon: CreditCard, path: "/merchant/charges", color: "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]" },
+    { label: "Transactions", icon: CreditCard, path: "/merchant/transactions", color: "bg-[hsl(150,50%,92%)] text-[hsl(150,50%,30%)]" },
   ];
 
   return (
