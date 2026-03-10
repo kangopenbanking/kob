@@ -38,7 +38,19 @@ serve(async (req) => {
             const data = await res.json();
             const status = data.data?.status === 'successful' ? 'successful' : data.data?.status === 'failed' ? 'failed' : null;
             if (status) {
-              await supabase.from('gateway_charges').update({ status, provider_raw: data }).eq('id', charge.id);
+              if (status === 'successful' && charge.merchant_id) {
+                // Use atomic wallet credit to ensure merchant gets paid
+                await supabase.rpc('atomic_charge_wallet_credit', {
+                  _charge_id: charge.id,
+                  _new_status: 'successful',
+                  _provider_raw: data,
+                  _merchant_id: charge.merchant_id,
+                  _currency: charge.currency || 'XAF',
+                  _credit_amount: charge.net_amount || charge.amount,
+                });
+              } else {
+                await supabase.from('gateway_charges').update({ status, provider_raw: data }).eq('id', charge.id);
+              }
               results.charges++;
             }
           }
@@ -52,7 +64,18 @@ serve(async (req) => {
             const statusMap: Record<string, string> = { succeeded: 'successful', canceled: 'failed' };
             const status = statusMap[data.status];
             if (status) {
-              await supabase.from('gateway_charges').update({ status, provider_raw: data }).eq('id', charge.id);
+              if (status === 'successful' && charge.merchant_id) {
+                await supabase.rpc('atomic_charge_wallet_credit', {
+                  _charge_id: charge.id,
+                  _new_status: 'successful',
+                  _provider_raw: data,
+                  _merchant_id: charge.merchant_id,
+                  _currency: charge.currency || 'XAF',
+                  _credit_amount: charge.net_amount || charge.amount,
+                });
+              } else {
+                await supabase.from('gateway_charges').update({ status, provider_raw: data }).eq('id', charge.id);
+              }
               results.charges++;
             }
           }
