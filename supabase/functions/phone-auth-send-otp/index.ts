@@ -11,7 +11,7 @@ const sendOtpSchema = z.object({
     .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in international format (e.g., +237123456789)')
     .min(8, 'Phone number is too short')
     .max(15, 'Phone number is too long'),
-  method: z.enum(['sms', 'whatsapp', 'auto']).optional(),
+  method: z.enum(['sms', 'whatsapp', 'auto', 'both']).optional(),
 });
 
 // Error codes for specific failure scenarios
