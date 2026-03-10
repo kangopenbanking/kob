@@ -5,6 +5,7 @@ import { SplashScreen } from '@/components/pwa/SplashScreen';
 import { WalkthroughCarousel } from '@/components/pwa/WalkthroughCarousel';
 import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { supabase } from '@/integrations/supabase/client';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
 
 const WALKTHROUGH_KEY = 'walkthrough_seen_kang-customer';
 
@@ -74,6 +75,11 @@ const CustomerSplashInner: React.FC = () => {
       <SplashScreen
         onComplete={() => setPhase('walkthrough')}
         duration={2500}
+        name={tenant.name}
+        logoUrl={tenant.logoUrl}
+        tagline={tenant.tagline}
+        walkthroughConfig={tenant.walkthroughConfig}
+        isLoading={tenant.isLoading}
       />
     );
   }
@@ -82,6 +88,8 @@ const CustomerSplashInner: React.FC = () => {
     return (
       <WalkthroughCarousel
         onComplete={handleWalkthroughComplete}
+        walkthroughConfig={tenant.walkthroughConfig}
+        slideSourceId={KANG_PLATFORM_ID}
       />
     );
   }

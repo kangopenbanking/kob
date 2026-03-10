@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Shield, CreditCard, SendHorizontal, ChevronRight, Play } from 'lucide-react';
+import { Shield, CreditCard, SendHorizontal, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTenant, type WalkthroughConfig } from './TenantProvider';
 import { supabase } from '@/integrations/supabase/client';
@@ -29,25 +29,34 @@ const defaultSlides: WalkthroughSlide[] = [
 interface WalkthroughCarouselProps {
   slides?: WalkthroughSlide[];
   onComplete: () => void;
+  /** Override walkthrough config — if not provided, falls back to useTenant() */
+  walkthroughConfig?: WalkthroughConfig;
+  /** Override institution ID for DB slide loading (e.g. KANG_PLATFORM_ID for Customer App) */
+  slideSourceId?: string;
 }
 
 export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
   slides: propSlides,
   onComplete,
+  walkthroughConfig: propWConfig,
+  slideSourceId,
 }) => {
   const [current, setCurrent] = useState(0);
   const [dbSlides, setDbSlides] = useState<WalkthroughSlide[] | null>(null);
   const tenant = useTenant();
   const { institutionId } = useParams();
-  const wConfig = tenant.walkthroughConfig || {};
+
+  // Resolve the ID used to fetch walkthrough slides from DB
+  const resolvedSourceId = slideSourceId || institutionId;
+  const wConfig = propWConfig ?? tenant.walkthroughConfig ?? {};
 
   useEffect(() => {
-    if (!institutionId || propSlides) return;
+    if (!resolvedSourceId || propSlides) return;
     const fetchSlides = async () => {
       const { data } = await supabase
         .from('institution_walkthroughs')
         .select('*')
-        .eq('institution_id', institutionId)
+        .eq('institution_id', resolvedSourceId)
         .order('slide_order');
       if (data && data.length > 0) {
         setDbSlides(data.map((s: any) => ({
@@ -62,7 +71,7 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
       }
     };
     fetchSlides();
-  }, [institutionId, propSlides]);
+  }, [resolvedSourceId, propSlides]);
 
   const slides = propSlides || dbSlides || defaultSlides;
   const isLast = current === slides.length - 1;

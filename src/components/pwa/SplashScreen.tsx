@@ -1,16 +1,37 @@
 import React, { useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useTenant } from './TenantProvider';
+import type { WalkthroughConfig } from './TenantProvider';
 import { Building2 } from 'lucide-react';
 
 interface SplashScreenProps {
   onComplete: () => void;
   duration?: number;
+  /** Optional branding overrides — if not provided, falls back to useTenant() */
+  name?: string;
+  logoUrl?: string | null;
+  tagline?: string | null;
+  walkthroughConfig?: WalkthroughConfig;
+  isLoading?: boolean;
 }
 
-export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration = 2000 }) => {
+export const SplashScreen: React.FC<SplashScreenProps> = ({
+  onComplete,
+  duration = 2000,
+  name: propName,
+  logoUrl: propLogoUrl,
+  tagline: propTagline,
+  walkthroughConfig: propWConfig,
+  isLoading: propIsLoading,
+}) => {
+  // Fall back to Banking App tenant context if no props provided
   const tenant = useTenant();
-  const wConfig = tenant.walkthroughConfig || {};
+
+  const name = propName ?? tenant.name;
+  const logoUrl = propLogoUrl !== undefined ? propLogoUrl : tenant.logoUrl;
+  const tagline = propTagline !== undefined ? propTagline : tenant.tagline;
+  const wConfig = propWConfig ?? tenant.walkthroughConfig ?? {};
+  const isLoading = propIsLoading ?? tenant.isLoading;
 
   useEffect(() => {
     const timer = setTimeout(onComplete, duration);
@@ -34,10 +55,10 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration
         transition={{ type: 'spring', stiffness: 200, damping: 20, delay: 0.1 }}
         className="flex flex-col items-center gap-6"
       >
-        {(wConfig.logo_url || tenant.logoUrl) ? (
+        {(wConfig.logo_url || logoUrl) ? (
           <img
-            src={wConfig.logo_url || tenant.logoUrl!}
-            alt={tenant.name}
+            src={wConfig.logo_url || logoUrl!}
+            alt={name}
             className="h-20 w-20 rounded-2xl object-contain bg-primary-foreground p-2"
           />
         ) : (
@@ -52,7 +73,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration
           transition={{ delay: 0.3 }}
           className="text-2xl font-semibold tracking-tight text-primary-foreground"
         >
-          {tenant.isLoading ? '' : tenant.name}
+          {isLoading ? '' : name}
         </motion.h1>
 
         <motion.p
@@ -61,7 +82,7 @@ export const SplashScreen: React.FC<SplashScreenProps> = ({ onComplete, duration
           transition={{ delay: 0.5 }}
           className="text-sm text-primary-foreground/70"
         >
-          {tenant.isLoading ? '' : tenant.tagline}
+          {isLoading ? '' : tagline}
         </motion.p>
       </motion.div>
 
