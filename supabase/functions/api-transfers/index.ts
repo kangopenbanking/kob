@@ -238,15 +238,48 @@ serve(async (req) => {
     // Tier 4: Try by DOMESTIC_RIB identification_value
     if (!destAccount) {
       const cleanValue = destination_account_id.replace(/[\s\-]/g, '');
-      if (/^\d{23}$/.test(cleanValue)) {
+      if (/^\d{23}$/.test(cleanValue) || identifier_type === 'DOMESTIC_RIB') {
+        const digits = cleanValue.replace(/\D/g, '');
+        // 4a: Try identification_value match
         const { data } = await supabase
           .from('accounts')
           .select('id, account_holder_name, user_id, institution_id, identification_scheme')
           .eq('identification_scheme', 'DOMESTIC_RIB')
-          .eq('identification_value', cleanValue)
+          .eq('identification_value', digits)
           .eq('is_active', true)
           .maybeSingle();
         destAccount = data;
+
+        // 4b: Try composite RIB component fields (rib_bank_code + rib_branch_code + rib_account_number + rib_key)
+        if (!destAccount && digits.length === 23) {
+          const ribBank = digits.substring(0, 5);
+          const ribBranch = digits.substring(5, 10);
+          const ribAcct = digits.substring(10, 21);
+          const ribKey = digits.substring(21, 23);
+          const { data: ribData } = await supabase
+            .from('accounts')
+            .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+            .eq('rib_bank_code', ribBank)
+            .eq('rib_branch_code', ribBranch)
+            .eq('rib_account_number', ribAcct)
+            .eq('rib_key', ribKey)
+            .eq('is_active', true)
+            .maybeSingle();
+          destAccount = ribData;
+        }
+
+        // 4c: Try partial match — just rib_account_number (11-digit core)
+        if (!destAccount && digits.length >= 11) {
+          const coreAcct = digits.length === 23 ? digits.substring(10, 21) : digits;
+          const { data: partialData } = await supabase
+            .from('accounts')
+            .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+            .eq('rib_account_number', coreAcct)
+            .eq('is_active', true)
+            .maybeSingle();
+          destAccount = partialData;
+        }
+
         if (destAccount) transferRail = 'domestic_interbank';
       }
     }
@@ -254,7 +287,8 @@ serve(async (req) => {
     // Tier 5: Try IBAN lookup
     if (!destAccount) {
       const cleanIban = destination_account_id.replace(/\s/g, '').toUpperCase();
-      if (/^[A-Z]{2}\d{2}/.test(cleanIban) && cleanIban.length >= 15) {
+      if (/^[A-Z]{2}\d{2}/.test(cleanIban) && cleanIban.length >= 15 || identifier_type === 'IBAN') {
+        // 5a: Try identification_value with IBAN scheme
         const { data } = await supabase
           .from('accounts')
           .select('id, account_holder_name, user_id, institution_id, identification_scheme')
@@ -263,8 +297,39 @@ serve(async (req) => {
           .eq('is_active', true)
           .maybeSingle();
         destAccount = data;
+
+        // 5b: If IBAN starts with CM21, extract RIB and try component lookup
+        if (!destAccount && cleanIban.startsWith('CM21') && cleanIban.length >= 27) {
+          const ribFromIban = cleanIban.substring(4); // Remove CM21 prefix
+          const ribDigits = ribFromIban.replace(/\D/g, '');
+          if (ribDigits.length === 23) {
+            const { data: ibanRibData } = await supabase
+              .from('accounts')
+              .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+              .eq('rib_bank_code', ribDigits.substring(0, 5))
+              .eq('rib_branch_code', ribDigits.substring(5, 10))
+              .eq('rib_account_number', ribDigits.substring(10, 21))
+              .eq('rib_key', ribDigits.substring(21, 23))
+              .eq('is_active', true)
+              .maybeSingle();
+            destAccount = ibanRibData;
+          }
+        }
+
         if (destAccount) transferRail = 'international';
       }
+    }
+
+    // Tier 6: Last resort — try identification_value without scheme filter
+    if (!destAccount) {
+      const cleanFallback = destination_account_id.replace(/[\s\-]/g, '');
+      const { data: fallbackData } = await supabase
+        .from('accounts')
+        .select('id, account_holder_name, user_id, institution_id, identification_scheme')
+        .eq('identification_value', cleanFallback)
+        .eq('is_active', true)
+        .maybeSingle();
+      destAccount = fallbackData;
     }
 
     if (!destAccount) {
