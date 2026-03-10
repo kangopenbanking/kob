@@ -10,12 +10,14 @@ import { useEffect, useState } from 'react';
 import { BankingAppAuthGuard } from '@/components/auth/BankingAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
+import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 
 const BankingAppInner: React.FC = () => {
   const { institutionId } = useParams<{ institutionId: string }>();
   const basePath = `/bank/${institutionId}`;
   const queryClient = useQueryClient();
   const tenant = useTenant();
+  useAppCacheClear();
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();

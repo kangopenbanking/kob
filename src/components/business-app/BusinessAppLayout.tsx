@@ -7,6 +7,7 @@ import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { Home, ShoppingBag, Package, MoreHorizontal, Plus, ScanLine, Monitor, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
@@ -118,6 +119,7 @@ const BusinessAppInner: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
   const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
   const queryClient = useQueryClient();
+  useAppCacheClear();
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();

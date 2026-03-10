@@ -9,12 +9,14 @@ import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useRealtimeBalanceSync } from '@/hooks/useRealtimeBalanceSync';
 import { CustomerAppAuthGuard } from '@/components/auth/CustomerAppAuthGuard';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 
 const CustomerAppInner: React.FC = () => {
   const basePath = '/app';
   const queryClient = useQueryClient();
   const { user } = useCustomerAuth();
   const tenant = useCustomerTenant();
+  useAppCacheClear();
 
   useOneSignal(undefined);
   useRealtimeBalanceSync(user?.id);
