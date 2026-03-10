@@ -121,7 +121,9 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       const { data, error } = await supabase.functions.invoke('phone-auth-check-pin', {
         body: { phone_number: fullPhone },
       });
-      if (!error && data?.has_pin) {
+      if (error) {
+        toast.error('Could not verify account. Please try again.');
+      } else if (data?.has_pin) {
         setUserHasPin(true);
         setStep('pin');
       } else {
@@ -131,9 +133,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         setStep('otp');
       }
     } catch {
-      setUserHasPin(false);
-      await firebasePhone.sendOTP(fullPhone);
-      setStep('otp');
+      toast.error('Connection error. Please try again.');
     } finally {
       setLoading(false);
     }
