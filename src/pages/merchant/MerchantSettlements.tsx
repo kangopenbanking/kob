@@ -86,9 +86,9 @@ export default function MerchantSettlements() {
                 <tbody>
                   {filtered.map(s => (
                     <tr key={s.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer" onClick={() => setSelectedTx(s)}>
-                      <td className="py-3 px-4 font-mono text-xs">{s.settlement_ref}</td>
-                      <td className="py-3 px-4">{Number(s.gross_amount || 0).toLocaleString()} {s.currency}</td>
-                      <td className="py-3 px-4 text-muted-foreground">{Number(s.total_fees || 0).toLocaleString()}</td>
+                      <td className="py-3 px-4 font-mono text-xs">{s.payout_ref || s.id.slice(0, 8)}</td>
+                      <td className="py-3 px-4">{Number(s.amount || 0).toLocaleString()} {s.currency}</td>
+                      <td className="py-3 px-4 text-muted-foreground">{Number(s.fees_total || 0).toLocaleString()}</td>
                       <td className="py-3 px-4 font-medium">{Number(s.net_amount || 0).toLocaleString()}</td>
                       <td className="py-3 px-4"><Badge variant={s.status === "settled" ? "default" : "secondary"}>{s.status}</Badge></td>
                       <td className="py-3 px-4 text-muted-foreground">{s.period_start ? format(new Date(s.period_start), "MMM d") : "-"} – {s.period_end ? format(new Date(s.period_end), "MMM d") : "-"}</td>
