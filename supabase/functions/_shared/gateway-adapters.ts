@@ -311,7 +311,7 @@ function getPayPalBaseUrl(): string {
 
 export async function getPayPalAccessToken(): Promise<string> {
   const clientId = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_ID') : undefined;
-  const secret = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_SECRET') : undefined;
+  const secret = typeof Deno !== "undefined" ? Deno.env.get('PAYPAL_CLIENT_SECRET') : undefined;
   if (!clientId || !secret) throw new Error('PayPal credentials not configured');
 
   const res = await fetch(`${getPayPalBaseUrl()}/v1/oauth2/token`, {

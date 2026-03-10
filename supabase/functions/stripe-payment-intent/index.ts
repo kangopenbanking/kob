@@ -43,9 +43,15 @@ serve(async (req) => {
     // Generate transaction reference
     const transaction_ref = `CARD-${crypto.randomUUID()}`;
 
+    // Zero-decimal currencies (XAF, XOF, JPY, etc.) should not be multiplied by 100
+    const ZERO_DECIMAL_CURRENCIES = ['XAF', 'XOF', 'JPY', 'KRW', 'CLP', 'BIF', 'DJF', 'GNF', 'KMF', 'MGA', 'PYG', 'RWF', 'UGX', 'VND', 'VUV'];
+    const stripeAmount = ZERO_DECIMAL_CURRENCIES.includes(currency.toUpperCase())
+      ? Math.round(amount)
+      : Math.round(amount * 100);
+
     // Create Stripe payment intent
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(amount * 100), // Convert to cents
+      amount: stripeAmount,
       currency: currency.toLowerCase(),
       description: description || 'Card payment',
       metadata: {

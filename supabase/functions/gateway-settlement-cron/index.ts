@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { verifyCronAuth } from "../_shared/cron-auth.ts";
+import {
+  getStripePayoutStatus,
+  getFlutterwaveTransferStatus,
+  getPayPalPayoutStatus,
+} from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
 
