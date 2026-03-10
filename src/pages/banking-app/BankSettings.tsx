@@ -106,12 +106,12 @@ const BankSettings: React.FC = () => {
       });
       if (error) throw error;
 
-      // Update profiles table
+      // Update profiles table with correct column name
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('profiles').update({
           full_name: fullName,
-          phone,
+          phone_number: phone,
         }).eq('id', user.id);
       }
 
