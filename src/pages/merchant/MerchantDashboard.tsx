@@ -502,7 +502,7 @@ export default function MerchantDashboard() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold truncate">{Number(c.amount).toLocaleString()} {c.currency}</p>
                         <p className="text-xs text-muted-foreground truncate">
-                          {c.charge_ref?.slice(0, 16)} · {c.channel || "direct"}
+                          {c.tx_ref?.slice(0, 16)} · {c.channel || "direct"}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
