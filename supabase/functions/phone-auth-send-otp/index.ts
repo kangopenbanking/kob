@@ -11,7 +11,7 @@ const sendOtpSchema = z.object({
     .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in international format (e.g., +237123456789)')
     .min(8, 'Phone number is too short')
     .max(15, 'Phone number is too long'),
-  method: z.enum(['sms', 'whatsapp', 'auto']).optional(),
+  method: z.enum(['sms', 'whatsapp', 'auto', 'both']).optional(),
 });
 
 // Error codes for specific failure scenarios
@@ -202,7 +202,7 @@ serve(async (req) => {
     let lastErrorCode: string | undefined;
     let lastErrorMessage: string | undefined;
 
-    if (delivery_method === 'sms' || delivery_method === 'auto') {
+    if (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both') {
       smsResult = await sendViaSMS(phone_number, otpCode);
       if (!smsResult.success) {
         lastErrorCode = smsResult.error_code;
@@ -210,7 +210,7 @@ serve(async (req) => {
       }
     }
 
-    if (delivery_method === 'whatsapp' || delivery_method === 'auto') {
+    if (delivery_method === 'whatsapp' || delivery_method === 'auto' || delivery_method === 'both') {
       whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
       if (!whatsappResult.success) {
         lastErrorCode = whatsappResult.error_code;
