@@ -14,6 +14,12 @@ export function useFirebasePhoneAuth() {
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
   const sendOTP = useCallback(async (phoneNumber: string) => {
+    if (!isFirebaseConfigured) {
+      const msg = 'Phone OTP is not available right now. Please use PIN login or try again later.';
+      setError(msg);
+      toast.error(msg);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

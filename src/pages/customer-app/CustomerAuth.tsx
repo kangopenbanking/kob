@@ -103,7 +103,9 @@ const CustomerAuth: React.FC = () => {
         const { data, error } = await supabase.functions.invoke('phone-auth-check-pin', {
           body: { phone_number: fullPhone },
         });
-        if (!error && data?.has_pin) {
+        if (error) {
+          toast.error('Could not verify account. Please try again.');
+        } else if (data?.has_pin) {
           setMode('pin');
         } else {
           await sendOTP(fullPhone);
@@ -111,8 +113,7 @@ const CustomerAuth: React.FC = () => {
         }
       }
     } catch {
-      await sendOTP(fullPhone);
-      setMode('otp');
+      toast.error('Connection error. Please try again.');
     } finally {
       setLoading(false);
     }
