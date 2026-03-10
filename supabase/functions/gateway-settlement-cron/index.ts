@@ -315,8 +315,8 @@ async function pollProviderStatus(payout: any): Promise<"completed" | "failed" |
     // PayPal payouts
     if (channel === 'paypal' || payout.provider === 'paypal') {
       const result = await getPayPalPayoutStatus(providerRef);
-      if (result.batch_status === 'SUCCESS') return "completed";
-      if (result.batch_status === 'DENIED' || result.batch_status === 'CANCELED') return "failed";
+      if (result.status === 'successful') return "completed";
+      if (result.status === 'failed') return "failed";
       return "pending";
     }
 
