@@ -163,7 +163,7 @@ export default function MerchantTransactions() {
                   <tbody>
                     {filtered.map(c => (
                       <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30 cursor-pointer transition-colors" onClick={() => setSelectedTx(c)}>
-                        <td className="py-3 px-4 font-mono text-xs">{c.charge_ref}</td>
+                        <td className="py-3 px-4 font-mono text-xs">{c.tx_ref}</td>
                         <td className="py-3 px-4 font-semibold">{Number(c.amount).toLocaleString()} {c.currency}</td>
                         <td className="py-3 px-4">
                           <Badge variant={c.status === "successful" ? "default" : c.status === "failed" ? "destructive" : "secondary"} className="text-xs">

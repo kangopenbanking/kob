@@ -536,7 +536,7 @@ export default function MerchantDashboard() {
                           className="border-b border-border/40 last:border-0 cursor-pointer hover:bg-muted/30 transition-colors"
                           onClick={() => setSelectedTx(c)}
                         >
-                          <td className="py-3.5 px-6 font-mono text-xs text-foreground/80">{c.charge_ref?.slice(0, 18)}</td>
+                          <td className="py-3.5 px-6 font-mono text-xs text-foreground/80">{c.tx_ref?.slice(0, 18)}</td>
                           <td className="py-3.5 px-3 font-bold">{Number(c.amount).toLocaleString()} <span className="text-muted-foreground font-normal">{c.currency}</span></td>
                           <td className="py-3.5 px-3">
                             <Badge variant="outline" className={`text-[10px] font-bold border ${statusColor(c.status)}`}>
