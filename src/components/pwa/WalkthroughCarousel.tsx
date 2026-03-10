@@ -102,7 +102,7 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
       className="flex min-h-screen flex-col"
       style={{ ...bgStyle, backgroundColor: bgStyle.backgroundColor || 'hsl(var(--background))' }}
     >
-      {/* Top media section — covers full width, ~55% of screen */}
+      {/* Top media section — covers full width, responsive height */}
       <AnimatePresence mode="wait">
         <motion.div
           key={`media-${current}`}
@@ -110,21 +110,33 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.35 }}
-          className="relative w-full shrink-0"
-          style={{ height: '55vh' }}
+          className="relative w-full shrink-0 overflow-hidden"
+          style={{ height: '55vh', minHeight: '280px', maxHeight: '520px' }}
         >
           {hasImage && (
-            <img
-              src={slide.media_url!}
-              alt={slide.title}
-              className="h-full w-full object-cover"
-            />
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={{
+                backgroundColor: slide.bg_color || wConfig.bg_color || 'hsl(var(--muted))',
+              }}
+            >
+              <img
+                src={slide.media_url!}
+                alt={slide.title}
+                className="h-full w-full object-contain"
+                style={{ padding: '0' }}
+                draggable={false}
+              />
+            </div>
           )}
 
           {hasVideo && (
             <video
               src={slide.media_url!}
-              className="h-full w-full object-cover"
+              className="h-full w-full object-contain"
+              style={{
+                backgroundColor: slide.bg_color || wConfig.bg_color || 'hsl(var(--muted))',
+              }}
               autoPlay
               muted
               playsInline
