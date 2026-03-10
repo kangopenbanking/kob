@@ -61,7 +61,20 @@ const BankSettings: React.FC = () => {
     if (!user) return;
     setEmail(user.email || '');
     setFullName(user.user_metadata?.full_name || '');
-    setPhone(user.user_metadata?.phone || '');
+
+    // Load phone from profiles table (canonical source)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name, phone_number')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (profile) {
+      setFullName(profile.full_name || user.user_metadata?.full_name || '');
+      setPhone(profile.phone_number || user.user_metadata?.phone || '');
+    } else {
+      setPhone(user.user_metadata?.phone || '');
+    }
 
     // Load preferences
     const { data: prefsRaw } = await supabase
@@ -93,12 +106,12 @@ const BankSettings: React.FC = () => {
       });
       if (error) throw error;
 
-      // Update profiles table
+      // Update profiles table with correct column name
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
         await supabase.from('profiles').update({
           full_name: fullName,
-          phone,
+          phone_number: phone,
         }).eq('id', user.id);
       }
 
