@@ -303,8 +303,8 @@ export function useCreateVirtualCard() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { card_type?: string; currency?: string; spending_limit?: number }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-create', {
-        body: { ...body, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'create', ...body, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
