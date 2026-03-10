@@ -177,8 +177,8 @@ export function useCreateSavingsGoal() {
       target_amount?: number;
       target_date?: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke('savings-create', {
-        body: { ...body, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
+        body: { action: 'create', ...body, institution_id: institutionId },
       });
       if (error) throw error;
       return data;

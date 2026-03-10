@@ -36,8 +36,9 @@ export const CreateSavingsForm = ({ products, onSuccess, onCancel }: CreateSavin
     setLoading(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('savings-create', {
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
         body: {
+          action: 'create',
           product_id: formData.product_id,
           account_name: formData.account_name,
           opening_deposit: parseFloat(formData.opening_deposit),
