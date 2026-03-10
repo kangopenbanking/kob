@@ -118,6 +118,7 @@ const BusinessAppInner: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
   const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
   const queryClient = useQueryClient();
+  useAppCacheClear();
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
