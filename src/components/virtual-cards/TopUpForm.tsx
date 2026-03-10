@@ -129,7 +129,7 @@ export const TopUpForm = ({ card, onSuccess, onCancel }: TopUpFormProps) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('virtual-card-topup', {
+      const response = await supabase.functions.invoke('virtual-cards', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

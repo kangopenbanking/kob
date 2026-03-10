@@ -38,7 +38,7 @@ export const VirtualCardDisplay = ({
 
       const newStatus = card.status === 'active' ? 'inactive' : 'active';
 
-      const response = await supabase.functions.invoke('virtual-card-update-status', {
+      const response = await supabase.functions.invoke('virtual-cards', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },

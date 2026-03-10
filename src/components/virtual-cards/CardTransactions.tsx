@@ -17,7 +17,7 @@ export const CardTransactions = ({ card }: CardTransactionsProps) => {
       if (!session) throw new Error('Not authenticated');
 
       const response = await supabase.functions.invoke(
-        `virtual-card-transactions?card_id=${card.id}&limit=50`,
+        `virtual-cards?card_id=${card.id}&limit=50`,
         {
           headers: {
             Authorization: `Bearer ${session.access_token}`,

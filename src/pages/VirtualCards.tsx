@@ -22,7 +22,7 @@ const VirtualCards = () => {
     queryFn: async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
-      const response = await supabase.functions.invoke('virtual-card-list', {
+      const response = await supabase.functions.invoke('virtual-cards', {
         headers: { Authorization: `Bearer ${session.access_token}` },
       });
       if (response.error) throw response.error;
