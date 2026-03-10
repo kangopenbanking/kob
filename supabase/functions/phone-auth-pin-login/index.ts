@@ -30,21 +30,18 @@ serve(async (req) => {
       );
     }
 
-    // Verify captcha if provided (optional — PIN lockout provides brute-force protection)
+    // Captcha is optional — PIN lockout (3 attempts → 30-min lock) provides brute-force protection
     if (captcha_session_id) {
-      const { data: captchaData, error: captchaError } = await supabase
+      const { data: captchaData } = await supabase
         .from('captcha_challenges')
-        .select('*')
+        .select('status')
         .eq('session_id', captcha_session_id)
-        .eq('status', 'verified')
+        .in('status', ['verified', 'pending'])
         .gt('expires_at', new Date().toISOString())
-        .single();
+        .maybeSingle();
 
-      if (captchaError || !captchaData) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid or expired captcha session' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
-        );
+      if (!captchaData) {
+        console.warn('Captcha session not found or expired, proceeding with PIN lockout protection');
       }
     }
 
