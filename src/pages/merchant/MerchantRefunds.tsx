@@ -37,7 +37,7 @@ export default function MerchantRefunds() {
   };
 
   const filtered = refunds.filter(r => {
-    if (search && !r.refund_ref?.toLowerCase().includes(search.toLowerCase())) return false;
+    if (search && !r.id?.toLowerCase().includes(search.toLowerCase()) && !r.provider_ref?.toLowerCase().includes(search.toLowerCase())) return false;
     if (statusFilter !== "all" && r.status !== statusFilter) return false;
     return true;
   });
