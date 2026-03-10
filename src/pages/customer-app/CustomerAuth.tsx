@@ -143,18 +143,28 @@ const CustomerAuth: React.FC = () => {
       const { data, error } = await supabase.functions.invoke('phone-auth-pin-login', {
         body: { phone_number: fullPhone, pin_code: pin, captcha_session_id: captchaData.session_id },
       });
-      if (error) throw error;
-
-      if (data?.success && data?.magic_link) {
-        const url = new URL(data.magic_link);
-        const token = url.searchParams.get('token') || url.hash?.split('token=')[1];
-        if (token) {
-          const { error: otpErr } = await supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' });
-          if (otpErr) {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) throw new Error('Session could not be established');
+      if (error) {
+        // Parse structured error from edge function
+        try {
+          const parsed = typeof error === 'object' && error.message ? JSON.parse(error.message) : null;
+          if (parsed?.locked) throw new Error(parsed.error || 'Account locked');
+          if (parsed?.remaining_attempts !== undefined) {
+            setPinError(`Invalid PIN. ${parsed.remaining_attempts} attempts remaining.`);
+            setPin('');
+            return;
           }
+          throw new Error(parsed?.error || error.message || 'PIN login failed');
+        } catch (parseErr) {
+          if (parseErr instanceof SyntaxError) throw error;
+          throw parseErr;
         }
+      }
+
+      if (data?.success && data?.session) {
+        await supabase.auth.setSession({
+          access_token: data.session.access_token,
+          refresh_token: data.session.refresh_token,
+        });
         toast.success('Welcome back!');
         await navigateAfterAuth(data.user_id);
       } else {
