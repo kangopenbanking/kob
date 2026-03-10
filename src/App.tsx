@@ -205,6 +205,7 @@ import BankingAppManagement from "./pages/admin/BankingAppManagement";
 import InstitutionAppUrls from "./pages/admin/InstitutionAppUrls";
 import HomepageHeroManager from "./pages/admin/HomepageHeroManager";
 import PaymentFacilitationAdmin from "./pages/admin/PaymentFacilitation";
+import PaymentCommandCenter from "./pages/admin/PaymentCommandCenter";
 import TranslationManager from "./pages/admin/TranslationManager";
 import CrediQ from "./pages/CrediQ";
 import CrediQOnboarding from "./pages/CrediQOnboarding";
