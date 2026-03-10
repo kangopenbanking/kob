@@ -1,18 +1,15 @@
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
-
 import { corsHeaders } from "../_shared/cors.ts";
 
-// Input validation schema
-const sendOtpSchema = z.object({
-  phone: z.string()
-    .trim()
-    .regex(/^\+[1-9]\d{6,14}$/, 'Phone must be in international format (e.g., +237123456789)')
-    .min(8, 'Phone number is too short')
-    .max(15, 'Phone number is too long'),
-  method: z.enum(['sms', 'whatsapp', 'auto', 'both']).optional(),
-});
+// Manual phone validation (replaced zod to avoid import timeout)
+function validatePhone(phone: string): { valid: boolean; error?: string } {
+  if (!phone || typeof phone !== 'string') return { valid: false, error: 'Phone number is required' };
+  const trimmed = phone.trim();
+  if (trimmed.length < 8) return { valid: false, error: 'Phone number is too short' };
+  if (trimmed.length > 16) return { valid: false, error: 'Phone number is too long' };
+  if (!/^\+[1-9]\d{6,14}$/.test(trimmed)) return { valid: false, error: 'Phone must be in international format (e.g., +237123456789)' };
+  return { valid: true };
+}
 
 // Error codes for specific failure scenarios
 type SMSResult = {
