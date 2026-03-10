@@ -44,7 +44,7 @@ export default function MerchantRefunds() {
 
   const statuses = [...new Set(refunds.map(r => r.status).filter(Boolean))];
   const totalAmount = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
-  const completedCount = filtered.filter(r => r.status === "completed").length;
+  const completedCount = filtered.filter(r => r.status === "completed" || r.status === "successful").length;
   const pendingCount = filtered.filter(r => r.status === "pending" || r.status === "processing").length;
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
