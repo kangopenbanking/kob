@@ -131,8 +131,8 @@ export function useSavingsDeposit() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ savings_account_id, amount }: { savings_account_id: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke('savings-deposit', {
-        body: { savings_account_id, amount, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
+        body: { action: 'deposit', savings_account_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
@@ -151,8 +151,8 @@ export function useSavingsWithdraw() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ savings_account_id, amount }: { savings_account_id: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke('savings-withdraw', {
-        body: { savings_account_id, amount, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
+        body: { action: 'withdraw', savings_account_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
@@ -177,8 +177,8 @@ export function useCreateSavingsGoal() {
       target_amount?: number;
       target_date?: string;
     }) => {
-      const { data, error } = await supabase.functions.invoke('savings-create', {
-        body: { ...body, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('savings-ops', {
+        body: { action: 'create', ...body, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
@@ -250,8 +250,8 @@ export function useApplyForLoan() {
       purpose: string;
       submit?: boolean;
     }) => {
-      const { data, error } = await supabase.functions.invoke('loan-apply', {
-        body: { ...body, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('loan-ops', {
+        body: { action: 'apply', ...body, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
@@ -459,9 +459,9 @@ export function useLoanRepayment() {
       loan_account_id: string; amount: number; payment_method?: string; notes?: string 
     }) => {
       const idempotencyKey = `loan-repay-${loan_account_id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-      const { data, error } = await supabase.functions.invoke('loan-repay', {
+      const { data, error } = await supabase.functions.invoke('loan-ops', {
         headers: { 'Idempotency-Key': idempotencyKey },
-        body: { loan_account_id, amount, payment_method: payment_method || 'bank_transfer', notes },
+        body: { action: 'repay', loan_account_id, amount, payment_method: payment_method || 'bank_transfer', notes },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
