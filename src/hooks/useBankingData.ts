@@ -459,9 +459,9 @@ export function useLoanRepayment() {
       loan_account_id: string; amount: number; payment_method?: string; notes?: string 
     }) => {
       const idempotencyKey = `loan-repay-${loan_account_id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}`;
-      const { data, error } = await supabase.functions.invoke('loan-repay', {
+      const { data, error } = await supabase.functions.invoke('loan-ops', {
         headers: { 'Idempotency-Key': idempotencyKey },
-        body: { loan_account_id, amount, payment_method: payment_method || 'bank_transfer', notes },
+        body: { action: 'repay', loan_account_id, amount, payment_method: payment_method || 'bank_transfer', notes },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
