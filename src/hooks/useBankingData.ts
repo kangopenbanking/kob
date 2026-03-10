@@ -289,8 +289,8 @@ export function useVirtualCards() {
   return useQuery({
     queryKey: ['virtual-cards', institutionId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-list', {
-        body: { institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'list', institution_id: institutionId },
       });
       if (error) throw error;
       return data?.cards || [];
@@ -303,8 +303,8 @@ export function useCreateVirtualCard() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { card_type?: string; currency?: string; spending_limit?: number }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-create', {
-        body: { ...body, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'create', ...body, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
@@ -322,8 +322,8 @@ export function useTopUpCard() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ card_id, amount }: { card_id: string; amount: number }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-topup', {
-        body: { card_id, amount, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'topup', card_id, amount, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
@@ -341,8 +341,8 @@ export function useUpdateCardStatus() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async ({ card_id, status }: { card_id: string; status: string }) => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-update-status', {
-        body: { card_id, status, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'update-status', card_id, status, institution_id: institutionId },
       });
       if (error) throw error;
       return data;

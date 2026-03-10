@@ -26,8 +26,8 @@ const BusinessWallet: React.FC = () => {
     queryKey: ['wallet-ledger', merchantId],
     queryFn: async () => {
       if (!merchantId) return { data: [], total: 0 };
-      const { data, error } = await supabase.functions.invoke('gateway-list-wallet-ledger', {
-        method: 'GET',
+      const { data, error } = await supabase.functions.invoke('gateway-query', {
+        body: { action: 'list-wallet-ledger', merchant_id: merchantId },
       });
       if (error) throw error;
       return data || { data: [], total: 0 };

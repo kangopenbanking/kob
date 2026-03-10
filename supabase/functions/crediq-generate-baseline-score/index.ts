@@ -63,8 +63,8 @@ Deno.serve(async (req) => {
           body: { user_id }
         });
         
-        await supabase.functions.invoke('crediq-send-welcome-email', {
-          body: { user_id, credit_score: fullScore }
+        await supabase.functions.invoke('crediq-emails', {
+          body: { action: 'send-welcome-email', user_id, credit_score: fullScore }
         });
         
         return new Response(
@@ -229,8 +229,8 @@ Deno.serve(async (req) => {
 
     // Send welcome email
     try {
-      await supabase.functions.invoke('crediq-send-welcome-email', {
-        body: { user_id, baseline_score: baselineScore }
+      await supabase.functions.invoke('crediq-emails', {
+        body: { action: 'send-welcome-email', user_id, baseline_score: baselineScore }
       });
     } catch (e) {
       console.error('Error sending welcome email:', e);

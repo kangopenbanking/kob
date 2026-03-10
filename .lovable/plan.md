@@ -1,142 +1,243 @@
 
 
-# Plan: Consolidate Edge Functions to Reduce Deployment Timeouts
+# KOB Payment Infrastructure — Deep Technical & Product Capability Audit
 
-## Problem
-The project has ~260 separate edge functions. The deployment pipeline times out bundling them all, causing persistent "Bundle generation timed out" and "connection reset" errors that block publishing.
+---
 
-## Strategy
-Consolidate groups of closely related functions into single "router" functions that use an `action` parameter to dispatch internally. This preserves the same client API contract — the only change on the frontend is updating `supabase.functions.invoke('old-name', ...)` calls to `supabase.functions.invoke('new-name', { body: { action: 'old-action', ... } })`.
+## CLASSIFICATION
 
-**Target: reduce from ~260 to ~140 functions** (eliminate ~120 separate deployable units).
+**KOB is Category B: Wallet support with programmatic outbound payouts, but NO instant payout rails (no Visa Direct, Mastercard Send, or real-time bank push).**
 
-## Consolidation Groups
+---
 
-### Group 1: Gateway List/Get → `gateway-query` (eliminates ~28 functions)
-Merge all read-only gateway query functions into one router:
-- `gateway-list-charges`, `gateway-list-refunds`, `gateway-list-payouts`, `gateway-list-settlements`, `gateway-list-disputes`, `gateway-list-beneficiaries`, `gateway-list-customers`, `gateway-list-customer-tokens`, `gateway-list-payment-links`, `gateway-list-payment-plans`, `gateway-list-subaccounts`, `gateway-list-subscriptions`, `gateway-list-virtual-accounts`, `gateway-list-funding-intents`, `gateway-list-wallet-ledger`
-- `gateway-get-charge`, `gateway-get-refund`, `gateway-get-payout`, `gateway-get-settlement`, `gateway-get-dispute`, `gateway-get-customer`, `gateway-get-payment-link`, `gateway-get-payment-plan`, `gateway-get-subaccount`, `gateway-get-subscription`, `gateway-get-virtual-account`, `gateway-get-funding-intent`, `gateway-get-payout-batch`
+## SECTION A — WALLET / STORED VALUE
 
-Pattern: `{ action: 'list-charges' | 'get-charge' | ... }` routes to the appropriate handler internally.
+### Current State: IMPLEMENTED (85%)
 
-### Group 2: Gateway Reports → `gateway-reports` (eliminates ~2 functions)
-- `gateway-report-fees`, `gateway-report-settlements`, `gateway-report-transactions` → 1 function
+KOB has a functional custodial wallet system:
 
-### Group 3: Gateway Webhooks → `gateway-webhooks` (eliminates ~4 functions)
-- `gateway-webhook-stripe`, `gateway-webhook-flutterwave`, `gateway-webhook-paypal`, `gateway-deliver-webhook`, `gateway-webhook-deliver-v2` → 1 function with provider routing
+| Capability | Status | Implementation |
+|---|---|---|
+| User wallet accounts | Yes | `accounts` table + `account_balances` (ClosingAvailable/InterimAvailable) |
+| Ledger-based balance tracking | Yes | `account_balances` with credit/debit indicators, datetime tracking |
+| Programmatic credit | Yes | `funding-scope-creditor.ts` upserts balances; `gateway-fund-account` credits via charges |
+| Programmatic debit | Yes | `gateway-process-withdrawal` debits balance atomically with rollback |
+| Sub-accounts / Escrow | Partial | `gateway_merchant_wallets` (3-balance model: available/pending/ledger) per merchant per currency; no formal escrow API |
+| Segregated fund structure | Not implemented | No dedicated safeguarding ledger or trust account segregation |
+| Transaction history | Yes | `transactions` table with full metadata, per-account filtering |
 
-### Group 4: Gateway Webhook Endpoints → `gateway-webhook-mgmt` (eliminates ~1 function)
-- `gateway-webhook-endpoints`, `gateway-merchant-webhooks` → 1 function
+### Missing: Dedicated Wallet REST API Surface
 
-### Group 5: CrediQ Emails → `crediq-emails` (eliminates ~4 functions)
-- `crediq-send-welcome-email`, `crediq-send-score-change-email`, `crediq-send-monthly-report`, `crediq-send-weekly-digest`, `crediq-send-goal-achieved-email` → 1 function
-- No client-side callers — only invoked server-side from other edge functions
+KOB has the underlying infrastructure but lacks a **formal `/v1/wallets/*` namespace**. Currently wallet operations are scattered across `gateway-fund-account`, `gateway-process-withdrawal`, and direct balance queries. Required new endpoints:
 
-### Group 6: Credit Score Operations → `credit-score` (eliminates ~4 functions)
-- `credit-score-calculate`, `credit-score-fetch`, `credit-score-engine`, `credit-score-simulate`, `credit-score-tips` → 1 function
-- Client calls: `CreditScore.tsx`, `useBankingData.ts`, `ScoreSimulator.tsx` — update invoke names
-
-### Group 7: Credit Operations → `credit-ops` (eliminates ~3 functions)
-- `credit-profile-get`, `credit-events-list`, `credit-explain`, `credit-recompute` → 1 function
-
-### Group 8: Virtual Cards → `virtual-cards` (eliminates ~4 functions)
-- `virtual-card-create`, `virtual-card-list`, `virtual-card-topup`, `virtual-card-update-status`, `virtual-card-transactions` → 1 function
-- All share the same Cardyfie API helper — deduplicates that code too
-
-### Group 9: Sandbox → `sandbox` (eliminates ~5 functions)
-- `sandbox-create-account`, `sandbox-create-api-key`, `sandbox-generate-data`, `sandbox-register-webhook`, `sandbox-test-webhook`, `sandbox-trigger-webhook`, `sandbox-validate-api-key` → 1 function
-
-### Group 10: Loan Operations → `loan-ops` (eliminates ~5 functions)
-- `loan-apply`, `loan-approve`, `loan-calculate`, `loan-disburse`, `loan-repay`, `loan-overdue-detect` → 1 function
-
-### Group 11: Savings Operations → `savings-ops` (eliminates ~3 functions)
-- `savings-create`, `savings-deposit`, `savings-withdraw`, `savings-accrue-interest` → 1 function
-
-### Group 12: Njangi Operations → `njangi-ops` (eliminates ~4 functions)
-- `njangi-create`, `njangi-join`, `njangi-contribute`, `njangi-payout`, `njangi-overdue-detect` → 1 function
-
-### Group 13: PiggyBank → `piggybank` (eliminates ~2 functions)
-- `piggybank-create`, `piggybank-pay`, `piggybank-overdue-detect` → 1 function
-
-### Group 14: ISO 20022/SWIFT → `iso-messaging` (eliminates ~4 functions)
-- `iso20022-camt053-parser`, `iso20022-pacs002-generator`, `iso20022-pacs008-generator`, `iso20022-pain001-parser`, `swift-mt103-generator`, `swift-mt103-parser`, `swift-mt940-parser` → 1 function
-
-### Group 15: OAuth/OIDC → `oauth` (eliminates ~4 functions)
-- `oauth-authorize`, `oauth-token`, `oauth-introspect`, `oauth-revoke`, `oidc-config`, `par-endpoint`, `jwks-endpoint` → 1 function (URL-path routing)
-
-### Group 16: AISP → `aisp` (eliminates ~6 functions)
-- `aisp-accounts`, `aisp-balances`, `aisp-beneficiaries`, `aisp-create-consent`, `aisp-direct-debits`, `aisp-standing-orders`, `aisp-transactions` → 1 function
-
-### Group 17: Admin Operations → `admin-ops` (eliminates ~10 functions)
-- `admin-approve-settlement`, `admin-assign-staff`, `admin-create-client`, `admin-create-user`, `admin-institution-approve`, `admin-invoice-actions`, `admin-kyb-verify`, `admin-kyc-review`, `admin-list-consents`, `admin-list-loans`, `admin-list-savings` → 1 function
-
-### Group 18: Certificate Management → `certificate-mgmt` (eliminates ~3 functions)
-- `certificate-upload`, `certificate-list`, `certificate-revoke`, `certificate-expiry-monitor` → 1 function
-
-### Group 19: Captcha/SCA → `security-challenge` (eliminates ~3 functions)
-- `captcha-generate`, `captcha-verify`, `sca-initiate`, `sca-verify` → 1 function
-
-### Group 20: Woocommerce → `woocommerce` (eliminates ~4 functions)
-- `woocommerce-register-merchant`, `woocommerce-process-payment`, `woocommerce-payment-webhook`, `woocommerce-transaction-sync`, `woocommerce-validate-install`, `woocommerce-download-plugin` → 1 function
-
-### Group 21: CrediQ Compute → `crediq-compute` (eliminates ~2 functions)
-- `crediq-calculate-health-metrics`, `crediq-generate-action-plan`, `crediq-generate-baseline-score`, `crediq-health-check` → 1 function
-
-### Group 22: Gateway Payout Operations → `gateway-payout-ops` (eliminates ~5 functions)
-- `gateway-create-payout`, `gateway-create-payout-batch`, `gateway-create-paypal-payout`, `gateway-cancel-payout`, `gateway-retry-payout`, `gateway-payout-status-poll`, `gateway-payout-rails`, `gateway-instant-payout`, `gateway-request-payout`, `gateway-payout-webhook` → 1 function
-
-### Group 23: Gateway Charge Operations → `gateway-charge-ops` (eliminates ~6 functions)
-- `gateway-create-charge`, `gateway-validate-charge`, `gateway-verify-charge`, `gateway-capture-charge`, `gateway-cancel-charge`, `gateway-void-charge`, `gateway-preauth-charge`, `gateway-charge-token`, `gateway-get-charge-events` → 1 function
-
-### Group 24: Phone Auth → `phone-auth` (eliminates ~3 functions)
-- `phone-auth-send-otp`, `phone-auth-verify-otp`, `phone-auth-pin-login`, `phone-auth-check-pin` → 1 function
-
-### Group 25: PIN Management → `pin-mgmt` (eliminates ~2 functions)
-- `pin-code-set`, `pin-code-verify`, `pin-code-reset`, `password-reset-with-pin` → 1 function
-
-### Group 26: Flutterwave Utils → `flutterwave-utils` (eliminates ~1 function)
-- `flutterwave-list-banks`, `flutterwave-verify-bank` → 1 function
-
-### Group 27: Gateway Funding → `gateway-funding` (eliminates ~3 functions)
-- `gateway-create-funding-intent`, `gateway-confirm-funding`, `gateway-cancel-funding-intent`, `gateway-reconcile-funding`, `gateway-fund-account` → 1 function
-
-### Group 28: Gateway Withdrawal → `gateway-withdrawal` (eliminates ~2 functions)
-- `gateway-withdraw-to-bank`, `gateway-withdraw-to-paypal`, `gateway-process-withdrawal`, `gateway-admin-reverse-withdrawal` → 1 function
-
-## Implementation Approach
-
-For each consolidated function:
-
-1. **Create the new router function** with an `action` body parameter that dispatches to handler functions (all in the same `index.ts` file)
-2. **Move logic** from each individual function into handler functions within the router
-3. **Update client-side calls** (in `src/`) to use the new function name + action parameter
-4. **Update server-side cross-calls** (in other edge functions) similarly
-5. **Delete the old individual function directories**
-6. **Update `config.toml`** — remove old entries, add new consolidated entries
-
-## Execution Order (phased to reduce risk)
-
-**Phase 1** — Highest impact, lowest client-side touch:
-- Groups 5 (CrediQ emails — 0 client callers), 14 (ISO/SWIFT), 17 (Admin ops), 1 (Gateway queries)
-
-**Phase 2** — Moderate client updates:
-- Groups 8 (Virtual cards), 9 (Sandbox), 10 (Loans), 11 (Savings), 12 (Njangi)
-
-**Phase 3** — Remaining:
-- Groups 6, 7, 15, 16, 22, 23, 24, 25, and others
-
-## Frontend Change Pattern
-
-```typescript
-// Before
-await supabase.functions.invoke('virtual-card-create', { body: { card_name, program_id } });
-
-// After
-await supabase.functions.invoke('virtual-cards', { body: { action: 'create', card_name, program_id } });
+```text
+POST   /v1/wallets                      — Create wallet (maps to account creation)
+GET    /v1/wallets/{id}                  — Get wallet with balances
+POST   /v1/wallets/{id}/credit           — Programmatic credit (wraps funding-scope-creditor)
+POST   /v1/wallets/{id}/debit            — Programmatic debit (wraps withdrawal logic)
+GET    /v1/wallets/{id}/transactions     — Transaction history for wallet
+GET    /v1/wallets/{id}/statement        — Generate statement (wraps generate-bank-statement)
+POST   /v1/wallets/{id}/freeze           — Freeze/unfreeze wallet (compliance)
 ```
 
-## Estimated Result
-- **Before**: ~260 edge functions
-- **After**: ~140 edge functions (45% reduction)
-- This should bring deployment well within timeout limits
+**Required additions:**
+- Idempotency-Key header support (already pattern exists in `gateway-fund-account`)
+- Webhook events: `wallet.credited`, `wallet.debited`, `wallet.frozen`
+- Escrow sub-wallet creation for marketplace holds
+
+**Effort**: 1 new edge function (multi-method router), ~200 lines. No DB migration needed — uses existing `accounts` + `account_balances` tables.
+
+---
+
+## SECTION B — OUTBOUND PAYOUTS
+
+### Current State: IMPLEMENTED (90%)
+
+KOB has a comprehensive outbound payout system:
+
+| Capability | Status | Provider |
+|---|---|---|
+| Payouts to bank accounts | Yes | Flutterwave `/v3/transfers` |
+| Payouts to mobile money (MoMo) | Yes | Flutterwave MPS (MTN/Orange) |
+| Payouts to debit cards | Partial | Stripe Refund-based (requires prior card deposit) |
+| Payouts to PayPal | Yes | PayPal Batch Payouts API |
+| Batch payouts | Yes | `gateway-create-payout-batch` (up to 15k items via PayPal) |
+| Merchant-initiated payouts | Yes | `gateway-create-payout` (merchant wallet debit) |
+| Consumer-initiated withdrawals | Yes | `gateway-process-withdrawal` (account balance debit) |
+| Payout status polling | Yes | `gateway-payout-status-poll` |
+| Async webhook updates | Yes | `gateway-payout-webhook` (Stripe/Flutterwave/PayPal) |
+| Failed payout reversal | Yes | Automatic balance restoration on failure |
+| Admin manual reversal | Yes | `gateway-admin-reverse-withdrawal` |
+| Retry mechanism | Yes | `gateway-retry-payout` |
+| Daily payout limits | Yes | Per-merchant `daily_payout_limit` enforcement |
+| Idempotency | Yes | `idempotency-key` header on `gateway-create-payout` |
+
+### Missing / Gaps
+
+1. **True push-to-card payouts**: Current card withdrawal is a Stripe Refund against a prior PaymentIntent. This is NOT a true payout — it requires a prior deposit, has refund-window limitations (180 days), and doesn't support arbitrary card destinations. For true instant card payouts, KOB needs Visa Direct / Mastercard Send integration.
+
+2. **Instant vs Standard payout parameter**: No `speed` parameter (`instant` | `standard`) on payout endpoints. All payouts use the provider's default speed.
+
+3. **Formal `/v1/payouts/cancel` endpoint**: Cancellation is not exposed as a standalone API. Only failed payouts can be retried.
+
+4. **Payout to arbitrary bank account** (non-linked): Currently requires a `linked_account_id` for consumer withdrawals. Merchant payouts accept direct beneficiary details but consumer withdrawals do not.
+
+### Required Endpoint Additions
+
+```text
+POST   /v1/payouts/{id}/cancel          — Cancel pending payout before provider submission
+PATCH  /v1/payouts                      — Add `speed: 'instant' | 'standard'` parameter
+POST   /v1/payouts/card                 — True push-to-card (requires Visa Direct integration)
+```
+
+---
+
+## SECTION C — INSTANT RAILS SUPPORT
+
+### Current State: NOT IMPLEMENTED
+
+| Rail | Status |
+|---|---|
+| Visa Direct | Not integrated |
+| Mastercard Send | Not integrated |
+| SEPA Instant / FPS / RTP | Not integrated |
+| CEMAC real-time clearing (SYSTAC) | Not integrated |
+| 24/7 settlement processing | No — relies on provider business hours |
+| Push-to-card | Not available (Stripe refund ≠ push-to-card) |
+| Prefunding / liquidity pool | Not implemented |
+
+### Required Architecture for Instant Payouts
+
+```text
+┌─────────────────────────────────────────────┐
+│            KOB Instant Payout Engine         │
+├─────────────────────────────────────────────┤
+│  1. Prefunding Pool (Float Management)       │
+│     - Dedicated settlement account per rail  │
+│     - Real-time float monitoring API         │
+│     - Auto-replenishment triggers            │
+├─────────────────────────────────────────────┤
+│  2. Rail Router                              │
+│     - Visa Direct (card payouts)             │
+│     - Flutterwave Instant (MoMo already ~OK) │
+│     - CEMAC RTGS / SYSTAC (bank-to-bank)    │
+│     - Fallback: standard ACH-equivalent     │
+├─────────────────────────────────────────────┤
+│  3. Risk & Fraud Layer                       │
+│     - Pre-payout risk scoring                │
+│     - Velocity checks (existing)             │
+│     - Amount limits per rail per user tier   │
+│     - ML anomaly detection (ai-anomaly exists)│
+├─────────────────────────────────────────────┤
+│  4. Liquidity Management API                 │
+│     GET  /v1/treasury/float-balance          │
+│     POST /v1/treasury/replenish              │
+│     GET  /v1/treasury/utilization            │
+└─────────────────────────────────────────────┘
+```
+
+**Required new endpoints:**
+
+```text
+POST   /v1/payouts/instant              — Instant payout (auto-routes to fastest rail)
+GET    /v1/payouts/rails                — List available rails + current speed + fees
+POST   /v1/payouts/card/push            — Visa Direct push-to-card
+GET    /v1/treasury/float               — Float balance per rail (admin)
+POST   /v1/risk/pre-check               — Pre-payout risk assessment
+```
+
+**Estimated effort**: 3-5 new edge functions + Visa Direct API integration + prefunding account infrastructure. This is the largest gap.
+
+---
+
+## SECTION D — LICENSING & COMPLIANCE
+
+### Current State: PARTIAL
+
+| Capability | Status |
+|---|---|
+| KYC verification | Yes — `kyc-submit`, `kyc_verifications` table, document upload |
+| KYB (merchant) | Yes — `gateway-merchant-kyb` (submit/review workflow) |
+| AML sanctions screening | Yes — `sanctions-screen` edge function |
+| Transaction monitoring | Yes — `transaction-monitor` + `ai-anomaly-detection` |
+| CDD (Customer Due Diligence) | Yes — `customer_due_diligence` table, PEP checks, risk scoring |
+| Risk scoring | Yes — `calculate_kyc_risk_score` DB function |
+| Data retention | Yes — 7-year COBAC compliance policy |
+| License type | Unclear — no EMI/MTL documentation found in codebase |
+
+### Missing
+
+1. **Formal EMI or Money Transmitter license documentation**: The platform operates as a wallet/payment processor but the licensing basis is not codified in the API. This is a business/legal gap, not a technical one.
+
+2. **Real-time transaction screening for outbound payouts**: `transaction-monitor` exists but it's not inline (pre-payout). Payouts execute first, monitor after.
+
+3. **Required compliance endpoints** (partially exist):
+
+```text
+POST   /v1/compliance/payout-screen     — Pre-payout AML/sanctions check (MISSING)
+GET    /v1/compliance/user-risk/{id}     — User risk profile (exists via calculate_kyc_risk_score)
+POST   /v1/compliance/sar               — Suspicious Activity Report submission (MISSING)
+```
+
+---
+
+## SECTION E — TECHNICAL READINESS
+
+### Current State: PRODUCTION-GRADE (85%)
+
+| Feature | Status | Details |
+|---|---|---|
+| Idempotency-Key | Yes | Supported on charges, payouts, funding intents via header + DB dedup |
+| Webhook system | Mature | HMAC-SHA256 signing, 7-retry exponential backoff, delivery logging, 24 event types |
+| Rate limiting | Yes | DB-backed (`check_rate_limit` RPC), per-provider webhook limits, per-user API limits |
+| Error format | Partial | Consistent `{error, message}` but NOT RFC 7807 `problem+json` everywhere |
+| Sandbox simulation | Yes | `sandbox-*` functions for data generation, API key creation, webhook testing |
+| API versioning | Yes | `/v1/` prefix on all endpoints |
+| OpenAPI spec | Yes | `public-api-spec` (OpenAPI 3.1.0, 245+ endpoints documented) |
+| Postman collection | Yes | `postman-collection` auto-generated |
+
+### Missing
+
+1. **RFC 7807 error responses** are not consistently used (some functions return `{error, message}`, not `{type, title, status, detail}`)
+2. **SLA guarantees** are not programmatically documented (only operational: 15-min critical response)
+3. **Payout sandbox simulation** — sandbox exists for charges but payout simulation with realistic delays is not confirmed
+
+---
+
+## COMPLETE GAP SUMMARY
+
+### To compete with Stripe-style instant payouts, KOB needs:
+
+| # | Gap | Priority | Effort |
+|---|---|---|---|
+| 1 | **Visa Direct integration** (true push-to-card) | CRITICAL | 1 edge function + Visa API onboarding |
+| 2 | **Formal `/v1/wallets/*` REST namespace** | HIGH | 1 edge function (router) |
+| 3 | **Instant payout rail router** with `speed` parameter | HIGH | 1 edge function + rail selection logic |
+| 4 | **Prefunding / float management API** | HIGH | 1 edge function + treasury tables |
+| 5 | **Pre-payout compliance screening** (inline) | HIGH | 1 edge function |
+| 6 | **Payout cancellation endpoint** | MEDIUM | Add to existing payout function |
+| 7 | **RFC 7807 error standardization** | MEDIUM | Update all edge functions |
+| 8 | **Escrow / hold sub-wallets** | MEDIUM | 1 migration + 1 function |
+| 9 | **Safeguarded fund segregation ledger** | MEDIUM | 1 migration |
+| 10 | **SAR submission endpoint** | LOW | 1 edge function |
+
+---
+
+## FINAL ANSWERS
+
+| Question | Answer |
+|---|---|
+| Can KOB support instant wallet-to-bank withdrawals? | **Partially** — Flutterwave MoMo is near-instant; bank transfers are T+1 to T+3. No real-time bank rail (RTGS/SYSTAC) integration. |
+| Can KOB support instant wallet-to-card withdrawals? | **No** — Current implementation uses Stripe Refunds (requires prior deposit, 5-10 day processing). True push-to-card requires Visa Direct/Mastercard Send. |
+| Can KOB support 24/7 real-time payout infrastructure? | **No** — Dependent on provider business hours. No prefunding pool, no instant rail router, no 24/7 settlement engine. |
+| Production readiness for high-risk instant payout fintech? | **Not yet.** The wallet + standard payout infrastructure is solid (~90%), but instant rails, prefunding, and inline compliance screening are required before production deployment for an instant payout platform. |
+
+### Recommended Upgrade Roadmap
+
+```text
+Phase 1 (4-6 weeks): Wallet API namespace + inline compliance screening + payout cancel
+Phase 2 (6-10 weeks): Visa Direct integration + instant rail router + speed parameter
+Phase 3 (4-6 weeks): Prefunding/treasury API + float monitoring + 24/7 settlement cron
+Phase 4 (2-4 weeks): Escrow sub-wallets + safeguarding ledger + SAR endpoint
+```
 

@@ -104,7 +104,7 @@ const FUNCTION_CATEGORIES: FunctionCategory[] = [
   {
     name: 'CrediQ',
     icon: Activity,
-    functions: ['crediq-generate-baseline-score', 'crediq-calculate-health-metrics', 'crediq-generate-action-plan', 'crediq-send-welcome-email', 'crediq-send-score-change-email', 'crediq-send-weekly-digest', 'crediq-send-monthly-report']
+    functions: ['crediq-generate-baseline-score', 'crediq-calculate-health-metrics', 'crediq-generate-action-plan', 'crediq-emails']
   }
 ];
 

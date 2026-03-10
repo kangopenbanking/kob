@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
         'crediq-generate-baseline-score',
         'crediq-calculate-health-metrics',
         'crediq-generate-action-plan',
-        'crediq-send-welcome-email'
+        'crediq-emails'
       ];
       
       healthChecks.edge_functions = {

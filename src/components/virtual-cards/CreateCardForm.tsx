@@ -53,7 +53,7 @@ export const CreateCardForm = ({ onSuccess, onCancel }: CreateCardFormProps) => 
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
-      const response = await supabase.functions.invoke('virtual-card-create', {
+      const response = await supabase.functions.invoke('virtual-cards', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
