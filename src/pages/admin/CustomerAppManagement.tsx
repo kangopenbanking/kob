@@ -1041,10 +1041,35 @@ function HeroSectionPanel({ institutionId, appConfig }: { institutionId: string;
       });
       if (uploadError) throw uploadError;
       const { data: urlData } = supabase.storage.from('institution-assets').getPublicUrl(fileName);
-      setBgImage(urlData.publicUrl);
+      const newUrl = urlData.publicUrl;
       const uploadedIsVideo = file.type.startsWith('video/');
-      setMediaType(uploadedIsVideo ? 'video' : 'image');
-      toast.success(`${uploadedIsVideo ? 'Video' : 'Image'} uploaded successfully`);
+      const newMediaType = uploadedIsVideo ? 'video' : 'image';
+
+      // Update local state
+      setBgImage(newUrl);
+      setMediaType(newMediaType);
+
+      // Auto-save to DB immediately after upload
+      const { data: inst } = await supabase.from("institutions").select("app_config").eq("id", institutionId).single();
+      const currentAppConfig = (inst as any)?.app_config || {};
+      const customerConfig = currentAppConfig.customer_app_config || {};
+      const { error: saveError } = await (supabase as any).from("institutions").update({
+        app_config: {
+          ...currentAppConfig,
+          customer_app_config: {
+            ...customerConfig,
+            hero_bg_color: bgColor,
+            hero_bg_image: newUrl,
+            hero_media_type: newMediaType,
+            hero_action_colors: actionColors,
+            hero_action_opacity: actionOpacity,
+          },
+        },
+      }).eq("id", institutionId);
+      if (saveError) throw saveError;
+
+      queryClient.invalidateQueries({ queryKey: ["admin-institutions-customer"] });
+      toast.success(`${uploadedIsVideo ? 'Video' : 'Image'} uploaded & saved`);
     } catch (err: any) {
       console.error('Hero media upload error:', err);
       toast.error(err.message || 'Upload failed');
