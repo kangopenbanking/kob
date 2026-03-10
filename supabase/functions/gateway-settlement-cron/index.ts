@@ -289,21 +289,42 @@ async function releaseFloat(
   });
 }
 
-async function simulateProviderPoll(payout: any): Promise<"completed" | "failed" | "pending"> {
-  // In production, this calls the actual provider API:
-  // - Flutterwave: GET /v3/transfers/{id}
-  // - Stripe: GET /v1/payouts/{id}
-  // - PayPal: GET /v1/payments/payouts-item/{id}
-  // - Visa Direct: GET /visadirect/fundstransfer/v1/pushfundstransactions/{id}
-  //
-  // For now, simulate based on age:
-  const ageMs = Date.now() - new Date(payout.created_at).getTime();
-  const ageMinutes = ageMs / (1000 * 60);
+async function pollProviderStatus(payout: any): Promise<"completed" | "failed" | "pending"> {
+  const providerRef = payout.provider_ref;
+  if (!providerRef) return "pending";
 
-  // Instant rails complete quickly
-  if (payout.speed === "instant" && ageMinutes > 2) return "completed";
-  // Standard rails take longer
-  if (payout.speed === "standard" && ageMinutes > 30) return "completed";
+  const channel = payout.channel || '';
 
-  return "pending";
+  try {
+    // Stripe payouts
+    if (channel === 'card_push' || payout.provider === 'stripe') {
+      const result = await getStripePayoutStatus(providerRef);
+      if (result.status === 'successful' || result.status === 'paid') return "completed";
+      if (result.status === 'failed' || result.status === 'canceled') return "failed";
+      return "pending";
+    }
+
+    // Flutterwave transfers (bank, mobile_money)
+    if (channel === 'bank_transfer' || channel === 'mobile_money' || payout.provider === 'flutterwave') {
+      const result = await getFlutterwaveTransferStatus(providerRef);
+      if (result.status === 'successful' || result.status === 'SUCCESSFUL') return "completed";
+      if (result.status === 'failed' || result.status === 'FAILED') return "failed";
+      return "pending";
+    }
+
+    // PayPal payouts
+    if (channel === 'paypal' || payout.provider === 'paypal') {
+      const result = await getPayPalPayoutStatus(providerRef);
+      if (result.batch_status === 'SUCCESS') return "completed";
+      if (result.batch_status === 'DENIED' || result.batch_status === 'CANCELED') return "failed";
+      return "pending";
+    }
+
+    // Unknown provider — remain pending
+    console.warn(`[Settlement] Unknown provider/channel for payout ${payout.id}: ${payout.provider}/${channel}`);
+    return "pending";
+  } catch (err) {
+    console.error(`[Settlement] Provider poll error for payout ${payout.id}:`, err);
+    return "pending";
+  }
 }
