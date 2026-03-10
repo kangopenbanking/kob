@@ -44,7 +44,7 @@ export default function MerchantSettlements() {
 
   const statuses = [...new Set(settlements.map(s => s.status).filter(Boolean))];
   const totalSettled = filtered.filter(s => s.status === "settled").reduce((sum, s) => sum + Number(s.net_amount || 0), 0);
-  const totalFees = filtered.reduce((sum, s) => sum + Number(s.total_fees || 0), 0);
+  const totalFees = filtered.reduce((sum, s) => sum + Number(s.fees_total || 0), 0);
   const pendingCount = filtered.filter(s => s.status !== "settled").length;
 
   if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
