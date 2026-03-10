@@ -60,7 +60,7 @@ export default function PaymentCheckout() {
   const fetchLink = async () => {
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-get-payment-link?slug=${slug}`,
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/gateway-query?action=get-payment-link&slug=${slug}`,
         { headers: { 'apikey': import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY } }
       );
       const linkData = await res.json();

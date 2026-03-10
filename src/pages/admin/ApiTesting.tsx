@@ -54,9 +54,9 @@ const API_ENDPOINTS = [
   { name: "Sanctions Screen", path: "sanctions-screen", displayPath: "/v1/compliance/sanctions/screen", method: "POST", category: "Compliance", requiresAuth: true },
 
   // Cards
-  { name: "Virtual Card Create", path: "virtual-card-create", displayPath: "/v1/cards/create", method: "POST", category: "Cards", requiresAuth: true },
-  { name: "Virtual Card List", path: "virtual-card-list", displayPath: "/v1/cards/list", method: "GET", category: "Cards", requiresAuth: true },
-  { name: "Virtual Card Top Up", path: "virtual-card-topup", displayPath: "/v1/cards/topup", method: "POST", category: "Cards", requiresAuth: true },
+  { name: "Virtual Card Create", path: "virtual-cards", displayPath: "/v1/cards/create", method: "POST", category: "Cards", requiresAuth: true },
+  { name: "Virtual Card List", path: "virtual-cards", displayPath: "/v1/cards/list", method: "GET", category: "Cards", requiresAuth: true },
+  { name: "Virtual Card Top Up", path: "virtual-cards", displayPath: "/v1/cards/topup", method: "POST", category: "Cards", requiresAuth: true },
 
   // Auth / DCR
   { name: "OAuth Token", path: "oauth-token", displayPath: "/v1/oauth/token", method: "POST", category: "Auth", requiresAuth: false },

@@ -60,9 +60,9 @@ const EDGE_FUNCTIONS = [
   { name: "sanctions-screen", path: "/v1/compliance/sanctions/screen", method: "POST", category: "Compliance", description: "Screen for sanctions", auth: true },
 
   // Cards
-  { name: "virtual-card-create", path: "/v1/cards/create", method: "POST", category: "Cards", description: "Create virtual card", auth: true },
-  { name: "virtual-card-list", path: "/v1/cards/list", method: "GET", category: "Cards", description: "List virtual cards", auth: true },
-  { name: "virtual-card-topup", path: "/v1/cards/topup", method: "POST", category: "Cards", description: "Top up virtual card", auth: true },
+  { name: "virtual-cards", path: "/v1/cards/create", method: "POST", category: "Cards", description: "Create virtual card", auth: true },
+  { name: "virtual-cards", path: "/v1/cards/list", method: "GET", category: "Cards", description: "List virtual cards", auth: true },
+  { name: "virtual-cards", path: "/v1/cards/topup", method: "POST", category: "Cards", description: "Top up virtual card", auth: true },
 
   // Auth / DCR
   { name: "oauth-token", path: "/v1/oauth/token", method: "POST", category: "Auth", description: "Exchange credentials for access token", auth: false },
