@@ -53,8 +53,9 @@ const apps: AppPhase[] = [
     accent: '#22C55E', accentBorder: 'border-green-500/30', accentBg: 'bg-green-500/10', accentText: 'text-green-400',
     phase: 2, link: '/merchant',
     features: [
-      { icon: Bus, label: 'Travel & Transport' }, { icon: UserCheck, label: 'Staff Portal & Roles' },
-      { icon: BarChart3, label: 'Sales Analytics' }, { icon: Package, label: 'Settlement Mgmt' },
+      { icon: Monitor, label: 'POS Till & Orders' }, { icon: ShoppingCart, label: 'WooCommerce Sync' },
+      { icon: Bus, label: 'Travel & Transport' }, { icon: BarChart3, label: 'Sales Analytics' },
+      { icon: UserCheck, label: 'Staff Portal & Roles' }, { icon: Package, label: 'Settlement Mgmt' },
       { icon: QrCode, label: 'QR Ticket Scanner' }, { icon: Receipt, label: 'Booking Management' },
     ],
   },
