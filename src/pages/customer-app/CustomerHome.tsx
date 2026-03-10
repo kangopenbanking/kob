@@ -143,12 +143,8 @@ const CustomerHome: React.FC = () => {
 
   // Admin-configurable hero background
   const isHeroVideo = tenant.heroMediaType === 'video' || (tenant.heroBgImage ? /\.(mp4|webm|ogg)(\?|$)/i.test(tenant.heroBgImage) : false);
+  const hasHeroImage = !!tenant.heroBgImage && !isHeroVideo;
   const heroBgStyle: React.CSSProperties = {
-    ...(tenant.heroBgImage && !isHeroVideo ? {
-      backgroundImage: `linear-gradient(to bottom, rgba(0,0,0,0.15), rgba(0,0,0,0.35)), url(${tenant.heroBgImage})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
-    } : {}),
     ...(tenant.heroBgColor && !tenant.heroBgImage ? { backgroundColor: tenant.heroBgColor } : {}),
   };
 
@@ -164,6 +160,17 @@ const CustomerHome: React.FC = () => {
           className="relative overflow-hidden rounded-b-[28px] bg-primary shadow-[0_8px_32px_-8px_rgba(0,0,0,0.25)]"
           style={heroBgStyle}
         >
+          {/* Image background — rendered as <img> for reliable GIF/image display */}
+          {hasHeroImage && (
+            <>
+              <img
+                src={tenant.heroBgImage!}
+                alt=""
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/20 to-black/35" />
+            </>
+          )}
           {/* Video background */}
           {isHeroVideo && tenant.heroBgImage && (
             <>
