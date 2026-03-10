@@ -24,19 +24,47 @@ serve(async (req) => {
 
     let event;
     
-    // Verify webhook signature if present
+    // Verify webhook signature (use STRIPE_WEBSECRET_KEY which is configured)
     if (signature) {
-      const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+      const webhookSecret = Deno.env.get('STRIPE_WEBSECRET_KEY');
       if (webhookSecret) {
         event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
       } else {
-        event = JSON.parse(body);
+        console.warn('STRIPE_WEBSECRET_KEY not configured — rejecting unsigned webhook');
+        return new Response(JSON.stringify({ error: 'Webhook secret not configured' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
       }
     } else {
-      event = JSON.parse(body);
+      return new Response(JSON.stringify({ error: 'Missing stripe-signature header' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     console.log('Stripe webhook event:', event.type);
+
+    // Deduplication via webhook_inbox
+    const eventId = event.id;
+    const { data: existing } = await supabase
+      .from('webhook_inbox')
+      .select('id')
+      .eq('event_id', eventId)
+      .eq('provider', 'stripe_legacy')
+      .maybeSingle();
+
+    if (existing) {
+      console.log('Duplicate webhook event, skipping:', eventId);
+      return new Response(JSON.stringify({ received: true, duplicate: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200,
+      });
+    }
+
+    await supabase.from('webhook_inbox').insert({
+      event_id: eventId,
+      provider: 'stripe_legacy',
+      event_type: event.type,
+      payload: event.data?.object || {},
+    });
 
     // Handle different event types
     switch (event.type) {

@@ -1,257 +1,243 @@
 
 
-# Full Payment Infrastructure Audit — Plan & Report
-
-## Audit Scope
-
-Systematic end-to-end verification of all payment-related edge functions, webhooks, database flows, cross-app synchronization, and error handling across the Kang Open Banking platform.
+# KOB Payment Infrastructure — Deep Technical & Product Capability Audit
 
 ---
 
-## 1. API Health Check — Findings
+## CLASSIFICATION
 
-### Edge Functions Verified (Payment-Related)
-
-| Function | Auth | CORS | Status |
-|---|---|---|---|
-| `stripe-payment-intent` | ✅ Bearer JWT | ✅ shared cors.ts | ✅ OK |
-| `stripe-confirm-payment` | ⚠️ Webhook (no user auth) | ✅ | ✅ OK |
-| `gateway-create-charge` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `gateway-create-refund` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `gateway-create-payout` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `gateway-preauth-charge` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `gateway-verify-charge` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `gateway-webhook-stripe` | ✅ HMAC-SHA256 sig | ✅ | ✅ OK |
-| `gateway-webhook-flutterwave` | ✅ verif-hash | ✅ | ✅ OK |
-| `gateway-webhook-paypal` | ✅ PayPal sig verify | ✅ | ✅ OK |
-| `mobile-money-charge` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `flutterwave-bank-transfer` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `facilitated-mobile-money-charge` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `facilitated-bank-transfer` | ✅ Bearer JWT | ✅ | ✅ OK |
-| `gateway-settlement-cron` | ✅ Cron auth | ✅ | ⚠️ Issue found |
-| `gateway-reconcile-stuck` | ✅ Cron auth | ✅ | ✅ OK |
-| `gateway-reconciliation` | ✅ Admin RBAC | ✅ | ✅ OK |
-
-### Secrets Verified
-All required provider secrets are configured: `STRIPE_SECRET_KEY`, `STRIPE_WEBSECRET_KEY`, `FLUTTERWAVE_SECRET_KEY`, `FLUTTERWAVE_ENCRYPTION_KEY`, `PAYPAL_CLIENT_ID`, `PAYPAL_CLIENT_SECRET` (as `PAYPAL_CLIENT_SECRET`), `PAYPAL_WEBHOOK_ID`.
-
-⚠️ **Issue P1**: `PAYPAL_SECRET` is the expected env var name in `gateway-adapters.ts` (line 314), but the configured secret is `PAYPAL_CLIENT_SECRET`. This will cause PayPal payouts and webhook verification to fail with "PayPal credentials not configured".
+**KOB is Category B: Wallet support with programmatic outbound payouts, but NO instant payout rails (no Visa Direct, Mastercard Send, or real-time bank push).**
 
 ---
 
-## 2. Payment Provider Integration — Findings
+## SECTION A — WALLET / STORED VALUE
 
-### Stripe
-- **Charge flow**: `stripe-payment-intent` → Stripe API → `stripe-confirm-payment` webhook → updates `card_payment_transactions`. ✅
-- **Gateway charge flow**: `gateway-create-charge` (channel=card) → `createStripeCharge` adapter → PaymentIntent → webhook updates `gateway_charges`. ✅
-- **XAF handling**: `toStripeAmount()` correctly treats XAF as zero-decimal. ✅
-- **Refund flow**: `gateway-create-refund` → `createStripeRefund` with correct XAF amount. ✅ Over-refund guard present. ✅
+### Current State: IMPLEMENTED (85%)
 
-### Flutterwave Mobile Money
-- **Charge flow**: `mobile-money-charge` → Flutterwave `/v3/charges?type=mobile_money_franco` → webhook updates `mobile_money_transactions`. ✅
-- **Gateway charge flow**: `gateway-create-charge` (channel=mobile_money) → `createFlutterwaveCharge` adapter. ✅
-- **Country detection**: Based on phone prefix (237=CM, 225=CI, etc.). ✅
+KOB has a functional custodial wallet system:
 
-### Local Bank Transfer
-- **Transfer flow**: `flutterwave-bank-transfer` → Flutterwave `/v3/transfers`. ✅
-- **Facilitated flow**: `facilitated-bank-transfer` → institution-scoped with KOB fee calculation. ✅
-- **Bank list**: `flutterwave-list-banks` fetches from Flutterwave by country. ✅
-- **Account verification**: `flutterwave-verify-bank` → `/v3/accounts/resolve`. ✅
-
-### PayPal
-- **Payout flow**: `gateway-create-paypal-payout` → PayPal Payouts API. ✅
-- ⚠️ **Issue P1** (repeated): `PAYPAL_SECRET` env var mismatch — see above.
-
----
-
-## 3. Webhook Processing — Findings
-
-### Webhook Endpoints
-
-| Webhook | Events Handled | Dedupe | Sig Verify | Wallet Update | Status |
-|---|---|---|---|---|---|
-| `gateway-webhook-stripe` | payment_intent.*, charge.dispute.*, charge.refunded | ✅ webhook_inbox | ✅ HMAC-SHA256 | ✅ atomic_charge_wallet_credit | ✅ |
-| `gateway-webhook-flutterwave` | charge success/fail, payout success/fail, VA credit | ✅ webhook_inbox | ✅ verif-hash | ✅ atomic + upsert | ✅ |
-| `gateway-webhook-paypal` | PAYMENT.CAPTURE.*, payout events | ✅ webhook_inbox | ✅ PayPal API verify | ✅ balance rollback | ✅ |
-| `stripe-confirm-payment` | payment_intent.succeeded/failed | ⚠️ No dedupe | ⚠️ Optional sig | ✅ | ⚠️ Issues |
-| `flutterwave-transfer-webhook` | transfer events | ✅ webhook_inbox | ✅ HMAC-SHA256 | ✅ | ✅ |
-
-⚠️ **Issue P2**: `stripe-confirm-payment` has no deduplication and only optionally verifies the webhook signature (`STRIPE_WEBHOOK_SECRET` env var — **not configured** in secrets, it uses `STRIPE_WEBSECRET_KEY`). This is a **legacy duplicate** of `gateway-webhook-stripe` which handles the same events with proper security. The legacy endpoint could process duplicate events.
-
-### Outbound Merchant Webhooks
-- `gateway-webhook-events` table stores pending events → `gateway-deliver-webhook` / `gateway-webhook-deliver-v2` delivers them with HMAC signing. ✅
-- Event types covered: `charge.successful`, `charge.failed`, `payout.completed`, `payout.failed`, `refund.completed`, `refund.failed`, `dispute.created`, `dispute.won`, `dispute.lost`, `virtualaccount.credit`. ✅
-
----
-
-## 4. Database Validation — Findings
-
-### Tables Updated Per Payment Flow
-
-| Flow | Tables Updated | ID Matching | Status |
-|---|---|---|---|
-| Card Payment (legacy) | `card_payment_transactions` | stripe_payment_intent_id ↔ Stripe PI | ✅ |
-| Gateway Charge | `gateway_charges`, `gateway_charge_events`, `gateway_merchant_wallets` | provider_ref ↔ Stripe PI / FLW ref | ✅ |
-| Gateway Payout | `gateway_payouts`, `gateway_merchant_wallets` | provider_ref ↔ FLW transfer ID | ✅ |
-| Gateway Refund | `gateway_refunds`, `gateway_merchant_wallets` | provider_ref ↔ Stripe refund ID | ✅ |
-| MoMo Transaction | `mobile_money_transactions` | transaction_ref ↔ FLW tx_ref | ✅ |
-| Bank Transfer | `bank_transfer_transactions` | transaction_ref ↔ FLW reference | ✅ |
-| Funding Intent | `funding_intents`, `funding_events`, `account_balances`, `transactions` | provider_reference ↔ provider PI | ✅ |
-
-### Status Lifecycle
-- Charges: `pending` → `processing` → `successful`/`failed`/`cancelled`. ✅
-- Payouts: `pending` → `submitted` → `completed`/`failed`. ✅
-- Refunds: `pending` → `successful`/`failed` with over-refund guard. ✅
-
-### Merchant Balance Updates
-- Atomic DB functions (`atomic_charge_wallet_credit`, `atomic_refund_wallet_debit`, `atomic_dispute_wallet_adjust`) ensure consistency. ✅
-- Settlement cron (`gateway-settlement-cron`) processes submitted payouts and handles wallet rollbacks on failure. ✅
-
----
-
-## 5. Cross-App Synchronization — Findings
-
-### Customer App → Merchant App Flow
-- Customer initiates payment via `gateway-create-charge` or `pos-qr-payment`
-- Webhook updates `gateway_charges` → `gateway_merchant_wallets`
-- Merchant App reads from same tables (scoped by `merchant_id`)
-- Business PWA subscribes to `pos_order_payments` realtime for instant notification. ✅
-
-### Banking App Ledger
-- `facilitated-mobile-money-charge` and `facilitated-bank-transfer` create entries in institution-scoped transaction tables
-- `useRealtimeBalanceSync` hook subscribes to `account_balances` and `transactions` changes, scoped by institution. ✅
-- Invalidates `bank-accounts`, `account-balances`, `spending-summary`, `bank-transactions`, `customer-transactions` caches. ✅
-
----
-
-## 6. Real-Time Updates — Findings
-
-- `useRealtimeBalanceSync`: Subscribed to `account_balances` + `transactions` with institution scoping. ✅
-- `BusinessHome`/`BusinessReceive`: Realtime on `pos_order_payments` for merchant alerts. ✅
-- `NotificationCenter`: Realtime on `system_alerts` + `app_notifications`. ✅
-- `TransactionHistory`: Realtime on `transactions` table. ✅
-- `CustomerInvoices`: Realtime on `customer_invoices`. ✅
-
----
-
-## 7. Error Handling — Findings
-
-### Duplicate Payment Prevention
-- **Gateway charges**: Idempotency-key support on `gateway-create-charge`, `gateway-create-refund`, `gateway-create-payout`. ✅
-- **Webhooks**: `webhook_inbox` deduplication on all 3 gateway webhook handlers. ✅
-- **Over-refund guard**: Prevents refund total from exceeding original charge amount. ✅
-
-### Failed Transaction Handling
-- Failed payouts trigger wallet rollback via `update_merchant_wallet`. ✅
-- Failed withdraw-to-bank triggers balance restoration via upsert on `account_balances`. ✅
-- `gateway-reconcile-stuck` auto-resolves stuck charges/payouts > 30 minutes by polling provider APIs. ✅
-
-### Rate Limiting
-- Webhook endpoints enforce 100 req/min via `check_webhook_rate_limit`. ✅
-- Merchant velocity checks on charge creation. ✅
-- Daily charge/payout limit enforcement. ✅
-
----
-
-## 8. Reconciliation — Findings
-
-- **Automated**: `gateway-reconcile-stuck` polls Stripe/Flutterwave for stuck transactions. ✅
-- **Formal**: `gateway-reconciliation` provides admin-only reconciliation runs with mismatch detection across charges, payouts, refunds. ✅
-- **Settlement cron**: `gateway-settlement-cron` auto-fails payouts stuck > 24 hours and processes completions. ✅
-
-⚠️ **Issue P3**: `gateway-settlement-cron` uses `simulateProviderPoll()` which returns simulated statuses based on age rather than actual provider API calls. The comment says "In production, this would call Flutterwave/Stripe/PayPal/Visa Direct APIs" — **this is still a simulation stub, not production-ready**.
-
----
-
-## 9. Monitoring — Findings
-
-- `system-health-check`: General system health monitoring. ✅
-- `api-health-collector`/`api-health`: API endpoint health checks. ✅
-- `health-alert-monitor`: Monitors for health anomalies. ✅
-- `gateway-sla-monitor`: SLA monitoring for gateway operations. ✅
-- `transaction-monitor`: Monitors transaction anomalies. ✅
-- `ai-anomaly-detection`: AI-based anomaly detection. ✅
-- Audit logging: All payment operations log to `audit_logs`. ✅
-
----
-
-## Critical Issues Found
-
-### P0 — Bugs Requiring Immediate Fix
-
-**1. `LoanApplicationForm.tsx` calls non-existent `loan-calculate` function**
-- Line 66: `supabase.functions.invoke('loan-calculate', ...)` 
-- Should be: `supabase.functions.invoke('loan-ops', { body: { action: 'calculate', ... } })`
-- Impact: Loan calculator fails with 404 for all users
-
-**2. `CardPaymentForm.tsx` missing XAF currency option**
-- Lines 148-153 only list USD, EUR, GBP — missing XAF (the platform's primary currency)
-- Impact: Users in Cameroon cannot make card payments in their local currency
-
-**3. `stripe-payment-intent` does not handle zero-decimal currencies**
-- Line 53: `Math.round(amount * 100)` — always multiplies by 100
-- For XAF, this is incorrect (should pass raw amount). The gateway adapter (`toStripeAmount`) handles this correctly, but the legacy `stripe-payment-intent` does not.
-- Impact: XAF card payments would be charged 100x the intended amount
-
-### P1 — Configuration Issues
-
-**4. PayPal secret env var mismatch**
-- `gateway-adapters.ts` reads `PAYPAL_SECRET` (line 314)
-- Configured secret is `PAYPAL_CLIENT_SECRET`
-- Impact: All PayPal payouts and webhook verification will fail
-
-**5. `stripe-confirm-payment` is a legacy duplicate**
-- No deduplication, optional signature verification
-- The secure `gateway-webhook-stripe` handles the same events
-- Impact: Potential double-processing of Stripe payment events if both webhooks are registered
-
-### P2 — Production Readiness
-
-**6. `gateway-settlement-cron` uses simulated provider polling**
-- `simulateProviderPoll()` is a stub returning time-based statuses
-- Must be replaced with actual Stripe/Flutterwave/PayPal API calls for production
-- Impact: Settlements will auto-complete based on age, not actual provider confirmation
-
----
-
-## Implementation Plan
-
-### Fix 1: `LoanApplicationForm.tsx` — Route to consolidated `loan-ops`
-Change `supabase.functions.invoke('loan-calculate', { body: { principal, ... } })` to `supabase.functions.invoke('loan-ops', { body: { action: 'calculate', principal, ... } })`.
-
-### Fix 2: `CardPaymentForm.tsx` — Add XAF currency
-Add `<SelectItem value="XAF">XAF (FCFA)</SelectItem>` to the currency selector.
-
-### Fix 3: `stripe-payment-intent` — Use `toStripeAmount` logic
-Import and use the zero-decimal currency check from the gateway adapters pattern, or inline the same `ZERO_DECIMAL_CURRENCIES` check.
-
-### Fix 4: `gateway-adapters.ts` — Fix PayPal secret name
-Change `Deno.env.get('PAYPAL_SECRET')` to `Deno.env.get('PAYPAL_CLIENT_SECRET')` on lines 314 and everywhere it's referenced.
-
-### Fix 5: `stripe-confirm-payment` — Add deduplication and proper sig verification
-Add `webhook_inbox` deduplication and align the webhook secret env var name with the configured `STRIPE_WEBSECRET_KEY`.
-
-### Fix 6: `gateway-settlement-cron` — Replace simulation with real provider polling
-Replace `simulateProviderPoll()` with actual API calls using `getFlutterwaveTransferStatus()`, `getStripePayoutStatus()`, and `getPayPalPayoutStatus()` from `gateway-adapters.ts`.
-
----
-
-## Summary
-
-| Category | Status | Issues |
+| Capability | Status | Implementation |
 |---|---|---|
-| API Health | ✅ Healthy | 0 |
-| Stripe Integration | ⚠️ | P0: XAF amount bug in legacy endpoint |
-| Flutterwave Integration | ✅ Healthy | 0 |
-| PayPal Integration | ❌ Broken | P1: Secret name mismatch |
-| Webhook Processing | ⚠️ | P1: Legacy duplicate, no dedupe |
-| Database Validation | ✅ Healthy | 0 |
-| Cross-App Sync | ✅ Healthy | 0 |
-| Real-Time Updates | ✅ Healthy | 0 |
-| Error Handling | ✅ Robust | 0 |
-| Reconciliation | ⚠️ | P2: Simulated polling in production |
-| Monitoring | ✅ Comprehensive | 0 |
-| Frontend Forms | ⚠️ | P0: Missing currency, broken loan calc |
+| User wallet accounts | Yes | `accounts` table + `account_balances` (ClosingAvailable/InterimAvailable) |
+| Ledger-based balance tracking | Yes | `account_balances` with credit/debit indicators, datetime tracking |
+| Programmatic credit | Yes | `funding-scope-creditor.ts` upserts balances; `gateway-fund-account` credits via charges |
+| Programmatic debit | Yes | `gateway-process-withdrawal` debits balance atomically with rollback |
+| Sub-accounts / Escrow | Partial | `gateway_merchant_wallets` (3-balance model: available/pending/ledger) per merchant per currency; no formal escrow API |
+| Segregated fund structure | Not implemented | No dedicated safeguarding ledger or trust account segregation |
+| Transaction history | Yes | `transactions` table with full metadata, per-account filtering |
 
-**Total: 3 P0 bugs, 2 P1 issues, 1 P2 gap**
+### Missing: Dedicated Wallet REST API Surface
+
+KOB has the underlying infrastructure but lacks a **formal `/v1/wallets/*` namespace**. Currently wallet operations are scattered across `gateway-fund-account`, `gateway-process-withdrawal`, and direct balance queries. Required new endpoints:
+
+```text
+POST   /v1/wallets                      — Create wallet (maps to account creation)
+GET    /v1/wallets/{id}                  — Get wallet with balances
+POST   /v1/wallets/{id}/credit           — Programmatic credit (wraps funding-scope-creditor)
+POST   /v1/wallets/{id}/debit            — Programmatic debit (wraps withdrawal logic)
+GET    /v1/wallets/{id}/transactions     — Transaction history for wallet
+GET    /v1/wallets/{id}/statement        — Generate statement (wraps generate-bank-statement)
+POST   /v1/wallets/{id}/freeze           — Freeze/unfreeze wallet (compliance)
+```
+
+**Required additions:**
+- Idempotency-Key header support (already pattern exists in `gateway-fund-account`)
+- Webhook events: `wallet.credited`, `wallet.debited`, `wallet.frozen`
+- Escrow sub-wallet creation for marketplace holds
+
+**Effort**: 1 new edge function (multi-method router), ~200 lines. No DB migration needed — uses existing `accounts` + `account_balances` tables.
+
+---
+
+## SECTION B — OUTBOUND PAYOUTS
+
+### Current State: IMPLEMENTED (90%)
+
+KOB has a comprehensive outbound payout system:
+
+| Capability | Status | Provider |
+|---|---|---|
+| Payouts to bank accounts | Yes | Flutterwave `/v3/transfers` |
+| Payouts to mobile money (MoMo) | Yes | Flutterwave MPS (MTN/Orange) |
+| Payouts to debit cards | Partial | Stripe Refund-based (requires prior card deposit) |
+| Payouts to PayPal | Yes | PayPal Batch Payouts API |
+| Batch payouts | Yes | `gateway-create-payout-batch` (up to 15k items via PayPal) |
+| Merchant-initiated payouts | Yes | `gateway-create-payout` (merchant wallet debit) |
+| Consumer-initiated withdrawals | Yes | `gateway-process-withdrawal` (account balance debit) |
+| Payout status polling | Yes | `gateway-payout-status-poll` |
+| Async webhook updates | Yes | `gateway-payout-webhook` (Stripe/Flutterwave/PayPal) |
+| Failed payout reversal | Yes | Automatic balance restoration on failure |
+| Admin manual reversal | Yes | `gateway-admin-reverse-withdrawal` |
+| Retry mechanism | Yes | `gateway-retry-payout` |
+| Daily payout limits | Yes | Per-merchant `daily_payout_limit` enforcement |
+| Idempotency | Yes | `idempotency-key` header on `gateway-create-payout` |
+
+### Missing / Gaps
+
+1. **True push-to-card payouts**: Current card withdrawal is a Stripe Refund against a prior PaymentIntent. This is NOT a true payout — it requires a prior deposit, has refund-window limitations (180 days), and doesn't support arbitrary card destinations. For true instant card payouts, KOB needs Visa Direct / Mastercard Send integration.
+
+2. **Instant vs Standard payout parameter**: No `speed` parameter (`instant` | `standard`) on payout endpoints. All payouts use the provider's default speed.
+
+3. **Formal `/v1/payouts/cancel` endpoint**: Cancellation is not exposed as a standalone API. Only failed payouts can be retried.
+
+4. **Payout to arbitrary bank account** (non-linked): Currently requires a `linked_account_id` for consumer withdrawals. Merchant payouts accept direct beneficiary details but consumer withdrawals do not.
+
+### Required Endpoint Additions
+
+```text
+POST   /v1/payouts/{id}/cancel          — Cancel pending payout before provider submission
+PATCH  /v1/payouts                      — Add `speed: 'instant' | 'standard'` parameter
+POST   /v1/payouts/card                 — True push-to-card (requires Visa Direct integration)
+```
+
+---
+
+## SECTION C — INSTANT RAILS SUPPORT
+
+### Current State: NOT IMPLEMENTED
+
+| Rail | Status |
+|---|---|
+| Visa Direct | Not integrated |
+| Mastercard Send | Not integrated |
+| SEPA Instant / FPS / RTP | Not integrated |
+| CEMAC real-time clearing (SYSTAC) | Not integrated |
+| 24/7 settlement processing | No — relies on provider business hours |
+| Push-to-card | Not available (Stripe refund ≠ push-to-card) |
+| Prefunding / liquidity pool | Not implemented |
+
+### Required Architecture for Instant Payouts
+
+```text
+┌─────────────────────────────────────────────┐
+│            KOB Instant Payout Engine         │
+├─────────────────────────────────────────────┤
+│  1. Prefunding Pool (Float Management)       │
+│     - Dedicated settlement account per rail  │
+│     - Real-time float monitoring API         │
+│     - Auto-replenishment triggers            │
+├─────────────────────────────────────────────┤
+│  2. Rail Router                              │
+│     - Visa Direct (card payouts)             │
+│     - Flutterwave Instant (MoMo already ~OK) │
+│     - CEMAC RTGS / SYSTAC (bank-to-bank)    │
+│     - Fallback: standard ACH-equivalent     │
+├─────────────────────────────────────────────┤
+│  3. Risk & Fraud Layer                       │
+│     - Pre-payout risk scoring                │
+│     - Velocity checks (existing)             │
+│     - Amount limits per rail per user tier   │
+│     - ML anomaly detection (ai-anomaly exists)│
+├─────────────────────────────────────────────┤
+│  4. Liquidity Management API                 │
+│     GET  /v1/treasury/float-balance          │
+│     POST /v1/treasury/replenish              │
+│     GET  /v1/treasury/utilization            │
+└─────────────────────────────────────────────┘
+```
+
+**Required new endpoints:**
+
+```text
+POST   /v1/payouts/instant              — Instant payout (auto-routes to fastest rail)
+GET    /v1/payouts/rails                — List available rails + current speed + fees
+POST   /v1/payouts/card/push            — Visa Direct push-to-card
+GET    /v1/treasury/float               — Float balance per rail (admin)
+POST   /v1/risk/pre-check               — Pre-payout risk assessment
+```
+
+**Estimated effort**: 3-5 new edge functions + Visa Direct API integration + prefunding account infrastructure. This is the largest gap.
+
+---
+
+## SECTION D — LICENSING & COMPLIANCE
+
+### Current State: PARTIAL
+
+| Capability | Status |
+|---|---|
+| KYC verification | Yes — `kyc-submit`, `kyc_verifications` table, document upload |
+| KYB (merchant) | Yes — `gateway-merchant-kyb` (submit/review workflow) |
+| AML sanctions screening | Yes — `sanctions-screen` edge function |
+| Transaction monitoring | Yes — `transaction-monitor` + `ai-anomaly-detection` |
+| CDD (Customer Due Diligence) | Yes — `customer_due_diligence` table, PEP checks, risk scoring |
+| Risk scoring | Yes — `calculate_kyc_risk_score` DB function |
+| Data retention | Yes — 7-year COBAC compliance policy |
+| License type | Unclear — no EMI/MTL documentation found in codebase |
+
+### Missing
+
+1. **Formal EMI or Money Transmitter license documentation**: The platform operates as a wallet/payment processor but the licensing basis is not codified in the API. This is a business/legal gap, not a technical one.
+
+2. **Real-time transaction screening for outbound payouts**: `transaction-monitor` exists but it's not inline (pre-payout). Payouts execute first, monitor after.
+
+3. **Required compliance endpoints** (partially exist):
+
+```text
+POST   /v1/compliance/payout-screen     — Pre-payout AML/sanctions check (MISSING)
+GET    /v1/compliance/user-risk/{id}     — User risk profile (exists via calculate_kyc_risk_score)
+POST   /v1/compliance/sar               — Suspicious Activity Report submission (MISSING)
+```
+
+---
+
+## SECTION E — TECHNICAL READINESS
+
+### Current State: PRODUCTION-GRADE (85%)
+
+| Feature | Status | Details |
+|---|---|---|
+| Idempotency-Key | Yes | Supported on charges, payouts, funding intents via header + DB dedup |
+| Webhook system | Mature | HMAC-SHA256 signing, 7-retry exponential backoff, delivery logging, 24 event types |
+| Rate limiting | Yes | DB-backed (`check_rate_limit` RPC), per-provider webhook limits, per-user API limits |
+| Error format | Partial | Consistent `{error, message}` but NOT RFC 7807 `problem+json` everywhere |
+| Sandbox simulation | Yes | `sandbox-*` functions for data generation, API key creation, webhook testing |
+| API versioning | Yes | `/v1/` prefix on all endpoints |
+| OpenAPI spec | Yes | `public-api-spec` (OpenAPI 3.1.0, 245+ endpoints documented) |
+| Postman collection | Yes | `postman-collection` auto-generated |
+
+### Missing
+
+1. **RFC 7807 error responses** are not consistently used (some functions return `{error, message}`, not `{type, title, status, detail}`)
+2. **SLA guarantees** are not programmatically documented (only operational: 15-min critical response)
+3. **Payout sandbox simulation** — sandbox exists for charges but payout simulation with realistic delays is not confirmed
+
+---
+
+## COMPLETE GAP SUMMARY
+
+### To compete with Stripe-style instant payouts, KOB needs:
+
+| # | Gap | Priority | Effort |
+|---|---|---|---|
+| 1 | **Visa Direct integration** (true push-to-card) | CRITICAL | 1 edge function + Visa API onboarding |
+| 2 | **Formal `/v1/wallets/*` REST namespace** | HIGH | 1 edge function (router) |
+| 3 | **Instant payout rail router** with `speed` parameter | HIGH | 1 edge function + rail selection logic |
+| 4 | **Prefunding / float management API** | HIGH | 1 edge function + treasury tables |
+| 5 | **Pre-payout compliance screening** (inline) | HIGH | 1 edge function |
+| 6 | **Payout cancellation endpoint** | MEDIUM | Add to existing payout function |
+| 7 | **RFC 7807 error standardization** | MEDIUM | Update all edge functions |
+| 8 | **Escrow / hold sub-wallets** | MEDIUM | 1 migration + 1 function |
+| 9 | **Safeguarded fund segregation ledger** | MEDIUM | 1 migration |
+| 10 | **SAR submission endpoint** | LOW | 1 edge function |
+
+---
+
+## FINAL ANSWERS
+
+| Question | Answer |
+|---|---|
+| Can KOB support instant wallet-to-bank withdrawals? | **Partially** — Flutterwave MoMo is near-instant; bank transfers are T+1 to T+3. No real-time bank rail (RTGS/SYSTAC) integration. |
+| Can KOB support instant wallet-to-card withdrawals? | **No** — Current implementation uses Stripe Refunds (requires prior deposit, 5-10 day processing). True push-to-card requires Visa Direct/Mastercard Send. |
+| Can KOB support 24/7 real-time payout infrastructure? | **No** — Dependent on provider business hours. No prefunding pool, no instant rail router, no 24/7 settlement engine. |
+| Production readiness for high-risk instant payout fintech? | **Not yet.** The wallet + standard payout infrastructure is solid (~90%), but instant rails, prefunding, and inline compliance screening are required before production deployment for an instant payout platform. |
+
+### Recommended Upgrade Roadmap
+
+```text
+Phase 1 (4-6 weeks): Wallet API namespace + inline compliance screening + payout cancel
+Phase 2 (6-10 weeks): Visa Direct integration + instant rail router + speed parameter
+Phase 3 (4-6 weeks): Prefunding/treasury API + float monitoring + 24/7 settlement cron
+Phase 4 (2-4 weeks): Escrow sub-wallets + safeguarding ledger + SAR endpoint
+```
 

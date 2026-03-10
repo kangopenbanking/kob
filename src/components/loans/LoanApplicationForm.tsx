@@ -63,8 +63,9 @@ export default function LoanApplicationForm({ product, onBack }: LoanApplication
 
     setIsCalculating(true);
     try {
-      const { data, error } = await supabase.functions.invoke('loan-calculate', {
+      const { data, error } = await supabase.functions.invoke('loan-ops', {
         body: {
+          action: 'calculate',
           principal: parseFloat(amount),
           interest_rate: product.interest_rate,
           tenure_months: parseInt(tenure),
