@@ -289,8 +289,8 @@ export function useVirtualCards() {
   return useQuery({
     queryKey: ['virtual-cards', institutionId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('virtual-card-list', {
-        body: { institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('virtual-cards', {
+        body: { action: 'list', institution_id: institutionId },
       });
       if (error) throw error;
       return data?.cards || [];
