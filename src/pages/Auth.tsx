@@ -189,7 +189,7 @@ export default function Auth() {
         return { exists: null, hasPIN: false };
       }
       if (!data) { setUserHasPIN(false); return { exists: false, hasPIN: false }; }
-      const userExists = data.user_exists === true;
+      const userExists = data.check_complete === true;
       const hasPIN = data.has_pin === true;
       setUserHasPIN(hasPIN);
       return { exists: userExists, hasPIN };

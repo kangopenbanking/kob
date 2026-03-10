@@ -1,1 +1,1018 @@
 project_id = "wdzkzeahdtxlynetndqw"
+
+[functions.admin-approve-settlement]
+verify_jwt = false
+
+[functions.admin-assign-staff]
+verify_jwt = false
+
+[functions.admin-create-client]
+verify_jwt = false
+
+[functions.admin-create-user]
+verify_jwt = false
+
+[functions.admin-institution-approve]
+verify_jwt = false
+
+[functions.admin-invoice-actions]
+verify_jwt = false
+
+[functions.admin-kyb-verify]
+verify_jwt = false
+
+[functions.admin-kyc-review]
+verify_jwt = false
+
+[functions.admin-list-consents]
+verify_jwt = false
+
+[functions.admin-list-loans]
+verify_jwt = false
+
+[functions.admin-list-savings]
+verify_jwt = false
+
+[functions.admin-manage-branches]
+verify_jwt = false
+
+[functions.admin-metrics]
+verify_jwt = false
+
+[functions.admin-rotate-jwt-secret]
+verify_jwt = false
+
+[functions.admin-sandbox-accounts]
+verify_jwt = false
+
+[functions.admin-set-pin]
+verify_jwt = false
+
+[functions.admin-system-config]
+verify_jwt = false
+
+[functions.admin-transaction-review]
+verify_jwt = false
+
+[functions.admin-webhooks]
+verify_jwt = false
+
+[functions.ai-anomaly-detection]
+verify_jwt = false
+
+[functions.aisp-accounts]
+verify_jwt = false
+
+[functions.aisp-balances]
+verify_jwt = false
+
+[functions.aisp-beneficiaries]
+verify_jwt = false
+
+[functions.aisp-create-consent]
+verify_jwt = false
+
+[functions.aisp-direct-debits]
+verify_jwt = false
+
+[functions.aisp-standing-orders]
+verify_jwt = false
+
+[functions.aisp-transactions]
+verify_jwt = false
+
+[functions.api-account-detail]
+verify_jwt = false
+
+[functions.api-account-details]
+verify_jwt = false
+
+[functions.api-bills]
+verify_jwt = false
+
+[functions.api-consents-list]
+verify_jwt = false
+
+[functions.api-demo-proxy]
+verify_jwt = false
+
+[functions.api-health-collector]
+verify_jwt = false
+
+[functions.api-health]
+verify_jwt = false
+
+[functions.api-key-expiration-notifier]
+verify_jwt = false
+
+[functions.api-ready]
+verify_jwt = false
+
+[functions.api-transactions]
+verify_jwt = false
+
+[functions.api-transfers]
+verify_jwt = false
+
+[functions.api-verification]
+verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
+
+[functions.automated-billing-cron]
+verify_jwt = false
+
+[functions.automated-settlement-cron]
+verify_jwt = false
+
+[functions.bank-import-transactions]
+verify_jwt = false
+
+[functions.bank-reconcile]
+verify_jwt = false
+
+[functions.bank-sync]
+verify_jwt = false
+
+[functions.bank-transaction-webhook]
+verify_jwt = false
+
+[functions.bulk-transfers]
+verify_jwt = false
+
+[functions.business-kyc-submit]
+verify_jwt = false
+
+[functions.captcha-generate]
+verify_jwt = false
+
+[functions.captcha-verify]
+verify_jwt = false
+
+[functions.certificate-expiry-monitor]
+verify_jwt = false
+
+[functions.certificate-list]
+verify_jwt = false
+
+[functions.certificate-revoke]
+verify_jwt = false
+
+[functions.certificate-upload]
+verify_jwt = false
+
+[functions.consent-authorize]
+verify_jwt = false
+
+[functions.consent-revoke]
+verify_jwt = false
+
+[functions.crediq-calculate-health-metrics]
+verify_jwt = false
+
+[functions.crediq-generate-action-plan]
+verify_jwt = false
+
+[functions.crediq-generate-baseline-score]
+verify_jwt = false
+
+[functions.crediq-health-check]
+verify_jwt = false
+
+[functions.crediq-send-goal-achieved-email]
+verify_jwt = false
+
+[functions.crediq-send-monthly-report]
+verify_jwt = false
+
+[functions.crediq-send-score-change-email]
+verify_jwt = false
+
+[functions.crediq-send-weekly-digest]
+verify_jwt = false
+
+[functions.crediq-send-welcome-email]
+verify_jwt = false
+
+[functions.credit-api-auth]
+verify_jwt = false
+
+[functions.credit-api-query-score]
+verify_jwt = false
+
+[functions.credit-events-list]
+verify_jwt = false
+
+[functions.credit-explain]
+verify_jwt = false
+
+[functions.credit-monthly-report]
+verify_jwt = false
+
+[functions.credit-profile-get]
+verify_jwt = false
+
+[functions.credit-recompute]
+verify_jwt = false
+
+[functions.credit-report-generate]
+verify_jwt = false
+
+[functions.credit-score-calculate]
+verify_jwt = false
+
+[functions.credit-score-engine]
+verify_jwt = false
+
+[functions.credit-score-fetch]
+verify_jwt = false
+
+[functions.credit-score-simulate]
+verify_jwt = false
+
+[functions.credit-score-tips]
+verify_jwt = false
+
+[functions.data-export]
+verify_jwt = false
+
+[functions.dcr-register]
+verify_jwt = false
+
+[functions.developer-register-app]
+verify_jwt = false
+
+[functions.directory-banks-cm]
+verify_jwt = false
+
+[functions.enforce-single-session]
+verify_jwt = false
+
+[functions.enterprise-contact-submit]
+verify_jwt = false
+
+[functions.exchange-rate-get]
+verify_jwt = false
+
+[functions.facilitated-bank-transfer]
+verify_jwt = false
+
+[functions.facilitated-mobile-money-charge]
+verify_jwt = false
+
+[functions.firebase-phone-verify]
+verify_jwt = false
+
+[functions.flutterwave-bank-transfer]
+verify_jwt = false
+
+[functions.flutterwave-list-banks]
+verify_jwt = false
+
+[functions.flutterwave-transfer-webhook]
+verify_jwt = false
+
+[functions.flutterwave-verify-bank]
+verify_jwt = false
+
+[functions.gateway-admin-reverse-withdrawal]
+verify_jwt = false
+
+[functions.gateway-bulk-operations]
+verify_jwt = false
+
+[functions.gateway-cancel-charge]
+verify_jwt = false
+
+[functions.gateway-cancel-funding-intent]
+verify_jwt = false
+
+[functions.gateway-cancel-payout]
+verify_jwt = false
+
+[functions.gateway-cancel-subscription]
+verify_jwt = false
+
+[functions.gateway-capture-charge]
+verify_jwt = false
+
+[functions.gateway-charge-token]
+verify_jwt = false
+
+[functions.gateway-compliance-screen]
+verify_jwt = false
+
+[functions.gateway-confirm-funding]
+verify_jwt = false
+
+[functions.gateway-create-beneficiary]
+verify_jwt = false
+
+[functions.gateway-create-charge]
+verify_jwt = false
+
+[functions.gateway-create-customer]
+verify_jwt = false
+
+[functions.gateway-create-funding-intent]
+verify_jwt = false
+
+[functions.gateway-create-payment-link]
+verify_jwt = false
+
+[functions.gateway-create-payment-plan]
+verify_jwt = false
+
+[functions.gateway-create-payout-batch]
+verify_jwt = false
+
+[functions.gateway-create-payout]
+verify_jwt = false
+
+[functions.gateway-create-paypal-payout]
+verify_jwt = false
+
+[functions.gateway-create-refund]
+verify_jwt = false
+
+[functions.gateway-create-subaccount]
+verify_jwt = false
+
+[functions.gateway-create-subscription]
+verify_jwt = false
+
+[functions.gateway-create-virtual-account]
+verify_jwt = false
+
+[functions.gateway-delete-beneficiary]
+verify_jwt = false
+
+[functions.gateway-delete-payment-link]
+verify_jwt = false
+
+[functions.gateway-delete-subaccount]
+verify_jwt = false
+
+[functions.gateway-deliver-webhook]
+verify_jwt = false
+
+[functions.gateway-dispute-notify]
+verify_jwt = false
+
+[functions.gateway-escrow-wallets]
+verify_jwt = false
+
+[functions.gateway-export-transactions]
+verify_jwt = false
+
+[functions.gateway-fee-estimate]
+verify_jwt = false
+
+[functions.gateway-fund-account]
+verify_jwt = false
+
+[functions.gateway-get-charge-events]
+verify_jwt = false
+
+[functions.gateway-get-charge]
+verify_jwt = false
+
+[functions.gateway-get-customer]
+verify_jwt = false
+
+[functions.gateway-get-dispute]
+verify_jwt = false
+
+[functions.gateway-get-exchange-rate]
+verify_jwt = false
+
+[functions.gateway-get-funding-intent]
+verify_jwt = false
+
+[functions.gateway-get-merchant-balance]
+verify_jwt = false
+
+[functions.gateway-get-payment-link]
+verify_jwt = false
+
+[functions.gateway-get-payment-plan]
+verify_jwt = false
+
+[functions.gateway-get-payout-batch]
+verify_jwt = false
+
+[functions.gateway-get-payout]
+verify_jwt = false
+
+[functions.gateway-get-refund]
+verify_jwt = false
+
+[functions.gateway-get-settlement]
+verify_jwt = false
+
+[functions.gateway-get-stripe-config]
+verify_jwt = false
+
+[functions.gateway-get-subaccount]
+verify_jwt = false
+
+[functions.gateway-get-subscription]
+verify_jwt = false
+
+[functions.gateway-get-virtual-account]
+verify_jwt = false
+
+[functions.gateway-instant-payout]
+verify_jwt = false
+
+[functions.gateway-list-beneficiaries]
+verify_jwt = false
+
+[functions.gateway-list-charges]
+verify_jwt = false
+
+[functions.gateway-list-customer-tokens]
+verify_jwt = false
+
+[functions.gateway-list-customers]
+verify_jwt = false
+
+[functions.gateway-list-disputes]
+verify_jwt = false
+
+[functions.gateway-list-funding-intents]
+verify_jwt = false
+
+[functions.gateway-list-payment-links]
+verify_jwt = false
+
+[functions.gateway-list-payment-plans]
+verify_jwt = false
+
+[functions.gateway-list-payouts]
+verify_jwt = false
+
+[functions.gateway-list-refunds]
+verify_jwt = false
+
+[functions.gateway-list-settlements]
+verify_jwt = false
+
+[functions.gateway-list-subaccounts]
+verify_jwt = false
+
+[functions.gateway-list-subscriptions]
+verify_jwt = false
+
+[functions.gateway-list-virtual-accounts]
+verify_jwt = false
+
+[functions.gateway-list-wallet-ledger]
+verify_jwt = false
+
+[functions.gateway-merchant-keys]
+verify_jwt = false
+
+[functions.gateway-merchant-kyb-review]
+verify_jwt = false
+
+[functions.gateway-merchant-kyb]
+verify_jwt = false
+
+[functions.gateway-merchant-lifecycle]
+verify_jwt = false
+
+[functions.gateway-merchant-settlement-accounts]
+verify_jwt = false
+
+[functions.gateway-merchant-webhooks]
+verify_jwt = false
+
+[functions.gateway-payout-rails]
+verify_jwt = false
+
+[functions.gateway-payout-status-poll]
+verify_jwt = false
+
+[functions.gateway-payout-webhook]
+verify_jwt = false
+
+[functions.gateway-preauth-charge]
+verify_jwt = false
+
+[functions.gateway-process-withdrawal]
+verify_jwt = false
+
+[functions.gateway-push-to-card]
+verify_jwt = false
+
+[functions.gateway-reconcile-funding]
+verify_jwt = false
+
+[functions.gateway-reconcile-stuck]
+verify_jwt = false
+
+[functions.gateway-reconciliation]
+verify_jwt = false
+
+[functions.gateway-report-fees]
+verify_jwt = false
+
+[functions.gateway-report-settlements]
+verify_jwt = false
+
+[functions.gateway-report-transactions]
+verify_jwt = false
+
+[functions.gateway-request-payout]
+verify_jwt = false
+
+[functions.gateway-resolve-bvn]
+verify_jwt = false
+
+[functions.gateway-retry-payout]
+verify_jwt = false
+
+[functions.gateway-revoke-customer-token]
+verify_jwt = false
+
+[functions.gateway-safeguarding-ledger]
+verify_jwt = false
+
+[functions.gateway-sandbox-payout-sim]
+verify_jwt = false
+
+[functions.gateway-sar]
+verify_jwt = false
+
+[functions.gateway-settlement-accounts]
+verify_jwt = false
+
+[functions.gateway-settlement-cron]
+verify_jwt = false
+
+[functions.gateway-sla-monitor]
+verify_jwt = false
+
+[functions.gateway-submit-dispute-evidence]
+verify_jwt = false
+
+[functions.gateway-subscription-charge-cron]
+verify_jwt = false
+
+[functions.gateway-treasury]
+verify_jwt = false
+
+[functions.gateway-update-customer]
+verify_jwt = false
+
+[functions.gateway-update-payment-link]
+verify_jwt = false
+
+[functions.gateway-update-payment-plan]
+verify_jwt = false
+
+[functions.gateway-update-subaccount]
+verify_jwt = false
+
+[functions.gateway-validate-charge]
+verify_jwt = false
+
+[functions.gateway-verify-bank-account]
+verify_jwt = false
+
+[functions.gateway-verify-charge]
+verify_jwt = false
+
+[functions.gateway-void-charge]
+verify_jwt = false
+
+[functions.gateway-wallets]
+verify_jwt = false
+
+[functions.gateway-webhook-deliver-v2]
+verify_jwt = false
+
+[functions.gateway-webhook-endpoints]
+verify_jwt = false
+
+[functions.gateway-webhook-flutterwave]
+verify_jwt = false
+
+[functions.gateway-webhook-paypal]
+verify_jwt = false
+
+[functions.gateway-webhook-stripe]
+verify_jwt = false
+
+[functions.gateway-withdraw-to-bank]
+verify_jwt = false
+
+[functions.gateway-withdraw-to-paypal]
+verify_jwt = false
+
+[functions.gdpr-consent-retention]
+verify_jwt = false
+
+[functions.generate-bank-statement]
+verify_jwt = false
+
+[functions.generate-invoice]
+verify_jwt = false
+
+[functions.health-alert-monitor]
+verify_jwt = false
+
+[functions.institution-api]
+verify_jwt = false
+
+[functions.institution-create-client]
+verify_jwt = false
+
+[functions.institution-register]
+verify_jwt = false
+
+[functions.iso20022-camt053-parser]
+verify_jwt = false
+
+[functions.iso20022-pacs002-generator]
+verify_jwt = false
+
+[functions.iso20022-pacs008-generator]
+verify_jwt = false
+
+[functions.iso20022-pain001-parser]
+verify_jwt = false
+
+[functions.journal-post]
+verify_jwt = false
+
+[functions.jwks-endpoint]
+verify_jwt = false
+
+[functions.kyc-submit]
+verify_jwt = false
+
+[functions.ledger-accounts]
+verify_jwt = false
+
+[functions.ledger-balance]
+verify_jwt = false
+
+[functions.load-test-runner]
+verify_jwt = false
+
+[functions.loan-apply]
+verify_jwt = false
+
+[functions.loan-approve]
+verify_jwt = false
+
+[functions.loan-calculate]
+verify_jwt = false
+
+[functions.loan-disburse]
+verify_jwt = false
+
+[functions.loan-overdue-detect]
+verify_jwt = false
+
+[functions.loan-repay]
+verify_jwt = false
+
+[functions.managed-send-email]
+verify_jwt = false
+
+[functions.merchant-create-staff]
+verify_jwt = false
+
+[functions.mobile-money-charge]
+verify_jwt = false
+
+[functions.mobile-money-to-bank]
+verify_jwt = false
+
+[functions.mobile-money-transfer]
+verify_jwt = false
+
+[functions.mobile-money-verify]
+verify_jwt = false
+
+[functions.njangi-contribute]
+verify_jwt = false
+
+[functions.njangi-create]
+verify_jwt = false
+
+[functions.njangi-join]
+verify_jwt = false
+
+[functions.njangi-overdue-detect]
+verify_jwt = false
+
+[functions.njangi-payout]
+verify_jwt = false
+
+[functions.njangibox-credit-fetch]
+verify_jwt = false
+
+[functions.oauth-authorize]
+verify_jwt = false
+
+[functions.oauth-introspect]
+verify_jwt = false
+
+[functions.oauth-revoke]
+verify_jwt = false
+
+[functions.oauth-token]
+verify_jwt = false
+
+[functions.oidc-config]
+verify_jwt = false
+
+[functions.openapi-json]
+verify_jwt = false
+
+[functions.par-endpoint]
+verify_jwt = false
+
+[functions.password-reset-with-pin]
+verify_jwt = false
+
+[functions.phone-auth-check-pin]
+verify_jwt = false
+
+[functions.phone-auth-pin-login]
+verify_jwt = false
+
+[functions.phone-auth-send-otp]
+verify_jwt = false
+
+[functions.phone-auth-verify-otp]
+verify_jwt = false
+
+[functions.piggybank-create]
+verify_jwt = false
+
+[functions.piggybank-overdue-detect]
+verify_jwt = false
+
+[functions.piggybank-pay]
+verify_jwt = false
+
+[functions.pin-code-reset]
+verify_jwt = false
+
+[functions.pin-code-set]
+verify_jwt = false
+
+[functions.pin-code-verify]
+verify_jwt = false
+
+[functions.pisp-create-consent]
+verify_jwt = false
+
+[functions.pisp-domestic-payment]
+verify_jwt = false
+
+[functions.pisp-payment-details]
+verify_jwt = false
+
+[functions.pisp-payment-submission]
+verify_jwt = false
+
+[functions.pos-catalog-products]
+verify_jwt = false
+
+[functions.pos-consumer-cart]
+verify_jwt = false
+
+[functions.pos-consumer-checkout]
+verify_jwt = false
+
+[functions.pos-demo-store]
+verify_jwt = false
+
+[functions.pos-finalize-payment]
+verify_jwt = false
+
+[functions.pos-inventory-sync]
+verify_jwt = false
+
+[functions.pos-inventory]
+verify_jwt = false
+
+[functions.pos-manage-locations]
+verify_jwt = false
+
+[functions.pos-orders]
+verify_jwt = false
+
+[functions.pos-pay-order]
+verify_jwt = false
+
+[functions.pos-qr-payment]
+verify_jwt = false
+
+[functions.pos-refunds]
+verify_jwt = false
+
+[functions.pos-store-browse]
+verify_jwt = false
+
+[functions.pos-store-subscription]
+verify_jwt = false
+
+[functions.pos-submit-order]
+verify_jwt = false
+
+[functions.pos-woo-connector]
+verify_jwt = false
+
+[functions.pos-woo-webhook-ingestion]
+verify_jwt = false
+
+[functions.postiq-create-code]
+verify_jwt = false
+
+[functions.postiq-lookup-code]
+verify_jwt = false
+
+[functions.postman-collection]
+verify_jwt = false
+
+[functions.public-api-spec]
+verify_jwt = false
+
+[functions.push-notification]
+verify_jwt = false
+
+[functions.pusher-config]
+verify_jwt = false
+
+[functions.register-translation-strings]
+verify_jwt = false
+
+[functions.rewards-process-cashback]
+verify_jwt = false
+
+[functions.sanctions-screen]
+verify_jwt = false
+
+[functions.sandbox-create-account]
+verify_jwt = false
+
+[functions.sandbox-create-api-key]
+verify_jwt = false
+
+[functions.sandbox-generate-data]
+verify_jwt = false
+
+[functions.sandbox-register-webhook]
+verify_jwt = false
+
+[functions.sandbox-test-webhook]
+verify_jwt = false
+
+[functions.sandbox-trigger-webhook]
+verify_jwt = false
+
+[functions.sandbox-validate-api-key]
+verify_jwt = false
+
+[functions.savings-accrue-interest]
+verify_jwt = false
+
+[functions.savings-create]
+verify_jwt = false
+
+[functions.savings-deposit]
+verify_jwt = false
+
+[functions.savings-withdraw]
+verify_jwt = false
+
+[functions.sca-initiate]
+verify_jwt = false
+
+[functions.sca-verify]
+verify_jwt = false
+
+[functions.send-bulk-communication]
+verify_jwt = false
+
+[functions.send-communication]
+verify_jwt = false
+
+[functions.send-customer-invoice]
+verify_jwt = false
+
+[functions.send-invoice-email]
+verify_jwt = false
+
+[functions.settlement-calculate]
+verify_jwt = false
+
+[functions.settlement-process]
+verify_jwt = false
+
+[functions.staff-assign]
+verify_jwt = false
+
+[functions.staff-pin-login]
+verify_jwt = false
+
+[functions.stripe-confirm-payment]
+verify_jwt = false
+
+[functions.stripe-payment-intent]
+verify_jwt = false
+
+[functions.stripe-save-card]
+verify_jwt = false
+
+[functions.swift-mt103-generator]
+verify_jwt = false
+
+[functions.swift-mt103-parser]
+verify_jwt = false
+
+[functions.swift-mt940-parser]
+verify_jwt = false
+
+[functions.system-health-check]
+verify_jwt = false
+
+[functions.teller-transaction]
+verify_jwt = false
+
+[functions.test-all-templates]
+verify_jwt = false
+
+[functions.transaction-monitor]
+verify_jwt = false
+
+[functions.translate-strings]
+verify_jwt = false
+
+[functions.travel-book-and-pay]
+verify_jwt = false
+
+[functions.travel-booking-notification]
+verify_jwt = false
+
+[functions.travel-seed-demo-data]
+verify_jwt = false
+
+[functions.userinfo]
+verify_jwt = false
+
+[functions.validate-account-identifier]
+verify_jwt = false
+
+[functions.validate-bic]
+verify_jwt = false
+
+[functions.validate-iban]
+verify_jwt = false
+
+[functions.validate-rib]
+verify_jwt = false
+
+[functions.virtual-card-create]
+verify_jwt = false
+
+[functions.virtual-card-list]
+verify_jwt = false
+
+[functions.virtual-card-topup]
+verify_jwt = false
+
+[functions.virtual-card-transactions]
+verify_jwt = false
+
+[functions.virtual-card-update-status]
+verify_jwt = false
+
+[functions.webhook-delivery]
+verify_jwt = false
+
+[functions.woocommerce-download-plugin]
+verify_jwt = false
+
+[functions.woocommerce-payment-webhook]
+verify_jwt = false
+
+[functions.woocommerce-process-payment]
+verify_jwt = false
+
+[functions.woocommerce-register-merchant]
+verify_jwt = false
+
+[functions.woocommerce-transaction-sync]
+verify_jwt = false
+
+[functions.woocommerce-validate-install]
+verify_jwt = false
