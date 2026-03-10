@@ -29,9 +29,7 @@ const defaultSlides: WalkthroughSlide[] = [
 interface WalkthroughCarouselProps {
   slides?: WalkthroughSlide[];
   onComplete: () => void;
-  /** Override walkthrough config — if not provided, falls back to useTenant() */
   walkthroughConfig?: WalkthroughConfig;
-  /** Override institution ID for DB slide loading (e.g. KANG_PLATFORM_ID for Customer App) */
   slideSourceId?: string;
 }
 
@@ -46,7 +44,6 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
   const tenant = useTenant();
   const { institutionId } = useParams();
 
-  // Resolve the ID used to fetch walkthrough slides from DB
   const resolvedSourceId = slideSourceId || institutionId;
   const wConfig = propWConfig ?? tenant.walkthroughConfig ?? {};
 
@@ -86,79 +83,146 @@ export const WalkthroughCarousel: React.FC<WalkthroughCarouselProps> = ({
   const SlideIcon = slide.icon || (LucideIcons as any)[iconName] || Shield;
   const mediaType = slide.media_type || 'icon';
 
+  const hasImage = mediaType === 'image' && slide.media_url;
+  const hasVideo = mediaType === 'video' && slide.media_url;
+  const hasMedia = hasImage || hasVideo;
+
   const bgStyle: React.CSSProperties = {};
-  if (slide.bg_color) bgStyle.backgroundColor = slide.bg_color;
-  else if (wConfig.bg_color) bgStyle.backgroundColor = wConfig.bg_color;
+  if (!hasMedia) {
+    if (slide.bg_color) bgStyle.backgroundColor = slide.bg_color;
+    else if (wConfig.bg_color) bgStyle.backgroundColor = wConfig.bg_color;
+  }
 
   const textStyle: React.CSSProperties = {};
   if (slide.text_color) textStyle.color = slide.text_color;
   else if (wConfig.text_color) textStyle.color = wConfig.text_color;
 
   return (
-    <div className="flex min-h-screen flex-col px-6 py-12" style={{ ...bgStyle, backgroundColor: bgStyle.backgroundColor || 'hsl(var(--background))' }}>
-      {wConfig.skip_enabled !== false && (
-        <div className="flex justify-end">
-          <Button variant="ghost" size="sm" onClick={onComplete} className="text-muted-foreground">Skip</Button>
-        </div>
-      )}
+    <div
+      className="flex min-h-screen flex-col"
+      style={{ ...bgStyle, backgroundColor: bgStyle.backgroundColor || 'hsl(var(--background))' }}
+    >
+      {/* Top media section — covers full width, ~55% of screen */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`media-${current}`}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.35 }}
+          className="relative w-full shrink-0"
+          style={{ height: '55vh' }}
+        >
+          {hasImage && (
+            <img
+              src={slide.media_url!}
+              alt={slide.title}
+              className="h-full w-full object-cover"
+            />
+          )}
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-8">
-        {wConfig.logo_url && (
-          <img src={wConfig.logo_url} alt="Logo" className="h-10 w-auto object-contain" />
-        )}
+          {hasVideo && (
+            <video
+              src={slide.media_url!}
+              className="h-full w-full object-cover"
+              autoPlay
+              muted
+              playsInline
+              loop
+            />
+          )}
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={current}
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -40 }}
-            transition={{ duration: 0.3 }}
-            className="flex flex-col items-center gap-6 text-center"
-          >
-            {mediaType === 'icon' && (
+          {mediaType === 'icon' && (
+            <div
+              className="flex h-full w-full items-center justify-center"
+              style={{
+                backgroundColor: slide.bg_color || wConfig.bg_color || 'hsl(var(--primary) / 0.06)',
+              }}
+            >
               <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-primary/10">
                 <SlideIcon className="h-14 w-14 text-primary" strokeWidth={1.5} />
               </div>
-            )}
+            </div>
+          )}
 
-            {mediaType === 'image' && slide.media_url && (
-              <img src={slide.media_url} alt={slide.title} className="h-48 w-48 rounded-3xl object-cover" />
-            )}
+          {/* Skip button overlaid on media */}
+          {wConfig.skip_enabled !== false && (
+            <div className="absolute right-4 top-4 z-10">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onComplete}
+                className="rounded-full bg-background/60 text-foreground backdrop-blur-sm hover:bg-background/80"
+              >
+                Skip
+              </Button>
+            </div>
+          )}
 
-            {mediaType === 'video' && slide.media_url && (
-              <div className="h-48 w-64 overflow-hidden rounded-2xl">
-                <video src={slide.media_url} className="h-full w-full object-cover" controls playsInline />
-              </div>
-            )}
+          {/* Logo overlaid on media */}
+          {wConfig.logo_url && (
+            <div className="absolute left-4 top-4 z-10">
+              <img
+                src={wConfig.logo_url}
+                alt="Logo"
+                className="h-8 w-auto rounded-lg object-contain bg-background/60 p-1 backdrop-blur-sm"
+              />
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
+      {/* Bottom content section */}
+      <div className="flex flex-1 flex-col justify-between px-6 pb-8 pt-6">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={`text-${current}`}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-1 flex-col items-center justify-center gap-3 text-center"
+          >
             <h2 className="text-2xl font-semibold tracking-tight" style={textStyle}>
               {slide.title}
             </h2>
-            <p className="max-w-xs text-sm leading-relaxed text-muted-foreground" style={slide.text_color ? { color: `${slide.text_color}99` } : undefined}>
+            <p
+              className="max-w-xs text-sm leading-relaxed text-muted-foreground"
+              style={slide.text_color ? { color: `${slide.text_color}99` } : undefined}
+            >
               {slide.description}
             </p>
           </motion.div>
         </AnimatePresence>
-      </div>
 
-      <div className="flex items-center justify-center gap-2 pb-6">
-        {slides.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'}`}
-            style={i === current && wConfig.accent_color ? { backgroundColor: wConfig.accent_color } : undefined}
-          />
-        ))}
-      </div>
+        {/* Dots */}
+        <div className="flex items-center justify-center gap-2 pb-4 pt-4">
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={`h-2 rounded-full transition-all duration-300 ${
+                i === current ? 'w-6 bg-primary' : 'w-2 bg-muted-foreground/30'
+              }`}
+              style={
+                i === current && wConfig.accent_color
+                  ? { backgroundColor: wConfig.accent_color }
+                  : undefined
+              }
+            />
+          ))}
+        </div>
 
-      <Button onClick={next} className="w-full gap-2" size="lg"
-        style={wConfig.accent_color ? { backgroundColor: wConfig.accent_color } : undefined}
-      >
-        {isLast ? 'Get Started' : 'Next'}
-        <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
-      </Button>
+        <Button
+          onClick={next}
+          className="w-full gap-2"
+          size="lg"
+          style={wConfig.accent_color ? { backgroundColor: wConfig.accent_color } : undefined}
+        >
+          {isLast ? 'Get Started' : 'Next'}
+          <ChevronRight className="h-4 w-4" strokeWidth={1.5} />
+        </Button>
+      </div>
     </div>
   );
 };
