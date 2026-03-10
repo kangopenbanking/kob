@@ -7,6 +7,7 @@ import { OfflineIndicator } from '@/components/pwa/OfflineIndicator';
 import { Home, ShoppingBag, Package, MoreHorizontal, Plus, ScanLine, Monitor, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
+import { useAppCacheClear } from '@/hooks/useAppCacheClear';
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle,
 } from '@/components/ui/sheet';
