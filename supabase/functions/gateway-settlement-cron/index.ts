@@ -74,7 +74,7 @@ Deno.serve(async (req) => {
 
         // Simulate provider status check
         // In production, this would call Flutterwave/Stripe/PayPal/Visa Direct APIs
-        const providerStatus = await simulateProviderPoll(payout);
+        const providerStatus = await pollProviderStatus(payout);
 
         if (providerStatus === "completed") {
           await supabase
