@@ -250,8 +250,8 @@ export function useApplyForLoan() {
       purpose: string;
       submit?: boolean;
     }) => {
-      const { data, error } = await supabase.functions.invoke('loan-apply', {
-        body: { ...body, institution_id: institutionId },
+      const { data, error } = await supabase.functions.invoke('loan-ops', {
+        body: { action: 'apply', ...body, institution_id: institutionId },
       });
       if (error) throw error;
       return data;
