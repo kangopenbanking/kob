@@ -110,17 +110,11 @@ serve(async (req) => {
       // Reset attempts
       await supabase
         .from('profiles')
-        .update({
-          pin_attempts: 0,
-          pin_locked_until: null,
-        })
+        .update({ pin_attempts: 0, pin_locked_until: null })
         .eq('id', profile.id);
 
-      // Create auth session using admin API
-      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(
-        profile.id
-      );
-
+      // Get user info for session creation
+      const { data: authData, error: authError } = await supabase.auth.admin.getUserById(profile.id);
       if (authError || !authData.user) {
         console.error('Failed to get user for session:', authError);
         return new Response(
@@ -129,14 +123,29 @@ serve(async (req) => {
         );
       }
 
-      // Generate session token
-      const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
+      // Generate magic link and verify server-side to get a real session
+      const userEmail = authData.user.email || `${phone_number.replace('+', '')}@temp.kob.cm`;
+      const { data: linkData, error: linkError } = await supabase.auth.admin.generateLink({
         type: 'magiclink',
-        email: authData.user.email || `${phone_number}@temp.kob.cm`,
+        email: userEmail,
+      });
+
+      if (linkError) {
+        console.error('Failed to generate magic link:', linkError);
+        return new Response(
+          JSON.stringify({ error: 'Failed to create session' }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+        );
+      }
+
+      // Verify the OTP server-side to get a session (same pattern as staff-pin-login)
+      const { data: sessionData, error: sessionError } = await supabase.auth.verifyOtp({
+        token_hash: linkData.properties.hashed_token,
+        type: 'magiclink',
       });
 
       if (sessionError) {
-        console.error('Failed to generate session:', sessionError);
+        console.error('Failed to verify OTP for session:', sessionError);
         return new Response(
           JSON.stringify({ error: 'Failed to create session' }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -162,7 +171,7 @@ serve(async (req) => {
           success: true,
           message: 'PIN login successful',
           user_id: profile.id,
-          magic_link: sessionData.properties.action_link,
+          session: sessionData.session,
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
       );
