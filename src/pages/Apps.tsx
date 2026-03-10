@@ -4,7 +4,7 @@ import {
   Building2, Palette, Smartphone, Wallet, CreditCard, History,
   ShieldCheck, Send, Store, Users, QrCode, BarChart3, Receipt,
   Package, ArrowRight, Layers, Globe, Lock, ChevronRight, Check,
-  Bus, UserCheck
+  Bus, UserCheck, Monitor, ShoppingCart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
