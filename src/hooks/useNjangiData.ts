@@ -69,7 +69,9 @@ export function useJoinNjangiGroup() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: { group_id: string }) => {
-      const { data, error } = await supabase.functions.invoke('njangi-join', { body });
+      const { data, error } = await supabase.functions.invoke('njangi-ops', {
+        body: { action: 'join', ...body },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
