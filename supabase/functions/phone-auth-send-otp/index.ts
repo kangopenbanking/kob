@@ -117,7 +117,7 @@ async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<Wh
   }
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -130,18 +130,10 @@ serve(async (req) => {
     const { phone_number, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
 
     // Validate input
-    const validationResult = sendOtpSchema.safeParse({ phone: phone_number, method: delivery_method });
-    
-    if (!validationResult.success) {
-      console.error('Validation failed:', validationResult.error.errors);
+    const phoneValidation = validatePhone(phone_number);
+    if (!phoneValidation.valid) {
       return new Response(
-        JSON.stringify({ 
-          error: 'Invalid phone number format', 
-          details: validationResult.error.errors.map(e => ({
-            field: e.path.join('.'),
-            message: e.message
-          }))
-        }),
+        JSON.stringify({ error: phoneValidation.error }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
