@@ -51,7 +51,9 @@ export function useCreateNjangiGroup() {
   const institutionId = useInstitutionId();
   return useMutation({
     mutationFn: async (body: any) => {
-      const { data, error } = await supabase.functions.invoke('njangi-create', { body });
+      const { data, error } = await supabase.functions.invoke('njangi-ops', {
+        body: { action: 'create', ...body },
+      });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
       return data;
