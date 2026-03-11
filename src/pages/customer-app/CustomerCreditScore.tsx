@@ -406,4 +406,109 @@ const CustomerCreditScore: React.FC = () => {
   );
 };
 
+// Inline Pre-Approved Offers for Customer App
+function PreApprovedOffersSection({ score }: { score: number }) {
+  const navigate = useNavigate();
+  const [applyingId, setApplyingId] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const { data: offers = [], isLoading } = useQuery({
+    queryKey: ['preapproved-offers-customer', score],
+    enabled: score > 0,
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase.functions.invoke('credit-ops', {
+        body: { action: 'preapproved-offers', credit_score: score }
+      });
+      if (error) throw error;
+      return (data?.offers || []) as any[];
+    },
+  });
+
+  const applyMutation = useMutation({
+    mutationFn: async ({ offerId, amount }: { offerId: string; amount: number }) => {
+      const { data, error } = await supabase.functions.invoke('credit-ops', {
+        body: { action: 'apply-preapproved', offer_id: offerId, requested_amount: amount }
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast.success('Application submitted! The bank will review your request.');
+      queryClient.invalidateQueries({ queryKey: ['preapproved-offers-customer'] });
+      setApplyingId(null);
+    },
+    onError: (err: any) => toast.error(err.message || 'Failed to apply'),
+  });
+
+  if (isLoading || !offers.length) return null;
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+      <div className="flex items-center gap-2 mb-3">
+        <Banknote className="h-4 w-4 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
+        <p className="text-sm font-bold text-foreground">Pre-Approved Loans</p>
+        <span className="ml-auto text-[10px] font-semibold text-muted-foreground">{offers.length} offer{offers.length !== 1 ? 's' : ''}</span>
+      </div>
+      <div className="space-y-2">
+        {offers.map((offer: any) => (
+          <motion.div
+            key={offer.id}
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="rounded-3xl bg-card border border-border p-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[hsl(210,80%,93%)]">
+                <Building2 className="h-4 w-4 text-[hsl(210,60%,45%)]" strokeWidth={1.5} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-foreground">{offer.product_name}</p>
+                <p className="text-[10px] text-muted-foreground">{offer.institution_name || 'Financial Institution'}</p>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-0.5">
+                    <Banknote className="h-3 w-3" />
+                    Up to {Number(offer.max_amount).toLocaleString()} {offer.currency}
+                  </span>
+                  <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-0.5">
+                    <Percent className="h-3 w-3" />
+                    {offer.interest_rate_annual}% p.a.
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-3">
+              {offer.requires_existing_account ? (
+                <button
+                  onClick={() => navigate('/app/accounts')}
+                  className="flex-1 rounded-xl bg-muted py-2 text-[11px] font-bold text-foreground text-center active:scale-[0.98] transition-transform"
+                >
+                  Open Account & Apply
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setApplyingId(offer.id);
+                    applyMutation.mutate({ offerId: offer.id, amount: Number(offer.max_amount) });
+                  }}
+                  disabled={applyMutation.isPending}
+                  className="flex-1 rounded-xl bg-foreground py-2 text-[11px] font-bold text-background text-center active:scale-[0.98] transition-transform disabled:opacity-50"
+                >
+                  {applyMutation.isPending && applyingId === offer.id ? 'Applying...' : 'Apply Now'}
+                </button>
+              )}
+            </div>
+            <p className="text-[9px] text-muted-foreground mt-2 flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 shrink-0" />
+              Applying triggers a hard credit check that may impact your score
+            </p>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 export default CustomerCreditScore;
