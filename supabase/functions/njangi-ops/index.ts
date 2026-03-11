@@ -216,6 +216,21 @@ async function handleOverdueDetect(req: Request) {
     await supabase.from('njangi_contributions').update({ status: 'missed' }).eq('id', contrib.id);
     await supabase.from('credit_events').insert({ user_id: contrib.user_id, event_type: 'NJANGI_CONTRIBUTION_MISSED', value_numeric: contrib.amount, description: `Missed njangi contribution - ${contrib.njangi_groups?.name || 'Unknown'} cycle ${contrib.cycle_number}`, event_time: new Date().toISOString() });
     try { await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: contrib.user_id } }); } catch (e) { console.error('Score recompute failed:', e); }
+
+    // ✉️ Email member: missed contribution
+    const missedMemberName = await getUserName(supabase, contrib.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'njangi_contribution_missed',
+      recipient_user_id: contrib.user_id,
+      variables: {
+        member_name: missedMemberName,
+        group_name: contrib.njangi_groups?.name || 'Njangi Group',
+        currency: 'XAF',
+        amount: new Intl.NumberFormat('fr-CM').format(contrib.amount),
+        cycle_number: contrib.cycle_number,
+      },
+    });
+
     processed++;
   }
 
