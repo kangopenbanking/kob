@@ -131,6 +131,28 @@ async function handleApply(req: Request, body: any) {
     });
   }
 
+  // ✉️ Email customer: loan application received (only when submitted)
+  if (submit && application) {
+    const serviceClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const customerName = await getUserName(serviceClient, user.id);
+    sendManagedEmail(serviceClient, {
+      email_key: 'loan_application_received',
+      recipient_user_id: user.id,
+      institution_id: institution_id || undefined,
+      variables: { customer_name: customerName, application_number: applicationNumber, currency: 'XAF', requested_amount: new Intl.NumberFormat('fr-CM').format(requested_amount), tenure_months, purpose: purpose || 'Not specified' },
+    });
+
+    // ✉️ Email management: new loan application alert
+    if (institution_id) {
+      emailManagers(serviceClient, {
+        institution_id,
+        role_type: 'branch_manager',
+        email_key: 'loan_application_alert',
+        variables: { application_number: applicationNumber, customer_name: customerName, currency: 'XAF', requested_amount: new Intl.NumberFormat('fr-CM').format(requested_amount), tenure_months, credit_score: creditScore || 'N/A', auto_decision: autoDecision || 'Manual review' },
+      });
+    }
+  }
+
   return new Response(JSON.stringify({ success: true, application, message: submit ? 'Application submitted successfully' : 'Application saved as draft' }), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
