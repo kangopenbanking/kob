@@ -124,6 +124,85 @@ export type Database = {
           },
         ]
       }
+      account_overdraft_profiles: {
+        Row: {
+          account_id: string
+          approved_limit: number
+          available_amount: number
+          branch_id: string | null
+          created_at: string
+          eligible: boolean
+          id: string
+          institution_id: string
+          last_scored_at: string | null
+          manual_approval_required: boolean
+          recommended_limit: number
+          review_date: string | null
+          risk_band: string
+          status: Database["public"]["Enums"]["overdraft_status"]
+          updated_at: string
+          utilised_amount: number
+        }
+        Insert: {
+          account_id: string
+          approved_limit?: number
+          available_amount?: number
+          branch_id?: string | null
+          created_at?: string
+          eligible?: boolean
+          id?: string
+          institution_id: string
+          last_scored_at?: string | null
+          manual_approval_required?: boolean
+          recommended_limit?: number
+          review_date?: string | null
+          risk_band?: string
+          status?: Database["public"]["Enums"]["overdraft_status"]
+          updated_at?: string
+          utilised_amount?: number
+        }
+        Update: {
+          account_id?: string
+          approved_limit?: number
+          available_amount?: number
+          branch_id?: string | null
+          created_at?: string
+          eligible?: boolean
+          id?: string
+          institution_id?: string
+          last_scored_at?: string | null
+          manual_approval_required?: boolean
+          recommended_limit?: number
+          review_date?: string | null
+          risk_band?: string
+          status?: Database["public"]["Enums"]["overdraft_status"]
+          updated_at?: string
+          utilised_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_overdraft_profiles_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: true
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_overdraft_profiles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_overdraft_profiles_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       accounts: {
         Row: {
           account_country: string | null
@@ -904,6 +983,125 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "app_notifications_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_actions: {
+        Row: {
+          acted_by: string
+          acted_role:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          action: Database["public"]["Enums"]["approval_action_type"]
+          approval_request_id: string
+          comments: string | null
+          created_at: string
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          acted_by: string
+          acted_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          action: Database["public"]["Enums"]["approval_action_type"]
+          approval_request_id: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          acted_by?: string
+          acted_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          action?: Database["public"]["Enums"]["approval_action_type"]
+          approval_request_id?: string
+          comments?: string | null
+          created_at?: string
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_actions_approval_request_id_fkey"
+            columns: ["approval_request_id"]
+            isOneToOne: false
+            referencedRelation: "approval_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      approval_requests: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          current_stage: Database["public"]["Enums"]["approval_status"]
+          entity_id: string
+          entity_type: string
+          expires_at: string | null
+          id: string
+          institution_id: string
+          reason: string | null
+          request_type: Database["public"]["Enums"]["approval_request_type"]
+          required_role:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          status: Database["public"]["Enums"]["approval_status"]
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          current_stage?: Database["public"]["Enums"]["approval_status"]
+          entity_id: string
+          entity_type: string
+          expires_at?: string | null
+          id?: string
+          institution_id: string
+          reason?: string | null
+          request_type: Database["public"]["Enums"]["approval_request_type"]
+          required_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          status?: Database["public"]["Enums"]["approval_status"]
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          current_stage?: Database["public"]["Enums"]["approval_status"]
+          entity_id?: string
+          entity_type?: string
+          expires_at?: string | null
+          id?: string
+          institution_id?: string
+          reason?: string | null
+          request_type?: Database["public"]["Enums"]["approval_request_type"]
+          required_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          status?: Database["public"]["Enums"]["approval_status"]
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "approval_requests_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "approval_requests_institution_id_fkey"
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
@@ -7095,6 +7293,54 @@ export type Database = {
           },
         ]
       }
+      institution_operational_roles: {
+        Row: {
+          branch_id: string | null
+          created_at: string
+          id: string
+          institution_id: string
+          is_active: boolean
+          role_type: Database["public"]["Enums"]["operational_role_type"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          institution_id: string
+          is_active?: boolean
+          role_type: Database["public"]["Enums"]["operational_role_type"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch_id?: string | null
+          created_at?: string
+          id?: string
+          institution_id?: string
+          is_active?: boolean
+          role_type?: Database["public"]["Enums"]["operational_role_type"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "institution_operational_roles_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "institution_operational_roles_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       institution_verification_steps: {
         Row: {
           completed_at: string | null
@@ -9738,6 +9984,62 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      overdraft_score_factors: {
+        Row: {
+          account_overdraft_profile_id: string
+          activity_score: number
+          balance_score: number
+          created_at: string
+          credit_score_input: number
+          factor_summary: Json | null
+          final_score: number
+          id: string
+          recommendation: string | null
+          repayment_score: number
+          salary_score: number
+          savings_score: number
+          tenure_score: number
+        }
+        Insert: {
+          account_overdraft_profile_id: string
+          activity_score?: number
+          balance_score?: number
+          created_at?: string
+          credit_score_input?: number
+          factor_summary?: Json | null
+          final_score?: number
+          id?: string
+          recommendation?: string | null
+          repayment_score?: number
+          salary_score?: number
+          savings_score?: number
+          tenure_score?: number
+        }
+        Update: {
+          account_overdraft_profile_id?: string
+          activity_score?: number
+          balance_score?: number
+          created_at?: string
+          credit_score_input?: number
+          factor_summary?: Json | null
+          final_score?: number
+          id?: string
+          recommendation?: string | null
+          repayment_score?: number
+          salary_score?: number
+          savings_score?: number
+          tenure_score?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "overdraft_score_factors_account_overdraft_profile_id_fkey"
+            columns: ["account_overdraft_profile_id"]
+            isOneToOne: false
+            referencedRelation: "account_overdraft_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       par_requests: {
         Row: {
@@ -13818,6 +14120,66 @@ export type Database = {
           },
         ]
       }
+      staff_authorizations: {
+        Row: {
+          branch_id: string | null
+          can_approve_overdraft: boolean
+          can_approve_withdrawal_override: boolean
+          can_suspend_overdraft: boolean
+          created_at: string
+          id: string
+          institution_id: string
+          max_override_limit: number | null
+          role_type: Database["public"]["Enums"]["operational_role_type"]
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          branch_id?: string | null
+          can_approve_overdraft?: boolean
+          can_approve_withdrawal_override?: boolean
+          can_suspend_overdraft?: boolean
+          created_at?: string
+          id?: string
+          institution_id: string
+          max_override_limit?: number | null
+          role_type: Database["public"]["Enums"]["operational_role_type"]
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          branch_id?: string | null
+          can_approve_overdraft?: boolean
+          can_approve_withdrawal_override?: boolean
+          can_suspend_overdraft?: boolean
+          created_at?: string
+          id?: string
+          institution_id?: string
+          max_override_limit?: number | null
+          role_type?: Database["public"]["Enums"]["operational_role_type"]
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_authorizations_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_authorizations_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_portal_permissions: {
         Row: {
           can_manage: boolean | null
@@ -16095,6 +16457,181 @@ export type Database = {
           },
         ]
       }
+      withdrawal_policies: {
+        Row: {
+          auto_approve_threshold: number
+          branch_id: string | null
+          can_override_lower_role: boolean
+          channel: string | null
+          created_at: string
+          currency: string
+          daily_total_limit: number
+          effective_from: string
+          effective_to: string | null
+          escalation_target_role:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          id: string
+          institution_id: string
+          requires_dual_approval_above: number | null
+          role_type: Database["public"]["Enums"]["operational_role_type"]
+          single_txn_limit: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          auto_approve_threshold?: number
+          branch_id?: string | null
+          can_override_lower_role?: boolean
+          channel?: string | null
+          created_at?: string
+          currency?: string
+          daily_total_limit?: number
+          effective_from?: string
+          effective_to?: string | null
+          escalation_target_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          id?: string
+          institution_id: string
+          requires_dual_approval_above?: number | null
+          role_type: Database["public"]["Enums"]["operational_role_type"]
+          single_txn_limit?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          auto_approve_threshold?: number
+          branch_id?: string | null
+          can_override_lower_role?: boolean
+          channel?: string | null
+          created_at?: string
+          currency?: string
+          daily_total_limit?: number
+          effective_from?: string
+          effective_to?: string | null
+          escalation_target_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          id?: string
+          institution_id?: string
+          requires_dual_approval_above?: number | null
+          role_type?: Database["public"]["Enums"]["operational_role_type"]
+          single_txn_limit?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_policies_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_policies_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      withdrawal_requests: {
+        Row: {
+          account_id: string
+          amount: number
+          approval_request_id: string | null
+          branch_id: string | null
+          channel: string
+          created_at: string
+          currency: string
+          current_status: Database["public"]["Enums"]["approval_status"]
+          execution_reference: string | null
+          id: string
+          initiated_by_staff_id: string | null
+          initiated_by_user_id: string | null
+          institution_id: string
+          policy_result: Json | null
+          reason: string | null
+          required_role:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          source_endpoint: string | null
+          source_type: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          amount: number
+          approval_request_id?: string | null
+          branch_id?: string | null
+          channel?: string
+          created_at?: string
+          currency?: string
+          current_status?: Database["public"]["Enums"]["approval_status"]
+          execution_reference?: string | null
+          id?: string
+          initiated_by_staff_id?: string | null
+          initiated_by_user_id?: string | null
+          institution_id: string
+          policy_result?: Json | null
+          reason?: string | null
+          required_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          source_endpoint?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          amount?: number
+          approval_request_id?: string | null
+          branch_id?: string | null
+          channel?: string
+          created_at?: string
+          currency?: string
+          current_status?: Database["public"]["Enums"]["approval_status"]
+          execution_reference?: string | null
+          id?: string
+          initiated_by_staff_id?: string | null
+          initiated_by_user_id?: string | null
+          institution_id?: string
+          policy_result?: Json | null
+          reason?: string | null
+          required_role?:
+            | Database["public"]["Enums"]["operational_role_type"]
+            | null
+          source_endpoint?: string | null
+          source_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "withdrawal_requests_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_branch_id_fkey"
+            columns: ["branch_id"]
+            isOneToOne: false
+            referencedRelation: "branches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "withdrawal_requests_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       woocommerce_merchants: {
         Row: {
           admin_email: string
@@ -16330,6 +16867,17 @@ export type Database = {
         }
         Returns: undefined
       }
+      evaluate_withdrawal_policy: {
+        Args: {
+          _amount: number
+          _branch_id: string
+          _channel?: string
+          _currency?: string
+          _institution_id: string
+          _staff_user_id: string
+        }
+        Returns: Json
+      }
       expire_old_consents: { Args: never; Returns: undefined }
       expire_store_subscriptions: { Args: never; Returns: undefined }
       generate_compliance_report: {
@@ -16372,6 +16920,10 @@ export type Database = {
           transaction_count: number
           transaction_type: string
         }[]
+      }
+      get_role_hierarchy_level: {
+        Args: { _role: Database["public"]["Enums"]["operational_role_type"] }
+        Returns: number
       }
       get_staff_institution_id: { Args: { _user_id: string }; Returns: string }
       get_staff_portal_sections: {
@@ -16559,6 +17111,30 @@ export type Database = {
         | "merchant"
         | "tpp"
         | "developer"
+      approval_action_type:
+        | "submit"
+        | "approve"
+        | "reject"
+        | "escalate"
+        | "cancel"
+        | "execute"
+        | "expire"
+      approval_request_type:
+        | "withdrawal_override"
+        | "overdraft_approval"
+        | "limit_override"
+        | "exceptional_withdrawal"
+      approval_status:
+        | "draft"
+        | "submitted"
+        | "pending_assistant_manager"
+        | "pending_branch_manager"
+        | "pending_general_manager"
+        | "approved"
+        | "rejected"
+        | "expired"
+        | "executed"
+        | "cancelled"
       card_funding_status:
         | "pending"
         | "processing"
@@ -16620,6 +17196,17 @@ export type Database = {
       njangi_member_status: "active" | "removed"
       njangi_payout_method: "random" | "manual"
       njangi_selection_method: "random" | "manual"
+      operational_role_type:
+        | "teller"
+        | "assistant_manager"
+        | "branch_manager"
+        | "general_manager"
+      overdraft_status:
+        | "active"
+        | "suspended"
+        | "revoked"
+        | "pending_approval"
+        | "inactive"
       payment_type:
         | "domestic"
         | "international"
@@ -16841,6 +17428,33 @@ export const Constants = {
         "tpp",
         "developer",
       ],
+      approval_action_type: [
+        "submit",
+        "approve",
+        "reject",
+        "escalate",
+        "cancel",
+        "execute",
+        "expire",
+      ],
+      approval_request_type: [
+        "withdrawal_override",
+        "overdraft_approval",
+        "limit_override",
+        "exceptional_withdrawal",
+      ],
+      approval_status: [
+        "draft",
+        "submitted",
+        "pending_assistant_manager",
+        "pending_branch_manager",
+        "pending_general_manager",
+        "approved",
+        "rejected",
+        "expired",
+        "executed",
+        "cancelled",
+      ],
       card_funding_status: [
         "pending",
         "processing",
@@ -16908,6 +17522,19 @@ export const Constants = {
       njangi_member_status: ["active", "removed"],
       njangi_payout_method: ["random", "manual"],
       njangi_selection_method: ["random", "manual"],
+      operational_role_type: [
+        "teller",
+        "assistant_manager",
+        "branch_manager",
+        "general_manager",
+      ],
+      overdraft_status: [
+        "active",
+        "suspended",
+        "revoked",
+        "pending_approval",
+        "inactive",
+      ],
       payment_type: [
         "domestic",
         "international",
