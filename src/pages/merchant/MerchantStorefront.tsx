@@ -37,6 +37,7 @@ import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeature
 import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgradeModal';
 import { ProductsTab } from '@/components/storefront/ProductsTab';
 import { WooConnectTab } from '@/components/storefront/WooConnectTab';
+import { getCanonicalUrl } from '@/config/api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
