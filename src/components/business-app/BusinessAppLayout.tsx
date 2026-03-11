@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from 'react';
-import { Outlet, useParams, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { TenantProvider } from '@/components/pwa/TenantProvider';
 import { PullToRefresh } from '@/components/pwa/PullToRefresh';
 import { useQueryClient } from '@tanstack/react-query';
@@ -12,14 +12,15 @@ import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
 
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+
+const basePath = '/biz';
 
 /* ── Quick-action bottom sheet ─────────────────────────────── */
 const QuickActionSheet: React.FC<{
   open: boolean;
   onOpenChange: (o: boolean) => void;
-  basePath: string;
-}> = ({ open, onOpenChange, basePath }) => {
+}> = ({ open, onOpenChange }) => {
   const navigate = useNavigate();
   const actions = [
     { icon: ShoppingBag, label: 'New Order', subtitle: 'Create a manual order', path: `${basePath}/quick-order`, color: 'bg-emerald-500/10 text-emerald-600' },
@@ -66,7 +67,7 @@ const QuickActionSheet: React.FC<{
 };
 
 /* ── Bottom navigation ─────────────────────────────────────── */
-const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
+const BusinessBottomNav: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [showActions, setShowActions] = useState(false);
@@ -123,17 +124,14 @@ const BusinessBottomNav: React.FC<{ basePath: string }> = ({ basePath }) => {
           })}
         </div>
       </nav>
-      <QuickActionSheet open={showActions} onOpenChange={setShowActions} basePath={basePath} />
+      <QuickActionSheet open={showActions} onOpenChange={setShowActions} />
     </>
   );
 };
 
 /* ── Inner wrapper ─────────────────────────────────────────── */
 const BusinessAppInner: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
-  const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
   const queryClient = useQueryClient();
-  // Removed useAppCacheClear — it was clearing all caches on every mount, causing slow reloads
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();
@@ -148,18 +146,15 @@ const BusinessAppInner: React.FC = () => {
           <Outlet />
         </div>
       </PullToRefresh>
-      <BusinessBottomNav basePath={basePath} />
+      <BusinessBottomNav />
     </div>
   );
 };
 
 /* ── Layout root ───────────────────────────────────────────── */
 export const BusinessAppLayout: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
-  const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
-
   return (
-    <SessionGuard logoutPath={`${basePath}/auth`} appName="Business" appContext={merchantId ? `biz:${merchantId}` : 'biz'}>
+    <SessionGuard logoutPath="/biz/auth" appName="Business" appContext="biz">
       <TenantProvider>
         <BusinessAppInner />
       </TenantProvider>

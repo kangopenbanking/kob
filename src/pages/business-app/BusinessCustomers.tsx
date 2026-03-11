@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Users, Phone, Mail, ShoppingBag, Search, ChevronRight } from 'lucide-react';
@@ -22,7 +22,7 @@ interface CustomerSummary {
 }
 
 const BusinessCustomers: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null);
 

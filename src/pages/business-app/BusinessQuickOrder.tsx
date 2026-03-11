@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { ArrowLeft, Plus, Minus, ShoppingBag, Search } from 'lucide-react';
@@ -18,7 +19,7 @@ interface CartItem {
 }
 
 const BusinessQuickOrder: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -80,13 +81,12 @@ const BusinessQuickOrder: React.FC = () => {
     },
     onSuccess: () => {
       toast.success('Order created!');
-      const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
-      navigate(`${basePath}/orders`);
+      navigate('/biz/orders');
     },
     onError: (e: any) => toast.error(e.message),
   });
 
-  const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
+  const basePath = '/biz';
 
   return (
     <div className="flex min-h-screen flex-col bg-background p-4">

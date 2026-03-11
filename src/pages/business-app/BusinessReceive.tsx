@@ -6,8 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
-import { useParams } from 'react-router-dom';
 import { useBusinessData } from '@/hooks/useBusinessData';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { sounds } from '@/lib/sounds';
 import { getCanonicalUrl } from '@/config/api';
@@ -15,7 +15,7 @@ import { getCanonicalUrl } from '@/config/api';
 type Tab = 'qr' | 'links';
 
 const BusinessReceive: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const { merchant } = useBusinessData(merchantId);
 
   const [activeTab, setActiveTab] = useState<Tab>('qr');

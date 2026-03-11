@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Ticket, Plus, ToggleLeft, ToggleRight, Trash2 } from 'lucide-react';
@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 
 const BusinessCoupons: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [code, setCode] = useState('');

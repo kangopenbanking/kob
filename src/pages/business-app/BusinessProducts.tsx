@@ -4,15 +4,16 @@ import { supabase } from '@/integrations/supabase/client';
 import { Plus, Search, Package, Edit, Trash2, ImageIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 export default function BusinessProducts() {
   const navigate = useNavigate();
-  const { merchantId: paramMerchantId } = useParams<{ merchantId?: string }>();
-  const basePath = paramMerchantId ? `/biz/${paramMerchantId}` : '/biz';
+  const { merchantId: paramMerchantId } = useMerchantContext();
+  const basePath = '/biz';
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'draft'>('all');
   const [merchantId, setMerchantId] = useState<string | null>(null);

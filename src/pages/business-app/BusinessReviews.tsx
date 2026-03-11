@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Star, MessageSquare, Send } from 'lucide-react';
@@ -19,7 +19,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => (
 );
 
 const BusinessReviews: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const queryClient = useQueryClient();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
