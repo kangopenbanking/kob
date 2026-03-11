@@ -108,6 +108,36 @@ serve(async (req) => {
       performed_by: user.id, details: { charge_id, merchant_id: charge.merchant_id, amount: refundAmount, currency: charge.currency, status: refund.status, reason },
     }).then(() => {}).catch(() => {});
 
+    // ✉️ Email merchant: refund processed
+    const { data: refundMerchant } = await supabase.from('gateway_merchants').select('business_name, user_id').eq('id', charge.merchant_id).single();
+    if (refundMerchant) {
+      sendManagedEmail(supabase, {
+        email_key: 'refund_processed',
+        recipient_user_id: refundMerchant.user_id,
+        variables: {
+          merchant_name: refundMerchant.business_name,
+          currency: charge.currency,
+          amount: new Intl.NumberFormat('fr-CM').format(refundAmount),
+          tx_ref: charge.tx_ref, reason: reason || 'N/A', status: refund.status,
+        },
+      });
+    }
+
+    // ✉️ Email consumer: refund notification
+    if (charge.customer_email) {
+      sendManagedEmail(supabase, {
+        email_key: 'consumer_refund_notification',
+        recipient_email: charge.customer_email,
+        variables: {
+          customer_name: charge.customer_name || 'Customer',
+          merchant_name: refundMerchant?.business_name || 'Merchant',
+          currency: charge.currency,
+          amount: new Intl.NumberFormat('fr-CM').format(refundAmount),
+          tx_ref: charge.tx_ref, reason: reason || 'N/A',
+        },
+      });
+    }
+
     return new Response(JSON.stringify(refund), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     const errorId = crypto.randomUUID().slice(0, 8);

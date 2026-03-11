@@ -175,6 +175,42 @@ serve(async (req) => {
           details: { previous_status: merchant.status, new_status: newStatus, reason: body.reason || null },
         });
 
+        // ✉️ Email merchant on lifecycle transitions
+        const merchantOwnerName = await getUserName(supabase, merchant.user_id);
+        const emailMap: Record<string, string> = {
+          activate: 'merchant_activated',
+          suspend: 'merchant_suspended',
+          reject: 'merchant_rejected',
+          submit: 'merchant_application_submitted',
+        };
+        if (emailMap[action]) {
+          sendManagedEmail(supabase, {
+            email_key: emailMap[action],
+            recipient_user_id: merchant.user_id,
+            variables: {
+              merchant_name: merchantOwnerName,
+              business_name: merchant.business_name,
+              reason: body.reason || 'N/A',
+            },
+          });
+        }
+
+        // ✉️ Admin alert on submission
+        if (action === 'submit') {
+          const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+          for (const admin of (admins || [])) {
+            sendManagedEmail(supabase, {
+              email_key: 'merchant_kyb_submitted_alert',
+              recipient_user_id: admin.user_id,
+              variables: {
+                business_name: merchant.business_name,
+                business_type: merchant.business_type || 'N/A',
+                country: merchant.country || 'N/A',
+              },
+            });
+          }
+        }
+
         return json({
           merchant_id, previous_status: merchant.status, new_status: newStatus,
           action, performed_at: new Date().toISOString(),

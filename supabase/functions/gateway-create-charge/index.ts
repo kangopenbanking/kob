@@ -233,6 +233,35 @@ serve(async (req) => {
       }).catch(() => {});
     }
 
+    // ✉️ Email merchant: payment received
+    if (charge.status === 'successful') {
+      sendManagedEmail(supabase, {
+        email_key: 'payment_received',
+        recipient_user_id: merchant.user_id,
+        variables: {
+          merchant_name: merchant.business_name,
+          business_name: merchant.business_name,
+          currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+          tx_ref, channel, customer_name: customer_name || 'Customer',
+          net_amount: new Intl.NumberFormat('fr-CM').format(net),
+        },
+      });
+
+      // ✉️ Email consumer: payment receipt
+      if (customer_email) {
+        sendManagedEmail(supabase, {
+          email_key: 'consumer_payment_receipt',
+          recipient_email: customer_email,
+          variables: {
+            customer_name: customer_name || 'Customer',
+            merchant_name: merchant.business_name,
+            currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+            tx_ref, channel,
+          },
+        });
+      }
+    }
+
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
     const errorId = crypto.randomUUID().slice(0, 8);
