@@ -9,6 +9,7 @@ import { Star, MapPin, Store, Heart, Share2, Package } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { SocialShare } from '@/components/customer-app/SocialShare';
+import { getCanonicalUrl } from '@/config/api';
 
 export function CustomerMarketplace() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -168,7 +169,7 @@ export function CustomerMarketplace() {
                       <SocialShare
                         title={store.store_name}
                         text={store.description}
-                        url={`${window.location.origin}/app/store/${store.merchant_id}`}
+                        url={getCanonicalUrl(`/app/store/${store.merchant_id}`)}
                       />
                     </div>
                   </div>

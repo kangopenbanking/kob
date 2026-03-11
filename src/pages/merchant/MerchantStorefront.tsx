@@ -37,6 +37,7 @@ import { EnterpriseFeaturesTab } from '@/components/storefront/EnterpriseFeature
 import { EnterpriseUpgradeModal } from '@/components/storefront/EnterpriseUpgradeModal';
 import { ProductsTab } from '@/components/storefront/ProductsTab';
 import { WooConnectTab } from '@/components/storefront/WooConnectTab';
+import { getCanonicalUrl } from '@/config/api';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -1049,9 +1050,9 @@ export default function MerchantStorefront() {
                         <Globe className="w-3.5 h-3.5 text-[hsl(var(--fi-green))]" /> Public Store Link
                       </p>
                       <div className="flex items-center gap-2">
-                        <Input readOnly value={`${window.location.origin}/store/${merchantId}`} className="h-9 text-[11px] font-mono bg-muted/30 rounded-xl border-border/40" />
+                        <Input readOnly value={getCanonicalUrl(`/store/${merchantId}`)} className="h-9 text-[11px] font-mono bg-muted/30 rounded-xl border-border/40" />
                         <Button variant="outline" size="sm" className="h-9 text-xs shrink-0 gap-1 rounded-xl font-semibold"
-                          onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/store/${merchantId}`); toast.success('Store URL copied!'); }}>
+                          onClick={() => { navigator.clipboard.writeText(getCanonicalUrl(`/store/${merchantId}`)); toast.success('Store URL copied!'); }}>
                           <Copy className="w-3 h-3" /> Copy
                         </Button>
                       </div>

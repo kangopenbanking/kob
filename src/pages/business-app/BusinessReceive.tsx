@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { supabase } from '@/integrations/supabase/client';
 import { sounds } from '@/lib/sounds';
+import { getCanonicalUrl } from '@/config/api';
 
 type Tab = 'qr' | 'links';
 
@@ -133,7 +134,7 @@ const BusinessReceive: React.FC = () => {
   };
 
   const handleShareLink = async (link: any) => {
-    const url = `${window.location.origin}/pay/${link.slug}`;
+    const url = getCanonicalUrl(`/pay/${link.slug}`);
     if (navigator.share) {
       try { await navigator.share({ title: link.title, text: `Pay ${formatXAF(link.amount)} - ${link.title}`, url }); } catch {}
     } else {
@@ -281,7 +282,7 @@ const BusinessReceive: React.FC = () => {
                     <p className="text-2xl font-bold text-primary">{formatXAF(createdLink.amount)}</p>
                     <div className="w-full rounded-xl bg-muted p-3">
                       <p className="break-all text-center font-mono text-xs text-muted-foreground">
-                        {window.location.origin}/pay/{createdLink.slug}
+                        {getCanonicalUrl(`/pay/${createdLink.slug}`)}
                       </p>
                     </div>
                   </CardContent>

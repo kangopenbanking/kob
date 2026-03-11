@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { getCanonicalUrl } from '@/config/api';
 
 interface MenuSection {
   title: string;
@@ -26,7 +27,7 @@ const BusinessMore: React.FC = () => {
     merchant_id: merchantId,
     merchant_name: merchant?.business_name || 'Store',
   });
-  const storeUrl = `${window.location.origin}/app/stores/${merchantId}`;
+  const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

@@ -14,3 +14,9 @@ export const API_CONFIG = {
   OPENAPI_SPEC: 'https://api.kangopenbanking.com/functions/v1/public-api-spec',
   POSTMAN_COLLECTION: 'https://api.kangopenbanking.com/functions/v1/postman-collection',
 } as const;
+
+/**
+ * Returns a canonical public URL for the given path.
+ * Always uses kangopenbanking.com regardless of the current browser origin.
+ */
+export const getCanonicalUrl = (path: string) => `${API_CONFIG.SITE_URL}${path}`;

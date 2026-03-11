@@ -13,6 +13,7 @@ import {
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+import { EMAIL_LOGO_URL } from '../email-config.ts'
 
 interface ReauthenticationEmailProps {
   token: string
@@ -45,7 +46,7 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 
 export default ReauthenticationEmail
 
-const logoUrl = 'https://ftwbtzbeqkqrdmxmyvvz.supabase.co/storage/v1/object/public/email-assets/kob-logo-email.png'
+const logoUrl = EMAIL_LOGO_URL
 
 const main = { backgroundColor: '#ffffff', fontFamily: "'Inter', 'Helvetica Neue', Arial, sans-serif" }
 const container = { padding: '32px 40px', maxWidth: '560px', margin: '0 auto' }
