@@ -173,6 +173,10 @@ import InstitutionBilling from "./pages/institution/InstitutionBilling";
 import InstitutionConsents from "./pages/institution/InstitutionConsents";
 import InstitutionCustomerOnboarding from "./pages/institution/InstitutionCustomerOnboarding";
 import InstitutionStaff from "./pages/institution/InstitutionStaff";
+import InstitutionWithdrawalPolicies from "./pages/institution/InstitutionWithdrawalPolicies";
+import InstitutionApprovals from "./pages/institution/InstitutionApprovals";
+import InstitutionOverdraft from "./pages/institution/InstitutionOverdraft";
+import InstitutionStaffAuthorizations from "./pages/institution/InstitutionStaffAuthorizations";
 import InstitutionIncidents from "./pages/institution/InstitutionIncidents";
 import InstitutionRegulatory from "./pages/institution/InstitutionRegulatory";
 import InstitutionMessaging from "./pages/institution/InstitutionMessaging";
@@ -507,6 +511,10 @@ function App() {
               <Route path="consents" element={<InstitutionConsents />} />
               <Route path="customer-onboarding" element={<InstitutionCustomerOnboarding />} />
               <Route path="staff" element={<InstitutionStaff />} />
+              <Route path="staff-authorizations" element={<InstitutionStaffAuthorizations />} />
+              <Route path="withdrawal-policies" element={<InstitutionWithdrawalPolicies />} />
+              <Route path="approvals" element={<InstitutionApprovals />} />
+              <Route path="overdraft" element={<InstitutionOverdraft />} />
               <Route path="incidents" element={<InstitutionIncidents />} />
               <Route path="regulatory" element={<InstitutionRegulatory />} />
               <Route path="messaging" element={<InstitutionMessaging />} />

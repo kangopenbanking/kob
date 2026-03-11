@@ -3,7 +3,7 @@ import {
   CreditCard, Building2, ArrowUpDown, DollarSign, TrendingUp, ShoppingCart,
   Store, Shield, UserCheck, Wallet, MapPin, Banknote, PiggyBank, BookOpen,
   Receipt, KeyRound, ScrollText, UserPlus, ShieldAlert, Bell, Mail,
-  Link2, RefreshCw, GitBranch, Contact,
+  Link2, RefreshCw, GitBranch, Contact, ClipboardList, UserCog,
 } from "lucide-react";
 
 export const institutionNavigation = [
@@ -48,6 +48,10 @@ export const institutionNavigation = [
     title: "Operations & Risk",
     items: [
       { title: "Staff Management", path: "/fi-portal/staff", icon: Users, sectionKey: "staff" },
+      { title: "Staff Authorizations", path: "/fi-portal/staff-authorizations", icon: UserCog, sectionKey: "staff-authorizations" },
+      { title: "Withdrawal Policies", path: "/fi-portal/withdrawal-policies", icon: Shield, sectionKey: "withdrawal-policies" },
+      { title: "Approval Queue", path: "/fi-portal/approvals", icon: ClipboardList, sectionKey: "approvals" },
+      { title: "Overdraft Management", path: "/fi-portal/overdraft", icon: TrendingUp, sectionKey: "overdraft" },
       { title: "Incidents", path: "/fi-portal/incidents", icon: ShieldAlert, sectionKey: "incidents" },
       { title: "Alerts", path: "/fi-portal/alerts", icon: Bell, sectionKey: "alerts" },
     ]
@@ -101,10 +105,10 @@ export const institutionNavigation = [
 ];
 
 export const ROLE_TEMPLATES = {
-  teller: { label: 'Teller', sections: ['dashboard', 'accounts', 'transactions', 'customers', 'payments'] },
-  branch_manager: { label: 'Branch Manager', sections: ['dashboard', 'accounts', 'customer-onboarding', 'branches', 'loans', 'savings', 'customers', 'transactions', 'payments', 'staff', 'incidents'] },
+  teller: { label: 'Teller', sections: ['dashboard', 'accounts', 'transactions', 'customers', 'payments', 'approvals'] },
+  branch_manager: { label: 'Branch Manager', sections: ['dashboard', 'accounts', 'customer-onboarding', 'branches', 'loans', 'savings', 'customers', 'transactions', 'payments', 'staff', 'staff-authorizations', 'withdrawal-policies', 'approvals', 'overdraft', 'incidents'] },
   compliance_officer: { label: 'Compliance Officer', sections: ['dashboard', 'regulatory', 'audit', 'compliance', 'incidents', 'customers', 'consents'] },
-  loan_officer: { label: 'Loan Officer', sections: ['dashboard', 'loans', 'customers', 'accounts', 'ledger'] },
+  loan_officer: { label: 'Loan Officer', sections: ['dashboard', 'loans', 'customers', 'accounts', 'ledger', 'overdraft'] },
   it_api_manager: { label: 'IT / API Manager', sections: ['dashboard', 'api-clients', 'webhooks', 'credit-api', 'woocommerce', 'settings'] },
 };
 
@@ -125,6 +129,10 @@ export const ALL_PORTAL_SECTIONS = [
   { key: 'billing', label: 'Billing' },
   { key: 'exchange-rates', label: 'Exchange Rates' },
   { key: 'staff', label: 'Staff Management' },
+  { key: 'staff-authorizations', label: 'Staff Authorizations' },
+  { key: 'withdrawal-policies', label: 'Withdrawal Policies' },
+  { key: 'approvals', label: 'Approval Queue' },
+  { key: 'overdraft', label: 'Overdraft Management' },
   { key: 'incidents', label: 'Incidents' },
   { key: 'alerts', label: 'Alerts' },
   { key: 'api-clients', label: 'API Clients' },
