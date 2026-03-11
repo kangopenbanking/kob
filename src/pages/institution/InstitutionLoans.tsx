@@ -62,6 +62,9 @@ export default function InstitutionLoans() {
   // Create pre-approved offer dialog
   const [showCreateOffer, setShowCreateOffer] = useState(false);
   const [creatingOffer, setCreatingOffer] = useState(false);
+  const [actingOnApp, setActingOnApp] = useState(false);
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [declineReasonInput, setDeclineReasonInput] = useState("");
   const [newOffer, setNewOffer] = useState({
     product_name: "", description: "", min_credit_score: 650, max_credit_score: 850,
     min_amount: "100000", max_amount: "5000000", interest_rate_annual: "15",
