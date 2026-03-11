@@ -22,7 +22,7 @@ interface CustomerSummary {
 }
 
 const BusinessCustomers: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const [search, setSearch] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerSummary | null>(null);
 

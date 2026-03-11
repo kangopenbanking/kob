@@ -18,7 +18,7 @@ import {
 } from '@/components/ui/select';
 
 const BusinessCoupons: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const queryClient = useQueryClient();
   const [showCreate, setShowCreate] = useState(false);
   const [code, setCode] = useState('');

@@ -86,7 +86,7 @@ const BusinessQuickOrder: React.FC = () => {
     onError: (e: any) => toast.error(e.message),
   });
 
-  const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
+  const basePath = '/biz';
 
   return (
     <div className="flex min-h-screen flex-col bg-background p-4">

@@ -16,6 +16,7 @@ type Tab = 'qr' | 'links';
 
 const BusinessReceive: React.FC = () => {
   const { merchantId } = useMerchantContext();
+  const { merchant } = useBusinessData(merchantId);
 
   const [activeTab, setActiveTab] = useState<Tab>('qr');
 

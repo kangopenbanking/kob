@@ -25,7 +25,7 @@ import { useMerchantContext } from '@/hooks/useMerchantContext';
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { minimumFractionDigits: 0 }).format(n);
 
 const BusinessTill: React.FC = () => {
-  const { merchantId: paramMerchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId: paramMerchantId } = useMerchantContext();
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('till');

@@ -19,7 +19,7 @@ const StarRating: React.FC<{ rating: number }> = ({ rating }) => (
 );
 
 const BusinessReviews: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const queryClient = useQueryClient();
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyText, setReplyText] = useState('');
