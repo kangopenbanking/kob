@@ -8,14 +8,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL')!,
-      Deno.env.get('SUPABASE_ANON_KEY')!,
-      { global: { headers: { Authorization: req.headers.get('Authorization')! } } }
-    );
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-    // Verify user is admin
-    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    // Extract and validate token
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const adminSupabase = createClient(supabaseUrl, serviceRoleKey);
+
+    const { data: { user }, error: authError } = await adminSupabase.auth.getUser(token);
     if (authError || !user) {
       return new Response(
         JSON.stringify({ error: 'Unauthorized' }),
@@ -23,7 +31,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: hasAdminRole } = await supabase.rpc('has_role', {
+    // Verify user is admin
+    const { data: hasAdminRole } = await adminSupabase.rpc('has_role', {
       _user_id: user.id,
       _role: 'admin'
     });
@@ -47,11 +56,6 @@ Deno.serve(async (req) => {
       // Generate unique account ID
       const account_id = `SAND${Date.now()}${Math.random().toString(36).substr(2, 9).toUpperCase()}`;
       const identification_value = `237${Math.floor(Math.random() * 900000000 + 100000000)}`;
-
-      const adminSupabase = createClient(
-        Deno.env.get('SUPABASE_URL')!,
-        Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
-      );
 
       const { data: account, error } = await adminSupabase
         .from('sandbox_accounts')
@@ -83,7 +87,7 @@ Deno.serve(async (req) => {
     }
 
     // GET - List sandbox accounts
-    const { data: accounts, error } = await supabase
+    const { data: accounts, error } = await adminSupabase
       .from('sandbox_accounts')
       .select('*')
       .order('created_at', { ascending: false });
