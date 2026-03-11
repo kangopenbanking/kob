@@ -105,10 +105,10 @@ export const institutionNavigation = [
 ];
 
 export const ROLE_TEMPLATES = {
-  teller: { label: 'Teller', sections: ['dashboard', 'accounts', 'transactions', 'customers', 'payments'] },
-  branch_manager: { label: 'Branch Manager', sections: ['dashboard', 'accounts', 'customer-onboarding', 'branches', 'loans', 'savings', 'customers', 'transactions', 'payments', 'staff', 'incidents'] },
+  teller: { label: 'Teller', sections: ['dashboard', 'accounts', 'transactions', 'customers', 'payments', 'approvals'] },
+  branch_manager: { label: 'Branch Manager', sections: ['dashboard', 'accounts', 'customer-onboarding', 'branches', 'loans', 'savings', 'customers', 'transactions', 'payments', 'staff', 'staff-authorizations', 'withdrawal-policies', 'approvals', 'overdraft', 'incidents'] },
   compliance_officer: { label: 'Compliance Officer', sections: ['dashboard', 'regulatory', 'audit', 'compliance', 'incidents', 'customers', 'consents'] },
-  loan_officer: { label: 'Loan Officer', sections: ['dashboard', 'loans', 'customers', 'accounts', 'ledger'] },
+  loan_officer: { label: 'Loan Officer', sections: ['dashboard', 'loans', 'customers', 'accounts', 'ledger', 'overdraft'] },
   it_api_manager: { label: 'IT / API Manager', sections: ['dashboard', 'api-clients', 'webhooks', 'credit-api', 'woocommerce', 'settings'] },
 };
 
