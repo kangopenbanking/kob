@@ -95,14 +95,22 @@ export default function InstitutionStaff() {
       if (!instId) { navigate('/register'); return; }
       setInstitutionId(instId);
 
-      const [staffRes, branchRes, authRes, policyRes] = await Promise.all([
-        supabase.from("staff_assignments").select("*, profiles(full_name, email)").eq("institution_id", instId).order("assigned_at", { ascending: false }),
+      const [staffRes, branchRes, authRes, policyRes, profilesRes] = await Promise.all([
+        supabase.from("staff_assignments").select("*").eq("institution_id", instId).order("assigned_at", { ascending: false }),
         supabase.from("branches").select("id, branch_name").eq("institution_id", instId),
         supabase.functions.invoke("banking-ops", { body: { action: "list-staff-authorizations", institution_id: instId } }),
         supabase.functions.invoke("banking-ops", { body: { action: "list-withdrawal-policies", institution_id: instId } }),
+        supabase.from("profiles").select("id, full_name, email"),
       ]);
 
-      const staffData = staffRes.data || [];
+      const profileMap: Record<string, any> = {};
+      (profilesRes.data || []).forEach((p: any) => { profileMap[p.id] = p; });
+
+      const staffData: StaffMember[] = (staffRes.data || []).map((s: any) => ({
+        ...s,
+        profile_name: profileMap[s.user_id]?.full_name || null,
+        profile_email: profileMap[s.user_id]?.email || null,
+      }));
       setStaff(staffData);
       setBranches(branchRes.data || []);
       setAuthorizations(authRes.data?.authorizations || []);
