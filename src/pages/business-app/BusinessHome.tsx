@@ -117,17 +117,21 @@ const BusinessHome: React.FC = () => {
             </button>
           </div>
           <p className="mt-3 text-[2rem] font-bold tracking-tight leading-none">
-            {formatXAF(availableBalance + pendingBalance)}
+            {walletsLoading ? <Skeleton className="h-8 w-40 bg-background/20" /> : formatXAF(availableBalance + pendingBalance)}
           </p>
           <div className="mt-4 flex items-center gap-6">
             <div>
               <p className="text-[10px] text-background/50 uppercase tracking-wider">Available</p>
-              <p className="text-sm font-semibold text-emerald-300 mt-0.5">{formatXAF(availableBalance)}</p>
+              <p className="text-sm font-semibold text-emerald-300 mt-0.5">
+                {walletsLoading ? <Skeleton className="h-4 w-20 bg-background/20" /> : formatXAF(availableBalance)}
+              </p>
             </div>
             <div className="h-6 w-px bg-background/15" />
             <div>
               <p className="text-[10px] text-background/50 uppercase tracking-wider">Pending</p>
-              <p className="text-sm font-semibold text-amber-300 mt-0.5">{formatXAF(pendingBalance)}</p>
+              <p className="text-sm font-semibold text-amber-300 mt-0.5">
+                {walletsLoading ? <Skeleton className="h-4 w-20 bg-background/20" /> : formatXAF(pendingBalance)}
+              </p>
             </div>
           </div>
         </div>
