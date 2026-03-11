@@ -1,29 +1,24 @@
 import React, { useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Store } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 const BusinessSplash: React.FC = () => {
-  const { merchantId } = useParams();
   const navigate = useNavigate();
 
   useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
-      
-      // Delay to show splash
       setTimeout(() => {
         if (session) {
-          navigate(`${basePath}/home`, { replace: true });
+          navigate('/biz/home', { replace: true });
         } else {
-          navigate(`${basePath}/auth`, { replace: true });
+          navigate('/biz/auth', { replace: true });
         }
       }, 1500);
     };
-
     checkAuth();
-  }, [merchantId, navigate]);
+  }, [navigate]);
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-primary">

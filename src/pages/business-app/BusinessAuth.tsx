@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { TenantProvider, useTenant } from '@/components/pwa/TenantProvider';
 import { MobileAuthForm } from '@/components/pwa/MobileAuthForm';
 import { StaffPinLogin } from '@/components/business-app/StaffPinLogin';
@@ -13,7 +13,6 @@ import kangLogo from '@/assets/kang-logo.png';
 type AuthMode = 'select' | 'owner' | 'staff';
 
 const BusinessAuthInner: React.FC = () => {
-  const { merchantId } = useParams();
   const navigate = useNavigate();
   const tenant = useTenant();
   const [checkingRole, setCheckingRole] = useState(false);
@@ -42,8 +41,7 @@ const BusinessAuthInner: React.FC = () => {
         return;
       }
 
-      const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
-      navigate(`${basePath}/home`, { replace: true });
+      navigate('/biz/home', { replace: true });
     } catch (error) {
       toast.error('Authentication error');
       setCheckingRole(false);
@@ -119,7 +117,7 @@ const BusinessAuthInner: React.FC = () => {
 
           <p className="mt-6 text-center text-xs text-muted-foreground">
             Don't have an account?{' '}
-            <button onClick={() => navigate('/merchant-register')} className="font-medium text-primary hover:underline">
+            <button onClick={() => navigate('/biz/register')} className="font-medium text-primary hover:underline">
               Register your business
             </button>
           </p>
@@ -167,7 +165,7 @@ const BusinessAuthInner: React.FC = () => {
   return (
     <MobileAuthForm
       onAuthSuccess={handleAuthSuccess}
-      onApplyAccount={() => navigate('/merchant-register')}
+      onApplyAccount={() => navigate('/biz/register')}
     />
   );
 };
