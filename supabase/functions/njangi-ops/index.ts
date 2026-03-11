@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendManagedEmail, getUserName } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -65,6 +66,25 @@ async function handleJoin(req: Request, body: any) {
 
   const { data: member, error: memberErr } = await supabase.from('njangi_members').insert({ group_id, user_id: user.id, status: 'active' }).select().single();
   if (memberErr) throw memberErr;
+
+  // ✉️ Notify group creator about new member
+  const { data: groupData } = await supabase.from('njangi_groups').select('creator_id, name, max_members').eq('id', group_id).single();
+  if (groupData) {
+    const newMemberName = await getUserName(supabase, user.id);
+    const creatorName = await getUserName(supabase, groupData.creator_id);
+    sendManagedEmail(supabase, {
+      email_key: 'njangi_member_joined',
+      recipient_user_id: groupData.creator_id,
+      variables: {
+        creator_name: creatorName,
+        member_name: newMemberName,
+        group_name: groupData.name,
+        member_count: (memberCount + 1).toString(),
+        max_members: groupData.max_members.toString(),
+      },
+    });
+  }
+
   return new Response(JSON.stringify({ member }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
@@ -99,6 +119,21 @@ async function handleContribute(req: Request, body: any) {
 
   const daysLate = isLate ? Math.floor((now.getTime() - dueDate.getTime()) / 86400000) : 0;
   await supabase.from('credit_events').insert({ user_id: user.id, event_type: eventType, value_numeric: isLate ? daysLate : group.contribution_amount, description: `Njangi contribution ${isLate ? `(late by ${daysLate} days)` : '(on-time)'} - ${group.name} cycle ${group.current_cycle}`, event_time: now.toISOString(), metadata: { group_id, cycle_number: group.current_cycle, amount: group.contribution_amount, late_interest: lateInterest, days_late: daysLate }, source: 'njangi_service' });
+
+  // ✉️ Email member: contribution confirmed
+  const contribMemberName = await getUserName(supabase, user.id);
+  sendManagedEmail(supabase, {
+    email_key: 'njangi_contribution_confirmed',
+    recipient_user_id: user.id,
+    variables: {
+      member_name: contribMemberName,
+      group_name: group.name,
+      currency: 'XAF',
+      amount: new Intl.NumberFormat('fr-CM').format(group.contribution_amount),
+      cycle_number: group.current_cycle,
+      late_notice: isLate ? `⚠️ This contribution was ${daysLate} day(s) late. Late interest: XAF ${new Intl.NumberFormat('fr-CM').format(lateInterest)}` : '',
+    },
+  });
 
   let scoreResult = null;
   try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
@@ -146,6 +181,23 @@ async function handlePayout(req: Request, body: any) {
   await supabase.from('njangi_groups').update({ current_cycle: group.current_cycle + 1 }).eq('id', group_id);
 
   const recipient = (members || []).find(m => m.id === selectedMemberId);
+
+  // ✉️ Email payout recipient
+  if (recipient?.user_id) {
+    const payoutMemberName = await getUserName(supabase, recipient.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'njangi_payout_received',
+      recipient_user_id: recipient.user_id,
+      variables: {
+        member_name: payoutMemberName,
+        group_name: group.name,
+        currency: 'XAF',
+        amount: new Intl.NumberFormat('fr-CM').format(totalAmount),
+        cycle_number: group.current_cycle,
+      },
+    });
+  }
+
   return new Response(JSON.stringify({ payout, recipient_user_id: recipient?.user_id, total_amount: totalAmount, next_cycle: group.current_cycle + 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
@@ -164,6 +216,21 @@ async function handleOverdueDetect(req: Request) {
     await supabase.from('njangi_contributions').update({ status: 'missed' }).eq('id', contrib.id);
     await supabase.from('credit_events').insert({ user_id: contrib.user_id, event_type: 'NJANGI_CONTRIBUTION_MISSED', value_numeric: contrib.amount, description: `Missed njangi contribution - ${contrib.njangi_groups?.name || 'Unknown'} cycle ${contrib.cycle_number}`, event_time: new Date().toISOString() });
     try { await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: contrib.user_id } }); } catch (e) { console.error('Score recompute failed:', e); }
+
+    // ✉️ Email member: missed contribution
+    const missedMemberName = await getUserName(supabase, contrib.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'njangi_contribution_missed',
+      recipient_user_id: contrib.user_id,
+      variables: {
+        member_name: missedMemberName,
+        group_name: contrib.njangi_groups?.name || 'Njangi Group',
+        currency: 'XAF',
+        amount: new Intl.NumberFormat('fr-CM').format(contrib.amount),
+        cycle_number: contrib.cycle_number,
+      },
+    });
+
     processed++;
   }
 

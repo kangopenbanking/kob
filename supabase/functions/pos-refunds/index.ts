@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -176,6 +177,30 @@ Deno.serve(async (req) => {
           } catch (wooErr) {
             console.error('Failed to sync refund to WooCommerce:', wooErr);
           }
+        }
+      }
+
+      // ✉️ Email consumer: POS refund receipt
+      const { data: posMerchant } = await supabase.from('gateway_merchants').select('business_name').eq('id', order.merchant_id).single();
+      const customerPayment = order.pos_order_payments?.find((p: any) => p.status === 'succeeded');
+      if (customerPayment) {
+        // Try to find consumer email from original charge
+        const { data: origCharge } = customerPayment.charge_id
+          ? await supabase.from('gateway_charges').select('customer_email, customer_name').eq('id', customerPayment.charge_id).single()
+          : { data: null };
+        if (origCharge?.customer_email) {
+          sendManagedEmail(supabase, {
+            email_key: 'pos_refund_receipt',
+            recipient_email: origCharge.customer_email,
+            variables: {
+              customer_name: origCharge.customer_name || 'Customer',
+              merchant_name: posMerchant?.business_name || 'Store',
+              order_number: order.order_number,
+              currency: order.currency,
+              amount: new Intl.NumberFormat('fr-CM').format(finalAmount),
+              reason: reason || 'Customer return',
+            },
+          });
         }
       }
 

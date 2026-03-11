@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -113,6 +114,19 @@ Deno.serve(async (req) => {
         await supabase.from('pos_order_status_history').insert({
           order_id: order.id, status: 'paid', note: 'Cash payment completed', created_by: user.id,
         });
+        // ✉️ POS order receipt for cash
+        if (customer?.email) {
+          sendManagedEmail(supabase, {
+            email_key: 'pos_order_receipt',
+            recipient_email: customer.email,
+            variables: {
+              customer_name: customer.name || 'Customer',
+              merchant_name: order.merchant_name || 'Store',
+              order_number: order.order_number, currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+              payment_method: 'Cash',
+            },
+          });
+        }
         return new Response(JSON.stringify({
           success: true, order_id: order.id, order_number: order.order_number,
           payment_id: cashPayment?.id, method: 'cash', status: 'succeeded',
@@ -250,6 +264,19 @@ Deno.serve(async (req) => {
         await supabase.from('pos_order_status_history').insert({
           order_id: order.id, status: 'paid', note: 'Wallet payment completed', created_by: user.id,
         });
+        // ✉️ POS order receipt for wallet
+        if (customer?.email) {
+          sendManagedEmail(supabase, {
+            email_key: 'pos_order_receipt',
+            recipient_email: customer.email,
+            variables: {
+              customer_name: customer.name || 'Customer',
+              merchant_name: order.merchant_name || 'Store',
+              order_number: order.order_number, currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+              payment_method: 'Wallet',
+            },
+          });
+        }
         return new Response(JSON.stringify({
           success: true, order_id: order.id, order_number: order.order_number,
           payment_id: walletPayment?.id, method: 'wallet', status: 'succeeded',

@@ -4,6 +4,7 @@ import { createFlutterwaveCharge, createStripeCharge, calculateGatewayFee } from
 import { recordTransactionFee } from "../_shared/record-transaction-fee.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -230,6 +231,35 @@ serve(async (req) => {
         feeBreakdown: { fee_amount: fee, net_amount: net, channel, provider },
         metadata: { charge_id: charge.id, merchant_id },
       }).catch(() => {});
+    }
+
+    // ✉️ Email merchant: payment received
+    if (charge.status === 'successful') {
+      sendManagedEmail(supabase, {
+        email_key: 'payment_received',
+        recipient_user_id: merchant.user_id,
+        variables: {
+          merchant_name: merchant.business_name,
+          business_name: merchant.business_name,
+          currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+          tx_ref, channel, customer_name: customer_name || 'Customer',
+          net_amount: new Intl.NumberFormat('fr-CM').format(net),
+        },
+      });
+
+      // ✉️ Email consumer: payment receipt
+      if (customer_email) {
+        sendManagedEmail(supabase, {
+          email_key: 'consumer_payment_receipt',
+          recipient_email: customer_email,
+          variables: {
+            customer_name: customer_name || 'Customer',
+            merchant_name: merchant.business_name,
+            currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+            tx_ref, channel,
+          },
+        });
+      }
     }
 
     return new Response(JSON.stringify(charge), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createStripeRefund, createFlutterwavePayout } from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -106,6 +107,36 @@ serve(async (req) => {
       action_type: 'gateway_refund_created', entity_type: 'gateway_refund', entity_id: refund.id,
       performed_by: user.id, details: { charge_id, merchant_id: charge.merchant_id, amount: refundAmount, currency: charge.currency, status: refund.status, reason },
     }).then(() => {}).catch(() => {});
+
+    // ✉️ Email merchant: refund processed
+    const { data: refundMerchant } = await supabase.from('gateway_merchants').select('business_name, user_id').eq('id', charge.merchant_id).single();
+    if (refundMerchant) {
+      sendManagedEmail(supabase, {
+        email_key: 'refund_processed',
+        recipient_user_id: refundMerchant.user_id,
+        variables: {
+          merchant_name: refundMerchant.business_name,
+          currency: charge.currency,
+          amount: new Intl.NumberFormat('fr-CM').format(refundAmount),
+          tx_ref: charge.tx_ref, reason: reason || 'N/A', status: refund.status,
+        },
+      });
+    }
+
+    // ✉️ Email consumer: refund notification
+    if (charge.customer_email) {
+      sendManagedEmail(supabase, {
+        email_key: 'consumer_refund_notification',
+        recipient_email: charge.customer_email,
+        variables: {
+          customer_name: charge.customer_name || 'Customer',
+          merchant_name: refundMerchant?.business_name || 'Merchant',
+          currency: charge.currency,
+          amount: new Intl.NumberFormat('fr-CM').format(refundAmount),
+          tx_ref: charge.tx_ref, reason: reason || 'N/A',
+        },
+      });
+    }
 
     return new Response(JSON.stringify(refund), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createFlutterwavePayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -89,6 +90,36 @@ serve(async (req) => {
       action_type: 'gateway_payout_created', entity_type: 'gateway_payout', entity_id: payout.id,
       performed_by: user.id, details: { merchant_id, amount, channel, status: payout.status, tx_ref },
     }).then(() => {}).catch(() => {});
+
+    // ✉️ Email merchant: payout initiated or failed
+    const payoutEmailKey = payout.status === 'failed' ? 'payout_failed' : 'payout_initiated';
+    sendManagedEmail(supabase, {
+      email_key: payoutEmailKey,
+      recipient_user_id: merchant.user_id,
+      variables: {
+        merchant_name: merchant.business_name,
+        currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+        channel, beneficiary_name: beneficiary_name || 'N/A',
+        tx_ref, fee: new Intl.NumberFormat('fr-CM').format(fee),
+        failure_reason: payout.failure_reason || 'N/A',
+      },
+    });
+
+    // ✉️ Admin alert for high-value payouts (>= 5M XAF)
+    if (amount >= 5000000) {
+      const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+      for (const admin of (admins || [])) {
+        sendManagedEmail(supabase, {
+          email_key: 'high_value_payout_alert',
+          recipient_user_id: admin.user_id,
+          variables: {
+            merchant_name: merchant.business_name,
+            currency, amount: new Intl.NumberFormat('fr-CM').format(amount),
+            channel, beneficiary_name: beneficiary_name || 'N/A',
+          },
+        });
+      }
+    }
 
     return new Response(JSON.stringify(payout), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   } catch (err) {
