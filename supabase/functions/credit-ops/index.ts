@@ -25,7 +25,8 @@ Deno.serve(async (req) => {
 });
 
 function getAuthClient(req: Request) {
-  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
+  const authHeader = req.headers.get('Authorization') || '';
+  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: authHeader } } });
 }
 
 function getServiceClient() {
@@ -33,9 +34,20 @@ function getServiceClient() {
 }
 
 async function getUser(req: Request) {
-  const supabase = getAuthClient(req);
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
+  const authHeader = req.headers.get('Authorization');
+  if (!authHeader?.startsWith('Bearer ')) throw new Error('Unauthorized');
+  
+  const supabase = createClient(
+    Deno.env.get('SUPABASE_URL')!,
+    Deno.env.get('SUPABASE_ANON_KEY')!,
+    { global: { headers: { Authorization: authHeader } } }
+  );
+  
+  const token = authHeader.replace('Bearer ', '');
+  const { data, error } = await supabase.auth.getClaims(token);
+  if (error || !data?.claims) throw new Error('Unauthorized');
+  
+  const user = { id: data.claims.sub, email: data.claims.email };
   return { user, supabase };
 }
 
