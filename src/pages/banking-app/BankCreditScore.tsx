@@ -1,8 +1,10 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight, Landmark, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCreditScore } from '@/hooks/useBankingData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 function getScoreLabel(score: number): string {
   if (score >= 800) return 'Excellent';
@@ -49,12 +51,43 @@ const defaultFactors = [
 const BankCreditScore: React.FC = () => {
   const navigate = useNavigate();
   const { data: creditData, isLoading } = useCreditScore();
+  const [overdraftLoading, setOverdraftLoading] = useState(false);
+  const [overdraftResult, setOverdraftResult] = useState<any>(null);
 
   const score = creditData?.score || 0;
   const maxScore = 850;
   const percentage = score > 0 ? (score / maxScore) * 100 : 0;
   const scoreRange = creditData?.score_range || (score > 0 ? getScoreLabel(score) : '—');
   const scoreBand = creditData?.score_band;
+
+  const handleCheckOverdraft = async () => {
+    setOverdraftLoading(true);
+    try {
+      // Get user's accounts to find their primary account
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: accounts } = await supabase.from('accounts').select('id, institution_id, account_holder_name')
+        .eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle();
+
+      if (!accounts) {
+        toast.error('No active account found');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('overdraft-ops', {
+        body: { action: 'recalculate', account_id: accounts.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setOverdraftResult(data);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to check overdraft eligibility');
+    } finally {
+      setOverdraftLoading(false);
+    }
+  };
 
   // Use event-sourced factors if available, otherwise legacy
   const apiFactors = creditData?.score_factors;
@@ -231,6 +264,106 @@ const BankCreditScore: React.FC = () => {
                 ))}
               </div>
             </>
+          )}
+
+          {/* Overdraft Eligibility Section */}
+          {score > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6"
+            >
+              <h3 className="mb-3 text-base font-bold text-foreground">Overdraft Eligibility</h3>
+              {!overdraftResult ? (
+                <button
+                  onClick={handleCheckOverdraft}
+                  disabled={overdraftLoading}
+                  className="flex w-full items-center justify-between rounded-2xl bg-[hsl(var(--bank-sky))] p-5 transition-transform active:scale-[0.98]"
+                >
+                  <div className="flex items-center gap-3">
+                    {overdraftLoading ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-white" />
+                    ) : (
+                      <Landmark className="h-5 w-5 text-white" strokeWidth={2} />
+                    )}
+                    <div className="text-left">
+                      <p className="text-sm font-bold text-white">
+                        {overdraftLoading ? 'Analyzing your profile...' : 'Check Overdraft Eligibility'}
+                      </p>
+                      <p className="text-xs text-white/70">
+                        Based on your credit score and banking activity
+                      </p>
+                    </div>
+                  </div>
+                  {!overdraftLoading && <ChevronRight className="h-5 w-5 text-white/60" />}
+                </button>
+              ) : (
+                <div className="rounded-2xl bg-muted p-5 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-muted-foreground">Eligibility</span>
+                    <span className={`text-sm font-bold ${overdraftResult.overdraft_profile?.eligible ? 'text-[hsl(var(--bank-mint))]' : 'text-[hsl(var(--bank-coral))]'}`}>
+                      {overdraftResult.overdraft_profile?.eligible ? 'Eligible' : 'Not Eligible'}
+                    </span>
+                  </div>
+                  {overdraftResult.overdraft_profile?.eligible && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">Risk Band</span>
+                        <span className="text-sm font-bold text-foreground">
+                          {overdraftResult.overdraft_profile?.risk_band || overdraftResult.score_factors?.factor_summary?.risk_band || '—'}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">Recommended Limit</span>
+                        <span className="text-sm font-bold text-foreground">
+                          {overdraftResult.overdraft_profile?.recommended_limit?.toLocaleString() || '—'} XAF
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-muted-foreground">Status</span>
+                        <span className="text-xs font-semibold rounded-full bg-primary/10 text-primary px-3 py-1">
+                          {overdraftResult.auto_approved ? 'Auto-Approved' : 'Pending Review'}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  {overdraftResult.score_factors && (
+                    <div className="pt-2 border-t border-border space-y-1.5">
+                      <p className="text-xs font-semibold text-muted-foreground">Score Breakdown ({overdraftResult.score_factors.final_score}/100)</p>
+                      {[
+                        { label: 'Salary Pattern', value: overdraftResult.score_factors.factor_summary?.salary_pattern },
+                        { label: 'Savings Health', value: overdraftResult.score_factors.factor_summary?.savings_health },
+                        { label: 'Balance Stability', value: overdraftResult.score_factors.factor_summary?.balance_stability },
+                        { label: 'Account Tenure', value: overdraftResult.score_factors.factor_summary?.account_tenure },
+                        { label: 'Transaction Activity', value: overdraftResult.score_factors.factor_summary?.transaction_activity },
+                        { label: 'Repayment History', value: overdraftResult.score_factors.factor_summary?.repayment_history },
+                        { label: 'Credit Profile', value: overdraftResult.score_factors.factor_summary?.credit_profile },
+                      ].map((f) => (
+                        <div key={f.label} className="flex items-center justify-between text-xs">
+                          <span className="text-muted-foreground">{f.label}</span>
+                          <span className={`font-medium capitalize ${
+                            f.value === 'strong' || f.value === 'excellent' || f.value === 'high' || f.value === 'established'
+                              ? 'text-[hsl(var(--bank-mint))]'
+                              : f.value === 'weak' || f.value === 'limited' || f.value === 'low' || f.value === 'new'
+                              ? 'text-[hsl(var(--bank-coral))]'
+                              : 'text-[hsl(var(--bank-amber))]'
+                          }`}>
+                            {f.value || '—'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <button
+                    onClick={() => setOverdraftResult(null)}
+                    className="w-full text-center text-xs font-medium text-muted-foreground hover:text-foreground pt-1"
+                  >
+                    Check again
+                  </button>
+                </div>
+              )}
+            </motion.div>
           )}
         </>
       )}

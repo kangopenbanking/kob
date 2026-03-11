@@ -38,6 +38,16 @@ export const SavingsTransactionForm = ({ savingsAccount, type, onSuccess, onCanc
         throw new Error(data.error);
       }
 
+      // Handle approval-required response from withdrawal policy engine
+      if (data?.requires_approval) {
+        toast({
+          title: "Approval Required",
+          description: data.message || "This withdrawal requires manager approval before processing.",
+        });
+        onSuccess();
+        return;
+      }
+
       toast({
         title: "Success",
         description: `${type === 'deposit' ? 'Deposit' : 'Withdrawal'} processed successfully`,

@@ -135,3 +135,120 @@ Deno.test("generate-bank-statement: rejects unauthenticated requests", async () 
   assertEquals(status >= 400, true);
   assertExists(data.error || data.raw);
 });
+
+// ═══════════════════════════════════════════════════════════════════
+// BANKING OPS & OVERDRAFT ENGINE TESTS
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── Test: banking-ops requires action parameter ───
+Deno.test("banking-ops: rejects missing action", async () => {
+  const { status, data } = await invoke("banking-ops", {});
+  assertEquals(status, 400);
+  assertEquals(data.error, "action parameter required");
+});
+
+// ─── Test: banking-ops rejects unauthenticated policy list ───
+Deno.test("banking-ops: list-withdrawal-policies requires auth", async () => {
+  const { status } = await invoke("banking-ops", {
+    action: "list-withdrawal-policies",
+    institution_id: "00000000-0000-0000-0000-000000000000",
+  });
+  assertEquals(status >= 400, true);
+});
+
+// ─── Test: banking-ops rejects unauthenticated approval ───
+Deno.test("banking-ops: approve action requires auth", async () => {
+  const { status } = await invoke("banking-ops", {
+    action: "approve",
+    approval_id: "fake-id",
+  });
+  assertEquals(status >= 400, true);
+});
+
+// ─── Test: banking-ops rejects unauthenticated role assignment ───
+Deno.test("banking-ops: assign-operational-role requires auth", async () => {
+  const { status } = await invoke("banking-ops", {
+    action: "assign-operational-role",
+    institution_id: "fake",
+    user_id: "fake",
+    role_type: "teller",
+  });
+  assertEquals(status >= 400, true);
+});
+
+// ─── Test: banking-ops rejects unknown action ───
+Deno.test("banking-ops: rejects unknown action", async () => {
+  const { status, data } = await invoke("banking-ops", {
+    action: "nonexistent-action",
+  });
+  assertEquals(status, 400);
+  assertExists(data.error);
+});
+
+// ─── Test: overdraft-ops requires action parameter ───
+Deno.test("overdraft-ops: rejects missing action", async () => {
+  const { status, data } = await invoke("overdraft-ops", {});
+  assertEquals(status, 400);
+  assertEquals(data.error, "action parameter required");
+});
+
+// ─── Test: overdraft-ops get-profile requires auth ───
+Deno.test("overdraft-ops: get-profile requires auth", async () => {
+  const { status } = await invoke("overdraft-ops", {
+    action: "get-profile",
+    account_id: "00000000-0000-0000-0000-000000000000",
+  });
+  assertEquals(status >= 400, true);
+});
+
+// ─── Test: overdraft-ops recalculate requires auth ───
+Deno.test("overdraft-ops: recalculate requires auth", async () => {
+  const { status } = await invoke("overdraft-ops", {
+    action: "recalculate",
+    account_id: "00000000-0000-0000-0000-000000000000",
+  });
+  assertEquals(status >= 400, true);
+});
+
+// ─── Test: overdraft-ops approve requires auth ───
+Deno.test("overdraft-ops: approve requires auth", async () => {
+  const { status } = await invoke("overdraft-ops", {
+    action: "approve",
+    account_id: "fake",
+    approved_limit: 100000,
+  });
+  assertEquals(status >= 400, true);
+});
+
+// ─── Test: overdraft-ops unknown action ───
+Deno.test("overdraft-ops: rejects unknown action", async () => {
+  const { status, data } = await invoke("overdraft-ops", {
+    action: "nonexistent",
+  });
+  assertEquals(status, 400);
+  assertExists(data.error);
+});
+
+// ─── Test: teller-transaction still works (regression) ───
+Deno.test("teller-transaction: rejects unauthenticated requests", async () => {
+  const { status, data } = await invoke("teller-transaction", {
+    account_id: "fake",
+    amount: 100,
+    operation: "deposit",
+    institution_id: "fake",
+  });
+  assertEquals(status, 401);
+  assertExists(data.error);
+});
+
+// ─── Test: gateway-withdraw-to-bank still works (regression) ───
+Deno.test("gateway-withdraw-to-bank: rejects unauthenticated requests", async () => {
+  const { status, data } = await invoke("gateway-withdraw-to-bank", {
+    amount: 1000,
+    account_id: "fake",
+    account_number: "1234567890",
+    beneficiary_name: "Test",
+  });
+  assertEquals(status, 401);
+  assertExists(data.error);
+});

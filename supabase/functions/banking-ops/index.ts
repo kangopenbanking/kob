@@ -1,6 +1,5 @@
 // Consolidated router for banking operations: withdrawal-policies, staff-authorizations, withdrawal-requests, approvals
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { validateUserRole, errorResponse } from '../_shared/role-middleware.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
@@ -49,8 +48,15 @@ Deno.serve(async (req) => {
       default: return error(400, `Unknown action: ${action}`);
     }
   } catch (err: any) {
+    const msg = err.message || 'internal_error';
+    if (msg.includes('authorization') || msg.includes('Unauthorized')) {
+      return error(401, msg);
+    }
+    if (msg.includes('Insufficient permissions')) {
+      return error(403, msg);
+    }
     console.error('banking-ops error:', err);
-    return error(500, err.message || 'internal_error');
+    return error(500, 'internal_error');
   }
 });
 
