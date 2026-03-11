@@ -15,6 +15,7 @@ Deno.serve(async (req) => {
       case 'recompute': return await handleRecompute(req);
       case 'preapproved-offers': return await handlePreapprovedOffers(req, body);
       case 'apply-preapproved': return await handleApplyPreapproved(req, body);
+      case 'review-application': return await handleReviewApplication(req, body);
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
