@@ -48,6 +48,10 @@ export const institutionNavigation = [
     title: "Operations & Risk",
     items: [
       { title: "Staff Management", path: "/fi-portal/staff", icon: Users, sectionKey: "staff" },
+      { title: "Staff Authorizations", path: "/fi-portal/staff-authorizations", icon: UserCog, sectionKey: "staff-authorizations" },
+      { title: "Withdrawal Policies", path: "/fi-portal/withdrawal-policies", icon: Shield, sectionKey: "withdrawal-policies" },
+      { title: "Approval Queue", path: "/fi-portal/approvals", icon: ClipboardList, sectionKey: "approvals" },
+      { title: "Overdraft Management", path: "/fi-portal/overdraft", icon: TrendingUp, sectionKey: "overdraft" },
       { title: "Incidents", path: "/fi-portal/incidents", icon: ShieldAlert, sectionKey: "incidents" },
       { title: "Alerts", path: "/fi-portal/alerts", icon: Bell, sectionKey: "alerts" },
     ]
