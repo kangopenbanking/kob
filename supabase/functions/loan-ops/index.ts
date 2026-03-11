@@ -344,6 +344,16 @@ async function handleDisburse(req: Request, body: any, bodyText: string) {
   await supabase.from('loan_accounts').update({ status: 'disbursed', amount_disbursed: loan.principal_amount, disbursed_at: now }).eq('id', loan_account_id);
   await supabase.from('loan_events').insert({ loan_id: loan_account_id, event_type: 'disbursed', performed_by: roleResult.userId!, metadata: { amount: Number(loan.principal_amount), journal_entry_id: journalEntry.id, disbursement_method: disbursement_method || 'bank_transfer', notes } });
 
+  // ✉️ Email customer: loan disbursed
+  const disbCustomerName = await getUserName(supabase, loan.user_id);
+  const { data: disbSchedule } = await supabase.from('loan_schedule').select('due_date, total_amount').eq('loan_id', loan_account_id).order('installment_number', { ascending: true }).limit(1).maybeSingle();
+  sendManagedEmail(supabase, {
+    email_key: 'loan_disbursement_confirmed',
+    recipient_user_id: loan.user_id,
+    institution_id: loan.institution_id || undefined,
+    variables: { customer_name: disbCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(Number(loan.principal_amount)), loan_account_number: loan.loan_account_number, first_due_date: disbSchedule?.due_date || 'TBD', monthly_payment: disbSchedule ? new Intl.NumberFormat('fr-CM').format(Number(disbSchedule.total_amount)) : 'N/A' },
+  });
+
   const responseBody = { data: { loan_account_id, status: 'disbursed', amount_disbursed: Number(loan.principal_amount), journal_entry_id: journalEntry.id, disbursed_at: now } };
   await supabase.from('idempotency_keys').insert({ idempotency_key: idempotencyKey, client_id: roleResult.userId!, endpoint: 'loan-disburse', payload_hash: payloadHash, response_status: 200, response_body: responseBody, expires_at: new Date(Date.now() + 86400000).toISOString() });
 
