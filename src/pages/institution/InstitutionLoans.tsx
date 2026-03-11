@@ -62,6 +62,9 @@ export default function InstitutionLoans() {
   // Create pre-approved offer dialog
   const [showCreateOffer, setShowCreateOffer] = useState(false);
   const [creatingOffer, setCreatingOffer] = useState(false);
+  const [actingOnApp, setActingOnApp] = useState(false);
+  const [reviewNotes, setReviewNotes] = useState("");
+  const [declineReasonInput, setDeclineReasonInput] = useState("");
   const [newOffer, setNewOffer] = useState({
     product_name: "", description: "", min_credit_score: 650, max_credit_score: 850,
     min_amount: "100000", max_amount: "5000000", interest_rate_annual: "15",
@@ -201,6 +204,25 @@ export default function InstitutionLoans() {
   };
 
   const handleUpdateMarketplaceApp = async (appId: string, newStatus: string, declineReason?: string) => {
+    // For approve/decline after hard check, use the edge function for notifications
+    if ((newStatus === 'approved' || newStatus === 'declined') && selectedMarketplaceApp?.status === 'hard_check_initiated') {
+      setActingOnApp(true);
+      const { data, error } = await supabase.functions.invoke('credit-ops', {
+        body: { action: 'review-application', application_id: appId, decision: newStatus, decline_reason: declineReason || undefined, review_notes: reviewNotes || undefined },
+      });
+      setActingOnApp(false);
+      if (error || data?.error) {
+        toast.error(data?.error || 'Failed to submit decision');
+        return;
+      }
+      toast.success(`Application ${newStatus}. Customer notified via push & email.`);
+      setSelectedMarketplaceApp(null);
+      setReviewNotes('');
+      setDeclineReasonInput('');
+      loadData();
+      return;
+    }
+
     const updateData: any = { status: newStatus, updated_at: new Date().toISOString() };
     if (declineReason) updateData.decline_reason = declineReason;
     if (newStatus === 'declined') updateData.score_impact = -5;
@@ -208,6 +230,8 @@ export default function InstitutionLoans() {
     if (error) { toast.error("Failed to update application"); return; }
     toast.success(`Application ${newStatus}`);
     setSelectedMarketplaceApp(null);
+    setReviewNotes('');
+    setDeclineReasonInput('');
     loadData();
   };
 
@@ -815,11 +839,38 @@ export default function InstitutionLoans() {
               </div>
 
               {selectedMarketplaceApp.hard_inquiry_id && (
-                <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
-                  <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-semibold text-red-800 dark:text-red-300">Hard Credit Check Logged</p>
-                    <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">A hard inquiry was recorded on the customer's credit profile when they applied.</p>
+                <div className="rounded-xl border border-red-200 dark:border-red-800 overflow-hidden">
+                  <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-950/20">
+                    <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-semibold text-red-800 dark:text-red-300">Hard Credit Check Logged</p>
+                      <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">A hard inquiry was recorded on the customer's credit profile (−5 pts impact).</p>
+                    </div>
+                  </div>
+                  {/* Checks completed breakdown */}
+                  <div className="px-3 py-2 space-y-1.5 bg-background">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Checks Completed</p>
+                    {[
+                      { label: 'Identity Verification (KYC)', done: true },
+                      { label: 'Credit Score Assessment', done: true, detail: `Score: ${selectedMarketplaceApp.credit_score_at_application || '—'}` },
+                      { label: 'Debt-to-Income Ratio', done: selectedMarketplaceApp.status !== 'pending_review', detail: selectedMarketplaceApp.status !== 'pending_review' ? 'Within acceptable range' : 'Pending' },
+                      { label: 'Existing Loan Obligations', done: selectedMarketplaceApp.status !== 'pending_review', detail: selectedMarketplaceApp.status !== 'pending_review' ? 'Reviewed' : 'Pending' },
+                      { label: 'Account History Review', done: selectedMarketplaceApp.has_existing_account, detail: selectedMarketplaceApp.has_existing_account ? 'Existing customer' : 'No prior history' },
+                      { label: 'Fraud & AML Screening', done: selectedMarketplaceApp.status !== 'pending_review' },
+                      { label: 'Affordability Assessment', done: ['approved', 'declined'].includes(selectedMarketplaceApp.status), detail: selectedMarketplaceApp.status === 'approved' ? 'Passed' : selectedMarketplaceApp.status === 'declined' ? 'Failed' : 'Pending' },
+                    ].map(check => (
+                      <div key={check.label} className="flex items-center gap-2 py-1 border-b border-border/20 last:border-0">
+                        {check.done ? (
+                          <CheckCircle className="h-3.5 w-3.5 text-fi-green shrink-0" />
+                        ) : (
+                          <Clock className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-xs ${check.done ? 'text-foreground' : 'text-muted-foreground'}`}>{check.label}</p>
+                          {check.detail && <p className="text-[10px] text-muted-foreground">{check.detail}</p>}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -836,7 +887,7 @@ export default function InstitutionLoans() {
 
               {[
                 { label: "Application ID", value: selectedMarketplaceApp.id.slice(0, 12) + '...' },
-                { label: "Status", value: selectedMarketplaceApp.status.replace('_', ' ') },
+                { label: "Status", value: selectedMarketplaceApp.status.replace(/_/g, ' ') },
                 { label: "Existing Account", value: selectedMarketplaceApp.has_existing_account ? 'Yes' : 'No' },
                 { label: "Applied", value: selectedMarketplaceApp.created_at ? format(new Date(selectedMarketplaceApp.created_at), 'PPp') : '—' },
               ].map(f => (
@@ -853,6 +904,22 @@ export default function InstitutionLoans() {
                 </div>
               )}
 
+              {/* Decision result badge for completed applications */}
+              {['approved', 'declined'].includes(selectedMarketplaceApp.status) && (
+                <div className={`rounded-xl p-4 text-center border ${selectedMarketplaceApp.status === 'approved' ? 'bg-fi-green/5 border-fi-green/20' : 'bg-destructive/5 border-destructive/20'}`}>
+                  {selectedMarketplaceApp.status === 'approved' ? (
+                    <CheckCircle className="h-8 w-8 text-fi-green mx-auto mb-2" />
+                  ) : (
+                    <XCircle className="h-8 w-8 text-destructive mx-auto mb-2" />
+                  )}
+                  <p className={`text-sm font-bold ${selectedMarketplaceApp.status === 'approved' ? 'text-fi-green' : 'text-destructive'}`}>
+                    Application {selectedMarketplaceApp.status === 'approved' ? 'Approved' : 'Declined'}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">Customer has been notified via push notification and email.</p>
+                </div>
+              )}
+
+              {/* Actions for pending_review */}
               {selectedMarketplaceApp.status === 'pending_review' && (
                 <div className="pt-4 space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Actions</p>
@@ -867,6 +934,57 @@ export default function InstitutionLoans() {
                   <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={() => handleUpdateMarketplaceApp(selectedMarketplaceApp.id, 'hard_check_initiated')}>
                     <ShieldAlert className="h-3.5 w-3.5" />Initiate Full Credit Check
                   </Button>
+                </div>
+              )}
+
+              {/* Actions for hard_check_initiated - approve/decline after full review */}
+              {selectedMarketplaceApp.status === 'hard_check_initiated' && (
+                <div className="pt-4 space-y-3">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Final Decision</p>
+                  <p className="text-xs text-muted-foreground">All credit checks are complete. Make a final decision on this application. The customer will be notified via push notification and email.</p>
+                  
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium">Review Notes (optional)</Label>
+                    <Textarea 
+                      value={reviewNotes} 
+                      onChange={e => setReviewNotes(e.target.value)} 
+                      placeholder="Internal notes about the decision..." 
+                      className="text-sm min-h-[60px]" 
+                    />
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      className="flex-1 gap-1.5 bg-fi-green text-white hover:bg-fi-green/90" 
+                      disabled={actingOnApp}
+                      onClick={() => handleUpdateMarketplaceApp(selectedMarketplaceApp.id, 'approved')}
+                    >
+                      <CheckCircle className="h-3.5 w-3.5" />{actingOnApp ? 'Processing...' : 'Approve & Notify'}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      className="flex-1 gap-1.5" 
+                      disabled={actingOnApp}
+                      onClick={() => {
+                        const reason = declineReasonInput || 'Application did not meet lending criteria after full credit review';
+                        handleUpdateMarketplaceApp(selectedMarketplaceApp.id, 'declined', reason);
+                      }}
+                    >
+                      <XCircle className="h-3.5 w-3.5" />{actingOnApp ? 'Processing...' : 'Decline & Notify'}
+                    </Button>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-medium text-destructive">Decline Reason (if declining)</Label>
+                    <Input 
+                      value={declineReasonInput} 
+                      onChange={e => setDeclineReasonInput(e.target.value)} 
+                      placeholder="Reason for declining..." 
+                      className="text-sm h-8" 
+                    />
+                  </div>
                 </div>
               )}
             </div>
