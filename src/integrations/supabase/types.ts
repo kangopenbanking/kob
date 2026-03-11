@@ -3180,7 +3180,9 @@ export type Database = {
           purpose: string
           report_id: string | null
           report_provided: boolean | null
+          score_impact: number | null
           score_provided: number | null
+          status: string | null
           user_agent: string | null
           user_consent_given: boolean | null
           user_id: string
@@ -3198,7 +3200,9 @@ export type Database = {
           purpose: string
           report_id?: string | null
           report_provided?: boolean | null
+          score_impact?: number | null
           score_provided?: number | null
+          status?: string | null
           user_agent?: string | null
           user_consent_given?: boolean | null
           user_id: string
@@ -3216,7 +3220,9 @@ export type Database = {
           purpose?: string
           report_id?: string | null
           report_provided?: boolean | null
+          score_impact?: number | null
           score_provided?: number | null
+          status?: string | null
           user_agent?: string | null
           user_consent_given?: boolean | null
           user_id?: string
@@ -11960,6 +11966,147 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "postiq_api_usage_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preapproved_loan_applications: {
+        Row: {
+          created_at: string | null
+          credit_score_at_application: number | null
+          decline_reason: string | null
+          hard_inquiry_id: string | null
+          has_existing_account: boolean | null
+          id: string
+          institution_id: string
+          offer_id: string
+          requested_amount: number
+          requested_tenure_months: number | null
+          score_impact: number | null
+          status: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          credit_score_at_application?: number | null
+          decline_reason?: string | null
+          hard_inquiry_id?: string | null
+          has_existing_account?: boolean | null
+          id?: string
+          institution_id: string
+          offer_id: string
+          requested_amount: number
+          requested_tenure_months?: number | null
+          score_impact?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          credit_score_at_application?: number | null
+          decline_reason?: string | null
+          hard_inquiry_id?: string | null
+          has_existing_account?: boolean | null
+          id?: string
+          institution_id?: string
+          offer_id?: string
+          requested_amount?: number
+          requested_tenure_months?: number | null
+          score_impact?: number | null
+          status?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preapproved_loan_applications_hard_inquiry_id_fkey"
+            columns: ["hard_inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "credit_inquiries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preapproved_loan_applications_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "preapproved_loan_applications_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "preapproved_loan_offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      preapproved_loan_offers: {
+        Row: {
+          created_at: string | null
+          currency: string
+          description: string | null
+          effective_from: string
+          effective_to: string | null
+          id: string
+          institution_id: string
+          interest_rate_annual: number
+          is_active: boolean | null
+          max_amount: number
+          max_credit_score: number
+          max_tenure_months: number
+          min_amount: number
+          min_credit_score: number
+          product_name: string
+          requires_existing_account: boolean | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          institution_id: string
+          interest_rate_annual: number
+          is_active?: boolean | null
+          max_amount?: number
+          max_credit_score?: number
+          max_tenure_months?: number
+          min_amount?: number
+          min_credit_score: number
+          product_name: string
+          requires_existing_account?: boolean | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          description?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          id?: string
+          institution_id?: string
+          interest_rate_annual?: number
+          is_active?: boolean | null
+          max_amount?: number
+          max_credit_score?: number
+          max_tenure_months?: number
+          min_amount?: number
+          min_credit_score?: number
+          product_name?: string
+          requires_existing_account?: boolean | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "preapproved_loan_offers_institution_id_fkey"
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"

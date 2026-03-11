@@ -24,6 +24,8 @@ import QuickStats from '@/components/credit/QuickStats';
 import { PostiQVerification } from '@/components/credit/PostiQVerification';
 import PostiQFeatureShowcase from '@/components/credit/PostiQFeatureShowcase';
 import LinkedAccountsWidget from '@/components/credit/LinkedAccountsWidget';
+import PreApprovedOffersCard from '@/components/credit/PreApprovedOffersCard';
+import CreditInquiriesPanel from '@/components/credit/CreditInquiriesPanel';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -452,6 +454,12 @@ export default function CreditScore() {
             </motion.div>
             <motion.div custom={6} variants={fadeUp} initial="hidden" animate="visible">
               <CreditActivityFeed activities={activities} />
+            </motion.div>
+            <motion.div custom={7} variants={fadeUp} initial="hidden" animate="visible">
+              <PreApprovedOffersCard creditScore={score} />
+            </motion.div>
+            <motion.div custom={8} variants={fadeUp} initial="hidden" animate="visible">
+              <CreditInquiriesPanel compact />
             </motion.div>
           </div>
         </div>
