@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { validateUserRole, errorResponse } from '../_shared/role-middleware.ts';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendManagedEmail, getUserName, emailManagers } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -130,6 +131,28 @@ async function handleApply(req: Request, body: any) {
     });
   }
 
+  // ✉️ Email customer: loan application received (only when submitted)
+  if (submit && application) {
+    const serviceClient = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    const customerName = await getUserName(serviceClient, user.id);
+    sendManagedEmail(serviceClient, {
+      email_key: 'loan_application_received',
+      recipient_user_id: user.id,
+      institution_id: institution_id || undefined,
+      variables: { customer_name: customerName, application_number: applicationNumber, currency: 'XAF', requested_amount: new Intl.NumberFormat('fr-CM').format(requested_amount), tenure_months, purpose: purpose || 'Not specified' },
+    });
+
+    // ✉️ Email management: new loan application alert
+    if (institution_id) {
+      emailManagers(serviceClient, {
+        institution_id,
+        role_type: 'branch_manager',
+        email_key: 'loan_application_alert',
+        variables: { application_number: applicationNumber, customer_name: customerName, currency: 'XAF', requested_amount: new Intl.NumberFormat('fr-CM').format(requested_amount), tenure_months, credit_score: creditScore || 'N/A', auto_decision: autoDecision || 'Manual review' },
+      });
+    }
+  }
+
   return new Response(JSON.stringify({ success: true, application, message: submit ? 'Application submitted successfully' : 'Application saved as draft' }), {
     status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
@@ -228,6 +251,15 @@ async function handleApprove(req: Request, body: any) {
     }).eq('id', loanAccount.id);
   }
 
+  // ✉️ Email customer: loan approved
+  const approvedCustomerName = await getUserName(supabase, app.user_id);
+  sendManagedEmail(supabase, {
+    email_key: 'loan_approved',
+    recipient_user_id: app.user_id,
+    institution_id: app.institution_id || undefined,
+    variables: { customer_name: approvedCustomerName, currency: 'XAF', approved_amount: new Intl.NumberFormat('fr-CM').format(principal), interest_rate: rate, monthly_payment: new Intl.NumberFormat('fr-CM').format(Math.round(emi * 100) / 100), tenure_months: tenure, loan_account_number: loanAccountNumber },
+  });
+
   return new Response(JSON.stringify({ data: { loan_account: loanAccount, schedule_count: scheduleRows.length, emi: Math.round(emi * 100) / 100, total_payable: Math.round(totalPayable * 100) / 100 } }), {
     status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
@@ -311,6 +343,16 @@ async function handleDisburse(req: Request, body: any, bodyText: string) {
   const now = new Date().toISOString();
   await supabase.from('loan_accounts').update({ status: 'disbursed', amount_disbursed: loan.principal_amount, disbursed_at: now }).eq('id', loan_account_id);
   await supabase.from('loan_events').insert({ loan_id: loan_account_id, event_type: 'disbursed', performed_by: roleResult.userId!, metadata: { amount: Number(loan.principal_amount), journal_entry_id: journalEntry.id, disbursement_method: disbursement_method || 'bank_transfer', notes } });
+
+  // ✉️ Email customer: loan disbursed
+  const disbCustomerName = await getUserName(supabase, loan.user_id);
+  const { data: disbSchedule } = await supabase.from('loan_schedule').select('due_date, total_amount').eq('loan_id', loan_account_id).order('installment_number', { ascending: true }).limit(1).maybeSingle();
+  sendManagedEmail(supabase, {
+    email_key: 'loan_disbursement_confirmed',
+    recipient_user_id: loan.user_id,
+    institution_id: loan.institution_id || undefined,
+    variables: { customer_name: disbCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(Number(loan.principal_amount)), loan_account_number: loan.loan_account_number, first_due_date: disbSchedule?.due_date || 'TBD', monthly_payment: disbSchedule ? new Intl.NumberFormat('fr-CM').format(Number(disbSchedule.total_amount)) : 'N/A' },
+  });
 
   const responseBody = { data: { loan_account_id, status: 'disbursed', amount_disbursed: Number(loan.principal_amount), journal_entry_id: journalEntry.id, disbursed_at: now } };
   await supabase.from('idempotency_keys').insert({ idempotency_key: idempotencyKey, client_id: roleResult.userId!, endpoint: 'loan-disburse', payload_hash: payloadHash, response_status: 200, response_body: responseBody, expires_at: new Date(Date.now() + 86400000).toISOString() });
@@ -397,6 +439,23 @@ async function handleRepay(req: Request, body: any, bodyText: string) {
     await fetch(`${supabaseUrl}/functions/v1/credit-score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` }, body: JSON.stringify({ action: 'engine', user_id: roleResult.userId! }) });
   } catch (e) { console.error('Credit score recompute failed:', e); }
 
+  // ✉️ Email customer: loan repayment confirmed
+  const repayCustomerName = await getUserName(supabase, loan.user_id);
+  sendManagedEmail(supabase, {
+    email_key: 'loan_repayment_confirmed',
+    recipient_user_id: loan.user_id,
+    variables: { customer_name: repayCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), payment_reference: paymentRef, principal_paid: new Intl.NumberFormat('fr-CM').format(Math.round(totalPrincipal * 100) / 100), interest_paid: new Intl.NumberFormat('fr-CM').format(Math.round(totalInterest * 100) / 100), remaining_balance: new Intl.NumberFormat('fr-CM').format(Math.max(0, Math.round(newOutstanding * 100) / 100)), loan_status: isCompleted ? 'Fully Repaid' : 'Active' },
+  });
+
+  // ✉️ If loan completed, send congratulations
+  if (isCompleted) {
+    sendManagedEmail(supabase, {
+      email_key: 'loan_completed',
+      recipient_user_id: loan.user_id,
+      variables: { customer_name: repayCustomerName, loan_account_number: loan.loan_account_number, currency: 'XAF', total_paid: new Intl.NumberFormat('fr-CM').format(Math.round(newRepaid * 100) / 100) },
+    });
+  }
+
   const responseBody = { data: { payment_reference: paymentRef, amount, principal_paid: Math.round(totalPrincipal * 100) / 100, interest_paid: Math.round(totalInterest * 100) / 100, fees_paid: Math.round(totalFees * 100) / 100, remaining_balance: Math.max(0, Math.round(newOutstanding * 100) / 100), loan_status: isCompleted ? 'completed' : 'active', journal_entry_id: journalEntry.id } };
   await supabase.from('idempotency_keys').insert({ idempotency_key: idempotencyKey, client_id: roleResult.userId!, endpoint: 'loan-repay', payload_hash: payloadHash, response_status: 200, response_body: responseBody, expires_at: new Date(Date.now() + 86400000).toISOString() });
 
@@ -421,11 +480,22 @@ async function handleOverdueDetect(req: Request) {
   let processed = 0;
 
   for (const item of (overdueItems || [])) {
-    const { data: loan } = await supabase.from('loan_accounts').select('user_id, institution_id').eq('id', item.loan_id).single();
+    const { data: loan } = await supabase.from('loan_accounts').select('user_id, institution_id, loan_account_number').eq('id', item.loan_id).single();
     if (!loan) continue;
     const daysLate = Math.floor((Date.now() - new Date(item.due_date).getTime()) / 86400000);
-    await supabase.from('credit_events').insert({ user_id: loan.user_id, institution_id: loan.institution_id, event_type: 'LOAN_INSTALLMENT_MISSED', event_time: new Date().toISOString(), value_numeric: daysLate, metadata: { loan_id: item.loan_id, schedule_item_id: item.id, installment_number: item.installment_number, due_date: item.due_date, amount_due: Number(item.total_amount) - Number(item.paid_amount) }, source: 'overdue_job' });
+    const amountDue = Number(item.total_amount) - Number(item.paid_amount);
+    await supabase.from('credit_events').insert({ user_id: loan.user_id, institution_id: loan.institution_id, event_type: 'LOAN_INSTALLMENT_MISSED', event_time: new Date().toISOString(), value_numeric: daysLate, metadata: { loan_id: item.loan_id, schedule_item_id: item.id, installment_number: item.installment_number, due_date: item.due_date, amount_due: amountDue }, source: 'overdue_job' });
     await supabase.from('loan_schedule').update({ missed_event_created: true, status: 'overdue' }).eq('id', item.id);
+
+    // ✉️ Email customer: loan overdue notice
+    const overdueCustomerName = await getUserName(supabase, loan.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'loan_overdue_alert',
+      recipient_user_id: loan.user_id,
+      institution_id: loan.institution_id || undefined,
+      variables: { customer_name: overdueCustomerName, days_overdue: daysLate, currency: 'XAF', amount_due: new Intl.NumberFormat('fr-CM').format(amountDue), due_date: item.due_date, loan_account_number: loan.loan_account_number || item.loan_id.slice(0, 8), installment_number: item.installment_number },
+    });
+
     affectedUsers.add(loan.user_id);
     processed++;
   }
@@ -434,6 +504,24 @@ async function handleOverdueDetect(req: Request) {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   for (const userId of affectedUsers) {
     try { await fetch(`${supabaseUrl}/functions/v1/credit-score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` }, body: JSON.stringify({ action: 'engine', user_id: userId }) }); } catch (e) { console.error(`Score recompute failed for ${userId}:`, e); }
+  }
+
+  // ✉️ Email management: overdue batch alert
+  if (processed > 0) {
+    // Find all affected institutions
+    const institutionIds = new Set<string>();
+    for (const item of (overdueItems || [])) {
+      const { data: loan } = await supabase.from('loan_accounts').select('institution_id').eq('id', item.loan_id).maybeSingle();
+      if (loan?.institution_id) institutionIds.add(loan.institution_id);
+    }
+    for (const instId of institutionIds) {
+      emailManagers(supabase, {
+        institution_id: instId,
+        role_type: 'branch_manager',
+        email_key: 'loan_overdue_management_alert',
+        variables: { overdue_count: processed, users_affected: affectedUsers.size },
+      });
+    }
   }
 
   return new Response(JSON.stringify({ success: true, processed, users_affected: affectedUsers.size }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

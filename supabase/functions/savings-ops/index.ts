@@ -2,6 +2,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendManagedEmail, getUserName } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -97,6 +98,25 @@ async function handleDeposit(req: Request, body: any) {
   let goalReached = false;
   if (savingsAccount.target_amount && newBalance >= parseFloat(savingsAccount.target_amount)) goalReached = true;
 
+  // ✉️ Email customer: savings deposit confirmed
+  const customerName = await getUserName(serviceSupabase, user.id);
+  sendManagedEmail(serviceSupabase, {
+    email_key: 'savings_deposit_confirmed',
+    recipient_user_id: user.id,
+    institution_id: savingsAccount.institution_id || undefined,
+    variables: { customer_name: customerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), account_name: savingsAccount.account_name || 'Savings', new_balance: new Intl.NumberFormat('fr-CM').format(newBalance), reference: txRef },
+  });
+
+  // ✉️ If savings goal reached, send congratulatory email
+  if (goalReached) {
+    sendManagedEmail(serviceSupabase, {
+      email_key: 'savings_goal_reached',
+      recipient_user_id: user.id,
+      institution_id: savingsAccount.institution_id || undefined,
+      variables: { customer_name: customerName, currency: 'XAF', target_amount: new Intl.NumberFormat('fr-CM').format(savingsAccount.target_amount), account_name: savingsAccount.account_name || 'Savings', current_balance: new Intl.NumberFormat('fr-CM').format(newBalance) },
+    });
+  }
+
   return new Response(JSON.stringify({ success: true, new_balance: newBalance, goal_reached: goalReached, transaction_ref: txRef }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
@@ -138,6 +158,15 @@ async function handleWithdraw(req: Request, body: any) {
   await supabase.from('account_balances').upsert({ account_id: savingsAccount.account_id, balance_type: 'InterimAvailable', credit_debit_indicator: 'Debit', amount: remainingBalance, currency: 'XAF', balance_datetime: new Date().toISOString() });
 
   try { await serviceSupabase.from('credit_events').insert({ user_id: user.id, institution_id: savingsAccount.institution_id || null, event_type: 'SAVINGS_WITHDRAWAL', event_time: new Date().toISOString(), value_numeric: amount, metadata: { savings_account_id, balance_after: remainingBalance, transaction_ref: txRef }, source: 'savings_service' }); } catch (e) { console.error('Credit event failed:', e); }
+
+  // ✉️ Email customer: savings withdrawal confirmed
+  const wdCustomerName = await getUserName(serviceSupabase, user.id);
+  sendManagedEmail(serviceSupabase, {
+    email_key: 'savings_withdrawal_confirmed',
+    recipient_user_id: user.id,
+    institution_id: savingsAccount.institution_id || undefined,
+    variables: { customer_name: wdCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), account_name: savingsAccount.account_name || 'Savings', remaining_balance: new Intl.NumberFormat('fr-CM').format(remainingBalance), reference: txRef },
+  });
 
   return new Response(JSON.stringify({ success: true, new_balance: remainingBalance, withdrawals_remaining: (product.max_withdrawals_per_month || 999) - (withdrawalsThisMonth + 1), transaction_ref: txRef }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
