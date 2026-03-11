@@ -1,8 +1,10 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight, Landmark, ChevronRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCreditScore } from '@/hooks/useBankingData';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 function getScoreLabel(score: number): string {
   if (score >= 800) return 'Excellent';
