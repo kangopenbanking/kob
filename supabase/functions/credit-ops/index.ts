@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
 
 Deno.serve(async (req) => {
@@ -237,15 +237,17 @@ async function handleApplyPreapproved(req: Request, body: any) {
   if (appErr) throw appErr;
 
   // Log credit event for the hard check
-  await serviceClient.from('credit_events').insert({
-    user_id: user.id,
-    event_type: 'hard_inquiry',
-    event_time: new Date().toISOString(),
-    source: 'preapproved_loan',
-    description: `Hard credit check for ${offer.product_name} loan application`,
-    score_impact: -5,
-    metadata: { offer_id, application_id: application.id, institution_id: offer.institution_id },
-  }).catch(() => {});
+  try {
+    await serviceClient.from('credit_events').insert({
+      user_id: user.id,
+      event_type: 'hard_inquiry',
+      event_time: new Date().toISOString(),
+      source: 'preapproved_loan',
+      description: `Hard credit check for ${offer.product_name} loan application`,
+      score_impact: -5,
+      metadata: { offer_id, application_id: application.id, institution_id: offer.institution_id },
+    });
+  } catch (_) { /* non-critical */ }
 
   return new Response(JSON.stringify({
     application_id: application.id,
