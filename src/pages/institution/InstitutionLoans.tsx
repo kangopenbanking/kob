@@ -495,6 +495,153 @@ export default function InstitutionLoans() {
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Pre-Approved Offers */}
+          <TabsContent value="preapproved">
+            <Card className="border-border/60">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Pre-Approved Loan Offers</CardTitle>
+                <Button size="sm" onClick={() => setShowCreateOffer(true)} className="gap-1.5 text-xs bg-emerald-600 text-white hover:bg-emerald-700"><Plus className="h-3.5 w-3.5" />New Offer</Button>
+              </CardHeader>
+              <CardContent>
+                {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div> : preapprovedOffers.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <Star className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">No pre-approved offers configured</p>
+                    <p className="text-xs mt-1">Create offers that appear on customers' credit score pages based on score benchmarks</p>
+                    <Button size="sm" onClick={() => setShowCreateOffer(true)} className="mt-4 gap-1.5"><Plus className="h-3.5 w-3.5" />Create Offer</Button>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Product</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Score Range</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Amount Range</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Rate</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tenure</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Account Req.</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Apps</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {preapprovedOffers.map(o => {
+                          const appCount = marketplaceApps.filter(a => a.offer_id === o.id).length;
+                          return (
+                            <TableRow key={o.id} className="hover:bg-muted/40 transition-colors">
+                              <TableCell>
+                                <div>
+                                  <p className="font-medium text-sm">{o.product_name}</p>
+                                  {o.description && <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">{o.description}</p>}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px] bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:border-emerald-700">
+                                  {o.min_credit_score}–{o.max_credit_score}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="text-xs">{Number(o.min_amount).toLocaleString()} — {Number(o.max_amount).toLocaleString()}</TableCell>
+                              <TableCell className="text-sm font-semibold text-emerald-600">{o.interest_rate_annual}% p.a.</TableCell>
+                              <TableCell className="text-sm">{o.max_tenure_months}mo</TableCell>
+                              <TableCell><Badge variant={o.requires_existing_account ? "default" : "secondary"} className="text-[10px]">{o.requires_existing_account ? 'Yes' : 'No'}</Badge></TableCell>
+                              <TableCell><Badge variant="secondary" className="text-[10px]">{appCount}</Badge></TableCell>
+                              <TableCell><Badge variant={o.is_active ? "default" : "secondary"} className="text-[10px]">{o.is_active ? "Active" : "Inactive"}</Badge></TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" onClick={() => handleToggleOffer(o.id, o.is_active)} className="h-7 px-2 text-xs gap-1">
+                                  <ToggleLeft className="h-3 w-3" />{o.is_active ? 'Disable' : 'Enable'}
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Marketplace Applications */}
+          <TabsContent value="marketplace">
+            <Card className="border-border/60">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-sm font-semibold">Marketplace Loan Applications</CardTitle>
+                <div className="flex gap-2">
+                  <Badge variant="outline" className="text-[10px] bg-fi-amber/10 text-fi-amber">{marketplaceApps.filter(a => a.status === 'pending_review').length} pending</Badge>
+                  <Badge variant="outline" className="text-[10px] bg-fi-green/10 text-fi-green">{marketplaceApps.filter(a => a.status === 'approved').length} approved</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {loading ? <div className="space-y-3">{[1,2,3].map(i => <Skeleton key={i} className="h-14 w-full" />)}</div> : marketplaceApps.length === 0 ? (
+                  <div className="text-center py-16 text-muted-foreground">
+                    <Users className="h-12 w-12 mx-auto mb-3 opacity-20" />
+                    <p className="text-sm font-medium">No marketplace applications</p>
+                    <p className="text-xs mt-1">Applications from customers who apply via their CrediQ credit score page will appear here</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="hover:bg-transparent border-border/40">
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Application ID</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Amount</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Tenure</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Credit Score</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Existing A/C</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Hard Check</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Status</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Date</TableHead>
+                          <TableHead className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {marketplaceApps.map(a => {
+                          const mktStatus = {
+                            pending_review: { variant: "secondary" as const, className: "bg-fi-amber/15 text-fi-amber border-fi-amber/30" },
+                            hard_check_initiated: { variant: "secondary" as const, className: "bg-fi-blue/15 text-fi-blue border-fi-blue/30" },
+                            approved: { variant: "default" as const, className: "bg-fi-green/15 text-fi-green border-fi-green/30" },
+                            declined: { variant: "destructive" as const, className: "bg-destructive/15 text-destructive border-destructive/30" },
+                          }[a.status] || { variant: "secondary" as const, className: "" };
+                          return (
+                            <TableRow key={a.id} className="hover:bg-muted/40 transition-colors cursor-pointer" onClick={() => setSelectedMarketplaceApp(a)}>
+                              <TableCell className="font-mono text-xs text-muted-foreground">{a.id.slice(0, 8)}...</TableCell>
+                              <TableCell className="text-sm font-semibold">{Number(a.requested_amount).toLocaleString()} XAF</TableCell>
+                              <TableCell className="text-sm">{a.requested_tenure_months || '—'}mo</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className={`text-[10px] ${(a.credit_score_at_application || 0) >= 700 ? 'bg-fi-green/10 text-fi-green' : (a.credit_score_at_application || 0) >= 580 ? 'bg-fi-amber/10 text-fi-amber' : 'bg-destructive/10 text-destructive'}`}>
+                                  {a.credit_score_at_application || '—'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell><Badge variant={a.has_existing_account ? "default" : "outline"} className="text-[10px]">{a.has_existing_account ? 'Yes' : 'No'}</Badge></TableCell>
+                              <TableCell>
+                                {a.hard_inquiry_id ? (
+                                  <Badge variant="outline" className="text-[10px] border-red-300 text-red-700 dark:border-red-700 dark:text-red-400">
+                                    <ShieldAlert className="h-3 w-3 mr-0.5" />Logged
+                                  </Badge>
+                                ) : <span className="text-xs text-muted-foreground">—</span>}
+                              </TableCell>
+                              <TableCell><Badge variant={mktStatus.variant} className={`text-[10px] capitalize ${mktStatus.className}`}>{a.status.replace('_', ' ')}</Badge></TableCell>
+                              <TableCell className="text-xs text-muted-foreground">{a.created_at ? format(new Date(a.created_at), 'PP') : '—'}</TableCell>
+                              <TableCell>
+                                <Button variant="ghost" size="sm" className="h-7 px-2 text-xs gap-1" onClick={e => { e.stopPropagation(); setSelectedMarketplaceApp(a); }}>
+                                  <Eye className="h-3 w-3" />Review
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
         </Tabs>
       </motion.div>
 
