@@ -55,6 +55,50 @@ serve(async (req) => {
     const { fee, net } = await calculateGatewayFee(amount, channel, supabase);
     const totalDebit = amount + fee;
 
+    // ═══ WITHDRAWAL POLICY CHECK (non-breaking enhancement) ═══
+    if (account.institution_id) {
+      try {
+        const { data: policyResult } = await supabase.rpc('evaluate_withdrawal_policy', {
+          _institution_id: account.institution_id,
+          _branch_id: null,
+          _staff_user_id: user.id,
+          _amount: amount,
+          _currency: account.currency || 'XAF',
+          _channel: channel,
+        });
+
+        if (policyResult && policyResult.allowed === false) {
+          const { data: wr } = await supabase.from('withdrawal_requests').insert({
+            institution_id: account.institution_id, account_id, initiated_by_user_id: user.id,
+            amount, currency: account.currency, channel, source_type: 'gateway',
+            source_endpoint: 'gateway-withdraw-to-bank',
+            current_status: 'pending_branch_manager', policy_result: policyResult,
+            required_role: policyResult.escalation_target || 'branch_manager',
+            reason: `Bank withdrawal exceeds policy: ${amount} ${account.currency}`,
+          }).select().single();
+
+          if (wr) {
+            await supabase.from('approval_requests').insert({
+              institution_id: account.institution_id, entity_type: 'withdrawal_request',
+              entity_id: wr.id, request_type: 'withdrawal_override',
+              current_stage: 'pending_branch_manager',
+              required_role: policyResult.escalation_target || 'branch_manager',
+              submitted_by: user.id, status: 'pending_branch_manager',
+              reason: wr.reason,
+            });
+          }
+
+          return new Response(JSON.stringify({
+            requires_approval: true, withdrawal_request_id: wr?.id,
+            message: `Withdrawal requires ${policyResult.escalation_target || 'manager'} approval`,
+            policy_evaluation: policyResult,
+          }), { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      } catch (policyErr) {
+        console.error('Policy evaluation failed (non-blocking):', policyErr);
+      }
+    }
+
     if (availableBalance < totalDebit) {
       return new Response(JSON.stringify({
         error: 'insufficient_balance',

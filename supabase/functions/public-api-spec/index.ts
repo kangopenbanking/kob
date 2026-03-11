@@ -1804,6 +1804,98 @@ paths['/v1/teller/transaction'] = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// OPERATIONAL CONTROLS — Withdrawal Policies & Staff Authorization
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/admin/withdrawal-policies'] = {
+  get: { tags: ['Operational Controls'], summary: 'List withdrawal policies', operationId: 'listWithdrawalPolicies', security: [{ bearerAuth: [] }], parameters: [{ name: 'institution_id', in: 'query', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Withdrawal policies list' }, ...errorResponses } },
+  post: { tags: ['Operational Controls'], summary: 'Create withdrawal policy', operationId: 'createWithdrawalPolicy', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['institution_id', 'role_type', 'single_txn_limit', 'daily_total_limit'], properties: { institution_id: { type: 'string', format: 'uuid' }, branch_id: { type: 'string', format: 'uuid' }, currency: { type: 'string', default: 'XAF' }, channel: { type: 'string' }, role_type: { type: 'string', enum: ['teller', 'assistant_manager', 'branch_manager', 'general_manager'] }, single_txn_limit: { type: 'number', example: 500000 }, daily_total_limit: { type: 'number', example: 5000000 }, auto_approve_threshold: { type: 'number', example: 100000 }, requires_dual_approval_above: { type: 'number' }, escalation_target_role: { type: 'string', enum: ['assistant_manager', 'branch_manager', 'general_manager'] }, can_override_lower_role: { type: 'boolean' }, effective_from: { type: 'string', format: 'date' }, effective_to: { type: 'string', format: 'date' } } } } } }, responses: { '201': { description: 'Policy created' }, ...errorResponses } },
+};
+
+paths['/v1/admin/withdrawal-policies/{policyId}'] = {
+  get: { tags: ['Operational Controls'], summary: 'Get withdrawal policy', operationId: 'getWithdrawalPolicy', security: [{ bearerAuth: [] }], parameters: [{ name: 'policyId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Policy details' }, ...errorResponses } },
+  patch: { tags: ['Operational Controls'], summary: 'Update withdrawal policy', operationId: 'updateWithdrawalPolicy', security: [{ bearerAuth: [] }], parameters: [{ name: 'policyId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { single_txn_limit: { type: 'number' }, daily_total_limit: { type: 'number' }, status: { type: 'string' }, effective_to: { type: 'string', format: 'date' } } } } } }, responses: { '200': { description: 'Policy updated' }, ...errorResponses } },
+};
+
+paths['/v1/admin/staff/authorizations'] = {
+  get: { tags: ['Operational Controls'], summary: 'List staff authorizations', operationId: 'listStaffAuthorizations', security: [{ bearerAuth: [] }], parameters: [{ name: 'institution_id', in: 'query', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Staff authorizations' }, ...errorResponses } },
+  post: { tags: ['Operational Controls'], summary: 'Create staff authorization', operationId: 'createStaffAuthorization', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['institution_id', 'user_id', 'role_type'], properties: { institution_id: { type: 'string', format: 'uuid' }, branch_id: { type: 'string', format: 'uuid' }, user_id: { type: 'string', format: 'uuid' }, role_type: { type: 'string', enum: ['teller', 'assistant_manager', 'branch_manager', 'general_manager'] }, max_override_limit: { type: 'number' }, can_approve_overdraft: { type: 'boolean' }, can_approve_withdrawal_override: { type: 'boolean' }, can_suspend_overdraft: { type: 'boolean' } } } } } }, responses: { '201': { description: 'Authorization created' }, ...errorResponses } },
+};
+
+paths['/v1/admin/staff/authorizations/{authorizationId}'] = {
+  get: { tags: ['Operational Controls'], summary: 'Get staff authorization', operationId: 'getStaffAuthorization', security: [{ bearerAuth: [] }], parameters: [{ name: 'authorizationId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Authorization details' }, ...errorResponses } },
+  patch: { tags: ['Operational Controls'], summary: 'Update staff authorization', operationId: 'updateStaffAuthorization', security: [{ bearerAuth: [] }], parameters: [{ name: 'authorizationId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { max_override_limit: { type: 'number' }, can_approve_overdraft: { type: 'boolean' }, can_approve_withdrawal_override: { type: 'boolean' }, status: { type: 'string' } } } } } }, responses: { '200': { description: 'Authorization updated' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// APPROVAL WORKFLOWS
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/banking/withdrawal-requests'] = {
+  post: { tags: ['Approval Workflows'], summary: 'Create withdrawal request', description: 'Create a withdrawal request. If the amount exceeds the staff member\'s policy limit, the request is automatically routed into the approval workflow.', operationId: 'createWithdrawalRequest', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['institution_id', 'account_id', 'amount'], properties: { institution_id: { type: 'string', format: 'uuid' }, branch_id: { type: 'string', format: 'uuid' }, account_id: { type: 'string', format: 'uuid' }, amount: { type: 'number', example: 2000000 }, currency: { type: 'string', default: 'XAF' }, channel: { type: 'string', default: 'branch' }, reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Request auto-approved and executed' }, '202': { description: 'Request requires manager approval', content: { 'application/json': { schema: { type: 'object', properties: { requires_approval: { type: 'boolean', example: true }, withdrawal_request_id: { type: 'string', format: 'uuid' }, approval_status: { type: 'string' }, pending_role: { type: 'string' } } } } } }, ...errorResponses } },
+  get: { tags: ['Approval Workflows'], summary: 'List withdrawal requests', operationId: 'listWithdrawalRequests', security: [{ bearerAuth: [] }], parameters: [{ name: 'institution_id', in: 'query', required: true, schema: { type: 'string', format: 'uuid' } }, { name: 'status', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Withdrawal requests' }, ...errorResponses } },
+};
+
+paths['/v1/banking/withdrawal-requests/{requestId}'] = {
+  get: { tags: ['Approval Workflows'], summary: 'Get withdrawal request', operationId: 'getWithdrawalRequest', security: [{ bearerAuth: [] }], parameters: [{ name: 'requestId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Withdrawal request details' }, ...errorResponses } },
+};
+
+paths['/v1/banking/withdrawal-requests/{requestId}/submit'] = {
+  post: { tags: ['Approval Workflows'], summary: 'Submit draft withdrawal request', operationId: 'submitWithdrawalRequest', security: [{ bearerAuth: [] }], parameters: [{ name: 'requestId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Request submitted' }, ...errorResponses } },
+};
+
+paths['/v1/banking/withdrawal-requests/{requestId}/cancel'] = {
+  post: { tags: ['Approval Workflows'], summary: 'Cancel withdrawal request', operationId: 'cancelWithdrawalRequest', security: [{ bearerAuth: [] }], parameters: [{ name: 'requestId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Request cancelled' }, ...errorResponses } },
+};
+
+paths['/v1/banking/approvals'] = {
+  get: { tags: ['Approval Workflows'], summary: 'List approval requests', operationId: 'listApprovals', security: [{ bearerAuth: [] }], parameters: [{ name: 'institution_id', in: 'query', required: true, schema: { type: 'string', format: 'uuid' } }, { name: 'status', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'Approval requests with action history' }, ...errorResponses } },
+};
+
+paths['/v1/banking/approvals/{approvalId}'] = {
+  get: { tags: ['Approval Workflows'], summary: 'Get approval request', operationId: 'getApproval', security: [{ bearerAuth: [] }], parameters: [{ name: 'approvalId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Approval with full action audit trail' }, ...errorResponses } },
+};
+
+paths['/v1/banking/approvals/{approvalId}/approve'] = {
+  post: { tags: ['Approval Workflows'], summary: 'Approve request', description: 'Approve a pending request. The approver must have the required operational role. If the entity is a withdrawal, it is automatically executed after approval.', operationId: 'approveRequest', security: [{ bearerAuth: [] }], parameters: [{ name: 'approvalId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { comments: { type: 'string' } } } } } }, responses: { '200': { description: 'Approved (and executed if withdrawal)' }, ...errorResponses } },
+};
+
+paths['/v1/banking/approvals/{approvalId}/reject'] = {
+  post: { tags: ['Approval Workflows'], summary: 'Reject request', operationId: 'rejectRequest', security: [{ bearerAuth: [] }], parameters: [{ name: 'approvalId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['reason'], properties: { reason: { type: 'string' }, comments: { type: 'string' } } } } } }, responses: { '200': { description: 'Rejected' }, ...errorResponses } },
+};
+
+paths['/v1/banking/approvals/{approvalId}/escalate'] = {
+  post: { tags: ['Approval Workflows'], summary: 'Escalate to higher authority', operationId: 'escalateRequest', security: [{ bearerAuth: [] }], parameters: [{ name: 'approvalId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { target_role: { type: 'string', enum: ['branch_manager', 'general_manager'] }, comments: { type: 'string' } } } } } }, responses: { '200': { description: 'Escalated' }, ...errorResponses } },
+};
+
+// ═══════════════════════════════════════════════════════════════════════════
+// OVERDRAFT
+// ═══════════════════════════════════════════════════════════════════════════
+paths['/v1/accounts/{accountId}/overdraft'] = {
+  get: { tags: ['Overdraft'], summary: 'Get overdraft profile', description: 'Returns overdraft eligibility, approved limit, utilised and available amounts, risk band, and score factors.', operationId: 'getOverdraftProfile', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Overdraft profile with score factors', content: { 'application/json': { schema: { type: 'object', properties: { eligible: { type: 'boolean' }, recommended_limit: { type: 'number', example: 250000 }, approved_limit: { type: 'number', example: 200000 }, utilised_amount: { type: 'number', example: 50000 }, available_amount: { type: 'number', example: 150000 }, risk_band: { type: 'string', enum: ['A', 'B', 'C', 'D', 'F'] }, status: { type: 'string', enum: ['active', 'suspended', 'revoked', 'pending_approval', 'inactive'] } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/accounts/{accountId}/overdraft/recalculate'] = {
+  post: { tags: ['Overdraft'], summary: 'Recalculate overdraft eligibility', description: 'Re-evaluates account behavior (salary consistency, savings, balance, tenure, activity, repayment history, credit score) and produces an explainable overdraft recommendation.', operationId: 'recalculateOverdraft', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], responses: { '200': { description: 'Recalculated overdraft profile with score factor breakdown' }, ...errorResponses } },
+};
+
+paths['/v1/accounts/{accountId}/overdraft/request'] = {
+  post: { tags: ['Overdraft'], summary: 'Request overdraft facility', description: 'Request an overdraft. Automatically scores the account and either auto-approves (high score) or routes to manager approval.', operationId: 'requestOverdraft', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { requested_limit: { type: 'number', example: 300000 } } } } } }, responses: { '200': { description: 'Auto-approved' }, '202': { description: 'Pending manager approval' }, ...errorResponses } },
+};
+
+paths['/v1/accounts/{accountId}/overdraft/approve'] = {
+  post: { tags: ['Overdraft'], summary: 'Approve overdraft', operationId: 'approveOverdraft', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['approved_limit'], properties: { approved_limit: { type: 'number', example: 200000 }, comments: { type: 'string' } } } } } }, responses: { '200': { description: 'Overdraft approved and activated' }, ...errorResponses } },
+};
+
+paths['/v1/accounts/{accountId}/overdraft/suspend'] = {
+  post: { tags: ['Overdraft'], summary: 'Suspend overdraft', operationId: 'suspendOverdraft', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['reason'], properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Overdraft suspended' }, ...errorResponses } },
+};
+
+paths['/v1/accounts/{accountId}/overdraft/revoke'] = {
+  post: { tags: ['Overdraft'], summary: 'Revoke overdraft', operationId: 'revokeOverdraft', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['reason'], properties: { reason: { type: 'string' } } } } } }, responses: { '200': { description: 'Overdraft revoked' }, ...errorResponses } },
+};
+
+paths['/v1/accounts/{accountId}/overdraft/reinstate'] = {
+  post: { tags: ['Overdraft'], summary: 'Reinstate overdraft', operationId: 'reinstateOverdraft', security: [{ bearerAuth: [] }], parameters: [{ name: 'accountId', in: 'path', required: true, schema: { type: 'string' } }, idempotencyHeader], requestBody: { content: { 'application/json': { schema: { type: 'object', properties: { new_limit: { type: 'number' }, comments: { type: 'string' } } } } } }, responses: { '200': { description: 'Overdraft reinstated' }, ...errorResponses } },
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
 // WALLETS (Phase 6)

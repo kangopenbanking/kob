@@ -96,6 +96,64 @@ serve(async (req) => {
 
     const currentAmount = currentBalance ? Number(currentBalance.amount) : 0;
 
+    // ═══ WITHDRAWAL POLICY CHECK (non-breaking enhancement) ═══
+    if (operation === 'withdraw') {
+      try {
+        const { data: policyResult } = await serviceSupabase.rpc('evaluate_withdrawal_policy', {
+          _institution_id: institution_id,
+          _branch_id: null,
+          _staff_user_id: user.id,
+          _amount: amount,
+          _currency: account.currency || 'XAF',
+          _channel: 'branch',
+        });
+
+        if (policyResult && policyResult.allowed === false) {
+          // Create withdrawal request + approval workflow instead of rejecting
+          const { data: wr } = await serviceSupabase.from('withdrawal_requests').insert({
+            institution_id, account_id, initiated_by_staff_id: user.id,
+            amount, currency: account.currency || 'XAF', channel: 'branch',
+            source_type: 'teller', source_endpoint: 'teller-transaction',
+            current_status: policyResult.escalation_target === 'assistant_manager' ? 'pending_assistant_manager' : policyResult.escalation_target === 'general_manager' ? 'pending_general_manager' : 'pending_branch_manager',
+            policy_result: policyResult, required_role: policyResult.escalation_target || 'branch_manager',
+            reason: `Teller withdrawal exceeds ${policyResult.reason}: ${amount} ${account.currency}`,
+          }).select().single();
+
+          if (wr) {
+            const approvalStatus = wr.current_status;
+            const { data: ar } = await serviceSupabase.from('approval_requests').insert({
+              institution_id, entity_type: 'withdrawal_request', entity_id: wr.id,
+              request_type: 'withdrawal_override', current_stage: approvalStatus,
+              required_role: policyResult.escalation_target || 'branch_manager',
+              submitted_by: user.id, status: approvalStatus,
+              reason: wr.reason,
+              expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            }).select().single();
+
+            if (ar) {
+              await serviceSupabase.from('withdrawal_requests').update({ approval_request_id: ar.id }).eq('id', wr.id);
+              await serviceSupabase.from('approval_actions').insert({
+                approval_request_id: ar.id, action: 'submit', acted_by: user.id,
+                acted_role: policyResult.staff_role, comments: wr.reason,
+                metadata: { amount, policy_result: policyResult },
+              });
+            }
+          }
+
+          return new Response(JSON.stringify({
+            requires_approval: true,
+            withdrawal_request_id: wr?.id,
+            approval_status: wr?.current_status,
+            policy_evaluation: policyResult,
+            message: `Withdrawal of ${amount} ${account.currency} requires ${policyResult.escalation_target || 'manager'} approval`,
+          }), { status: 202, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+      } catch (policyErr) {
+        // Policy evaluation failure is non-blocking — fall through to existing behavior
+        console.error('Policy evaluation failed (non-blocking):', policyErr);
+      }
+    }
+
     // For withdrawals, check sufficient funds
     if (operation === 'withdraw' && currentAmount < amount) {
       return new Response(JSON.stringify({
