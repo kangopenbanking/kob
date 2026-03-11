@@ -44,6 +44,8 @@ export default function InstitutionLoans() {
   const [products, setProducts] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [repayments, setRepayments] = useState<any[]>([]);
+  const [preapprovedOffers, setPreapprovedOffers] = useState<any[]>([]);
+  const [marketplaceApps, setMarketplaceApps] = useState<any[]>([]);
 
   // Filters
   const [searchQuery, setSearchQuery] = useState("");
@@ -51,10 +53,20 @@ export default function InstitutionLoans() {
 
   // Detail sheet
   const [selectedApp, setSelectedApp] = useState<any>(null);
+  const [selectedMarketplaceApp, setSelectedMarketplaceApp] = useState<any>(null);
 
   // Create product dialog
   const [showCreate, setShowCreate] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  // Create pre-approved offer dialog
+  const [showCreateOffer, setShowCreateOffer] = useState(false);
+  const [creatingOffer, setCreatingOffer] = useState(false);
+  const [newOffer, setNewOffer] = useState({
+    product_name: "", description: "", min_credit_score: 650, max_credit_score: 850,
+    min_amount: "100000", max_amount: "5000000", interest_rate_annual: "15",
+    max_tenure_months: "36", requires_existing_account: false,
+  });
   const [newProduct, setNewProduct] = useState({
     product_name: "", product_code: "", loan_type: "personal_loan" as string,
     interest_rate: "12", interest_calculation_method: "reducing_balance",
