@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
+import CreditInquiriesPanel from '@/components/credit/CreditInquiriesPanel';
+import PreApprovedOffersCard from '@/components/credit/PreApprovedOffersCard';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
