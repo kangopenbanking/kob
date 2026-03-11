@@ -334,113 +334,203 @@ export default function InstitutionStaff() {
             </DialogContent>
           </Dialog>
 
-          {/* Assign Staff Dialog */}
+          {/* Assign Staff Dialog — persistent (no close on outside click) */}
           <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild><Button size="sm"><Plus className="h-3.5 w-3.5 mr-1.5" />Assign Staff</Button></DialogTrigger>
-            <DialogContent className="max-w-lg max-h-[90vh]">
-              <DialogHeader><DialogTitle>Assign Staff Member</DialogTitle></DialogHeader>
-              <ScrollArea className="max-h-[70vh] pr-4">
-                <div className="space-y-4 pt-2">
-                  <div><Label>User ID</Label><Input placeholder="User UUID" value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))} /></div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Position</Label><Input placeholder="e.g. Branch Manager" value={form.position} onChange={e => setForm(f => ({ ...f, position: e.target.value }))} /></div>
-                    <div><Label>Department</Label><Input placeholder="e.g. Operations" value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))} /></div>
+            <DialogContent className="max-w-2xl max-h-[92vh] p-0" onPointerDownOutside={e => e.preventDefault()} onInteractOutside={e => e.preventDefault()}>
+              <DialogHeader className="px-6 pt-5 pb-3 border-b border-border/60">
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                    <Plus className="h-4 w-4 text-primary" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Branch</Label>
-                      <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v }))}>
-                        <SelectTrigger><SelectValue placeholder="Select branch" /></SelectTrigger>
-                        <SelectContent>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.branch_name}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div><Label>Employment</Label>
-                      <Select value={form.employment_type} onValueChange={v => setForm(f => ({ ...f, employment_type: v }))}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="full_time">Full-time</SelectItem>
-                          <SelectItem value="part_time">Part-time</SelectItem>
-                          <SelectItem value="contract">Contract</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                  Assign Staff Member
+                </DialogTitle>
+                <p className="text-xs text-muted-foreground ml-10">Complete all sections to assign a new staff member with portal access and optional operational authority.</p>
+              </DialogHeader>
+              <ScrollArea className="max-h-[72vh]">
+                <div className="px-6 py-4 space-y-5">
 
-                  <Separator />
-
-                  {/* Portal Access */}
-                  <div>
-                    <div className="flex items-center gap-2 mb-3">
-                      <Shield className="h-4 w-4 text-primary" />
-                      <Label className="text-sm font-semibold">Portal Access Permissions</Label>
+                  {/* Section 1: Staff Identity */}
+                  <div className="rounded-lg border border-border/60 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border/40">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">1</div>
+                      <span className="text-xs font-semibold">Staff Identity</span>
+                      {form.user_id && form.position && <Check className="h-3.5 w-3.5 text-primary ml-auto" />}
                     </div>
-                    <div className="mb-3">
-                      <Label className="text-xs text-muted-foreground">Role Template</Label>
-                      <Select value={form.role_template} onValueChange={handleTemplateChange}>
-                        <SelectTrigger><SelectValue placeholder="Custom (select sections below)" /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="custom">Custom</SelectItem>
-                          {Object.entries(ROLE_TEMPLATES).map(([key, tmpl]) => (
-                            <SelectItem key={key} value={key}>{tmpl.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {ALL_PORTAL_SECTIONS.map(section => (
-                        <label key={section.key} className="flex items-center gap-2 rounded-md border border-border/60 px-2.5 py-1.5 text-[11px] cursor-pointer hover:bg-muted/50 transition-colors">
-                          <Checkbox checked={form.sections.includes(section.key)} onCheckedChange={() => toggleSection(section.key)} />
-                          <span className="truncate">{section.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                    {form.sections.length > 0 && (
-                      <p className="text-[10px] text-muted-foreground mt-1.5">{form.sections.length} section{form.sections.length > 1 ? 's' : ''} selected</p>
-                    )}
-                  </div>
-
-                  <Separator />
-
-                  {/* Operational Authority */}
-                  <div>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <UserCog className="h-4 w-4 text-primary" />
-                        <Label className="text-sm font-semibold">Operational Authority</Label>
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <Label className="text-xs">User ID or Email</Label>
+                        <Input placeholder="Enter user UUID or email address" value={form.user_id} onChange={e => setForm(f => ({ ...f, user_id: e.target.value }))} className="mt-1" />
+                        <p className="text-[10px] text-muted-foreground mt-1">The user must have an existing account on the platform.</p>
                       </div>
-                      <Switch checked={form.assign_authority} onCheckedChange={v => setForm(f => ({ ...f, assign_authority: v }))} />
-                    </div>
-                    {form.assign_authority && (
-                      <div className="space-y-3 rounded-lg border border-border/60 p-3 bg-muted/30">
+                      <div className="grid grid-cols-2 gap-3">
                         <div>
-                          <Label className="text-xs">Operational Role</Label>
-                          <Select value={form.op_role_type} onValueChange={v => setForm(f => ({ ...f, op_role_type: v }))}>
-                            <SelectTrigger><SelectValue /></SelectTrigger>
+                          <Label className="text-xs">Position / Title</Label>
+                          <Input placeholder="e.g. Branch Manager" value={form.position} onChange={e => setForm(f => ({ ...f, position: e.target.value }))} className="mt-1" />
+                        </div>
+                        <div>
+                          <Label className="text-xs">Department</Label>
+                          <Input placeholder="e.g. Operations" value={form.department} onChange={e => setForm(f => ({ ...f, department: e.target.value }))} className="mt-1" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <Label className="text-xs">Branch Assignment</Label>
+                          <Select value={form.branch_id} onValueChange={v => setForm(f => ({ ...f, branch_id: v }))}>
+                            <SelectTrigger className="mt-1"><SelectValue placeholder="Select branch (optional)" /></SelectTrigger>
+                            <SelectContent>{branches.map(b => <SelectItem key={b.id} value={b.id}>{b.branch_name}</SelectItem>)}</SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <Label className="text-xs">Employment Type</Label>
+                          <Select value={form.employment_type} onValueChange={v => setForm(f => ({ ...f, employment_type: v }))}>
+                            <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
                             <SelectContent>
-                              {Object.entries(OP_ROLE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                              <SelectItem value="full_time">Full-time</SelectItem>
+                              <SelectItem value="part_time">Part-time</SelectItem>
+                              <SelectItem value="contract">Contract</SelectItem>
+                              <SelectItem value="intern">Intern</SelectItem>
                             </SelectContent>
                           </Select>
-                          {getPolicyForRole(form.op_role_type) && (
-                            <p className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1">
-                              <Shield className="h-3 w-3" />
-                              Withdrawal policy: {Number(getPolicyForRole(form.op_role_type).single_txn_limit).toLocaleString()} single / {Number(getPolicyForRole(form.op_role_type).daily_total_limit).toLocaleString()} daily
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 2: Portal Access */}
+                  <div className="rounded-lg border border-border/60 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border/40">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">2</div>
+                      <Shield className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-semibold">Portal Access Permissions</span>
+                      {form.sections.length > 0 && (
+                        <Badge variant="secondary" className="text-[10px] ml-auto">{form.sections.length} selected</Badge>
+                      )}
+                    </div>
+                    <div className="p-4 space-y-3">
+                      <div>
+                        <Label className="text-xs text-muted-foreground">Quick-apply a role template or manually select sections</Label>
+                        <Select value={form.role_template} onValueChange={handleTemplateChange}>
+                          <SelectTrigger className="mt-1"><SelectValue placeholder="Choose a role template..." /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="custom">Custom (manual selection)</SelectItem>
+                            {Object.entries(ROLE_TEMPLATES).map(([key, tmpl]) => (
+                              <SelectItem key={key} value={key}>
+                                {tmpl.label} — {tmpl.sections.length} sections
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 max-h-[200px] overflow-y-auto pr-1">
+                        {ALL_PORTAL_SECTIONS.map(section => (
+                          <label
+                            key={section.key}
+                            className={`flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-[10px] cursor-pointer transition-colors ${
+                              form.sections.includes(section.key)
+                                ? 'border-primary/40 bg-primary/5 text-foreground'
+                                : 'border-border/50 hover:bg-muted/50 text-muted-foreground'
+                            }`}
+                          >
+                            <Checkbox
+                              checked={form.sections.includes(section.key)}
+                              onCheckedChange={() => toggleSection(section.key)}
+                              className="h-3 w-3"
+                            />
+                            <span className="truncate">{section.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                      {form.sections.length > 0 && (
+                        <div className="flex items-center justify-between">
+                          <p className="text-[10px] text-muted-foreground">{form.sections.length} portal section{form.sections.length > 1 ? 's' : ''} granted</p>
+                          <Button variant="ghost" size="sm" className="h-6 text-[10px] text-destructive" onClick={() => setForm(f => ({ ...f, sections: [], role_template: '' }))}>
+                            Clear all
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Section 3: Operational Authority */}
+                  <div className="rounded-lg border border-border/60 overflow-hidden">
+                    <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border/40">
+                      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold">3</div>
+                      <UserCog className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-xs font-semibold">Operational Authority</span>
+                      <span className="text-[10px] text-muted-foreground">(Optional)</span>
+                      <Switch checked={form.assign_authority} onCheckedChange={v => setForm(f => ({ ...f, assign_authority: v }))} className="ml-auto" />
+                    </div>
+                    {form.assign_authority && (
+                      <div className="p-4 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <Label className="text-xs">Operational Role</Label>
+                            <Select value={form.op_role_type} onValueChange={v => setForm(f => ({ ...f, op_role_type: v }))}>
+                              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                {Object.entries(OP_ROLE_LABELS).map(([k, v]) => <SelectItem key={k} value={k}>{v}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="text-xs">Max Override Limit (XAF)</Label>
+                            <Input type="number" value={form.max_override_limit} onChange={e => setForm(f => ({ ...f, max_override_limit: e.target.value }))} placeholder="Optional limit" className="mt-1" />
+                          </div>
+                        </div>
+
+                        {/* Show linked withdrawal policy */}
+                        {getPolicyForRole(form.op_role_type) && (
+                          <div className="rounded-md border border-primary/20 bg-primary/5 p-3">
+                            <p className="text-[10px] font-semibold text-primary flex items-center gap-1 mb-1.5">
+                              <Shield className="h-3 w-3" /> Linked Withdrawal Policy — {OP_ROLE_LABELS[form.op_role_type]}
                             </p>
-                          )}
-                        </div>
-                        <div>
-                          <Label className="text-xs">Max Override Limit (XAF)</Label>
-                          <Input type="number" value={form.max_override_limit} onChange={e => setForm(f => ({ ...f, max_override_limit: e.target.value }))} placeholder="Optional" />
-                        </div>
-                        <div className="space-y-2">
+                            <div className="grid grid-cols-3 gap-2 text-[10px]">
+                              <div>
+                                <p className="text-muted-foreground">Single Txn</p>
+                                <p className="font-semibold">{Number(getPolicyForRole(form.op_role_type).single_txn_limit).toLocaleString()} XAF</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Daily Limit</p>
+                                <p className="font-semibold">{Number(getPolicyForRole(form.op_role_type).daily_total_limit).toLocaleString()} XAF</p>
+                              </div>
+                              <div>
+                                <p className="text-muted-foreground">Escalates To</p>
+                                <p className="font-semibold">{OP_ROLE_LABELS[getPolicyForRole(form.op_role_type).escalation_target_role] || '—'}</p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {!getPolicyForRole(form.op_role_type) && (
+                          <div className="rounded-md border border-destructive/20 bg-destructive/5 p-2.5 flex items-center gap-2">
+                            <AlertTriangle className="h-3.5 w-3.5 text-destructive flex-shrink-0" />
+                            <p className="text-[10px] text-destructive">No withdrawal policy configured for {OP_ROLE_LABELS[form.op_role_type]}. Configure one under Withdrawal Policies.</p>
+                          </div>
+                        )}
+
+                        <div className="rounded-md border border-border/50 p-3 space-y-2.5">
+                          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Approval Capabilities</p>
                           <div className="flex items-center justify-between">
-                            <Label className="text-xs">Withdrawal Override</Label>
+                            <div>
+                              <Label className="text-xs">Withdrawal Override</Label>
+                              <p className="text-[10px] text-muted-foreground">Can approve withdrawals exceeding policy limits</p>
+                            </div>
                             <Switch checked={form.can_approve_withdrawal_override} onCheckedChange={v => setForm(f => ({ ...f, can_approve_withdrawal_override: v }))} />
                           </div>
+                          <Separator />
                           <div className="flex items-center justify-between">
-                            <Label className="text-xs">Overdraft Approval</Label>
+                            <div>
+                              <Label className="text-xs">Overdraft Approval</Label>
+                              <p className="text-[10px] text-muted-foreground">Can approve overdraft facility requests</p>
+                            </div>
                             <Switch checked={form.can_approve_overdraft} onCheckedChange={v => setForm(f => ({ ...f, can_approve_overdraft: v }))} />
                           </div>
+                          <Separator />
                           <div className="flex items-center justify-between">
-                            <Label className="text-xs">Overdraft Suspension</Label>
+                            <div>
+                              <Label className="text-xs">Overdraft Suspension</Label>
+                              <p className="text-[10px] text-muted-foreground">Can suspend active overdraft facilities</p>
+                            </div>
                             <Switch checked={form.can_suspend_overdraft} onCheckedChange={v => setForm(f => ({ ...f, can_suspend_overdraft: v }))} />
                           </div>
                         </div>
@@ -448,11 +538,22 @@ export default function InstitutionStaff() {
                     )}
                   </div>
 
-                  <Button className="w-full" onClick={handleCreate} disabled={saving || !form.user_id || !form.position}>
-                    {saving ? "Assigning..." : "Assign Staff"}
-                  </Button>
                 </div>
               </ScrollArea>
+
+              {/* Sticky footer */}
+              <div className="px-6 py-3 border-t border-border/60 bg-background flex items-center justify-between gap-3">
+                <div className="text-[10px] text-muted-foreground">
+                  {form.sections.length > 0 && <span>{form.sections.length} sections</span>}
+                  {form.assign_authority && <span className="ml-2">+ {OP_ROLE_LABELS[form.op_role_type]} authority</span>}
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => { setDialogOpen(false); resetForm(); }}>Cancel</Button>
+                  <Button size="sm" onClick={handleCreate} disabled={saving || !form.user_id || !form.position}>
+                    {saving ? "Assigning..." : "Assign Staff Member"}
+                  </Button>
+                </div>
+              </div>
             </DialogContent>
           </Dialog>
         </div>
