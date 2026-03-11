@@ -936,6 +936,8 @@ function App() {
               <Route path="reviews" element={<BusinessReviews />} />
               <Route path="quick-order" element={<BusinessQuickOrder />} />
               <Route path="products" element={<BusinessProducts />} />
+              <Route path="products/new" element={<BusinessProductForm />} />
+              <Route path="products/:id" element={<BusinessProductForm />} />
               <Route path="analytics" element={<BusinessAnalytics />} />
               <Route path="staff" element={<BusinessStaff />} />
               <Route path="storefront" element={<BusinessStorefront />} />
