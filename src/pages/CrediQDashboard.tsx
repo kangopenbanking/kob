@@ -12,7 +12,7 @@ import {
   TrendingUp, TrendingDown, AlertCircle, CheckCircle, Clock,
   ArrowRight, ExternalLink, Shield, Zap, Target, Lightbulb,
   CreditCard, Building2, PiggyBank, BarChart3, ChevronRight,
-  Sparkles, Award, Eye, FileText,
+  Sparkles, Award, Eye, FileText, Banknote, Percent, Calendar,
 } from "lucide-react";
 
 // Score factor config
