@@ -131,8 +131,7 @@ export default function InstitutionStaff() {
   };
 
   const getStaffName = (s: StaffMember) => {
-    const p = s.profiles as any;
-    return p?.full_name || p?.email || s.user_id.substring(0, 8);
+    return s.profile_name || s.profile_email || s.user_id.substring(0, 8);
   };
 
   const getStaffNameById = (userId: string) => {
