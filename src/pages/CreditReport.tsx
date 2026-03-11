@@ -283,31 +283,14 @@ export default function CreditReport() {
           </Card>
         </motion.div>
 
-        {/* Credit Inquiries */}
+        {/* Credit Inquiries - Enhanced Panel */}
         <motion.div custom={7} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-2">
-                <div className="h-8 w-8 rounded-xl bg-blue-100 dark:bg-blue-900 flex items-center justify-center">
-                  <Search className="h-4 w-4 text-blue-700 dark:text-blue-300" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">Credit Inquiries</CardTitle>
-                  <CardDescription className="text-xs">Recent credit checks</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-0 divide-y divide-border/50">
-                {inquiryRows.map((row) => (
-                  <div key={row.label} className="flex justify-between items-center py-3">
-                    <span className="text-sm text-muted-foreground">{row.label}</span>
-                    <span className="text-sm font-bold text-foreground">{row.value}</span>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          <CreditInquiriesPanel />
+        </motion.div>
+
+        {/* Pre-Approved Loans */}
+        <motion.div custom={8} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
+          <PreApprovedOffersCard creditScore={reportData?.score || 0} />
         </motion.div>
 
         {/* Report Info Footer */}
