@@ -22,6 +22,8 @@ const BusinessHome: React.FC = () => {
     todayOrders,
     charges,
     isLoading,
+    walletsLoading,
+    chargesLoading,
   } = useBusinessData(merchantId);
   const queryClient = useQueryClient();
 
