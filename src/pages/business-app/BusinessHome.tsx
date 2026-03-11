@@ -66,9 +66,6 @@ const BusinessHome: React.FC = () => {
       <div className="p-5 space-y-6">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-[140px] rounded-3xl" />
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
-        </div>
       </div>
     );
   }
