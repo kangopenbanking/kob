@@ -1,6 +1,5 @@
 // Consolidated router for banking operations: withdrawal-policies, staff-authorizations, withdrawal-requests, approvals
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
-import { validateUserRole, errorResponse } from '../_shared/role-middleware.ts';
 import { corsHeaders } from '../_shared/cors.ts';
 
 Deno.serve(async (req) => {
