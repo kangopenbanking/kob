@@ -15,8 +15,7 @@ import { getCanonicalUrl } from '@/config/api';
 type Tab = 'qr' | 'links';
 
 const BusinessReceive: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
-  const { merchant } = useBusinessData(merchantId);
+  const { merchantId } = useMerchantContext();
 
   const [activeTab, setActiveTab] = useState<Tab>('qr');
 
