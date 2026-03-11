@@ -299,6 +299,11 @@ export default function CreditScore() {
       </motion.div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-2">
+        {/* Pre-Approved Loan Offers - right below the score card */}
+        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mt-6">
+          <PreApprovedOffersCard creditScore={score} />
+        </motion.div>
+
         {/* PostiQ Feature Showcase */}
         <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mt-6">
           <PostiQFeatureShowcase hasVerification={!!verification} onVerifyClick={scrollToVerification} />
