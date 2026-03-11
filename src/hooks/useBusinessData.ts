@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useBusinessData = (merchantId?: string) => {
-  // Fetch merchant info
+  // Fetch merchant info — fast direct DB query, critical for UI
   const { data: merchant, isLoading: merchantLoading } = useQuery({
     queryKey: ['merchant', merchantId],
     queryFn: async () => {
@@ -16,26 +16,26 @@ export const useBusinessData = (merchantId?: string) => {
       return data;
     },
     enabled: !!merchantId,
+    staleTime: 5 * 60 * 1000, // 5 min
   });
 
-  // Fetch wallet balances
+  // Fetch wallet balances — edge function, can be slow
   const { data: wallets, isLoading: walletsLoading, refetch: refetchWallets } = useQuery({
     queryKey: ['merchant-wallets', merchantId],
     queryFn: async () => {
       if (!merchantId) return [];
       const { data, error } = await supabase.functions.invoke('gateway-get-merchant-balance', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
       });
       if (error) throw error;
       return data?.data || [];
     },
     enabled: !!merchantId,
+    staleTime: 2 * 60 * 1000, // 2 min
   });
 
-  // Fetch recent settlements
+  // Fetch recent settlements — deferred, not needed for initial render
   const { data: settlementsData, isLoading: settlementsLoading } = useQuery({
     queryKey: ['merchant-settlements', merchantId],
     queryFn: async () => {
@@ -45,9 +45,11 @@ export const useBusinessData = (merchantId?: string) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!merchantId,
+    staleTime: 5 * 60 * 1000,
   });
 
-  // Fetch recent charges (revenue)
+  // Fetch recent charges (revenue) — fast direct DB query
   const { data: charges, isLoading: chargesLoading } = useQuery({
     queryKey: ['merchant-charges', merchantId],
     queryFn: async () => {
@@ -62,9 +64,10 @@ export const useBusinessData = (merchantId?: string) => {
       return data;
     },
     enabled: !!merchantId,
+    staleTime: 60 * 1000, // 1 min
   });
 
-  // Fetch payouts
+  // Fetch payouts — deferred
   const { data: payoutsData, isLoading: payoutsLoading } = useQuery({
     queryKey: ['merchant-payouts', merchantId],
     queryFn: async () => {
@@ -74,6 +77,8 @@ export const useBusinessData = (merchantId?: string) => {
       if (error) throw error;
       return data;
     },
+    enabled: !!merchantId,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Calculate metrics
