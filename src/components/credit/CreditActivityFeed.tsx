@@ -41,6 +41,10 @@ const CreditActivityFeed = ({ activities }: CreditActivityFeedProps) => {
         return <CreditCard className={`${className} text-purple-600`} />;
       case 'savings':
         return <DollarSign className={`${className} text-green-600`} />;
+      case 'pre_approved':
+        return <Building2 className={`${className} text-emerald-600`} />;
+      case 'hard_check':
+        return <Eye className={`${className} text-red-600`} />;
       default:
         return <Building2 className={className} />;
     }

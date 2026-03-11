@@ -294,7 +294,7 @@ export default function CreditReport() {
         </motion.div>
 
         {/* Report Info Footer */}
-        <motion.div custom={8} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
+        <motion.div custom={9} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
           <Card className="bg-muted/30">
             <CardContent className="p-4 flex items-center gap-4">
               <div className="h-11 w-11 shrink-0 rounded-2xl bg-muted flex items-center justify-center">
