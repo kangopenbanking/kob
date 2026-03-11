@@ -133,7 +133,7 @@ const BusinessAppInner: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
   const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
   const queryClient = useQueryClient();
-  useAppCacheClear();
+  // Removed useAppCacheClear — it was clearing all caches on every mount, causing slow reloads
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();

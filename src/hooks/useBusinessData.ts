@@ -109,6 +109,8 @@ export const useBusinessData = (merchantId?: string) => {
     pendingBalance,
     todayRevenue,
     todayOrders: todayCharges.length,
-    isLoading: merchantLoading || walletsLoading,
+    isLoading: merchantLoading,
+    walletsLoading,
+    chargesLoading,
   };
 };
