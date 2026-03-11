@@ -19,8 +19,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { minimumFractionDigits: 0 }).format(n);
 
