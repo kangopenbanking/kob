@@ -306,10 +306,16 @@ export default function InstitutionLoans() {
       {/* Tabs */}
       <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={6}>
         <Tabs defaultValue="applications" className="space-y-4">
-          <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1">
+          <TabsList className="inline-flex h-9 items-center rounded-lg bg-muted p-1 flex-wrap">
             <TabsTrigger value="applications" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Applications ({filteredApplications.length})</TabsTrigger>
             <TabsTrigger value="products" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Products ({filteredProducts.length})</TabsTrigger>
             <TabsTrigger value="repayments" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm">Repayments ({repayments.length})</TabsTrigger>
+            <TabsTrigger value="preapproved" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1">
+              <Star className="h-3 w-3" />Pre-Approved ({preapprovedOffers.length})
+            </TabsTrigger>
+            <TabsTrigger value="marketplace" className="rounded-md px-3 text-xs font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm gap-1">
+              <Users className="h-3 w-3" />Marketplace ({marketplaceApps.length})
+            </TabsTrigger>
           </TabsList>
 
           {/* Applications */}
