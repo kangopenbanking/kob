@@ -351,6 +351,7 @@ import MerchantWhiteLabel from "./pages/merchant/MerchantWhiteLabel";
 import MerchantAdvancedAnalytics from "./pages/merchant/MerchantAdvancedAnalytics";
 import AdminMarketplaceModeration from "./pages/admin/AdminMarketplaceModeration";
 import BusinessRefunds from "./pages/business-app/BusinessRefunds";
+import BusinessRegister from "./pages/business-app/BusinessRegister";
 import CustomerTravelCategories from "./pages/customer-app/CustomerTravelCategories";
 import CustomerTravelAgencies from "./pages/customer-app/CustomerTravelAgencies";
 import CustomerTravelTrips from "./pages/customer-app/CustomerTravelTrips";
