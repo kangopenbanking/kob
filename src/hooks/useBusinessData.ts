@@ -110,7 +110,5 @@ export const useBusinessData = (merchantId?: string) => {
     todayRevenue,
     todayOrders: todayCharges.length,
     isLoading: merchantLoading,
-    walletsLoading,
-    chargesLoading,
   };
 };
