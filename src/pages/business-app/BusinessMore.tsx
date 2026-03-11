@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
 import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -7,13 +6,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { useBusinessData } from '@/hooks/useBusinessData';
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { cn } from '@/lib/utils';
 
 interface MenuSection {
   title: string;
-  items: { icon: React.ElementType; label: string; subtitle?: string; path?: string; action?: () => void; badge?: string }[];
+  items: { icon: React.ElementType; label: string; subtitle?: string; path?: string; action?: () => void; color: string }[];
 }
 
 const BusinessMore: React.FC = () => {
@@ -28,7 +26,6 @@ const BusinessMore: React.FC = () => {
     merchant_id: merchantId,
     merchant_name: merchant?.business_name || 'Store',
   });
-
   const storeUrl = `${window.location.origin}/app/stores/${merchantId}`;
 
   const handleLogout = async () => {
@@ -50,102 +47,107 @@ const BusinessMore: React.FC = () => {
     {
       title: 'Account',
       items: [
-        { icon: Wallet, label: 'Wallet', subtitle: 'Balances, funding & payouts', path: `${basePath}/wallet` },
-        { icon: UserCog, label: 'Staff', subtitle: 'Team members & roles', path: `${basePath}/staff` },
+        { icon: Wallet, label: 'Wallet', subtitle: 'Balances & payouts', path: `${basePath}/wallet`, color: 'bg-violet-500/10 text-violet-600' },
+        { icon: UserCog, label: 'Staff', subtitle: 'Team & roles', path: `${basePath}/staff`, color: 'bg-sky-500/10 text-sky-600' },
       ],
     },
     {
       title: 'Store',
       items: [
-        { icon: Store, label: 'Storefront', subtitle: 'Customize your online store', path: `${basePath}/storefront` },
-        { icon: Package, label: 'Products', subtitle: 'Manage catalog & pricing', path: `${basePath}/products` },
-        { icon: ShoppingBag, label: 'Inventory', subtitle: 'Track stock levels', path: `${basePath}/inventory` },
-        { icon: Ticket, label: 'Coupons', subtitle: 'Discounts & promotions', path: `${basePath}/coupons` },
+        { icon: Store, label: 'Storefront', subtitle: 'Customize online store', path: `${basePath}/storefront`, color: 'bg-emerald-500/10 text-emerald-600' },
+        { icon: Package, label: 'Products', subtitle: 'Catalog & pricing', path: `${basePath}/products`, color: 'bg-amber-500/10 text-amber-600' },
+        { icon: ShoppingBag, label: 'Inventory', subtitle: 'Stock levels', path: `${basePath}/inventory`, color: 'bg-rose-500/10 text-rose-600' },
+        { icon: Ticket, label: 'Coupons', subtitle: 'Discounts & promos', path: `${basePath}/coupons`, color: 'bg-indigo-500/10 text-indigo-600' },
       ],
     },
     {
       title: 'Sales',
       items: [
-        { icon: Monitor, label: 'POS Till', subtitle: 'Point of sale terminal', path: `${basePath}/till` },
-        { icon: ScanLine, label: 'Receive Payment', subtitle: 'QR code & payment links', path: `${basePath}/receive` },
-        { icon: BarChart3, label: 'Analytics', subtitle: 'Revenue & performance stats', path: `${basePath}/analytics` },
-        { icon: Users, label: 'Customers', subtitle: 'Customer directory', path: `${basePath}/customers` },
-        { icon: Star, label: 'Reviews', subtitle: 'Customer feedback & ratings', path: `${basePath}/reviews` },
+        { icon: Monitor, label: 'POS Till', subtitle: 'Point of sale', path: `${basePath}/till`, color: 'bg-cyan-500/10 text-cyan-600' },
+        { icon: ScanLine, label: 'Receive Payment', subtitle: 'QR & payment links', path: `${basePath}/receive`, color: 'bg-teal-500/10 text-teal-600' },
+        { icon: BarChart3, label: 'Analytics', subtitle: 'Revenue stats', path: `${basePath}/analytics`, color: 'bg-orange-500/10 text-orange-600' },
+        { icon: Users, label: 'Customers', subtitle: 'Customer directory', path: `${basePath}/customers`, color: 'bg-pink-500/10 text-pink-600' },
+        { icon: Star, label: 'Reviews', subtitle: 'Feedback & ratings', path: `${basePath}/reviews`, color: 'bg-yellow-500/10 text-yellow-600' },
       ],
     },
     {
       title: 'Settings',
       items: [
-        { icon: QrCode, label: 'Store QR Code', subtitle: 'Share with customers', action: () => setShowStoreQR(true) },
-        { icon: Bell, label: 'Notifications', subtitle: 'Alerts & sound preferences', path: `${basePath}/notifications` },
+        { icon: QrCode, label: 'Store QR Code', subtitle: 'Share with customers', action: () => setShowStoreQR(true), color: 'bg-stone-500/10 text-stone-600' },
+        { icon: Bell, label: 'Notifications', subtitle: 'Alert preferences', path: `${basePath}/notifications`, color: 'bg-blue-500/10 text-blue-600' },
       ],
     },
   ];
 
   return (
-    <div className="p-4 space-y-6 pb-20">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">More</h1>
-        <p className="text-sm text-muted-foreground">{merchant?.business_name || 'Business settings'}</p>
+    <div className="flex min-h-screen flex-col bg-background pb-24">
+      {/* Header */}
+      <header className="px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-4">
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Settings</h1>
+        <p className="text-xs text-muted-foreground font-medium mt-0.5">{merchant?.business_name || 'Business settings'}</p>
       </header>
 
-      {sections.map(section => (
-        <div key={section.title} className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground px-1">{section.title}</h2>
-          <Card className="border-0 shadow-sm overflow-hidden">
-            <CardContent className="p-0 divide-y divide-border">
+      {/* Sections */}
+      <div className="px-5 space-y-6">
+        {sections.map(section => (
+          <div key={section.title}>
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground/70 mb-2 px-1">{section.title}</h2>
+            <div className="rounded-2xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
               {section.items.map(item => {
                 const Icon = item.icon;
                 return (
                   <button
                     key={item.label}
-                    className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/50 transition-colors"
+                    className="w-full flex items-center gap-3.5 p-3.5 text-left transition-colors hover:bg-muted/40 active:bg-muted/60"
                     onClick={() => item.path ? navigate(item.path) : item.action?.()}
                   >
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-muted">
-                      <Icon className="h-4.5 w-4.5 text-muted-foreground" strokeWidth={1.5} />
+                    <div className={cn('flex h-9 w-9 items-center justify-center rounded-xl', item.color)}>
+                      <Icon className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.8} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium">{item.label}</p>
-                      {item.subtitle && <p className="text-xs text-muted-foreground">{item.subtitle}</p>}
+                      <p className="text-[13px] font-semibold text-foreground">{item.label}</p>
+                      {item.subtitle && <p className="text-[11px] text-muted-foreground mt-0.5">{item.subtitle}</p>}
                     </div>
-                    {item.badge && (
-                      <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{item.badge}</span>
-                    )}
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground/30" strokeWidth={2} />
                   </button>
                 );
               })}
-            </CardContent>
-          </Card>
-        </div>
-      ))}
+            </div>
+          </div>
+        ))}
 
-      <Button onClick={handleLogout} variant="outline" className="w-full rounded-2xl">
-        <LogOut className="h-4 w-4 mr-2" /> Logout
-      </Button>
+        <Button
+          onClick={handleLogout}
+          variant="ghost"
+          className="w-full rounded-2xl h-12 text-rose-500 hover:text-rose-600 hover:bg-rose-500/5 font-semibold"
+        >
+          <LogOut className="h-4 w-4 mr-2" strokeWidth={2} /> Sign Out
+        </Button>
+      </div>
 
       {/* Store QR Dialog */}
       <Dialog open={showStoreQR} onOpenChange={setShowStoreQR}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="text-center">Store QR Code</DialogTitle>
+            <DialogTitle className="text-center text-lg">Store QR Code</DialogTitle>
           </DialogHeader>
           <div className="flex flex-col items-center gap-4 py-4">
-            <div className="rounded-3xl border-2 border-border bg-white p-5">
-              <QRCodeSVG value={storeQRData} size={200} />
+            <div className="rounded-3xl bg-white p-6 shadow-inner">
+              <QRCodeSVG value={storeQRData} size={180} />
             </div>
-            <p className="text-sm font-bold text-foreground">{merchant?.business_name}</p>
-            <p className="text-xs text-muted-foreground text-center">Customers scan this code to visit your storefront</p>
+            <div className="text-center">
+              <p className="text-sm font-bold text-foreground">{merchant?.business_name}</p>
+              <p className="text-xs text-muted-foreground mt-1">Customers scan this to visit your store</p>
+            </div>
             <div className="grid w-full grid-cols-2 gap-3">
-              <Button variant="outline" className="rounded-2xl gap-2" onClick={async () => {
+              <Button variant="outline" className="rounded-full gap-2 h-10" onClick={async () => {
                 await navigator.clipboard.writeText(storeUrl);
                 toast.success('Link copied!');
               }}>
-                <Copy className="h-4 w-4" strokeWidth={1.5} /> Copy
+                <Copy className="h-3.5 w-3.5" strokeWidth={2} /> Copy
               </Button>
-              <Button className="rounded-2xl gap-2" onClick={handleShareStoreQR}>
-                <Share2 className="h-4 w-4" strokeWidth={1.5} /> Share
+              <Button className="rounded-full gap-2 h-10 bg-foreground text-background hover:bg-foreground/90" onClick={handleShareStoreQR}>
+                <Share2 className="h-3.5 w-3.5" strokeWidth={2} /> Share
               </Button>
             </div>
           </div>
