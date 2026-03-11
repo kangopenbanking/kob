@@ -792,6 +792,157 @@ export default function InstitutionLoans() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Marketplace Application Review Sheet */}
+      <Sheet open={!!selectedMarketplaceApp} onOpenChange={() => setSelectedMarketplaceApp(null)}>
+        <SheetContent className="sm:max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="text-lg">Marketplace Application Review</SheetTitle>
+          </SheetHeader>
+          {selectedMarketplaceApp && (
+            <div className="mt-6 space-y-4">
+              <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800 p-4 text-center">
+                <p className="text-xs text-muted-foreground mb-1">Requested Amount</p>
+                <p className="text-3xl font-bold text-emerald-700 dark:text-emerald-300">{Number(selectedMarketplaceApp.requested_amount).toLocaleString()} XAF</p>
+                <p className="text-xs text-muted-foreground mt-1">Tenure: {selectedMarketplaceApp.requested_tenure_months || '—'} months</p>
+              </div>
+
+              <div className="rounded-lg border border-border/40 p-3 flex items-center justify-between">
+                <span className="text-xs font-medium text-muted-foreground">Credit Score at Application</span>
+                <Badge variant="outline" className={`text-sm font-bold ${(selectedMarketplaceApp.credit_score_at_application || 0) >= 700 ? 'bg-fi-green/10 text-fi-green border-fi-green/30' : (selectedMarketplaceApp.credit_score_at_application || 0) >= 580 ? 'bg-fi-amber/10 text-fi-amber border-fi-amber/30' : 'bg-destructive/10 text-destructive border-destructive/30'}`}>
+                  {selectedMarketplaceApp.credit_score_at_application || '—'}
+                </Badge>
+              </div>
+
+              {selectedMarketplaceApp.hard_inquiry_id && (
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800">
+                  <ShieldAlert className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-red-800 dark:text-red-300">Hard Credit Check Logged</p>
+                    <p className="text-xs text-red-700 dark:text-red-400 mt-0.5">A hard inquiry was recorded on the customer's credit profile when they applied.</p>
+                  </div>
+                </div>
+              )}
+
+              {!selectedMarketplaceApp.has_existing_account && (
+                <div className="flex items-start gap-3 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-semibold text-amber-800 dark:text-amber-300">No Existing Account</p>
+                    <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">This customer does not currently bank with your institution. Account opening may be required.</p>
+                  </div>
+                </div>
+              )}
+
+              {[
+                { label: "Application ID", value: selectedMarketplaceApp.id.slice(0, 12) + '...' },
+                { label: "Status", value: selectedMarketplaceApp.status.replace('_', ' ') },
+                { label: "Existing Account", value: selectedMarketplaceApp.has_existing_account ? 'Yes' : 'No' },
+                { label: "Applied", value: selectedMarketplaceApp.created_at ? format(new Date(selectedMarketplaceApp.created_at), 'PPp') : '—' },
+              ].map(f => (
+                <div key={f.label} className="flex items-center justify-between border-b border-border/30 pb-2">
+                  <span className="text-xs text-muted-foreground">{f.label}</span>
+                  <span className="text-sm font-medium capitalize">{f.value}</span>
+                </div>
+              ))}
+
+              {selectedMarketplaceApp.decline_reason && (
+                <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-3">
+                  <p className="text-xs font-semibold text-destructive mb-1">Decline Reason</p>
+                  <p className="text-sm">{selectedMarketplaceApp.decline_reason}</p>
+                </div>
+              )}
+
+              {selectedMarketplaceApp.status === 'pending_review' && (
+                <div className="pt-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Actions</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1 gap-1.5 bg-fi-green text-white hover:bg-fi-green/90" onClick={() => handleUpdateMarketplaceApp(selectedMarketplaceApp.id, 'approved')}>
+                      <CheckCircle className="h-3.5 w-3.5" />Approve
+                    </Button>
+                    <Button size="sm" variant="destructive" className="flex-1 gap-1.5" onClick={() => handleUpdateMarketplaceApp(selectedMarketplaceApp.id, 'declined', 'Application did not meet lending criteria after full review')}>
+                      <XCircle className="h-3.5 w-3.5" />Decline
+                    </Button>
+                  </div>
+                  <Button size="sm" variant="outline" className="w-full gap-1.5" onClick={() => handleUpdateMarketplaceApp(selectedMarketplaceApp.id, 'hard_check_initiated')}>
+                    <ShieldAlert className="h-3.5 w-3.5" />Initiate Full Credit Check
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Create Pre-Approved Offer Dialog */}
+      <Dialog open={showCreateOffer} onOpenChange={setShowCreateOffer}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto" onPointerDownOutside={e => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><Star className="h-5 w-5 text-emerald-600" />Create Pre-Approved Offer</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 pt-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Product Name *</Label>
+              <Input placeholder="e.g. Instant Personal Loan" value={newOffer.product_name} onChange={e => setNewOffer(p => ({ ...p, product_name: e.target.value }))} className="h-9 text-sm" />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Description</Label>
+              <Textarea placeholder="Brief description of the offer..." value={newOffer.description} onChange={e => setNewOffer(p => ({ ...p, description: e.target.value }))} className="text-sm min-h-[60px]" />
+            </div>
+
+            {/* Credit Score Benchmark */}
+            <div className="p-4 rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
+              <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">Credit Score Benchmark</p>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Minimum Score</span>
+                  <span className="font-bold">{newOffer.min_credit_score}</span>
+                </div>
+                <Slider value={[newOffer.min_credit_score]} onValueChange={v => setNewOffer(p => ({ ...p, min_credit_score: v[0] }))} min={300} max={850} step={10} />
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground">Maximum Score</span>
+                  <span className="font-bold">{newOffer.max_credit_score}</span>
+                </div>
+                <Slider value={[newOffer.max_credit_score]} onValueChange={v => setNewOffer(p => ({ ...p, max_credit_score: v[0] }))} min={newOffer.min_credit_score} max={850} step={10} />
+              </div>
+              <p className="text-[10px] text-muted-foreground">Customers with scores between {newOffer.min_credit_score} and {newOffer.max_credit_score} will see this offer</p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Min Amount (XAF)</Label>
+                <Input type="number" value={newOffer.min_amount} onChange={e => setNewOffer(p => ({ ...p, min_amount: e.target.value }))} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Max Amount (XAF)</Label>
+                <Input type="number" value={newOffer.max_amount} onChange={e => setNewOffer(p => ({ ...p, max_amount: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Interest Rate (% p.a.) *</Label>
+                <Input type="number" step="0.1" value={newOffer.interest_rate_annual} onChange={e => setNewOffer(p => ({ ...p, interest_rate_annual: e.target.value }))} className="h-9 text-sm" />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold">Max Tenure (months)</Label>
+                <Input type="number" value={newOffer.max_tenure_months} onChange={e => setNewOffer(p => ({ ...p, max_tenure_months: e.target.value }))} className="h-9 text-sm" />
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-lg border border-border/40">
+              <div>
+                <p className="text-sm font-medium">Require Existing Account</p>
+                <p className="text-[10px] text-muted-foreground">Only show to customers who bank with you</p>
+              </div>
+              <Switch checked={newOffer.requires_existing_account} onCheckedChange={v => setNewOffer(p => ({ ...p, requires_existing_account: v }))} />
+            </div>
+            <Button onClick={handleCreatePreapprovedOffer} disabled={creatingOffer || !newOffer.product_name} className="mt-2 bg-emerald-600 text-white hover:bg-emerald-700">
+              {creatingOffer ? 'Creating...' : 'Create Pre-Approved Offer'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
