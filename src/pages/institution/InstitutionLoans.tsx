@@ -211,6 +211,7 @@ export default function InstitutionLoans() {
     loadData();
   };
 
+  const exportCSV = () => {
     const headers = ["Application #", "Amount", "Tenure", "Status", "Purpose", "Credit Score", "Date"];
     const rows = applications.map(a => [a.application_number, a.requested_amount, a.tenure_months, a.status, a.purpose, a.credit_score || '', a.created_at ? format(new Date(a.created_at), 'yyyy-MM-dd') : '']);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
