@@ -3,6 +3,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { validateUserRole, errorResponse } from '../_shared/role-middleware.ts';
 import { verifyCronAuth } from '../_shared/cron-auth.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendManagedEmail, getUserName, emailManagers } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
