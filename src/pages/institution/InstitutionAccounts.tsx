@@ -164,6 +164,17 @@ export default function InstitutionAccounts() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Handle approval-required response from withdrawal policy engine
+      if (data?.requires_approval) {
+        toast({
+          title: "Approval Required",
+          description: data.message || `This withdrawal of ${amt.toLocaleString()} requires manager approval. Request ID: ${data.withdrawal_request_id?.substring(0, 8) || 'pending'}`,
+        });
+        setTellerOpen(false);
+        return;
+      }
+
       toast({ title: `${tellerOp === 'deposit' ? 'Deposit' : 'Withdrawal'} Successful`, description: `${data.currency} ${amt.toLocaleString()} — New balance: ${data.balance_after?.toLocaleString()} ${data.currency}` });
       setTellerOpen(false);
       loadData();
