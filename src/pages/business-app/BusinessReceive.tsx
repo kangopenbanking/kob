@@ -134,7 +134,7 @@ const BusinessReceive: React.FC = () => {
   };
 
   const handleShareLink = async (link: any) => {
-    const url = `${window.location.origin}/pay/${link.slug}`;
+    const url = getCanonicalUrl(`/pay/${link.slug}`);
     if (navigator.share) {
       try { await navigator.share({ title: link.title, text: `Pay ${formatXAF(link.amount)} - ${link.title}`, url }); } catch {}
     } else {
