@@ -12,6 +12,7 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp
 import { UserPlus, Loader2, Shield, Pencil, Trash2, Eye, EyeOff, Copy, Link2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { getCanonicalUrl } from '@/config/api';
 
 const permissionKeys = [
   { key: 'services', label: 'Services', desc: 'Manage travel services' },
