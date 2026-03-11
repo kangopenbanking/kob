@@ -81,8 +81,7 @@ const BusinessQuickOrder: React.FC = () => {
     },
     onSuccess: () => {
       toast.success('Order created!');
-      const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
-      navigate(`${basePath}/orders`);
+      navigate('/biz/orders');
     },
     onError: (e: any) => toast.error(e.message),
   });
