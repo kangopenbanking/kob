@@ -441,6 +441,7 @@ import BusinessAnalytics from "./pages/business-app/BusinessAnalytics";
 import BusinessStaff from "./pages/business-app/BusinessStaff";
 import BusinessStorefront from "./pages/business-app/BusinessStorefront";
 import BusinessInventory from "./pages/business-app/BusinessInventory";
+import BusinessProductForm from "./pages/business-app/BusinessProductForm";
 
 const queryClient = new QueryClient({
   defaultOptions: {
