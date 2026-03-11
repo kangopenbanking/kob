@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { SessionGuard } from '@/components/auth/SessionGuard';
-import { useAppCacheClear } from '@/hooks/useAppCacheClear';
+
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -133,7 +133,7 @@ const BusinessAppInner: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
   const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
   const queryClient = useQueryClient();
-  useAppCacheClear();
+  // Removed useAppCacheClear — it was clearing all caches on every mount, causing slow reloads
 
   const handleRefresh = useCallback(async () => {
     await queryClient.invalidateQueries();

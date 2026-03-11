@@ -22,6 +22,8 @@ const BusinessHome: React.FC = () => {
     todayOrders,
     charges,
     isLoading,
+    walletsLoading,
+    chargesLoading,
   } = useBusinessData(merchantId);
   const queryClient = useQueryClient();
 
@@ -64,9 +66,6 @@ const BusinessHome: React.FC = () => {
       <div className="p-5 space-y-6">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-[140px] rounded-3xl" />
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
-        </div>
       </div>
     );
   }
@@ -118,17 +117,21 @@ const BusinessHome: React.FC = () => {
             </button>
           </div>
           <p className="mt-3 text-[2rem] font-bold tracking-tight leading-none">
-            {formatXAF(availableBalance + pendingBalance)}
+            {walletsLoading ? <Skeleton className="h-8 w-40 bg-background/20" /> : formatXAF(availableBalance + pendingBalance)}
           </p>
           <div className="mt-4 flex items-center gap-6">
             <div>
               <p className="text-[10px] text-background/50 uppercase tracking-wider">Available</p>
-              <p className="text-sm font-semibold text-emerald-300 mt-0.5">{formatXAF(availableBalance)}</p>
+              <p className="text-sm font-semibold text-emerald-300 mt-0.5">
+                {walletsLoading ? <Skeleton className="h-4 w-20 bg-background/20" /> : formatXAF(availableBalance)}
+              </p>
             </div>
             <div className="h-6 w-px bg-background/15" />
             <div>
               <p className="text-[10px] text-background/50 uppercase tracking-wider">Pending</p>
-              <p className="text-sm font-semibold text-amber-300 mt-0.5">{formatXAF(pendingBalance)}</p>
+              <p className="text-sm font-semibold text-amber-300 mt-0.5">
+                {walletsLoading ? <Skeleton className="h-4 w-20 bg-background/20" /> : formatXAF(pendingBalance)}
+              </p>
             </div>
           </div>
         </div>
