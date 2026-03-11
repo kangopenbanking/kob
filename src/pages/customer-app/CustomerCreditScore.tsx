@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, TrendingDown, Shield, Clock, CreditCard, Loader2, Zap, Calendar, AlertCircle, MapPin, PiggyBank, Users, Home, ChevronRight, Lightbulb, CheckCircle2, XCircle, Building2, Percent, Banknote, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerCreditScore } from '@/hooks/useCustomerData';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const CustomerCreditScore: React.FC = () => {
   const navigate = useNavigate();
