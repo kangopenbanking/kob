@@ -167,7 +167,50 @@ export default function InstitutionLoans() {
     loadData();
   };
 
-  const exportCSV = () => {
+  const handleCreatePreapprovedOffer = async () => {
+    if (!institutionId || !newOffer.product_name) return;
+    setCreatingOffer(true);
+    try {
+      const { error } = await supabase.from("preapproved_loan_offers").insert({
+        institution_id: institutionId,
+        product_name: newOffer.product_name,
+        description: newOffer.description || null,
+        min_credit_score: newOffer.min_credit_score,
+        max_credit_score: newOffer.max_credit_score,
+        min_amount: Number(newOffer.min_amount),
+        max_amount: Number(newOffer.max_amount),
+        interest_rate_annual: Number(newOffer.interest_rate_annual),
+        max_tenure_months: Number(newOffer.max_tenure_months),
+        requires_existing_account: newOffer.requires_existing_account,
+        is_active: true,
+      });
+      if (error) throw error;
+      toast.success("Pre-approved offer created successfully");
+      setShowCreateOffer(false);
+      setNewOffer({ product_name: "", description: "", min_credit_score: 650, max_credit_score: 850, min_amount: "100000", max_amount: "5000000", interest_rate_annual: "15", max_tenure_months: "36", requires_existing_account: false });
+      loadData();
+    } catch (err: any) { toast.error(err.message || "Failed to create offer"); }
+    finally { setCreatingOffer(false); }
+  };
+
+  const handleToggleOffer = async (offerId: string, currentActive: boolean) => {
+    const { error } = await supabase.from("preapproved_loan_offers").update({ is_active: !currentActive }).eq("id", offerId);
+    if (error) { toast.error("Failed to update offer"); return; }
+    toast.success(`Offer ${!currentActive ? 'activated' : 'deactivated'}`);
+    loadData();
+  };
+
+  const handleUpdateMarketplaceApp = async (appId: string, newStatus: string, declineReason?: string) => {
+    const updateData: any = { status: newStatus, updated_at: new Date().toISOString() };
+    if (declineReason) updateData.decline_reason = declineReason;
+    if (newStatus === 'declined') updateData.score_impact = -5;
+    const { error } = await supabase.from("preapproved_loan_applications").update(updateData).eq("id", appId);
+    if (error) { toast.error("Failed to update application"); return; }
+    toast.success(`Application ${newStatus}`);
+    setSelectedMarketplaceApp(null);
+    loadData();
+  };
+
     const headers = ["Application #", "Amount", "Tenure", "Status", "Purpose", "Credit Score", "Date"];
     const rows = applications.map(a => [a.application_number, a.requested_amount, a.tenure_months, a.status, a.purpose, a.credit_score || '', a.created_at ? format(new Date(a.created_at), 'yyyy-MM-dd') : '']);
     const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
