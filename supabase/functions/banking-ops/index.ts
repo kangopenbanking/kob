@@ -1,6 +1,7 @@
 // Consolidated router for banking operations: withdrawal-policies, staff-authorizations, withdrawal-requests, approvals
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendManagedEmail, getAccountRef, getUserName, getUserEmail, getBranchName, emailManagers } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -91,6 +92,9 @@ async function requireInstitutionAccess(supabase: any, userId: string, instituti
   if (staff) return 'staff';
   throw new Error('Insufficient permissions for this institution');
 }
+
+// High-value threshold for alerts (XAF)
+const HIGH_VALUE_THRESHOLD = 1000000;
 
 // ═══════════════════════════════════════════════════════════════════
 // WITHDRAWAL POLICIES
@@ -291,15 +295,45 @@ async function handleCreateWithdrawalRequest(req: Request, body: any) {
 
   const policy = policyResult.data;
 
+  // Get account info for emails
+  const accountRef = await getAccountRef(supabase, account_id);
+  const { data: acct } = await supabase.from('accounts').select('user_id').eq('id', account_id).single();
+  const accountOwnerId = acct?.user_id;
+  const customerName = accountOwnerId ? await getUserName(supabase, accountOwnerId) : 'Customer';
+  const staffName = await getUserName(supabase, user.id);
+  const branchName = await getBranchName(supabase, branch_id || null);
+  const cur = currency || 'XAF';
+  const formattedAmount = new Intl.NumberFormat('fr-CM').format(amount);
+
   if (policy?.allowed) {
-    // Within policy — can be auto-executed or drafted
+    // Within policy — auto-executed
     const { data, error: e } = await supabase.from('withdrawal_requests').insert({
       institution_id, branch_id: branch_id || null, account_id,
-      initiated_by_staff_id: user.id, amount, currency: currency || 'XAF',
+      initiated_by_staff_id: user.id, amount, currency: cur,
       channel: channel || 'branch', source_type: 'staff', source_endpoint: 'banking-ops',
       current_status: 'approved', policy_result: policy, reason,
     }).select().single();
     if (e) throw e;
+
+    // ✉️ Email customer: withdrawal approved
+    if (accountOwnerId) {
+      sendManagedEmail(supabase, {
+        email_key: 'withdrawal_approved',
+        recipient_user_id: accountOwnerId,
+        institution_id,
+        variables: { customer_name: customerName, amount: formattedAmount, currency: cur, reference: data.id.slice(0, 8), account_ref: accountRef, date: new Date().toLocaleDateString('en-GB') },
+      });
+    }
+
+    // ✉️ High-value alert to management
+    if (amount >= HIGH_VALUE_THRESHOLD) {
+      emailManagers(supabase, {
+        institution_id, branch_id, role_type: 'general_manager',
+        email_key: 'high_value_withdrawal_alert',
+        variables: { amount: formattedAmount, currency: cur, account_ref: accountRef, processed_by: staffName, branch_name: branchName, approval_status: 'Auto-approved (within policy)', reference: data.id.slice(0, 8) },
+      });
+    }
+
     return ok({ success: true, withdrawal_request: data, policy_evaluation: policy, auto_approved: true });
   }
 
@@ -310,7 +344,7 @@ async function handleCreateWithdrawalRequest(req: Request, body: any) {
 
   const { data: wr, error: wrErr } = await supabase.from('withdrawal_requests').insert({
     institution_id, branch_id: branch_id || null, account_id,
-    initiated_by_staff_id: user.id, amount, currency: currency || 'XAF',
+    initiated_by_staff_id: user.id, amount, currency: cur,
     channel: channel || 'branch', source_type: 'staff', source_endpoint: 'banking-ops',
     current_status: approvalStatus, policy_result: policy,
     required_role: escalationRole, reason,
@@ -334,17 +368,35 @@ async function handleCreateWithdrawalRequest(req: Request, body: any) {
   await supabase.from('approval_actions').insert({
     approval_request_id: ar.id, action: 'submit', acted_by: user.id,
     acted_role: policy?.staff_role || null,
-    comments: `Withdrawal of ${amount} ${currency || 'XAF'} exceeds ${policy?.reason || 'policy limit'}`,
+    comments: `Withdrawal of ${amount} ${cur} exceeds ${policy?.reason || 'policy limit'}`,
     metadata: { amount, policy_result: policy },
   });
 
   await supabase.rpc('log_audit_event', { _action_type: 'withdrawal_request_escalated', _entity_type: 'withdrawal_request', _entity_id: wr.id, _details: { amount, escalation_role: escalationRole, policy_result: policy } });
 
-  // Notify managers with the required role about the pending approval
+  // ✉️ Email customer: withdrawal pending approval
+  if (accountOwnerId) {
+    sendManagedEmail(supabase, {
+      email_key: 'withdrawal_pending_approval',
+      recipient_user_id: accountOwnerId,
+      institution_id,
+      variables: { customer_name: customerName, amount: formattedAmount, currency: cur, reference: wr.id.slice(0, 8), account_ref: accountRef, date: new Date().toLocaleDateString('en-GB') },
+    });
+  }
+
+  // ✉️ Email managers: approval pending
+  const roleName = escalationRole.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+  emailManagers(supabase, {
+    institution_id, branch_id, role_type: escalationRole,
+    email_key: 'approval_pending_manager',
+    variables: { role_title: roleName, amount: formattedAmount, currency: cur, account_ref: accountRef, submitted_by: staffName, branch_name: branchName, reason: reason || 'Exceeds policy limit', reference: wr.id.slice(0, 8) },
+  });
+
+  // In-app notification (existing)
   await notifyPendingApprovalManagers(supabase, {
     institution_id, branch_id: branch_id || null,
     escalation_role: escalationRole, approval_request_id: ar.id,
-    amount, currency: currency || 'XAF', submitted_by_id: user.id,
+    amount, currency: cur, submitted_by_id: user.id,
   });
 
   return ok({ success: true, withdrawal_request: { ...wr, approval_request_id: ar.id }, approval_request: ar, policy_evaluation: policy, requires_approval: true, pending_role: escalationRole }, 202);
@@ -459,7 +511,6 @@ async function handleApproveAction(req: Request, body: any) {
   const { data: approverAuth } = await supabase.from('staff_authorizations').select('*').eq('user_id', user.id).eq('institution_id', ar.institution_id).eq('status', 'active').maybeSingle();
 
   if (!approverRole && !approverAuth) {
-    // Check if institution owner or admin
     const access = await requireInstitutionAccess(supabase, user.id, ar.institution_id);
     if (access === 'staff') return error(403, 'Insufficient authority to approve');
   } else if (approverRole) {
@@ -476,13 +527,20 @@ async function handleApproveAction(req: Request, body: any) {
     metadata: { approved_at: new Date().toISOString() },
   });
 
-  // If this is a withdrawal override, update the withdrawal request
+  // If this is a withdrawal override, update the withdrawal request and send emails
   if (ar.entity_type === 'withdrawal_request') {
     await supabase.from('withdrawal_requests').update({ current_status: 'approved', updated_at: new Date().toISOString() }).eq('id', ar.entity_id);
 
-    // Execute the withdrawal through existing teller-transaction
     const { data: wr } = await supabase.from('withdrawal_requests').select('*').eq('id', ar.entity_id).single();
     if (wr) {
+      const accountRef = await getAccountRef(supabase, wr.account_id);
+      const { data: acct } = await supabase.from('accounts').select('user_id').eq('id', wr.account_id).single();
+      const accountOwnerId = acct?.user_id;
+      const customerName = accountOwnerId ? await getUserName(supabase, accountOwnerId) : 'Customer';
+      const formattedAmount = new Intl.NumberFormat('fr-CM').format(wr.amount);
+      const approverName = await getUserName(supabase, user.id);
+      const branchName = await getBranchName(supabase, wr.branch_id);
+
       try {
         const tellerResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/teller-transaction`, {
           method: 'POST',
@@ -495,6 +553,25 @@ async function handleApproveAction(req: Request, body: any) {
           await supabase.from('withdrawal_requests').update({ current_status: 'executed', execution_reference: tellerResult.transaction_ref, updated_at: new Date().toISOString() }).eq('id', ar.entity_id);
           await supabase.from('approval_requests').update({ status: 'executed' }).eq('id', approval_id);
           await supabase.from('approval_actions').insert({ approval_request_id: approval_id, action: 'execute', acted_by: user.id, acted_role: approverRole?.role_type || null, comments: 'Withdrawal executed after approval', metadata: tellerResult });
+
+          // ✉️ Email customer: withdrawal approved & executed
+          if (accountOwnerId) {
+            sendManagedEmail(supabase, {
+              email_key: 'withdrawal_approved',
+              recipient_user_id: accountOwnerId,
+              institution_id: wr.institution_id,
+              variables: { customer_name: customerName, amount: formattedAmount, currency: wr.currency, reference: wr.id.slice(0, 8), account_ref: accountRef, date: new Date().toLocaleDateString('en-GB') },
+            });
+          }
+
+          // ✉️ High-value alert
+          if (wr.amount >= HIGH_VALUE_THRESHOLD) {
+            emailManagers(supabase, {
+              institution_id: wr.institution_id, branch_id: wr.branch_id, role_type: 'general_manager',
+              email_key: 'high_value_withdrawal_alert',
+              variables: { amount: formattedAmount, currency: wr.currency, account_ref: accountRef, processed_by: approverName, branch_name: branchName, approval_status: `Approved by ${approverRole?.role_type || 'owner'}`, reference: wr.id.slice(0, 8) },
+            });
+          }
         }
 
         return ok({ success: true, status: 'approved_and_executed', withdrawal_result: tellerResult });
@@ -526,6 +603,22 @@ async function handleRejectAction(req: Request, body: any) {
 
   if (ar.entity_type === 'withdrawal_request') {
     await supabase.from('withdrawal_requests').update({ current_status: 'rejected', updated_at: new Date().toISOString() }).eq('id', ar.entity_id);
+
+    // ✉️ Email customer: withdrawal rejected
+    const { data: wr } = await supabase.from('withdrawal_requests').select('account_id, amount, currency').eq('id', ar.entity_id).single();
+    if (wr) {
+      const accountRef = await getAccountRef(supabase, wr.account_id);
+      const { data: acct } = await supabase.from('accounts').select('user_id').eq('id', wr.account_id).single();
+      if (acct?.user_id) {
+        const customerName = await getUserName(supabase, acct.user_id);
+        sendManagedEmail(supabase, {
+          email_key: 'withdrawal_rejected',
+          recipient_user_id: acct.user_id,
+          institution_id: ar.institution_id,
+          variables: { customer_name: customerName, amount: new Intl.NumberFormat('fr-CM').format(wr.amount), currency: wr.currency, reference: ar.entity_id.slice(0, 8), account_ref: accountRef, reason: comments || reason || 'Management decision' },
+        });
+      }
+    }
   }
 
   await supabase.rpc('log_audit_event', { _action_type: 'approval_rejected', _entity_type: 'approval_request', _entity_id: approval_id, _details: { rejected_by: user.id, reason: comments || reason } });
@@ -549,6 +642,19 @@ async function handleEscalateAction(req: Request, body: any) {
 
   if (ar.entity_type === 'withdrawal_request') {
     await supabase.from('withdrawal_requests').update({ current_status: nextStage, required_role: nextRole, updated_at: new Date().toISOString() }).eq('id', ar.entity_id);
+
+    // ✉️ Email escalated managers
+    const { data: wr } = await supabase.from('withdrawal_requests').select('account_id, amount, currency, branch_id').eq('id', ar.entity_id).single();
+    if (wr) {
+      const accountRef = await getAccountRef(supabase, wr.account_id);
+      const fromRoleName = (ar.required_role || '').replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+      const toRoleName = nextRole.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
+      emailManagers(supabase, {
+        institution_id: ar.institution_id, branch_id: wr.branch_id, role_type: nextRole,
+        email_key: 'approval_escalated',
+        variables: { role_title: toRoleName, amount: new Intl.NumberFormat('fr-CM').format(wr.amount), currency: wr.currency, account_ref: accountRef, from_role: fromRoleName, escalation_reason: comments || 'Escalated for higher authority review', reference: ar.entity_id.slice(0, 8) },
+      });
+    }
   }
 
   return ok({ success: true, status: nextStage, escalated_to: nextRole });
@@ -574,7 +680,7 @@ async function handleEvaluatePolicy(req: Request, body: any) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// PUSH NOTIFICATION FOR PENDING APPROVALS
+// IN-APP PUSH NOTIFICATION FOR PENDING APPROVALS
 // ═══════════════════════════════════════════════════════════════════
 
 async function notifyPendingApprovalManagers(
@@ -590,7 +696,6 @@ async function notifyPendingApprovalManagers(
   }
 ) {
   try {
-    // Find all staff with the required operational role at this institution/branch
     let query = supabase
       .from('institution_operational_roles')
       .select('user_id')
@@ -599,7 +704,6 @@ async function notifyPendingApprovalManagers(
       .eq('is_active', true);
 
     if (params.branch_id) {
-      // Include branch-specific and institution-wide managers
       query = query.or(`branch_id.eq.${params.branch_id},branch_id.is.null`);
     }
 
@@ -610,10 +714,8 @@ async function notifyPendingApprovalManagers(
     const formattedAmount = new Intl.NumberFormat('fr-CM', { style: 'currency', currency: params.currency }).format(params.amount);
 
     for (const mgr of managers) {
-      // Skip notifying the person who submitted
       if (mgr.user_id === params.submitted_by_id) continue;
 
-      // In-app notification
       await supabase.from('app_notifications').insert({
         user_id: mgr.user_id,
         institution_id: params.institution_id,
@@ -629,7 +731,6 @@ async function notifyPendingApprovalManagers(
         },
       });
 
-      // Push notification via push-notification function
       try {
         await supabase.functions.invoke('push-notification', {
           body: {
@@ -639,10 +740,7 @@ async function notifyPendingApprovalManagers(
             title: 'Withdrawal Approval Required',
             message: `A withdrawal of ${formattedAmount} requires your approval as ${roleName}.`,
             icon: 'alert-triangle',
-            metadata: {
-              approval_request_id: params.approval_request_id,
-              amount: params.amount,
-            },
+            metadata: { approval_request_id: params.approval_request_id, amount: params.amount },
           },
         });
       } catch (pushErr) {
@@ -650,7 +748,6 @@ async function notifyPendingApprovalManagers(
       }
     }
   } catch (err) {
-    // Non-fatal — log but don't break the approval flow
     console.error('notifyPendingApprovalManagers error:', err);
   }
 }

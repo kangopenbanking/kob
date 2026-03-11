@@ -1,6 +1,7 @@
 // Overdraft eligibility engine and management operations
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendManagedEmail, getAccountRef, getUserName, emailManagers } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -71,14 +72,13 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
   const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString();
   const threeMonthsAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString();
 
-  // 1. Salary score: recurring credits of similar amounts
+  // 1. Salary score
   let salaryScore = 0;
   const { data: credits } = await supabase.from('transactions').select('amount, booking_datetime')
     .eq('account_id', accountId).eq('credit_debit_indicator', 'Credit')
     .gte('booking_datetime', sixMonthsAgo).order('booking_datetime', { ascending: false }).limit(100);
 
   if (credits && credits.length > 0) {
-    // Group by month and find recurring amounts
     const monthlyCredits: Record<string, number[]> = {};
     credits.forEach((tx: any) => {
       const month = tx.booking_datetime.substring(0, 7);
@@ -86,14 +86,12 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
       monthlyCredits[month].push(Number(tx.amount));
     });
     const months = Object.keys(monthlyCredits).length;
-    if (months >= 3) salaryScore += 5; // Has 3+ months of activity
+    if (months >= 3) salaryScore += 5;
     if (months >= 6) salaryScore += 5;
-
-    // Check for recurring similar-value credits (salary pattern)
     const allAmounts = credits.map((c: any) => Number(c.amount));
     const avgCredit = allAmounts.reduce((a: number, b: number) => a + b, 0) / allAmounts.length;
     const recurringCredits = allAmounts.filter((a: number) => Math.abs(a - avgCredit) / avgCredit < 0.15);
-    if (recurringCredits.length >= 3) salaryScore += 10; // Consistent income pattern
+    if (recurringCredits.length >= 3) salaryScore += 10;
   }
 
   // 2. Savings score
@@ -108,7 +106,7 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
     if (totalSavings > 500000) savingsScore += 5;
   }
 
-  // 3. Balance score: average balance over last 3 months
+  // 3. Balance score
   let balanceScore = 0;
   const { data: balances } = await supabase.from('account_balances').select('amount, balance_datetime')
     .eq('account_id', accountId).in('balance_type', ['InterimAvailable', 'ClosingAvailable'])
@@ -133,7 +131,7 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
     if (tenureMonths >= 24) tenureScore += 5;
   }
 
-  // 5. Activity score: transaction volume
+  // 5. Activity score
   let activityScore = 0;
   const { count: txCount } = await supabase.from('transactions').select('*', { count: 'exact', head: true })
     .eq('account_id', accountId).gte('booking_datetime', threeMonthsAgo);
@@ -142,14 +140,12 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
   if (txCount && txCount > 60) activityScore += 5;
   if (txCount && txCount > 100) activityScore += 5;
 
-  // 6. Repayment score: loan repayment history
+  // 6. Repayment score
   let repaymentScore = 0;
   const { data: loanAccounts } = await supabase.from('loan_accounts').select('id, status').eq('user_id', userId);
   if (loanAccounts && loanAccounts.length > 0) {
     const closedLoans = loanAccounts.filter((la: any) => la.status === 'closed' || la.status === 'completed');
     if (closedLoans.length > 0) repaymentScore += 10;
-
-    // Check for on-time repayments
     const { data: onTimePayments } = await supabase.from('loan_repayment_schedule').select('id')
       .in('loan_account_id', loanAccounts.map((l: any) => l.id))
       .eq('status', 'paid').limit(50);
@@ -169,10 +165,8 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
     else creditScoreInput = 0;
   }
 
-  // Calculate final score (max 100)
   const finalScore = Math.min(100, salaryScore + savingsScore + balanceScore + tenureScore + activityScore + repaymentScore + creditScoreInput);
 
-  // Determine recommendation
   let recommendation: string;
   let riskBand: string;
   if (finalScore >= 75) { recommendation = 'Highly eligible — auto-approve recommended'; riskBand = 'A'; }
@@ -182,15 +176,9 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
   else { recommendation = 'Not eligible — insufficient account activity'; riskBand = 'F'; }
 
   return {
-    salary_score: salaryScore,
-    savings_score: savingsScore,
-    balance_score: balanceScore,
-    tenure_score: tenureScore,
-    activity_score: activityScore,
-    repayment_score: repaymentScore,
-    credit_score_input: creditScoreInput,
-    final_score: finalScore,
-    recommendation,
+    salary_score: salaryScore, savings_score: savingsScore, balance_score: balanceScore,
+    tenure_score: tenureScore, activity_score: activityScore, repayment_score: repaymentScore,
+    credit_score_input: creditScoreInput, final_score: finalScore, recommendation,
     factor_summary: {
       salary_pattern: salaryScore > 10 ? 'strong' : salaryScore > 5 ? 'moderate' : 'weak',
       savings_health: savingsScore > 10 ? 'strong' : savingsScore > 5 ? 'moderate' : 'weak',
@@ -205,15 +193,14 @@ async function calculateOverdraftScore(supabase: any, accountId: string, userId:
 }
 
 function calculateRecommendedLimit(factors: ScoreFactors, avgMonthlyInflow: number): number {
-  // Recommended limit = percentage of average monthly inflow based on score
   let percentage = 0;
-  if (factors.final_score >= 75) percentage = 0.5;    // 50% of monthly income
-  else if (factors.final_score >= 55) percentage = 0.3; // 30%
-  else if (factors.final_score >= 40) percentage = 0.15; // 15%
+  if (factors.final_score >= 75) percentage = 0.5;
+  else if (factors.final_score >= 55) percentage = 0.3;
+  else if (factors.final_score >= 40) percentage = 0.15;
   else percentage = 0;
 
-  const limit = Math.round(avgMonthlyInflow * percentage / 1000) * 1000; // Round to nearest 1000
-  return Math.max(0, Math.min(limit, 5000000)); // Cap at 5M XAF
+  const limit = Math.round(avgMonthlyInflow * percentage / 1000) * 1000;
+  return Math.max(0, Math.min(limit, 5000000));
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -226,7 +213,6 @@ async function handleGetProfile(req: Request, body: any) {
   const { account_id } = body;
   if (!account_id) return error(400, 'account_id required');
 
-  // Check access — account owner or institution staff
   const { data: account } = await supabase.from('accounts').select('user_id, institution_id').eq('id', account_id).single();
   if (!account) return error(404, 'Account not found');
   if (account.user_id !== user.id) {
@@ -247,10 +233,8 @@ async function handleRecalculate(req: Request, body: any) {
   const { data: account } = await supabase.from('accounts').select('id, user_id, institution_id').eq('id', account_id).single();
   if (!account) return error(404, 'Account not found');
 
-  // Calculate score factors
   const factors = await calculateOverdraftScore(supabase, account_id, account.user_id);
 
-  // Get average monthly inflow for limit calculation
   const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString();
   const { data: recentCredits } = await supabase.from('transactions').select('amount')
     .eq('account_id', account_id).eq('credit_debit_indicator', 'Credit')
@@ -262,7 +246,6 @@ async function handleRecalculate(req: Request, body: any) {
   const eligible = factors.final_score >= 25;
   const manualApprovalRequired = factors.final_score < 75;
 
-  // Upsert profile
   const { data: profile, error: upsertErr } = await supabase.from('account_overdraft_profiles').upsert({
     account_id,
     institution_id: account.institution_id || '00000000-0000-0000-0000-000000000000',
@@ -285,9 +268,28 @@ async function handleRecalculate(req: Request, body: any) {
       available_amount: recommendedLimit,
       status: 'active',
     }).eq('id', profile.id);
+
+    // ✉️ Email customer: overdraft auto-approved
+    const accountRef = await getAccountRef(supabase, account_id);
+    const customerName = await getUserName(supabase, account.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'overdraft_approved',
+      recipient_user_id: account.user_id,
+      institution_id: account.institution_id,
+      variables: { customer_name: customerName, account_ref: accountRef, approved_limit: new Intl.NumberFormat('fr-CM').format(recommendedLimit), available_amount: new Intl.NumberFormat('fr-CM').format(recommendedLimit), currency: 'XAF' },
+    });
+  } else if (eligible) {
+    // ✉️ Email customer: eligible notification
+    const accountRef = await getAccountRef(supabase, account_id);
+    const customerName = await getUserName(supabase, account.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'overdraft_eligible',
+      recipient_user_id: account.user_id,
+      institution_id: account.institution_id,
+      variables: { customer_name: customerName, account_ref: accountRef, recommended_limit: new Intl.NumberFormat('fr-CM').format(recommendedLimit), currency: 'XAF', risk_band: factors.factor_summary.risk_band },
+    });
   }
 
-  // Store score factors
   await supabase.from('overdraft_score_factors').insert({
     account_overdraft_profile_id: profile.id,
     ...factors,
@@ -310,7 +312,6 @@ async function handleRequest(req: Request, body: any) {
   const { account_id, requested_limit } = body;
   if (!account_id) return error(400, 'account_id required');
 
-  // First recalculate
   const recalcResp = await handleRecalculate(req, body);
   const recalcResult = await recalcResp.clone().json();
   if (!recalcResult.success) return recalcResp;
@@ -324,9 +325,11 @@ async function handleRequest(req: Request, body: any) {
   }
 
   // Create approval request for manual review
-  const { data: account } = await supabase.from('accounts').select('institution_id').eq('id', account_id).single();
+  const { data: account } = await supabase.from('accounts').select('institution_id, user_id').eq('id', account_id).single();
+  const institutionId = account?.institution_id || '00000000-0000-0000-0000-000000000000';
+
   const { data: ar } = await supabase.from('approval_requests').insert({
-    institution_id: account?.institution_id || '00000000-0000-0000-0000-000000000000',
+    institution_id: institutionId,
     entity_type: 'overdraft_profile', entity_id: recalcResult.overdraft_profile.id,
     request_type: 'overdraft_approval', current_stage: 'pending_branch_manager',
     required_role: 'branch_manager', submitted_by: user.id, status: 'pending_branch_manager',
@@ -338,6 +341,15 @@ async function handleRequest(req: Request, body: any) {
     approval_request_id: ar!.id, action: 'submit', acted_by: user.id,
     comments: `Overdraft request submitted. Score: ${recalcResult.score_factors.final_score}/100`,
     metadata: { score_factors: recalcResult.score_factors, requested_limit },
+  });
+
+  // ✉️ Email managers: overdraft review required
+  const accountRef = await getAccountRef(supabase, account_id);
+  const customerName = account?.user_id ? await getUserName(supabase, account.user_id) : 'Customer';
+  emailManagers(supabase, {
+    institution_id: institutionId, role_type: 'branch_manager',
+    email_key: 'overdraft_review_required',
+    variables: { account_ref: accountRef, customer_name: customerName, recommended_limit: new Intl.NumberFormat('fr-CM').format(recalcResult.overdraft_profile.recommended_limit), currency: 'XAF', risk_band: recalcResult.overdraft_profile.risk_band, score: recalcResult.score_factors.final_score },
   });
 
   return ok({ success: true, status: 'pending_approval', approval_request: ar, overdraft_profile: recalcResult.overdraft_profile, score_factors: recalcResult.score_factors }, 202);
@@ -352,7 +364,6 @@ async function handleApprove(req: Request, body: any) {
   const { data: profile } = await supabase.from('account_overdraft_profiles').select('*').eq('account_id', account_id).single();
   if (!profile) return error(404, 'Overdraft profile not found');
 
-  // Verify approver authority
   const { data: auth } = await supabase.from('staff_authorizations').select('*').eq('user_id', user.id).eq('institution_id', profile.institution_id).eq('status', 'active').maybeSingle();
   if (!auth?.can_approve_overdraft) {
     const { data: roles } = await supabase.from('user_roles').select('role').eq('user_id', user.id);
@@ -361,14 +372,27 @@ async function handleApprove(req: Request, body: any) {
     if (!isAdmin && inst?.user_id !== user.id) return error(403, 'Not authorized to approve overdrafts');
   }
 
+  const availableAmount = approved_limit - profile.utilised_amount;
   await supabase.from('account_overdraft_profiles').update({
-    approved_limit, available_amount: approved_limit - profile.utilised_amount,
+    approved_limit, available_amount: availableAmount,
     status: 'active', manual_approval_required: false, updated_at: new Date().toISOString(),
   }).eq('id', profile.id);
 
-  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_approved', _entity_type: 'account', _entity_id: account_id, _details: { approved_limit, approved_by: user.id, comments } });
+  // ✉️ Email customer: overdraft approved
+  const { data: account } = await supabase.from('accounts').select('user_id').eq('id', account_id).single();
+  if (account?.user_id) {
+    const accountRef = await getAccountRef(supabase, account_id);
+    const customerName = await getUserName(supabase, account.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'overdraft_approved',
+      recipient_user_id: account.user_id,
+      institution_id: profile.institution_id,
+      variables: { customer_name: customerName, account_ref: accountRef, approved_limit: new Intl.NumberFormat('fr-CM').format(approved_limit), available_amount: new Intl.NumberFormat('fr-CM').format(availableAmount), currency: 'XAF' },
+    });
+  }
 
-  return ok({ success: true, status: 'active', approved_limit, available_amount: approved_limit - profile.utilised_amount });
+  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_approved', _entity_type: 'account', _entity_id: account_id, _details: { approved_limit, approved_by: user.id, comments } });
+  return ok({ success: true, status: 'active', approved_limit, available_amount: availableAmount });
 }
 
 async function handleSuspend(req: Request, body: any) {
@@ -387,8 +411,21 @@ async function handleSuspend(req: Request, body: any) {
   }
 
   await supabase.from('account_overdraft_profiles').update({ status: 'suspended', available_amount: 0, updated_at: new Date().toISOString() }).eq('id', profile.id);
-  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_suspended', _entity_type: 'account', _entity_id: account_id, _details: { reason, suspended_by: user.id } });
 
+  // ✉️ Email customer: overdraft suspended
+  const { data: account } = await supabase.from('accounts').select('user_id').eq('id', account_id).single();
+  if (account?.user_id) {
+    const accountRef = await getAccountRef(supabase, account_id);
+    const customerName = await getUserName(supabase, account.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'overdraft_suspended',
+      recipient_user_id: account.user_id,
+      institution_id: profile.institution_id,
+      variables: { customer_name: customerName, account_ref: accountRef, previous_limit: new Intl.NumberFormat('fr-CM').format(profile.approved_limit), currency: 'XAF', reason: reason || 'Account review' },
+    });
+  }
+
+  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_suspended', _entity_type: 'account', _entity_id: account_id, _details: { reason, suspended_by: user.id } });
   return ok({ success: true, status: 'suspended' });
 }
 
@@ -402,8 +439,21 @@ async function handleRevoke(req: Request, body: any) {
   if (!profile) return error(404, 'Not found');
 
   await supabase.from('account_overdraft_profiles').update({ status: 'revoked', available_amount: 0, approved_limit: 0, updated_at: new Date().toISOString() }).eq('id', profile.id);
-  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_revoked', _entity_type: 'account', _entity_id: account_id, _details: { reason, revoked_by: user.id, previous_limit: profile.approved_limit } });
 
+  // ✉️ Email customer: overdraft revoked
+  const { data: account } = await supabase.from('accounts').select('user_id').eq('id', account_id).single();
+  if (account?.user_id) {
+    const accountRef = await getAccountRef(supabase, account_id);
+    const customerName = await getUserName(supabase, account.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'overdraft_revoked',
+      recipient_user_id: account.user_id,
+      institution_id: profile.institution_id,
+      variables: { customer_name: customerName, account_ref: accountRef, previous_limit: new Intl.NumberFormat('fr-CM').format(profile.approved_limit), currency: 'XAF', reason: reason || 'Policy decision' },
+    });
+  }
+
+  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_revoked', _entity_type: 'account', _entity_id: account_id, _details: { reason, revoked_by: user.id, previous_limit: profile.approved_limit } });
   return ok({ success: true, status: 'revoked' });
 }
 
@@ -418,8 +468,22 @@ async function handleReinstate(req: Request, body: any) {
   if (!['suspended', 'revoked'].includes(profile.status)) return error(422, 'Can only reinstate suspended or revoked overdrafts');
 
   const limit = new_limit || profile.recommended_limit;
-  await supabase.from('account_overdraft_profiles').update({ status: 'active', approved_limit: limit, available_amount: limit - profile.utilised_amount, updated_at: new Date().toISOString() }).eq('id', profile.id);
-  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_reinstated', _entity_type: 'account', _entity_id: account_id, _details: { new_limit: limit, reinstated_by: user.id, comments } });
+  const availableAmount = limit - profile.utilised_amount;
+  await supabase.from('account_overdraft_profiles').update({ status: 'active', approved_limit: limit, available_amount: availableAmount, updated_at: new Date().toISOString() }).eq('id', profile.id);
 
+  // ✉️ Email customer: overdraft reinstated
+  const { data: account } = await supabase.from('accounts').select('user_id').eq('id', account_id).single();
+  if (account?.user_id) {
+    const accountRef = await getAccountRef(supabase, account_id);
+    const customerName = await getUserName(supabase, account.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'overdraft_reinstated',
+      recipient_user_id: account.user_id,
+      institution_id: profile.institution_id,
+      variables: { customer_name: customerName, account_ref: accountRef, new_limit: new Intl.NumberFormat('fr-CM').format(limit), available_amount: new Intl.NumberFormat('fr-CM').format(availableAmount), currency: 'XAF' },
+    });
+  }
+
+  await supabase.rpc('log_audit_event', { _action_type: 'overdraft_reinstated', _entity_type: 'account', _entity_id: account_id, _details: { new_limit: limit, reinstated_by: user.id, comments } });
   return ok({ success: true, status: 'active', approved_limit: limit });
 }
