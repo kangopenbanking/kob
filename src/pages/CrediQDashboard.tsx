@@ -116,6 +116,7 @@ export default function CrediQDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
 
+      // Fetch credit score
       const { data: scoreData, error: scoreError } = await supabase
         .from('credit_scores')
         .select('*')
@@ -137,6 +138,20 @@ export default function CrediQDashboard() {
       }
 
       setCreditScore(scoreData);
+
+      // Fetch pre-approved loan offers eligible for user's score
+      if (scoreData) {
+        const score = scoreData.score || 0;
+        const { data: offers } = await supabase
+          .from('preapproved_loan_offers')
+          .select('*, institutions!inner(institution_name, logo_url)')
+          .eq('is_active', true)
+          .lte('min_credit_score', score)
+          .gte('max_credit_score', score)
+          .order('interest_rate_annual', { ascending: true })
+          .limit(5);
+        setPreapprovedOffers(offers || []);
+      }
 
       const { data: actionsData } = await supabase
         .from('crediq_action_plans')
