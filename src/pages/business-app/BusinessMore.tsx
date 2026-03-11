@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
 import { useBusinessData } from '@/hooks/useBusinessData';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 import { getCanonicalUrl } from '@/config/api';
@@ -17,10 +18,10 @@ interface MenuSection {
 
 const BusinessMore: React.FC = () => {
   const navigate = useNavigate();
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const { merchant } = useBusinessData(merchantId);
   const [showStoreQR, setShowStoreQR] = useState(false);
-  const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
+  const basePath = '/biz';
 
   const storeQRData = JSON.stringify({
     type: 'kob_store',
