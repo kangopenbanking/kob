@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { ShoppingBag, Clock, CheckCircle2, XCircle, RefreshCw, ChevronRight, ArrowRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { ShoppingBag, Clock, CheckCircle2, XCircle, RefreshCw, ChevronRight, ArrowRight, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import {
-  Sheet, SheetContent, SheetHeader, SheetTitle,
-} from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { cn } from '@/lib/utils';
 
 type OrderStatus = 'all' | 'paid' | 'pending_payment' | 'draft' | 'cancelled' | 'refunded';
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ReactNode }> = {
-  paid: { label: 'Paid', color: 'bg-[hsl(150,40%,90%)] text-[hsl(150,40%,30%)]', icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-  pending_payment: { label: 'Pending', color: 'bg-[hsl(40,90%,90%)] text-[hsl(40,60%,30%)]', icon: <Clock className="h-3.5 w-3.5" /> },
-  draft: { label: 'Draft', color: 'bg-muted text-muted-foreground', icon: <ShoppingBag className="h-3.5 w-3.5" /> },
-  cancelled: { label: 'Cancelled', color: 'bg-[hsl(0,60%,93%)] text-[hsl(0,60%,40%)]', icon: <XCircle className="h-3.5 w-3.5" /> },
-  refunded: { label: 'Refunded', color: 'bg-[hsl(260,40%,92%)] text-[hsl(260,40%,35%)]', icon: <RefreshCw className="h-3.5 w-3.5" /> },
-  processing: { label: 'Processing', color: 'bg-[hsl(210,60%,90%)] text-[hsl(210,60%,30%)]', icon: <Clock className="h-3.5 w-3.5" /> },
-  completed: { label: 'Completed', color: 'bg-[hsl(150,40%,90%)] text-[hsl(150,40%,30%)]', icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-  shipped: { label: 'Shipped', color: 'bg-[hsl(210,50%,90%)] text-[hsl(210,50%,30%)]', icon: <ArrowRight className="h-3.5 w-3.5" /> },
+const statusConfig: Record<string, { label: string; dot: string; bg: string }> = {
+  paid: { label: 'Paid', dot: 'bg-emerald-500', bg: 'bg-emerald-500/10 text-emerald-700' },
+  pending_payment: { label: 'Pending', dot: 'bg-amber-500', bg: 'bg-amber-500/10 text-amber-700' },
+  draft: { label: 'Draft', dot: 'bg-muted-foreground', bg: 'bg-muted text-muted-foreground' },
+  cancelled: { label: 'Cancelled', dot: 'bg-rose-500', bg: 'bg-rose-500/10 text-rose-700' },
+  refunded: { label: 'Refunded', dot: 'bg-violet-500', bg: 'bg-violet-500/10 text-violet-700' },
+  processing: { label: 'Processing', dot: 'bg-sky-500', bg: 'bg-sky-500/10 text-sky-700' },
+  completed: { label: 'Completed', dot: 'bg-emerald-500', bg: 'bg-emerald-500/10 text-emerald-700' },
+  shipped: { label: 'Shipped', dot: 'bg-sky-500', bg: 'bg-sky-500/10 text-sky-700' },
 };
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
@@ -37,6 +35,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 const BusinessOrders: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
   const [filter, setFilter] = useState<OrderStatus>('all');
+  const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const queryClient = useQueryClient();
 
@@ -58,7 +57,6 @@ const BusinessOrders: React.FC = () => {
     enabled: !!merchantId,
   });
 
-  // Order status history
   const { data: statusHistory } = useQuery({
     queryKey: ['order-status-history', selectedOrder?.id],
     queryFn: async () => {
@@ -76,15 +74,11 @@ const BusinessOrders: React.FC = () => {
   const updateStatusMutation = useMutation({
     mutationFn: async ({ orderId, newStatus, previousStatus }: { orderId: string; newStatus: string; previousStatus: string }) => {
       const { data: { user } } = await supabase.auth.getUser();
-
-      // Update order status
       const { error: updateError } = await supabase
         .from('pos_orders')
         .update({ status: newStatus as any })
         .eq('id', orderId);
       if (updateError) throw updateError;
-
-      // Record status change
       const { error: historyError } = await supabase
         .from('pos_order_status_history')
         .insert({
@@ -115,40 +109,55 @@ const BusinessOrders: React.FC = () => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const filters: { key: OrderStatus; label: string }[] = [
+  const filters: { key: OrderStatus; label: string; count?: number }[] = [
     { key: 'all', label: 'All' },
     { key: 'paid', label: 'Paid' },
     { key: 'pending_payment', label: 'Pending' },
     { key: 'draft', label: 'Draft' },
   ];
 
+  const filteredOrders = orders?.filter(o => {
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (o.order_number?.toLowerCase().includes(s) || o.customer_name?.toLowerCase().includes(s) || o.id.toLowerCase().includes(s));
+  });
+
   const nextStatuses = selectedOrder ? (STATUS_TRANSITIONS[selectedOrder.status] || []) : [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background pb-20">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
-      <header className="bg-primary px-4 pt-6 pb-8 text-primary-foreground rounded-b-[2rem]">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-            <p className="text-sm text-primary-foreground/80 font-medium mt-1">
-              {orders?.length ?? 0} order{(orders?.length ?? 0) !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <Button size="icon" variant="ghost" className="rounded-2xl text-primary-foreground hover:bg-white/10 h-11 w-11" onClick={() => refetch()}>
-            <RefreshCw className="h-5 w-5" strokeWidth={2} />
-          </Button>
+      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Orders</h1>
+          <button onClick={() => refetch()} className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/60 hover:bg-muted transition-colors">
+            <RefreshCw className="h-4 w-4 text-foreground" strokeWidth={2} />
+          </button>
         </div>
 
-        {/* Filters */}
-        <div className="mt-5 flex gap-2 overflow-x-auto pb-1 hide-scrollbar">
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={2} />
+          <Input
+            placeholder="Search orders..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-10 rounded-xl border-border/50 bg-muted/40 text-sm"
+          />
+        </div>
+
+        {/* Filter pills */}
+        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar -mx-1 px-1">
           {filters.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setFilter(key)}
-              className={`whitespace-nowrap rounded-xl px-5 py-2.5 text-xs font-bold transition-all ${
-                filter === key ? 'bg-white text-primary shadow-sm' : 'bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20'
-              }`}
+              className={cn(
+                'whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-all',
+                filter === key
+                  ? 'bg-foreground text-background'
+                  : 'bg-muted/60 text-muted-foreground hover:bg-muted',
+              )}
             >
               {label}
             </button>
@@ -157,56 +166,52 @@ const BusinessOrders: React.FC = () => {
       </header>
 
       {/* Orders List */}
-      <div className="p-4 -mt-6">
+      <div className="flex-1 px-5 pt-4 pb-24">
         {isLoading ? (
           <div className="space-y-3">
-            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-24 rounded-3xl" />)}
+            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[72px] rounded-2xl" />)}
           </div>
-        ) : !orders?.length ? (
-          <Card className="border-0 shadow-md">
-            <CardContent className="flex flex-col items-center justify-center gap-4 p-12">
-              <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-primary/10">
-                <ShoppingBag className="h-10 w-10 text-primary" strokeWidth={1.5} />
-              </div>
-              <p className="text-sm text-muted-foreground text-center">
-                {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
-              </p>
-            </CardContent>
-          </Card>
+        ) : !filteredOrders?.length ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 mb-4">
+              <ShoppingBag className="h-7 w-7 text-muted-foreground/50" strokeWidth={1.5} />
+            </div>
+            <p className="text-sm font-medium text-muted-foreground">
+              {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
+            </p>
+          </div>
         ) : (
           <AnimatePresence>
-            <div className="space-y-3">
-              {orders.map((order: any, i: number) => {
+            <div className="space-y-2">
+              {filteredOrders.map((order: any, i: number) => {
                 const sc = statusConfig[order.status] || statusConfig.draft;
                 return (
-                  <motion.div
+                  <motion.button
                     key={order.id}
-                    initial={{ opacity: 0, y: 8 }}
+                    initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.03 }}
+                    transition={{ delay: i * 0.025 }}
+                    className="w-full flex items-center gap-3.5 rounded-2xl border border-border/40 bg-card p-4 text-left transition-all hover:border-border/80 active:scale-[0.99]"
+                    onClick={() => setSelectedOrder(order)}
                   >
-                    <Card className="border-0 shadow-sm cursor-pointer hover:shadow-md transition-all" onClick={() => setSelectedOrder(order)}>
-                      <CardContent className="flex items-center gap-4 p-5">
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center gap-2">
-                            <p className="truncate text-sm font-bold text-foreground">
-                              {order.order_number || `#${order.id.slice(0, 8)}`}
-                            </p>
-                            <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[10px] font-bold ${sc.color}`}>
-                              {sc.icon} {sc.label}
-                            </span>
-                          </div>
-                          <div className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span>{formatTime(order.created_at)}</span>
-                            {order.customer_name && <span>· {order.customer_name}</span>}
-                            {order.channel && <span>· {order.channel}</span>}
-                          </div>
-                        </div>
-                        <p className="text-sm font-bold text-foreground">{formatXAF(order.total || 0)}</p>
-                        <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground" strokeWidth={2} />
-                      </CardContent>
-                    </Card>
-                  </motion.div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="text-[13px] font-bold text-foreground truncate">
+                          {order.order_number || `#${order.id.slice(0, 8)}`}
+                        </p>
+                        <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold', sc.bg)}>
+                          <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
+                          {sc.label}
+                        </span>
+                      </div>
+                      <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                        <span>{formatTime(order.created_at)}</span>
+                        {order.customer_name && <><span>·</span><span className="truncate">{order.customer_name}</span></>}
+                      </div>
+                    </div>
+                    <p className="text-sm font-bold text-foreground whitespace-nowrap">{formatXAF(order.total || 0)}</p>
+                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/40" strokeWidth={2} />
+                  </motion.button>
                 );
               })}
             </div>
@@ -216,58 +221,50 @@ const BusinessOrders: React.FC = () => {
 
       {/* Order Detail Sheet */}
       <Sheet open={!!selectedOrder} onOpenChange={open => !open && setSelectedOrder(null)}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-3xl overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle>{selectedOrder?.order_number || `#${selectedOrder?.id?.slice(0, 8)}`}</SheetTitle>
+        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-[2rem] overflow-y-auto border-t-0 px-5 pb-10">
+          <SheetHeader className="pb-1">
+            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/20" />
+            <SheetTitle className="text-left">{selectedOrder?.order_number || `#${selectedOrder?.id?.slice(0, 8)}`}</SheetTitle>
           </SheetHeader>
           {selectedOrder && (
             <div className="mt-4 space-y-5">
-              {/* Order Summary */}
               <div className="grid grid-cols-2 gap-3">
-                <Card className="border-0 bg-muted/50">
-                  <CardContent className="p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Total</p>
-                    <p className="text-lg font-bold">{formatXAF(selectedOrder.total || 0)}</p>
-                  </CardContent>
-                </Card>
-                <Card className="border-0 bg-muted/50">
-                  <CardContent className="p-3 text-center">
-                    <p className="text-xs text-muted-foreground">Status</p>
-                    <span className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-bold ${(statusConfig[selectedOrder.status] || statusConfig.draft).color}`}>
-                      {(statusConfig[selectedOrder.status] || statusConfig.draft).icon}
-                      {(statusConfig[selectedOrder.status] || statusConfig.draft).label}
-                    </span>
-                  </CardContent>
-                </Card>
+                <div className="rounded-2xl bg-muted/40 p-4 text-center">
+                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Total</p>
+                  <p className="text-xl font-bold mt-1">{formatXAF(selectedOrder.total || 0)}</p>
+                </div>
+                <div className="rounded-2xl bg-muted/40 p-4 text-center">
+                  <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Status</p>
+                  <span className={cn('mt-2 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold', (statusConfig[selectedOrder.status] || statusConfig.draft).bg)}>
+                    <span className={cn('h-1.5 w-1.5 rounded-full', (statusConfig[selectedOrder.status] || statusConfig.draft).dot)} />
+                    {(statusConfig[selectedOrder.status] || statusConfig.draft).label}
+                  </span>
+                </div>
               </div>
 
-              {/* Customer Info */}
               {(selectedOrder.customer_name || selectedOrder.customer_email || selectedOrder.customer_phone) && (
                 <div>
-                  <h3 className="text-sm font-bold mb-2">Customer</h3>
-                  <Card className="border-0 bg-muted/50">
-                    <CardContent className="p-3 space-y-1">
-                      {selectedOrder.customer_name && <p className="text-sm font-medium">{selectedOrder.customer_name}</p>}
-                      {selectedOrder.customer_email && <p className="text-xs text-muted-foreground">{selectedOrder.customer_email}</p>}
-                      {selectedOrder.customer_phone && <p className="text-xs text-muted-foreground">{selectedOrder.customer_phone}</p>}
-                    </CardContent>
-                  </Card>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Customer</h3>
+                  <div className="rounded-2xl bg-muted/40 p-4 space-y-1">
+                    {selectedOrder.customer_name && <p className="text-sm font-semibold">{selectedOrder.customer_name}</p>}
+                    {selectedOrder.customer_email && <p className="text-xs text-muted-foreground">{selectedOrder.customer_email}</p>}
+                    {selectedOrder.customer_phone && <p className="text-xs text-muted-foreground">{selectedOrder.customer_phone}</p>}
+                  </div>
                 </div>
               )}
 
-              {/* Status Actions */}
               {nextStatuses.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-bold mb-2">Update Status</h3>
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Update Status</h3>
                   <div className="flex gap-2 flex-wrap">
                     {nextStatuses.map(ns => {
-                      const sc = statusConfig[ns] || { label: ns, color: 'bg-muted text-muted-foreground', icon: null };
+                      const sc = statusConfig[ns] || { label: ns, bg: 'bg-muted text-muted-foreground', dot: 'bg-muted-foreground' };
                       return (
                         <Button
                           key={ns}
                           size="sm"
                           variant="outline"
-                          className="rounded-xl gap-1.5"
+                          className="rounded-full gap-1.5 text-xs h-9"
                           disabled={updateStatusMutation.isPending}
                           onClick={() => updateStatusMutation.mutate({
                             orderId: selectedOrder.id,
@@ -275,7 +272,8 @@ const BusinessOrders: React.FC = () => {
                             previousStatus: selectedOrder.status,
                           })}
                         >
-                          {'icon' in sc && sc.icon} {sc.label}
+                          <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
+                          {sc.label}
                         </Button>
                       );
                     })}
@@ -283,21 +281,15 @@ const BusinessOrders: React.FC = () => {
                 </div>
               )}
 
-              {/* Status Timeline */}
               {statusHistory && statusHistory.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-bold mb-2">Status History</h3>
-                  <div className="space-y-2">
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Timeline</h3>
+                  <div className="space-y-3 pl-3 border-l-2 border-border/50">
                     {statusHistory.map((h: any) => (
-                      <div key={h.id} className="flex items-center gap-3 text-sm">
-                        <div className="h-2 w-2 rounded-full bg-primary" />
-                        <div className="flex-1">
-                          <span className="font-medium">{statusConfig[h.new_status]?.label || h.new_status}</span>
-                          {h.previous_status && (
-                            <span className="text-muted-foreground"> from {statusConfig[h.previous_status]?.label || h.previous_status}</span>
-                          )}
-                        </div>
-                        <span className="text-xs text-muted-foreground">{formatTime(h.created_at)}</span>
+                      <div key={h.id} className="relative pl-4">
+                        <div className="absolute -left-[0.4375rem] top-1 h-2.5 w-2.5 rounded-full bg-foreground border-2 border-background" />
+                        <p className="text-sm font-semibold">{statusConfig[h.new_status]?.label || h.new_status}</p>
+                        <p className="text-[11px] text-muted-foreground">{formatTime(h.created_at)}</p>
                       </div>
                     ))}
                   </div>

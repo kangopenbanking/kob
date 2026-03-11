@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Wallet, ArrowUpRight, History, Eye, EyeOff } from 'lucide-react';
+import { Wallet, ArrowUpRight, History, Eye, EyeOff, TrendingUp, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
@@ -10,18 +9,16 @@ import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { motion } from 'framer-motion';
+import { cn } from '@/lib/utils';
 
 const BusinessWallet: React.FC = () => {
   const { merchantId } = useParams<{ merchantId?: string }>();
   const { wallets, availableBalance, pendingBalance, settlements, isLoading, refetchWallets } = useBusinessData(merchantId);
   const [showBalance, setShowBalance] = useState(true);
   const [showLedger, setShowLedger] = useState(false);
-  const [pinDialog, setPinDialog] = useState<{ open: boolean; action: string; amount?: number }>({ 
-    open: false, 
-    action: '' 
-  });
+  const [pinDialog, setPinDialog] = useState<{ open: boolean; action: string; amount?: number }>({ open: false, action: '' });
 
-  // Fetch wallet ledger
   const { data: ledgerData, isLoading: ledgerLoading } = useQuery({
     queryKey: ['wallet-ledger', merchantId],
     queryFn: async () => {
@@ -35,13 +32,8 @@ const BusinessWallet: React.FC = () => {
     enabled: !!merchantId && showLedger,
   });
 
-  const formatXAF = (amount: number) => {
-    return new Intl.NumberFormat('fr-CM', {
-      style: 'currency',
-      currency: 'XAF',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
+  const formatXAF = (amount: number) =>
+    new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
 
   const handlePayout = (amount?: number) => {
     setPinDialog({ open: true, action: 'payout', amount });
@@ -51,35 +43,22 @@ const BusinessWallet: React.FC = () => {
     if (pinDialog.action === 'payout') {
       try {
         const amount = pinDialog.amount || availableBalance;
-        
-        // Get first active settlement account (in production, show selection UI)
         const { data: settlementAccounts, error: accountsError }: any = await supabase
           .from('gateway_settlement_accounts' as any)
           .select('*')
           .eq('merchant_id', merchantId!)
           .eq('is_active', true)
           .limit(1);
-
         if (accountsError) throw accountsError;
-
         if (!settlementAccounts || settlementAccounts.length === 0) {
           toast.error('No settlement account configured');
           return;
         }
-
         const { data, error } = await supabase.functions.invoke('gateway-request-payout', {
-          body: {
-            merchant_id: merchantId,
-            amount,
-            currency: 'XAF',
-            settlement_account_id: settlementAccounts[0].id,
-            pin,
-          },
+          body: { merchant_id: merchantId, amount, currency: 'XAF', settlement_account_id: settlementAccounts[0].id, pin },
         });
-
         if (error) throw error;
-        
-        toast.success('Payout request submitted for approval');
+        toast.success('Payout request submitted');
         refetchWallets();
       } catch (err: any) {
         toast.error(err.message || 'Failed to request payout');
@@ -89,144 +68,157 @@ const BusinessWallet: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-4 space-y-6">
-        <Skeleton className="h-48 rounded-2xl" />
-        <Skeleton className="h-32 rounded-2xl" />
+      <div className="p-5 space-y-6">
+        <Skeleton className="h-6 w-32" />
+        <Skeleton className="h-48 rounded-3xl" />
+        <Skeleton className="h-24 rounded-2xl" />
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-6">
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Wallet</h1>
-        <Button
-          variant="ghost"
-          size="icon"
+    <div className="flex min-h-screen flex-col bg-background pb-24">
+      {/* Header */}
+      <header className="px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-2 flex items-center justify-between">
+        <h1 className="text-xl font-bold tracking-tight text-foreground">Wallet</h1>
+        <button
           onClick={() => setShowBalance(!showBalance)}
-          className="rounded-full"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/60 hover:bg-muted transition-colors"
         >
-          {showBalance ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
-        </Button>
+          {showBalance ? <Eye className="h-4 w-4" strokeWidth={2} /> : <EyeOff className="h-4 w-4" strokeWidth={2} />}
+        </button>
       </header>
 
-      <Card className="border-0 shadow-md bg-gradient-to-br from-primary/5 to-primary/10">
-        <CardContent className="p-6 space-y-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center">
-                <Wallet className="h-6 w-6 text-primary" />
+      {/* Balance card */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35 }}
+        className="mx-5 mt-4"
+      >
+        <div className="rounded-[1.5rem] bg-foreground p-6 text-background">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-background/10">
+              <Wallet className="h-5 w-5 text-background/80" strokeWidth={1.8} />
+            </div>
+            <p className="text-xs font-medium text-background/50 uppercase tracking-widest">Total Balance</p>
+          </div>
+          <p className="text-[2.25rem] font-bold tracking-tight leading-none">
+            {showBalance ? formatXAF(availableBalance + pendingBalance) : '••••••'}
+          </p>
+          <div className="mt-5 flex gap-6">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <TrendingUp className="h-3.5 w-3.5 text-emerald-400" strokeWidth={2} />
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Total Balance</p>
-                <p className="text-3xl font-bold tracking-tight">
-                  {showBalance ? formatXAF(availableBalance + pendingBalance) : '••••••'}
-                </p>
+                <p className="text-[10px] text-background/40 uppercase tracking-wider">Available</p>
+                <p className="text-sm font-semibold text-emerald-300">{showBalance ? formatXAF(availableBalance) : '••••'}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                <Clock className="h-3.5 w-3.5 text-amber-400" strokeWidth={2} />
+              </div>
+              <div>
+                <p className="text-[10px] text-background/40 uppercase tracking-wider">Pending</p>
+                <p className="text-sm font-semibold text-amber-300">{showBalance ? formatXAF(pendingBalance) : '••••'}</p>
               </div>
             </div>
           </div>
+        </div>
+      </motion.div>
 
-          <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Available</p>
-              <p className="text-lg font-bold text-emerald-600">
-                {showBalance ? formatXAF(availableBalance) : '••••••'}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground mb-1">Pending</p>
-              <p className="text-lg font-bold text-amber-600">
-                {showBalance ? formatXAF(pendingBalance) : '••••••'}
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-2 gap-4">
+      {/* Actions */}
+      <div className="mx-5 mt-5 grid grid-cols-2 gap-3">
         <Button
           onClick={() => handlePayout()}
           disabled={availableBalance < 1000}
-          className="h-auto py-4 flex-col gap-2 rounded-2xl"
+          className="h-14 rounded-2xl flex-col gap-1.5 bg-foreground text-background hover:bg-foreground/90"
         >
-          <ArrowUpRight className="h-5 w-5" />
-          <span className="text-sm font-medium">Request Payout</span>
+          <ArrowUpRight className="h-5 w-5" strokeWidth={2} />
+          <span className="text-xs font-semibold">Request Payout</span>
         </Button>
         <Sheet open={showLedger} onOpenChange={setShowLedger}>
           <SheetTrigger asChild>
-            <Button
-              variant="outline"
-              className="h-auto py-4 flex-col gap-2 rounded-2xl"
-            >
-              <History className="h-5 w-5" />
-              <span className="text-sm font-medium">Transaction History</span>
+            <Button variant="outline" className="h-14 rounded-2xl flex-col gap-1.5 border-border/50">
+              <History className="h-5 w-5" strokeWidth={2} />
+              <span className="text-xs font-semibold">History</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="h-[80vh]">
+          <SheetContent side="bottom" className="h-[80vh] rounded-t-[2rem] border-t-0 px-5">
             <SheetHeader>
-              <SheetTitle>Transaction Ledger</SheetTitle>
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/20" />
+              <SheetTitle className="text-left">Transaction History</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-2 overflow-auto max-h-[calc(80vh-100px)]">
               {ledgerLoading ? (
                 <div className="space-y-2">
-                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full" />)}
+                  {[1, 2, 3].map(i => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}
                 </div>
               ) : ledgerData?.data && ledgerData.data.length > 0 ? (
                 ledgerData.data.map((entry: any) => (
-                  <Card key={entry.id} className="p-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium capitalize">{entry.type}</p>
-                        <p className="text-xs text-muted-foreground">{entry.reference}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(entry.created_at).toLocaleDateString('en-GB', {
-                            day: '2-digit',
-                            month: 'short',
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-sm font-bold ${entry.direction === 'credit' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
-                          {entry.direction === 'credit' ? '+' : '-'}{formatXAF(entry.amount)}
-                        </p>
-                        <p className="text-xs capitalize text-muted-foreground">{entry.status}</p>
-                      </div>
+                  <div key={entry.id} className="flex items-center gap-3.5 rounded-xl p-3 hover:bg-muted/40 transition-colors">
+                    <div className={cn(
+                      'flex h-9 w-9 items-center justify-center rounded-xl',
+                      entry.direction === 'credit' ? 'bg-emerald-500/10' : 'bg-rose-500/10',
+                    )}>
+                      <ArrowUpRight className={cn(
+                        'h-4 w-4',
+                        entry.direction === 'credit' ? 'text-emerald-600' : 'text-rose-600 rotate-180',
+                      )} strokeWidth={2} />
                     </div>
-                  </Card>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[13px] font-semibold capitalize">{entry.type}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {new Date(entry.created_at).toLocaleDateString('en-GB', {
+                          day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit',
+                        })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className={cn(
+                        'text-[13px] font-bold',
+                        entry.direction === 'credit' ? 'text-emerald-600' : 'text-rose-600',
+                      )}>
+                        {entry.direction === 'credit' ? '+' : '-'}{formatXAF(entry.amount)}
+                      </p>
+                      <p className="text-[10px] capitalize text-muted-foreground">{entry.status}</p>
+                    </div>
+                  </div>
                 ))
               ) : (
-                <p className="text-center text-muted-foreground py-8">No transactions yet</p>
+                <div className="text-center py-12">
+                  <History className="h-8 w-8 text-muted-foreground/30 mx-auto mb-2" strokeWidth={1.5} />
+                  <p className="text-sm text-muted-foreground">No transactions yet</p>
+                </div>
               )}
             </div>
           </SheetContent>
         </Sheet>
       </div>
 
+      {/* Recent Settlements */}
       {settlements && settlements.length > 0 && (
-        <Card className="border-0 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base">Recent Settlements</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="mx-5 mt-6">
+          <h2 className="text-[15px] font-bold text-foreground mb-3">Recent Settlements</h2>
+          <div className="rounded-2xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
             {settlements.slice(0, 5).map((settlement: any) => (
-              <div key={settlement.id} className="flex items-center justify-between py-2 border-b last:border-0">
+              <div key={settlement.id} className="flex items-center justify-between p-3.5">
                 <div>
-                  <p className="text-sm font-medium">{settlement.settlement_ref}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[13px] font-semibold text-foreground">{settlement.settlement_ref}</p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
                     {new Date(settlement.created_at).toLocaleDateString()}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-bold">{formatXAF(settlement.amount)}</p>
-                  <p className="text-xs capitalize text-muted-foreground">{settlement.status}</p>
+                  <p className="text-[13px] font-bold text-foreground">{formatXAF(settlement.amount)}</p>
+                  <p className="text-[10px] capitalize text-muted-foreground">{settlement.status}</p>
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       <PinConfirmDialog
