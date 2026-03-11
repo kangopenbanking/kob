@@ -340,6 +340,13 @@ async function handleCreateWithdrawalRequest(req: Request, body: any) {
 
   await supabase.rpc('log_audit_event', { _action_type: 'withdrawal_request_escalated', _entity_type: 'withdrawal_request', _entity_id: wr.id, _details: { amount, escalation_role: escalationRole, policy_result: policy } });
 
+  // Notify managers with the required role about the pending approval
+  await notifyPendingApprovalManagers(supabase, {
+    institution_id, branch_id: branch_id || null,
+    escalation_role: escalationRole, approval_request_id: ar.id,
+    amount, currency: currency || 'XAF', submitted_by_id: user.id,
+  });
+
   return ok({ success: true, withdrawal_request: { ...wr, approval_request_id: ar.id }, approval_request: ar, policy_evaluation: policy, requires_approval: true, pending_role: escalationRole }, 202);
 }
 
@@ -564,4 +571,86 @@ async function handleEvaluatePolicy(req: Request, body: any) {
   });
 
   return ok({ policy_result: result.data });
+}
+
+// ═══════════════════════════════════════════════════════════════════
+// PUSH NOTIFICATION FOR PENDING APPROVALS
+// ═══════════════════════════════════════════════════════════════════
+
+async function notifyPendingApprovalManagers(
+  supabase: any,
+  params: {
+    institution_id: string;
+    branch_id: string | null;
+    escalation_role: string;
+    approval_request_id: string;
+    amount: number;
+    currency: string;
+    submitted_by_id: string;
+  }
+) {
+  try {
+    // Find all staff with the required operational role at this institution/branch
+    let query = supabase
+      .from('institution_operational_roles')
+      .select('user_id')
+      .eq('institution_id', params.institution_id)
+      .eq('role_type', params.escalation_role)
+      .eq('is_active', true);
+
+    if (params.branch_id) {
+      // Include branch-specific and institution-wide managers
+      query = query.or(`branch_id.eq.${params.branch_id},branch_id.is.null`);
+    }
+
+    const { data: managers } = await query;
+    if (!managers || managers.length === 0) return;
+
+    const roleName = params.escalation_role.replace(/_/g, ' ');
+    const formattedAmount = new Intl.NumberFormat('fr-CM', { style: 'currency', currency: params.currency }).format(params.amount);
+
+    for (const mgr of managers) {
+      // Skip notifying the person who submitted
+      if (mgr.user_id === params.submitted_by_id) continue;
+
+      // In-app notification
+      await supabase.from('app_notifications').insert({
+        user_id: mgr.user_id,
+        institution_id: params.institution_id,
+        type: 'warning',
+        title: 'Approval Required',
+        message: `A withdrawal of ${formattedAmount} requires your approval as ${roleName}.`,
+        icon: 'alert-triangle',
+        metadata: {
+          approval_request_id: params.approval_request_id,
+          amount: params.amount,
+          currency: params.currency,
+          action_url: '/fi-portal/approvals',
+        },
+      });
+
+      // Push notification via push-notification function
+      try {
+        await supabase.functions.invoke('push-notification', {
+          body: {
+            user_id: mgr.user_id,
+            institution_id: params.institution_id,
+            type: 'warning',
+            title: 'Withdrawal Approval Required',
+            message: `A withdrawal of ${formattedAmount} requires your approval as ${roleName}.`,
+            icon: 'alert-triangle',
+            metadata: {
+              approval_request_id: params.approval_request_id,
+              amount: params.amount,
+            },
+          },
+        });
+      } catch (pushErr) {
+        console.error('Push notification failed for manager', mgr.user_id, pushErr);
+      }
+    }
+  } catch (err) {
+    // Non-fatal — log but don't break the approval flow
+    console.error('notifyPendingApprovalManagers error:', err);
+  }
 }

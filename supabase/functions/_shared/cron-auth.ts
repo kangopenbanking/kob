@@ -17,12 +17,18 @@ export function verifyCronAuth(req: Request): { authorized: boolean; response?: 
     return { authorized: true };
   }
 
-  // Check for service_role JWT in Authorization header
+  // Check for service_role JWT or anon key in Authorization header
   const authHeader = req.headers.get('authorization') || '';
   const token = authHeader.replace('Bearer ', '');
   const serviceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const anonKey = Deno.env.get('SUPABASE_ANON_KEY');
 
   if (serviceRoleKey && token === serviceRoleKey) {
+    return { authorized: true };
+  }
+
+  // Allow anon key for pg_cron → pg_net invocations
+  if (anonKey && token === anonKey) {
     return { authorized: true };
   }
 
