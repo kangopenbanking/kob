@@ -455,6 +455,12 @@ export default function CreditScore() {
             <motion.div custom={6} variants={fadeUp} initial="hidden" animate="visible">
               <CreditActivityFeed activities={activities} />
             </motion.div>
+            <motion.div custom={7} variants={fadeUp} initial="hidden" animate="visible">
+              <PreApprovedOffersCard creditScore={score} />
+            </motion.div>
+            <motion.div custom={8} variants={fadeUp} initial="hidden" animate="visible">
+              <CreditInquiriesPanel compact />
+            </motion.div>
           </div>
         </div>
       </div>

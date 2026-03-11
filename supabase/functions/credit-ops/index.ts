@@ -13,6 +13,8 @@ Deno.serve(async (req) => {
       case 'events-list': return await handleEventsList(req);
       case 'explain': return await handleExplain(req);
       case 'recompute': return await handleRecompute(req);
+      case 'preapproved-offers': return await handlePreapprovedOffers(req, body);
+      case 'apply-preapproved': return await handleApplyPreapproved(req, body);
       default:
         return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
@@ -22,22 +24,30 @@ Deno.serve(async (req) => {
   }
 });
 
-async function handleProfileGet(req: Request) {
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
+function getAuthClient(req: Request) {
+  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
+}
+
+function getServiceClient() {
+  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+}
+
+async function getUser(req: Request) {
+  const supabase = getAuthClient(req);
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) throw new Error('Unauthorized');
+  return { user, supabase };
+}
 
+async function handleProfileGet(req: Request) {
+  const { user, supabase } = await getUser(req);
   const { data: profile } = await supabase.from('credit_profiles').select('*').eq('user_id', user.id).maybeSingle();
   const { data: latestSnapshot } = await supabase.from('credit_score_snapshots').select('*').eq('user_id', user.id).order('computed_at', { ascending: false }).limit(1).maybeSingle();
-
   return new Response(JSON.stringify({ profile: profile || { current_score: 500, score_band: 'C', last_computed_at: null }, latest_snapshot: latestSnapshot }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function handleEventsList(req: Request) {
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
-
+  const { user, supabase } = await getUser(req);
   const url = new URL(req.url);
   const from = url.searchParams.get('from');
   const to = url.searchParams.get('to');
@@ -52,20 +62,15 @@ async function handleEventsList(req: Request) {
 
   const { data: events, count, error } = await query;
   if (error) throw error;
-
   return new Response(JSON.stringify({ events: events || [], total: count || 0, limit, offset }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function handleExplain(req: Request) {
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
-
+  const { user, supabase } = await getUser(req);
   const { data: snapshot } = await supabase.from('credit_score_snapshots').select('*').eq('user_id', user.id).order('computed_at', { ascending: false }).limit(1).maybeSingle();
   if (!snapshot) {
     return new Response(JSON.stringify({ score: 500, band: 'C', factors: [], summary: 'No credit history yet. Your score starts at the baseline of 500.' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
   }
-
   const factors = snapshot.factors_json || [];
   const positive = factors.filter((f: any) => f.total_impact > 0);
   const negative = factors.filter((f: any) => f.total_impact < 0);
@@ -73,19 +78,180 @@ async function handleExplain(req: Request) {
   if (positive.length > 0) summary += `Positive: ${positive.map((f: any) => f.description).join('; ')}. `;
   if (negative.length > 0) summary += `Areas to improve: ${negative.map((f: any) => f.description).join('; ')}.`;
   if (!positive.length && !negative.length) summary += 'Limited credit activity detected.';
-
   return new Response(JSON.stringify({ score: snapshot.score, band: snapshot.score_band, factors, summary, computed_at: snapshot.computed_at }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
 async function handleRecompute(req: Request) {
-  const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: req.headers.get('Authorization')! } } });
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) throw new Error('Unauthorized');
-
+  const { user } = await getUser(req);
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   const res = await fetch(`${supabaseUrl}/functions/v1/credit-score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` }, body: JSON.stringify({ action: 'engine', user_id: user.id }) });
   const result = await res.json();
-
   return new Response(JSON.stringify(result), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function handlePreapprovedOffers(req: Request, body: any) {
+  const { user } = await getUser(req);
+  const creditScore = body.credit_score || 0;
+  const serviceClient = getServiceClient();
+
+  // Fetch active offers where user's score meets benchmark
+  const { data: offers, error } = await serviceClient
+    .from('preapproved_loan_offers')
+    .select('*, institutions!inner(institution_name)')
+    .eq('is_active', true)
+    .lte('min_credit_score', creditScore)
+    .gte('max_credit_score', creditScore)
+    .lte('effective_from', new Date().toISOString().split('T')[0])
+    .or(`effective_to.is.null,effective_to.gte.${new Date().toISOString().split('T')[0]}`);
+
+  if (error) throw error;
+
+  // Check which institutions user has accounts with
+  const { data: userAccounts } = await serviceClient
+    .from('accounts')
+    .select('institution_id')
+    .eq('user_id', user.id)
+    .eq('is_active', true);
+
+  const userInstitutionIds = new Set((userAccounts || []).map((a: any) => a.institution_id));
+
+  // Log soft inquiry for browsing offers
+  await serviceClient.from('credit_inquiries').insert({
+    user_id: user.id,
+    inquiry_type: 'soft',
+    inquirer_type: 'system',
+    inquirer_name: 'CrediQ Pre-Approval Check',
+    purpose: 'Pre-approved loan eligibility check',
+    score_impact: 0,
+    score_provided: creditScore,
+  });
+
+  const enrichedOffers = (offers || []).map((offer: any) => ({
+    id: offer.id,
+    institution_id: offer.institution_id,
+    product_name: offer.product_name,
+    description: offer.description,
+    min_credit_score: offer.min_credit_score,
+    max_credit_score: offer.max_credit_score,
+    min_amount: offer.min_amount,
+    max_amount: offer.max_amount,
+    interest_rate_annual: offer.interest_rate_annual,
+    max_tenure_months: offer.max_tenure_months,
+    currency: offer.currency,
+    requires_existing_account: offer.requires_existing_account && !userInstitutionIds.has(offer.institution_id),
+    institution_name: offer.institutions?.institution_name || 'Financial Institution',
+  }));
+
+  return new Response(JSON.stringify({ offers: enrichedOffers }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+async function handleApplyPreapproved(req: Request, body: any) {
+  const { user } = await getUser(req);
+  const { offer_id, requested_amount, requested_tenure_months } = body;
+
+  if (!offer_id || !requested_amount) {
+    return new Response(JSON.stringify({ error: 'offer_id and requested_amount are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  const serviceClient = getServiceClient();
+
+  // Fetch offer details
+  const { data: offer, error: offerErr } = await serviceClient
+    .from('preapproved_loan_offers')
+    .select('*')
+    .eq('id', offer_id)
+    .eq('is_active', true)
+    .maybeSingle();
+
+  if (offerErr || !offer) {
+    return new Response(JSON.stringify({ error: 'Offer not found or no longer active' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Get current credit score
+  const { data: scoreData } = await serviceClient
+    .from('credit_score_history')
+    .select('score')
+    .eq('user_id', user.id)
+    .order('recorded_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  const currentScore = scoreData?.score || 0;
+
+  if (currentScore < offer.min_credit_score) {
+    return new Response(JSON.stringify({ error: 'Your credit score no longer meets the minimum requirement for this offer' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  if (requested_amount < offer.min_amount || requested_amount > offer.max_amount) {
+    return new Response(JSON.stringify({ error: `Amount must be between ${offer.min_amount} and ${offer.max_amount}` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Check for existing account
+  const { data: existingAccounts } = await serviceClient
+    .from('accounts')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('institution_id', offer.institution_id)
+    .eq('is_active', true)
+    .limit(1);
+
+  const hasExistingAccount = (existingAccounts || []).length > 0;
+
+  // Log hard inquiry
+  const { data: inquiry, error: inqErr } = await serviceClient
+    .from('credit_inquiries')
+    .insert({
+      user_id: user.id,
+      inquiry_type: 'hard',
+      inquirer_type: 'institution',
+      inquirer_name: `Loan Application - ${offer.product_name}`,
+      inquirer_id: offer.institution_id,
+      purpose: `Pre-approved loan application: ${offer.product_name}`,
+      score_impact: -5,
+      score_provided: currentScore,
+      status: 'completed',
+    })
+    .select('id')
+    .single();
+
+  if (inqErr) throw inqErr;
+
+  // Create application
+  const { data: application, error: appErr } = await serviceClient
+    .from('preapproved_loan_applications')
+    .insert({
+      offer_id,
+      user_id: user.id,
+      institution_id: offer.institution_id,
+      requested_amount,
+      requested_tenure_months: requested_tenure_months || offer.max_tenure_months,
+      status: 'pending_review',
+      credit_score_at_application: currentScore,
+      hard_inquiry_id: inquiry.id,
+      has_existing_account: hasExistingAccount,
+    })
+    .select('id')
+    .single();
+
+  if (appErr) throw appErr;
+
+  // Log credit event for the hard check
+  await serviceClient.from('credit_events').insert({
+    user_id: user.id,
+    event_type: 'hard_inquiry',
+    event_time: new Date().toISOString(),
+    source: 'preapproved_loan',
+    description: `Hard credit check for ${offer.product_name} loan application`,
+    score_impact: -5,
+    metadata: { offer_id, application_id: application.id, institution_id: offer.institution_id },
+  }).catch(() => {});
+
+  return new Response(JSON.stringify({
+    application_id: application.id,
+    status: 'pending_review',
+    hard_inquiry_logged: true,
+    score_impact: -5,
+    message: 'Your application has been submitted. The bank will perform additional checks before making a final decision.',
+  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
