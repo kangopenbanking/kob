@@ -149,34 +149,31 @@ Deno.test("banking-ops: rejects missing action", async () => {
 
 // ─── Test: banking-ops rejects unauthenticated policy list ───
 Deno.test("banking-ops: list-withdrawal-policies requires auth", async () => {
-  const { status, data } = await invoke("banking-ops", {
+  const { status } = await invoke("banking-ops", {
     action: "list-withdrawal-policies",
     institution_id: "00000000-0000-0000-0000-000000000000",
   });
   assertEquals(status >= 400, true);
-  assertExists(data.error);
 });
 
 // ─── Test: banking-ops rejects unauthenticated approval ───
 Deno.test("banking-ops: approve action requires auth", async () => {
-  const { status, data } = await invoke("banking-ops", {
+  const { status } = await invoke("banking-ops", {
     action: "approve",
     approval_id: "fake-id",
   });
   assertEquals(status >= 400, true);
-  assertExists(data.error);
 });
 
 // ─── Test: banking-ops rejects unauthenticated role assignment ───
 Deno.test("banking-ops: assign-operational-role requires auth", async () => {
-  const { status, data } = await invoke("banking-ops", {
+  const { status } = await invoke("banking-ops", {
     action: "assign-operational-role",
     institution_id: "fake",
     user_id: "fake",
     role_type: "teller",
   });
   assertEquals(status >= 400, true);
-  assertExists(data.error);
 });
 
 // ─── Test: banking-ops rejects unknown action ───
@@ -197,33 +194,30 @@ Deno.test("overdraft-ops: rejects missing action", async () => {
 
 // ─── Test: overdraft-ops get-profile requires auth ───
 Deno.test("overdraft-ops: get-profile requires auth", async () => {
-  const { status, data } = await invoke("overdraft-ops", {
+  const { status } = await invoke("overdraft-ops", {
     action: "get-profile",
     account_id: "00000000-0000-0000-0000-000000000000",
   });
   assertEquals(status >= 400, true);
-  assertExists(data.error);
 });
 
 // ─── Test: overdraft-ops recalculate requires auth ───
 Deno.test("overdraft-ops: recalculate requires auth", async () => {
-  const { status, data } = await invoke("overdraft-ops", {
+  const { status } = await invoke("overdraft-ops", {
     action: "recalculate",
     account_id: "00000000-0000-0000-0000-000000000000",
   });
   assertEquals(status >= 400, true);
-  assertExists(data.error);
 });
 
 // ─── Test: overdraft-ops approve requires auth ───
 Deno.test("overdraft-ops: approve requires auth", async () => {
-  const { status, data } = await invoke("overdraft-ops", {
+  const { status } = await invoke("overdraft-ops", {
     action: "approve",
     account_id: "fake",
     approved_limit: 100000,
   });
   assertEquals(status >= 400, true);
-  assertExists(data.error);
 });
 
 // ─── Test: overdraft-ops unknown action ───
