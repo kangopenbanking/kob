@@ -410,6 +410,87 @@ export default function CrediQDashboard() {
         </motion.div>
       </div>
 
+      {/* Pre-Approved Loan Offers */}
+      {preapprovedOffers.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
+          <Card className="p-6 border-0 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Banknote className="w-4 h-4 text-primary" />
+                <h3 className="text-sm font-semibold text-foreground">Pre-Approved Loan Offers</h3>
+              </div>
+              <Badge variant="outline" className="text-[10px]">{preapprovedOffers.length} offers</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Based on your credit score of {score}, these institutions have pre-approved you for loans
+            </p>
+            
+            <div className="space-y-3">
+              {preapprovedOffers.slice(0, 3).map((offer, i) => (
+                <motion.div
+                  key={offer.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 + i * 0.1 }}
+                  className="group flex items-start gap-4 p-4 rounded-xl border border-border/50 bg-card hover:border-primary/20 hover:shadow-sm transition-all"
+                >
+                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    {offer.institutions?.logo_url ? (
+                      <img src={offer.institutions.logo_url} alt="" className="w-6 h-6 object-contain" />
+                    ) : (
+                      <Building2 className="w-5 h-5 text-primary" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground">{offer.product_name}</h4>
+                        <p className="text-xs text-muted-foreground">{offer.institutions?.institution_name}</p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-sm font-bold text-primary">{offer.interest_rate_annual}%</p>
+                        <p className="text-[10px] text-muted-foreground">APR</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Banknote className="w-3 h-3" />
+                        {offer.min_amount.toLocaleString()} - {offer.max_amount.toLocaleString()} {offer.currency}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        Up to {offer.max_tenure_months} months
+                      </span>
+                    </div>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="h-8 text-xs flex-shrink-0"
+                    onClick={() => navigate('/credit-score')}
+                  >
+                    View Details
+                    <ChevronRight className="w-3 h-3 ml-1" />
+                  </Button>
+                </motion.div>
+              ))}
+            </div>
+            
+            {preapprovedOffers.length > 3 && (
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="w-full mt-4 text-xs"
+                onClick={() => navigate('/credit-score')}
+              >
+                View all {preapprovedOffers.length} offers
+                <ArrowRight className="w-3 h-3 ml-1" />
+              </Button>
+            )}
+          </Card>
+        </motion.div>
+      )}
+
       {/* Personalized Insights */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <Card className="p-6 border-0 shadow-lg">
