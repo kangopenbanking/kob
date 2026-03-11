@@ -919,31 +919,9 @@ function App() {
             {/* Business App PWA Routes */}
             <Route path="/biz" element={<BusinessSplash />} />
             <Route path="/biz/auth" element={<BusinessAuth />} />
+            <Route path="/biz/register" element={<BusinessRegister />} />
             <Route path="/biz/reset-password" element={<ResetPassword />} />
             <Route path="/biz" element={<BusinessAppLayout />}>
-              <Route path="home" element={<BusinessHome />} />
-              <Route path="wallet" element={<BusinessWallet />} />
-              <Route path="receive" element={<BusinessReceive />} />
-              <Route path="orders" element={<BusinessOrders />} />
-              <Route path="refunds" element={<BusinessRefunds />} />
-              <Route path="fees" element={<MerchantFees />} />
-              <Route path="till" element={<BusinessTill />} />
-              <Route path="more" element={<BusinessMore />} />
-              <Route path="customers" element={<BusinessCustomers />} />
-              <Route path="coupons" element={<BusinessCoupons />} />
-              <Route path="reviews" element={<BusinessReviews />} />
-              <Route path="quick-order" element={<BusinessQuickOrder />} />
-              <Route path="products" element={<BusinessProducts />} />
-              <Route path="analytics" element={<BusinessAnalytics />} />
-              <Route path="staff" element={<BusinessStaff />} />
-              <Route path="storefront" element={<BusinessStorefront />} />
-              <Route path="inventory" element={<BusinessInventory />} />
-            </Route>
-
-            <Route path="/biz/:merchantId" element={<BusinessSplash />} />
-            <Route path="/biz/:merchantId/auth" element={<BusinessAuth />} />
-            <Route path="/biz/:merchantId/reset-password" element={<ResetPassword />} />
-            <Route path="/biz/:merchantId" element={<BusinessAppLayout />}>
               <Route path="home" element={<BusinessHome />} />
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
