@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { motion } from "framer-motion";
-import { RefreshCw, Banknote, FileText, Calendar, CreditCard, Search, Plus, Download, Eye, TrendingUp, CheckCircle, XCircle, Clock, ToggleLeft } from "lucide-react";
+import { RefreshCw, Banknote, FileText, Calendar, CreditCard, Search, Plus, Download, Eye, TrendingUp, CheckCircle, XCircle, Clock, ToggleLeft, Star, Users, AlertTriangle, ShieldAlert } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 
