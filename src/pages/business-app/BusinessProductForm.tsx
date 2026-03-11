@@ -171,7 +171,7 @@ export default function BusinessProductForm() {
         toast.success('Product created');
       }
 
-      navigate('/business/products');
+      navigate('/biz/products');
     } catch (error: any) {
       toast.error(error.message || 'Failed to save product');
     } finally {

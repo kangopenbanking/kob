@@ -113,7 +113,7 @@ export default function BusinessStorefront() {
       if (error) throw error;
 
       toast.success('Storefront updated');
-      navigate('/business/home');
+      navigate('/biz/home');
     } catch (error: any) {
       toast.error(error.message || 'Failed to save');
     } finally {
