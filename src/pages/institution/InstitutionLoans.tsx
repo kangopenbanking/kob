@@ -111,6 +111,13 @@ export default function InstitutionLoans() {
           }
         }
       }
+      // Load pre-approved offers
+      const { data: offers } = await supabase.from("preapproved_loan_offers").select("*").eq("institution_id", instId).order("created_at", { ascending: false });
+      setPreapprovedOffers(offers || []);
+
+      // Load marketplace applications (pre-approved loan applications)
+      const { data: mktApps } = await supabase.from("preapproved_loan_applications").select("*").eq("institution_id", instId).order("created_at", { ascending: false });
+      setMarketplaceApps(mktApps || []);
     } catch (error) { console.error("Error loading loans:", error); }
     finally { setLoading(false); }
   };
