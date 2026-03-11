@@ -8,10 +8,11 @@ import { Card } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { CAMEROON_CITIES } from '@/lib/storefront-data';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 
 export default function BusinessStorefront() {
   const navigate = useNavigate();
-  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const { merchantId } = useMerchantContext();
   const [loading, setLoading] = useState(false);
 
   // Storefront data
@@ -41,26 +42,22 @@ export default function BusinessStorefront() {
     sunday: { open: '', close: '', closed: true },
   });
 
-  // Get merchant ID and load storefront
+  // Load storefront when merchantId becomes available
   useEffect(() => {
+    if (!merchantId) return;
     const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
       const { data: merchant } = await supabase
         .from('gateway_merchants')
-        .select('id, business_name')
-        .eq('user_id', user.id)
+        .select('business_name')
+        .eq('id', merchantId)
         .single();
-
       if (merchant) {
-        setMerchantId(merchant.id);
         setBusinessName(merchant.business_name || '');
-        loadStorefront(merchant.id);
       }
+      loadStorefront(merchantId);
     };
     init();
-  }, []);
+  }, [merchantId]);
 
   const loadStorefront = async (mId: string) => {
     const { data } = await supabase

@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Textarea } from '@/components/ui/textarea';
 import { POS_PRODUCT_ATTRIBUTES } from '@/lib/storefront-data';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 
 interface Variant {
   id?: string;
@@ -22,7 +23,7 @@ interface Variant {
 export default function BusinessProductForm() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const { merchantId } = useMerchantContext();
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -30,23 +31,6 @@ export default function BusinessProductForm() {
   const [variants, setVariants] = useState<Variant[]>([
     { name: 'Default', sku: '', barcode: '', price: 0, cost_price: 0, track_inventory: true }
   ]);
-
-  // Get merchant ID
-  useEffect(() => {
-    const getMerchantId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: merchant } = await supabase
-        .from('gateway_merchants')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (merchant) setMerchantId(merchant.id);
-    };
-    getMerchantId();
-  }, []);
 
   // Load existing product if editing
   useEffect(() => {

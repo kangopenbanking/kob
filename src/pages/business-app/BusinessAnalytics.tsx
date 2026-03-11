@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { TrendingUp, ShoppingBag, Users, ArrowLeft, DollarSign } from 'lucide-react';
@@ -6,25 +6,12 @@ import { useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 
 export default function BusinessAnalytics() {
   const navigate = useNavigate();
-  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const { merchantId } = useMerchantContext();
   const [timeframe, setTimeframe] = useState<'7d' | '30d' | '90d'>('30d');
-
-  useEffect(() => {
-    const getMerchantId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-      const { data: merchant } = await supabase
-        .from('gateway_merchants')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-      if (merchant) setMerchantId(merchant.id);
-    };
-    getMerchantId();
-  }, []);
 
   const { data: orders, isLoading } = useQuery({
     queryKey: ['analytics-orders', merchantId, timeframe],
