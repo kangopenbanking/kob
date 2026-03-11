@@ -103,6 +103,7 @@ export default function CrediQDashboard() {
   const [loading, setLoading] = useState(true);
   const [creditScore, setCreditScore] = useState<any>(null);
   const [actionPlans, setActionPlans] = useState<any[]>([]);
+  const [preapprovedOffers, setPreapprovedOffers] = useState<any[]>([]);
   const { toast } = useToast();
   const navigate = useNavigate();
 
