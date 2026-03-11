@@ -439,6 +439,23 @@ async function handleRepay(req: Request, body: any, bodyText: string) {
     await fetch(`${supabaseUrl}/functions/v1/credit-score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` }, body: JSON.stringify({ action: 'engine', user_id: roleResult.userId! }) });
   } catch (e) { console.error('Credit score recompute failed:', e); }
 
+  // ✉️ Email customer: loan repayment confirmed
+  const repayCustomerName = await getUserName(supabase, loan.user_id);
+  sendManagedEmail(supabase, {
+    email_key: 'loan_repayment_confirmed',
+    recipient_user_id: loan.user_id,
+    variables: { customer_name: repayCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), payment_reference: paymentRef, principal_paid: new Intl.NumberFormat('fr-CM').format(Math.round(totalPrincipal * 100) / 100), interest_paid: new Intl.NumberFormat('fr-CM').format(Math.round(totalInterest * 100) / 100), remaining_balance: new Intl.NumberFormat('fr-CM').format(Math.max(0, Math.round(newOutstanding * 100) / 100)), loan_status: isCompleted ? 'Fully Repaid' : 'Active' },
+  });
+
+  // ✉️ If loan completed, send congratulations
+  if (isCompleted) {
+    sendManagedEmail(supabase, {
+      email_key: 'loan_completed',
+      recipient_user_id: loan.user_id,
+      variables: { customer_name: repayCustomerName, loan_account_number: loan.loan_account_number, currency: 'XAF', total_paid: new Intl.NumberFormat('fr-CM').format(Math.round(newRepaid * 100) / 100) },
+    });
+  }
+
   const responseBody = { data: { payment_reference: paymentRef, amount, principal_paid: Math.round(totalPrincipal * 100) / 100, interest_paid: Math.round(totalInterest * 100) / 100, fees_paid: Math.round(totalFees * 100) / 100, remaining_balance: Math.max(0, Math.round(newOutstanding * 100) / 100), loan_status: isCompleted ? 'completed' : 'active', journal_entry_id: journalEntry.id } };
   await supabase.from('idempotency_keys').insert({ idempotency_key: idempotencyKey, client_id: roleResult.userId!, endpoint: 'loan-repay', payload_hash: payloadHash, response_status: 200, response_body: responseBody, expires_at: new Date(Date.now() + 86400000).toISOString() });
 
