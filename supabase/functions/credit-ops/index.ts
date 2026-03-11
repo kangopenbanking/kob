@@ -270,3 +270,168 @@ async function handleApplyPreapproved(req: Request, body: any) {
     message: 'Your application has been submitted. The bank will perform additional checks before making a final decision.',
   }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
+
+async function handleReviewApplication(req: Request, body: any) {
+  const { user } = await getUser(req);
+  const { application_id, decision, decline_reason, review_notes } = body;
+
+  if (!application_id || !decision || !['approved', 'declined'].includes(decision)) {
+    return new Response(JSON.stringify({ error: 'application_id and decision (approved/declined) are required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  const serviceClient = getServiceClient();
+
+  // Verify the reviewer is staff/owner of the institution
+  const { data: app, error: appErr } = await serviceClient
+    .from('preapproved_loan_applications')
+    .select('*, preapproved_loan_offers!inner(product_name, institution_id, interest_rate_annual)')
+    .eq('id', application_id)
+    .maybeSingle();
+
+  if (appErr || !app) {
+    return new Response(JSON.stringify({ error: 'Application not found' }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Verify reviewer belongs to the institution
+  const { data: inst } = await serviceClient.from('institutions').select('id, institution_name').eq('id', app.institution_id).eq('user_id', user.id).maybeSingle();
+  let reviewerInstitution = inst;
+  if (!reviewerInstitution) {
+    const { data: staffInst } = await serviceClient.from('staff_assignments').select('institution_id, institutions!inner(id, institution_name)').eq('user_id', user.id).eq('institution_id', app.institution_id).eq('is_active', true).maybeSingle();
+    if (staffInst) reviewerInstitution = staffInst.institutions as any;
+  }
+  if (!reviewerInstitution) {
+    return new Response(JSON.stringify({ error: 'Unauthorized: you are not authorized to review this application' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
+  // Update application status
+  const updateData: any = {
+    status: decision,
+    updated_at: new Date().toISOString(),
+  };
+  if (decision === 'declined' && decline_reason) {
+    updateData.decline_reason = decline_reason;
+  }
+
+  const { error: updateErr } = await serviceClient
+    .from('preapproved_loan_applications')
+    .update(updateData)
+    .eq('id', application_id);
+
+  if (updateErr) throw updateErr;
+
+  // Get customer profile for notification
+  const { data: customerProfile } = await serviceClient
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', app.user_id)
+    .maybeSingle();
+
+  const productName = app.preapproved_loan_offers?.product_name || 'Loan';
+  const institutionName = reviewerInstitution.institution_name || 'Your Bank';
+  const customerName = customerProfile?.full_name || 'Customer';
+  const amountFormatted = new Intl.NumberFormat('fr-CM', { style: 'decimal' }).format(app.requested_amount) + ' XAF';
+
+  // Build notification content
+  const isApproved = decision === 'approved';
+  const notifTitle = isApproved
+    ? `Loan Application Approved 🎉`
+    : `Loan Application Update`;
+  const notifMessage = isApproved
+    ? `Great news! Your ${productName} application for ${amountFormatted} with ${institutionName} has been approved. Please contact the bank for next steps.`
+    : `Your ${productName} application for ${amountFormatted} with ${institutionName} was not approved. ${decline_reason || 'Please contact the bank for more information.'}`;
+
+  // Send in-app push notification
+  try {
+    await serviceClient.from('app_notifications').insert({
+      user_id: app.user_id,
+      institution_id: app.institution_id,
+      type: isApproved ? 'success' : 'warning',
+      title: notifTitle,
+      message: notifMessage,
+      icon: isApproved ? 'check-circle' : 'x-circle',
+      metadata: { application_id, decision, product_name: productName },
+    });
+  } catch (_) { /* non-critical */ }
+
+  // Send push notification via push-notification function
+  try {
+    const pushUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/push-notification`;
+    await fetch(pushUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({
+        user_id: app.user_id,
+        institution_id: app.institution_id,
+        type: isApproved ? 'success' : 'warning',
+        title: notifTitle,
+        message: notifMessage,
+        icon: isApproved ? 'check-circle' : 'x-circle',
+        metadata: { application_id, decision },
+      }),
+    });
+  } catch (_) { /* non-critical */ }
+
+  // Send email notification via managed-send-email
+  try {
+    const emailUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/managed-send-email`;
+    const emailHtml = `
+      <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
+        <div style="text-align:center;margin-bottom:24px;">
+          <h2 style="color:${isApproved ? '#16a34a' : '#dc2626'};margin:0;">
+            ${isApproved ? '✅ Application Approved' : '❌ Application Not Approved'}
+          </h2>
+        </div>
+        <p>Dear ${customerName},</p>
+        <p>${notifMessage}</p>
+        <div style="background:#f8f9fa;border-radius:8px;padding:16px;margin:16px 0;">
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Product</td><td style="padding:4px 0;font-weight:600;text-align:right;">${productName}</td></tr>
+            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Amount</td><td style="padding:4px 0;font-weight:600;text-align:right;">${amountFormatted}</td></tr>
+            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Institution</td><td style="padding:4px 0;font-weight:600;text-align:right;">${institutionName}</td></tr>
+            <tr><td style="padding:4px 0;color:#6b7280;font-size:14px;">Decision</td><td style="padding:4px 0;font-weight:600;text-align:right;color:${isApproved ? '#16a34a' : '#dc2626'};">${isApproved ? 'Approved' : 'Declined'}</td></tr>
+          </table>
+        </div>
+        ${!isApproved && decline_reason ? `<p style="color:#6b7280;font-size:14px;"><strong>Reason:</strong> ${decline_reason}</p>` : ''}
+        <p style="color:#6b7280;font-size:13px;margin-top:24px;">This is an automated notification from Kang Open Banking.</p>
+      </div>
+    `;
+
+    await fetch(emailUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+      },
+      body: JSON.stringify({
+        to: customerProfile?.email || '',
+        subject: notifTitle,
+        html: emailHtml,
+        tags: ['loan-application-decision'],
+      }),
+    });
+  } catch (_) { /* non-critical */ }
+
+  // Log credit event for the decision
+  try {
+    await serviceClient.from('credit_events').insert({
+      user_id: app.user_id,
+      event_type: isApproved ? 'loan_approved' : 'loan_declined',
+      event_time: new Date().toISOString(),
+      source: 'preapproved_loan',
+      description: `${productName} application ${decision} by ${institutionName}`,
+      score_impact: 0,
+      metadata: { application_id, decision, reviewer_id: user.id, institution_id: app.institution_id },
+    });
+  } catch (_) { /* non-critical */ }
+
+  return new Response(JSON.stringify({
+    success: true,
+    application_id,
+    decision,
+    notifications_sent: true,
+    message: `Application ${decision} successfully. Customer has been notified via push notification and email.`,
+  }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
