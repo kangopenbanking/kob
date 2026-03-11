@@ -8,6 +8,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { getCanonicalUrl } from '@/config/api';
 
 interface MenuSection {
   title: string;
