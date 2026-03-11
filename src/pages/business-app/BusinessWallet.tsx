@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Wallet, ArrowUpRight, History, Eye, EyeOff, TrendingUp, Clock } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
 import { toast } from 'sonner';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const BusinessWallet: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const { wallets, availableBalance, pendingBalance, settlements, isLoading, refetchWallets } = useBusinessData(merchantId);
   const [showBalance, setShowBalance] = useState(true);
   const [showLedger, setShowLedger] = useState(false);

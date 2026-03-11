@@ -33,7 +33,7 @@ const BusinessMore: React.FC = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success('Logged out successfully');
-    navigate(merchantId ? `/biz/${merchantId}/auth` : '/biz/auth');
+    navigate('/biz/auth');
   };
 
   const handleShareStoreQR = async () => {

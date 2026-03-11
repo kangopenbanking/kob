@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Wallet, TrendingUp, ShoppingBag, Clock, ArrowUpRight, ChevronRight, Bell, BarChart3 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { sounds } from '@/lib/sounds';
@@ -11,9 +12,9 @@ import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const BusinessHome: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const navigate = useNavigate();
-  const basePath = merchantId ? `/biz/${merchantId}` : '/biz';
+  const basePath = '/biz';
   const {
     merchant,
     availableBalance,

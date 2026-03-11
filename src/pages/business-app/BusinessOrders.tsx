@@ -33,7 +33,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 };
 
 const BusinessOrders: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const [filter, setFilter] = useState<OrderStatus>('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
