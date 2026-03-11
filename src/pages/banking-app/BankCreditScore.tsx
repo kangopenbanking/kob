@@ -51,12 +51,43 @@ const defaultFactors = [
 const BankCreditScore: React.FC = () => {
   const navigate = useNavigate();
   const { data: creditData, isLoading } = useCreditScore();
+  const [overdraftLoading, setOverdraftLoading] = useState(false);
+  const [overdraftResult, setOverdraftResult] = useState<any>(null);
 
   const score = creditData?.score || 0;
   const maxScore = 850;
   const percentage = score > 0 ? (score / maxScore) * 100 : 0;
   const scoreRange = creditData?.score_range || (score > 0 ? getScoreLabel(score) : '—');
   const scoreBand = creditData?.score_band;
+
+  const handleCheckOverdraft = async () => {
+    setOverdraftLoading(true);
+    try {
+      // Get user's accounts to find their primary account
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      const { data: accounts } = await supabase.from('accounts').select('id, institution_id, account_holder_name')
+        .eq('user_id', user.id).eq('is_active', true).limit(1).maybeSingle();
+
+      if (!accounts) {
+        toast.error('No active account found');
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('overdraft-ops', {
+        body: { action: 'recalculate', account_id: accounts.id },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setOverdraftResult(data);
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to check overdraft eligibility');
+    } finally {
+      setOverdraftLoading(false);
+    }
+  };
 
   // Use event-sourced factors if available, otherwise legacy
   const apiFactors = creditData?.score_factors;
