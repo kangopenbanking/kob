@@ -13,6 +13,7 @@ import {
   Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+import { EMAIL_LOGO_URL } from '../email-config.ts'
 
 interface ReauthenticationEmailProps {
   token: string
