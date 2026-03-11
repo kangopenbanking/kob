@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight, Landmark, ChevronRight } from 'lucide-react';
+import { ArrowLeft, BarChart3, TrendingUp, Shield, Clock, Loader2, ArrowUpRight, ArrowDownRight, Landmark, ChevronRight, Building2, Banknote, Percent, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCreditScore } from '@/hooks/useBankingData';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 function getScoreLabel(score: number): string {
   if (score >= 800) return 'Excellent';
