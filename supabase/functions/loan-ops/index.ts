@@ -251,6 +251,15 @@ async function handleApprove(req: Request, body: any) {
     }).eq('id', loanAccount.id);
   }
 
+  // ✉️ Email customer: loan approved
+  const approvedCustomerName = await getUserName(supabase, app.user_id);
+  sendManagedEmail(supabase, {
+    email_key: 'loan_approved',
+    recipient_user_id: app.user_id,
+    institution_id: app.institution_id || undefined,
+    variables: { customer_name: approvedCustomerName, currency: 'XAF', approved_amount: new Intl.NumberFormat('fr-CM').format(principal), interest_rate: rate, monthly_payment: new Intl.NumberFormat('fr-CM').format(Math.round(emi * 100) / 100), tenure_months: tenure, loan_account_number: loanAccountNumber },
+  });
+
   return new Response(JSON.stringify({ data: { loan_account: loanAccount, schedule_count: scheduleRows.length, emi: Math.round(emi * 100) / 100, total_payable: Math.round(totalPayable * 100) / 100 } }), {
     status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
   });
