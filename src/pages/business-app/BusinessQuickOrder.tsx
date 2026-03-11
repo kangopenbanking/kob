@@ -19,7 +19,7 @@ interface CartItem {
 }
 
 const BusinessQuickOrder: React.FC = () => {
-  const { merchantId } = useParams<{ merchantId?: string }>();
+  const { merchantId } = useMerchantContext();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [cart, setCart] = useState<CartItem[]>([]);
