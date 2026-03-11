@@ -27,7 +27,7 @@ const BusinessMore: React.FC = () => {
     merchant_id: merchantId,
     merchant_name: merchant?.business_name || 'Store',
   });
-  const storeUrl = `${window.location.origin}/app/stores/${merchantId}`;
+  const storeUrl = getCanonicalUrl(`/app/stores/${merchantId}`);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();

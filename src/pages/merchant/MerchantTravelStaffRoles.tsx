@@ -165,7 +165,7 @@ const MerchantTravelStaffRoles: React.FC = () => {
   };
 
   const copyLoginLink = () => {
-    const url = `${window.location.origin}/staff-login`;
+    const url = getCanonicalUrl('/staff-login');
     navigator.clipboard.writeText(url);
     toast.success('Staff login link copied!');
   };

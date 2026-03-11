@@ -37,8 +37,7 @@ const BusinessAppManagement: React.FC = () => {
   const getMerchantAppPath = (merchantId: string) => `/biz/${merchantId}/auth`;
   const getMerchantAppUrl = (merchantId: string) => {
     const path = getMerchantAppPath(merchantId);
-    if (typeof window === 'undefined') return path;
-    return `${window.location.origin}${path}`;
+    return getCanonicalUrl(path);
   };
 
   const openMerchantApp = (merchantId: string) => {

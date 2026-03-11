@@ -169,7 +169,7 @@ export function CustomerMarketplace() {
                       <SocialShare
                         title={store.store_name}
                         text={store.description}
-                        url={`${window.location.origin}/app/store/${store.merchant_id}`}
+                        url={getCanonicalUrl(`/app/store/${store.merchant_id}`)}
                       />
                     </div>
                   </div>

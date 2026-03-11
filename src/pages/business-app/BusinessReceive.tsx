@@ -282,7 +282,7 @@ const BusinessReceive: React.FC = () => {
                     <p className="text-2xl font-bold text-primary">{formatXAF(createdLink.amount)}</p>
                     <div className="w-full rounded-xl bg-muted p-3">
                       <p className="break-all text-center font-mono text-xs text-muted-foreground">
-                        {window.location.origin}/pay/{createdLink.slug}
+                        {getCanonicalUrl(`/pay/${createdLink.slug}`)}
                       </p>
                     </div>
                   </CardContent>
