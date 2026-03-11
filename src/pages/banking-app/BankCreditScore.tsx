@@ -171,6 +171,9 @@ const BankCreditScore: React.FC = () => {
             )}
           </motion.div>
 
+          {/* Pre-Approved Loan Offers */}
+          <BankPreApprovedOffers score={score} />
+
           {/* Event-sourced factors */}
           {eventFactors && eventFactors.length > 0 ? (
             <>
