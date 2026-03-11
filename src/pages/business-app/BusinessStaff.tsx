@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { UserPlus, Mail, Shield, Edit, Trash2, ArrowLeft } from 'lucide-react';
@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 
 const STAFF_ROLES = [
   { value: 'merchant_admin', label: 'Admin', description: 'Full access to all features' },
@@ -24,28 +25,11 @@ const STAFF_ROLES = [
 export default function BusinessStaff() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const { merchantId } = useMerchantContext();
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState('');
   const [inviteRole, setInviteRole] = useState<string>('cashier');
   const [invitePin, setInvitePin] = useState('');
-
-  // Get merchant ID
-  useEffect(() => {
-    const getMerchantId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: merchant } = await supabase
-        .from('gateway_merchants')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (merchant) setMerchantId(merchant.id);
-    };
-    getMerchantId();
-  }, []);
 
   // Fetch staff
   const { data: staff, isLoading } = useQuery({

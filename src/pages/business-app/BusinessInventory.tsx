@@ -13,30 +13,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import { useMerchantContext } from '@/hooks/useMerchantContext';
 
 export default function BusinessInventory() {
   const [search, setSearch] = useState('');
-  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const { merchantId } = useMerchantContext();
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [adjustmentQty, setAdjustmentQty] = useState('');
   const [adjustmentReason, setAdjustmentReason] = useState('');
-
-  // Get merchant ID from auth
-  useState(() => {
-    const getMerchantId = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const { data: merchant } = await supabase
-        .from('gateway_merchants')
-        .select('id')
-        .eq('user_id', user.id)
-        .single();
-
-      if (merchant) setMerchantId(merchant.id);
-    };
-    getMerchantId();
-  });
 
   // Fetch locations for merchant
   const { data: locations } = useQuery({
