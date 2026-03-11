@@ -120,6 +120,21 @@ async function handleContribute(req: Request, body: any) {
   const daysLate = isLate ? Math.floor((now.getTime() - dueDate.getTime()) / 86400000) : 0;
   await supabase.from('credit_events').insert({ user_id: user.id, event_type: eventType, value_numeric: isLate ? daysLate : group.contribution_amount, description: `Njangi contribution ${isLate ? `(late by ${daysLate} days)` : '(on-time)'} - ${group.name} cycle ${group.current_cycle}`, event_time: now.toISOString(), metadata: { group_id, cycle_number: group.current_cycle, amount: group.contribution_amount, late_interest: lateInterest, days_late: daysLate }, source: 'njangi_service' });
 
+  // ✉️ Email member: contribution confirmed
+  const contribMemberName = await getUserName(supabase, user.id);
+  sendManagedEmail(supabase, {
+    email_key: 'njangi_contribution_confirmed',
+    recipient_user_id: user.id,
+    variables: {
+      member_name: contribMemberName,
+      group_name: group.name,
+      currency: 'XAF',
+      amount: new Intl.NumberFormat('fr-CM').format(group.contribution_amount),
+      cycle_number: group.current_cycle,
+      late_notice: isLate ? `⚠️ This contribution was ${daysLate} day(s) late. Late interest: XAF ${new Intl.NumberFormat('fr-CM').format(lateInterest)}` : '',
+    },
+  });
+
   let scoreResult = null;
   try { const { data } = await supabase.functions.invoke('credit-score', { body: { action: 'engine', user_id: user.id } }); scoreResult = data; } catch (e) { console.error('Score engine error:', e); }
 
