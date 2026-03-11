@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createStripeRefund, createFlutterwavePayout } from "../_shared/gateway-adapters.ts";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail } from '../_shared/send-managed-email.ts';
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
