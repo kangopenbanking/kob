@@ -340,6 +340,13 @@ async function handleCreateWithdrawalRequest(req: Request, body: any) {
 
   await supabase.rpc('log_audit_event', { _action_type: 'withdrawal_request_escalated', _entity_type: 'withdrawal_request', _entity_id: wr.id, _details: { amount, escalation_role: escalationRole, policy_result: policy } });
 
+  // Notify managers with the required role about the pending approval
+  await notifyPendingApprovalManagers(supabase, {
+    institution_id, branch_id: branch_id || null,
+    escalation_role: escalationRole, approval_request_id: ar.id,
+    amount, currency: currency || 'XAF', submitted_by_id: user.id,
+  });
+
   return ok({ success: true, withdrawal_request: { ...wr, approval_request_id: ar.id }, approval_request: ar, policy_evaluation: policy, requires_approval: true, pending_role: escalationRole }, 202);
 }
 
