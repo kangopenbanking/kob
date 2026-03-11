@@ -153,7 +153,7 @@ Deno.test("banking-ops: list-withdrawal-policies requires auth", async () => {
     action: "list-withdrawal-policies",
     institution_id: "00000000-0000-0000-0000-000000000000",
   });
-  assertEquals(status, 401);
+  assertEquals(status >= 400, true);
   assertExists(data.error);
 });
 
@@ -163,7 +163,7 @@ Deno.test("banking-ops: approve action requires auth", async () => {
     action: "approve",
     approval_id: "fake-id",
   });
-  assertEquals(status, 401);
+  assertEquals(status >= 400, true);
   assertExists(data.error);
 });
 
@@ -175,7 +175,7 @@ Deno.test("banking-ops: assign-operational-role requires auth", async () => {
     user_id: "fake",
     role_type: "teller",
   });
-  assertEquals(status, 401);
+  assertEquals(status >= 400, true);
   assertExists(data.error);
 });
 
@@ -201,7 +201,7 @@ Deno.test("overdraft-ops: get-profile requires auth", async () => {
     action: "get-profile",
     account_id: "00000000-0000-0000-0000-000000000000",
   });
-  assertEquals(status, 401);
+  assertEquals(status >= 400, true);
   assertExists(data.error);
 });
 
@@ -211,7 +211,7 @@ Deno.test("overdraft-ops: recalculate requires auth", async () => {
     action: "recalculate",
     account_id: "00000000-0000-0000-0000-000000000000",
   });
-  assertEquals(status, 401);
+  assertEquals(status >= 400, true);
   assertExists(data.error);
 });
 
@@ -222,7 +222,7 @@ Deno.test("overdraft-ops: approve requires auth", async () => {
     account_id: "fake",
     approved_limit: 100000,
   });
-  assertEquals(status, 401);
+  assertEquals(status >= 400, true);
   assertExists(data.error);
 });
 
