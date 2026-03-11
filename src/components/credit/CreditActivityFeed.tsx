@@ -13,7 +13,7 @@ import {
 
 interface ActivityItem {
   id: string;
-  type: 'score_change' | 'inquiry' | 'alert' | 'loan' | 'savings';
+  type: 'score_change' | 'inquiry' | 'alert' | 'loan' | 'savings' | 'pre_approved' | 'hard_check';
   title: string;
   description: string;
   timestamp: string;
