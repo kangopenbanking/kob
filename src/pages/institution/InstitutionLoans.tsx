@@ -201,6 +201,25 @@ export default function InstitutionLoans() {
   };
 
   const handleUpdateMarketplaceApp = async (appId: string, newStatus: string, declineReason?: string) => {
+    // For approve/decline after hard check, use the edge function for notifications
+    if ((newStatus === 'approved' || newStatus === 'declined') && selectedMarketplaceApp?.status === 'hard_check_initiated') {
+      setActingOnApp(true);
+      const { data, error } = await supabase.functions.invoke('credit-ops', {
+        body: { action: 'review-application', application_id: appId, decision: newStatus, decline_reason: declineReason || undefined, review_notes: reviewNotes || undefined },
+      });
+      setActingOnApp(false);
+      if (error || data?.error) {
+        toast.error(data?.error || 'Failed to submit decision');
+        return;
+      }
+      toast.success(`Application ${newStatus}. Customer notified via push & email.`);
+      setSelectedMarketplaceApp(null);
+      setReviewNotes('');
+      setDeclineReasonInput('');
+      loadData();
+      return;
+    }
+
     const updateData: any = { status: newStatus, updated_at: new Date().toISOString() };
     if (declineReason) updateData.decline_reason = declineReason;
     if (newStatus === 'declined') updateData.score_impact = -5;
@@ -208,6 +227,8 @@ export default function InstitutionLoans() {
     if (error) { toast.error("Failed to update application"); return; }
     toast.success(`Application ${newStatus}`);
     setSelectedMarketplaceApp(null);
+    setReviewNotes('');
+    setDeclineReasonInput('');
     loadData();
   };
 
