@@ -66,6 +66,25 @@ async function handleJoin(req: Request, body: any) {
 
   const { data: member, error: memberErr } = await supabase.from('njangi_members').insert({ group_id, user_id: user.id, status: 'active' }).select().single();
   if (memberErr) throw memberErr;
+
+  // ✉️ Notify group creator about new member
+  const { data: groupData } = await supabase.from('njangi_groups').select('creator_id, name, max_members').eq('id', group_id).single();
+  if (groupData) {
+    const newMemberName = await getUserName(supabase, user.id);
+    const creatorName = await getUserName(supabase, groupData.creator_id);
+    sendManagedEmail(supabase, {
+      email_key: 'njangi_member_joined',
+      recipient_user_id: groupData.creator_id,
+      variables: {
+        creator_name: creatorName,
+        member_name: newMemberName,
+        group_name: groupData.name,
+        member_count: (memberCount + 1).toString(),
+        max_members: groupData.max_members.toString(),
+      },
+    });
+  }
+
   return new Response(JSON.stringify({ member }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
