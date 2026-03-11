@@ -255,6 +255,9 @@ const CustomerCreditScore: React.FC = () => {
         </div>
       </motion.div>
 
+      {/* Pre-Approved Loan Offers */}
+      <PreApprovedOffersSection score={score} />
+
       {/* What's Impacting Your Score */}
       {score > 0 && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
