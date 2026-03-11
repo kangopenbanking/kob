@@ -159,6 +159,15 @@ async function handleWithdraw(req: Request, body: any) {
 
   try { await serviceSupabase.from('credit_events').insert({ user_id: user.id, institution_id: savingsAccount.institution_id || null, event_type: 'SAVINGS_WITHDRAWAL', event_time: new Date().toISOString(), value_numeric: amount, metadata: { savings_account_id, balance_after: remainingBalance, transaction_ref: txRef }, source: 'savings_service' }); } catch (e) { console.error('Credit event failed:', e); }
 
+  // ✉️ Email customer: savings withdrawal confirmed
+  const wdCustomerName = await getUserName(serviceSupabase, user.id);
+  sendManagedEmail(serviceSupabase, {
+    email_key: 'savings_withdrawal_confirmed',
+    recipient_user_id: user.id,
+    institution_id: savingsAccount.institution_id || undefined,
+    variables: { customer_name: wdCustomerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), account_name: savingsAccount.account_name || 'Savings', remaining_balance: new Intl.NumberFormat('fr-CM').format(remainingBalance), reference: txRef },
+  });
+
   return new Response(JSON.stringify({ success: true, new_balance: remainingBalance, withdrawals_remaining: (product.max_withdrawals_per_month || 999) - (withdrawalsThisMonth + 1), transaction_ref: txRef }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 

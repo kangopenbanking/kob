@@ -274,6 +274,28 @@ serve(async (req) => {
 
     console.log(`Teller ${operation} completed:`, { account_id, amount, newBalance, teller: user.id });
 
+    // ✉️ Email customer: teller transaction receipt
+    const accountOwnerName = await getUserName(serviceSupabase, account.user_id);
+    const accountRef = await getAccountRef(serviceSupabase, account_id);
+    const tellerName = await getUserName(serviceSupabase, user.id);
+    const emailKey = operation === 'deposit' ? 'teller_deposit_receipt' : 'teller_withdrawal_receipt';
+    sendManagedEmail(serviceSupabase, {
+      email_key: emailKey,
+      recipient_user_id: account.user_id,
+      institution_id: institution_id,
+      variables: {
+        customer_name: accountOwnerName,
+        currency: account.currency || 'XAF',
+        amount: new Intl.NumberFormat('fr-CM').format(amount),
+        account_ref: accountRef,
+        balance_before: new Intl.NumberFormat('fr-CM').format(currentAmount),
+        balance_after: new Intl.NumberFormat('fr-CM').format(newBalance),
+        reference: txRef,
+        teller_name: tellerName,
+        branch_name: 'Branch',
+      },
+    });
+
     return new Response(JSON.stringify({
       success: true,
       operation,

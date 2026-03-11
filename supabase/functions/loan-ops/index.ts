@@ -480,11 +480,22 @@ async function handleOverdueDetect(req: Request) {
   let processed = 0;
 
   for (const item of (overdueItems || [])) {
-    const { data: loan } = await supabase.from('loan_accounts').select('user_id, institution_id').eq('id', item.loan_id).single();
+    const { data: loan } = await supabase.from('loan_accounts').select('user_id, institution_id, loan_account_number').eq('id', item.loan_id).single();
     if (!loan) continue;
     const daysLate = Math.floor((Date.now() - new Date(item.due_date).getTime()) / 86400000);
-    await supabase.from('credit_events').insert({ user_id: loan.user_id, institution_id: loan.institution_id, event_type: 'LOAN_INSTALLMENT_MISSED', event_time: new Date().toISOString(), value_numeric: daysLate, metadata: { loan_id: item.loan_id, schedule_item_id: item.id, installment_number: item.installment_number, due_date: item.due_date, amount_due: Number(item.total_amount) - Number(item.paid_amount) }, source: 'overdue_job' });
+    const amountDue = Number(item.total_amount) - Number(item.paid_amount);
+    await supabase.from('credit_events').insert({ user_id: loan.user_id, institution_id: loan.institution_id, event_type: 'LOAN_INSTALLMENT_MISSED', event_time: new Date().toISOString(), value_numeric: daysLate, metadata: { loan_id: item.loan_id, schedule_item_id: item.id, installment_number: item.installment_number, due_date: item.due_date, amount_due: amountDue }, source: 'overdue_job' });
     await supabase.from('loan_schedule').update({ missed_event_created: true, status: 'overdue' }).eq('id', item.id);
+
+    // ✉️ Email customer: loan overdue notice
+    const overdueCustomerName = await getUserName(supabase, loan.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'loan_overdue_alert',
+      recipient_user_id: loan.user_id,
+      institution_id: loan.institution_id || undefined,
+      variables: { customer_name: overdueCustomerName, days_overdue: daysLate, currency: 'XAF', amount_due: new Intl.NumberFormat('fr-CM').format(amountDue), due_date: item.due_date, loan_account_number: loan.loan_account_number || item.loan_id.slice(0, 8), installment_number: item.installment_number },
+    });
+
     affectedUsers.add(loan.user_id);
     processed++;
   }
@@ -493,6 +504,24 @@ async function handleOverdueDetect(req: Request) {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
   for (const userId of affectedUsers) {
     try { await fetch(`${supabaseUrl}/functions/v1/credit-score`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` }, body: JSON.stringify({ action: 'engine', user_id: userId }) }); } catch (e) { console.error(`Score recompute failed for ${userId}:`, e); }
+  }
+
+  // ✉️ Email management: overdue batch alert
+  if (processed > 0) {
+    // Find all affected institutions
+    const institutionIds = new Set<string>();
+    for (const item of (overdueItems || [])) {
+      const { data: loan } = await supabase.from('loan_accounts').select('institution_id').eq('id', item.loan_id).maybeSingle();
+      if (loan?.institution_id) institutionIds.add(loan.institution_id);
+    }
+    for (const instId of institutionIds) {
+      emailManagers(supabase, {
+        institution_id: instId,
+        role_type: 'branch_manager',
+        email_key: 'loan_overdue_management_alert',
+        variables: { overdue_count: processed, users_affected: affectedUsers.size },
+      });
+    }
   }
 
   return new Response(JSON.stringify({ success: true, processed, users_affected: affectedUsers.size }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
