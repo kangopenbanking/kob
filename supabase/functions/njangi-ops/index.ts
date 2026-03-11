@@ -181,6 +181,23 @@ async function handlePayout(req: Request, body: any) {
   await supabase.from('njangi_groups').update({ current_cycle: group.current_cycle + 1 }).eq('id', group_id);
 
   const recipient = (members || []).find(m => m.id === selectedMemberId);
+
+  // ✉️ Email payout recipient
+  if (recipient?.user_id) {
+    const payoutMemberName = await getUserName(supabase, recipient.user_id);
+    sendManagedEmail(supabase, {
+      email_key: 'njangi_payout_received',
+      recipient_user_id: recipient.user_id,
+      variables: {
+        member_name: payoutMemberName,
+        group_name: group.name,
+        currency: 'XAF',
+        amount: new Intl.NumberFormat('fr-CM').format(totalAmount),
+        cycle_number: group.current_cycle,
+      },
+    });
+  }
+
   return new Response(JSON.stringify({ payout, recipient_user_id: recipient?.user_id, total_amount: totalAmount, next_cycle: group.current_cycle + 1 }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
