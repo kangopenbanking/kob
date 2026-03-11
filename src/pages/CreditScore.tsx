@@ -24,6 +24,8 @@ import QuickStats from '@/components/credit/QuickStats';
 import { PostiQVerification } from '@/components/credit/PostiQVerification';
 import PostiQFeatureShowcase from '@/components/credit/PostiQFeatureShowcase';
 import LinkedAccountsWidget from '@/components/credit/LinkedAccountsWidget';
+import PreApprovedOffersCard from '@/components/credit/PreApprovedOffersCard';
+import CreditInquiriesPanel from '@/components/credit/CreditInquiriesPanel';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
