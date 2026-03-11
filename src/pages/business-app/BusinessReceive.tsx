@@ -10,6 +10,7 @@ import { useParams } from 'react-router-dom';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { supabase } from '@/integrations/supabase/client';
 import { sounds } from '@/lib/sounds';
+import { getCanonicalUrl } from '@/config/api';
 
 type Tab = 'qr' | 'links';
 
