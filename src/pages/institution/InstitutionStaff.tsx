@@ -44,7 +44,8 @@ interface StaffMember {
   is_active: boolean;
   start_date: string | null;
   assigned_at: string;
-  profiles?: { full_name: string | null; email: string | null } | null;
+  profile_name?: string | null;
+  profile_email?: string | null;
 }
 
 export default function InstitutionStaff() {
