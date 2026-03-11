@@ -98,6 +98,25 @@ async function handleDeposit(req: Request, body: any) {
   let goalReached = false;
   if (savingsAccount.target_amount && newBalance >= parseFloat(savingsAccount.target_amount)) goalReached = true;
 
+  // ✉️ Email customer: savings deposit confirmed
+  const customerName = await getUserName(serviceSupabase, user.id);
+  sendManagedEmail(serviceSupabase, {
+    email_key: 'savings_deposit_confirmed',
+    recipient_user_id: user.id,
+    institution_id: savingsAccount.institution_id || undefined,
+    variables: { customer_name: customerName, currency: 'XAF', amount: new Intl.NumberFormat('fr-CM').format(amount), account_name: savingsAccount.account_name || 'Savings', new_balance: new Intl.NumberFormat('fr-CM').format(newBalance), reference: txRef },
+  });
+
+  // ✉️ If savings goal reached, send congratulatory email
+  if (goalReached) {
+    sendManagedEmail(serviceSupabase, {
+      email_key: 'savings_goal_reached',
+      recipient_user_id: user.id,
+      institution_id: savingsAccount.institution_id || undefined,
+      variables: { customer_name: customerName, currency: 'XAF', target_amount: new Intl.NumberFormat('fr-CM').format(savingsAccount.target_amount), account_name: savingsAccount.account_name || 'Savings', current_balance: new Intl.NumberFormat('fr-CM').format(newBalance) },
+    });
+  }
+
   return new Response(JSON.stringify({ success: true, new_balance: newBalance, goal_reached: goalReached, transaction_ref: txRef }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 }
 
