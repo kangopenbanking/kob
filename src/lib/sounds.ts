@@ -1,8 +1,19 @@
 // Lightweight button interaction sounds using Web Audio API
-const audioCtx = typeof window !== 'undefined' ? new (window.AudioContext || (window as any).webkitAudioContext)() : null;
+let audioCtx: AudioContext | null = null;
+
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  if (!audioCtx) {
+    try {
+      audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    } catch { return null; }
+  }
+  return audioCtx;
+}
 
 function playTone(freq: number, duration: number, type: OscillatorType = 'sine', vol = 0.08) {
-  if (!audioCtx) return;
+  const ctx = getAudioContext();
+  if (!ctx) return;
   try {
     if (audioCtx.state === 'suspended') audioCtx.resume();
     const osc = audioCtx.createOscillator();
