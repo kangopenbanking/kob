@@ -81,6 +81,7 @@ const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string
   Social: { bg: "bg-pink-500/5", border: "border-pink-200 dark:border-pink-800", text: "text-pink-700 dark:text-pink-400", icon: Users },
   International: { bg: "bg-cyan-500/5", border: "border-cyan-200 dark:border-cyan-800", text: "text-cyan-700 dark:text-cyan-400", icon: Globe2 },
   Gateway: { bg: "bg-amber-500/5", border: "border-amber-200 dark:border-amber-800", text: "text-amber-700 dark:text-amber-400", icon: Zap },
+  Services: { bg: "bg-teal-500/5", border: "border-teal-200 dark:border-teal-800", text: "text-teal-700 dark:text-teal-400", icon: FileText },
 };
 
 function getFeeDisplay(s: any) {
