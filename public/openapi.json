@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "3.7.0",
+    "version": "3.8.0",
     "description": "This is a summary specification. The full dynamic OpenAPI specification with 250+ endpoints is available at the x-full-spec-url below. AI agents and tooling should fetch the full spec for complete coverage.",
     "x-full-spec-url": "https://api.kangopenbanking.com/functions/v1/public-api-spec",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
