@@ -332,25 +332,6 @@ export default function CreditScore() {
         <div className="grid lg:grid-cols-3 gap-5 mt-6 pb-12">
           {/* Left Column — 2/3 */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Score Trend */}
-            <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible">
-              <div className="rounded-2xl bg-muted/40 p-5">
-                <h3 className="text-lg font-bold text-foreground">Score Trend</h3>
-                <p className="text-xs text-muted-foreground mb-3">Your score history over time</p>
-                {historyData && historyData.length > 0 ? (
-                  <ScoreTrendChart
-                    history={historyData.map(h => ({
-                      id: h.id,
-                      score: h.score,
-                      calculated_at: h.recorded_at,
-                    }))}
-                  />
-                ) : (
-                  <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
-                )}
-              </div>
-            </motion.div>
-
             {/* Full Report Paywall */}
             <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
               <FullReportPaywall />
