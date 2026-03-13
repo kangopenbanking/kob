@@ -505,7 +505,7 @@
   <!-- API Specifications -->
   <url>
     <loc>https://api.kangopenbanking.com/functions/v1/public-api-spec</loc>
-    <lastmod>2026-03-07</lastmod>
+    <lastmod>2026-03-13</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
