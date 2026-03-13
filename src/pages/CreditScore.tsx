@@ -127,26 +127,12 @@ export default function CreditScore() {
         body: { user_id: user.id, force_refresh: true },
       });
       await refetch();
-      await refetchTips();
       toast.success('Credit score updated successfully');
     } catch (error) {
       console.error('Error refreshing score:', error);
       toast.error('Failed to refresh credit score');
     } finally {
       setIsRefreshing(false);
-    }
-  };
-
-  const handleGenerateTips = async () => {
-    try {
-      await supabase.functions.invoke('credit-score-tips', {
-        body: { force_refresh: true },
-      });
-      await refetchTips();
-      toast.success('AI tips generated successfully');
-    } catch (error) {
-      console.error('Error generating tips:', error);
-      toast.error('Failed to generate tips');
     }
   };
 
