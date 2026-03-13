@@ -98,6 +98,24 @@ export default function CreditScore() {
     },
   });
 
+  const { data: activePurchase } = useQuery({
+    queryKey: ['credit-report-purchase'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase
+        .from('credit_report_purchases')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .gte('expires_at', new Date().toISOString())
+        .order('purchased_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const { data: verification } = useQuery({
     queryKey: ['postiq-verification'],
     queryFn: async () => {
