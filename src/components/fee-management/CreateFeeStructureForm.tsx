@@ -46,6 +46,7 @@ const TRANSACTION_TYPES = [
   { value: "api_request", label: "API Request", icon: Plug, category: "Gateway" },
   { value: "mobile_recharge", label: "Mobile Recharge", icon: Radio, category: "Mobile" },
   { value: "invoice_create", label: "Invoice Create", icon: FileText, category: "Core" },
+  { value: "credit_report_purchase", label: "Credit Report Purchase", icon: FileText, category: "Services" },
 ];
 
 const FEE_MODELS = [

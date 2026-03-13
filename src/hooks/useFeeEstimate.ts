@@ -49,6 +49,7 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   fx_conversion: { rate: 0.015, fixed: 0 },
   gateway_charge: { rate: 0.03, fixed: 50 },
   gateway_payout: { rate: 0.02, fixed: 75 },
+  credit_report_purchase: { rate: 0, fixed: 2500 },
 };
 
 interface UseFeeEstimateOptions {
