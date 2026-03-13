@@ -257,22 +257,6 @@ export default function CreditScore() {
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               Update score
             </span>
-            {activePurchase && (
-              <>
-                <span className="text-muted-foreground/30">·</span>
-                <span
-                  onClick={() => {
-                    const tipsEl = document.getElementById('credit-tips-section');
-                    if (tipsEl) tipsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    else handleGenerateTips();
-                  }}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors flex items-center gap-1.5"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Tips
-                </span>
-              </>
-            )}
           </div>
         </div>
       </motion.div>
