@@ -66,17 +66,6 @@ export default function CreditScore() {
     },
   });
 
-  const { data: tips, refetch: refetchTips } = useQuery({
-    queryKey: ['credit-tips'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('credit-score-tips', {
-        body: { force_refresh: false },
-      });
-      if (error) throw error;
-      return data?.tips || [];
-    },
-    enabled: !!scoreData,
-  });
 
   const { data: inquiriesData } = useQuery({
     queryKey: ['credit-inquiries'],
