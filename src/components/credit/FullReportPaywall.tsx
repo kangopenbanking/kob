@@ -114,7 +114,7 @@ export default function FullReportPaywall() {
       if (balanceError) throw balanceError;
 
       // Record the debit transaction
-      await supabase.from('transactions').insert({
+      await supabase.from('transactions').insert([{
         account_id: account.id,
         amount: reportFee,
         currency: 'XAF',
@@ -126,7 +126,7 @@ export default function FullReportPaywall() {
         transaction_information: 'Full Credit Report Purchase',
         user_id: user.id,
         metadata: { type: 'credit_report_purchase' },
-      });
+      }]);
 
       // Record the purchase
       const { error } = await supabase.from('credit_report_purchases').insert({
