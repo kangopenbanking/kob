@@ -1,14 +1,12 @@
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, RefreshCw, Sparkles, Target, TrendingUp, ChevronRight, Shield, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Loader2, RefreshCw, Target, TrendingUp, ChevronRight, Shield, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CircularScoreDisplay from '@/components/credit/CircularScoreDisplay';
-import ScoreTrendChart from '@/components/credit/ScoreTrendChart';
-import AITipsCard from '@/components/credit/AITipsCard';
 import ScoreSimulator from '@/components/credit/ScoreSimulator';
 import CreditActivityFeed from '@/components/credit/CreditActivityFeed';
 import ScoreComponentDetails from '@/components/credit/ScoreComponentDetails';
@@ -68,17 +66,6 @@ export default function CreditScore() {
     },
   });
 
-  const { data: tips, refetch: refetchTips } = useQuery({
-    queryKey: ['credit-tips'],
-    queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke('credit-score-tips', {
-        body: { force_refresh: false },
-      });
-      if (error) throw error;
-      return data?.tips || [];
-    },
-    enabled: !!scoreData,
-  });
 
   const { data: inquiriesData } = useQuery({
     queryKey: ['credit-inquiries'],
@@ -140,26 +127,12 @@ export default function CreditScore() {
         body: { user_id: user.id, force_refresh: true },
       });
       await refetch();
-      await refetchTips();
       toast.success('Credit score updated successfully');
     } catch (error) {
       console.error('Error refreshing score:', error);
       toast.error('Failed to refresh credit score');
     } finally {
       setIsRefreshing(false);
-    }
-  };
-
-  const handleGenerateTips = async () => {
-    try {
-      await supabase.functions.invoke('credit-score-tips', {
-        body: { force_refresh: true },
-      });
-      await refetchTips();
-      toast.success('AI tips generated successfully');
-    } catch (error) {
-      console.error('Error generating tips:', error);
-      toast.error('Failed to generate tips');
     }
   };
 
@@ -257,22 +230,6 @@ export default function CreditScore() {
               <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
               Update score
             </span>
-            {activePurchase && (
-              <>
-                <span className="text-muted-foreground/30">·</span>
-                <span
-                  onClick={() => {
-                    const tipsEl = document.getElementById('credit-tips-section');
-                    if (tipsEl) tipsEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    else handleGenerateTips();
-                  }}
-                  className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors flex items-center gap-1.5"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  Tips
-                </span>
-              </>
-            )}
           </div>
         </div>
       </motion.div>
@@ -332,25 +289,6 @@ export default function CreditScore() {
         <div className="grid lg:grid-cols-3 gap-5 mt-6 pb-12">
           {/* Left Column — 2/3 */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Score Trend */}
-            <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible">
-              <div className="rounded-2xl bg-muted/40 p-5">
-                <h3 className="text-lg font-bold text-foreground">Score Trend</h3>
-                <p className="text-xs text-muted-foreground mb-3">Your score history over time</p>
-                {historyData && historyData.length > 0 ? (
-                  <ScoreTrendChart
-                    history={historyData.map(h => ({
-                      id: h.id,
-                      score: h.score,
-                      calculated_at: h.recorded_at,
-                    }))}
-                  />
-                ) : (
-                  <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
-                )}
-              </div>
-            </motion.div>
-
             {/* Full Report Paywall */}
             <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
               <FullReportPaywall />
@@ -411,11 +349,6 @@ export default function CreditScore() {
             </motion.div>
 
             {/* Tips — behind paywall */}
-            {activePurchase && tips && tips.length > 0 && (
-              <motion.div id="credit-tips-section" custom={8} variants={fadeUp} initial="hidden" animate="visible">
-                <AITipsCard tips={tips} onTipComplete={refetchTips} />
-              </motion.div>
-            )}
           </div>
 
           {/* Right Column — 1/3 */}

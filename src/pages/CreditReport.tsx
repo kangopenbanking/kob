@@ -11,6 +11,8 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import CreditInquiriesPanel from '@/components/credit/CreditInquiriesPanel';
 import PreApprovedOffersCard from '@/components/credit/PreApprovedOffersCard';
+import ScoreTrendChart from '@/components/credit/ScoreTrendChart';
+import AITipsCard from '@/components/credit/AITipsCard';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
@@ -34,6 +36,34 @@ export default function CreditReport() {
       if (error) throw error;
       return data;
     },
+  });
+
+  const { data: historyData } = useQuery({
+    queryKey: ['credit-score-history'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase
+        .from('credit_score_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('recorded_at', { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: tips, refetch: refetchTips } = useQuery({
+    queryKey: ['credit-tips'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('credit-score-tips', {
+        body: { force_refresh: false },
+      });
+      if (error) throw error;
+      return data?.tips || [];
+    },
+    enabled: !!reportData,
   });
 
   const handleDownload = () => {
@@ -210,6 +240,43 @@ export default function CreditReport() {
         <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible" className="mt-6">
           <PreApprovedOffersCard creditScore={reportData?.score || 0} />
         </motion.div>
+
+        {/* Score Trend */}
+        <motion.div custom={4.5} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Score Trend</CardTitle>
+                  <CardDescription className="text-xs">Your score history over time</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {historyData && historyData.length > 0 ? (
+                <ScoreTrendChart
+                  history={historyData.map(h => ({
+                    id: h.id,
+                    score: h.score,
+                    calculated_at: h.recorded_at,
+                  }))}
+                />
+              ) : (
+                <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Improvement Tips */}
+        {tips && tips.length > 0 && (
+          <motion.div custom={4.8} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
+            <AITipsCard tips={tips} onTipComplete={refetchTips} />
+          </motion.div>
+        )}
 
         {/* Personal Information */}
         <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
