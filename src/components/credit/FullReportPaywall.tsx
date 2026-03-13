@@ -126,6 +126,7 @@ export default function FullReportPaywall() {
         transaction_type: 'purchase',
         transaction_information: 'Full Credit Report Purchase',
         user_id: user.id,
+        institution_id: KANG_PLATFORM_ID,
         metadata: { type: 'credit_report_purchase' },
       }]);
 
