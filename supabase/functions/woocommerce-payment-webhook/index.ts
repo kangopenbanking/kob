@@ -1,10 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { crypto } from 'https://deno.land/std@0.177.0/crypto/mod.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-webhook-signature',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 interface WebhookPayload {
   event_type: 'payment.completed' | 'payment.failed' | 'payment.refunded';
