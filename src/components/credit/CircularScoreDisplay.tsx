@@ -1,6 +1,6 @@
 import { useEffect, useState, useId } from 'react';
-import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { motion, useMotionValue, animate } from 'framer-motion';
+import { TrendingUp, TrendingDown } from 'lucide-react';
 
 interface CircularScoreDisplayProps {
   score: number;
@@ -32,15 +32,15 @@ const CircularScoreDisplay = ({
   const uid = useId();
   const gradientId = `score-grad-${uid}`;
   const glowId = `score-glow-${uid}`;
+  const pulseId = `score-pulse-${uid}`;
 
   const motionScore = useMotionValue(0);
-  const displayScore = useTransform(motionScore, v => Math.round(v));
   const [rendered, setRendered] = useState(0);
 
   useEffect(() => {
     const controls = animate(motionScore, score, {
-      duration: 2,
-      ease: 'easeOut',
+      duration: 2.2,
+      ease: [0.25, 0.46, 0.45, 0.94],
       onUpdate: v => setRendered(Math.round(v)),
     });
     return controls.stop;
@@ -49,17 +49,15 @@ const CircularScoreDisplay = ({
   const band = getBand(score);
   const scoreChange = previousScore ? score - previousScore : 0;
 
-  const strokeW = size > 200 ? 18 : 12;
-  const radius = (size - strokeW * 2 - 8) / 2;
+  const strokeW = size > 200 ? 16 : 10;
+  const radius = (size - strokeW * 2 - 10) / 2;
   const circumference = 2 * Math.PI * radius;
   const pct = Math.min(score / maxScore, 1);
   const dashOffset = circumference * (1 - pct);
 
-  // Tick marks for score bands on the arc
-  const ticks = [300, 580, 670, 740, 800, 850].map(v => ({
-    value: v,
-    angle: -90 + (v / maxScore) * 360,
-  }));
+  const dotAngle = (-90 + pct * 360) * (Math.PI / 180);
+  const dotX = size / 2 + radius * Math.cos(dotAngle);
+  const dotY = size / 2 + radius * Math.sin(dotAngle);
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -70,8 +68,17 @@ const CircularScoreDisplay = ({
             <stop offset="100%" stopColor={band.gradient[1]} />
           </linearGradient>
           <filter id={glowId}>
-            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feGaussianBlur stdDeviation="6" result="blur" />
             <feFlood floodColor={band.glow} result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id={pulseId}>
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feFlood floodColor={band.gradient[0]} floodOpacity="0.6" result="color" />
             <feComposite in="color" in2="blur" operator="in" result="glow" />
             <feMerge>
               <feMergeNode in="glow" />
@@ -88,26 +95,8 @@ const CircularScoreDisplay = ({
           stroke="hsl(var(--muted))"
           strokeWidth={strokeW}
           fill="none"
-          opacity={0.5}
+          opacity={0.35}
         />
-
-        {/* Segment markers */}
-        {[580, 670, 740, 800].map(v => {
-          const angle = (-90 + (v / maxScore) * 360) * (Math.PI / 180);
-          const x1 = size / 2 + (radius - strokeW / 2 - 2) * Math.cos(angle);
-          const y1 = size / 2 + (radius - strokeW / 2 - 2) * Math.sin(angle);
-          const x2 = size / 2 + (radius + strokeW / 2 + 2) * Math.cos(angle);
-          const y2 = size / 2 + (radius + strokeW / 2 + 2) * Math.sin(angle);
-          return (
-            <line
-              key={v}
-              x1={x1} y1={y1} x2={x2} y2={y2}
-              stroke="hsl(var(--background))"
-              strokeWidth={2}
-              opacity={0.8}
-            />
-          );
-        })}
 
         {/* Score arc */}
         <motion.circle
@@ -121,30 +110,44 @@ const CircularScoreDisplay = ({
           strokeDasharray={circumference}
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: dashOffset }}
-          transition={{ duration: 2, ease: 'easeOut' }}
+          transition={{ duration: 2.2, ease: [0.25, 0.46, 0.45, 0.94] }}
           filter={`url(#${glowId})`}
         />
 
-        {/* Indicator dot at the end of the arc */}
+        {/* Pulsing indicator dot */}
         <motion.circle
-          cx={size / 2 + radius * Math.cos((-90 + pct * 360) * (Math.PI / 180))}
-          cy={size / 2 + radius * Math.sin((-90 + pct * 360) * (Math.PI / 180))}
-          r={strokeW / 2 + 3}
+          cx={dotX}
+          cy={dotY}
+          r={strokeW / 2 + 4}
           fill={band.gradient[1]}
           stroke="hsl(var(--background))"
           strokeWidth={3}
+          filter={`url(#${pulseId})`}
           initial={{ opacity: 0, scale: 0 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 1.8, duration: 0.4, ease: 'backOut' }}
+          animate={{ opacity: [0, 1, 1], scale: [0, 1.3, 1] }}
+          transition={{ delay: 1.8, duration: 0.6, ease: 'backOut' }}
+        />
+
+        {/* Outer pulse ring */}
+        <motion.circle
+          cx={dotX}
+          cy={dotY}
+          r={strokeW / 2 + 4}
+          fill="none"
+          stroke={band.gradient[0]}
+          strokeWidth={2}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: [0, 0.5, 0], scale: [1, 2, 2.5] }}
+          transition={{ delay: 2.4, duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
         />
       </svg>
 
       {/* Center content */}
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.6 }}
+          initial={{ opacity: 0, scale: 0.5 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, duration: 0.6, ease: 'backOut' }}
+          transition={{ delay: 0.3, duration: 0.7, type: 'spring', stiffness: 200, damping: 20 }}
           className="text-center"
         >
           <div
@@ -192,7 +195,7 @@ const CircularScoreDisplay = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 1.6 }}
               className={`flex items-center justify-center gap-1 mt-2 text-xs font-semibold ${
-                scoreChange > 0 ? 'text-green-600' : 'text-red-500'
+                scoreChange > 0 ? 'text-emerald-600' : 'text-red-500'
               }`}
             >
               {scoreChange > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
