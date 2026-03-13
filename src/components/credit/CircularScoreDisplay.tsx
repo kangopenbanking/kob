@@ -11,14 +11,12 @@ interface CircularScoreDisplayProps {
 }
 
 const SCORE_BANDS = [
-  { min: 800, label: 'Excellent', color: '#22c55e' },
-  { min: 700, label: 'Very Good', color: '#84cc16' },
-  { min: 580, label: 'Good', color: '#eab308' },
-  { min: 450, label: 'Fair', color: '#f97316' },
-  { min: 0, label: 'Poor', color: '#ef4444' },
+  { min: 800, label: 'Excellent', gradient: ['#10b981', '#059669'], glow: '#10b98140' },
+  { min: 740, label: 'Very Good', gradient: ['#3b82f6', '#2563eb'], glow: '#3b82f640' },
+  { min: 670, label: 'Good', gradient: ['#8b5cf6', '#7c3aed'], glow: '#8b5cf640' },
+  { min: 580, label: 'Fair', gradient: ['#f59e0b', '#d97706'], glow: '#f59e0b40' },
+  { min: 0, label: 'Poor', gradient: ['#ef4444', '#dc2626'], glow: '#ef444440' },
 ];
-
-const ARC_COLORS = ['#ef4444', '#f97316', '#eab308', '#84cc16', '#22c55e'];
 
 function getBand(score: number) {
   return SCORE_BANDS.find(b => score >= b.min) || SCORE_BANDS[SCORE_BANDS.length - 1];
@@ -28,16 +26,20 @@ const CircularScoreDisplay = ({
   score,
   previousScore,
   maxScore = 850,
-  size = 300,
+  size = 320,
   showLabel = true,
 }: CircularScoreDisplayProps) => {
   const uid = useId();
+  const gradientId = `score-grad-${uid}`;
+  const glowId = `score-glow-${uid}`;
+  const pulseId = `score-pulse-${uid}`;
+
   const motionScore = useMotionValue(0);
   const [rendered, setRendered] = useState(0);
 
   useEffect(() => {
     const controls = animate(motionScore, score, {
-      duration: 2,
+      duration: 2.2,
       ease: [0.25, 0.46, 0.45, 0.94],
       onUpdate: v => setRendered(Math.round(v)),
     });
@@ -47,142 +49,161 @@ const CircularScoreDisplay = ({
   const band = getBand(score);
   const scoreChange = previousScore ? score - previousScore : 0;
 
-  const minScore = 300;
-  const cx = size / 2;
-  const cy = size * 0.55;
-  const radius = size * 0.38;
-  const strokeW = size * 0.065;
-  const startAngle = 180;
-  const endAngle = 0;
-  const totalAngle = 180;
-  const segmentCount = ARC_COLORS.length;
-  const segmentAngle = totalAngle / segmentCount;
-  const gap = 3;
+  const strokeW = size > 200 ? 18 : 12;
+  const radius = (size - strokeW * 2 - 10) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const pct = Math.min(score / maxScore, 1);
+  const dashOffset = circumference * (1 - pct);
 
-  const polarToCartesian = (angle: number) => {
-    const rad = (angle * Math.PI) / 180;
-    return { x: cx + radius * Math.cos(rad), y: cy - radius * Math.sin(rad) };
-  };
-
-  const arcPath = (startA: number, endA: number) => {
-    const s = polarToCartesian(startA);
-    const e = polarToCartesian(endA);
-    const largeArc = Math.abs(startA - endA) > 180 ? 1 : 0;
-    return `M ${s.x} ${s.y} A ${radius} ${radius} 0 ${largeArc} 0 ${e.x} ${e.y}`;
-  };
-
-  // Score labels around the arc
-  const scoreLabels = [300, 450, 580, 700, 850];
-  const labelPositions = scoreLabels.map(val => {
-    const pct = (val - minScore) / (maxScore - minScore);
-    const angle = startAngle - pct * totalAngle;
-    const labelRadius = radius + strokeW + 14;
-    const rad = (angle * Math.PI) / 180;
-    return {
-      val,
-      x: cx + labelRadius * Math.cos(rad),
-      y: cy - labelRadius * Math.sin(rad),
-    };
-  });
-
-  // Needle position
-  const scorePct = Math.max(0, Math.min(1, (score - minScore) / (maxScore - minScore)));
-  const needleAngle = startAngle - scorePct * totalAngle;
-  const needleRad = (needleAngle * Math.PI) / 180;
-  const needleLength = radius - strokeW;
-  const needleTipX = cx + needleLength * Math.cos(needleRad);
-  const needleTipY = cy - needleLength * Math.sin(needleRad);
+  const dotAngle = (-90 + pct * 360) * (Math.PI / 180);
+  const dotX = size / 2 + radius * Math.cos(dotAngle);
+  const dotY = size / 2 + radius * Math.sin(dotAngle);
 
   return (
-    <div className="flex flex-col items-center" style={{ width: size }}>
-      <div className="relative" style={{ width: size, height: size * 0.65 }}>
-        <svg width={size} height={size * 0.65} viewBox={`0 0 ${size} ${size * 0.65}`}>
-          {/* Arc segments with wavy/organic feel */}
-          {ARC_COLORS.map((color, i) => {
-            const segStart = startAngle - i * segmentAngle - gap / 2;
-            const segEnd = startAngle - (i + 1) * segmentAngle + gap / 2;
-            return (
-              <motion.path
-                key={i}
-                d={arcPath(segStart, segEnd)}
-                fill="none"
-                stroke={color}
-                strokeWidth={strokeW}
-                strokeLinecap="round"
-                initial={{ pathLength: 0, opacity: 0 }}
-                animate={{ pathLength: 1, opacity: 1 }}
-                transition={{ duration: 0.6, delay: i * 0.12, ease: 'easeOut' }}
-              />
-            );
-          })}
+    <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        <defs>
+          <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor={band.gradient[0]} />
+            <stop offset="100%" stopColor={band.gradient[1]} />
+          </linearGradient>
+          <filter id={glowId}>
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feFlood floodColor={band.glow} result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id={pulseId}>
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feFlood floodColor={band.gradient[0]} floodOpacity="0.6" result="color" />
+            <feComposite in="color" in2="blur" operator="in" result="glow" />
+            <feMerge>
+              <feMergeNode in="glow" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
 
-          {/* Score labels */}
-          {labelPositions.map(lp => (
-            <text
-              key={lp.val}
-              x={lp.x}
-              y={lp.y}
-              textAnchor="middle"
-              dominantBaseline="central"
-              className="fill-muted-foreground"
-              style={{ fontSize: size * 0.04, fontWeight: 500 }}
-            >
-              {lp.val}
-            </text>
-          ))}
-        </svg>
+        {/* Background track */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="hsl(var(--muted))"
+          strokeWidth={strokeW}
+          fill="none"
+          opacity={0.35}
+        />
 
-        {/* Center content */}
-        <div className="absolute inset-0 flex flex-col items-center" style={{ top: size * 0.22 }}>
-          {/* Score change badge */}
-          {scoreChange !== 0 && (
+        {/* Score arc */}
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke={`url(#${gradientId})`}
+          strokeWidth={strokeW}
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: dashOffset }}
+          transition={{ duration: 2.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+          filter={`url(#${glowId})`}
+        />
+
+        {/* Pulsing indicator dot */}
+        <motion.circle
+          cx={dotX}
+          cy={dotY}
+          r={strokeW / 2 + 4}
+          fill={band.gradient[1]}
+          stroke="hsl(var(--background))"
+          strokeWidth={3}
+          filter={`url(#${pulseId})`}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: [0, 1, 1], scale: [0, 1.3, 1] }}
+          transition={{ delay: 1.8, duration: 0.6, ease: 'backOut' }}
+        />
+
+        {/* Outer pulse ring */}
+        <motion.circle
+          cx={dotX}
+          cy={dotY}
+          r={strokeW / 2 + 4}
+          fill="none"
+          stroke={band.gradient[0]}
+          strokeWidth={2}
+          initial={{ opacity: 0, scale: 0 }}
+          animate={{ opacity: [0, 0.5, 0], scale: [1, 2, 2.5] }}
+          transition={{ delay: 2.4, duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+        />
+      </svg>
+
+      {/* Center content */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: 0.3, duration: 0.7, type: 'spring', stiffness: 200, damping: 20 }}
+          className="text-center"
+        >
+          <div
+            className="font-black tracking-tight leading-none"
+            style={{
+              fontSize: size > 200 ? '4rem' : '2.5rem',
+              background: `linear-gradient(135deg, ${band.gradient[0]}, ${band.gradient[1]})`,
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+            }}
+          >
+            {rendered}
+          </div>
+
+          {showLabel && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.5 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 1.4 }}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold mb-2 ${
-                scoreChange > 0
-                  ? 'bg-crediq-green/15 text-crediq-green'
-                  : 'bg-crediq-red/15 text-crediq-red'
-              }`}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1 }}
             >
-              {scoreChange > 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
-              {scoreChange > 0 ? '+' : ''}{scoreChange} pts
+              <span
+                className="inline-block mt-1 px-3 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase"
+                style={{
+                  background: `${band.gradient[0]}18`,
+                  color: band.gradient[1],
+                }}
+              >
+                {band.label}
+              </span>
             </motion.div>
           )}
 
-          {/* Large score number */}
           <motion.div
-            initial={{ opacity: 0, scale: 0.5 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, duration: 0.7, type: 'spring', stiffness: 200, damping: 20 }}
-            className="font-black text-foreground leading-none"
-            style={{ fontSize: size * 0.16 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.2 }}
+            className="text-[11px] text-muted-foreground mt-1.5 tracking-wide"
           >
-            {rendered}
+            out of {maxScore}
           </motion.div>
-        </div>
-      </div>
 
-      {/* Update button area */}
-      {showLabel && (
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1 }}
-          className="-mt-2"
-        >
-          <span
-            className="inline-block px-3 py-0.5 rounded-full text-xs font-bold tracking-wide uppercase"
-            style={{
-              background: `${band.color}18`,
-              color: band.color,
-            }}
-          >
-            {band.label}
-          </span>
+          {scoreChange !== 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.6 }}
+              className={`flex items-center justify-center gap-1 mt-2 text-xs font-semibold ${
+                scoreChange > 0 ? 'text-crediq-green' : 'text-crediq-red'
+              }`}
+            >
+              {scoreChange > 0 ? <TrendingUp className="w-3.5 h-3.5" /> : <TrendingDown className="w-3.5 h-3.5" />}
+              <span>{scoreChange > 0 ? '+' : ''}{scoreChange} pts</span>
+            </motion.div>
+          )}
         </motion.div>
-      )}
+      </div>
     </div>
   );
 };

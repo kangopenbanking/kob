@@ -116,19 +116,14 @@ export default function CrediQDashboard() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) { navigate('/auth'); return; }
 
-      // Fetch credit score
-      const { data: scoreData, error: scoreError } = await supabase
-        .from('credit_scores')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('calculated_at', { ascending: false })
-        .limit(1)
-        .single();
+      // Fetch credit score via edge function (single source of truth)
+      const { data: scoreData, error: scoreError } = await supabase.functions.invoke('credit-score-fetch', {
+        body: { user_id: user.id, include_report: false },
+      });
 
       if (scoreError) throw scoreError;
 
-      if (!scoreData) {
+      if (!scoreData?.score) {
         const { data: profileData } = await supabase
           .from('crediq_user_profiles')
           .select('*')

@@ -244,7 +244,7 @@ export default function CreditScore() {
               score={score}
               previousScore={historyData?.[1]?.score}
               maxScore={850}
-              size={300}
+              size={320}
             />
           </div>
 
