@@ -241,6 +241,43 @@ export default function CreditReport() {
           <PreApprovedOffersCard creditScore={reportData?.score || 0} />
         </motion.div>
 
+        {/* Score Trend */}
+        <motion.div custom={4.5} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
+          <Card>
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <BarChart3 className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg">Score Trend</CardTitle>
+                  <CardDescription className="text-xs">Your score history over time</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {historyData && historyData.length > 0 ? (
+                <ScoreTrendChart
+                  history={historyData.map(h => ({
+                    id: h.id,
+                    score: h.score,
+                    calculated_at: h.recorded_at,
+                  }))}
+                />
+              ) : (
+                <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Improvement Tips */}
+        {tips && tips.length > 0 && (
+          <motion.div custom={4.8} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
+            <AITipsCard tips={tips} onTipComplete={refetchTips} />
+          </motion.div>
+        )}
+
         {/* Personal Information */}
         <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible" className="mt-5">
           <Card>
