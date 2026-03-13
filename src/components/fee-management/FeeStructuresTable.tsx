@@ -67,6 +67,7 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   api_request: { icon: Plug, category: "Gateway", label: "API Request" },
   mobile_recharge: { icon: Radio, category: "Mobile", label: "Mobile Recharge" },
   invoice_create: { icon: FileText, category: "Core", label: "Invoice Create" },
+  credit_report_purchase: { icon: FileText, category: "Services", label: "Credit Report Purchase" },
 };
 
 const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Savings", "Lending", "Social", "International", "Gateway"];
