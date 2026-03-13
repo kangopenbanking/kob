@@ -1,10 +1,8 @@
 import { useState, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Loader2, RefreshCw, Sparkles, Target, TrendingUp, ChevronRight, Shield, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -215,42 +213,30 @@ export default function CreditScore() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-emerald-600 dark:from-primary dark:via-primary/90 dark:to-emerald-700 rounded-b-[2.5rem] px-4 pt-6 pb-14 md:px-8"
+        className="px-4 pt-8 pb-6 md:px-8"
       >
-        {/* Subtle pattern overlay */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{
-          backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
-          backgroundSize: '24px 24px',
-        }} />
-
-        <div className="relative max-w-5xl mx-auto">
-          {/* Top bar */}
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/50">CrediQ</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight">Credit Score</h1>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleRefresh}
-                disabled={isRefreshing}
-                size="sm"
-                className="rounded-full bg-white/15 text-primary-foreground border-0 hover:bg-white/25 backdrop-blur-sm"
-                variant="ghost"
-              >
-                <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-              </Button>
-              <Button
-                onClick={handleGenerateTips}
-                size="sm"
-                className="rounded-full bg-white/15 text-primary-foreground border-0 hover:bg-white/25 backdrop-blur-sm gap-1.5"
-                variant="ghost"
-              >
-                <Sparkles className="h-4 w-4" />
-                Tips
-              </Button>
-            </div>
+        <div className="max-w-5xl mx-auto">
+          {/* Greeting */}
+          <div className="text-center mb-2">
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
+              Here is your credit rate
+            </h1>
           </div>
+
+          {/* Score type badges */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex items-center justify-center gap-2 mb-6"
+          >
+            <ScoreTypeBadge scoringModel={scoringModel} confidenceLevel={confidenceLevel} />
+            {scoreData?.calculated_at && (
+              <span className="text-xs text-muted-foreground">
+                Updated {new Date(scoreData.calculated_at).toLocaleDateString()}
+              </span>
+            )}
+          </motion.div>
 
           {/* Score display centered */}
           <div className="flex flex-col items-center">
@@ -258,61 +244,61 @@ export default function CreditScore() {
               score={score}
               previousScore={historyData?.[1]?.score}
               maxScore={850}
-              size={260}
+              size={300}
             />
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-4 flex items-center gap-3"
+          </div>
+
+          {/* Action row */}
+          <div className="flex items-center justify-center gap-3 mt-4">
+            <span
+              onClick={handleRefresh}
+              className={`text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors flex items-center gap-1.5 ${isRefreshing ? 'pointer-events-none opacity-50' : ''}`}
             >
-              <div className="flex items-center gap-1.5">
-                <ScoreTypeBadge scoringModel={scoringModel} confidenceLevel={confidenceLevel} />
-              </div>
-              {scoreData?.calculated_at && (
-                <span className="text-xs text-primary-foreground/50">
-                  Updated {new Date(scoreData.calculated_at).toLocaleDateString()}
-                </span>
-              )}
-            </motion.div>
+              <RefreshCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
+              Update score
+            </span>
+            <span className="text-muted-foreground/30">·</span>
+            <span
+              onClick={handleGenerateTips}
+              className="text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer transition-colors flex items-center gap-1.5"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              Tips
+            </span>
           </div>
         </div>
       </motion.div>
 
-      {/* ── QUICK STATS floating cards ── */}
-      <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-8 relative z-10">
+      {/* ── QUICK STATS ── */}
+      <div className="max-w-5xl mx-auto px-4 md:px-8">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
           className="grid grid-cols-2 gap-3"
         >
-          <Card className="border-border/50 shadow-lg">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
-                <ArrowUpRight className="h-5 w-5 text-emerald-600" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Total Savings</p>
-                <p className="text-lg font-bold text-foreground truncate">
-                  {totalSavings > 0 ? `${totalSavings.toLocaleString()} XAF` : '--'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="border-border/50 shadow-lg">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
-                <ArrowDownRight className="h-5 w-5 text-rose-500" />
-              </div>
-              <div className="min-w-0">
-                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Outstanding Debt</p>
-                <p className="text-lg font-bold text-foreground truncate">
-                  {totalLoans > 0 ? `${totalLoans.toLocaleString()} XAF` : '--'}
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="rounded-2xl bg-muted/40 p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-crediq-green/10 flex items-center justify-center shrink-0">
+              <ArrowUpRight className="h-5 w-5 text-crediq-green" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Total Savings</p>
+              <p className="text-lg font-bold text-foreground truncate">
+                {totalSavings > 0 ? `${totalSavings.toLocaleString()} XAF` : '--'}
+              </p>
+            </div>
+          </div>
+          <div className="rounded-2xl bg-muted/40 p-4 flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-crediq-red/10 flex items-center justify-center shrink-0">
+              <ArrowDownRight className="h-5 w-5 text-crediq-red" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Outstanding Debt</p>
+              <p className="text-lg font-bold text-foreground truncate">
+                {totalLoans > 0 ? `${totalLoans.toLocaleString()} XAF` : '--'}
+              </p>
+            </div>
+          </div>
         </motion.div>
       </div>
 
@@ -340,25 +326,21 @@ export default function CreditScore() {
           <div className="lg:col-span-2 space-y-5">
             {/* Score Trend */}
             <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Score Trend</CardTitle>
-                  <CardDescription className="text-xs">Your score history over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {historyData && historyData.length > 0 ? (
-                    <ScoreTrendChart
-                      history={historyData.map(h => ({
-                        id: h.id,
-                        score: h.score,
-                        calculated_at: h.recorded_at,
-                      }))}
-                    />
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
-                  )}
-                </CardContent>
-              </Card>
+              <div className="rounded-2xl bg-muted/40 p-5">
+                <h3 className="text-lg font-bold text-foreground">Score Trend</h3>
+                <p className="text-xs text-muted-foreground mb-3">Your score history over time</p>
+                {historyData && historyData.length > 0 ? (
+                  <ScoreTrendChart
+                    history={historyData.map(h => ({
+                      id: h.id,
+                      score: h.score,
+                      calculated_at: h.recorded_at,
+                    }))}
+                  />
+                ) : (
+                  <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
+                )}
+              </div>
             </motion.div>
 
             {/* Full Report Paywall */}
@@ -369,58 +351,50 @@ export default function CreditScore() {
             {/* Score Components — behind paywall */}
             {activePurchase && (
               <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg">Score Components</CardTitle>
-                    <CardDescription className="text-xs">Detailed breakdown of scoring factors</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {scoreFactors?.components ? (
-                      <ScoreComponentDetails components={scoreFactors.components} />
-                    ) : (
-                      <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
-                    )}
-                  </CardContent>
-                </Card>
+                <div className="rounded-2xl bg-muted/40 p-5">
+                  <h3 className="text-lg font-bold text-foreground">Score Components</h3>
+                  <p className="text-xs text-muted-foreground mb-3">Detailed breakdown of scoring factors</p>
+                  {scoreFactors?.components ? (
+                    <ScoreComponentDetails components={scoreFactors.components} />
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
+                  )}
+                </div>
               </motion.div>
             )}
 
             {/* Build Your Score */}
             <motion.div custom={6} variants={fadeUp} initial="hidden" animate="visible">
-              <Card>
-                <CardHeader className="pb-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
-                      <TrendingUp className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-lg">Build Your Score</CardTitle>
-                      <CardDescription className="text-xs">Active participation impacts your CrediQ score</CardDescription>
-                    </div>
+              <div className="rounded-2xl bg-muted/40 p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <TrendingUp className="h-4 w-4 text-primary" />
                   </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {creditServices.map(svc => (
-                      <Link
-                        key={svc.to}
-                        to={svc.to}
-                        className="flex items-center gap-3 rounded-2xl border border-border/50 p-3.5 hover:bg-accent/50 transition-colors group"
-                      >
-                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${svc.color}`}>
-                          <Target className="h-4 w-4 text-white" strokeWidth={2} />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-sm text-foreground">{svc.label}</p>
-                          <p className="text-xs text-muted-foreground truncate">{svc.desc}</p>
-                        </div>
-                        <Badge variant="outline" className="text-[10px] shrink-0 font-bold">{svc.impact}</Badge>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
-                      </Link>
-                    ))}
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Build Your Score</h3>
+                    <p className="text-xs text-muted-foreground">Active participation impacts your CrediQ score</p>
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+                <div className="space-y-2">
+                  {creditServices.map(svc => (
+                    <Link
+                      key={svc.to}
+                      to={svc.to}
+                      className="flex items-center gap-3 rounded-2xl bg-background/60 p-3.5 hover:bg-accent/50 transition-colors group"
+                    >
+                      <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${svc.color}`}>
+                        <Target className="h-4 w-4 text-white" strokeWidth={2} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm text-foreground">{svc.label}</p>
+                        <p className="text-xs text-muted-foreground truncate">{svc.desc}</p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px] shrink-0 font-bold">{svc.impact}</Badge>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </motion.div>
 
             {/* Educational Content */}
