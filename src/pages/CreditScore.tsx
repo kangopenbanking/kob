@@ -4,32 +4,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, RefreshCw, FileText, Sparkles, Target, TrendingUp, Shield, ChevronRight } from 'lucide-react';
+import { Loader2, RefreshCw, Sparkles, Target, TrendingUp, ChevronRight, Shield, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CircularScoreDisplay from '@/components/credit/CircularScoreDisplay';
-import ScoreBreakdownChart from '@/components/credit/ScoreBreakdownChart';
 import ScoreTrendChart from '@/components/credit/ScoreTrendChart';
 import AITipsCard from '@/components/credit/AITipsCard';
 import ScoreSimulator from '@/components/credit/ScoreSimulator';
 import CreditActivityFeed from '@/components/credit/CreditActivityFeed';
 import ScoreComponentDetails from '@/components/credit/ScoreComponentDetails';
 import ScoreTypeBadge from '@/components/credit/ScoreTypeBadge';
-import DataSourceChart from '@/components/credit/DataSourceChart';
 import ConfidenceIndicator from '@/components/credit/ConfidenceIndicator';
-import ScoreMetadata from '@/components/credit/ScoreMetadata';
 import ScoreEducation from '@/components/credit/ScoreEducation';
-import QuickStats from '@/components/credit/QuickStats';
 import { PostiQVerification } from '@/components/credit/PostiQVerification';
 import PostiQFeatureShowcase from '@/components/credit/PostiQFeatureShowcase';
 import LinkedAccountsWidget from '@/components/credit/LinkedAccountsWidget';
-import PreApprovedOffersCard from '@/components/credit/PreApprovedOffersCard';
 import CreditInquiriesPanel from '@/components/credit/CreditInquiriesPanel';
+import CreditFactorGrid from '@/components/credit/CreditFactorGrid';
+import FullReportPaywall from '@/components/credit/FullReportPaywall';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const } }),
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] as const },
+  }),
 };
 
 export default function CreditScore() {
@@ -37,7 +38,7 @@ export default function CreditScore() {
   const verificationRef = useRef<HTMLDivElement>(null);
 
   const scrollToVerification = () => {
-    verificationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    verificationRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
   };
 
   const { data: scoreData, isLoading, refetch } = useQuery({
@@ -46,7 +47,7 @@ export default function CreditScore() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       const { data, error } = await supabase.functions.invoke('credit-score-fetch', {
-        body: { user_id: user.id, include_report: false }
+        body: { user_id: user.id, include_report: false },
       });
       if (error) throw error;
       return data;
@@ -63,7 +64,7 @@ export default function CreditScore() {
         .select('*')
         .eq('user_id', user.id)
         .order('recorded_at', { ascending: false })
-        .limit(10);
+        .limit(12);
       if (error) throw error;
       return data;
     },
@@ -97,23 +98,6 @@ export default function CreditScore() {
     },
   });
 
-  const { data: alertsData } = useQuery({
-    queryKey: ['credit-alerts'],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error('Not authenticated');
-      const { data, error } = await supabase
-        .from('credit_monitoring_alerts')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'unread')
-        .order('created_at', { ascending: false })
-        .limit(5);
-      if (error) throw error;
-      return data;
-    },
-  });
-
   const { data: verification } = useQuery({
     queryKey: ['postiq-verification'],
     queryFn: async () => {
@@ -128,7 +112,7 @@ export default function CreditScore() {
         .limit(1)
         .maybeSingle();
       return data;
-    }
+    },
   });
 
   const handleRefresh = async () => {
@@ -137,7 +121,7 @@ export default function CreditScore() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
       await supabase.functions.invoke('credit-score-fetch', {
-        body: { user_id: user.id, force_refresh: true }
+        body: { user_id: user.id, force_refresh: true },
       });
       await refetch();
       await refetchTips();
@@ -186,7 +170,7 @@ export default function CreditScore() {
       title: 'Score Updated',
       description: `Your credit score changed to ${hist.score}`,
       timestamp: hist.recorded_at,
-      impact: hist.score_change > 0 ? 'positive' as const : hist.score_change < 0 ? 'negative' as const : 'neutral' as const,
+      impact: hist.score_change > 0 ? ('positive' as const) : hist.score_change < 0 ? ('negative' as const) : ('neutral' as const),
     })) || []),
     ...(inquiriesData?.slice(0, 2).map((inq: any) => ({
       id: inq.id,
@@ -194,153 +178,177 @@ export default function CreditScore() {
       title: `${inq.inquiry_type === 'hard' ? 'Hard' : 'Soft'} Inquiry`,
       description: inq.purpose || 'Credit inquiry performed',
       timestamp: inq.inquiry_date,
-      impact: inq.inquiry_type === 'hard' ? 'negative' as const : 'neutral' as const,
+      impact: inq.inquiry_type === 'hard' ? ('negative' as const) : ('neutral' as const),
     })) || []),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
 
+  const totalSavings = scoreFactors?.details?.total_savings || 0;
+  const totalLoans = scoreFactors?.details?.total_loans || 0;
+
   const creditServices = [
-    {
-      to: '/piggybank',
-      label: 'Piggy Bank',
-      desc: 'Savings & rent plans',
-      impact: '+3 to +10',
-      color: 'bg-emerald-600',
-    },
-    {
-      to: '/njangi',
-      label: 'Njangi Groups',
-      desc: 'Group savings rotation',
-      impact: '+3 to +5',
-      color: 'bg-violet-600',
-    },
-    {
-      to: '/rent-reporting',
-      label: 'Rent Reporting',
-      desc: 'Report via KRENTS',
-      impact: '+5 to +10',
-      color: 'bg-rose-600',
-    },
+    { to: '/piggybank', label: 'Piggy Bank', desc: 'Savings & rent plans', impact: '+3 to +10', color: 'bg-emerald-600' },
+    { to: '/njangi', label: 'Njangi Groups', desc: 'Group savings rotation', impact: '+3 to +5', color: 'bg-violet-600' },
+    { to: '/rent-reporting', label: 'Rent Reporting', desc: 'Report via KRENTS', impact: '+5 to +10', color: 'bg-rose-600' },
   ];
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Header */}
+      {/* ── HERO ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        className="bg-primary rounded-b-[2rem] px-4 pt-6 pb-10 md:px-8"
+        className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-emerald-600 dark:from-primary dark:via-primary/90 dark:to-emerald-700 rounded-b-[2.5rem] px-4 pt-6 pb-14 md:px-8"
       >
-        <div className="max-w-5xl mx-auto">
-          <div className="flex items-center justify-between mb-6">
+        {/* Subtle pattern overlay */}
+        <div className="absolute inset-0 opacity-[0.04]" style={{
+          backgroundImage: 'radial-gradient(circle at 1px 1px, white 1px, transparent 0)',
+          backgroundSize: '24px 24px',
+        }} />
+
+        <div className="relative max-w-5xl mx-auto">
+          {/* Top bar */}
+          <div className="flex items-center justify-between mb-8">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-widest text-primary-foreground/60">CrediQ</p>
-              <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight">Your Credit Score</h1>
+              <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-primary-foreground/50">CrediQ</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-primary-foreground tracking-tight">Credit Score</h1>
             </div>
             <div className="flex gap-2">
               <Button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                variant="secondary"
                 size="sm"
-                className="rounded-full bg-primary-foreground/15 text-primary-foreground border-0 hover:bg-primary-foreground/25"
+                className="rounded-full bg-white/15 text-primary-foreground border-0 hover:bg-white/25 backdrop-blur-sm"
+                variant="ghost"
               >
                 <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
               </Button>
-              <Button asChild size="sm" variant="secondary" className="rounded-full bg-primary-foreground/15 text-primary-foreground border-0 hover:bg-primary-foreground/25">
-                <Link to="/credit-report">
-                  <FileText className="h-4 w-4 mr-1.5" />
-                  Report
-                </Link>
+              <Button
+                onClick={handleGenerateTips}
+                size="sm"
+                className="rounded-full bg-white/15 text-primary-foreground border-0 hover:bg-white/25 backdrop-blur-sm gap-1.5"
+                variant="ghost"
+              >
+                <Sparkles className="h-4 w-4" />
+                AI Tips
               </Button>
             </div>
           </div>
 
-          {/* Score Hero Card */}
-          <Card className="border-0 shadow-lg">
-            <CardContent className="p-6 md:p-8">
-              <div className="grid md:grid-cols-2 gap-6 items-center">
-                <div className="flex justify-center">
-                  <CircularScoreDisplay
-                    score={score}
-                    previousScore={historyData?.[1]?.score}
-                    maxScore={850}
-                    size={240}
-                  />
-                </div>
-                <div className="space-y-4 text-center md:text-left">
-                  <div>
-                    <div className="flex items-center gap-2 justify-center md:justify-start mb-1">
-                      <h2 className="text-2xl font-bold text-foreground">{scoreRange}</h2>
-                      <ScoreTypeBadge scoringModel={scoringModel} confidenceLevel={confidenceLevel} />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      {scoreData?.calculated_at
-                        ? `Updated ${new Date(scoreData.calculated_at).toLocaleDateString()}`
-                        : 'Not yet calculated'}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2 justify-center md:justify-start">
-                    <Button onClick={handleGenerateTips} size="sm" className="rounded-full gap-1.5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      Get AI Tips
-                    </Button>
-                    <Button asChild variant="outline" size="sm" className="rounded-full gap-1.5">
-                      <Link to="/credit-scores-info">
-                        <Target className="h-3.5 w-3.5" />
-                        Learn More
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
+          {/* Score display centered */}
+          <div className="flex flex-col items-center">
+            <CircularScoreDisplay
+              score={score}
+              previousScore={historyData?.[1]?.score}
+              maxScore={850}
+              size={260}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="mt-4 flex items-center gap-3"
+            >
+              <div className="flex items-center gap-1.5">
+                <ScoreTypeBadge scoringModel={scoringModel} confidenceLevel={confidenceLevel} />
               </div>
-            </CardContent>
-          </Card>
+              {scoreData?.calculated_at && (
+                <span className="text-xs text-primary-foreground/50">
+                  Updated {new Date(scoreData.calculated_at).toLocaleDateString()}
+                </span>
+              )}
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 
-      <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-2">
-        {/* Pre-Approved Loan Offers - right below the score card */}
-        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mt-6">
-          <PreApprovedOffersCard creditScore={score} />
+      {/* ── QUICK STATS floating cards ── */}
+      <div className="max-w-5xl mx-auto px-4 md:px-8 -mt-8 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="grid grid-cols-2 gap-3"
+        >
+          <Card className="border-border/50 shadow-lg">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+                <ArrowUpRight className="h-5 w-5 text-emerald-600" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Total Savings</p>
+                <p className="text-lg font-bold text-foreground truncate">
+                  {totalSavings > 0 ? `${totalSavings.toLocaleString()} XAF` : '--'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-border/50 shadow-lg">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-rose-500/10 flex items-center justify-center shrink-0">
+                <ArrowDownRight className="h-5 w-5 text-rose-500" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[11px] text-muted-foreground font-medium uppercase tracking-wide">Outstanding Debt</p>
+                <p className="text-lg font-bold text-foreground truncate">
+                  {totalLoans > 0 ? `${totalLoans.toLocaleString()} XAF` : '--'}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-8 mt-6">
+        {/* ── CREDIT FACTOR GRID ── */}
+        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible">
+          <div className="mb-4">
+            <h2 className="text-lg font-bold text-foreground">Credit Factors</h2>
+            <p className="text-xs text-muted-foreground">Key factors influencing your score</p>
+          </div>
+          <CreditFactorGrid components={scoreFactors?.components} />
         </motion.div>
 
-        {/* PostiQ Feature Showcase */}
-        <motion.div custom={0} variants={fadeUp} initial="hidden" animate="visible" className="mt-6">
+        {/* ── PostiQ ── */}
+        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible" className="mt-6">
           <PostiQFeatureShowcase hasVerification={!!verification} onVerifyClick={scrollToVerification} />
         </motion.div>
-
-        {/* PostiQ Address Verification */}
-        <motion.div custom={1} variants={fadeUp} initial="hidden" animate="visible" ref={verificationRef} className="mt-6">
+        <motion.div custom={2.5} variants={fadeUp} initial="hidden" animate="visible" ref={verificationRef} className="mt-4">
           <PostiQVerification />
         </motion.div>
 
-        {/* Core Metrics Row */}
-        <motion.div custom={2} variants={fadeUp} initial="hidden" animate="visible" className="grid md:grid-cols-3 gap-4 mt-6">
-          <ScoreMetadata
-            scoreVersion={scoreData?.score_version}
-            calculatedAt={scoreData?.calculated_at}
-            nextUpdateDate={scoreData?.next_update_date}
-            expiresAt={scoreData?.expires_at}
-          />
-          <DataSourceChart scoringModel={scoringModel} externalBureauUsed={externalDataUsed} />
-          <QuickStats
-            totalLoans={scoreFactors?.details?.total_loans}
-            totalSavings={scoreFactors?.details?.total_savings}
-            kycVerified={kycVerified}
-            externalDataUsed={externalDataUsed}
-          />
-        </motion.div>
-
-        {/* Main Content Grid */}
+        {/* ── MAIN CONTENT GRID ── */}
         <div className="grid lg:grid-cols-3 gap-5 mt-6 pb-12">
-          {/* Left Column */}
+          {/* Left Column — 2/3 */}
           <div className="lg:col-span-2 space-y-5">
-            {/* Score Components */}
+            {/* Score Trend */}
             <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible">
               <Card>
                 <CardHeader className="pb-3">
+                  <CardTitle className="text-lg">Score Trend</CardTitle>
+                  <CardDescription className="text-xs">Your score history over time</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {historyData && historyData.length > 0 ? (
+                    <ScoreTrendChart
+                      history={historyData.map(h => ({
+                        id: h.id,
+                        score: h.score,
+                        calculated_at: h.recorded_at,
+                      }))}
+                    />
+                  ) : (
+                    <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Score Components */}
+            <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
+              <Card>
+                <CardHeader className="pb-3">
                   <CardTitle className="text-lg">Score Components</CardTitle>
-                  <CardDescription className="text-xs">8 factors affecting your score</CardDescription>
+                  <CardDescription className="text-xs">Detailed breakdown of scoring factors</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {scoreFactors?.components ? (
@@ -352,45 +360,12 @@ export default function CreditScore() {
               </Card>
             </motion.div>
 
-            {/* Score Breakdown Chart */}
-            <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Score Breakdown</CardTitle>
-                  <CardDescription className="text-xs">Visual distribution of scoring components</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {scoreFactors?.components ? (
-                    <ScoreBreakdownChart components={scoreFactors.components} />
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Score Trend */}
+            {/* Full Report Paywall */}
             <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Score Trend</CardTitle>
-                  <CardDescription className="text-xs">Your score history over time</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {historyData && historyData.length > 0 ? (
-                    <ScoreTrendChart history={historyData.map(h => ({
-                      id: h.id,
-                      score: h.score,
-                      calculated_at: h.recorded_at
-                    }))} />
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8 text-sm">No history available</p>
-                  )}
-                </CardContent>
-              </Card>
+              <FullReportPaywall />
             </motion.div>
 
-            {/* Credit-Building Services */}
+            {/* Build Your Score */}
             <motion.div custom={6} variants={fadeUp} initial="hidden" animate="visible">
               <Card>
                 <CardHeader className="pb-3">
@@ -406,7 +381,7 @@ export default function CreditScore() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {creditServices.map((svc) => (
+                    {creditServices.map(svc => (
                       <Link
                         key={svc.to}
                         to={svc.to}
@@ -441,7 +416,7 @@ export default function CreditScore() {
             )}
           </div>
 
-          {/* Right Column */}
+          {/* Right Column — 1/3 */}
           <div className="space-y-5">
             <motion.div custom={3} variants={fadeUp} initial="hidden" animate="visible">
               <LinkedAccountsWidget />
