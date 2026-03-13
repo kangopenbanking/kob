@@ -31,6 +31,7 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   fx_conversion: "fx_conversion",
   gateway_charge: "gateway_charge",
   gateway_payout: "gateway_payout",
+  credit_report_purchase: "credit_report_purchase",
 };
 
 // Last-resort fallback rates — only used when fee_structures DB has no matching row.
