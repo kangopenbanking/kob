@@ -11,6 +11,8 @@ import { motion } from 'framer-motion';
 import jsPDF from 'jspdf';
 import CreditInquiriesPanel from '@/components/credit/CreditInquiriesPanel';
 import PreApprovedOffersCard from '@/components/credit/PreApprovedOffersCard';
+import ScoreTrendChart from '@/components/credit/ScoreTrendChart';
+import AITipsCard from '@/components/credit/AITipsCard';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },

@@ -392,11 +392,6 @@ export default function CreditScore() {
             </motion.div>
 
             {/* Tips — behind paywall */}
-            {activePurchase && tips && tips.length > 0 && (
-              <motion.div id="credit-tips-section" custom={8} variants={fadeUp} initial="hidden" animate="visible">
-                <AITipsCard tips={tips} onTipComplete={refetchTips} />
-              </motion.div>
-            )}
           </div>
 
           {/* Right Column — 1/3 */}
