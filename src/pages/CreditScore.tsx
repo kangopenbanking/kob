@@ -98,6 +98,24 @@ export default function CreditScore() {
     },
   });
 
+  const { data: activePurchase } = useQuery({
+    queryKey: ['credit-report-purchase'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
+      const { data } = await supabase
+        .from('credit_report_purchases')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .gte('expires_at', new Date().toISOString())
+        .order('purchased_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      return data;
+    },
+  });
+
   const { data: verification } = useQuery({
     queryKey: ['postiq-verification'],
     queryFn: async () => {
@@ -229,7 +247,7 @@ export default function CreditScore() {
                 variant="ghost"
               >
                 <Sparkles className="h-4 w-4" />
-                AI Tips
+                Tips
               </Button>
             </div>
           </div>
@@ -343,27 +361,29 @@ export default function CreditScore() {
               </Card>
             </motion.div>
 
-            {/* Score Components */}
-            <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Score Components</CardTitle>
-                  <CardDescription className="text-xs">Detailed breakdown of scoring factors</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {scoreFactors?.components ? (
-                    <ScoreComponentDetails components={scoreFactors.components} />
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
             {/* Full Report Paywall */}
-            <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
+            <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
               <FullReportPaywall />
             </motion.div>
+
+            {/* Score Components — behind paywall */}
+            {activePurchase && (
+              <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Score Components</CardTitle>
+                    <CardDescription className="text-xs">Detailed breakdown of scoring factors</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {scoreFactors?.components ? (
+                      <ScoreComponentDetails components={scoreFactors.components} />
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Build Your Score */}
             <motion.div custom={6} variants={fadeUp} initial="hidden" animate="visible">
@@ -408,8 +428,8 @@ export default function CreditScore() {
               <ScoreEducation />
             </motion.div>
 
-            {/* AI Tips */}
-            {tips && tips.length > 0 && (
+            {/* Tips — behind paywall */}
+            {activePurchase && tips && tips.length > 0 && (
               <motion.div custom={8} variants={fadeUp} initial="hidden" animate="visible">
                 <AITipsCard tips={tips} onTipComplete={refetchTips} />
               </motion.div>

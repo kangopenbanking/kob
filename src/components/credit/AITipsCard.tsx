@@ -83,7 +83,7 @@ const AITipsCard = ({ tips, onTipComplete }: AITipsCardProps) => {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-primary" />
-            <CardTitle>AI-Powered Improvement Tips</CardTitle>
+            <CardTitle>Improvement Tips</CardTitle>
           </div>
           <CardDescription>
             Personalized recommendations to boost your credit score
