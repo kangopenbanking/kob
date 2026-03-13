@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeeEstimate } from '@/hooks/useFeeEstimate';
+import { KANG_PLATFORM_ID } from '@/constants/platform';
 import { Lock, Unlock, FileText, CheckCircle2, Loader2, ShieldCheck, BarChart3, Scale, Wallet, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
