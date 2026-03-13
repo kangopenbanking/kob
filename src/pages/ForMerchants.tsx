@@ -26,6 +26,18 @@ const ForMerchants = () => {
       <Helmet>
         <title>Merchant Portal - Accept Payments in Cameroon | Kang Open Banking</title>
         <meta name="description" content="Accept payments via mobile money, bank transfers, and cards. Manage disputes, track settlements, and grow your business with KOB's Merchant Portal." />
+        <link rel="canonical" href="https://kangopenbanking.com/for-merchants" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "KOB Merchant Portal",
+          "applicationCategory": "BusinessApplication",
+          "description": "Accept payments via mobile money, bank transfers, and cards across Cameroon. Manage disputes, track real-time settlements, and access merchant analytics.",
+          "url": "https://kangopenbanking.com/for-merchants",
+          "operatingSystem": "Web",
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "XAF" },
+          "provider": { "@type": "Organization", "name": "Kang Open Banking", "url": "https://kangopenbanking.com" }
+        })}</script>
       </Helmet>
 
       {/* Hero */}

@@ -52,8 +52,34 @@ export default function CrediQ() {
     requestAnimationFrame(step);
   }, []);
 
+  const crediqSchema = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "CrediQ Credit Score",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "description": "AI-powered credit scoring system for Cameroon and the CEMAC region. Build your credit score through loan repayments, savings, Njangi contributions, and rent payments.",
+    "url": "https://kangopenbanking.com/crediq",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "XAF"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "Kang Open Banking",
+      "url": "https://kangopenbanking.com"
+    }
+  };
+
   return (
     <Layout>
+      <Helmet>
+        <title>CrediQ — AI Credit Scoring for Cameroon | Kang Open Banking</title>
+        <meta name="description" content="Build your credit score through loan repayments, savings, Njangi contributions, and rent payments. CrediQ is Cameroon's first AI-powered credit scoring system." />
+        <link rel="canonical" href="https://kangopenbanking.com/crediq" />
+        <script type="application/ld+json">{JSON.stringify(crediqSchema)}</script>
+      </Helmet>
       <div className="min-h-screen bg-background">
         {/* ─── HERO ─── */}
         <section className="relative overflow-hidden">
