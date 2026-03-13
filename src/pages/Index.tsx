@@ -58,7 +58,25 @@ import { AccountsPreview, PaymentsPreview, CreditScorePreview, SavingsPreview } 
 const Index = () => {
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Admin-managed slider with static fallback */}
+      <SEO
+        title="Unified Open Banking API for Cameroon"
+        description="Connect banks, credit unions, and fintech companies with Cameroon's #1 Open Banking platform. XAF-native payments, credit scoring, and merchant tools."
+        canonical="https://kangopenbanking.com"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          "name": "Kang Open Banking",
+          "url": "https://kangopenbanking.com",
+          "logo": "https://kangopenbanking.com/kob-logo.png",
+          "description": "Unified Open Banking API for Cameroon's financial ecosystem",
+          "sameAs": [],
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Support",
+            "email": "support@kangopenbanking.com"
+          }
+        }}
+      />
       <HomepageHeroSlider fallback={
         <section className="relative overflow-hidden animated-gradient-banner">
           <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:32px_32px]"></div>
