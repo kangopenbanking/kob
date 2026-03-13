@@ -50,6 +50,7 @@ Allow: /functions/v1/postman-collection
 Allow: /openapi.json
 Allow: /apis.json
 Allow: /.well-known/ai-plugin.json
+Allow: /changelog.json
 
 # Certificate Management & Security
 Allow: /guides/certificates
