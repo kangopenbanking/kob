@@ -1,5 +1,23 @@
 [
   {
+    "version": "3.8.0",
+    "date": "2026-03-13",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Overdraft Eligibility Engine, Credit Report Purchase, and Fee Management enhancements",
+    "highlights": [
+      "Overdraft Eligibility Engine — 7-factor scoring (salary, savings, balance, tenure, activity, repayment, credit score) with explainable risk bands (A-F)",
+      "Full overdraft lifecycle: recalculate, request, approve, suspend, revoke, reinstate with email notifications and audit logging",
+      "Auto-approval for high-score profiles (≥75), approval workflow integration for manual review",
+      "FI Portal Overdraft Management dashboard with summary stats, profile table, and action dialogs",
+      "Banking App overdraft eligibility check integrated into Bank Credit Score page",
+      "Credit Report Purchase — wallet-based payment with balance validation and 30-day access",
+      "Fee Management — Services category added for Credit Report Purchase fee structures",
+      "OpenAPI spec updated with 7 Overdraft endpoints under /accounts/{accountId}/overdraft/*",
+      "New tables: account_overdraft_profiles, overdraft_score_factors"
+    ]
+  },
+  {
     "version": "3.7.0",
     "date": "2026-03-08",
     "type": "minor",
