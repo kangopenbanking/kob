@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout";
 import { Shield, TrendingUp, Bell, Target, Award, Users, ArrowRight, ChevronRight, Zap, PiggyBank, Home, BarChart3, CreditCard, Landmark, HandCoins, FileCheck, AlertTriangle, CheckCircle2, XCircle, Clock, Repeat, Search } from "lucide-react";
 import { motion, useMotionValue, useTransform, animate } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { Helmet } from "react-helmet-async";
 import crediqHero from "@/assets/crediq-hero.jpg";
 import crediqCard from "@/assets/crediq-card.jpg";
 import crediqMobile from "@/assets/crediq-mobile.webp";
