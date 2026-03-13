@@ -15,6 +15,16 @@ const PiggyBankInfo = () => {
       <Helmet>
         <title>Piggy Bank — Savings & Rent Plans | Kang Open Banking</title>
         <meta name="description" content="Explore savings products from banks and credit unions, or create personal savings plans. Build your credit score with every on-time payment through Kang's Piggy Bank." />
+        <link rel="canonical" href="https://kangopenbanking.com/piggybank" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": "Piggy Bank — Savings & Rent Plans",
+          "description": "Explore savings products from Cameroonian banks and credit unions, or create personal savings plans. Build your credit score with every on-time payment.",
+          "url": "https://kangopenbanking.com/piggybank",
+          "brand": { "@type": "Brand", "name": "Kang Open Banking" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "XAF", "availability": "https://schema.org/InStock" }
+        })}</script>
       </Helmet>
 
       {/* Hero */}

@@ -15,6 +15,16 @@ const NjangiInfo = () => {
       <Helmet>
         <title>Njangi — Group Savings & Money Pot | Kang Open Banking</title>
         <meta name="description" content="Join or create a Njangi group — the traditional Cameroonian money pot, digitized. Pool funds with friends and family while building your credit score." />
+        <link rel="canonical" href="https://kangopenbanking.com/njangi" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": "Njangi — Digital Group Savings",
+          "description": "The traditional Cameroonian rotating savings group, digitized. Pool funds, receive payouts, and build credit through on-time contributions.",
+          "url": "https://kangopenbanking.com/njangi",
+          "brand": { "@type": "Brand", "name": "Kang Open Banking" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "XAF", "availability": "https://schema.org/InStock" }
+        })}</script>
       </Helmet>
 
       {/* Hero */}

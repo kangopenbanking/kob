@@ -13,8 +13,18 @@ const RentReportingInfo = () => {
   return (
     <div className="min-h-screen">
       <Helmet>
-        <title>Rent Reporting — Build Credit with Rent Payments | Kang Open Banking</title>
+        <title>Rent Reporting — Build Credit with Rent | Kang Open Banking</title>
         <meta name="description" content="Turn your rent payments into credit history. Get a unique KRENTS reference, pay your landlord directly, and watch your CrediQ score grow with every on-time payment." />
+        <link rel="canonical" href="https://kangopenbanking.com/rent-reporting" />
+        <script type="application/ld+json">{JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Product",
+          "name": "Rent Reporting — Build Credit Through Rent",
+          "description": "Turn monthly rent payments into verifiable credit history. Get a unique KRENTS reference code and build your CrediQ score with every on-time payment.",
+          "url": "https://kangopenbanking.com/rent-reporting",
+          "brand": { "@type": "Brand", "name": "Kang Open Banking" },
+          "offers": { "@type": "Offer", "price": "0", "priceCurrency": "XAF", "availability": "https://schema.org/InStock" }
+        })}</script>
       </Helmet>
 
       {/* Hero */}
