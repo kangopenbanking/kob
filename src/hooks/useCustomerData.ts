@@ -181,55 +181,32 @@ export function useCustomerNjangi(userId?: string, institutionId?: string) {
   });
 }
 
-// ─── Credit Score (event-sourced first, legacy fallback) ───
+// ─── Credit Score (unified via edge function) ───
 export function useCustomerCreditScore(userId?: string) {
   return useQuery({
     queryKey: ['customer-credit-score', userId],
     enabled: !!userId,
     queryFn: async () => {
-      // Try event-sourced credit_profiles first
-      const { data: profile } = await supabase
-        .from('credit_profiles')
-        .select('current_score, score_band, last_computed_at')
-        .eq('user_id', userId!)
-        .maybeSingle();
-
-      if (profile?.current_score) {
-        // Get latest snapshot for factor detail
-        const { data: snapshot } = await supabase
-          .from('credit_score_snapshots')
-          .select('factors_json, computed_at')
-          .eq('user_id', userId!)
-          .order('computed_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-
-        return {
-          score: profile.current_score,
-          score_band: profile.score_band,
-          updated_at: profile.last_computed_at,
-          score_factors: snapshot?.factors_json,
-          // Legacy factor scores not available from event-sourced — use 0
-          payment_history_score: 0,
-          amounts_owed_score: 0,
-          credit_history_length_score: 0,
-          new_credit_score: 0,
-          credit_mix_score: 0,
-          source: 'event_sourced' as const,
-        };
-      }
-
-      // Fallback to legacy credit_scores table
-      const { data, error } = await supabase
-        .from('credit_scores')
-        .select('score, payment_history_score, amounts_owed_score, credit_history_length_score, new_credit_score, credit_mix_score, score_factors, updated_at')
-        .eq('user_id', userId!)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const { data, error } = await supabase.functions.invoke('credit-score-fetch', {
+        body: { user_id: userId, include_report: false },
+      });
       if (error) throw error;
-      return data ? { ...data, source: 'legacy' as const } : null;
+      if (!data?.score) return null;
+
+      return {
+        score: data.score,
+        score_band: data.score_range,
+        updated_at: data.calculated_at,
+        score_factors: data.score_factors,
+        payment_history_score: data.score_factors?.components?.payment_history?.score ?? 0,
+        amounts_owed_score: data.score_factors?.components?.amounts_owed?.score ?? 0,
+        credit_history_length_score: data.score_factors?.components?.credit_history?.score ?? 0,
+        new_credit_score: data.score_factors?.components?.new_credit?.score ?? 0,
+        credit_mix_score: data.score_factors?.components?.credit_mix?.score ?? 0,
+        source: (data.source || 'edge_function') as string,
+      };
     },
+    staleTime: 5 * 60 * 1000,
   });
 }
 
