@@ -229,7 +229,7 @@ export default function CreditScore() {
                 variant="ghost"
               >
                 <Sparkles className="h-4 w-4" />
-                AI Tips
+                Tips
               </Button>
             </div>
           </div>
