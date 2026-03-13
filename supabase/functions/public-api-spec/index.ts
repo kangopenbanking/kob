@@ -2073,9 +2073,10 @@ serve(async (req) => {
       openapi: '3.1.0',
       info: {
         title: 'Kang Open Banking API',
-        version: '3.4.0',
+        version: '3.7.0',
         summary: 'Unified Open Banking API for Cameroon',
-        description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
+        description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
+        'x-changelog-url': 'https://kangopenbanking.com/changelog.json',
         contact: {
           name: 'Kang Open Banking Support',
           email: 'support@kangopenbanking.com',
