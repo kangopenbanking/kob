@@ -572,9 +572,79 @@
         "tags": ["Banking Operations"],
         "responses": { "200": { "description": "Transfer completed" } }
       }
+    },
+    "/accounts/{accountId}/overdraft": {
+      "get": {
+        "summary": "Get Overdraft Profile",
+        "operationId": "getOverdraftProfile",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Overdraft profile with eligibility, limits, risk band, and score factors" },
+          "404": { "description": "Account not found" }
+        }
+      }
+    },
+    "/accounts/{accountId}/overdraft/recalculate": {
+      "post": {
+        "summary": "Recalculate Overdraft Eligibility",
+        "operationId": "recalculateOverdraft",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Recalculated overdraft profile with 7-factor score breakdown" }
+        }
+      }
+    },
+    "/accounts/{accountId}/overdraft/request": {
+      "post": {
+        "summary": "Request Overdraft Facility",
+        "operationId": "requestOverdraft",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": {
+          "200": { "description": "Auto-approved overdraft" },
+          "202": { "description": "Overdraft request submitted for manual approval" }
+        }
+      }
+    },
+    "/accounts/{accountId}/overdraft/approve": {
+      "post": {
+        "summary": "Approve Overdraft (Staff/Admin)",
+        "operationId": "approveOverdraft",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Overdraft approved with limit set" } }
+      }
+    },
+    "/accounts/{accountId}/overdraft/suspend": {
+      "post": {
+        "summary": "Suspend Overdraft Facility",
+        "operationId": "suspendOverdraft",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Overdraft suspended" } }
+      }
+    },
+    "/accounts/{accountId}/overdraft/revoke": {
+      "post": {
+        "summary": "Revoke Overdraft Facility",
+        "operationId": "revokeOverdraft",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Overdraft revoked" } }
+      }
+    },
+    "/accounts/{accountId}/overdraft/reinstate": {
+      "post": {
+        "summary": "Reinstate Overdraft Facility",
+        "operationId": "reinstateOverdraft",
+        "tags": ["Overdraft"],
+        "parameters": [{ "name": "accountId", "in": "path", "required": true, "schema": { "type": "string", "format": "uuid" } }],
+        "responses": { "200": { "description": "Overdraft reinstated with new limit" } }
+      }
     }
   },
-  "components": {
     "schemas": {
       "Error": {
         "type": "object",
