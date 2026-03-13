@@ -1,10 +1,8 @@
 import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useFeeEstimate } from '@/hooks/useFeeEstimate';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Lock, Unlock, FileText, CheckCircle2, Loader2, ShieldCheck, BarChart3, Scale } from 'lucide-react';
+import { Lock, Unlock, FileText, CheckCircle2, Loader2, ShieldCheck, BarChart3, Scale, Wallet, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -40,12 +38,97 @@ export default function FullReportPaywall() {
     },
   });
 
+  // Fetch user's wallet balance
+  const { data: walletBalance } = useQuery({
+    queryKey: ['wallet-balance-for-report'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return 0;
+      const { data: account } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      if (!account) return 0;
+      const { data: balance } = await supabase
+        .from('account_balances')
+        .select('amount')
+        .eq('account_id', account.id)
+        .eq('balance_type', 'ClosingAvailable')
+        .eq('credit_debit_indicator', 'Credit')
+        .maybeSingle();
+      return balance?.amount || 0;
+    },
+  });
+
+  const hasSufficientFunds = (walletBalance || 0) >= reportFee;
+
   const handlePurchase = async () => {
+    if (!hasSufficientFunds) {
+      toast.error('Insufficient funds. Please add money to your wallet first.');
+      navigate('/wallet');
+      return;
+    }
+
     setIsPurchasing(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('Not authenticated');
 
+      // Get user's account
+      const { data: account } = await supabase
+        .from('accounts')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('is_active', true)
+        .limit(1)
+        .maybeSingle();
+      if (!account) throw new Error('No wallet account found');
+
+      // Get current balance
+      const { data: balanceRow } = await supabase
+        .from('account_balances')
+        .select('id, amount')
+        .eq('account_id', account.id)
+        .eq('balance_type', 'ClosingAvailable')
+        .eq('credit_debit_indicator', 'Credit')
+        .maybeSingle();
+
+      if (!balanceRow || balanceRow.amount < reportFee) {
+        toast.error('Insufficient funds. Please add money to your wallet.');
+        navigate('/wallet');
+        return;
+      }
+
+      // Deduct from wallet balance
+      const { error: balanceError } = await supabase
+        .from('account_balances')
+        .update({
+          amount: balanceRow.amount - reportFee,
+          balance_datetime: new Date().toISOString(),
+        })
+        .eq('id', balanceRow.id);
+
+      if (balanceError) throw balanceError;
+
+      // Record the debit transaction
+      await supabase.from('transactions').insert({
+        account_id: account.id,
+        amount: reportFee,
+        currency: 'XAF',
+        credit_debit_indicator: 'Debit',
+        status: 'Booked',
+        booking_datetime: new Date().toISOString(),
+        value_datetime: new Date().toISOString(),
+        transaction_type: 'purchase',
+        transaction_information: 'Full Credit Report Purchase',
+        user_id: user.id,
+        metadata: { type: 'credit_report_purchase' },
+      });
+
+      // Record the purchase
       const { error } = await supabase.from('credit_report_purchases').insert({
         user_id: user.id,
         amount: reportFee,
@@ -57,8 +140,9 @@ export default function FullReportPaywall() {
       if (error) throw error;
 
       queryClient.invalidateQueries({ queryKey: ['credit-report-purchase'] });
-      toast.success('Full Credit Report unlocked!');
-      navigate('/credit-report');
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance-for-report'] });
+      queryClient.invalidateQueries({ queryKey: ['wallet-balance'] });
+      toast.success('Full Credit Report unlocked! Funds deducted from your wallet.');
     } catch (err: any) {
       toast.error(err.message || 'Purchase failed');
     } finally {
@@ -76,14 +160,9 @@ export default function FullReportPaywall() {
   ];
 
   return (
-    <Card className="overflow-hidden border-primary/20">
+    <div className="rounded-2xl bg-muted/40 overflow-hidden">
       <div className="relative">
-        {/* Blurred preview background */}
-        {!hasAccess && (
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-card/60 to-card z-10" />
-        )}
-
-        <CardContent className="p-6 relative z-20">
+        <div className="p-6 relative z-20">
           {hasAccess ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
@@ -99,10 +178,13 @@ export default function FullReportPaywall() {
                   Valid until {new Date(activePurchase.expires_at).toLocaleDateString()}
                 </p>
               </div>
-              <Button onClick={() => navigate('/credit-report')} className="rounded-full gap-2 w-full">
+              <span
+                onClick={() => navigate('/credit-report')}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/80 cursor-pointer transition-colors"
+              >
                 <FileText className="h-4 w-4" />
                 View Full Report
-              </Button>
+              </span>
             </motion.div>
           ) : (
             <div className="space-y-5">
@@ -116,7 +198,6 @@ export default function FullReportPaywall() {
                 </p>
               </div>
 
-              {/* Preview sections with blur overlay */}
               <div className="space-y-2">
                 {reportSections.map((section, i) => {
                   const Icon = section.icon;
@@ -126,7 +207,7 @@ export default function FullReportPaywall() {
                       initial={{ opacity: 0, x: -8 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.1 + i * 0.05 }}
-                      className="flex items-center gap-3 rounded-xl bg-muted/50 p-3"
+                      className="flex items-center gap-3 rounded-xl bg-background/60 p-3"
                     >
                       <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
                       <div className="flex items-center gap-2">
@@ -138,7 +219,7 @@ export default function FullReportPaywall() {
                 })}
               </div>
 
-              {/* Price and CTA */}
+              {/* Price and wallet info */}
               <div className="text-center space-y-3 pt-2">
                 <div className="flex items-baseline justify-center gap-1">
                   <span className="text-3xl font-black text-foreground">
@@ -147,24 +228,59 @@ export default function FullReportPaywall() {
                   <span className="text-sm font-medium text-muted-foreground">XAF</span>
                 </div>
                 <p className="text-xs text-muted-foreground">Valid for 30 days after purchase</p>
-                <Button
+
+                {/* Wallet balance notice */}
+                {!hasSufficientFunds && walletBalance !== undefined && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-2 rounded-xl bg-destructive/10 p-3 text-left"
+                  >
+                    <AlertCircle className="h-4 w-4 text-destructive shrink-0" />
+                    <div className="flex-1">
+                      <p className="text-xs font-medium text-destructive">Insufficient wallet balance</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        Current balance: {(walletBalance || 0).toLocaleString()} XAF.{' '}
+                        <span
+                          onClick={() => navigate('/wallet')}
+                          className="text-primary font-semibold cursor-pointer hover:underline"
+                        >
+                          Add funds →
+                        </span>
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+
+                {hasSufficientFunds && walletBalance !== undefined && (
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                    <Wallet className="h-3.5 w-3.5" />
+                    <span>Wallet balance: {(walletBalance || 0).toLocaleString()} XAF</span>
+                  </div>
+                )}
+
+                <span
                   onClick={handlePurchase}
-                  disabled={isPurchasing || feeLoading || purchaseLoading}
-                  className="rounded-full gap-2 w-full text-base h-12"
-                  size="lg"
+                  className={`inline-flex items-center justify-center gap-2 text-base font-semibold cursor-pointer transition-colors ${
+                    isPurchasing || feeLoading || purchaseLoading
+                      ? 'text-muted-foreground pointer-events-none'
+                      : hasSufficientFunds
+                        ? 'text-primary hover:text-primary/80'
+                        : 'text-primary hover:text-primary/80'
+                  }`}
                 >
                   {isPurchasing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Lock className="h-4 w-4" />
                   )}
-                  Pay & Unlock Report
-                </Button>
+                  {hasSufficientFunds ? 'Pay & Unlock Report' : 'Add Funds & Unlock'}
+                </span>
               </div>
             </div>
           )}
-        </CardContent>
+        </div>
       </div>
-    </Card>
+    </div>
   );
 }
