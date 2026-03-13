@@ -1,0 +1,249 @@
+[
+  {
+    "version": "3.7.0",
+    "date": "2026-03-08",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "POS Consumer Marketplace, QR Payments, Wallet payment method",
+    "highlights": [
+      "POS Consumer Marketplace — merchants publish storefronts via subscription; consumers browse, cart, and buy with wallet balance",
+      "QR Code Payments — merchant QR generation (static/dynamic) and consumer scan-to-pay",
+      "Wallet payment method added to pos-pay-order — atomic consumer debit + merchant credit",
+      "New edge functions: pos-store-browse, pos-consumer-cart, pos-consumer-checkout, pos-qr-payment, pos-store-subscription",
+      "New tables: pos_store_profiles, pos_subscription_plans, pos_store_subscriptions, pos_consumer_carts, pos_consumer_cart_items"
+    ]
+  },
+  {
+    "version": "3.6.0",
+    "date": "2026-03-06",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Merchant Staff Login portal with Email+Password and Phone+PIN authentication",
+    "highlights": [
+      "Dedicated Merchant Staff Login portal at /staff-login",
+      "merchant-create-staff and staff-pin-login edge functions",
+      "PIN-based staff authentication with salted SHA-256 hashing"
+    ]
+  },
+  {
+    "version": "3.5.0",
+    "date": "2026-03-01",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Cameroon Banking Identifiers — RIB, IBAN, BIC/SWIFT validation and bank directory",
+    "highlights": [
+      "Full RIB (23-digit) and IBAN (27-char) validation with MOD-97 checksum",
+      "validate-rib, validate-account-identifier, directory-banks-cm edge functions",
+      "DOMESTIC_RIB added to account_scheme enum",
+      "Transfer rail auto-selection (internal, domestic_interbank, international)"
+    ]
+  },
+  {
+    "version": "3.4.0",
+    "date": "2026-02-27",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Funding Intents API with full lifecycle tracking and multi-provider support",
+    "highlights": [
+      "Funding Intents API — canonical domain for account funding (created → pending → succeeded/failed/cancelled/expired)",
+      "PayPal inbound funding with auto-capture on approval",
+      "Bank transfer funding instructions with unique reference generation",
+      "Funding reconciliation job with 24h expiry",
+      "Idempotency-Key enforcement per (account_id, key)"
+    ]
+  },
+  {
+    "version": "3.3.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Multi-Tenancy Apps Showcase and PWA ecosystem presentation",
+    "highlights": [
+      "Apps Showcase page at /apps — Banking, Merchant, Customer app demos",
+      "Multi-tenancy branding demo with institutional theming",
+      "Technical Architecture section with TenantProvider context flow"
+    ]
+  },
+  {
+    "version": "3.2.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Cameroon Regulatory Filing Pack — 10 BEAC/COBAC submission documents",
+    "highlights": [
+      "10 submission-ready documents for PSP license application",
+      "Corporate Structure, Internal Control, AML/CFT, Data Protection policies",
+      "Risk Assessment Matrix and Regulatory Reporting Templates"
+    ]
+  },
+  {
+    "version": "3.1.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Shared UI components and merchant/FI portal dashboard enhancements",
+    "highlights": [
+      "New shared components: StatCard, DataTablePagination, EmptyState, DateRangePicker, TransactionDetailSheet",
+      "Merchant Dashboard, Analytics, Payouts, Settlements, Transactions, Refunds redesigned",
+      "FI Portal Analytics and Transactions enhanced with new components"
+    ]
+  },
+  {
+    "version": "3.0.0",
+    "date": "2026-02-26",
+    "type": "major",
+    "breaking_changes": false,
+    "summary": "30+ institutional pages, regulatory compliance, fraud engine, and multi-country expansion",
+    "highlights": [
+      "30+ new institutional pages: Regulatory, Compliance, Architecture, Expansion, Investor, API Reference",
+      "Cameroon Regulatory Compliance — BEAC/COBAC framework, PSP licensing",
+      "Fraud Engine — 5-layer defence model",
+      "Double-Entry Ledger and Reconciliation Framework documentation",
+      "6 Multi-Country Expansion pages",
+      "7 API Reference pages and Sandbox Simulation Tools"
+    ]
+  },
+  {
+    "version": "2.9.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "OpenAPI spec accuracy fixes — grant types, idempotency, consent headers, webhook event types",
+    "highlights": [
+      "grant_type enum includes client_credentials",
+      "Idempotency-Key header marked required",
+      "x-consent-id header added to all AISP endpoints",
+      "24 webhook event types enumerated",
+      "Legacy endpoints marked deprecated in favor of Gateway API"
+    ]
+  },
+  {
+    "version": "2.8.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Critical payment gateway fixes — Stripe currency guard, webhook verification, wallet credits",
+    "highlights": [
+      "Stripe zero-decimal currency guard for USD/EUR vs XAF/XOF",
+      "Stripe webhook signature verification enforced",
+      "Merchant wallet credited on successful charge",
+      "Over-refund guard and dispute wallet adjustments"
+    ]
+  },
+  {
+    "version": "2.7.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Woo for Kang v1.0.0 — production-ready WooCommerce plugin with ZIP download",
+    "highlights": [
+      "Complete WordPress plugin ZIP download (9 files)",
+      "In-memory ZIP generation edge function",
+      "6 WooCommerce endpoints with full schemas"
+    ]
+  },
+  {
+    "version": "2.6.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "39 new OpenAPI endpoint paths — Payment Links, Subscriptions, Split Payments, Merchant Onboarding",
+    "highlights": [
+      "39 missing endpoint paths added to OpenAPI spec",
+      "Merchant Onboarding API fully documented (13 endpoints)",
+      "9 new schemas for payment links, subscriptions, subaccounts, customers"
+    ]
+  },
+  {
+    "version": "2.5.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "PayPal Payouts API and PayPal withdrawal support",
+    "highlights": [
+      "PayPal batch payouts via EMAIL, PHONE, or PAYPAL_ID",
+      "PayPal withdrawal with automatic failure reversal",
+      "PayPal OAuth2 token adapter with in-memory caching"
+    ]
+  },
+  {
+    "version": "2.4.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Internal Account Transfer and Facilitated Bank Transfer endpoints",
+    "highlights": [
+      "Internal KOB-to-KOB transfer with balance validation",
+      "Facilitated bank transfer via Flutterwave with KOB fee calculation",
+      "Unified Transfers guide documenting all 6 transfer channels"
+    ]
+  },
+  {
+    "version": "2.3.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Transaction Risk Scoring API and Gateway Exchange Rate API",
+    "highlights": [
+      "Transaction risk scoring with velocity, amount-threshold, and pattern-anomaly checks",
+      "Real-time multi-currency FX lookups",
+      "Fee estimate expanded to 8 channels"
+    ]
+  },
+  {
+    "version": "2.2.0",
+    "date": "2026-02-26",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Account Funding API and Withdraw to Bank API",
+    "highlights": [
+      "Fund accounts via MoMo, Card, or Bank Transfer",
+      "Withdraw to external bank via Flutterwave",
+      "Auto-credit webhook handler and withdrawal reversal on failure"
+    ]
+  },
+  {
+    "version": "2.1.0",
+    "date": "2026-02-21",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Payment Links, Subscriptions, Split Payments, Tokenization, Charge Events",
+    "highlights": [
+      "Payment Links API with slug-based lookup",
+      "Subscriptions with automated cron-based recurring billing",
+      "Split Payments for marketplace subaccounts",
+      "Customer tokenization for one-click checkout",
+      "Charge Events timeline for lifecycle tracking"
+    ]
+  },
+  {
+    "version": "2.0.0",
+    "date": "2026-02-16",
+    "type": "major",
+    "breaking_changes": true,
+    "summary": "v1 API path standardization, RFC 7807 errors, OAuth 2.0/DCR/mTLS, Payment Facilitation, Virtual Cards, ISO 20022, SWIFT",
+    "highlights": [
+      "v1 API path standardization across all endpoints",
+      "RFC 7807 error model with domain-prefixed codes",
+      "OAuth 2.0 + Dynamic Client Registration + mTLS",
+      "Payment Facilitation API for white-label processing",
+      "Virtual Cards API",
+      "ISO 20022 and SWIFT messaging",
+      "AI agent discovery endpoints"
+    ]
+  },
+  {
+    "version": "1.0.0",
+    "date": "2024-11-01",
+    "type": "major",
+    "breaking_changes": false,
+    "summary": "Initial public release — AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
+    "highlights": [
+      "Account Information Service (AISP)",
+      "Payment Initiation Service (PISP)",
+      "Mobile Money integration (MTN, Orange)",
+      "Credit scoring engine",
+      "OAuth 2.0 authentication"
+    ]
+  }
+]

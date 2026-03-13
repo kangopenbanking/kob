@@ -2086,7 +2086,7 @@ serve(async (req) => {
         license: { name: 'Proprietary', url: 'https://kangopenbanking.com/terms' },
       },
       servers: [
-        { url: 'https://api.kangopenbanking.com', description: 'Production' },
+        { url: 'https://api.kangopenbanking.com/v1', description: 'Production' },
         { url: 'https://sandbox.kangopenbanking.com', description: 'Sandbox' },
       ],
       security: [{ bearerAuth: [] }],
