@@ -38,6 +38,34 @@ export default function CreditReport() {
     },
   });
 
+  const { data: historyData } = useQuery({
+    queryKey: ['credit-score-history'],
+    queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase
+        .from('credit_score_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('recorded_at', { ascending: false })
+        .limit(12);
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: tips, refetch: refetchTips } = useQuery({
+    queryKey: ['credit-tips'],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('credit-score-tips', {
+        body: { force_refresh: false },
+      });
+      if (error) throw error;
+      return data?.tips || [];
+    },
+    enabled: !!reportData,
+  });
+
   const handleDownload = () => {
     if (!reportData) {
       toast.error('No report data available');
