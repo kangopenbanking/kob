@@ -1,11 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.75.1';
 import * as bcrypt from 'https://deno.land/x/bcrypt@v0.4.1/mod.ts';
 import { create } from 'https://deno.land/x/djwt@v3.0.2/mod.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { corsHeaders } from "../_shared/cors.ts";
 
 async function getJwtKey(): Promise<CryptoKey> {
   const secret = Deno.env.get('JWT_SECRET');
