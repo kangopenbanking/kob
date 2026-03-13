@@ -7,7 +7,6 @@ import { toast } from 'sonner';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import CircularScoreDisplay from '@/components/credit/CircularScoreDisplay';
-import ScoreTrendChart from '@/components/credit/ScoreTrendChart';
 import AITipsCard from '@/components/credit/AITipsCard';
 import ScoreSimulator from '@/components/credit/ScoreSimulator';
 import CreditActivityFeed from '@/components/credit/CreditActivityFeed';
