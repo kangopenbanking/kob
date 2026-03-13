@@ -343,27 +343,29 @@ export default function CreditScore() {
               </Card>
             </motion.div>
 
-            {/* Score Components */}
-            <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-lg">Score Components</CardTitle>
-                  <CardDescription className="text-xs">Detailed breakdown of scoring factors</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {scoreFactors?.components ? (
-                    <ScoreComponentDetails components={scoreFactors.components} />
-                  ) : (
-                    <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-
             {/* Full Report Paywall */}
-            <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
+            <motion.div custom={4} variants={fadeUp} initial="hidden" animate="visible">
               <FullReportPaywall />
             </motion.div>
+
+            {/* Score Components — behind paywall */}
+            {activePurchase && (
+              <motion.div custom={5} variants={fadeUp} initial="hidden" animate="visible">
+                <Card>
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg">Score Components</CardTitle>
+                    <CardDescription className="text-xs">Detailed breakdown of scoring factors</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {scoreFactors?.components ? (
+                      <ScoreComponentDetails components={scoreFactors.components} />
+                    ) : (
+                      <p className="text-center text-muted-foreground py-8 text-sm">No data available</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
 
             {/* Build Your Score */}
             <motion.div custom={6} variants={fadeUp} initial="hidden" animate="visible">
