@@ -3317,6 +3317,45 @@ export type Database = {
           },
         ]
       }
+      credit_report_purchases: {
+        Row: {
+          amount: number
+          created_at: string | null
+          currency: string
+          expires_at: string | null
+          id: string
+          payment_method: string | null
+          purchased_at: string | null
+          report_type: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string | null
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          payment_method?: string | null
+          purchased_at?: string | null
+          report_type?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string | null
+          currency?: string
+          expires_at?: string | null
+          id?: string
+          payment_method?: string | null
+          purchased_at?: string | null
+          report_type?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_reports: {
         Row: {
           active_accounts: number | null
