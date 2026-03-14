@@ -389,7 +389,67 @@ export default function Auth() {
   const handleFirebaseVerifyOTP = async () => {
     if (firebaseOtpCode.length !== 6) return;
     const ok = await firebasePhone.verifyOTP(firebaseOtpCode);
-    if (ok) { setLoginStep('complete'); setTimeout(() => navigate('/dashboard'), 1000); }
+    if (ok) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await enforceSingleSession(session.access_token);
+      // Check if user needs PIN setup
+      if (session) {
+        const { data: profile } = await supabase.from('profiles').select('pin_code_hash').eq('id', session.user.id).maybeSingle();
+        if (!profile?.pin_code_hash) {
+          setLoginStep('setup-pin');
+          return;
+        }
+      }
+      sounds.success();
+      setLoginStep('complete');
+      setTimeout(() => navigate('/dashboard'), 1000);
+    }
+  };
+
+  // ── Forgot password handler ──
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { toast({ title: 'Required', description: 'Please enter your email', variant: 'destructive' }); return; }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast({ title: 'Email sent', description: 'Check your inbox for the reset link' });
+    } catch (err: any) {
+      toast({ title: 'Failed', description: err.message || 'Failed to send reset email', variant: 'destructive' });
+    } finally { setForgotLoading(false); }
+  };
+
+  // ── Reset PIN handler ──
+  const handleResetPin = async () => {
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast({ title: 'Invalid', description: 'PIN must be 6 digits', variant: 'destructive' }); return; }
+    if (newPin !== confirmNewPin) { toast({ title: 'Mismatch', description: 'PINs do not match', variant: 'destructive' }); return; }
+    setResetPinLoading(true);
+    try {
+      const fullPhone = `${loginCountryCode}${loginPhone}`;
+      const { data, error } = await supabase.functions.invoke('pin-code-reset', {
+        body: { phone_number: fullPhone, new_pin_code: newPin },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        sounds.success();
+        toast({ title: 'PIN Reset', description: 'PIN reset successfully! Please sign in.' });
+        setNewPin(''); setConfirmNewPin(''); setLoginStep('captcha'); generateCaptcha();
+      } else { throw new Error(data?.error || 'Failed to reset PIN'); }
+    } catch (err: any) {
+      sounds.error();
+      toast({ title: 'Failed', description: err.message || 'Failed to reset PIN', variant: 'destructive' });
+    } finally { setResetPinLoading(false); }
+  };
+
+  // ── Login PIN setup complete handler ──
+  const handleLoginPinSetupComplete = () => {
+    sounds.success();
+    toast({ title: 'PIN Set', description: 'Your security PIN has been set successfully' });
+    setLoginStep('complete');
+    setTimeout(() => navigate('/dashboard'), 1000);
   };
 
   // ── Registration handlers ──
