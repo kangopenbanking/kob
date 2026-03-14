@@ -19,7 +19,7 @@ import { API_CONFIG } from '@/config/api';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
-type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin';
+type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
