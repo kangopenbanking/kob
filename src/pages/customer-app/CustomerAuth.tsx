@@ -199,12 +199,17 @@ const CustomerAuth: React.FC = () => {
     setLoading(true);
     try {
       if (intent === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/app/auth` },
         });
         if (error) throw error;
-        setMode('email-sent');
+        // If auto-confirmed (e.g. after email click), go to PIN setup
+        if (signUpData?.session) {
+          setMode('setup-pin');
+        } else {
+          setMode('email-sent');
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
