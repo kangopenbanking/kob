@@ -69,9 +69,24 @@ const CustomerRewards: React.FC = () => {
 
   const referralLink = `${API_CONFIG.SITE_URL}/app/register?ref=${user?.id?.slice(0, 8)}`;
 
-  const cashbackRate = 1;
-  const cashbackMinTransfer = 10000;
-  const referralBonus = 500;
+  // Fetch dynamic reward settings from system_config
+  const { data: rewardConfig } = useQuery({
+    queryKey: ['reward-config'],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from('system_config')
+        .select('key, value')
+        .in('key', ['referral_bonus_amount', 'cashback_rate', 'cashback_min_transfer']);
+      const cfg: Record<string, number> = {};
+      (data || []).forEach((r: any) => { cfg[r.key] = Number(r.value); });
+      return cfg;
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const cashbackRate = rewardConfig?.cashback_rate ?? 1;
+  const cashbackMinTransfer = rewardConfig?.cashback_min_transfer ?? 10000;
+  const referralBonus = rewardConfig?.referral_bonus_amount ?? 500;
 
   const copyReferralLink = () => {
     navigator.clipboard.writeText(referralLink);

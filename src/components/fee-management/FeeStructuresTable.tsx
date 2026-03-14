@@ -87,6 +87,7 @@ const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string
   International: { bg: "bg-cyan-500/5", border: "border-cyan-200 dark:border-cyan-800", text: "text-cyan-700 dark:text-cyan-400", icon: Globe2 },
   Gateway: { bg: "bg-amber-500/5", border: "border-amber-200 dark:border-amber-800", text: "text-amber-700 dark:text-amber-400", icon: Zap },
   Services: { bg: "bg-teal-500/5", border: "border-teal-200 dark:border-teal-800", text: "text-teal-700 dark:text-teal-400", icon: FileText },
+  Banking: { bg: "bg-slate-500/5", border: "border-slate-200 dark:border-slate-800", text: "text-slate-700 dark:text-slate-400", icon: Landmark },
 };
 
 function getFeeDisplay(s: any) {

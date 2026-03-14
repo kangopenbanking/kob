@@ -101,7 +101,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (existingRef) throw new Error('You have already been referred');
 
-      const bonusAmount = 500;
+      const bonusAmount = Number(cfg.referral_bonus_amount) || 500;
 
       // Create referral record
       await supabase.from('customer_referrals').insert({
