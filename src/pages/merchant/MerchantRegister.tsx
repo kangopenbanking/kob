@@ -39,6 +39,7 @@ export default function MerchantRegister() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
   const [form, setForm] = useState({
     business_name: "",
     business_type: "",
