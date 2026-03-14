@@ -260,6 +260,13 @@ const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketp
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
+const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
+
+// Developer Portal — Identity & Onboarding Guides
+const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
+const IdentityGuide = lazy(() => import("./pages/developer/IdentityGuide"));
+const OnboardingGuide = lazy(() => import("./pages/developer/OnboardingGuide"));
+const RolesPermissions = lazy(() => import("./pages/developer/RolesPermissions"));
 
 // Institution (FI Portal)
 const FIPortal = lazy(() => import("./pages/FIPortal"));
