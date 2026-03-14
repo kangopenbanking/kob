@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, Store, ArrowRight, ArrowLeft, CheckCircle2, Building2, Mail, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 const STEPS = [
   { title: 'Business Info', description: 'Tell us about your business' },
@@ -23,26 +24,17 @@ const BUSINESS_TYPES = [
   'cooperative', 'freelancer', 'e_commerce', 'saas', 'marketplace', 'other',
 ];
 
-const COUNTRIES = [
-  { code: 'CM', name: 'Cameroon', currency: 'XAF' },
-  { code: 'NG', name: 'Nigeria', currency: 'NGN' },
-  { code: 'GH', name: 'Ghana', currency: 'GHS' },
-  { code: 'KE', name: 'Kenya', currency: 'KES' },
-  { code: 'SN', name: 'Senegal', currency: 'XOF' },
-  { code: 'CI', name: "Côte d'Ivoire", currency: 'XOF' },
-  { code: 'GA', name: 'Gabon', currency: 'XAF' },
-  { code: 'CD', name: 'DR Congo', currency: 'CDF' },
-];
-
 const BusinessRegister: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: supportedCountries = [] } = useSupportedCountries();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     business_name: '',
     business_type: '',
     business_description: '',
-    country: 'CM',
+    country: 'Cameroon',
     business_email: '',
     business_phone: '',
     contact_name: '',
@@ -50,7 +42,6 @@ const BusinessRegister: React.FC = () => {
   });
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
-  const selectedCountry = COUNTRIES.find(c => c.code === form.country);
 
   const canProceed = () => {
     if (step === 0) return form.business_name.trim().length >= 2 && form.business_type;
@@ -63,14 +54,14 @@ const BusinessRegister: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Please sign in first');
+        toast({ title: 'Auth Required', description: 'Please sign in first', variant: 'destructive' });
         navigate('/biz/auth');
         return;
       }
 
       const { data: existing } = await supabase.from('gateway_merchants').select('id').eq('user_id', user.id).maybeSingle();
       if (existing) {
-        toast.info('You already have a merchant account');
+        toast({ title: 'Info', description: 'You already have a merchant account' });
         navigate('/biz/home');
         return;
       }
@@ -88,23 +79,23 @@ const BusinessRegister: React.FC = () => {
           business_description: form.business_description,
           country: form.country,
           contact_name: form.contact_name,
-          default_currency: form.default_currency || selectedCountry?.currency || 'XAF',
+          default_currency: form.default_currency || 'XAF',
         },
       });
 
       if (error) throw error;
 
-      toast.success('Merchant account created! Welcome aboard 🎉');
+      toast({ title: 'Welcome!', description: 'Merchant account created! Welcome aboard 🎉' });
       setTimeout(() => navigate('/biz/home'), 500);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create merchant account');
+      toast({ title: 'Error', description: err.message || 'Failed to create merchant account', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
       <div className="relative overflow-hidden bg-primary px-6 pb-14 pt-12">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[hsl(0,0%,100%)]/[0.08]" />
@@ -172,14 +163,10 @@ const BusinessRegister: React.FC = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Country</Label>
-                  <Select value={form.country} onValueChange={v => {
-                    update('country', v);
-                    const c = COUNTRIES.find(c => c.code === v);
-                    if (c) update('default_currency', c.currency);
-                  }}>
+                  <Select value={form.country} onValueChange={v => update('country', v)}>
                     <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {COUNTRIES.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
+                      {supportedCountries.map(c => <SelectItem key={c.code} value={c.country}>{c.flag} {c.country}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -244,7 +231,7 @@ const BusinessRegister: React.FC = () => {
                   {[
                     ['Business', form.business_name],
                     ['Type', form.business_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())],
-                    ['Country', selectedCountry?.name || form.country],
+                    ['Country', form.country],
                     ['Currency', form.default_currency],
                     ['Email', form.business_email || '—'],
                     ['Phone', form.business_phone || '—'],

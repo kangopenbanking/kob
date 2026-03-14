@@ -12,20 +12,23 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2, ArrowLeft, Smartphone, Shield, User, Building2, Landmark, Code,
-  CheckCircle, Lock, Globe, ArrowRight, Mail, Calendar, Hash, FileText, Briefcase
+  CheckCircle, Lock, Globe, ArrowRight, Mail, Calendar, Hash, FileText, Briefcase, KeyRound
 } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
 import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
+import { enforceSingleSession } from '@/hooks/useSingleSession';
+import { sounds } from '@/lib/sounds';
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
 // ── Types ──────────────────────────────────────────────────────────
 type AccountType = 'personal' | 'merchant' | 'institution' | 'developer';
 type AuthMode = 'select' | 'login' | 'register';
 type RegisterStep = 'account-type' | 'identity' | 'details' | 'pin-setup' | 'success';
-type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete';
+type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthMethod = 'standard' | 'firebase';
 type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
 
@@ -112,6 +115,11 @@ const BUSINESS_TYPES = [
   { value: 'partnership', label: 'Partnership' },
   { value: 'cooperative', label: 'Cooperative' },
   { value: 'ngo', label: 'NGO / Non-Profit' },
+  { value: 'freelancer', label: 'Freelancer' },
+  { value: 'e_commerce', label: 'E-Commerce' },
+  { value: 'saas', label: 'SaaS' },
+  { value: 'marketplace', label: 'Marketplace' },
+  { value: 'other', label: 'Other' },
 ];
 
 const fadeSlide = {
@@ -130,10 +138,28 @@ const REGISTER_STEPS: { key: RegisterStep; label: string }[] = [
 ];
 
 // ════════════════════════════════════════════════════════════════════
+// ── Captcha auto-solver ──
+const solveCaptcha = (q: string): number => {
+  const match = q.match(/(\d+)\s*([+\-*])\s*(\d+)/);
+  if (!match) return 0;
+  const [, a, op, b] = match;
+  if (op === '+') return parseInt(a) + parseInt(b);
+  if (op === '-') return parseInt(a) - parseInt(b);
+  if (op === '*') return parseInt(a) * parseInt(b);
+  return 0;
+};
+
+// ════════════════════════════════════════════════════════════════════
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: authConfig } = useAuthPageConfig();
+  const { data: supportedCountries = [] } = useSupportedCountries();
+
+  // Use supportedCountries with fallback to static COUNTRY_CODES
+  const countryList = supportedCountries.length > 0
+    ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
+    : COUNTRY_CODES;
 
   // ── Top-level state ──
   const [authMode, setAuthMode] = useState<AuthMode>('select');
@@ -145,7 +171,7 @@ export default function Auth() {
 
   // Identity fields
   const [selectedCountry, setSelectedCountry] = useState('Cameroon');
-  const countryCode = COUNTRY_CODES.find(c => c.country === selectedCountry)?.code || '+237';
+  const countryCode = countryList.find(c => c.country === selectedCountry)?.code || '+237';
   const [phoneNumber, setPhoneNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -161,6 +187,9 @@ export default function Auth() {
   const [businessType, setBusinessType] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
   const [businessPhone, setBusinessPhone] = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [businessContactPerson, setBusinessContactPerson] = useState('');
+  const [businessCurrency, setBusinessCurrency] = useState('XAF');
   const [institutionName, setInstitutionName] = useState('');
   const [institutionType, setInstitutionType] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
@@ -179,7 +208,7 @@ export default function Auth() {
   const [pinLoginAttempts, setPinLoginAttempts] = useState(3);
   const [loginPhone, setLoginPhone] = useState('');
   const [loginCountry, setLoginCountry] = useState('Cameroon');
-  const loginCountryCode = COUNTRY_CODES.find(c => c.country === loginCountry)?.code || '+237';
+  const loginCountryCode = countryList.find(c => c.country === loginCountry)?.code || '+237';
   const [loginPinCode, setLoginPinCode] = useState('');
   const [loginOtpCode, setLoginOtpCode] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
@@ -188,6 +217,14 @@ export default function Auth() {
   const [captchaAnswer, setCaptchaAnswer] = useState('');
   const [captchaSessionId, setCaptchaSessionId] = useState('');
   const [firebaseOtpCode, setFirebaseOtpCode] = useState('');
+
+  // Forgot password / reset PIN state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [resetPinLoading, setResetPinLoading] = useState(false);
 
   const isCameroonLogin = loginCountryCode === '+237';
 
@@ -284,19 +321,34 @@ export default function Auth() {
     try { pinSchema.parse(loginPinCode); } catch { toast({ title: 'Invalid PIN', description: 'PIN must be 6 digits', variant: 'destructive' }); return; }
     setLoginLoading(true);
     try {
+      // Auto-generate and solve captcha for PIN login (matching mobile behavior)
+      let captchaSid = captchaSessionId;
+      if (!captchaSid) {
+        const { data: captchaData, error: captchaError } = await supabase.functions.invoke('captcha-generate', { body: {} });
+        if (captchaError) throw captchaError;
+        const answer = solveCaptcha(captchaData.question);
+        await supabase.functions.invoke('captcha-verify', { body: { session_id: captchaData.session_id, answer } });
+        captchaSid = captchaData.session_id;
+      }
+
       const fullPhone = `${loginCountryCode}${loginPhone}`;
       const { data, error } = await supabase.functions.invoke('phone-auth-pin-login', {
-        body: { phone_number: fullPhone, pin_code: loginPinCode, captcha_session_id: captchaSessionId },
+        body: { phone_number: fullPhone, pin_code: loginPinCode, captcha_session_id: captchaSid },
       });
       if (error) {
         try { const p = JSON.parse(typeof error === 'object' && error.message ? error.message : String(error)); if (p.locked) throw new Error(p.error); if (p.remaining_attempts !== undefined) setPinLoginAttempts(p.remaining_attempts); throw new Error(p.error || 'Invalid PIN'); } catch (pe) { if (pe instanceof SyntaxError) throw new Error(String(error)); throw pe; }
       }
-      if (!data?.success) { if (data?.locked) throw new Error(data.error); setPinLoginAttempts(data?.remaining_attempts || 0); throw new Error(data?.error || 'Invalid PIN'); }
-      if (data.session) await supabase.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+      if (!data?.success) { if (data?.locked) throw new Error(data.error); sounds.error(); setPinLoginAttempts(data?.remaining_attempts || 0); throw new Error(data?.error || 'Invalid PIN'); }
+      if (data.session) {
+        await supabase.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+        await enforceSingleSession(data.session.access_token);
+      }
+      sounds.success();
       toast({ title: 'Welcome back!', description: 'Signed in successfully' });
       setLoginStep('complete');
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (err: any) {
+      sounds.error();
       toast({ title: 'Login Failed', description: err.message || 'Invalid PIN', variant: 'destructive' });
     } finally { setLoginLoading(false); }
   };
@@ -312,9 +364,20 @@ export default function Auth() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Failed');
       await supabase.auth.refreshSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await enforceSingleSession(session.access_token);
+      // Check if user needs PIN setup
+      if (session) {
+        const { data: profile } = await supabase.from('profiles').select('pin_code_hash').eq('id', session.user.id).maybeSingle();
+        if (!profile?.pin_code_hash) {
+          setLoginStep('setup-pin');
+          return;
+        }
+      }
+      sounds.success();
       setLoginStep('complete');
       setTimeout(() => navigate('/dashboard'), 1000);
-    } catch (err: any) { toast({ title: 'Failed', description: err.message, variant: 'destructive' }); }
+    } catch (err: any) { sounds.error(); toast({ title: 'Failed', description: err.message, variant: 'destructive' }); }
     finally { setLoginLoading(false); }
   };
 
@@ -326,7 +389,67 @@ export default function Auth() {
   const handleFirebaseVerifyOTP = async () => {
     if (firebaseOtpCode.length !== 6) return;
     const ok = await firebasePhone.verifyOTP(firebaseOtpCode);
-    if (ok) { setLoginStep('complete'); setTimeout(() => navigate('/dashboard'), 1000); }
+    if (ok) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await enforceSingleSession(session.access_token);
+      // Check if user needs PIN setup
+      if (session) {
+        const { data: profile } = await supabase.from('profiles').select('pin_code_hash').eq('id', session.user.id).maybeSingle();
+        if (!profile?.pin_code_hash) {
+          setLoginStep('setup-pin');
+          return;
+        }
+      }
+      sounds.success();
+      setLoginStep('complete');
+      setTimeout(() => navigate('/dashboard'), 1000);
+    }
+  };
+
+  // ── Forgot password handler ──
+  const handleForgotPassword = async () => {
+    if (!forgotEmail) { toast({ title: 'Required', description: 'Please enter your email', variant: 'destructive' }); return; }
+    setForgotLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+      if (error) throw error;
+      setForgotSent(true);
+      toast({ title: 'Email sent', description: 'Check your inbox for the reset link' });
+    } catch (err: any) {
+      toast({ title: 'Failed', description: err.message || 'Failed to send reset email', variant: 'destructive' });
+    } finally { setForgotLoading(false); }
+  };
+
+  // ── Reset PIN handler ──
+  const handleResetPin = async () => {
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast({ title: 'Invalid', description: 'PIN must be 6 digits', variant: 'destructive' }); return; }
+    if (newPin !== confirmNewPin) { toast({ title: 'Mismatch', description: 'PINs do not match', variant: 'destructive' }); return; }
+    setResetPinLoading(true);
+    try {
+      const fullPhone = `${loginCountryCode}${loginPhone}`;
+      const { data, error } = await supabase.functions.invoke('pin-code-reset', {
+        body: { phone_number: fullPhone, new_pin_code: newPin },
+      });
+      if (error) throw error;
+      if (data?.success) {
+        sounds.success();
+        toast({ title: 'PIN Reset', description: 'PIN reset successfully! Please sign in.' });
+        setNewPin(''); setConfirmNewPin(''); setLoginStep('captcha'); generateCaptcha();
+      } else { throw new Error(data?.error || 'Failed to reset PIN'); }
+    } catch (err: any) {
+      sounds.error();
+      toast({ title: 'Failed', description: err.message || 'Failed to reset PIN', variant: 'destructive' });
+    } finally { setResetPinLoading(false); }
+  };
+
+  // ── Login PIN setup complete handler ──
+  const handleLoginPinSetupComplete = () => {
+    sounds.success();
+    toast({ title: 'PIN Set', description: 'Your security PIN has been set successfully' });
+    setLoginStep('complete');
+    setTimeout(() => navigate('/dashboard'), 1000);
   };
 
   // ── Registration handlers ──
@@ -385,6 +508,9 @@ export default function Auth() {
       if (selectedAccountType === 'merchant') {
         body.business_name = businessName;
         body.org_name = businessName;
+        body.business_description = businessDescription || undefined;
+        body.contact_person = businessContactPerson || undefined;
+        body.default_currency = businessCurrency || undefined;
       }
       if (selectedAccountType === 'institution') {
         body.institution_name = institutionName;
@@ -397,9 +523,11 @@ export default function Auth() {
       const { data, error } = await supabase.functions.invoke('identity-register', { body });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
+      sounds.success();
       toast({ title: 'Account created', description: 'Now set your security PIN' });
       setRegisterStep('pin-setup');
     } catch (err: any) {
+      sounds.error();
       toast({ title: 'Registration failed', description: err.message || 'Please try again', variant: 'destructive' });
     } finally { setRegLoading(false); }
   };
@@ -426,6 +554,8 @@ export default function Auth() {
     else if (loginStep === 'pin') { setLoginStep('phone'); setLoginPinCode(''); setUsesPINLogin(false); }
     else if (loginStep === 'phone') { setLoginStep('captcha'); generateCaptcha(); }
     else if (loginStep === 'firebase-otp') { firebasePhone.reset(); setFirebaseOtpCode(''); setLoginStep('captcha'); generateCaptcha(); }
+    else if (loginStep === 'forgot-password') { setLoginStep('phone'); setForgotSent(false); }
+    else if (loginStep === 'reset-pin') { setLoginStep('phone'); setNewPin(''); setConfirmNewPin(''); }
   };
 
   // ── Computed ──
@@ -585,7 +715,7 @@ export default function Auth() {
                             <div className="flex gap-2">
                               <Select value={loginCountry} onValueChange={setLoginCountry}>
                                 <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                                <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                                <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                               </Select>
                               <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                             </div>
@@ -627,7 +757,7 @@ export default function Auth() {
                         <div className="flex gap-2">
                           <Select value={loginCountry} onValueChange={setLoginCountry}>
                             <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                            <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                            <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                           </Select>
                           <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                         </div>
@@ -635,7 +765,10 @@ export default function Auth() {
                       <Button onClick={handleLoginPhoneSubmit} className="w-full h-11" disabled={loginLoading}>
                         {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Continue
                       </Button>
-                      <Button variant="link" className="w-full text-sm" onClick={() => setShowForgotPassword(true)}>Forgot PIN?</Button>
+                      <div className="flex gap-2">
+                        <Button variant="link" className="flex-1 text-sm" onClick={() => setLoginStep('forgot-password')}>Forgot Password?</Button>
+                        <Button variant="link" className="flex-1 text-sm" onClick={() => setLoginStep('reset-pin')}>Reset PIN?</Button>
+                      </div>
                     </motion.div>
                   )}
 
@@ -679,6 +812,82 @@ export default function Auth() {
                         {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Verify
                       </Button>
                       <Button variant="ghost" className="w-full text-sm" onClick={() => { setLoginOtpCode(''); handleLoginSendOTP(); }} disabled={loginLoading}>Resend Code</Button>
+                    </motion.div>
+                  )}
+
+                  {/* FORGOT PASSWORD */}
+                  {loginStep === 'forgot-password' && (
+                    <motion.div key="l-forgot" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Mail className="h-5 w-5 text-primary" /></div>
+                        <h3 className="text-lg font-semibold text-foreground">Reset Password</h3>
+                        <p className="text-sm text-muted-foreground">We'll send a reset link to your email</p>
+                      </div>
+                      {forgotSent ? (
+                        <div className="text-center space-y-3">
+                          <p className="text-sm font-medium text-foreground">Reset link sent!</p>
+                          <p className="text-sm font-bold text-primary">{forgotEmail}</p>
+                          <p className="text-xs text-muted-foreground">Check your inbox for the password reset link.</p>
+                          <Button onClick={() => { setLoginStep('phone'); setForgotSent(false); }} variant="outline" className="w-full h-11">
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Sign In
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Email Address</Label>
+                            <Input type="email" placeholder="you@example.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} className="h-11" />
+                          </div>
+                          <Button onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail} className="w-full h-11">
+                            {forgotLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Reset Link
+                          </Button>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* RESET PIN */}
+                  {loginStep === 'reset-pin' && (
+                    <motion.div key="l-reset-pin" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><KeyRound className="h-5 w-5 text-primary" /></div>
+                        <h3 className="text-lg font-semibold text-foreground">Reset Your PIN</h3>
+                        <p className="text-sm text-muted-foreground">Set a new 6-digit PIN for {loginCountryCode}{loginPhone}</p>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-sm">New PIN</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                              <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm">Confirm New PIN</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={confirmNewPin} onChange={setConfirmNewPin}>
+                              <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                        </div>
+                      </div>
+                      <Button onClick={handleResetPin} disabled={resetPinLoading || newPin.length !== 6 || confirmNewPin.length !== 6} className="w-full h-11">
+                        {resetPinLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Reset PIN
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {/* SETUP PIN (after OTP login for users without PIN) */}
+                  {loginStep === 'setup-pin' && (
+                    <motion.div key="l-setup-pin" {...fadeSlide}>
+                      <MandatoryPinSetupStep
+                        onComplete={handleLoginPinSetupComplete}
+                        title="Set Your Security PIN"
+                        subtitle="Required for secure login and transactions"
+                      />
                     </motion.div>
                   )}
 
@@ -825,7 +1034,7 @@ export default function Auth() {
                             <div className="flex gap-2">
                               <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                                 <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                                <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                                <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                               </Select>
                               <Input type="tel" placeholder="6 XX XX XX XX" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} className="h-11" />
                             </div>
@@ -904,7 +1113,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 space-y-1.5">
@@ -929,6 +1138,14 @@ export default function Auth() {
                             </Select>
                           </div>
                           <div className="space-y-2">
+                            <Label>Description <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input placeholder="Describe your business" value={businessDescription} onChange={e => setBusinessDescription(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input placeholder="John Doe" value={businessContactPerson} onChange={e => setBusinessContactPerson(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
                             <Label>Business Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
                             <Input type="email" placeholder="info@acme.com" value={businessEmail} onChange={e => setBusinessEmail(e.target.value)} className="h-11" />
                           </div>
@@ -940,7 +1157,19 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Default Currency</Label>
+                            <Select value={businessCurrency} onValueChange={setBusinessCurrency}>
+                              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="XAF">XAF (CFA Franc BEAC)</SelectItem>
+                                <SelectItem value="XOF">XOF (CFA Franc BCEAO)</SelectItem>
+                                <SelectItem value="NGN">NGN (Nigerian Naira)</SelectItem>
+                                <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                              </SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 space-y-1.5">
@@ -972,7 +1201,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-1.5">
@@ -997,7 +1226,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-violet-50 border border-violet-200 p-3 space-y-1.5">

@@ -10,7 +10,7 @@ import { useTenant } from './TenantProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { enforceSingleSession } from '@/hooks/useSingleSession';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { sounds } from '@/lib/sounds';
 import { API_CONFIG } from '@/config/api';
 import kangLogo from '@/assets/kang-logo.png';
@@ -27,6 +27,7 @@ interface MobileAuthFormProps {
 
 export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, onApplyAccount }) => {
   const { data: supportedCountries = [] } = useSupportedCountries('banking');
+  const { toast } = useToast();
   const tenant = useTenant();
   const [step, setStep] = useState<AuthStep>('phone');
   const [mode, setMode] = useState<'login' | 'signup'>('login');
@@ -80,7 +81,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
 
   const handleContinue = async () => {
     if (!phoneNumber || phoneNumber.length < 6) {
-      toast.error('Please enter a valid phone number');
+      toast({ title: 'Invalid', description: 'Please enter a valid phone number', variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -114,7 +115,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
 
   const handlePhoneContinue = async () => {
     if (!phoneNumber || phoneNumber.length < 6) {
-      toast.error('Please enter a valid phone number');
+      toast({ title: 'Invalid', description: 'Please enter a valid phone number', variant: 'destructive' });
       return;
     }
     setLoading(true);
@@ -123,7 +124,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         body: { phone_number: fullPhone },
       });
       if (error) {
-        toast.error('Could not verify account. Please try again.');
+        toast({ title: 'Error', description: 'Could not verify account. Please try again.', variant: 'destructive' });
       } else if (data?.has_pin) {
         setUserHasPin(true);
         setStep('pin');
@@ -134,7 +135,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         setStep('otp');
       }
     } catch {
-      toast.error('Connection error. Please try again.');
+      toast({ title: 'Error', description: 'Connection error. Please try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -195,7 +196,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         const { data: { session } } = await supabase.auth.getSession();
         if (session) await enforceSingleSession(session.access_token);
         sounds.success();
-        toast.success('Login successful!');
+        toast({ title: 'Welcome back!', description: 'Login successful!' });
         onAuthSuccess();
       } else {
         sounds.error();
@@ -214,7 +215,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
 
   const handleVerifyOTP = async () => {
     if (otpCode.length !== 6) {
-      toast.error('Please enter the 6-digit code');
+      toast({ title: 'Invalid', description: 'Please enter the 6-digit code', variant: 'destructive' });
       return;
     }
     const success = await firebasePhone.verifyOTP(otpCode);
@@ -261,14 +262,14 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       }
     } catch (err: any) {
       sounds.error();
-      toast.error(err.message || 'Authentication failed');
+      toast({ title: 'Error', description: err.message || 'Authentication failed', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
 
   const handleForgotPassword = async () => {
-    if (!forgotEmail) { toast.error('Please enter your email'); return; }
+    if (!forgotEmail) { toast({ title: 'Required', description: 'Please enter your email', variant: 'destructive' }); return; }
     setForgotLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(forgotEmail, {
@@ -276,17 +277,17 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       });
       if (error) throw error;
       setForgotSent(true);
-      toast.success('Password reset email sent!');
+      toast({ title: 'Email sent', description: 'Password reset email sent!' });
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send reset email');
+      toast({ title: 'Error', description: err.message || 'Failed to send reset email', variant: 'destructive' });
     } finally {
       setForgotLoading(false);
     }
   };
 
   const handleResetPin = async () => {
-    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast.error('Please enter a 6-digit PIN'); return; }
-    if (newPin !== confirmNewPin) { toast.error('PINs do not match'); return; }
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast({ title: 'Invalid', description: 'Please enter a 6-digit PIN', variant: 'destructive' }); return; }
+    if (newPin !== confirmNewPin) { toast({ title: 'Mismatch', description: 'PINs do not match', variant: 'destructive' }); return; }
     setResetPinLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('pin-code-reset', {
@@ -295,12 +296,12 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       if (error) throw error;
       if (data?.success) {
         sounds.success();
-        toast.success('PIN reset successfully! Please sign in.');
+        toast({ title: 'PIN Reset', description: 'PIN reset successfully! Please sign in.' });
         setNewPin(''); setConfirmNewPin(''); setStep('phone');
       } else { throw new Error(data?.error || 'Failed to reset PIN'); }
     } catch (err: any) {
       sounds.error();
-      toast.error(err.message || 'Failed to reset PIN');
+      toast({ title: 'Error', description: err.message || 'Failed to reset PIN', variant: 'destructive' });
     } finally {
       setResetPinLoading(false);
     }
@@ -316,7 +317,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
   const logoSrc = tenant.logoUrl || kangLogo;
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <div id="recaptcha-container" />
 
       {/* Top decorative area */}
