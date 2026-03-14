@@ -21,10 +21,18 @@ Deno.serve(async (req) => {
     const { data: { user }, error: authErr } = await supabase.auth.getUser(token);
     if (authErr || !user) throw new Error('Unauthorized');
 
+    // Fetch dynamic config from system_config
+    const { data: configRows } = await supabase
+      .from('system_config')
+      .select('key, value')
+      .in('key', ['referral_bonus_amount', 'cashback_rate', 'cashback_min_transfer']);
+
+    const cfg: Record<string, string> = {};
+    (configRows || []).forEach((r: any) => { cfg[r.key] = r.value; });
+
     const { action, transaction_id, referral_code } = await req.json();
 
     if (action === 'cashback' && transaction_id) {
-      // Check if cashback already credited for this transaction
       const { data: existing } = await supabase
         .from('customer_rewards')
         .select('id')
@@ -34,7 +42,6 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (existing) throw new Error('Cashback already credited for this transaction');
 
-      // Get the transaction
       const { data: tx } = await supabase
         .from('transactions')
         .select('amount, currency, transaction_type, status')
@@ -46,9 +53,8 @@ Deno.serve(async (req) => {
       if (tx.transaction_type !== 'transfer') throw new Error('Only transfers qualify for cashback');
 
       const amount = Math.abs(tx.amount || 0);
-      // Default cashback: 1% on transfers >= 10,000 XAF
-      const minTransfer = 10000;
-      const cashbackRate = 1;
+      const minTransfer = Number(cfg.cashback_min_transfer) || 10000;
+      const cashbackRate = Number(cfg.cashback_rate) || 1;
 
       if (amount < minTransfer) throw new Error(`Transfer must be at least ${minTransfer} ${tx.currency}`);
 
@@ -95,7 +101,7 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (existingRef) throw new Error('You have already been referred');
 
-      const bonusAmount = 500;
+      const bonusAmount = Number(cfg.referral_bonus_amount) || 500;
 
       // Create referral record
       await supabase.from('customer_referrals').insert({

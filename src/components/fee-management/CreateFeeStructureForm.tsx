@@ -47,6 +47,11 @@ const TRANSACTION_TYPES = [
   { value: "mobile_recharge", label: "Mobile Recharge", icon: Radio, category: "Mobile" },
   { value: "invoice_create", label: "Invoice Create", icon: FileText, category: "Core" },
   { value: "credit_report_purchase", label: "Credit Report Purchase", icon: FileText, category: "Services" },
+  { value: "overdraft_fee", label: "Overdraft Fee", icon: ArrowDownToLine, category: "Lending" },
+  { value: "loan_processing_fee", label: "Loan Processing Fee", icon: ArrowUpFromLine, category: "Lending" },
+  { value: "atm_withdrawal", label: "ATM Withdrawal", icon: Banknote, category: "Banking" },
+  { value: "standing_order", label: "Standing Order", icon: RefreshCw, category: "Banking" },
+  { value: "dormancy_fee", label: "Dormancy Fee", icon: Lock, category: "Banking" },
 ];
 
 const FEE_MODELS = [

@@ -3,7 +3,7 @@
   "description": "COBAC-compliant Open Banking and Payment Gateway API for Cameroon and the CEMAC region",
   "url": "https://kangopenbanking.com",
   "created": "2024-01-01",
-  "modified": "2026-03-13",
+  "modified": "2026-03-14",
   "specificationVersion": "0.18",
   "apis": [
     {
@@ -12,7 +12,7 @@
       "image": "https://kangopenbanking.com/kob-logo.png",
       "baseURL": "https://api.kangopenbanking.com/v1",
       "humanURL": "https://kangopenbanking.com/developer",
-      "version": "3.8.0",
+      "version": "3.9.0",
       "tags": [
         "banking",
         "payments",

@@ -137,6 +137,12 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Rewards",
+    items: [
+      { title: "Rewards & Referrals", path: "/admin/rewards-management", icon: DollarSign },
+    ],
+  },
+  {
     title: "Configuration",
     items: [
       { title: "System Config", path: "/admin/system-config", icon: Settings },

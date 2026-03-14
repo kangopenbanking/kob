@@ -32,6 +32,11 @@ const CHANNEL_TO_TX_TYPE: Record<string, string> = {
   gateway_charge: "gateway_charge",
   gateway_payout: "gateway_payout",
   credit_report_purchase: "credit_report_purchase",
+  overdraft_fee: "overdraft_fee",
+  loan_processing_fee: "loan_processing_fee",
+  atm_withdrawal: "atm_withdrawal",
+  standing_order: "standing_order",
+  dormancy_fee: "dormancy_fee",
 };
 
 // Last-resort fallback rates — only used when fee_structures DB has no matching row.
@@ -50,6 +55,11 @@ const FALLBACK_RATES: Record<string, { rate: number; fixed: number }> = {
   gateway_charge: { rate: 0.03, fixed: 50 },
   gateway_payout: { rate: 0.02, fixed: 75 },
   credit_report_purchase: { rate: 0, fixed: 2500 },
+  overdraft_fee: { rate: 0.05, fixed: 200 },
+  loan_processing_fee: { rate: 0.02, fixed: 500 },
+  atm_withdrawal: { rate: 0, fixed: 150 },
+  standing_order: { rate: 0, fixed: 100 },
+  dormancy_fee: { rate: 0, fixed: 500 },
 };
 
 interface UseFeeEstimateOptions {
