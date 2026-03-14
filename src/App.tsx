@@ -261,6 +261,7 @@ const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManage
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
 const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
+const InstitutionManagement = lazy(() => import("./pages/admin/InstitutionManagement"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
