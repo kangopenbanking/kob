@@ -231,7 +231,7 @@ const BusinessRegister: React.FC = () => {
                   {[
                     ['Business', form.business_name],
                     ['Type', form.business_type.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())],
-                    ['Country', selectedCountry?.name || form.country],
+                    ['Country', form.country],
                     ['Currency', form.default_currency],
                     ['Email', form.business_email || '—'],
                     ['Phone', form.business_phone || '—'],
