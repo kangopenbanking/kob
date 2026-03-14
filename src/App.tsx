@@ -259,6 +259,7 @@ const InvoiceManagement = lazy(() => import("./pages/admin/InvoiceManagement"));
 const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketplaceModeration"));
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
+const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
 
 // Institution (FI Portal)
 const FIPortal = lazy(() => import("./pages/FIPortal"));
