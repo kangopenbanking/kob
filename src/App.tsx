@@ -693,6 +693,7 @@ function App() {
               {/* Phase 3: Advanced Commerce */}
               <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="rewards-management" element={<RewardsManagement />} />
+              <Route path="onboarding-management" element={<OnboardingManagement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
