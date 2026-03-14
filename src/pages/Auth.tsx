@@ -523,11 +523,11 @@ export default function Auth() {
           {authMode === 'login' && (
             <AnimatePresence mode="wait">
               {/* Login Progress */}
-              {loginStep !== 'complete' && (
+              {!(['complete'] as string[]).includes(loginStep) && (
                 <div className="flex items-center gap-1">
                   {['Security', 'Verify', 'Complete'].map((label, i) => {
                     const active = i === 0 ? loginStep === 'captcha' : i === 1 ? ['phone', 'firebase-otp', 'pin', 'otp'].includes(loginStep) : false;
-                    const done = i === 0 ? loginStep !== 'captcha' : i === 1 ? loginStep === 'complete' : false;
+                    const done = i === 0 ? loginStep !== 'captcha' : i === 1 ? (['complete'] as string[]).includes(loginStep) : false;
                     return <div key={label} className="flex-1"><div className={`h-1.5 rounded-full transition-colors ${done ? 'bg-primary' : active ? 'bg-primary/60' : 'bg-muted'}`} /></div>;
                   })}
                 </div>
