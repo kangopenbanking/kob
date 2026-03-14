@@ -303,6 +303,7 @@ const CustomerAuth: React.FC = () => {
       case 'email-sent': return 'Almost there!';
       case 'forgot-password': return 'Enter your email to receive a reset link';
       case 'reset-pin': return 'Set a new 6-digit PIN';
+      case 'setup-pin': return 'Required for secure access';
     }
   };
 
