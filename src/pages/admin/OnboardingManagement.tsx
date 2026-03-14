@@ -192,6 +192,44 @@ export default function OnboardingManagement() {
           </Table>
         </Card>
       )}
+
+      {/* Review Dialog - Controlled */}
+      <Dialog open={reviewDialogOpen} onOpenChange={(open) => {
+        setReviewDialogOpen(open);
+        if (!open) { setSelectedApp(null); setReviewNotes(''); }
+      }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Review Application</DialogTitle>
+            <DialogDescription>
+              {selectedApp?.entity_type?.replace('_', ' ')} application — ID: {selectedApp?.id?.slice(0, 8)}...
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-2 text-sm">
+              <span className="text-muted-foreground">Entity Type:</span>
+              <span className="capitalize">{selectedApp?.entity_type?.replace('_', ' ')}</span>
+              <span className="text-muted-foreground">Submitted:</span>
+              <span>{selectedApp?.submitted_at ? new Date(selectedApp.submitted_at).toLocaleString() : 'N/A'}</span>
+            </div>
+            <Textarea
+              placeholder="Review notes (optional)"
+              value={reviewNotes}
+              onChange={(e) => setReviewNotes(e.target.value)}
+            />
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="destructive" onClick={() => handleReview('rejected')} disabled={reviewing}>
+              {reviewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
+              Reject
+            </Button>
+            <Button onClick={() => handleReview('approved')} disabled={reviewing}>
+              {reviewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
+              Approve
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

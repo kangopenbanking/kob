@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+// @ts-ignore - screen is re-exported from @testing-library/dom
 import { render, screen } from '@testing-library/react';
 
 const mockNavigate = vi.fn();

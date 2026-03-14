@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest';
+// @ts-ignore - screen is re-exported from @testing-library/dom
 import { render, screen } from '@testing-library/react';
 
 describe('OnboardingGuide', () => {
