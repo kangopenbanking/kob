@@ -20,6 +20,10 @@ export default function MerchantManagement() {
   const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
   const [kybDecision, setKybDecision] = useState<"approved" | "rejected" | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [actionReason, setActionReason] = useState("");
+  const [actionTarget, setActionTarget] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: merchants, isLoading } = useQuery({
