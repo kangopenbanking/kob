@@ -12,13 +12,16 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import {
   Loader2, ArrowLeft, Smartphone, Shield, User, Building2, Landmark, Code,
-  CheckCircle, Lock, Globe, ArrowRight, Mail, Calendar, Hash, FileText, Briefcase
+  CheckCircle, Lock, Globe, ArrowRight, Mail, Calendar, Hash, FileText, Briefcase, KeyRound
 } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
 import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
+import { enforceSingleSession } from '@/hooks/useSingleSession';
+import { sounds } from '@/lib/sounds';
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
 // ── Types ──────────────────────────────────────────────────────────
