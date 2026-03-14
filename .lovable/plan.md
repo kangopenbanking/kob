@@ -1,192 +1,243 @@
 
 
-# KOB v1: Registration + Login + Onboarding Modernization Plan
-
-## Phase 0 — Current State Audit Summary
-
-### What Already Exists (Robust)
-
-**Authentication:**
-- Phone OTP (SMS/WhatsApp/both) via `phone-auth-send-otp`, `phone-auth-verify-otp`
-- PIN-based login via `phone-auth-pin-login`, `phone-auth-check-pin`
-- Firebase Phone Auth fallback for Cameroon (+237)
-- Captcha challenge system (`captcha-verify`)
-- Brute-force lockout (3 attempts / 30-min)
-- Session management with single-active-session enforcement
-- 5-minute inactivity timeout
-
-**OAuth 2.0 / OIDC:**
-- Full OAuth token endpoint with mTLS, PKCE, client_credentials, authorization_code, refresh_token grants
-- DCR (Dynamic Client Registration)
-- PAR (Pushed Authorization Requests)
-- Token introspection, revocation
-- JWKS endpoint, OIDC discovery
-- Hashed token storage (SHA-256)
-
-**Registration Flows (4 types):**
-- **Personal**: Auth.tsx (phone/email tabs with captcha + OTP + PIN)
-- **Institution**: Register.tsx → `institution-register` edge function → PendingApproval page
-- **Merchant**: MerchantRegister.tsx → direct `gateway_merchants` insert → MerchantDashboard
-- **Developer/TPP**: TPPRegistration.tsx → `dcr-register` edge function + `developer-register-app`
-
-**KYC/KYB:**
-- Customer KYC: `kyc-submit` + admin review via `admin-kyc-review`
-- Business KYB: `business-kyc-submit` + `admin-kyb-verify`
-- Private document storage with signed URLs
-- Three-tier verification (100K/5M XAF/day)
-
-**RBAC:**
-- 8 roles via `app_role` enum: admin, personal, institution, merchant, tpp, staff, moderator, developer
-- `has_role()` + `has_permission()` SECURITY DEFINER functions
-- RoleGuard component for frontend route protection
-- Staff assignments with portal permissions
-
-**Admin Portal:**
-- Institution verification, KYC review, KYB review, TPP registrations
-- Merchant management, user management, access roles
-- Audit logs, security monitoring
-
-**Audit Logging:**
-- `audit_logs` table with `log_audit_event()` function
-- `security_audit_logs` with risk scoring
-- `suspicious_activities` tracking
-- Consent event logging
-
-### Gaps Identified
-
-1. **No MFA / Step-up authentication** — No TOTP, no MFA challenge flow for sensitive operations
-2. **No unified `/v1/identity/*` namespace** — Auth flows are scattered across separate edge functions
-3. **No `developer_orgs` table** — Developers register apps but have no org-level entity
-4. **No unified onboarding status endpoint** — Each entity type has different status tracking
-5. **No onboarding_applications table** — KYC/KYB exist but no unified application tracker
-6. **No membership/RBAC mapping table** — Roles are in `user_roles` but not entity-scoped
-7. **No rotating refresh tokens with reuse detection** — OAuth refresh tokens exist but no rotation enforcement
-8. **No session/device tracking table** — Single-session enforced via Realtime, no persistent device registry
-9. **Merchant registration bypasses approval** — Direct insert, no KYB gating before production keys
-10. **No developer portal "Getting Started by account type"** — Only TPP-focused guide exists
+# KOB Payment Infrastructure — Deep Technical & Product Capability Audit
 
 ---
 
-## Implementation Plan (Non-Breaking, Additive)
+## CLASSIFICATION
 
-### Phase 1: Database Migrations (6 new tables, 2 extensions)
-
-**New tables:**
-1. `developer_orgs` — id, name, user_id, status (sandbox_active|prod_requested|prod_approved|suspended), created_at, updated_at
-2. `mfa_factors` — id, user_id, type (sms_otp|totp|email_otp), secret_encrypted, phone_snapshot, enabled, verified_at, created_at
-3. `mfa_challenges` — id, user_id, factor_id, challenge_code_hash, expires_at, verified_at, created_at
-4. `onboarding_applications` — id, entity_type (personal|merchant|institution|developer_org), entity_id, user_id, status (draft|submitted|under_review|approved|rejected), submitted_at, reviewed_at, reviewer_user_id, notes, created_at, updated_at
-5. `user_sessions` — id, user_id, device_fingerprint, ip_address, user_agent, last_seen_at, created_at, revoked_at
-6. `identity_memberships` — id, user_id, entity_type, entity_id, role, status (active|suspended), created_at
-
-**Extensions to existing tables:**
-- `gateway_merchants`: Add `onboarding_status` column (default 'active' for existing rows — backwards compatible)
-- Insert default `system_config` rows for MFA policies
-
-**Seed data:**
-- Demo developer_org, onboarding_applications in various states
-
-### Phase 2: Edge Functions (New Identity Layer)
-
-All new endpoints under additive namespace. Existing `/v1/auth/*` and `/v1/oauth/*` remain untouched.
-
-**identity-register** — `POST /v1/identity/register`
-- Accepts `account_type` (personal|merchant|institution|developer)
-- Creates user entity + `onboarding_applications` record
-- Returns `entity_id`, `next_steps[]`, provisional token (for sandbox)
-- Delegates to existing `institution-register`, `gateway_merchants` insert, or new `developer_orgs` insert internally
-
-**identity-login** — `POST /v1/identity/login`
-- Supports `phone_otp`, `email_password`, `pin` methods
-- Wraps existing phone-auth functions
-- Returns `access_token`, `refresh_token`, `mfa_required` flag
-- If MFA required, returns `challenge_id` for step-up
-
-**identity-mfa** — `POST /v1/identity/mfa/*`
-- Actions: `enable-totp`, `challenge`, `verify`, `disable`
-- TOTP via otpauth:// URI generation
-- SMS OTP challenge for step-up
-- Required for: key rotation, payout config changes, role changes
-
-**identity-session** — Session management
-- `POST /v1/identity/token/refresh` (rotating refresh with reuse detection)
-- `POST /v1/identity/logout`
-- `GET /v1/identity/me` (current user + roles + entity memberships)
-
-**identity-onboarding** — `POST /v1/onboarding/{type}/start|submit|status|documents`
-- Unified onboarding lifecycle
-- Wraps existing KYC/KYB submit functions
-- Adds `onboarding_applications` tracking
-
-**admin-onboarding-review** — `POST /v1/admin/onboarding/{type}/{id}/approve|reject`
-- Wraps existing `admin-kyc-review`, `admin-kyb-verify`, `admin-institution-approve`
-- Updates `onboarding_applications` status
-- Audit logged
-
-### Phase 3: Frontend Changes
-
-**New pages:**
-1. `src/pages/developer/GettingStartedByType.tsx` — Account type selector (Personal / Merchant / Institution / Developer) with guided flows per type
-2. `src/pages/admin/OnboardingManagement.tsx` — Unified onboarding application queue across all entity types
-3. `src/pages/SecuritySettings.tsx` — Enhance existing with MFA enrollment section (TOTP QR code, SMS backup)
-
-**Enhanced pages:**
-- `Auth.tsx` — Add account type selector on signup (personal is default, link to merchant/institution/developer registration)
-- `MerchantRegister.tsx` — After registration, create `onboarding_applications` record, route to status page
-- `Dashboard.tsx` — Show onboarding progress banner if application is pending
-
-**Admin navigation:**
-- Add "Onboarding Queue" under "Registration & Verification" section
-
-### Phase 4: Documentation & API Updates
-
-**New docs pages:**
-- `src/pages/developer/IdentityGuide.tsx` — Security & MFA guide
-- `src/pages/developer/OnboardingGuide.tsx` — KYB/KYC lifecycle by account type
-- `src/pages/developer/RolesPermissions.tsx` — RBAC reference
-
-**OpenAPI updates** (`public/openapi.json` + `public-api-spec`):
-- Add Identity tag with 8 new endpoints
-- Add Onboarding tag with 6 new endpoints
-- Add Admin-Onboarding tag with 2 endpoints
-- Add MFA schemas
-
-**Postman collection** (`postman-collection/index.ts`):
-- Add Identity folder (register/login/mfa/refresh/me/logout)
-- Add Onboarding folder (start/submit/status/documents per type)
-- Add Admin Onboarding folder
-
-**Changelog:**
-- v4.0.0: Identity API layer, MFA, unified onboarding, developer orgs, RBAC memberships
-
-### Phase 5: Audit Documentation
-
-Create under `docs/identity/`:
-- `audit.md` — Current state findings
-- `route-inventory.md` — All auth/identity routes mapped
-- `gap-report.md` — Gaps addressed
-- `non-breaking-plan.md` — Compatibility guarantees
-- `security-posture.md` — Rate limits, lockouts, token rotation, audit log coverage
+**KOB is Category B: Wallet support with programmatic outbound payouts, but NO instant payout rails (no Visa Direct, Mastercard Send, or real-time bank push).**
 
 ---
 
-## What This Does NOT Change (Zero Breaking)
+## SECTION A — WALLET / STORED VALUE
 
-- All existing `/v1/auth/*` endpoints remain identical
-- All existing `/v1/oauth/*` endpoints remain identical
-- Existing `user_roles`, `institutions`, `gateway_merchants` tables unchanged structurally
-- Existing `RoleGuard`, `DashboardRouter`, auth flows all preserved
-- Customer/Banking/Business PWA auth flows untouched
-- All 260+ existing edge functions unchanged
+### Current State: IMPLEMENTED (85%)
 
-## Files Summary
+KOB has a functional custodial wallet system:
 
-| Action | Count | Examples |
-|--------|-------|---------|
-| New edge functions | 5 | identity-register, identity-login, identity-mfa, identity-session, identity-onboarding |
-| New pages | 4 | GettingStartedByType, OnboardingManagement, IdentityGuide, OnboardingGuide |
-| New DB tables | 6 | developer_orgs, mfa_factors, mfa_challenges, onboarding_applications, user_sessions, identity_memberships |
-| New docs | 5 | audit.md, route-inventory.md, gap-report.md, non-breaking-plan.md, security-posture.md |
-| Enhanced pages | 4 | Auth.tsx, MerchantRegister.tsx, SecuritySettings, admin-navigation |
-| Updated specs | 3 | openapi.json, public-api-spec, postman-collection |
+| Capability | Status | Implementation |
+|---|---|---|
+| User wallet accounts | Yes | `accounts` table + `account_balances` (ClosingAvailable/InterimAvailable) |
+| Ledger-based balance tracking | Yes | `account_balances` with credit/debit indicators, datetime tracking |
+| Programmatic credit | Yes | `funding-scope-creditor.ts` upserts balances; `gateway-fund-account` credits via charges |
+| Programmatic debit | Yes | `gateway-process-withdrawal` debits balance atomically with rollback |
+| Sub-accounts / Escrow | Partial | `gateway_merchant_wallets` (3-balance model: available/pending/ledger) per merchant per currency; no formal escrow API |
+| Segregated fund structure | Not implemented | No dedicated safeguarding ledger or trust account segregation |
+| Transaction history | Yes | `transactions` table with full metadata, per-account filtering |
+
+### Missing: Dedicated Wallet REST API Surface
+
+KOB has the underlying infrastructure but lacks a **formal `/v1/wallets/*` namespace**. Currently wallet operations are scattered across `gateway-fund-account`, `gateway-process-withdrawal`, and direct balance queries. Required new endpoints:
+
+```text
+POST   /v1/wallets                      — Create wallet (maps to account creation)
+GET    /v1/wallets/{id}                  — Get wallet with balances
+POST   /v1/wallets/{id}/credit           — Programmatic credit (wraps funding-scope-creditor)
+POST   /v1/wallets/{id}/debit            — Programmatic debit (wraps withdrawal logic)
+GET    /v1/wallets/{id}/transactions     — Transaction history for wallet
+GET    /v1/wallets/{id}/statement        — Generate statement (wraps generate-bank-statement)
+POST   /v1/wallets/{id}/freeze           — Freeze/unfreeze wallet (compliance)
+```
+
+**Required additions:**
+- Idempotency-Key header support (already pattern exists in `gateway-fund-account`)
+- Webhook events: `wallet.credited`, `wallet.debited`, `wallet.frozen`
+- Escrow sub-wallet creation for marketplace holds
+
+**Effort**: 1 new edge function (multi-method router), ~200 lines. No DB migration needed — uses existing `accounts` + `account_balances` tables.
+
+---
+
+## SECTION B — OUTBOUND PAYOUTS
+
+### Current State: IMPLEMENTED (90%)
+
+KOB has a comprehensive outbound payout system:
+
+| Capability | Status | Provider |
+|---|---|---|
+| Payouts to bank accounts | Yes | Flutterwave `/v3/transfers` |
+| Payouts to mobile money (MoMo) | Yes | Flutterwave MPS (MTN/Orange) |
+| Payouts to debit cards | Partial | Stripe Refund-based (requires prior card deposit) |
+| Payouts to PayPal | Yes | PayPal Batch Payouts API |
+| Batch payouts | Yes | `gateway-create-payout-batch` (up to 15k items via PayPal) |
+| Merchant-initiated payouts | Yes | `gateway-create-payout` (merchant wallet debit) |
+| Consumer-initiated withdrawals | Yes | `gateway-process-withdrawal` (account balance debit) |
+| Payout status polling | Yes | `gateway-payout-status-poll` |
+| Async webhook updates | Yes | `gateway-payout-webhook` (Stripe/Flutterwave/PayPal) |
+| Failed payout reversal | Yes | Automatic balance restoration on failure |
+| Admin manual reversal | Yes | `gateway-admin-reverse-withdrawal` |
+| Retry mechanism | Yes | `gateway-retry-payout` |
+| Daily payout limits | Yes | Per-merchant `daily_payout_limit` enforcement |
+| Idempotency | Yes | `idempotency-key` header on `gateway-create-payout` |
+
+### Missing / Gaps
+
+1. **True push-to-card payouts**: Current card withdrawal is a Stripe Refund against a prior PaymentIntent. This is NOT a true payout — it requires a prior deposit, has refund-window limitations (180 days), and doesn't support arbitrary card destinations. For true instant card payouts, KOB needs Visa Direct / Mastercard Send integration.
+
+2. **Instant vs Standard payout parameter**: No `speed` parameter (`instant` | `standard`) on payout endpoints. All payouts use the provider's default speed.
+
+3. **Formal `/v1/payouts/cancel` endpoint**: Cancellation is not exposed as a standalone API. Only failed payouts can be retried.
+
+4. **Payout to arbitrary bank account** (non-linked): Currently requires a `linked_account_id` for consumer withdrawals. Merchant payouts accept direct beneficiary details but consumer withdrawals do not.
+
+### Required Endpoint Additions
+
+```text
+POST   /v1/payouts/{id}/cancel          — Cancel pending payout before provider submission
+PATCH  /v1/payouts                      — Add `speed: 'instant' | 'standard'` parameter
+POST   /v1/payouts/card                 — True push-to-card (requires Visa Direct integration)
+```
+
+---
+
+## SECTION C — INSTANT RAILS SUPPORT
+
+### Current State: NOT IMPLEMENTED
+
+| Rail | Status |
+|---|---|
+| Visa Direct | Not integrated |
+| Mastercard Send | Not integrated |
+| SEPA Instant / FPS / RTP | Not integrated |
+| CEMAC real-time clearing (SYSTAC) | Not integrated |
+| 24/7 settlement processing | No — relies on provider business hours |
+| Push-to-card | Not available (Stripe refund ≠ push-to-card) |
+| Prefunding / liquidity pool | Not implemented |
+
+### Required Architecture for Instant Payouts
+
+```text
+┌─────────────────────────────────────────────┐
+│            KOB Instant Payout Engine         │
+├─────────────────────────────────────────────┤
+│  1. Prefunding Pool (Float Management)       │
+│     - Dedicated settlement account per rail  │
+│     - Real-time float monitoring API         │
+│     - Auto-replenishment triggers            │
+├─────────────────────────────────────────────┤
+│  2. Rail Router                              │
+│     - Visa Direct (card payouts)             │
+│     - Flutterwave Instant (MoMo already ~OK) │
+│     - CEMAC RTGS / SYSTAC (bank-to-bank)    │
+│     - Fallback: standard ACH-equivalent     │
+├─────────────────────────────────────────────┤
+│  3. Risk & Fraud Layer                       │
+│     - Pre-payout risk scoring                │
+│     - Velocity checks (existing)             │
+│     - Amount limits per rail per user tier   │
+│     - ML anomaly detection (ai-anomaly exists)│
+├─────────────────────────────────────────────┤
+│  4. Liquidity Management API                 │
+│     GET  /v1/treasury/float-balance          │
+│     POST /v1/treasury/replenish              │
+│     GET  /v1/treasury/utilization            │
+└─────────────────────────────────────────────┘
+```
+
+**Required new endpoints:**
+
+```text
+POST   /v1/payouts/instant              — Instant payout (auto-routes to fastest rail)
+GET    /v1/payouts/rails                — List available rails + current speed + fees
+POST   /v1/payouts/card/push            — Visa Direct push-to-card
+GET    /v1/treasury/float               — Float balance per rail (admin)
+POST   /v1/risk/pre-check               — Pre-payout risk assessment
+```
+
+**Estimated effort**: 3-5 new edge functions + Visa Direct API integration + prefunding account infrastructure. This is the largest gap.
+
+---
+
+## SECTION D — LICENSING & COMPLIANCE
+
+### Current State: PARTIAL
+
+| Capability | Status |
+|---|---|
+| KYC verification | Yes — `kyc-submit`, `kyc_verifications` table, document upload |
+| KYB (merchant) | Yes — `gateway-merchant-kyb` (submit/review workflow) |
+| AML sanctions screening | Yes — `sanctions-screen` edge function |
+| Transaction monitoring | Yes — `transaction-monitor` + `ai-anomaly-detection` |
+| CDD (Customer Due Diligence) | Yes — `customer_due_diligence` table, PEP checks, risk scoring |
+| Risk scoring | Yes — `calculate_kyc_risk_score` DB function |
+| Data retention | Yes — 7-year COBAC compliance policy |
+| License type | Unclear — no EMI/MTL documentation found in codebase |
+
+### Missing
+
+1. **Formal EMI or Money Transmitter license documentation**: The platform operates as a wallet/payment processor but the licensing basis is not codified in the API. This is a business/legal gap, not a technical one.
+
+2. **Real-time transaction screening for outbound payouts**: `transaction-monitor` exists but it's not inline (pre-payout). Payouts execute first, monitor after.
+
+3. **Required compliance endpoints** (partially exist):
+
+```text
+POST   /v1/compliance/payout-screen     — Pre-payout AML/sanctions check (MISSING)
+GET    /v1/compliance/user-risk/{id}     — User risk profile (exists via calculate_kyc_risk_score)
+POST   /v1/compliance/sar               — Suspicious Activity Report submission (MISSING)
+```
+
+---
+
+## SECTION E — TECHNICAL READINESS
+
+### Current State: PRODUCTION-GRADE (85%)
+
+| Feature | Status | Details |
+|---|---|---|
+| Idempotency-Key | Yes | Supported on charges, payouts, funding intents via header + DB dedup |
+| Webhook system | Mature | HMAC-SHA256 signing, 7-retry exponential backoff, delivery logging, 24 event types |
+| Rate limiting | Yes | DB-backed (`check_rate_limit` RPC), per-provider webhook limits, per-user API limits |
+| Error format | Partial | Consistent `{error, message}` but NOT RFC 7807 `problem+json` everywhere |
+| Sandbox simulation | Yes | `sandbox-*` functions for data generation, API key creation, webhook testing |
+| API versioning | Yes | `/v1/` prefix on all endpoints |
+| OpenAPI spec | Yes | `public-api-spec` (OpenAPI 3.1.0, 245+ endpoints documented) |
+| Postman collection | Yes | `postman-collection` auto-generated |
+
+### Missing
+
+1. **RFC 7807 error responses** are not consistently used (some functions return `{error, message}`, not `{type, title, status, detail}`)
+2. **SLA guarantees** are not programmatically documented (only operational: 15-min critical response)
+3. **Payout sandbox simulation** — sandbox exists for charges but payout simulation with realistic delays is not confirmed
+
+---
+
+## COMPLETE GAP SUMMARY
+
+### To compete with Stripe-style instant payouts, KOB needs:
+
+| # | Gap | Priority | Effort |
+|---|---|---|---|
+| 1 | **Visa Direct integration** (true push-to-card) | CRITICAL | 1 edge function + Visa API onboarding |
+| 2 | **Formal `/v1/wallets/*` REST namespace** | HIGH | 1 edge function (router) |
+| 3 | **Instant payout rail router** with `speed` parameter | HIGH | 1 edge function + rail selection logic |
+| 4 | **Prefunding / float management API** | HIGH | 1 edge function + treasury tables |
+| 5 | **Pre-payout compliance screening** (inline) | HIGH | 1 edge function |
+| 6 | **Payout cancellation endpoint** | MEDIUM | Add to existing payout function |
+| 7 | **RFC 7807 error standardization** | MEDIUM | Update all edge functions |
+| 8 | **Escrow / hold sub-wallets** | MEDIUM | 1 migration + 1 function |
+| 9 | **Safeguarded fund segregation ledger** | MEDIUM | 1 migration |
+| 10 | **SAR submission endpoint** | LOW | 1 edge function |
+
+---
+
+## FINAL ANSWERS
+
+| Question | Answer |
+|---|---|
+| Can KOB support instant wallet-to-bank withdrawals? | **Partially** — Flutterwave MoMo is near-instant; bank transfers are T+1 to T+3. No real-time bank rail (RTGS/SYSTAC) integration. |
+| Can KOB support instant wallet-to-card withdrawals? | **No** — Current implementation uses Stripe Refunds (requires prior deposit, 5-10 day processing). True push-to-card requires Visa Direct/Mastercard Send. |
+| Can KOB support 24/7 real-time payout infrastructure? | **No** — Dependent on provider business hours. No prefunding pool, no instant rail router, no 24/7 settlement engine. |
+| Production readiness for high-risk instant payout fintech? | **Not yet.** The wallet + standard payout infrastructure is solid (~90%), but instant rails, prefunding, and inline compliance screening are required before production deployment for an instant payout platform. |
+
+### Recommended Upgrade Roadmap
+
+```text
+Phase 1 (4-6 weeks): Wallet API namespace + inline compliance screening + payout cancel
+Phase 2 (6-10 weeks): Visa Direct integration + instant rail router + speed parameter
+Phase 3 (4-6 weeks): Prefunding/treasury API + float monitoring + 24/7 settlement cron
+Phase 4 (2-4 weeks): Escrow sub-wallets + safeguarding ledger + SAR endpoint
+```
 

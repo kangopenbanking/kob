@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Kang Open Banking API",
-    "version": "3.8.0",
+    "version": "4.0.0",
     "description": "This is a summary specification. The full dynamic OpenAPI specification with 250+ endpoints is available at the x-full-spec-url below. AI agents and tooling should fetch the full spec for complete coverage.",
     "x-full-spec-url": "https://api.kangopenbanking.com/functions/v1/public-api-spec",
     "x-changelog-url": "https://kangopenbanking.com/changelog.json",
@@ -738,6 +738,9 @@
     { "name": "Banking Operations", "description": "Internal transfers, facilitated transfers, exchange rates" },
     { "name": "Certificates", "description": "mTLS certificate management" },
     { "name": "POS", "description": "Point-of-sale commerce — catalog, inventory, orders, payments, refunds, QR payments, consumer marketplace, WooCommerce sync" },
-    { "name": "Consumer Tools", "description": "Piggy Bank savings goals, Njangi group savings" }
+    { "name": "Consumer Tools", "description": "Piggy Bank savings goals, Njangi group savings" },
+    { "name": "Identity", "description": "Unified registration, login, MFA, session management — /v1/identity/*" },
+    { "name": "Onboarding", "description": "KYB/KYC lifecycle, document upload, status tracking — /v1/onboarding/*" },
+    { "name": "Admin-Onboarding", "description": "Admin review, approve/reject onboarding applications" }
   ]
 }

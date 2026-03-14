@@ -260,6 +260,13 @@ const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketp
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
+const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
+
+// Developer Portal — Identity & Onboarding Guides
+const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
+const IdentityGuide = lazy(() => import("./pages/developer/IdentityGuide"));
+const OnboardingGuide = lazy(() => import("./pages/developer/OnboardingGuide"));
+const RolesPermissions = lazy(() => import("./pages/developer/RolesPermissions"));
 
 // Institution (FI Portal)
 const FIPortal = lazy(() => import("./pages/FIPortal"));
@@ -686,6 +693,7 @@ function App() {
               {/* Phase 3: Advanced Commerce */}
               <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="rewards-management" element={<RewardsManagement />} />
+              <Route path="onboarding-management" element={<OnboardingManagement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -769,6 +777,10 @@ function App() {
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
+              <Route path="getting-started-by-type" element={<GettingStartedByType />} />
+              <Route path="identity-guide" element={<IdentityGuide />} />
+              <Route path="onboarding-guide" element={<OnboardingGuide />} />
+              <Route path="roles-permissions" element={<RolesPermissions />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
