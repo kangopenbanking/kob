@@ -366,6 +366,48 @@ export default function MerchantManagement() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Suspend Dialog */}
+      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suspend Merchant</DialogTitle>
+            <DialogDescription>Suspend "{actionTarget?.business_name}". The merchant will not be able to process payments.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Reason</Label>
+            <Textarea placeholder="Enter reason..." value={actionReason} onChange={(e) => setActionReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuspendDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={!actionReason.trim() || adminManageMutation.isPending}
+              onClick={() => adminManageMutation.mutate({ action: 'suspend_merchant', entityId: actionTarget?.id, reason: actionReason })}>
+              Suspend Merchant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Merchant Permanently</DialogTitle>
+            <DialogDescription>Delete "{actionTarget?.business_name}" and all charges, refunds, wallets, API keys, and staff roles. This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Reason</Label>
+            <Textarea placeholder="Enter reason..." value={actionReason} onChange={(e) => setActionReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={!actionReason.trim() || adminManageMutation.isPending}
+              onClick={() => adminManageMutation.mutate({ action: 'delete_merchant', entityId: actionTarget?.id, reason: actionReason })}>
+              Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

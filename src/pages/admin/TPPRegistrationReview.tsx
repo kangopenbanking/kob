@@ -166,6 +166,30 @@ export default function TPPRegistrationReview() {
             </Button>
           </div>
         )}
+
+        <div className="flex gap-2 pt-2 border-t">
+          {tpp.is_active && (
+            <Button size="sm" variant="outline" className="flex-1 text-destructive"
+              onClick={async () => {
+                const { error } = await supabase.functions.invoke('admin-manage-user', {
+                  body: { action: 'suspend_developer', target_entity_id: tpp.id, reason: 'Suspended by admin' },
+                });
+                if (!error) { toast({ title: 'TPP suspended' }); queryClient.invalidateQueries({ queryKey: ["tpp-registrations"] }); }
+              }}>
+              <Ban className="h-3.5 w-3.5 mr-1" /> Suspend
+            </Button>
+          )}
+          <Button size="sm" variant="destructive" className="flex-1"
+            onClick={async () => {
+              if (!confirm(`Delete TPP "${tpp.client_name}" permanently?`)) return;
+              const { error } = await supabase.functions.invoke('admin-manage-user', {
+                body: { action: 'delete_developer', target_entity_id: tpp.id, reason: 'Deleted by admin' },
+              });
+              if (!error) { toast({ title: 'TPP deleted' }); queryClient.invalidateQueries({ queryKey: ["tpp-registrations"] }); }
+            }}>
+            <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
