@@ -508,6 +508,9 @@ export default function Auth() {
       if (selectedAccountType === 'merchant') {
         body.business_name = businessName;
         body.org_name = businessName;
+        body.business_description = businessDescription || undefined;
+        body.contact_person = businessContactPerson || undefined;
+        body.default_currency = businessCurrency || undefined;
       }
       if (selectedAccountType === 'institution') {
         body.institution_name = institutionName;
@@ -520,9 +523,11 @@ export default function Auth() {
       const { data, error } = await supabase.functions.invoke('identity-register', { body });
       if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
+      sounds.success();
       toast({ title: 'Account created', description: 'Now set your security PIN' });
       setRegisterStep('pin-setup');
     } catch (err: any) {
+      sounds.error();
       toast({ title: 'Registration failed', description: err.message || 'Please try again', variant: 'destructive' });
     } finally { setRegLoading(false); }
   };
