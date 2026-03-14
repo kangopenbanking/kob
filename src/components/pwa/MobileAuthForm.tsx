@@ -221,6 +221,16 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     if (success) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) await enforceSingleSession(session.access_token);
+      // Check if user has a PIN set — if not, require setup
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pin_code_hash')
+        .eq('id', session?.user?.id || '')
+        .maybeSingle();
+      if (!profile?.pin_code_hash) {
+        setStep('setup-pin');
+        return;
+      }
       sounds.success();
       onAuthSuccess();
     }
