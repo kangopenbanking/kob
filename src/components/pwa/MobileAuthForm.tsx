@@ -115,7 +115,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
 
   const handlePhoneContinue = async () => {
     if (!phoneNumber || phoneNumber.length < 6) {
-      toast.error('Please enter a valid phone number');
+      toast({ title: 'Invalid', description: 'Please enter a valid phone number', variant: 'destructive' });
       return;
     }
     setLoading(true);
