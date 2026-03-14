@@ -705,14 +705,13 @@ function App() {
             <Route path="/communications" element={<Navigate to="/admin/communications" replace />} />
             <Route path="/compliance-dashboard" element={<Navigate to="/admin/compliance-dashboard" replace />} />
             
-            {/* New Developer Portal */}
-            <Route path="/developer" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
+            {/* Public Developer Documentation — no auth required */}
+            <Route path="/developer" element={<PublicDeveloperLayout />}>
               <Route index element={<DeveloperHome />} />
               <Route path="getting-started" element={<GettingStarted />} />
               <Route path="getting-started/authentication" element={<GettingStarted />} />
               <Route path="getting-started/first-call" element={<GettingStarted />} />
               <Route path="quick-start" element={<QuickStart />} />
-              <Route path="playground" element={<Playground />} />
               <Route path="changelog" element={<Changelog />} />
               <Route path="api/aisp" element={<AispReference />} />
               <Route path="api/pisp" element={<PispReference />} />
@@ -751,7 +750,6 @@ function App() {
               <Route path="gateway/treasury" element={<TreasuryGuide />} />
               <Route path="gateway/webhooks-v2" element={<WebhooksV2Guide />} />
               <Route path="gateway/sla" element={<SLAMonitorGuide />} />
-              <Route path="sandbox/payout-simulation" element={<SandboxPayoutSimGuide />} />
               <Route path="api/error-codes" element={<ErrorCodesReference />} />
               <Route path="api/rate-limits" element={<RateLimitsGuide />} />
               <Route path="api/idempotency" element={<IdempotencyGuide />} />
@@ -761,21 +759,11 @@ function App() {
               <Route path="status" element={<ApiStatusPage />} />
               <Route path="gateway/paypal" element={<PayPalIntegrationGuide />} />
               <Route path="payment-facilitation" element={<PaymentFacilitationDev />} />
-              <Route path="console" element={<ApiConsole />} />
-              <Route path="sandbox" element={<Sandbox />} />
-              <Route path="sandbox/usage" element={<SandboxUsage />} />
-              <Route path="sandbox/webhooks" element={<SandboxWebhooks />} />
-              <Route path="sandbox/webhook-testing" element={<WebhookTesting />} />
-              <Route path="sandbox/data-generator" element={<SandboxDataGenerator />} />
-              <Route path="api-playground" element={<ApiPlayground />} />
-              <Route path="api-testing" element={<ApiTesting />} />
               <Route path="examples" element={<CodeExamples />} />
               <Route path="guides/web" element={<WebIntegration />} />
               <Route path="guides/mobile" element={<MobileIntegration />} />
               <Route path="guides/sdks" element={<SDKsPage />} />
               <Route path="api-explorer" element={<ApiExplorer />} />
-              <Route path="certificates" element={<CertificateManagement />} />
-              <Route path="api-keys" element={<ApiKeys />} />
               <Route path="ai-integration-guide" element={<AIIntegrationGuide />} />
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
@@ -785,6 +773,22 @@ function App() {
               <Route path="onboarding-guide" element={<OnboardingGuide />} />
               <Route path="roles-permissions" element={<RolesPermissions />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
+            </Route>
+
+            {/* Protected Developer Tools — auth + role required */}
+            <Route path="/developer" element={<ProtectedRoute><RoleGuard allowedRoles={['developer', 'tpp']} redirectTo="/dashboard"><DeveloperLayout /></RoleGuard></ProtectedRoute>}>
+              <Route path="sandbox" element={<Sandbox />} />
+              <Route path="sandbox/usage" element={<SandboxUsage />} />
+              <Route path="sandbox/webhooks" element={<SandboxWebhooks />} />
+              <Route path="sandbox/webhook-testing" element={<WebhookTesting />} />
+              <Route path="sandbox/data-generator" element={<SandboxDataGenerator />} />
+              <Route path="sandbox/payout-simulation" element={<SandboxPayoutSimGuide />} />
+              <Route path="api-playground" element={<ApiPlayground />} />
+              <Route path="api-testing" element={<ApiTesting />} />
+              <Route path="playground" element={<Playground />} />
+              <Route path="console" element={<ApiConsole />} />
+              <Route path="certificates" element={<CertificateManagement />} />
+              <Route path="api-keys" element={<ApiKeys />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
             <Route path="/for-merchants" element={<Layout><ForMerchants /></Layout>} />
