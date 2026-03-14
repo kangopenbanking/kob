@@ -657,6 +657,7 @@ function App() {
               <Route path="business-kyc" element={<BusinessKYCReview />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
+              <Route path="institution-management" element={<InstitutionManagement />} />
               <Route path="security-dashboard" element={<SecurityDashboard />} />
               {/* Phase 1: Fixed orphaned routes - now inside admin layout */}
               <Route path="fee-management" element={<FeeManagement />} />
