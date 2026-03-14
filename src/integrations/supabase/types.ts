@@ -12420,6 +12420,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string
           account_type: string | null
           address: string | null
           city: string | null
@@ -12445,9 +12446,12 @@ export type Database = {
           pin_code_set_at: string | null
           pin_locked_until: string | null
           preferred_otp_method: string | null
+          suspended_at: string | null
+          suspended_reason: string | null
           updated_at: string
         }
         Insert: {
+          account_status?: string
           account_type?: string | null
           address?: string | null
           city?: string | null
@@ -12473,9 +12477,12 @@ export type Database = {
           pin_code_set_at?: string | null
           pin_locked_until?: string | null
           preferred_otp_method?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Update: {
+          account_status?: string
           account_type?: string | null
           address?: string | null
           city?: string | null
@@ -12501,6 +12508,8 @@ export type Database = {
           pin_code_set_at?: string | null
           pin_locked_until?: string | null
           preferred_otp_method?: string | null
+          suspended_at?: string | null
+          suspended_reason?: string | null
           updated_at?: string
         }
         Relationships: [
