@@ -1226,7 +1226,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-violet-50 border border-violet-200 p-3 space-y-1.5">
