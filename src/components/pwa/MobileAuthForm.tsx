@@ -742,6 +742,13 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                 </div>
               </motion.div>
             )}
+
+            {/* Mandatory PIN Setup */}
+            {step === 'setup-pin' && (
+              <motion.div key="setup-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <MandatoryPinSetupStep onComplete={() => { sounds.success(); onAuthSuccess(); }} />
+              </motion.div>
+            )}
           </AnimatePresence>
         </motion.div>
 
