@@ -215,7 +215,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
 
   const handleVerifyOTP = async () => {
     if (otpCode.length !== 6) {
-      toast.error('Please enter the 6-digit code');
+      toast({ title: 'Invalid', description: 'Please enter the 6-digit code', variant: 'destructive' });
       return;
     }
     const success = await firebasePhone.verifyOTP(otpCode);
