@@ -1,16 +1,17 @@
-import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Search, UserPlus, Shield, Ban, Trash2, RefreshCw, Eye, MoreVertical } from 'lucide-react';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Search, UserPlus, Shield, Ban, Trash2, RefreshCw, Eye, MoreVertical, ShieldOff, UserCheck } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { UserDetailsDialog } from '@/components/admin/UserDetailsDialog';
@@ -28,6 +29,8 @@ interface UserProfile {
   status: string;
   institution_name?: string;
   branch_name?: string;
+  suspended_at?: string;
+  suspended_reason?: string;
 }
 
 export default function UserManagement() {
@@ -42,6 +45,13 @@ export default function UserManagement() {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [institutionFilter, setInstitutionFilter] = useState<string>('all');
+
+  // Suspend/Delete state
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [actionTargetUser, setActionTargetUser] = useState<UserProfile | null>(null);
+  const [actionReason, setActionReason] = useState('');
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     checkAdminAccess();
@@ -80,7 +90,6 @@ export default function UserManagement() {
     try {
       setLoading(true);
       
-      // Get all profiles
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
@@ -88,14 +97,12 @@ export default function UserManagement() {
 
       if (profilesError) throw profilesError;
 
-      // Get roles for each user
       const { data: userRoles, error: rolesError } = await supabase
         .from('user_roles')
         .select('user_id, role');
 
       if (rolesError) throw rolesError;
 
-      // Get staff assignments with institution and branch info
       const { data: assignments } = await supabase
         .from('staff_assignments')
         .select(`
@@ -105,13 +112,14 @@ export default function UserManagement() {
         `)
         .eq('is_active', true);
 
-      // Combine data
       const usersWithRoles = profiles?.map(profile => {
         const assignment = assignments?.find(a => a.user_id === profile.id);
         return {
           ...profile,
           roles: userRoles?.filter(r => r.user_id === profile.id).map(r => r.role) || [],
-          status: 'active',
+          status: (profile as any).account_status || 'active',
+          suspended_at: (profile as any).suspended_at,
+          suspended_reason: (profile as any).suspended_reason,
           institution_name: assignment?.institutions?.institution_name,
           branch_name: assignment?.branches?.branch_name
         };
@@ -160,6 +168,65 @@ export default function UserManagement() {
     }
   };
 
+  const handleSuspendUser = async () => {
+    if (!actionTargetUser) return;
+    setActionLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const isSuspended = actionTargetUser.status === 'suspended';
+      
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: isSuspended ? 'unsuspend' : 'suspend',
+          target_user_id: actionTargetUser.id,
+          reason: actionReason
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success(isSuspended ? 'User unsuspended successfully' : 'User suspended successfully');
+      setSuspendDialogOpen(false);
+      setActionReason('');
+      setActionTargetUser(null);
+      loadUsers();
+    } catch (error: any) {
+      logger.error('Error suspending user:', error);
+      toast.error(error.message || 'Failed to update user status');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!actionTargetUser) return;
+    setActionLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: {
+          action: 'delete',
+          target_user_id: actionTargetUser.id,
+          reason: actionReason
+        }
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast.success('User and all associated data deleted permanently');
+      setDeleteDialogOpen(false);
+      setActionReason('');
+      setActionTargetUser(null);
+      loadUsers();
+    } catch (error: any) {
+      logger.error('Error deleting user:', error);
+      toast.error(error.message || 'Failed to delete user');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -176,6 +243,16 @@ export default function UserManagement() {
       case 'admin': return 'destructive';
       case 'moderator': return 'default';
       default: return 'secondary';
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'suspended':
+        return <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" />Suspended</Badge>;
+      case 'active':
+      default:
+        return <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-300 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-950"><UserCheck className="h-3 w-3" />Active</Badge>;
     }
   };
 
@@ -229,7 +306,6 @@ export default function UserManagement() {
                   <SelectItem value="all">All Status</SelectItem>
                   <SelectItem value="active">Active</SelectItem>
                   <SelectItem value="suspended">Suspended</SelectItem>
-                  <SelectItem value="banned">Banned</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={institutionFilter} onValueChange={setInstitutionFilter}>
@@ -257,12 +333,13 @@ export default function UserManagement() {
                 <TableHead>Branch</TableHead>
                 <TableHead>Roles</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Joined</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} className={user.status === 'suspended' ? 'opacity-60' : ''}>
                   <TableCell>
                     <div>
                       <div className="font-medium">{user.full_name || 'N/A'}</div>
@@ -286,7 +363,7 @@ export default function UserManagement() {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">{user.status}</Badge>
+                    {getStatusBadge(user.status)}
                   </TableCell>
                   <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>
@@ -297,6 +374,14 @@ export default function UserManagement() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => {
+                          setSelectedUserId(user.id);
+                          setDetailsDialogOpen(true);
+                        }}>
+                          <Eye className="h-4 w-4 mr-2" />
+                          View Details
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                         <DropdownMenuItem onClick={() => assignRole(user.id, 'admin')}>
                           <Shield className="h-4 w-4 mr-2" />
                           Make Admin
@@ -307,22 +392,41 @@ export default function UserManagement() {
                         </DropdownMenuItem>
                         {user.roles.includes('admin') && (
                           <DropdownMenuItem onClick={() => removeRole(user.id, 'admin')}>
-                            <Ban className="h-4 w-4 mr-2" />
+                            <ShieldOff className="h-4 w-4 mr-2" />
                             Remove Admin
                           </DropdownMenuItem>
                         )}
                         {user.roles.includes('moderator') && (
                           <DropdownMenuItem onClick={() => removeRole(user.id, 'moderator')}>
-                            <Ban className="h-4 w-4 mr-2" />
+                            <ShieldOff className="h-4 w-4 mr-2" />
                             Remove Moderator
                           </DropdownMenuItem>
                         )}
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedUserId(user.id);
-                          setDetailsDialogOpen(true);
-                        }}>
-                          <Eye className="h-4 w-4 mr-2" />
-                          View Details
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActionTargetUser(user);
+                            setActionReason('');
+                            setSuspendDialogOpen(true);
+                          }}
+                          className={user.status === 'suspended' ? 'text-emerald-600' : 'text-amber-600'}
+                        >
+                          {user.status === 'suspended' ? (
+                            <><UserCheck className="h-4 w-4 mr-2" />Unsuspend User</>
+                          ) : (
+                            <><Ban className="h-4 w-4 mr-2" />Suspend User</>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setActionTargetUser(user);
+                            setActionReason('');
+                            setDeleteDialogOpen(true);
+                          }}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete User
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -333,6 +437,106 @@ export default function UserManagement() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Suspend/Unsuspend Dialog */}
+      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {actionTargetUser?.status === 'suspended' ? 'Unsuspend User' : 'Suspend User'}
+            </DialogTitle>
+            <DialogDescription>
+              {actionTargetUser?.status === 'suspended'
+                ? `Reactivate the account for ${actionTargetUser?.full_name || actionTargetUser?.email}. They will be able to log in again.`
+                : `Suspend the account for ${actionTargetUser?.full_name || actionTargetUser?.email}. They will be unable to log in until unsuspended.`
+              }
+            </DialogDescription>
+          </DialogHeader>
+          {actionTargetUser?.status !== 'suspended' && (
+            <div className="space-y-2">
+              <Label htmlFor="suspend-reason">Reason for suspension</Label>
+              <Textarea
+                id="suspend-reason"
+                placeholder="Enter reason for suspension..."
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+              />
+            </div>
+          )}
+          {actionTargetUser?.status === 'suspended' && actionTargetUser.suspended_reason && (
+            <div className="rounded-md bg-muted p-3 text-sm">
+              <p className="font-medium text-muted-foreground mb-1">Original suspension reason:</p>
+              <p>{actionTargetUser.suspended_reason}</p>
+              {actionTargetUser.suspended_at && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Suspended on {new Date(actionTargetUser.suspended_at).toLocaleDateString()}
+                </p>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuspendDialogOpen(false)} disabled={actionLoading}>
+              Cancel
+            </Button>
+            <Button
+              variant={actionTargetUser?.status === 'suspended' ? 'default' : 'destructive'}
+              onClick={handleSuspendUser}
+              disabled={actionLoading}
+            >
+              {actionLoading && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
+              {actionTargetUser?.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete User Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">Permanently Delete User</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-3">
+              <p>
+                You are about to permanently delete <strong>{actionTargetUser?.full_name || actionTargetUser?.email}</strong> and all their associated data. This includes:
+              </p>
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>User profile and authentication credentials</li>
+                <li>All roles and permissions</li>
+                <li>Bank accounts, transactions, and balances</li>
+                <li>Consent records (AISP/PISP)</li>
+                <li>KYC verifications and documents</li>
+                <li>Mobile money and bank transfer history</li>
+                <li>Staff assignments and portal permissions</li>
+                <li>Notifications and security logs</li>
+              </ul>
+              <p className="font-semibold text-destructive">This action cannot be undone.</p>
+              <div className="pt-2 space-y-2">
+                <Label htmlFor="delete-reason">Reason for deletion</Label>
+                <Textarea
+                  id="delete-reason"
+                  placeholder="Enter reason for account deletion..."
+                  value={actionReason}
+                  onChange={(e) => setActionReason(e.target.value)}
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={actionLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteUser();
+              }}
+              disabled={actionLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {actionLoading && <RefreshCw className="h-4 w-4 mr-2 animate-spin" />}
+              Delete Permanently
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <UserDetailsDialog
         open={detailsDialogOpen}
