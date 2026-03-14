@@ -163,14 +163,10 @@ const BusinessRegister: React.FC = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs">Country</Label>
-                  <Select value={form.country} onValueChange={v => {
-                    update('country', v);
-                    const c = COUNTRIES.find(c => c.code === v);
-                    if (c) update('default_currency', c.currency);
-                  }}>
+                  <Select value={form.country} onValueChange={v => update('country', v)}>
                     <SelectTrigger className="rounded-xl"><SelectValue /></SelectTrigger>
                     <SelectContent>
-                      {COUNTRIES.map(c => <SelectItem key={c.code} value={c.code}>{c.name}</SelectItem>)}
+                      {supportedCountries.map(c => <SelectItem key={c.code} value={c.country}>{c.flag} {c.country}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
