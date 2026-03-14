@@ -777,6 +777,10 @@ function App() {
               <Route path="api-directory-submissions" element={<ApiDirectorySubmissions />} />
               <Route path="integration-workflow" element={<IntegrationWorkflow />} />
               <Route path="merchants-pos" element={<MerchantsPOSGuide />} />
+              <Route path="getting-started-by-type" element={<GettingStartedByType />} />
+              <Route path="identity-guide" element={<IdentityGuide />} />
+              <Route path="onboarding-guide" element={<OnboardingGuide />} />
+              <Route path="roles-permissions" element={<RolesPermissions />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
             <Route path="/for-developers" element={<Layout><ForDevelopers /></Layout>} />
