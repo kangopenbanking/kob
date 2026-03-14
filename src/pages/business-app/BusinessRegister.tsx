@@ -54,14 +54,14 @@ const BusinessRegister: React.FC = () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
-        toast.error('Please sign in first');
+        toast({ title: 'Auth Required', description: 'Please sign in first', variant: 'destructive' });
         navigate('/biz/auth');
         return;
       }
 
       const { data: existing } = await supabase.from('gateway_merchants').select('id').eq('user_id', user.id).maybeSingle();
       if (existing) {
-        toast.info('You already have a merchant account');
+        toast({ title: 'Info', description: 'You already have a merchant account' });
         navigate('/biz/home');
         return;
       }
@@ -79,16 +79,16 @@ const BusinessRegister: React.FC = () => {
           business_description: form.business_description,
           country: form.country,
           contact_name: form.contact_name,
-          default_currency: form.default_currency || selectedCountry?.currency || 'XAF',
+          default_currency: form.default_currency || 'XAF',
         },
       });
 
       if (error) throw error;
 
-      toast.success('Merchant account created! Welcome aboard 🎉');
+      toast({ title: 'Welcome!', description: 'Merchant account created! Welcome aboard 🎉' });
       setTimeout(() => navigate('/biz/home'), 500);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create merchant account');
+      toast({ title: 'Error', description: err.message || 'Failed to create merchant account', variant: 'destructive' });
     } finally {
       setSubmitting(false);
     }
