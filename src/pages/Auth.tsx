@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -10,28 +10,108 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Smartphone, Shield, User, Building2, Landmark, Code, CheckCircle, Lock, Globe, ArrowRight } from 'lucide-react';
+import {
+  Loader2, ArrowLeft, Smartphone, Shield, User, Building2, Landmark, Code,
+  CheckCircle, Lock, Globe, ArrowRight, Mail, Calendar, Hash, FileText, Briefcase
+} from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
+import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 import { motion, AnimatePresence } from 'framer-motion';
-
-type AuthStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete';
-type OTPType = 'login' | 'signup';
-type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
-type AuthMethod = 'standard' | 'firebase';
-
 import { COUNTRY_CODES } from '@/lib/country-codes';
 
-const phoneSchema = z.string().regex(/^\d{6,15}$/, 'Invalid phone number format');
-const pinSchema = z.string().regex(/^\d{6}$/, 'PIN must be exactly 6 digits');
-const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be exactly 6 digits');
+// ── Types ──────────────────────────────────────────────────────────
+type AccountType = 'personal' | 'merchant' | 'institution' | 'developer';
+type AuthMode = 'select' | 'login' | 'register';
+type RegisterStep = 'account-type' | 'identity' | 'details' | 'pin-setup' | 'success';
+type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete';
+type AuthMethod = 'standard' | 'firebase';
+type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
 
-const ACCOUNT_TYPE_OPTIONS = [
-  { type: 'personal', label: 'Personal', icon: User, desc: 'Banking & payments', path: '/auth' },
-  { type: 'merchant', label: 'Business', icon: Building2, desc: 'Accept payments', path: '/merchant-register' },
-  { type: 'institution', label: 'Institution', icon: Landmark, desc: 'Open Banking APIs', path: '/register' },
-  { type: 'developer', label: 'Developer', icon: Code, desc: 'Build & integrate', path: '/tpp-registration' },
+// ── Schemas ────────────────────────────────────────────────────────
+const phoneSchema = z.string().regex(/^\d{6,15}$/, 'Invalid phone number');
+const pinSchema = z.string().regex(/^\d{6}$/, 'PIN must be 6 digits');
+const otpSchema = z.string().regex(/^\d{6}$/, 'OTP must be 6 digits');
+
+// ── Account Type Config ────────────────────────────────────────────
+const ACCOUNT_TYPES: {
+  type: AccountType;
+  label: string;
+  subtitle: string;
+  icon: typeof User;
+  color: string;
+  borderColor: string;
+  bgColor: string;
+  iconBg: string;
+  requirements: string[];
+  description: string;
+}[] = [
+  {
+    type: 'personal',
+    label: 'Personal Account',
+    subtitle: 'Banking & Payments',
+    icon: User,
+    color: 'text-blue-600',
+    borderColor: 'border-blue-200 hover:border-blue-400',
+    bgColor: 'bg-blue-50',
+    iconBg: 'bg-blue-100',
+    requirements: ['KYC verification required', 'Link mobile money accounts', 'Access credit scoring'],
+    description: 'Send & receive money, track spending, build your credit score, and access financial services.',
+  },
+  {
+    type: 'merchant',
+    label: 'Business Account',
+    subtitle: 'Accept Payments',
+    icon: Building2,
+    color: 'text-emerald-600',
+    borderColor: 'border-emerald-200 hover:border-emerald-400',
+    bgColor: 'bg-emerald-50',
+    iconBg: 'bg-emerald-100',
+    requirements: ['KYB documents needed', 'Business registration required', 'Settlement configuration'],
+    description: 'Accept payments via mobile money, manage staff, track revenue, and configure settlement.',
+  },
+  {
+    type: 'institution',
+    label: 'Financial Institution',
+    subtitle: 'Open Banking APIs',
+    icon: Landmark,
+    color: 'text-amber-600',
+    borderColor: 'border-amber-200 hover:border-amber-400',
+    bgColor: 'bg-amber-50',
+    iconBg: 'bg-amber-100',
+    requirements: ['Regulatory licence required', 'Admin approval process', 'KYB verification mandatory'],
+    description: 'Banks, microfinance & fintechs — manage accounts, issue loans, and connect via Open Banking.',
+  },
+  {
+    type: 'developer',
+    label: 'Developer Account',
+    subtitle: 'Build & Integrate',
+    icon: Code,
+    color: 'text-violet-600',
+    borderColor: 'border-violet-200 hover:border-violet-400',
+    bgColor: 'bg-violet-50',
+    iconBg: 'bg-violet-100',
+    requirements: ['Sandbox access on signup', 'Production requires approval', 'API documentation available'],
+    description: 'Access sandbox APIs, build fintech products, test integrations, and request production access.',
+  },
+];
+
+const INSTITUTION_TYPES = [
+  { value: 'commercial_bank', label: 'Commercial Bank' },
+  { value: 'microfinance', label: 'Microfinance Institution' },
+  { value: 'fintech_institution', label: 'Fintech Institution' },
+  { value: 'credit_union', label: 'Credit Union' },
+  { value: 'insurance', label: 'Insurance Company' },
+  { value: 'mobile_money_operator', label: 'Mobile Money Operator' },
+];
+
+const BUSINESS_TYPES = [
+  { value: 'sole_proprietorship', label: 'Sole Proprietorship' },
+  { value: 'limited_company', label: 'Limited Company' },
+  { value: 'partnership', label: 'Partnership' },
+  { value: 'cooperative', label: 'Cooperative' },
+  { value: 'ngo', label: 'NGO / Non-Profit' },
 ];
 
 const fadeSlide = {
@@ -40,779 +120,957 @@ const fadeSlide = {
   exit: { opacity: 0, y: -8, transition: { duration: 0.2 } },
 };
 
+// ── Progress Steps Config ──────────────────────────────────────────
+const REGISTER_STEPS: { key: RegisterStep; label: string }[] = [
+  { key: 'account-type', label: 'Account Type' },
+  { key: 'identity', label: 'Identity' },
+  { key: 'details', label: 'Details' },
+  { key: 'pin-setup', label: 'Security' },
+  { key: 'success', label: 'Complete' },
+];
+
+// ════════════════════════════════════════════════════════════════════
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: authConfig } = useAuthPageConfig();
 
-  const [authStep, setAuthStep] = useState<AuthStep>('captcha');
-  const [authMethod, setAuthMethod] = useState<AuthMethod>('firebase');
-  const [isLogin, setIsLogin] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [showForgotPassword, setShowForgotPassword] = useState(false);
-  const [userHasPIN, setUserHasPIN] = useState(false);
-  const [usesPINLogin, setUsesPINLogin] = useState(false);
-  const [pinLoginAttempts, setPinLoginAttempts] = useState(3);
+  // ── Top-level state ──
+  const [authMode, setAuthMode] = useState<AuthMode>('select');
+  const [selectedAccountType, setSelectedAccountType] = useState<AccountType>('personal');
 
-  const [captchaQuestion, setCaptchaQuestion] = useState('');
-  const [captchaAnswer, setCaptchaAnswer] = useState('');
-  const [captchaSessionId, setCaptchaSessionId] = useState('');
+  // ── Registration state ──
+  const [registerStep, setRegisterStep] = useState<RegisterStep>('account-type');
+  const [regLoading, setRegLoading] = useState(false);
 
+  // Identity fields
   const [selectedCountry, setSelectedCountry] = useState('Cameroon');
   const countryCode = COUNTRY_CODES.find(c => c.country === selectedCountry)?.code || '+237';
   const [phoneNumber, setPhoneNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
-  const [pinCode, setPinCode] = useState('');
-  const [otpCode, setOtpCode] = useState('');
+
+  // OTP verification (registration)
+  const firebasePhone = useFirebasePhoneAuth();
+  const [regOtpCode, setRegOtpCode] = useState('');
+  const [regOtpSent, setRegOtpSent] = useState(false);
+  const [regOtpVerified, setRegOtpVerified] = useState(false);
+
+  // Account-specific detail fields
+  const [businessName, setBusinessName] = useState('');
+  const [businessType, setBusinessType] = useState('');
+  const [businessEmail, setBusinessEmail] = useState('');
+  const [businessPhone, setBusinessPhone] = useState('');
+  const [institutionName, setInstitutionName] = useState('');
+  const [institutionType, setInstitutionType] = useState('');
+  const [registrationNumber, setRegistrationNumber] = useState('');
+  const [orgName, setOrgName] = useState('');
+  const [useCase, setUseCase] = useState('');
+  const [detailCountry, setDetailCountry] = useState('Cameroon');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+
+  // ── Login state ──
+  const [loginStep, setLoginStep] = useState<LoginStep>('captcha');
+  const [authMethod, setAuthMethod] = useState<AuthMethod>('firebase');
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [userHasPIN, setUserHasPIN] = useState(false);
+  const [usesPINLogin, setUsesPINLogin] = useState(false);
+  const [pinLoginAttempts, setPinLoginAttempts] = useState(3);
+  const [loginPhone, setLoginPhone] = useState('');
+  const [loginCountry, setLoginCountry] = useState('Cameroon');
+  const loginCountryCode = COUNTRY_CODES.find(c => c.country === loginCountry)?.code || '+237';
+  const [loginPinCode, setLoginPinCode] = useState('');
+  const [loginOtpCode, setLoginOtpCode] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
   const [otpExpiresAt, setOtpExpiresAt] = useState('');
-
-  const firebasePhone = useFirebasePhoneAuth();
+  const [captchaQuestion, setCaptchaQuestion] = useState('');
+  const [captchaAnswer, setCaptchaAnswer] = useState('');
+  const [captchaSessionId, setCaptchaSessionId] = useState('');
   const [firebaseOtpCode, setFirebaseOtpCode] = useState('');
 
-  const isCameroon = countryCode === '+237';
+  const isCameroonLogin = loginCountryCode === '+237';
 
+  // ── Auth check ──
   useEffect(() => {
-    const checkUser = async () => {
+    const check = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) navigate('/dashboard');
     };
-    checkUser();
+    check();
   }, [navigate]);
 
+  // ── Captcha effects ──
   useEffect(() => {
-    if (authStep === 'captcha') generateCaptcha();
-  }, [authStep]);
+    if (authMode === 'login' && loginStep === 'captcha') generateCaptcha();
+  }, [authMode, loginStep]);
 
   useEffect(() => {
-    if (authStep !== 'captcha') return;
-    const interval = setInterval(() => {
-      generateCaptcha();
-      toast({ title: 'Refreshed', description: 'Security challenge refreshed' });
-    }, 4 * 60 * 1000);
-    return () => clearInterval(interval);
-  }, [authStep]);
+    if (authMode !== 'login' || loginStep !== 'captcha') return;
+    const iv = setInterval(() => { generateCaptcha(); }, 4 * 60 * 1000);
+    return () => clearInterval(iv);
+  }, [authMode, loginStep]);
 
+  // ── Captcha ──
   const generateCaptcha = async (retryCount = 0) => {
     try {
       const { data, error } = await supabase.functions.invoke('captcha-generate');
       if (error) throw error;
-      if (!data?.question || !data?.session_id) throw new Error('Invalid captcha response');
+      if (!data?.question || !data?.session_id) throw new Error('Invalid captcha');
       setCaptchaQuestion(data.question);
       setCaptchaSessionId(data.session_id);
       setCaptchaAnswer('');
-    } catch (error) {
-      console.error('Failed to generate captcha:', error);
-      if (retryCount < 2) {
-        setTimeout(() => generateCaptcha(retryCount + 1), 1500 * (retryCount + 1));
-      } else {
-        toast({ title: 'Error', description: 'Failed to load security check. Please refresh the page.', variant: 'destructive' });
-      }
+    } catch (err) {
+      if (retryCount < 2) setTimeout(() => generateCaptcha(retryCount + 1), 1500 * (retryCount + 1));
+      else toast({ title: 'Error', description: 'Failed to load security check. Please refresh.', variant: 'destructive' });
     }
   };
 
   const handleVerifyCaptcha = async () => {
-    if (!captchaAnswer) {
-      toast({ title: 'Required', description: 'Please solve the math problem', variant: 'destructive' });
-      return;
-    }
-    setLoading(true);
+    if (!captchaAnswer) { toast({ title: 'Required', description: 'Please solve the math problem', variant: 'destructive' }); return; }
+    setLoginLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('captcha-verify', {
         body: { session_id: captchaSessionId, answer: parseInt(captchaAnswer) },
       });
-      if (error || !data?.verified) throw new Error(data?.error || 'Captcha verification failed');
-      toast({ title: 'Success', description: 'Security check passed' });
-      if (authMethod === 'firebase') {
-        setAuthStep('firebase-otp');
-      } else {
-        setAuthStep('phone');
-      }
-    } catch (error: any) {
-      const msg = error.message || 'Please try again';
-      const isExpired = msg.toLowerCase().includes('expired');
-      toast({ title: isExpired ? 'Expired' : 'Incorrect', description: isExpired ? 'Captcha expired. A new one has been loaded.' : msg, variant: 'destructive' });
+      if (error || !data?.verified) throw new Error(data?.error || 'Captcha failed');
+      setLoginStep(authMethod === 'firebase' ? 'firebase-otp' : 'phone');
+    } catch (err: any) {
+      const msg = err.message || 'Please try again';
+      toast({ title: msg.includes('expired') ? 'Expired' : 'Incorrect', description: msg, variant: 'destructive' });
       generateCaptcha();
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoginLoading(false); }
   };
 
-  const handleFirebaseSendOTP = async () => {
-    try { phoneSchema.parse(phoneNumber); } catch {
-      toast({ title: 'Invalid phone number', description: 'Please enter a valid phone number', variant: 'destructive' });
-      return;
-    }
-    const fullPhone = `${countryCode}${phoneNumber}`;
-    await firebasePhone.sendOTP(fullPhone);
-  };
-
-  const handleFirebaseVerifyOTP = async () => {
-    if (firebaseOtpCode.length !== 6) {
-      toast({ title: 'Invalid code', description: 'Please enter the 6-digit code', variant: 'destructive' });
-      return;
-    }
-    const success = await firebasePhone.verifyOTP(firebaseOtpCode);
-    if (success) {
-      setAuthStep('complete');
-      setTimeout(() => navigate('/dashboard'), 1000);
-    }
-  };
-
+  // ── Login handlers ──
   const checkIfUserHasPIN = async () => {
     try {
-      const fullPhone = `${countryCode}${phoneNumber}`;
-      const { data, error } = await supabase.functions.invoke('phone-auth-check-pin', {
-        body: { phone_number: fullPhone }
-      });
-      if (error) {
-        toast({ title: 'Connection Error', description: 'Could not verify account. Please try again.', variant: 'destructive' });
-        setUserHasPIN(false);
-        return { exists: null, hasPIN: false };
-      }
-      if (!data) { setUserHasPIN(false); return { exists: false, hasPIN: false }; }
-      const userExists = data.check_complete === true;
+      const fullPhone = `${loginCountryCode}${loginPhone}`;
+      const { data, error } = await supabase.functions.invoke('phone-auth-check-pin', { body: { phone_number: fullPhone } });
+      if (error || !data) { setUserHasPIN(false); return { exists: null, hasPIN: false }; }
+      const exists = data.check_complete === true;
       const hasPIN = data.has_pin === true;
       setUserHasPIN(hasPIN);
-      return { exists: userExists, hasPIN };
-    } catch (error) {
-      toast({ title: 'Connection Error', description: 'Could not verify account. Please try again.', variant: 'destructive' });
-      setUserHasPIN(false);
-      return { exists: null, hasPIN: false };
-    }
+      return { exists, hasPIN };
+    } catch { setUserHasPIN(false); return { exists: null, hasPIN: false }; }
   };
 
-  const handlePhoneSubmit = async () => {
-    try { phoneSchema.parse(phoneNumber); } catch {
-      toast({ title: 'Invalid phone number', description: 'Please enter a valid phone number (6-15 digits)', variant: 'destructive' });
-      return;
+  const handleLoginPhoneSubmit = async () => {
+    try { phoneSchema.parse(loginPhone); } catch {
+      toast({ title: 'Invalid phone', description: 'Enter a valid phone number', variant: 'destructive' }); return;
     }
-    if (!isLogin && !fullName.trim()) {
-      toast({ title: 'Required field', description: 'Please enter your full name', variant: 'destructive' });
-      return;
-    }
-    if (!isLogin) {
-      try { pinSchema.parse(pinCode); } catch {
-        toast({ title: 'Invalid PIN', description: 'PIN must be exactly 6 digits', variant: 'destructive' });
-        return;
-      }
-    }
-    setLoading(true);
+    setLoginLoading(true);
     try {
-      if (isLogin) {
-        const { exists, hasPIN } = await checkIfUserHasPIN();
-        if (exists === null) { setLoading(false); return; }
-        if (!exists) {
-          toast({ title: 'Account Not Found', description: 'No account found. Please sign up first.', variant: 'destructive' });
-          setLoading(false);
-          return;
-        }
-        if (hasPIN) {
-          setUsesPINLogin(true);
-          setAuthStep('pin');
-          setLoading(false);
-          return;
-        }
-      }
+      const { exists, hasPIN } = await checkIfUserHasPIN();
+      if (exists === null) { setLoginLoading(false); return; }
+      if (!exists) { toast({ title: 'Not Found', description: 'No account found. Please sign up.', variant: 'destructive' }); setLoginLoading(false); return; }
+      if (hasPIN) { setUsesPINLogin(true); setLoginStep('pin'); setLoginLoading(false); return; }
       setUsesPINLogin(false);
-      await handleSendOTP();
-    } finally {
-      setLoading(false);
-    }
+      await handleLoginSendOTP();
+    } finally { setLoginLoading(false); }
   };
 
-  const handleSendOTP = async () => {
-    const fullPhone = `${countryCode}${phoneNumber}`;
+  const handleLoginSendOTP = async () => {
+    const fullPhone = `${loginCountryCode}${loginPhone}`;
     const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', {
-      body: {
-        phone_number: fullPhone,
-        otp_type: isLogin ? 'login' : 'signup',
-        delivery_method: deliveryMethod,
-        captcha_session_id: captchaSessionId,
-      },
+      body: { phone_number: fullPhone, otp_type: 'login', delivery_method: deliveryMethod, captcha_session_id: captchaSessionId },
     });
     if (error) throw error;
-    toast({ title: 'OTP Sent', description: `Verification code sent via ${deliveryMethod === 'both' ? 'SMS and WhatsApp' : deliveryMethod.toUpperCase()}` });
     setOtpExpiresAt(data.expires_at);
-    setAuthStep('otp');
+    setLoginStep('otp');
   };
 
   const handlePINLogin = async () => {
-    try { pinSchema.parse(pinCode); } catch {
-      toast({ title: 'Invalid PIN', description: 'PIN must be exactly 6 digits', variant: 'destructive' });
-      return;
-    }
-    setLoading(true);
+    try { pinSchema.parse(loginPinCode); } catch { toast({ title: 'Invalid PIN', description: 'PIN must be 6 digits', variant: 'destructive' }); return; }
+    setLoginLoading(true);
     try {
-      const fullPhone = `${countryCode}${phoneNumber}`;
+      const fullPhone = `${loginCountryCode}${loginPhone}`;
       const { data, error } = await supabase.functions.invoke('phone-auth-pin-login', {
-        body: { phone_number: fullPhone, pin_code: pinCode, captcha_session_id: captchaSessionId },
+        body: { phone_number: fullPhone, pin_code: loginPinCode, captcha_session_id: captchaSessionId },
       });
       if (error) {
-        const errorBody = typeof error === 'object' && error.message ? error.message : String(error);
-        try {
-          const parsed = JSON.parse(errorBody);
-          if (parsed.locked) throw new Error(parsed.error || 'Account locked');
-          if (parsed.remaining_attempts !== undefined) setPinLoginAttempts(parsed.remaining_attempts);
-          throw new Error(parsed.error || 'Invalid PIN code');
-        } catch (parseErr) {
-          if (parseErr instanceof SyntaxError) throw new Error(errorBody);
-          throw parseErr;
-        }
+        try { const p = JSON.parse(typeof error === 'object' && error.message ? error.message : String(error)); if (p.locked) throw new Error(p.error); if (p.remaining_attempts !== undefined) setPinLoginAttempts(p.remaining_attempts); throw new Error(p.error || 'Invalid PIN'); } catch (pe) { if (pe instanceof SyntaxError) throw new Error(String(error)); throw pe; }
       }
-      if (!data?.success) {
-        if (data?.locked) throw new Error(data.error || 'Account locked');
-        setPinLoginAttempts(data?.remaining_attempts || 0);
-        throw new Error(data?.error || 'Invalid PIN code');
-      }
-      if (data.session) {
-        await supabase.auth.setSession({
-          access_token: data.session.access_token,
-          refresh_token: data.session.refresh_token,
-        });
-      }
-      toast({ title: 'Success', description: 'Logged in successfully!' });
-      setAuthStep('complete');
+      if (!data?.success) { if (data?.locked) throw new Error(data.error); setPinLoginAttempts(data?.remaining_attempts || 0); throw new Error(data?.error || 'Invalid PIN'); }
+      if (data.session) await supabase.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+      toast({ title: 'Welcome back!', description: 'Signed in successfully' });
+      setLoginStep('complete');
       setTimeout(() => navigate('/dashboard'), 1000);
-    } catch (error: any) {
-      let errorMessage = error.message || 'Invalid PIN code';
-      if (errorMessage.includes('Account locked')) errorMessage = 'Too many failed attempts. Account locked for 30 minutes.';
-      else if (pinLoginAttempts > 0) errorMessage = `Invalid PIN. ${pinLoginAttempts} attempts remaining.`;
-      toast({ title: 'Login Failed', description: errorMessage, variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) {
+      toast({ title: 'Login Failed', description: err.message || 'Invalid PIN', variant: 'destructive' });
+    } finally { setLoginLoading(false); }
   };
 
-  const switchToOTPLogin = () => {
-    setUsesPINLogin(false);
-    setAuthStep('phone');
-    setPinCode('');
-    toast({ title: 'Switched to OTP', description: 'Choose your delivery method to receive a code' });
-  };
-
-  const handleVerifyOTP = async () => {
-    try { otpSchema.parse(otpCode); } catch {
-      toast({ title: 'Invalid OTP', description: 'OTP must be exactly 6 digits', variant: 'destructive' });
-      return;
-    }
-    setLoading(true);
+  const handleLoginVerifyOTP = async () => {
+    try { otpSchema.parse(loginOtpCode); } catch { toast({ title: 'Invalid OTP', description: '6 digits required', variant: 'destructive' }); return; }
+    setLoginLoading(true);
     try {
-      const fullPhone = `${countryCode}${phoneNumber}`;
+      const fullPhone = `${loginCountryCode}${loginPhone}`;
       const { data, error } = await supabase.functions.invoke('phone-auth-verify-otp', {
-        body: {
-          phone_number: fullPhone,
-          otp_code: otpCode,
-          otp_type: isLogin ? 'login' : 'signup',
-          full_name: isLogin ? undefined : fullName,
-          pin_code: isLogin ? undefined : pinCode,
-          country_code: countryCode,
-        },
+        body: { phone_number: fullPhone, otp_code: loginOtpCode, otp_type: 'login', country_code: loginCountryCode },
       });
-      if (error) throw new Error(error.message || 'Verification failed');
-      if (!data.success) throw new Error(data.error || 'Verification failed');
-      toast({ title: 'Success', description: `${isLogin ? 'Logged in' : 'Account created'} successfully!` });
+      if (error) throw new Error(error.message);
+      if (!data.success) throw new Error(data.error || 'Failed');
       await supabase.auth.refreshSession();
-      setAuthStep('complete');
-      setTimeout(() => navigate(isLogin ? '/dashboard' : '/register'), 1000);
-    } catch (error: any) {
-      let errorMessage = error.message || 'Invalid or expired OTP code';
-      if (errorMessage.includes('No account found')) errorMessage = 'No account found. Please sign up first.';
-      toast({ title: 'Verification Failed', description: errorMessage, variant: 'destructive' });
-    } finally {
-      setLoading(false);
-    }
+      setLoginStep('complete');
+      setTimeout(() => navigate('/dashboard'), 1000);
+    } catch (err: any) { toast({ title: 'Failed', description: err.message, variant: 'destructive' }); }
+    finally { setLoginLoading(false); }
   };
 
-  const handleForgotPassword = async () => {
-    try { phoneSchema.parse(phoneNumber); pinSchema.parse(pinCode); } catch {
-      toast({ title: 'Invalid input', description: 'Please enter valid phone number and 6-digit PIN', variant: 'destructive' });
-      return;
+  const handleFirebaseSendOTP = async () => {
+    try { phoneSchema.parse(loginPhone); } catch { toast({ title: 'Invalid phone', description: 'Enter a valid number', variant: 'destructive' }); return; }
+    await firebasePhone.sendOTP(`${loginCountryCode}${loginPhone}`);
+  };
+
+  const handleFirebaseVerifyOTP = async () => {
+    if (firebaseOtpCode.length !== 6) return;
+    const ok = await firebasePhone.verifyOTP(firebaseOtpCode);
+    if (ok) { setLoginStep('complete'); setTimeout(() => navigate('/dashboard'), 1000); }
+  };
+
+  // ── Registration handlers ──
+  const handleRegSendOTP = async () => {
+    try { phoneSchema.parse(phoneNumber); } catch { toast({ title: 'Invalid phone', description: 'Enter a valid number', variant: 'destructive' }); return; }
+    if (!fullName.trim()) { toast({ title: 'Required', description: 'Full name is required', variant: 'destructive' }); return; }
+    if (['merchant', 'institution', 'developer'].includes(selectedAccountType) && !email.trim()) {
+      toast({ title: 'Required', description: 'Email is required for this account type', variant: 'destructive' }); return;
     }
-    setLoading(true);
+    setRegLoading(true);
     try {
-      const fullPhone = `${countryCode}${phoneNumber}`;
-      const { data: pinData, error: pinError } = await supabase.functions.invoke('pin-code-verify', {
-        body: { phone_number: fullPhone, pin_code: pinCode },
-      });
-      if (pinError || !pinData.verified) throw new Error(pinData?.error || 'Invalid PIN code');
-      const { error: otpError } = await supabase.functions.invoke('phone-auth-send-otp', {
-        body: { phone_number: fullPhone, otp_type: 'password_reset', delivery_method: deliveryMethod, captcha_session_id: captchaSessionId },
-      });
-      if (otpError) throw otpError;
-      toast({ title: 'OTP Sent', description: 'Enter the code to reset your password' });
-      setAuthStep('otp');
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message || 'Failed to verify PIN', variant: 'destructive' });
-    } finally {
-      setLoading(false);
+      await firebasePhone.sendOTP(`${countryCode}${phoneNumber}`);
+      setRegOtpSent(true);
+    } finally { setRegLoading(false); }
+  };
+
+  const handleRegVerifyOTP = async () => {
+    if (regOtpCode.length !== 6) return;
+    setRegLoading(true);
+    try {
+      const ok = await firebasePhone.verifyOTP(regOtpCode);
+      if (ok) { setRegOtpVerified(true); setRegisterStep('details'); }
+    } finally { setRegLoading(false); }
+  };
+
+  const validateDetails = (): boolean => {
+    switch (selectedAccountType) {
+      case 'merchant':
+        if (!businessName.trim()) { toast({ title: 'Required', description: 'Business name is required', variant: 'destructive' }); return false; }
+        if (!businessType) { toast({ title: 'Required', description: 'Select business type', variant: 'destructive' }); return false; }
+        return true;
+      case 'institution':
+        if (!institutionName.trim()) { toast({ title: 'Required', description: 'Institution name is required', variant: 'destructive' }); return false; }
+        if (!institutionType) { toast({ title: 'Required', description: 'Select institution type', variant: 'destructive' }); return false; }
+        if (!registrationNumber.trim()) { toast({ title: 'Required', description: 'Registration number is required', variant: 'destructive' }); return false; }
+        return true;
+      case 'developer':
+        if (!orgName.trim()) { toast({ title: 'Required', description: 'Organization name is required', variant: 'destructive' }); return false; }
+        return true;
+      case 'personal':
+      default:
+        return true;
     }
   };
 
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setAuthStep('captcha');
-    setPhoneNumber(''); setFullName(''); setEmail(''); setPinCode(''); setOtpCode('');
-    setCaptchaAnswer(''); setShowForgotPassword(false); setFirebaseOtpCode('');
+  const handleSubmitRegistration = async () => {
+    if (!validateDetails()) return;
+    setRegLoading(true);
+    try {
+      const body: Record<string, any> = {
+        account_type: selectedAccountType,
+        phone: `${countryCode}${phoneNumber}`,
+        full_name: fullName,
+        email: email || undefined,
+      };
+      if (selectedAccountType === 'merchant') {
+        body.business_name = businessName;
+        body.org_name = businessName;
+      }
+      if (selectedAccountType === 'institution') {
+        body.institution_name = institutionName;
+        body.institution_type = institutionType;
+        body.org_name = institutionName;
+      }
+      if (selectedAccountType === 'developer') {
+        body.org_name = orgName;
+      }
+      const { data, error } = await supabase.functions.invoke('identity-register', { body });
+      if (error) throw new Error(error.message);
+      if (data?.error) throw new Error(data.error);
+      toast({ title: 'Account created', description: 'Now set your security PIN' });
+      setRegisterStep('pin-setup');
+    } catch (err: any) {
+      toast({ title: 'Registration failed', description: err.message || 'Please try again', variant: 'destructive' });
+    } finally { setRegLoading(false); }
+  };
+
+  const handlePinComplete = () => {
+    setRegisterStep('success');
+    setTimeout(() => navigate('/dashboard'), 2500);
+  };
+
+  // ── Reset helpers ──
+  const resetToSelect = () => {
+    setAuthMode('select');
+    setRegisterStep('account-type');
+    setLoginStep('captcha');
+    setPhoneNumber(''); setFullName(''); setEmail('');
+    setRegOtpCode(''); setRegOtpSent(false); setRegOtpVerified(false);
+    setLoginPhone(''); setLoginPinCode(''); setLoginOtpCode('');
+    setFirebaseOtpCode(''); setCaptchaAnswer('');
     firebasePhone.reset();
-    generateCaptcha();
   };
 
-  const goBack = () => {
-    if (authStep === 'otp') { setAuthStep('phone'); setOtpCode(''); }
-    else if (authStep === 'pin') { setAuthStep('phone'); setPinCode(''); setUsesPINLogin(false); }
-    else if (authStep === 'phone') { setAuthStep('captcha'); generateCaptcha(); }
-    else if (authStep === 'firebase-otp') {
-      firebasePhone.reset(); setFirebaseOtpCode('');
-      setAuthStep('captcha'); generateCaptcha();
+  const loginGoBack = () => {
+    if (loginStep === 'otp') { setLoginStep('phone'); setLoginOtpCode(''); }
+    else if (loginStep === 'pin') { setLoginStep('phone'); setLoginPinCode(''); setUsesPINLogin(false); }
+    else if (loginStep === 'phone') { setLoginStep('captcha'); generateCaptcha(); }
+    else if (loginStep === 'firebase-otp') { firebasePhone.reset(); setFirebaseOtpCode(''); setLoginStep('captcha'); generateCaptcha(); }
+  };
+
+  // ── Computed ──
+  const activeAccountConfig = ACCOUNT_TYPES.find(a => a.type === selectedAccountType)!;
+  const registerStepIndex = REGISTER_STEPS.findIndex(s => s.key === registerStep);
+
+  // ── Right panel hero content based on context ──
+  const getHeroContent = () => {
+    if (authMode === 'register' && registerStep !== 'account-type') {
+      const cfg = activeAccountConfig;
+      return {
+        title: cfg.label,
+        subtitle: cfg.description,
+        features: cfg.requirements,
+      };
     }
+    return {
+      title: authConfig.hero_title,
+      subtitle: authConfig.hero_subtitle,
+      features: ['Open Banking', 'Mobile Money', 'Payments', 'Credit Score'],
+    };
   };
 
-  const stepLabel = authStep === 'captcha' ? 'Security' : authStep === 'phone' || authStep === 'firebase-otp' ? 'Verify' : authStep === 'pin' ? 'PIN' : authStep === 'otp' ? 'Code' : 'Done';
-  const stepIndex = ['captcha', 'phone', 'firebase-otp', 'pin', 'otp', 'complete'].indexOf(authStep);
+  const hero = getHeroContent();
 
+  // ════════════════════════════════════════════════════════════════
+  // RENDER
+  // ════════════════════════════════════════════════════════════════
   return (
     <div className="min-h-screen grid grid-cols-1 lg:grid-cols-2">
-      {/* Left Panel — Auth Form */}
+      {/* ──── LEFT PANEL ──── */}
       <div className="flex flex-col items-center justify-center px-4 py-8 bg-background relative">
-        {/* Invisible reCAPTCHA container for Firebase */}
         <div id="recaptcha-container" className="absolute" />
 
-        <div className="w-full max-w-[440px] space-y-6">
+        <div className="w-full max-w-[480px] space-y-6">
           {/* Header */}
           <div className="flex items-center gap-3">
+            {authMode !== 'select' && (
+              <Button variant="ghost" size="icon" onClick={resetToSelect} className="shrink-0 -ml-1">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
             <img src={authConfig.logo_url} alt="KOB" className="h-10 w-10 rounded-xl" />
-            <div>
+            <div className="min-w-0">
               <h1 className="text-xl font-bold text-foreground tracking-tight">
-                {showForgotPassword ? 'Reset Password' : isLogin ? authConfig.login_title : authConfig.signup_title}
+                {authMode === 'select' ? 'Welcome to KOB' : authMode === 'login' ? authConfig.login_title : activeAccountConfig.label}
               </h1>
-              <p className="text-sm text-muted-foreground">
-                {showForgotPassword
-                  ? 'Verify your phone and PIN to reset password'
-                  : isLogin
-                    ? authConfig.login_subtitle
-                    : authConfig.signup_subtitle}
+              <p className="text-sm text-muted-foreground truncate">
+                {authMode === 'select' ? 'Secure Open Banking Platform' : authMode === 'login' ? authConfig.login_subtitle : activeAccountConfig.subtitle}
               </p>
             </div>
           </div>
 
-          {/* Progress Indicator */}
-          {authStep !== 'complete' && (
-            <div className="flex items-center gap-1">
-              {['Security', 'Verify', 'Complete'].map((label, i) => {
-                const active = i === 0 ? authStep === 'captcha'
-                  : i === 1 ? ['phone', 'firebase-otp', 'pin', 'otp'].includes(authStep)
-                  : false;
-                const done = i === 0 ? authStep !== 'captcha'
-                  : i === 1 ? (authStep as string) === 'complete'
-                  : false;
-                return (
-                  <div key={label} className="flex items-center gap-1 flex-1">
-                    <div className={`h-1.5 rounded-full flex-1 transition-colors ${done ? 'bg-primary' : active ? 'bg-primary/60' : 'bg-muted'}`} />
-                  </div>
-                );
-              })}
-            </div>
-          )}
+          {/* ═══ MODE: SELECT ═══ */}
+          {authMode === 'select' && (
+            <motion.div {...fadeSlide} className="space-y-5">
+              <div className="grid grid-cols-1 gap-3">
+                <Button onClick={() => setAuthMode('login')} className="h-12 text-base font-semibold w-full">
+                  Sign In
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+                <Button onClick={() => setAuthMode('register')} variant="outline" className="h-12 text-base font-semibold w-full">
+                  Create Account
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
 
-          {/* Main Card */}
-          <Card className="border-border/50 shadow-sm">
-            <CardContent className="pt-6 space-y-5">
-              <AnimatePresence mode="wait">
-                {/* === CAPTCHA STEP === */}
-                {authStep === 'captcha' && (
-                  <motion.div key="captcha" {...fadeSlide} className="space-y-5">
-                    {/* Auth Method Selection */}
-                    {!showForgotPassword && (
-                      <div className="space-y-3">
-                        <Label className="text-sm font-medium text-foreground">Authentication method</Label>
-                        <div className="grid grid-cols-1 gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setAuthMethod('firebase')}
-                            className={`flex items-center gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${
-                              authMethod === 'firebase'
-                                ? 'border-primary bg-primary/5 shadow-sm'
-                                : 'border-border hover:border-primary/40'
-                            }`}
-                          >
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${authMethod === 'firebase' ? 'bg-primary/10' : 'bg-muted'}`}>
-                              <Smartphone className={`h-4 w-4 ${authMethod === 'firebase' ? 'text-primary' : 'text-muted-foreground'}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-foreground">One Time Code</span>
-                                {isCameroon && (
-                                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0">
-                                    Recommended
-                                  </Badge>
-                                )}
-                              </div>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                SMS verification code{isCameroon && ' — optimized for Cameroon'}
-                              </p>
-                            </div>
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => setAuthMethod('standard')}
-                            className={`flex items-center gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${
-                              authMethod === 'standard'
-                                ? 'border-primary bg-primary/5 shadow-sm'
-                                : 'border-border hover:border-primary/40'
-                            }`}
-                          >
-                            <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${authMethod === 'standard' ? 'bg-primary/10' : 'bg-muted'}`}>
-                              <Shield className={`h-4 w-4 ${authMethod === 'standard' ? 'text-primary' : 'text-muted-foreground'}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <span className="text-sm font-semibold text-foreground">PIN / WhatsApp OTP</span>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                Login with PIN or receive code via SMS/WhatsApp
-                              </p>
-                            </div>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-
-                    {/* Captcha */}
-                    <div className="space-y-3">
-                      <Label className="text-sm font-medium text-foreground">Security Check</Label>
-                      <div className="text-center py-5 bg-muted/60 rounded-xl border border-border/50">
-                        <p className="text-2xl font-bold tracking-wide text-foreground">{captchaQuestion} = ?</p>
-                      </div>
-                      <Input
-                        type="number"
-                        placeholder="Your answer"
-                        value={captchaAnswer}
-                        onChange={(e) => setCaptchaAnswer(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && handleVerifyCaptcha()}
-                        className="h-11"
-                      />
-                    </div>
-                    <Button onClick={handleVerifyCaptcha} className="w-full h-11" disabled={loading}>
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Continue
-                    </Button>
-                  </motion.div>
-                )}
-
-                {/* === FIREBASE OTP STEP === */}
-                {authStep === 'firebase-otp' && (
-                  <motion.div key="firebase-otp" {...fadeSlide} className="space-y-4">
-                    <Button variant="ghost" size="sm" onClick={goBack} className="gap-1 -ml-2 text-muted-foreground hover:text-foreground">
-                      <ArrowLeft className="h-4 w-4" /> Back
-                    </Button>
-
-                    <div className="flex items-center gap-2 rounded-xl bg-primary/5 border border-primary/10 px-3 py-2.5 text-sm text-primary font-medium">
-                      <Smartphone className="h-4 w-4" />
-                      <span>One Time Code — {isCameroon ? 'Recommended for Cameroon' : 'Fast & Secure'}</span>
-                    </div>
-
-                    {firebasePhone.step === 'phone' && (
-                      <>
-                        {!isLogin && !showForgotPassword && (
-                          <div className="space-y-2">
-                            <Label htmlFor="fullName">Full Name *</Label>
-                            <Input id="fullName" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-11" />
-                          </div>
-                        )}
-                        <div className="space-y-2">
-                          <Label>Phone Number *</Label>
-                          <div className="flex gap-2">
-                            <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                              <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                {COUNTRY_CODES.map((cc) => (
-                                  <SelectItem key={cc.country} value={cc.country}>
-                                    <span className="inline-flex items-center gap-1.5">
-                                      <span>{cc.flag}</span> <span>{cc.code}</span>
-                                    </span>
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Input type="tel" placeholder="6 XX XX XX XX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} className="h-11" />
-                          </div>
-                        </div>
-                        <Button onClick={handleFirebaseSendOTP} className="w-full h-11" disabled={firebasePhone.loading}>
-                          {firebasePhone.loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Send Verification Code
-                        </Button>
-                      </>
-                    )}
-
-                    {(firebasePhone.step === 'otp' || firebasePhone.step === 'verifying') && (
-                      <>
-                        <div className="space-y-2">
-                          <Label>Enter 6-Digit Code</Label>
-                          <p className="text-sm text-muted-foreground">Code sent to {countryCode}{phoneNumber}</p>
-                          <div className="flex justify-center py-2">
-                            <InputOTP maxLength={6} value={firebaseOtpCode} onChange={setFirebaseOtpCode}>
-                              <InputOTPGroup>
-                                <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
-                                <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
-                              </InputOTPGroup>
-                            </InputOTP>
-                          </div>
-                        </div>
-                        <Button onClick={handleFirebaseVerifyOTP} className="w-full h-11" disabled={firebasePhone.loading || firebaseOtpCode.length !== 6}>
-                          {firebasePhone.loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Verify Code
-                        </Button>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => { firebasePhone.reset(); setFirebaseOtpCode(''); }}>Change Number</Button>
-                          <Button variant="ghost" size="sm" onClick={handleFirebaseSendOTP} disabled={firebasePhone.loading}>Resend Code</Button>
-                        </div>
-                      </>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* === PHONE STEP (Standard) === */}
-                {authStep === 'phone' && (
-                  <motion.div key="phone" {...fadeSlide} className="space-y-4">
-                    <Button variant="ghost" size="sm" onClick={goBack} className="gap-1 -ml-2 text-muted-foreground hover:text-foreground">
-                      <ArrowLeft className="h-4 w-4" /> Back
-                    </Button>
-
-                    {!isLogin && !showForgotPassword && (
-                      <div className="space-y-2">
-                        <Label htmlFor="fullName">Full Name *</Label>
-                        <Input id="fullName" placeholder="John Doe" value={fullName} onChange={(e) => setFullName(e.target.value)} className="h-11" />
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number *</Label>
-                      <div className="flex gap-2">
-                        <Select value={selectedCountry} onValueChange={setSelectedCountry}>
-                          <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                          <SelectContent>
-                            {COUNTRY_CODES.map((cc) => (
-                              <SelectItem key={cc.country} value={cc.country}>
-                                <span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Input id="phone" type="tel" placeholder="6 XX XX XX XX" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ''))} className="h-11" />
-                      </div>
-                    </div>
-
-                    {!isLogin && !showForgotPassword && (
-                      <div className="space-y-2">
-                        <Label htmlFor="pin">Set 6-Digit PIN *</Label>
-                        <div className="flex justify-center">
-                          <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
-                        <p className="text-xs text-muted-foreground text-center">Use this PIN for future logins</p>
-                      </div>
-                    )}
-
-                    {showForgotPassword && (
-                      <div className="space-y-2">
-                        <Label htmlFor="reset-pin">Enter Your 6-Digit PIN</Label>
-                        <div className="flex justify-center">
-                          <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
-                            <InputOTPGroup>
-                              <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
-                              <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
-                            </InputOTPGroup>
-                          </InputOTP>
-                        </div>
-                      </div>
-                    )}
-
-                    {(!isLogin || showForgotPassword) && (
-                      <div className="space-y-2">
-                        <Label>How should we send your code?</Label>
-                        <RadioGroup value={deliveryMethod} onValueChange={(v) => setDeliveryMethod(v as DeliveryMethod)}>
-                          <div className="flex items-center space-x-2"><RadioGroupItem value="sms" id="sms" /><Label htmlFor="sms" className="font-normal flex items-center gap-2">SMS <span className="text-xs text-muted-foreground">(Recommended)</span></Label></div>
-                          <div className="flex items-center space-x-2"><RadioGroupItem value="whatsapp" id="whatsapp" /><Label htmlFor="whatsapp" className="font-normal">WhatsApp</Label></div>
-                          <div className="flex items-center space-x-2"><RadioGroupItem value="both" id="both" /><Label htmlFor="both" className="font-normal">Both</Label></div>
-                        </RadioGroup>
-                        <p className="text-xs text-muted-foreground mt-1">💡 WhatsApp delivery requires you to message our business number first.</p>
-                      </div>
-                    )}
-
-                    <Button onClick={showForgotPassword ? handleForgotPassword : handlePhoneSubmit} className="w-full h-11" disabled={loading}>
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {isLogin && !showForgotPassword ? 'Continue' : 'Send Verification Code'}
-                    </Button>
-
-                    {isLogin && !showForgotPassword && (
-                      <Button variant="link" className="w-full text-sm" onClick={() => setShowForgotPassword(true)}>Forgot Password?</Button>
-                    )}
-                  </motion.div>
-                )}
-
-                {/* === PIN STEP === */}
-                {authStep === 'pin' && (
-                  <motion.div key="pin" {...fadeSlide} className="space-y-4">
-                    <Button variant="ghost" size="sm" onClick={goBack} className="gap-1 -ml-2 text-muted-foreground hover:text-foreground">
-                      <ArrowLeft className="h-4 w-4" /> Back
-                    </Button>
-
-                    <div className="text-center space-y-1">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                        <Lock className="h-5 w-5 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground">Enter Your PIN</h3>
-                      <p className="text-sm text-muted-foreground">6-digit PIN for {countryCode}{phoneNumber}</p>
-                    </div>
-
-                    <div className="flex justify-center py-2">
-                      <InputOTP maxLength={6} value={pinCode} onChange={setPinCode}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    {pinLoginAttempts < 3 && (
-                      <p className="text-xs text-destructive text-center">{pinLoginAttempts} attempts remaining before account lock</p>
-                    )}
-
-                    <Button onClick={handlePINLogin} className="w-full h-11" disabled={loading || pinCode.length !== 6}>
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Login with PIN
-                    </Button>
-
-                    <div className="flex flex-col gap-1">
-                      <Button variant="ghost" className="w-full text-sm" onClick={switchToOTPLogin} disabled={loading}>Login with OTP instead</Button>
-                      <Button variant="link" className="w-full text-xs" onClick={() => { setShowForgotPassword(true); setAuthStep('phone'); }} disabled={loading}>Forgot PIN?</Button>
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* === OTP STEP (Standard) === */}
-                {authStep === 'otp' && (
-                  <motion.div key="otp" {...fadeSlide} className="space-y-4">
-                    <Button variant="ghost" size="sm" onClick={goBack} className="gap-1 -ml-2 text-muted-foreground hover:text-foreground">
-                      <ArrowLeft className="h-4 w-4" /> Back
-                    </Button>
-
-                    <div className="text-center space-y-1">
-                      <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-                        <Smartphone className="h-5 w-5 text-primary" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-foreground">Verify Your Code</h3>
-                      <p className="text-sm text-muted-foreground">
-                        Code sent to {countryCode}{phoneNumber}
-                        {deliveryMethod === 'both' && ' via SMS and WhatsApp'}
-                      </p>
-                    </div>
-
-                    <div className="flex justify-center py-2">
-                      <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode}>
-                        <InputOTPGroup>
-                          <InputOTPSlot index={0} /><InputOTPSlot index={1} /><InputOTPSlot index={2} />
-                          <InputOTPSlot index={3} /><InputOTPSlot index={4} /><InputOTPSlot index={5} />
-                        </InputOTPGroup>
-                      </InputOTP>
-                    </div>
-                    {otpExpiresAt && <p className="text-xs text-muted-foreground text-center">Code expires in 10 minutes</p>}
-
-                    <Button onClick={handleVerifyOTP} className="w-full h-11" disabled={loading || otpCode.length !== 6}>
-                      {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Verify Code
-                    </Button>
-
-                    <Button variant="ghost" className="w-full text-sm" onClick={() => { setOtpCode(''); handleSendOTP(); }} disabled={loading}>Resend Code</Button>
-                  </motion.div>
-                )}
-
-                {/* === SUCCESS === */}
-                {authStep === 'complete' && (
-                  <motion.div key="complete" {...fadeSlide} className="text-center py-10">
-                    <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="h-8 w-8 text-secondary" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-foreground mb-1">
-                      {isLogin ? 'Welcome back!' : 'Account created!'}
-                    </h3>
-                    <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Toggle Login/Signup */}
-              {authStep !== 'complete' && !showForgotPassword && (
-                <div className="text-center pt-4 border-t border-border/50">
-                  <Button variant="link" onClick={toggleMode} className="text-sm text-muted-foreground hover:text-foreground">
-                    {isLogin ? "Don't have an account? Sign up" : "Already have an account? Log in"}
-                  </Button>
-                </div>
-              )}
-
-              {showForgotPassword && (
-                <div className="text-center pt-4 border-t border-border/50">
-                  <Button
-                    variant="link"
-                    onClick={() => {
-                      setShowForgotPassword(false);
-                      setAuthStep('captcha');
-                      generateCaptcha();
-                    }}
-                    className="text-sm text-muted-foreground hover:text-foreground"
-                  >
-                    Back to Login
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Account Type Quick Links — show on signup only */}
-          {!isLogin && authStep === 'captcha' && (
-            <motion.div {...fadeSlide} className="space-y-3">
-              <p className="text-xs font-medium text-muted-foreground text-center uppercase tracking-wider">Or register as</p>
-              <div className="grid grid-cols-3 gap-2">
-                {ACCOUNT_TYPE_OPTIONS.filter(a => a.type !== 'personal').map((acc) => {
+              <div className="grid grid-cols-2 gap-3 pt-2">
+                {ACCOUNT_TYPES.map((acc) => {
                   const Icon = acc.icon;
                   return (
-                    <button
-                      key={acc.type}
-                      onClick={() => navigate(acc.path)}
-                      className="flex flex-col items-center gap-1.5 p-3 rounded-xl border border-border/50 bg-card hover:border-primary/40 hover:bg-primary/5 transition-all group"
-                    >
-                      <div className="w-8 h-8 rounded-lg bg-muted group-hover:bg-primary/10 flex items-center justify-center transition-colors">
-                        <Icon className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                    <div key={acc.type} className={`flex items-start gap-3 p-3.5 rounded-2xl border ${acc.borderColor} transition-all`}>
+                      <div className={`w-9 h-9 rounded-xl ${acc.iconBg} flex items-center justify-center shrink-0`}>
+                        <Icon className={`h-4.5 w-4.5 ${acc.color}`} strokeWidth={1.5} />
                       </div>
-                      <span className="text-xs font-medium text-foreground">{acc.label}</span>
-                      <span className="text-[10px] text-muted-foreground">{acc.desc}</span>
-                    </button>
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-foreground">{acc.label.replace(' Account', '').replace('Financial ', '')}</p>
+                        <p className="text-xs text-muted-foreground leading-relaxed mt-0.5">{acc.subtitle}</p>
+                      </div>
+                    </div>
                   );
                 })}
+              </div>
+
+              {/* Trust */}
+              <div className="flex items-center justify-center gap-4 pt-1">
+                <div className="flex items-center gap-1 text-xs text-muted-foreground"><Lock className="h-3 w-3" /> 256-bit SSL</div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground"><Shield className="h-3 w-3" /> COBAC</div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground"><Globe className="h-3 w-3" /> CEMAC</div>
               </div>
             </motion.div>
           )}
 
-          {/* Trust Badges */}
-          <div className="flex items-center justify-center gap-4 pt-2">
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Lock className="h-3 w-3" /> <span>256-bit SSL</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Shield className="h-3 w-3" /> <span>COBAC Compliant</span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Globe className="h-3 w-3" /> <span>CEMAC</span>
-            </div>
-          </div>
+          {/* ═══ MODE: LOGIN ═══ */}
+          {authMode === 'login' && (
+            <AnimatePresence mode="wait">
+              {/* Login Progress */}
+              {loginStep !== 'complete' && (
+                <div className="flex items-center gap-1">
+                  {['Security', 'Verify', 'Complete'].map((label, i) => {
+                    const active = i === 0 ? loginStep === 'captcha' : i === 1 ? ['phone', 'firebase-otp', 'pin', 'otp'].includes(loginStep) : false;
+                    const done = i === 0 ? loginStep !== 'captcha' : i === 1 ? loginStep === 'complete' : false;
+                    return <div key={label} className="flex-1"><div className={`h-1.5 rounded-full transition-colors ${done ? 'bg-primary' : active ? 'bg-primary/60' : 'bg-muted'}`} /></div>;
+                  })}
+                </div>
+              )}
+
+              <Card className="border-border/50 shadow-sm">
+                <CardContent className="pt-6 space-y-5">
+                  {/* CAPTCHA */}
+                  {loginStep === 'captcha' && (
+                    <motion.div key="l-captcha" {...fadeSlide} className="space-y-5">
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Authentication Method</Label>
+                        <div className="grid grid-cols-1 gap-2">
+                          {[
+                            { key: 'firebase' as AuthMethod, icon: Smartphone, label: 'One Time Code', desc: 'SMS verification code', badge: isCameroonLogin ? 'Recommended' : null },
+                            { key: 'standard' as AuthMethod, icon: Shield, label: 'PIN / WhatsApp OTP', desc: 'Login with PIN or receive code via SMS/WhatsApp' },
+                          ].map((m) => (
+                            <button key={m.key} type="button" onClick={() => setAuthMethod(m.key)}
+                              className={`flex items-center gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${authMethod === m.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${authMethod === m.key ? 'bg-primary/10' : 'bg-muted'}`}>
+                                <m.icon className={`h-4 w-4 ${authMethod === m.key ? 'text-primary' : 'text-muted-foreground'}`} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-semibold text-foreground">{m.label}</span>
+                                  {m.badge && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0">{m.badge}</Badge>}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-0.5">{m.desc}</p>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-sm font-medium">Security Check</Label>
+                        <div className="text-center py-5 bg-muted/60 rounded-xl border border-border/50">
+                          <p className="text-2xl font-bold tracking-wide text-foreground">{captchaQuestion} = ?</p>
+                        </div>
+                        <Input type="number" placeholder="Your answer" value={captchaAnswer} onChange={e => setCaptchaAnswer(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleVerifyCaptcha()} className="h-11" />
+                      </div>
+                      <Button onClick={handleVerifyCaptcha} className="w-full h-11" disabled={loginLoading}>
+                        {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Continue
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {/* FIREBASE OTP */}
+                  {loginStep === 'firebase-otp' && (
+                    <motion.div key="l-firebase" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      {firebasePhone.step === 'phone' && (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Phone Number</Label>
+                            <div className="flex gap-2">
+                              <Select value={loginCountry} onValueChange={setLoginCountry}>
+                                <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
+                                <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                              </Select>
+                              <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
+                            </div>
+                          </div>
+                          <Button onClick={handleFirebaseSendOTP} className="w-full h-11" disabled={firebasePhone.loading}>
+                            {firebasePhone.loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Code
+                          </Button>
+                        </>
+                      )}
+                      {(firebasePhone.step === 'otp' || firebasePhone.step === 'verifying') && (
+                        <>
+                          <div className="space-y-2 text-center">
+                            <Label>Enter 6-Digit Code</Label>
+                            <p className="text-sm text-muted-foreground">Code sent to {loginCountryCode}{loginPhone}</p>
+                            <div className="flex justify-center py-2">
+                              <InputOTP maxLength={6} value={firebaseOtpCode} onChange={setFirebaseOtpCode}>
+                                <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                              </InputOTP>
+                            </div>
+                          </div>
+                          <Button onClick={handleFirebaseVerifyOTP} className="w-full h-11" disabled={firebasePhone.loading || firebaseOtpCode.length !== 6}>
+                            {firebasePhone.loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Verify
+                          </Button>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => { firebasePhone.reset(); setFirebaseOtpCode(''); }}>Change Number</Button>
+                            <Button variant="ghost" size="sm" onClick={handleFirebaseSendOTP} disabled={firebasePhone.loading}>Resend</Button>
+                          </div>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* STANDARD PHONE */}
+                  {loginStep === 'phone' && (
+                    <motion.div key="l-phone" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="space-y-2">
+                        <Label>Phone Number</Label>
+                        <div className="flex gap-2">
+                          <Select value={loginCountry} onValueChange={setLoginCountry}>
+                            <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
+                            <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                          </Select>
+                          <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
+                        </div>
+                      </div>
+                      <Button onClick={handleLoginPhoneSubmit} className="w-full h-11" disabled={loginLoading}>
+                        {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Continue
+                      </Button>
+                      <Button variant="link" className="w-full text-sm" onClick={() => setShowForgotPassword(true)}>Forgot PIN?</Button>
+                    </motion.div>
+                  )}
+
+                  {/* PIN */}
+                  {loginStep === 'pin' && (
+                    <motion.div key="l-pin" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Lock className="h-5 w-5 text-primary" /></div>
+                        <h3 className="text-lg font-semibold text-foreground">Enter Your PIN</h3>
+                        <p className="text-sm text-muted-foreground">6-digit PIN for {loginCountryCode}{loginPhone}</p>
+                      </div>
+                      <div className="flex justify-center py-2">
+                        <InputOTP maxLength={6} value={loginPinCode} onChange={setLoginPinCode}>
+                          <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      {pinLoginAttempts < 3 && <p className="text-xs text-destructive text-center">{pinLoginAttempts} attempts remaining</p>}
+                      <Button onClick={handlePINLogin} className="w-full h-11" disabled={loginLoading || loginPinCode.length !== 6}>
+                        {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Login with PIN
+                      </Button>
+                      <Button variant="ghost" className="w-full text-sm" onClick={() => { setUsesPINLogin(false); setLoginStep('phone'); setLoginPinCode(''); }}>Use OTP instead</Button>
+                    </motion.div>
+                  )}
+
+                  {/* OTP */}
+                  {loginStep === 'otp' && (
+                    <motion.div key="l-otp" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Smartphone className="h-5 w-5 text-primary" /></div>
+                        <h3 className="text-lg font-semibold">Verify Your Code</h3>
+                        <p className="text-sm text-muted-foreground">Code sent to {loginCountryCode}{loginPhone}</p>
+                      </div>
+                      <div className="flex justify-center py-2">
+                        <InputOTP maxLength={6} value={loginOtpCode} onChange={setLoginOtpCode}>
+                          <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                        </InputOTP>
+                      </div>
+                      <Button onClick={handleLoginVerifyOTP} className="w-full h-11" disabled={loginLoading || loginOtpCode.length !== 6}>
+                        {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Verify
+                      </Button>
+                      <Button variant="ghost" className="w-full text-sm" onClick={() => { setLoginOtpCode(''); handleLoginSendOTP(); }} disabled={loginLoading}>Resend Code</Button>
+                    </motion.div>
+                  )}
+
+                  {/* COMPLETE */}
+                  {loginStep === 'complete' && (
+                    <motion.div key="l-done" {...fadeSlide} className="text-center py-10">
+                      <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4"><CheckCircle className="h-8 w-8 text-secondary" /></div>
+                      <h3 className="text-lg font-semibold text-foreground mb-1">Welcome back!</h3>
+                      <p className="text-sm text-muted-foreground">Redirecting to dashboard...</p>
+                    </motion.div>
+                  )}
+
+                  {/* Toggle to Register */}
+                  {loginStep !== 'complete' && (
+                    <div className="text-center pt-4 border-t border-border/50">
+                      <Button variant="link" onClick={() => { setAuthMode('register'); setRegisterStep('account-type'); }} className="text-sm text-muted-foreground hover:text-foreground">
+                        Don't have an account? Create one
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </AnimatePresence>
+          )}
+
+          {/* ═══ MODE: REGISTER ═══ */}
+          {authMode === 'register' && (
+            <AnimatePresence mode="wait">
+              {/* Progress bar */}
+              {registerStep !== 'success' && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1">
+                    {REGISTER_STEPS.filter(s => s.key !== 'success').map((s, i) => {
+                      const done = i < registerStepIndex;
+                      const active = i === registerStepIndex;
+                      const accentColor = activeAccountConfig.color.replace('text-', '');
+                      return (
+                        <div key={s.key} className="flex-1">
+                          <div className={`h-1.5 rounded-full transition-colors ${
+                            done ? `bg-${accentColor}` : active ? `bg-${accentColor}/60` : 'bg-muted'
+                          }`} style={done ? { backgroundColor: `var(--${accentColor}, hsl(var(--primary)))` } : active ? { backgroundColor: `var(--${accentColor}, hsl(var(--primary) / 0.6))` } : undefined} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between">
+                    {REGISTER_STEPS.filter(s => s.key !== 'success').map((s, i) => (
+                      <span key={s.key} className={`text-[10px] font-medium ${i <= registerStepIndex ? 'text-foreground' : 'text-muted-foreground'}`}>{s.label}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── STEP 1: Account Type Selection ── */}
+              {registerStep === 'account-type' && (
+                <motion.div key="r-type" {...fadeSlide} className="space-y-4">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">Choose Account Type</h2>
+                    <p className="text-sm text-muted-foreground">Select the type of account that best fits your needs</p>
+                  </div>
+
+                  <div className="space-y-3">
+                    {ACCOUNT_TYPES.map((acc) => {
+                      const Icon = acc.icon;
+                      const selected = selectedAccountType === acc.type;
+                      return (
+                        <button
+                          key={acc.type}
+                          type="button"
+                          onClick={() => setSelectedAccountType(acc.type)}
+                          className={`w-full text-left rounded-2xl border-2 p-4 transition-all ${
+                            selected ? `${acc.borderColor.split(' ')[0].replace('border-', 'border-').replace('200', '500')} ${acc.bgColor} shadow-sm` : `border-border/60 hover:border-border`
+                          }`}
+                        >
+                          <div className="flex items-start gap-3.5">
+                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${selected ? acc.iconBg : 'bg-muted'}`}>
+                              <Icon className={`h-5 w-5 ${selected ? acc.color : 'text-muted-foreground'}`} strokeWidth={1.5} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-foreground">{acc.label}</span>
+                                {selected && (
+                                  <div className={`w-5 h-5 rounded-full flex items-center justify-center ${acc.iconBg}`}>
+                                    <CheckCircle className={`h-3.5 w-3.5 ${acc.color}`} strokeWidth={2} />
+                                  </div>
+                                )}
+                              </div>
+                              <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">{acc.description}</p>
+                              {selected && (
+                                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-2.5 space-y-1">
+                                  {acc.requirements.map((req, i) => (
+                                    <div key={i} className="flex items-center gap-2">
+                                      <div className={`w-1 h-1 rounded-full ${acc.color.replace('text-', 'bg-')}`} />
+                                      <span className="text-[11px] text-muted-foreground">{req}</span>
+                                    </div>
+                                  ))}
+                                </motion.div>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <Button onClick={() => setRegisterStep('identity')} className="w-full h-11">
+                    Continue as {activeAccountConfig.label.replace(' Account', '').replace('Financial ', '')}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+
+                  <div className="text-center pt-2 border-t border-border/50">
+                    <Button variant="link" onClick={() => { setAuthMode('login'); setLoginStep('captcha'); generateCaptcha(); }} className="text-sm text-muted-foreground">
+                      Already have an account? Sign in
+                    </Button>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ── STEP 2: Identity ── */}
+              {registerStep === 'identity' && (
+                <motion.div key="r-identity" {...fadeSlide}>
+                  <Card className="border-border/50 shadow-sm">
+                    <CardContent className="pt-6 space-y-4">
+                      <Button variant="ghost" size="sm" onClick={() => setRegisterStep('account-type')} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeAccountConfig.iconBg}`}>
+                          <activeAccountConfig.icon className={`h-4 w-4 ${activeAccountConfig.color}`} strokeWidth={1.5} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-foreground">Verify Your Identity</h3>
+                          <p className="text-xs text-muted-foreground">We'll send a code to verify your phone</p>
+                        </div>
+                      </div>
+
+                      {!regOtpSent ? (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Full Name <span className="text-destructive">*</span></Label>
+                            <Input placeholder="John Doe" value={fullName} onChange={e => setFullName(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Phone Number <span className="text-destructive">*</span></Label>
+                            <div className="flex gap-2">
+                              <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                                <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
+                                <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                              </Select>
+                              <Input type="tel" placeholder="6 XX XX XX XX" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} className="h-11" />
+                            </div>
+                          </div>
+                          {['merchant', 'institution', 'developer'].includes(selectedAccountType) && (
+                            <div className="space-y-2">
+                              <Label>Email Address <span className="text-destructive">*</span></Label>
+                              <Input type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11" />
+                              <p className="text-xs text-muted-foreground">Required for {selectedAccountType === 'merchant' ? 'business' : selectedAccountType} accounts</p>
+                            </div>
+                          )}
+                          {selectedAccountType === 'personal' && (
+                            <div className="space-y-2">
+                              <Label>Email Address <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                              <Input type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} className="h-11" />
+                            </div>
+                          )}
+                          <Button onClick={handleRegSendOTP} className="w-full h-11" disabled={regLoading || firebasePhone.loading}>
+                            {(regLoading || firebasePhone.loading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Send Verification Code
+                          </Button>
+                        </>
+                      ) : !regOtpVerified ? (
+                        <>
+                          <div className="text-center space-y-1">
+                            <p className="text-sm text-muted-foreground">Code sent to {countryCode}{phoneNumber}</p>
+                          </div>
+                          <div className="flex justify-center py-2">
+                            <InputOTP maxLength={6} value={regOtpCode} onChange={setRegOtpCode}>
+                              <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                          <Button onClick={handleRegVerifyOTP} className="w-full h-11" disabled={regLoading || firebasePhone.loading || regOtpCode.length !== 6}>
+                            {(regLoading || firebasePhone.loading) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Verify Code
+                          </Button>
+                          <div className="flex gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => { setRegOtpSent(false); setRegOtpCode(''); firebasePhone.reset(); }}>Change Number</Button>
+                            <Button variant="ghost" size="sm" onClick={handleRegSendOTP} disabled={firebasePhone.loading}>Resend</Button>
+                          </div>
+                        </>
+                      ) : null}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* ── STEP 3: Account Details ── */}
+              {registerStep === 'details' && (
+                <motion.div key="r-details" {...fadeSlide}>
+                  <Card className="border-border/50 shadow-sm">
+                    <CardContent className="pt-6 space-y-4">
+                      <Button variant="ghost" size="sm" onClick={() => setRegisterStep('identity')} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+
+                      <div className="flex items-center gap-2.5">
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${activeAccountConfig.iconBg}`}>
+                          <activeAccountConfig.icon className={`h-4 w-4 ${activeAccountConfig.color}`} strokeWidth={1.5} />
+                        </div>
+                        <div>
+                          <h3 className="text-base font-semibold text-foreground">
+                            {selectedAccountType === 'personal' ? 'Personal Details' :
+                             selectedAccountType === 'merchant' ? 'Business Details' :
+                             selectedAccountType === 'institution' ? 'Institution Details' : 'Organization Details'}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">Complete your profile to continue</p>
+                        </div>
+                      </div>
+
+                      {/* Personal */}
+                      {selectedAccountType === 'personal' && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Date of Birth <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input type="date" value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Country</Label>
+                            <Select value={detailCountry} onValueChange={setDetailCountry}>
+                              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 space-y-1.5">
+                            <p className="text-xs font-medium text-blue-700">What happens next</p>
+                            <p className="text-xs text-blue-600 leading-relaxed">After registration, you'll need to complete KYC verification to access all features including transfers and mobile money linking.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Merchant */}
+                      {selectedAccountType === 'merchant' && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Business Name <span className="text-destructive">*</span></Label>
+                            <Input placeholder="Acme Ltd" value={businessName} onChange={e => setBusinessName(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Business Type <span className="text-destructive">*</span></Label>
+                            <Select value={businessType} onValueChange={setBusinessType}>
+                              <SelectTrigger className="h-11"><SelectValue placeholder="Select type" /></SelectTrigger>
+                              <SelectContent>{BUSINESS_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Business Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input type="email" placeholder="info@acme.com" value={businessEmail} onChange={e => setBusinessEmail(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Business Phone <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input type="tel" placeholder="+237 6XX XXX XXX" value={businessPhone} onChange={e => setBusinessPhone(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Country</Label>
+                            <Select value={detailCountry} onValueChange={setDetailCountry}>
+                              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 space-y-1.5">
+                            <p className="text-xs font-medium text-emerald-700">What happens next</p>
+                            <p className="text-xs text-emerald-600 leading-relaxed">You'll need to complete KYB verification with business registration documents before accepting payments. Settlement configuration will be done in your merchant portal.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Institution */}
+                      {selectedAccountType === 'institution' && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Institution Name <span className="text-destructive">*</span></Label>
+                            <Input placeholder="First National Bank" value={institutionName} onChange={e => setInstitutionName(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Institution Type <span className="text-destructive">*</span></Label>
+                            <Select value={institutionType} onValueChange={setInstitutionType}>
+                              <SelectTrigger className="h-11"><SelectValue placeholder="Select type" /></SelectTrigger>
+                              <SelectContent>{INSTITUTION_TYPES.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Registration Number <span className="text-destructive">*</span></Label>
+                            <Input placeholder="RC/DJA/2024/B/XXX" value={registrationNumber} onChange={e => setRegistrationNumber(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Country</Label>
+                            <Select value={detailCountry} onValueChange={setDetailCountry}>
+                              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-1.5">
+                            <p className="text-xs font-medium text-amber-700">Regulatory Notice</p>
+                            <p className="text-xs text-amber-600 leading-relaxed">Institution registration requires COBAC regulatory licence verification and admin approval. KYB documents including operating licence and board resolution are mandatory.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Developer */}
+                      {selectedAccountType === 'developer' && (
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label>Organization Name <span className="text-destructive">*</span></Label>
+                            <Input placeholder="My Fintech Startup" value={orgName} onChange={e => setOrgName(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Use Case <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input placeholder="e.g. Payment integration for e-commerce" value={useCase} onChange={e => setUseCase(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Country</Label>
+                            <Select value={detailCountry} onValueChange={setDetailCountry}>
+                              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="rounded-xl bg-violet-50 border border-violet-200 p-3 space-y-1.5">
+                            <p className="text-xs font-medium text-violet-700">Sandbox Access</p>
+                            <p className="text-xs text-violet-600 leading-relaxed">You'll get immediate sandbox access to test API integrations. Production access requires approval and KYB documentation.</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <Button onClick={handleSubmitRegistration} className="w-full h-11" disabled={regLoading}>
+                        {regLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Create {activeAccountConfig.label}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* ── STEP 4: PIN Setup ── */}
+              {registerStep === 'pin-setup' && (
+                <motion.div key="r-pin" {...fadeSlide}>
+                  <Card className="border-border/50 shadow-sm">
+                    <CardContent className="pt-6">
+                      <MandatoryPinSetupStep
+                        onComplete={handlePinComplete}
+                        title="Set Your Security PIN"
+                        subtitle="Create a 6-digit PIN for secure login and transactions"
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+
+              {/* ── STEP 5: Success ── */}
+              {registerStep === 'success' && (
+                <motion.div key="r-success" {...fadeSlide}>
+                  <Card className="border-border/50 shadow-sm">
+                    <CardContent className="pt-8 pb-8">
+                      <div className="text-center space-y-4">
+                        <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto ${activeAccountConfig.iconBg}`}>
+                          <CheckCircle className={`h-8 w-8 ${activeAccountConfig.color}`} strokeWidth={1.5} />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-semibold text-foreground">{activeAccountConfig.label} Created</h3>
+                          <p className="text-sm text-muted-foreground mt-1">Your account is set up and ready to go</p>
+                        </div>
+
+                        <div className="rounded-xl bg-muted/50 p-4 text-left space-y-2">
+                          <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Next Steps</p>
+                          {activeAccountConfig.requirements.map((req, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${activeAccountConfig.iconBg}`}>
+                                <span className={`text-[10px] font-bold ${activeAccountConfig.color}`}>{i + 1}</span>
+                              </div>
+                              <span className="text-xs text-muted-foreground">{req}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        <p className="text-xs text-muted-foreground">Redirecting to your dashboard...</p>
+                        <Loader2 className="h-4 w-4 animate-spin mx-auto text-muted-foreground" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          )}
         </div>
       </div>
 
-      {/* Right Panel — Hero */}
+      {/* ──── RIGHT PANEL — Hero ──── */}
       <div
         className="hidden lg:flex relative overflow-hidden items-center justify-center"
         style={{
@@ -824,45 +1082,42 @@ export default function Auth() {
       >
         {authConfig.hero_image_url && <div className="absolute inset-0 bg-black/40" />}
         <div className="relative text-center space-y-6 px-12 z-10 max-w-lg">
-          <h2 className="text-5xl font-bold text-white drop-shadow-lg leading-tight">
-            {authConfig.hero_title}
-          </h2>
-          <p className="text-xl text-white/90 drop-shadow leading-relaxed">
-            {authConfig.hero_subtitle}
-          </p>
+          {/* Dynamic account type badge */}
+          {authMode === 'register' && registerStep !== 'account-type' && (
+            <div className="flex justify-center">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/15 backdrop-blur-sm border border-white/20">
+                <activeAccountConfig.icon className="h-4 w-4 text-white/90" strokeWidth={1.5} />
+                <span className="text-sm font-medium text-white/90">{activeAccountConfig.label}</span>
+              </div>
+            </div>
+          )}
 
-          {/* Feature Pills */}
+          <h2 className="text-5xl font-bold text-white drop-shadow-lg leading-tight">{hero.title}</h2>
+          <p className="text-xl text-white/90 drop-shadow leading-relaxed">{hero.subtitle}</p>
+
           <div className="flex flex-wrap justify-center gap-2 pt-4">
-            {['Open Banking', 'Mobile Money', 'Payments', 'Credit Score'].map((f) => (
-              <span key={f} className="px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-sm text-white/90 border border-white/20">
-                {f}
-              </span>
+            {hero.features.map((f) => (
+              <span key={f} className="px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-sm text-sm text-white/90 border border-white/20">{f}</span>
             ))}
           </div>
 
-          {/* Account Type Cards */}
-          <div className="grid grid-cols-2 gap-3 pt-6">
-            {ACCOUNT_TYPE_OPTIONS.map((acc) => {
-              const Icon = acc.icon;
-              return (
-                <button
-                  key={acc.type}
-                  onClick={() => acc.type === 'personal' ? undefined : navigate(acc.path)}
-                  className={`flex items-center gap-3 p-3 rounded-xl text-left transition-all ${
-                    acc.type === 'personal'
-                      ? 'bg-white/20 border-2 border-white/40 backdrop-blur-sm cursor-default'
-                      : 'bg-white/10 border border-white/20 backdrop-blur-sm hover:bg-white/20 cursor-pointer'
-                  }`}
-                >
-                  <Icon className="h-5 w-5 text-white/80 shrink-0" />
-                  <div>
-                    <span className="text-sm font-semibold text-white">{acc.label}</span>
-                    <p className="text-xs text-white/70">{acc.desc}</p>
+          {/* Account type cards on select/login mode */}
+          {(authMode === 'select' || authMode === 'login') && (
+            <div className="grid grid-cols-2 gap-3 pt-6">
+              {ACCOUNT_TYPES.map((acc) => {
+                const Icon = acc.icon;
+                return (
+                  <div key={acc.type} className="flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm text-left">
+                    <Icon className="h-5 w-5 text-white/80 shrink-0" strokeWidth={1.5} />
+                    <div>
+                      <span className="text-sm font-semibold text-white">{acc.label.replace(' Account', '').replace('Financial ', '')}</span>
+                      <p className="text-xs text-white/70">{acc.subtitle}</p>
+                    </div>
                   </div>
-                </button>
-              );
-            })}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
