@@ -19,6 +19,7 @@ const Register = () => {
   const [user, setUser] = useState<any>(null);
   const [institutionType, setInstitutionType] = useState("");
   const [useKobFlutterwave, setUseKobFlutterwave] = useState(false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
   const [formData, setFormData] = useState({
     institutionName: "",
     registrationNumber: "",
