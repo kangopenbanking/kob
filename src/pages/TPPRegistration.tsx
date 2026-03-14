@@ -16,6 +16,7 @@ const TPPRegistration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [registration, setRegistration] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showPinSetup, setShowPinSetup] = useState(false);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
