@@ -405,7 +405,7 @@ export default function Auth() {
                   : i === 1 ? ['phone', 'firebase-otp', 'pin', 'otp'].includes(authStep)
                   : false;
                 const done = i === 0 ? authStep !== 'captcha'
-                  : i === 1 ? authStep === 'complete'
+                  : i === 1 ? (authStep as string) === 'complete'
                   : false;
                 return (
                   <div key={label} className="flex items-center gap-1 flex-1">
