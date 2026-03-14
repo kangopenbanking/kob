@@ -286,8 +286,8 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
   };
 
   const handleResetPin = async () => {
-    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast.error('Please enter a 6-digit PIN'); return; }
-    if (newPin !== confirmNewPin) { toast.error('PINs do not match'); return; }
+    if (newPin.length !== 6 || confirmNewPin.length !== 6) { toast({ title: 'Invalid', description: 'Please enter a 6-digit PIN', variant: 'destructive' }); return; }
+    if (newPin !== confirmNewPin) { toast({ title: 'Mismatch', description: 'PINs do not match', variant: 'destructive' }); return; }
     setResetPinLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke('pin-code-reset', {
