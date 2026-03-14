@@ -115,6 +115,11 @@ const BUSINESS_TYPES = [
   { value: 'partnership', label: 'Partnership' },
   { value: 'cooperative', label: 'Cooperative' },
   { value: 'ngo', label: 'NGO / Non-Profit' },
+  { value: 'freelancer', label: 'Freelancer' },
+  { value: 'e_commerce', label: 'E-Commerce' },
+  { value: 'saas', label: 'SaaS' },
+  { value: 'marketplace', label: 'Marketplace' },
+  { value: 'other', label: 'Other' },
 ];
 
 const fadeSlide = {
