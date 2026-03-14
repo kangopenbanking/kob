@@ -730,6 +730,13 @@ const CustomerAuth: React.FC = () => {
               </motion.div>
             )}
 
+            {/* Mandatory PIN Setup after signup */}
+            {mode === 'setup-pin' && (
+              <motion.div key="setup-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <MandatoryPinSetupStep onComplete={() => navigateAfterAuth()} />
+              </motion.div>
+            )}
+
             {mode === 'verifying' && (
               <motion.div key="verifying" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center gap-4 py-12">
                 <Loader2 className="h-10 w-10 animate-spin text-primary" />
