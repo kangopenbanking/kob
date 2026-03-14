@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, CheckCircle2, AlertCircle, Shield, Key } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
 
 const TPPRegistration = () => {
   const [softwareStatement, setSoftwareStatement] = useState("");
