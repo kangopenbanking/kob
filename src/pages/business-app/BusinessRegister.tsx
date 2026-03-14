@@ -6,10 +6,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { Loader2, Store, ArrowRight, ArrowLeft, CheckCircle2, Building2, Mail, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import kangLogo from '@/assets/kang-logo.png';
+import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
 const STEPS = [
   { title: 'Business Info', description: 'Tell us about your business' },
