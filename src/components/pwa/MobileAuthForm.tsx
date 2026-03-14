@@ -301,7 +301,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       } else { throw new Error(data?.error || 'Failed to reset PIN'); }
     } catch (err: any) {
       sounds.error();
-      toast.error(err.message || 'Failed to reset PIN');
+      toast({ title: 'Error', description: err.message || 'Failed to reset PIN', variant: 'destructive' });
     } finally {
       setResetPinLoading(false);
     }
