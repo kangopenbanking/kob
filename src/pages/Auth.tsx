@@ -321,19 +321,34 @@ export default function Auth() {
     try { pinSchema.parse(loginPinCode); } catch { toast({ title: 'Invalid PIN', description: 'PIN must be 6 digits', variant: 'destructive' }); return; }
     setLoginLoading(true);
     try {
+      // Auto-generate and solve captcha for PIN login (matching mobile behavior)
+      let captchaSid = captchaSessionId;
+      if (!captchaSid) {
+        const { data: captchaData, error: captchaError } = await supabase.functions.invoke('captcha-generate', { body: {} });
+        if (captchaError) throw captchaError;
+        const answer = solveCaptcha(captchaData.question);
+        await supabase.functions.invoke('captcha-verify', { body: { session_id: captchaData.session_id, answer } });
+        captchaSid = captchaData.session_id;
+      }
+
       const fullPhone = `${loginCountryCode}${loginPhone}`;
       const { data, error } = await supabase.functions.invoke('phone-auth-pin-login', {
-        body: { phone_number: fullPhone, pin_code: loginPinCode, captcha_session_id: captchaSessionId },
+        body: { phone_number: fullPhone, pin_code: loginPinCode, captcha_session_id: captchaSid },
       });
       if (error) {
         try { const p = JSON.parse(typeof error === 'object' && error.message ? error.message : String(error)); if (p.locked) throw new Error(p.error); if (p.remaining_attempts !== undefined) setPinLoginAttempts(p.remaining_attempts); throw new Error(p.error || 'Invalid PIN'); } catch (pe) { if (pe instanceof SyntaxError) throw new Error(String(error)); throw pe; }
       }
-      if (!data?.success) { if (data?.locked) throw new Error(data.error); setPinLoginAttempts(data?.remaining_attempts || 0); throw new Error(data?.error || 'Invalid PIN'); }
-      if (data.session) await supabase.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+      if (!data?.success) { if (data?.locked) throw new Error(data.error); sounds.error(); setPinLoginAttempts(data?.remaining_attempts || 0); throw new Error(data?.error || 'Invalid PIN'); }
+      if (data.session) {
+        await supabase.auth.setSession({ access_token: data.session.access_token, refresh_token: data.session.refresh_token });
+        await enforceSingleSession(data.session.access_token);
+      }
+      sounds.success();
       toast({ title: 'Welcome back!', description: 'Signed in successfully' });
       setLoginStep('complete');
       setTimeout(() => navigate('/dashboard'), 1000);
     } catch (err: any) {
+      sounds.error();
       toast({ title: 'Login Failed', description: err.message || 'Invalid PIN', variant: 'destructive' });
     } finally { setLoginLoading(false); }
   };
