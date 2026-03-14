@@ -18,6 +18,7 @@ import { NestedNotFound } from "@/components/NestedNotFound";
 import { ScrollToTop } from "@/components/ScrollToTop";
 import { PWARouteGuard } from "@/components/pwa/PWARouteGuard";
 import { DeveloperLayout } from "@/components/developer/DeveloperLayout";
+import { PublicDeveloperLayout } from "@/components/developer/PublicDeveloperLayout";
 import { InstitutionLayout } from "@/components/institution/InstitutionLayout";
 import { MerchantLayout } from "@/components/merchant/MerchantLayout";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
