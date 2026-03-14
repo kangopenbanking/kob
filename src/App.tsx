@@ -261,6 +261,7 @@ const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManage
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
 const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
+const InstitutionManagement = lazy(() => import("./pages/admin/InstitutionManagement"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
@@ -656,6 +657,7 @@ function App() {
               <Route path="business-kyc" element={<BusinessKYCReview />} />
               <Route path="tpp-registrations" element={<TPPRegistrationReview />} />
               <Route path="institution-verification" element={<InstitutionVerification />} />
+              <Route path="institution-management" element={<InstitutionManagement />} />
               <Route path="security-dashboard" element={<SecurityDashboard />} />
               {/* Phase 1: Fixed orphaned routes - now inside admin layout */}
               <Route path="fee-management" element={<FeeManagement />} />

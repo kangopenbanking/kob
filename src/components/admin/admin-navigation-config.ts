@@ -60,6 +60,7 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Registration & Verification",
     items: [
       { title: "Institution Verification", path: "/admin/institution-verification", icon: Shield },
+      { title: "Institution Management", path: "/admin/institution-management", icon: Building2 },
       { title: "KYC Verification", path: "/admin/kyc-verification", icon: Shield },
       { title: "Business KYC (KYB)", path: "/admin/business-kyc", icon: Building2 },
       { title: "TPP Registrations", path: "/admin/tpp-registrations", icon: Key },
