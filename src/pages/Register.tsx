@@ -86,7 +86,13 @@ const Register = () => {
         description: "Your application is pending review. You'll be notified once approved.",
       });
 
-      navigate('/pending-approval');
+      // Check if user needs PIN setup
+      const { data: profile } = await supabase.from("profiles").select("pin_code_hash").eq("id", user.id).maybeSingle();
+      if (!profile?.pin_code_hash) {
+        setShowPinSetup(true);
+      } else {
+        navigate('/pending-approval');
+      }
     } catch (error: any) {
       console.error("Registration error:", error);
       
