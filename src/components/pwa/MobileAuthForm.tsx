@@ -18,7 +18,7 @@ import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
-type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin';
+type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 
 interface MobileAuthFormProps {
   onAuthSuccess: () => void;
