@@ -42,7 +42,6 @@ const BusinessRegister: React.FC = () => {
   });
 
   const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
-  const selectedCountry = COUNTRIES.find(c => c.code === form.country);
 
   const canProceed = () => {
     if (step === 0) return form.business_name.trim().length >= 2 && form.business_type;
