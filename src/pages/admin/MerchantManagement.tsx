@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Store, Eye, Shield, CheckCircle, XCircle, AlertCircle, Key, Landmark, Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Store, Eye, Shield, CheckCircle, XCircle, AlertCircle, Key, Landmark, Clock, Ban, Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 export default function MerchantManagement() {
