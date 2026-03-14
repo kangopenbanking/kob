@@ -692,7 +692,7 @@ export default function Auth() {
                   )}
 
                   {/* Toggle to Register */}
-                  {loginStep !== 'complete' && (
+                  {!(['complete'] as string[]).includes(loginStep) && (
                     <div className="text-center pt-4 border-t border-border/50">
                       <Button variant="link" onClick={() => { setAuthMode('register'); setRegisterStep('account-type'); }} className="text-sm text-muted-foreground hover:text-foreground">
                         Don't have an account? Create one
