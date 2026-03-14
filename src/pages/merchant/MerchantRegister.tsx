@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, Store, ArrowRight, ArrowLeft, CheckCircle2, Building2, Globe, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
 
 const STEPS = [
   { title: "Business Information", description: "Tell us about your business" },
