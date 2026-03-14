@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Key, FileText, ExternalLink, CheckCircle, XCircle, Clock, Shield } from "lucide-react";
+import { Key, FileText, ExternalLink, CheckCircle, XCircle, Clock, Shield, Ban, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 
 interface TPPRegistration {
