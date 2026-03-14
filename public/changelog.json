@@ -1,5 +1,21 @@
 [
   {
+    "version": "3.9.0",
+    "date": "2026-03-14",
+    "type": "minor",
+    "breaking_changes": false,
+    "summary": "Admin Rewards & Referral Management, 5 new banking fee types, dynamic reward configuration",
+    "highlights": [
+      "Admin Rewards Management — full referral tracking, reward history, manual credit, and void capabilities",
+      "Dynamic reward settings — referral bonus, cashback rate, and minimum transfer configurable via system_config",
+      "Edge function rewards-process-cashback reads config dynamically instead of hardcoded values",
+      "Customer app reward display syncs with admin-configured values in real time",
+      "5 new fee types: overdraft_fee, loan_processing_fee, atm_withdrawal, standing_order, dormancy_fee",
+      "New 'Banking' fee category for ATM, standing order, and dormancy fees",
+      "Fee estimate hook updated with new channel mappings and fallback rates"
+    ]
+  },
+  {
     "version": "3.8.0",
     "date": "2026-03-13",
     "type": "minor",
