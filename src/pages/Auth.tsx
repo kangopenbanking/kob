@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Smartphone, Shield, Bus, User, Building2, Landmark, Code, CheckCircle, Lock, Globe, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowLeft, Smartphone, Shield, User, Building2, Landmark, Code, CheckCircle, Lock, Globe, ArrowRight } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
@@ -477,23 +477,6 @@ export default function Auth() {
                       </div>
                     )}
 
-                    {/* Merchant Staff Link */}
-                    {!showForgotPassword && (
-                      <button
-                        type="button"
-                        onClick={() => navigate('/staff-login')}
-                        className="flex items-center gap-3 w-full rounded-xl border border-dashed border-border p-3 text-left transition-all hover:border-primary/40 hover:bg-muted/50"
-                      >
-                        <div className="w-9 h-9 rounded-lg bg-muted flex items-center justify-center">
-                          <Bus className="h-4 w-4 text-muted-foreground" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-sm font-medium text-foreground">Merchant Staff Login</span>
-                          <p className="text-xs text-muted-foreground">Travel & transport staff</p>
-                        </div>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                    )}
 
                     {/* Captcha */}
                     <div className="space-y-3">
