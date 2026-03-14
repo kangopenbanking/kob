@@ -241,13 +241,17 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     setLoading(true);
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
           options: { data: { full_name: form.fullName }, emailRedirectTo: `${window.location.origin}${window.location.pathname}` },
         });
         if (error) throw error;
-        setStep('email-sent');
+        if (signUpData?.session) {
+          setStep('setup-pin');
+        } else {
+          setStep('email-sent');
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
         if (error) throw error;
