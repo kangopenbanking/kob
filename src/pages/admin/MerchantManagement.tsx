@@ -113,6 +113,25 @@ export default function MerchantManagement() {
     onError: (err: any) => toast.error(err.message),
   });
 
+  const adminManageMutation = useMutation({
+    mutationFn: async ({ action, entityId, reason }: { action: string; entityId: string; reason?: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: { action, target_entity_id: entityId, reason },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Merchant ${vars.action.replace('_merchant', '')} successfully`);
+      queryClient.invalidateQueries({ queryKey: ["admin-gateway-merchants"] });
+      setSuspendDialogOpen(false);
+      setDeleteDialogOpen(false);
+      setActionReason("");
+    },
+    onError: (err: any) => toast.error(err.message || "Action failed"),
+  });
+
   const filtered = (merchants || []).filter((m: any) => {
     const matchSearch = m.business_name?.toLowerCase().includes(search.toLowerCase()) ||
       m.business_email?.toLowerCase().includes(search.toLowerCase());
