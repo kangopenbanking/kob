@@ -757,7 +757,7 @@ export default function Auth() {
                         <div className="flex gap-2">
                           <Select value={loginCountry} onValueChange={setLoginCountry}>
                             <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                            <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                            <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                           </Select>
                           <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                         </div>
