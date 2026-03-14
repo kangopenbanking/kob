@@ -180,42 +180,7 @@ export default function OnboardingManagement() {
                     <TableCell className="text-muted-foreground text-sm">{app.reviewed_at ? new Date(app.reviewed_at).toLocaleDateString() : '—'}</TableCell>
                     <TableCell>
                       {['submitted', 'under_review'].includes(app.status) ? (
-                        <Dialog>
-                          <DialogTrigger asChild>
-                            <Button size="sm" variant="outline" onClick={() => setSelectedApp(app)}>Review</Button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader>
-                              <DialogTitle>Review Application</DialogTitle>
-                              <DialogDescription>
-                                {app.entity_type.replace('_', ' ')} application — ID: {app.id.slice(0, 8)}...
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="space-y-4 py-4">
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                <span className="text-muted-foreground">Entity Type:</span>
-                                <span className="capitalize">{app.entity_type.replace('_', ' ')}</span>
-                                <span className="text-muted-foreground">Submitted:</span>
-                                <span>{app.submitted_at ? new Date(app.submitted_at).toLocaleString() : 'N/A'}</span>
-                              </div>
-                              <Textarea
-                                placeholder="Review notes (optional)"
-                                value={reviewNotes}
-                                onChange={(e) => setReviewNotes(e.target.value)}
-                              />
-                            </div>
-                            <DialogFooter className="gap-2">
-                              <Button variant="destructive" onClick={() => handleReview('rejected')} disabled={reviewing}>
-                                {reviewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <XCircle className="h-4 w-4 mr-2" />}
-                                Reject
-                              </Button>
-                              <Button onClick={() => handleReview('approved')} disabled={reviewing}>
-                                {reviewing ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle className="h-4 w-4 mr-2" />}
-                                Approve
-                              </Button>
-                            </DialogFooter>
-                          </DialogContent>
-                        </Dialog>
+                        <Button size="sm" variant="outline" onClick={() => openReviewDialog(app)}>Review</Button>
                       ) : (
                         <span className="text-sm text-muted-foreground">—</span>
                       )}
