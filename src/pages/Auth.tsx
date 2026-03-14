@@ -10,7 +10,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, ArrowLeft, Smartphone, Shield, Bus, User, Building2, Landmark, Code, CheckCircle, Lock, Globe, ArrowRight } from 'lucide-react';
+import { Loader2, ArrowLeft, Smartphone, Shield, User, Building2, Landmark, Code, CheckCircle, Lock, Globe, ArrowRight } from 'lucide-react';
 import { z } from 'zod';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { useAuthPageConfig } from '@/hooks/useAuthPageConfig';
