@@ -124,7 +124,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         body: { phone_number: fullPhone },
       });
       if (error) {
-        toast.error('Could not verify account. Please try again.');
+        toast({ title: 'Error', description: 'Could not verify account. Please try again.', variant: 'destructive' });
       } else if (data?.has_pin) {
         setUserHasPin(true);
         setStep('pin');
