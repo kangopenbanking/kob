@@ -4289,6 +4289,42 @@ export type Database = {
         }
         Relationships: []
       }
+      developer_orgs: {
+        Row: {
+          country: string | null
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          country?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
       developer_resources: {
         Row: {
           created_at: string | null
@@ -6004,6 +6040,7 @@ export type Database = {
           kyb_status: string
           metadata: Json | null
           monthly_volume_limit: number | null
+          onboarding_status: string | null
           plan_tier: string
           single_charge_limit: number | null
           status: string
@@ -6033,6 +6070,7 @@ export type Database = {
           kyb_status?: string
           metadata?: Json | null
           monthly_volume_limit?: number | null
+          onboarding_status?: string | null
           plan_tier?: string
           single_charge_limit?: number | null
           status?: string
@@ -6062,6 +6100,7 @@ export type Database = {
           kyb_status?: string
           metadata?: Json | null
           monthly_volume_limit?: number | null
+          onboarding_status?: string | null
           plan_tier?: string
           single_charge_limit?: number | null
           status?: string
@@ -7097,6 +7136,36 @@ export type Database = {
           payload_hash?: string
           response_body?: Json | null
           response_status?: number | null
+        }
+        Relationships: []
+      }
+      identity_memberships: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          role: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          role?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          role?: string
+          status?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -9543,6 +9612,86 @@ export type Database = {
           },
         ]
       }
+      mfa_challenges: {
+        Row: {
+          challenge_code_hash: string
+          created_at: string
+          expires_at: string
+          factor_id: string
+          id: string
+          ip_address: string | null
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          challenge_code_hash: string
+          created_at?: string
+          expires_at: string
+          factor_id: string
+          id?: string
+          ip_address?: string | null
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          challenge_code_hash?: string
+          created_at?: string
+          expires_at?: string
+          factor_id?: string
+          id?: string
+          ip_address?: string | null
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mfa_challenges_factor_id_fkey"
+            columns: ["factor_id"]
+            isOneToOne: false
+            referencedRelation: "mfa_factors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      mfa_factors: {
+        Row: {
+          created_at: string
+          email_snapshot: string | null
+          enabled: boolean
+          friendly_name: string | null
+          id: string
+          phone_snapshot: string | null
+          secret_encrypted: string | null
+          type: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          email_snapshot?: string | null
+          enabled?: boolean
+          friendly_name?: string | null
+          id?: string
+          phone_snapshot?: string | null
+          secret_encrypted?: string | null
+          type: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          email_snapshot?: string | null
+          enabled?: boolean
+          friendly_name?: string | null
+          id?: string
+          phone_snapshot?: string | null
+          secret_encrypted?: string | null
+          type?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       mfa_settings: {
         Row: {
           backup_codes: string[] | null
@@ -10027,6 +10176,51 @@ export type Database = {
           state?: string
           used?: boolean | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      onboarding_applications: {
+        Row: {
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          notes: string | null
+          reviewed_at: string | null
+          reviewer_user_id: string | null
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewer_user_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          notes?: string | null
+          reviewed_at?: string | null
+          reviewer_user_id?: string | null
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -16366,6 +16560,42 @@ export type Database = {
           require_mfa?: boolean | null
           session_timeout_minutes?: number | null
           updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_sessions: {
+        Row: {
+          app_context: string | null
+          created_at: string
+          device_fingerprint: string | null
+          id: string
+          ip_address: string | null
+          last_seen_at: string
+          revoked_at: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          app_context?: string | null
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          app_context?: string | null
+          created_at?: string
+          device_fingerprint?: string | null
+          id?: string
+          ip_address?: string | null
+          last_seen_at?: string
+          revoked_at?: string | null
+          user_agent?: string | null
           user_id?: string
         }
         Relationships: []
