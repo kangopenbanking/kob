@@ -751,8 +751,8 @@ export default function Auth() {
                 {/* === SUCCESS === */}
                 {authStep === 'complete' && (
                   <motion.div key="complete" {...fadeSlide} className="text-center py-10">
-                    <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mx-auto mb-4">
-                      <CheckCircle className="h-8 w-8 text-green-600" />
+                    <div className="w-16 h-16 rounded-full bg-secondary/10 flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle className="h-8 w-8 text-secondary" />
                     </div>
                     <h3 className="text-lg font-semibold text-foreground mb-1">
                       {isLogin ? 'Welcome back!' : 'Account created!'}
