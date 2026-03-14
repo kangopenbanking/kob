@@ -364,9 +364,20 @@ export default function Auth() {
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Failed');
       await supabase.auth.refreshSession();
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) await enforceSingleSession(session.access_token);
+      // Check if user needs PIN setup
+      if (session) {
+        const { data: profile } = await supabase.from('profiles').select('pin_code_hash').eq('id', session.user.id).maybeSingle();
+        if (!profile?.pin_code_hash) {
+          setLoginStep('setup-pin');
+          return;
+        }
+      }
+      sounds.success();
       setLoginStep('complete');
       setTimeout(() => navigate('/dashboard'), 1000);
-    } catch (err: any) { toast({ title: 'Failed', description: err.message, variant: 'destructive' }); }
+    } catch (err: any) { sounds.error(); toast({ title: 'Failed', description: err.message, variant: 'destructive' }); }
     finally { setLoginLoading(false); }
   };
 
