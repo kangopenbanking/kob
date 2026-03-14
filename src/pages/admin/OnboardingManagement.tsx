@@ -36,6 +36,13 @@ export default function OnboardingManagement() {
   const [selectedApp, setSelectedApp] = useState<any | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [reviewing, setReviewing] = useState(false);
+  const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
+
+  const openReviewDialog = (app: any) => {
+    setSelectedApp(app);
+    setReviewNotes('');
+    setReviewDialogOpen(true);
+  };
 
   useEffect(() => {
     loadApplications();
