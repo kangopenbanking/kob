@@ -232,6 +232,18 @@ export default function MerchantManagement() {
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>
                       </DialogTrigger>
+                    {m.status === 'suspended' ? (
+                      <Button size="sm" variant="outline" onClick={() => adminManageMutation.mutate({ action: 'unsuspend_merchant', entityId: m.id })} disabled={adminManageMutation.isPending}>
+                        <RotateCcw className="h-3.5 w-3.5 mr-1" /> Unsuspend
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" className="text-destructive" onClick={() => { setActionTarget(m); setSuspendDialogOpen(true); }}>
+                        <Ban className="h-3.5 w-3.5 mr-1" /> Suspend
+                      </Button>
+                    )}
+                    <Button size="sm" variant="destructive" onClick={() => { setActionTarget(m); setDeleteDialogOpen(true); }}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                    </Button>
                       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{m.business_name}</DialogTitle>
