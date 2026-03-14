@@ -95,7 +95,7 @@ const BusinessRegister: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
       <div className="relative overflow-hidden bg-primary px-6 pb-14 pt-12">
         <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[hsl(0,0%,100%)]/[0.08]" />
