@@ -75,7 +75,7 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   dormancy_fee: { icon: Lock, category: "Banking", label: "Dormancy Fee" },
 };
 
-const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Savings", "Lending", "Social", "International", "Gateway", "Services"];
+const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Banking", "Savings", "Lending", "Social", "International", "Gateway", "Services"];
 
 const CATEGORY_STYLES: Record<string, { bg: string; border: string; text: string; icon: any }> = {
   Core: { bg: "bg-blue-500/5", border: "border-blue-200 dark:border-blue-800", text: "text-blue-700 dark:text-blue-400", icon: ArrowLeftRight },
