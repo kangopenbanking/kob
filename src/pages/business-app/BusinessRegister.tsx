@@ -26,13 +26,15 @@ const BUSINESS_TYPES = [
 
 const BusinessRegister: React.FC = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const { data: supportedCountries = [] } = useSupportedCountries();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     business_name: '',
     business_type: '',
     business_description: '',
-    country: 'CM',
+    country: 'Cameroon',
     business_email: '',
     business_phone: '',
     contact_name: '',
