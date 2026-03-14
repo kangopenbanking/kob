@@ -9,6 +9,7 @@ import { Building2, ArrowLeft, CheckCircle2, Shield, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
 
 const Register = () => {
   const { toast } = useToast();
@@ -18,6 +19,7 @@ const Register = () => {
   const [user, setUser] = useState<any>(null);
   const [institutionType, setInstitutionType] = useState("");
   const [useKobFlutterwave, setUseKobFlutterwave] = useState(false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
   const [formData, setFormData] = useState({
     institutionName: "",
     registrationNumber: "",
@@ -84,7 +86,13 @@ const Register = () => {
         description: "Your application is pending review. You'll be notified once approved.",
       });
 
-      navigate('/pending-approval');
+      // Check if user needs PIN setup
+      const { data: profile } = await supabase.from("profiles").select("pin_code_hash").eq("id", user.id).maybeSingle();
+      if (!profile?.pin_code_hash) {
+        setShowPinSetup(true);
+      } else {
+        navigate('/pending-approval');
+      }
     } catch (error: any) {
       console.error("Registration error:", error);
       
@@ -108,6 +116,20 @@ const Register = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <p>Loading...</p>
+      </div>
+    );
+  }
+
+  if (showPinSetup) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Card className="border-2">
+            <CardContent className="pt-6">
+              <MandatoryPinSetupStep onComplete={() => navigate('/pending-approval')} />
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }

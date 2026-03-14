@@ -16,10 +16,11 @@ import { toast } from 'sonner';
 import kangLogo from '@/assets/kang-logo.png';
 import authBanner from '@/assets/auth-banner.png';
 import { API_CONFIG } from '@/config/api';
+import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
-type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin';
+type AuthMode = 'welcome' | 'input' | 'otp' | 'pin' | 'verifying' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthTab = 'phone' | 'email';
 type AuthIntent = 'signin' | 'signup';
 
@@ -185,7 +186,11 @@ const CustomerAuth: React.FC = () => {
     const success = await verifyOTP(code);
     if (success) {
       toast.success('Verified!');
-      await navigateAfterAuth();
+      if (intent === 'signup') {
+        setMode('setup-pin');
+      } else {
+        await navigateAfterAuth();
+      }
     }
   };
 
@@ -194,12 +199,17 @@ const CustomerAuth: React.FC = () => {
     setLoading(true);
     try {
       if (intent === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email, password,
           options: { data: { full_name: fullName }, emailRedirectTo: `${window.location.origin}/app/auth` },
         });
         if (error) throw error;
-        setMode('email-sent');
+        // If auto-confirmed (e.g. after email click), go to PIN setup
+        if (signUpData?.session) {
+          setMode('setup-pin');
+        } else {
+          setMode('email-sent');
+        }
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -279,6 +289,7 @@ const CustomerAuth: React.FC = () => {
       case 'email-sent': return 'Check Your Email';
       case 'forgot-password': return 'Reset Password';
       case 'reset-pin': return 'Reset PIN';
+      case 'setup-pin': return 'Set Your PIN';
     }
   };
 
@@ -292,6 +303,7 @@ const CustomerAuth: React.FC = () => {
       case 'email-sent': return 'Almost there!';
       case 'forgot-password': return 'Enter your email to receive a reset link';
       case 'reset-pin': return 'Set a new 6-digit PIN';
+      case 'setup-pin': return 'Required for secure access';
     }
   };
 
@@ -715,6 +727,13 @@ const CustomerAuth: React.FC = () => {
                     <ArrowLeft className="h-3 w-3" /> Cancel
                   </Button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Mandatory PIN Setup after signup */}
+            {mode === 'setup-pin' && (
+              <motion.div key="setup-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <MandatoryPinSetupStep onComplete={() => navigateAfterAuth()} />
               </motion.div>
             )}
 

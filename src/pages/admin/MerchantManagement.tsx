@@ -10,7 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Store, Eye, Shield, CheckCircle, XCircle, AlertCircle, Key, Landmark, Clock } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Store, Eye, Shield, CheckCircle, XCircle, AlertCircle, Key, Landmark, Clock, Ban, Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 export default function MerchantManagement() {
@@ -19,6 +20,10 @@ export default function MerchantManagement() {
   const [selectedMerchant, setSelectedMerchant] = useState<any>(null);
   const [kybDecision, setKybDecision] = useState<"approved" | "rejected" | null>(null);
   const [rejectionReason, setRejectionReason] = useState("");
+  const [suspendDialogOpen, setSuspendDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [actionReason, setActionReason] = useState("");
+  const [actionTarget, setActionTarget] = useState<any>(null);
   const queryClient = useQueryClient();
 
   const { data: merchants, isLoading } = useQuery({
@@ -106,6 +111,25 @@ export default function MerchantManagement() {
       queryClient.invalidateQueries({ queryKey: ["admin-gateway-merchants"] });
     },
     onError: (err: any) => toast.error(err.message),
+  });
+
+  const adminManageMutation = useMutation({
+    mutationFn: async ({ action, entityId, reason }: { action: string; entityId: string; reason?: string }) => {
+      const { data, error } = await supabase.functions.invoke('admin-manage-user', {
+        body: { action, target_entity_id: entityId, reason },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: (_, vars) => {
+      toast.success(`Merchant ${vars.action.replace('_merchant', '')} successfully`);
+      queryClient.invalidateQueries({ queryKey: ["admin-gateway-merchants"] });
+      setSuspendDialogOpen(false);
+      setDeleteDialogOpen(false);
+      setActionReason("");
+    },
+    onError: (err: any) => toast.error(err.message || "Action failed"),
   });
 
   const filtered = (merchants || []).filter((m: any) => {
@@ -208,6 +232,18 @@ export default function MerchantManagement() {
                           <Eye className="h-4 w-4 mr-1" /> View
                         </Button>
                       </DialogTrigger>
+                    {m.status === 'suspended' ? (
+                      <Button size="sm" variant="outline" onClick={() => adminManageMutation.mutate({ action: 'unsuspend_merchant', entityId: m.id })} disabled={adminManageMutation.isPending}>
+                        <RotateCcw className="h-3.5 w-3.5 mr-1" /> Unsuspend
+                      </Button>
+                    ) : (
+                      <Button size="sm" variant="outline" className="text-destructive" onClick={() => { setActionTarget(m); setSuspendDialogOpen(true); }}>
+                        <Ban className="h-3.5 w-3.5 mr-1" /> Suspend
+                      </Button>
+                    )}
+                    <Button size="sm" variant="destructive" onClick={() => { setActionTarget(m); setDeleteDialogOpen(true); }}>
+                      <Trash2 className="h-3.5 w-3.5 mr-1" /> Delete
+                    </Button>
                       <DialogContent className="max-w-3xl max-h-[85vh] overflow-y-auto">
                         <DialogHeader>
                           <DialogTitle>{m.business_name}</DialogTitle>
@@ -330,6 +366,48 @@ export default function MerchantManagement() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Suspend Dialog */}
+      <Dialog open={suspendDialogOpen} onOpenChange={setSuspendDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Suspend Merchant</DialogTitle>
+            <DialogDescription>Suspend "{actionTarget?.business_name}". The merchant will not be able to process payments.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Reason</Label>
+            <Textarea placeholder="Enter reason..." value={actionReason} onChange={(e) => setActionReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSuspendDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={!actionReason.trim() || adminManageMutation.isPending}
+              onClick={() => adminManageMutation.mutate({ action: 'suspend_merchant', entityId: actionTarget?.id, reason: actionReason })}>
+              Suspend Merchant
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Dialog */}
+      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Delete Merchant Permanently</DialogTitle>
+            <DialogDescription>Delete "{actionTarget?.business_name}" and all charges, refunds, wallets, API keys, and staff roles. This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label>Reason</Label>
+            <Textarea placeholder="Enter reason..." value={actionReason} onChange={(e) => setActionReason(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button variant="destructive" disabled={!actionReason.trim() || adminManageMutation.isPending}
+              onClick={() => adminManageMutation.mutate({ action: 'delete_merchant', entityId: actionTarget?.id, reason: actionReason })}>
+              Delete Permanently
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

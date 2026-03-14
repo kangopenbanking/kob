@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { Loader2, Store, ArrowRight, ArrowLeft, CheckCircle2, Building2, Globe, Mail, Phone } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
 
 const STEPS = [
   { title: "Business Information", description: "Tell us about your business" },
@@ -38,6 +39,7 @@ export default function MerchantRegister() {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [showPinSetup, setShowPinSetup] = useState(false);
   const [form, setForm] = useState({
     business_name: "",
     business_type: "",
@@ -101,14 +103,33 @@ export default function MerchantRegister() {
       if (error) throw error;
 
       toast.success("Merchant account created! Welcome aboard 🎉");
-      // Small delay to let the trigger assign the merchant role
-      setTimeout(() => navigate("/merchant"), 500);
+      // Check if user needs PIN setup
+      const { data: profile } = await supabase.from("profiles").select("pin_code_hash").eq("id", user.id).maybeSingle();
+      if (!profile?.pin_code_hash) {
+        setShowPinSetup(true);
+      } else {
+        setTimeout(() => navigate("/merchant"), 500);
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to create merchant account");
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (showPinSetup) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Card className="border-border/60 shadow-lg">
+            <CardContent className="pt-6">
+              <MandatoryPinSetupStep onComplete={() => navigate("/merchant")} />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 flex items-center justify-center p-4">

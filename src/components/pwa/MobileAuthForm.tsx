@@ -14,10 +14,11 @@ import { toast } from 'sonner';
 import { sounds } from '@/lib/sounds';
 import { API_CONFIG } from '@/config/api';
 import kangLogo from '@/assets/kang-logo.png';
+import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
-type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin';
+type AuthStep = 'phone' | 'pin' | 'otp' | 'email' | 'email-sent' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 
 interface MobileAuthFormProps {
   onAuthSuccess: () => void;
@@ -220,6 +221,16 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     if (success) {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) await enforceSingleSession(session.access_token);
+      // Check if user has a PIN set — if not, require setup
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pin_code_hash')
+        .eq('id', session?.user?.id || '')
+        .maybeSingle();
+      if (!profile?.pin_code_hash) {
+        setStep('setup-pin');
+        return;
+      }
       sounds.success();
       onAuthSuccess();
     }
@@ -230,13 +241,17 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
     setLoading(true);
     try {
       if (mode === 'signup') {
-        const { error } = await supabase.auth.signUp({
+        const { data: signUpData, error } = await supabase.auth.signUp({
           email: form.email,
           password: form.password,
           options: { data: { full_name: form.fullName }, emailRedirectTo: `${window.location.origin}${window.location.pathname}` },
         });
         if (error) throw error;
-        setStep('email-sent');
+        if (signUpData?.session) {
+          setStep('setup-pin');
+        } else {
+          setStep('email-sent');
+        }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
         if (error) throw error;
@@ -320,10 +335,10 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
             <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
           </div>
           <h1 className="text-xl font-bold text-primary-foreground">
-            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-pin' ? 'Reset PIN' : 'Sign In'}
+            {step === 'phone' ? 'Welcome Back' : step === 'pin' ? 'Enter Your PIN' : step === 'otp' ? 'Verify Code' : step === 'email-sent' ? 'Check Your Email' : step === 'forgot-password' ? 'Reset Password' : step === 'reset-pin' ? 'Reset PIN' : step === 'setup-pin' ? 'Set Your PIN' : 'Sign In'}
           </h1>
           <p className="mt-1 text-sm text-primary-foreground/70">
-            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : step === 'email-sent' ? 'Almost there!' : step === 'forgot-password' ? 'Enter your email to receive a reset link' : step === 'reset-pin' ? 'Set a new 6-digit PIN' : `Access your ${tenant.name} account`}
+            {step === 'phone' ? tenant.tagline : step === 'pin' ? `Logging in as ${countryCode} ${phoneNumber}` : step === 'otp' ? `Code sent to ${countryCode} ${phoneNumber}` : step === 'email-sent' ? 'Almost there!' : step === 'forgot-password' ? 'Enter your email to receive a reset link' : step === 'reset-pin' ? 'Set a new 6-digit PIN' : step === 'setup-pin' ? 'Required for secure access' : `Access your ${tenant.name} account`}
           </p>
         </motion.div>
       </div>
@@ -725,6 +740,13 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
                     <ArrowLeft className="h-3 w-3" /> Cancel
                   </Button>
                 </div>
+              </motion.div>
+            )}
+
+            {/* Mandatory PIN Setup */}
+            {step === 'setup-pin' && (
+              <motion.div key="setup-pin" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
+                <MandatoryPinSetupStep onComplete={() => { sounds.success(); onAuthSuccess(); }} />
               </motion.div>
             )}
           </AnimatePresence>

@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Copy, CheckCircle2, AlertCircle, Shield, Key } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
 
 const TPPRegistration = () => {
   const [softwareStatement, setSoftwareStatement] = useState("");
@@ -15,6 +16,7 @@ const TPPRegistration = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [registration, setRegistration] = useState<any>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [showPinSetup, setShowPinSetup] = useState(false);
 
   const copyToClipboard = (text: string, field: string) => {
     navigator.clipboard.writeText(text);
@@ -48,6 +50,14 @@ const TPPRegistration = () => {
 
       setRegistration(data);
       toast.success("TPP registration successful!");
+      // Check if user needs PIN setup
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("pin_code_hash").eq("id", user.id).maybeSingle();
+        if (!profile?.pin_code_hash) {
+          setShowPinSetup(true);
+        }
+      }
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.error(error.message || "Failed to register TPP");
@@ -59,6 +69,13 @@ const TPPRegistration = () => {
   return (
     <div className="container mx-auto py-8 px-4 max-w-4xl">
       <div className="space-y-6">
+        {showPinSetup && (
+          <Card className="border-primary/50">
+            <CardContent className="pt-6">
+              <MandatoryPinSetupStep onComplete={() => setShowPinSetup(false)} />
+            </CardContent>
+          </Card>
+        )}
         <div>
           <h1 className="text-4xl font-bold mb-2">TPP Registration</h1>
           <p className="text-muted-foreground">

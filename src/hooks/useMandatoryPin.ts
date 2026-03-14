@@ -7,8 +7,8 @@ interface MandatoryPinState {
 }
 
 /**
- * Checks if the system enforces mandatory PIN (2FA) and whether the 
- * current user has a PIN set. Returns whether they need to set one up.
+ * Checks if the current user has a PIN set by looking at profiles.pin_code_hash.
+ * Returns whether they need to set one up.
  */
 export function useMandatoryPin() {
   const [state, setState] = useState<MandatoryPinState>({
@@ -28,35 +28,16 @@ export function useMandatoryPin() {
         return;
       }
 
-      // Check if system config enforces 2FA (mandatory PIN)
-      const { data: configData } = await supabase
-        .from('system_config')
-        .select('value')
-        .eq('key', 'security.mfa_required')
+      // Check if user has a PIN set directly from profiles
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('pin_code_hash')
+        .eq('id', user.id)
         .maybeSingle();
 
-      const mfaRequired = configData?.value === true;
+      const hasPin = !!profile?.pin_code_hash;
 
-      if (!mfaRequired) {
-        setState({ isLoading: false, requiresPinSetup: false });
-        return;
-      }
-
-      // Check if user has a PIN set via the phone number
-      const phone = user.phone || user.user_metadata?.phone_number;
-      if (!phone) {
-        // No phone on file — can't check PIN, skip enforcement
-        setState({ isLoading: false, requiresPinSetup: false });
-        return;
-      }
-
-      const { data: pinData } = await supabase.functions.invoke('phone-auth-check-pin', {
-        body: { phone_number: phone.startsWith('+') ? phone : `+${phone}` },
-      });
-
-      const hasPIN = pinData?.has_pin === true;
-
-      setState({ isLoading: false, requiresPinSetup: !hasPIN });
+      setState({ isLoading: false, requiresPinSetup: !hasPin });
     } catch (error) {
       console.error('Error checking mandatory PIN:', error);
       setState({ isLoading: false, requiresPinSetup: false });
