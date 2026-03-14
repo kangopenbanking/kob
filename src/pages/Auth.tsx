@@ -765,7 +765,10 @@ export default function Auth() {
                       <Button onClick={handleLoginPhoneSubmit} className="w-full h-11" disabled={loginLoading}>
                         {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Continue
                       </Button>
-                      <Button variant="link" className="w-full text-sm" onClick={() => setShowForgotPassword(true)}>Forgot PIN?</Button>
+                      <div className="flex gap-2">
+                        <Button variant="link" className="flex-1 text-sm" onClick={() => setLoginStep('forgot-password')}>Forgot Password?</Button>
+                        <Button variant="link" className="flex-1 text-sm" onClick={() => setLoginStep('reset-pin')}>Reset PIN?</Button>
+                      </div>
                     </motion.div>
                   )}
 
