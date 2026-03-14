@@ -277,9 +277,9 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       });
       if (error) throw error;
       setForgotSent(true);
-      toast.success('Password reset email sent!');
+      toast({ title: 'Email sent', description: 'Password reset email sent!' });
     } catch (err: any) {
-      toast.error(err.message || 'Failed to send reset email');
+      toast({ title: 'Error', description: err.message || 'Failed to send reset email', variant: 'destructive' });
     } finally {
       setForgotLoading(false);
     }
