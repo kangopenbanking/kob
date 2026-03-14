@@ -296,7 +296,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       if (error) throw error;
       if (data?.success) {
         sounds.success();
-        toast.success('PIN reset successfully! Please sign in.');
+        toast({ title: 'PIN Reset', description: 'PIN reset successfully! Please sign in.' });
         setNewPin(''); setConfirmNewPin(''); setStep('phone');
       } else { throw new Error(data?.error || 'Failed to reset PIN'); }
     } catch (err: any) {
