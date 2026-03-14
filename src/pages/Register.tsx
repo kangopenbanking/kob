@@ -9,6 +9,7 @@ import { Building2, ArrowLeft, CheckCircle2, Shield, Zap } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { MandatoryPinSetupStep } from "@/components/auth/MandatoryPinSetupStep";
 
 const Register = () => {
   const { toast } = useToast();
