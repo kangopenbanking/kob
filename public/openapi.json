@@ -738,6 +738,9 @@
     { "name": "Banking Operations", "description": "Internal transfers, facilitated transfers, exchange rates" },
     { "name": "Certificates", "description": "mTLS certificate management" },
     { "name": "POS", "description": "Point-of-sale commerce — catalog, inventory, orders, payments, refunds, QR payments, consumer marketplace, WooCommerce sync" },
-    { "name": "Consumer Tools", "description": "Piggy Bank savings goals, Njangi group savings" }
+    { "name": "Consumer Tools", "description": "Piggy Bank savings goals, Njangi group savings" },
+    { "name": "Identity", "description": "Unified registration, login, MFA, session management — /v1/identity/*" },
+    { "name": "Onboarding", "description": "KYB/KYC lifecycle, document upload, status tracking — /v1/onboarding/*" },
+    { "name": "Admin-Onboarding", "description": "Admin review, approve/reject onboarding applications" }
   ]
 }
