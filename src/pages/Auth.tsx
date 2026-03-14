@@ -1110,7 +1110,7 @@ export default function Auth() {
                   <div key={acc.type} className="flex items-center gap-3 p-3 rounded-xl bg-white/10 border border-white/20 backdrop-blur-sm text-left">
                     <Icon className="h-5 w-5 text-white/80 shrink-0" strokeWidth={1.5} />
                     <div>
-                      <span className="text-sm font-semibold text-white">{acc.label.replace(' Account', '').replace('Financial ', '')}</span>
+                      <span className="text-sm font-semibold text-white">{acc.subtitle}</span>
                       <p className="text-xs text-white/70">{acc.subtitle}</p>
                     </div>
                   </div>

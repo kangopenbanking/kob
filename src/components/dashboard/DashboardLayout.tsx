@@ -48,6 +48,10 @@ const dashboardNavigation = [
     items: [
       { title: "Credit Score", path: "/credit-score", icon: TrendingUp },
       { title: "Credit Report", path: "/credit-report", icon: FileText },
+      { title: "Banking & Payments", path: "/banking-payments", icon: Wallet },
+      { title: "Accept Payments", path: "/accept-payments", icon: CreditCard },
+      { title: "Open Banking APIs", path: "/open-banking", icon: Landmark },
+      { title: "Build & Integrate", path: "/build-integrate", icon: FileText },
     ],
   },
   {
