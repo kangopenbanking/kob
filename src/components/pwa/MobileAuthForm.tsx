@@ -262,7 +262,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
       }
     } catch (err: any) {
       sounds.error();
-      toast.error(err.message || 'Authentication failed');
+      toast({ title: 'Error', description: err.message || 'Authentication failed', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
