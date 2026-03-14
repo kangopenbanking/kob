@@ -367,7 +367,7 @@ function RewardSettingsTab() {
               <div className="flex items-center gap-3">
                 <Input
                   type="number"
-                  value={getVal(key)}
+                  value={String(getVal(key) ?? "")}
                   onChange={e => setValues(p => ({ ...p, [key]: e.target.value }))}
                   className="max-w-[200px]"
                 />
