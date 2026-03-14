@@ -196,7 +196,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         const { data: { session } } = await supabase.auth.getSession();
         if (session) await enforceSingleSession(session.access_token);
         sounds.success();
-        toast.success('Login successful!');
+        toast({ title: 'Welcome back!', description: 'Login successful!' });
         onAuthSuccess();
       } else {
         sounds.error();
