@@ -24,17 +24,6 @@ const BUSINESS_TYPES = [
   'cooperative', 'freelancer', 'e_commerce', 'saas', 'marketplace', 'other',
 ];
 
-const COUNTRIES = [
-  { code: 'CM', name: 'Cameroon', currency: 'XAF' },
-  { code: 'NG', name: 'Nigeria', currency: 'NGN' },
-  { code: 'GH', name: 'Ghana', currency: 'GHS' },
-  { code: 'KE', name: 'Kenya', currency: 'KES' },
-  { code: 'SN', name: 'Senegal', currency: 'XOF' },
-  { code: 'CI', name: "Côte d'Ivoire", currency: 'XOF' },
-  { code: 'GA', name: 'Gabon', currency: 'XAF' },
-  { code: 'CD', name: 'DR Congo', currency: 'CDF' },
-];
-
 const BusinessRegister: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(0);
