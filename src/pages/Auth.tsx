@@ -445,7 +445,7 @@ export default function Auth() {
     return {
       title: authConfig.hero_title,
       subtitle: authConfig.hero_subtitle,
-      features: ['Open Banking', 'Mobile Money', 'Payments', 'Credit Score'],
+      features: ['Open Banking', 'Mobile Money', 'Payments', 'Credit Score', 'Banking & Payments', 'Accept Payments', 'Open Banking APIs', 'Build & Integrate'],
     };
   };
 
