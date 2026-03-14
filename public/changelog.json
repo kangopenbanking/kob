@@ -1,5 +1,26 @@
 [
   {
+    "version": "4.0.0",
+    "date": "2026-03-14",
+    "type": "major",
+    "breaking_changes": false,
+    "summary": "Identity Modernization — unified registration, login, MFA, onboarding lifecycle, developer orgs, entity-scoped RBAC memberships",
+    "highlights": [
+      "Unified /v1/identity/register endpoint supporting personal, merchant, institution, and developer account types",
+      "Unified /v1/identity/login with phone_otp, email_password, and pin methods — wraps existing auth",
+      "MFA system — TOTP, SMS OTP, email OTP with step-up challenges for sensitive operations",
+      "Session management — device tracking, rotating tokens, session revocation",
+      "Onboarding lifecycle — unified onboarding_applications table with draft→submitted→approved flow",
+      "Developer organizations (developer_orgs) with sandbox_active→prod_approved lifecycle",
+      "Identity memberships — entity-scoped RBAC (owner, manager, viewer per institution/merchant/developer_org)",
+      "Admin Onboarding Queue — unified review interface for all account types",
+      "Developer portal: Getting Started by Type, Identity Guide, Onboarding Guide, Roles & Permissions docs",
+      "6 new database tables: developer_orgs, mfa_factors, mfa_challenges, onboarding_applications, user_sessions, identity_memberships",
+      "5 new edge functions: identity-register, identity-login, identity-mfa, identity-session, identity-onboarding",
+      "Zero breaking changes — all existing auth, OAuth, and registration endpoints untouched"
+    ]
+  },
+  {
     "version": "3.9.0",
     "date": "2026-03-14",
     "type": "minor",
