@@ -815,6 +815,82 @@ export default function Auth() {
                     </motion.div>
                   )}
 
+                  {/* FORGOT PASSWORD */}
+                  {loginStep === 'forgot-password' && (
+                    <motion.div key="l-forgot" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Mail className="h-5 w-5 text-primary" /></div>
+                        <h3 className="text-lg font-semibold text-foreground">Reset Password</h3>
+                        <p className="text-sm text-muted-foreground">We'll send a reset link to your email</p>
+                      </div>
+                      {forgotSent ? (
+                        <div className="text-center space-y-3">
+                          <p className="text-sm font-medium text-foreground">Reset link sent!</p>
+                          <p className="text-sm font-bold text-primary">{forgotEmail}</p>
+                          <p className="text-xs text-muted-foreground">Check your inbox for the password reset link.</p>
+                          <Button onClick={() => { setLoginStep('phone'); setForgotSent(false); }} variant="outline" className="w-full h-11">
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Sign In
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="space-y-2">
+                            <Label>Email Address</Label>
+                            <Input type="email" placeholder="you@example.com" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} className="h-11" />
+                          </div>
+                          <Button onClick={handleForgotPassword} disabled={forgotLoading || !forgotEmail} className="w-full h-11">
+                            {forgotLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Reset Link
+                          </Button>
+                        </>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {/* RESET PIN */}
+                  {loginStep === 'reset-pin' && (
+                    <motion.div key="l-reset-pin" {...fadeSlide} className="space-y-4">
+                      <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
+                      <div className="text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><KeyRound className="h-5 w-5 text-primary" /></div>
+                        <h3 className="text-lg font-semibold text-foreground">Reset Your PIN</h3>
+                        <p className="text-sm text-muted-foreground">Set a new 6-digit PIN for {loginCountryCode}{loginPhone}</p>
+                      </div>
+                      <div className="space-y-3">
+                        <div className="space-y-2">
+                          <Label className="text-sm">New PIN</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={newPin} onChange={setNewPin}>
+                              <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-sm">Confirm New PIN</Label>
+                          <div className="flex justify-center">
+                            <InputOTP maxLength={6} value={confirmNewPin} onChange={setConfirmNewPin}>
+                              <InputOTPGroup>{[0,1,2,3,4,5].map(i => <InputOTPSlot key={i} index={i} />)}</InputOTPGroup>
+                            </InputOTP>
+                          </div>
+                        </div>
+                      </div>
+                      <Button onClick={handleResetPin} disabled={resetPinLoading || newPin.length !== 6 || confirmNewPin.length !== 6} className="w-full h-11">
+                        {resetPinLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Reset PIN
+                      </Button>
+                    </motion.div>
+                  )}
+
+                  {/* SETUP PIN (after OTP login for users without PIN) */}
+                  {loginStep === 'setup-pin' && (
+                    <motion.div key="l-setup-pin" {...fadeSlide}>
+                      <MandatoryPinSetupStep
+                        onComplete={handleLoginPinSetupComplete}
+                        title="Set Your Security PIN"
+                        subtitle="Required for secure login and transactions"
+                      />
+                    </motion.div>
+                  )}
+
                   {/* COMPLETE */}
                   {loginStep === 'complete' && (
                     <motion.div key="l-done" {...fadeSlide} className="text-center py-10">
