@@ -103,8 +103,13 @@ export default function MerchantRegister() {
       if (error) throw error;
 
       toast.success("Merchant account created! Welcome aboard 🎉");
-      // Small delay to let the trigger assign the merchant role
-      setTimeout(() => navigate("/merchant"), 500);
+      // Check if user needs PIN setup
+      const { data: profile } = await supabase.from("profiles").select("pin_code_hash").eq("id", user.id).maybeSingle();
+      if (!profile?.pin_code_hash) {
+        setShowPinSetup(true);
+      } else {
+        setTimeout(() => navigate("/merchant"), 500);
+      }
     } catch (err: any) {
       toast.error(err.message || "Failed to create merchant account");
     } finally {
