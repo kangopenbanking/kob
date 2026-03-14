@@ -28,7 +28,7 @@ import { COUNTRY_CODES } from '@/lib/country-codes';
 type AccountType = 'personal' | 'merchant' | 'institution' | 'developer';
 type AuthMode = 'select' | 'login' | 'register';
 type RegisterStep = 'account-type' | 'identity' | 'details' | 'pin-setup' | 'success';
-type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete';
+type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthMethod = 'standard' | 'firebase';
 type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
 
