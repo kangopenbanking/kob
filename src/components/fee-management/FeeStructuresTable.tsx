@@ -68,6 +68,11 @@ const TX_TYPE_META: Record<string, { icon: any; category: string; label: string 
   mobile_recharge: { icon: Radio, category: "Mobile", label: "Mobile Recharge" },
   invoice_create: { icon: FileText, category: "Core", label: "Invoice Create" },
   credit_report_purchase: { icon: FileText, category: "Services", label: "Credit Report Purchase" },
+  overdraft_fee: { icon: ArrowDownToLine, category: "Lending", label: "Overdraft Fee" },
+  loan_processing_fee: { icon: ArrowUpFromLine, category: "Lending", label: "Loan Processing Fee" },
+  atm_withdrawal: { icon: Banknote, category: "Banking", label: "ATM Withdrawal" },
+  standing_order: { icon: RefreshCw, category: "Banking", label: "Standing Order" },
+  dormancy_fee: { icon: Lock, category: "Banking", label: "Dormancy Fee" },
 };
 
 const CATEGORY_ORDER = ["Core", "Mobile", "Cards", "Savings", "Lending", "Social", "International", "Gateway", "Services"];
