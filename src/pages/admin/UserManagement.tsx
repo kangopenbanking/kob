@@ -252,7 +252,7 @@ export default function UserManagement() {
         return <Badge variant="destructive" className="gap-1"><Ban className="h-3 w-3" />Suspended</Badge>;
       case 'active':
       default:
-        return <Badge variant="outline" className="gap-1 text-emerald-600 border-emerald-300 bg-emerald-50 dark:text-emerald-400 dark:border-emerald-800 dark:bg-emerald-950"><UserCheck className="h-3 w-3" />Active</Badge>;
+        return <Badge variant="outline" className="gap-1"><UserCheck className="h-3 w-3" />Active</Badge>;
     }
   };
 
