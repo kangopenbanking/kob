@@ -135,7 +135,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
         setStep('otp');
       }
     } catch {
-      toast.error('Connection error. Please try again.');
+      toast({ title: 'Error', description: 'Connection error. Please try again.', variant: 'destructive' });
     } finally {
       setLoading(false);
     }
