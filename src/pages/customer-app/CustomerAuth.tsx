@@ -16,6 +16,7 @@ import { toast } from 'sonner';
 import kangLogo from '@/assets/kang-logo.png';
 import authBanner from '@/assets/auth-banner.png';
 import { API_CONFIG } from '@/config/api';
+import { MandatoryPinSetupStep } from '@/components/auth/MandatoryPinSetupStep';
 
 import { useSupportedCountries } from '@/hooks/useSupportedCountries';
 
