@@ -10,7 +10,7 @@ import { useTenant } from './TenantProvider';
 import { supabase } from '@/integrations/supabase/client';
 import { useFirebasePhoneAuth } from '@/hooks/useFirebasePhoneAuth';
 import { enforceSingleSession } from '@/hooks/useSingleSession';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { sounds } from '@/lib/sounds';
 import { API_CONFIG } from '@/config/api';
 import kangLogo from '@/assets/kang-logo.png';
