@@ -1138,6 +1138,14 @@ export default function Auth() {
                             </Select>
                           </div>
                           <div className="space-y-2">
+                            <Label>Description <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input placeholder="Describe your business" value={businessDescription} onChange={e => setBusinessDescription(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Contact Person <span className="text-muted-foreground text-xs">(optional)</span></Label>
+                            <Input placeholder="John Doe" value={businessContactPerson} onChange={e => setBusinessContactPerson(e.target.value)} className="h-11" />
+                          </div>
+                          <div className="space-y-2">
                             <Label>Business Email <span className="text-muted-foreground text-xs">(optional)</span></Label>
                             <Input type="email" placeholder="info@acme.com" value={businessEmail} onChange={e => setBusinessEmail(e.target.value)} className="h-11" />
                           </div>
@@ -1149,7 +1157,19 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{COUNTRY_CODES.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Default Currency</Label>
+                            <Select value={businessCurrency} onValueChange={setBusinessCurrency}>
+                              <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="XAF">XAF (CFA Franc BEAC)</SelectItem>
+                                <SelectItem value="XOF">XOF (CFA Franc BCEAO)</SelectItem>
+                                <SelectItem value="NGN">NGN (Nigerian Naira)</SelectItem>
+                                <SelectItem value="USD">USD (US Dollar)</SelectItem>
+                              </SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-emerald-50 border border-emerald-200 p-3 space-y-1.5">
