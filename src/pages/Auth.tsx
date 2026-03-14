@@ -138,10 +138,28 @@ const REGISTER_STEPS: { key: RegisterStep; label: string }[] = [
 ];
 
 // ════════════════════════════════════════════════════════════════════
+// ── Captcha auto-solver ──
+const solveCaptcha = (q: string): number => {
+  const match = q.match(/(\d+)\s*([+\-*])\s*(\d+)/);
+  if (!match) return 0;
+  const [, a, op, b] = match;
+  if (op === '+') return parseInt(a) + parseInt(b);
+  if (op === '-') return parseInt(a) - parseInt(b);
+  if (op === '*') return parseInt(a) * parseInt(b);
+  return 0;
+};
+
+// ════════════════════════════════════════════════════════════════════
 export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { config: authConfig } = useAuthPageConfig();
+  const { data: supportedCountries = [] } = useSupportedCountries();
+
+  // Use supportedCountries with fallback to static COUNTRY_CODES
+  const countryList = supportedCountries.length > 0
+    ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
+    : COUNTRY_CODES;
 
   // ── Top-level state ──
   const [authMode, setAuthMode] = useState<AuthMode>('select');
@@ -153,7 +171,7 @@ export default function Auth() {
 
   // Identity fields
   const [selectedCountry, setSelectedCountry] = useState('Cameroon');
-  const countryCode = COUNTRY_CODES.find(c => c.country === selectedCountry)?.code || '+237';
+  const countryCode = countryList.find(c => c.country === selectedCountry)?.code || '+237';
   const [phoneNumber, setPhoneNumber] = useState('');
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -169,6 +187,9 @@ export default function Auth() {
   const [businessType, setBusinessType] = useState('');
   const [businessEmail, setBusinessEmail] = useState('');
   const [businessPhone, setBusinessPhone] = useState('');
+  const [businessDescription, setBusinessDescription] = useState('');
+  const [businessContactPerson, setBusinessContactPerson] = useState('');
+  const [businessCurrency, setBusinessCurrency] = useState('XAF');
   const [institutionName, setInstitutionName] = useState('');
   const [institutionType, setInstitutionType] = useState('');
   const [registrationNumber, setRegistrationNumber] = useState('');
@@ -187,7 +208,7 @@ export default function Auth() {
   const [pinLoginAttempts, setPinLoginAttempts] = useState(3);
   const [loginPhone, setLoginPhone] = useState('');
   const [loginCountry, setLoginCountry] = useState('Cameroon');
-  const loginCountryCode = COUNTRY_CODES.find(c => c.country === loginCountry)?.code || '+237';
+  const loginCountryCode = countryList.find(c => c.country === loginCountry)?.code || '+237';
   const [loginPinCode, setLoginPinCode] = useState('');
   const [loginOtpCode, setLoginOtpCode] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
@@ -196,6 +217,14 @@ export default function Auth() {
   const [captchaAnswer, setCaptchaAnswer] = useState('');
   const [captchaSessionId, setCaptchaSessionId] = useState('');
   const [firebaseOtpCode, setFirebaseOtpCode] = useState('');
+
+  // Forgot password / reset PIN state
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSent, setForgotSent] = useState(false);
+  const [newPin, setNewPin] = useState('');
+  const [confirmNewPin, setConfirmNewPin] = useState('');
+  const [resetPinLoading, setResetPinLoading] = useState(false);
 
   const isCameroonLogin = loginCountryCode === '+237';
 
