@@ -50,6 +50,14 @@ const TPPRegistration = () => {
 
       setRegistration(data);
       toast.success("TPP registration successful!");
+      // Check if user needs PIN setup
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: profile } = await supabase.from("profiles").select("pin_code_hash").eq("id", user.id).maybeSingle();
+        if (!profile?.pin_code_hash) {
+          setShowPinSetup(true);
+        }
+      }
     } catch (error: any) {
       console.error('Registration error:', error);
       toast.error(error.message || "Failed to register TPP");
