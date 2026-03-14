@@ -186,7 +186,11 @@ const CustomerAuth: React.FC = () => {
     const success = await verifyOTP(code);
     if (success) {
       toast.success('Verified!');
-      await navigateAfterAuth();
+      if (intent === 'signup') {
+        setMode('setup-pin');
+      } else {
+        await navigateAfterAuth();
+      }
     }
   };
 
