@@ -317,7 +317,7 @@ export const MobileAuthForm: React.FC<MobileAuthFormProps> = ({ onAuthSuccess, o
   const logoSrc = tenant.logoUrl || kangLogo;
 
   return (
-    <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
+    <div className="flex min-h-screen flex-col bg-background">
       <div id="recaptcha-container" />
 
       {/* Top decorative area */}
