@@ -289,6 +289,7 @@ const CustomerAuth: React.FC = () => {
       case 'email-sent': return 'Check Your Email';
       case 'forgot-password': return 'Reset Password';
       case 'reset-pin': return 'Reset PIN';
+      case 'setup-pin': return 'Set Your PIN';
     }
   };
 
