@@ -686,18 +686,18 @@ export default function Auth() {
                         <Label className="text-sm font-medium">Authentication Method</Label>
                         <div className="grid grid-cols-1 gap-2">
                           {[
-                            { key: 'firebase' as AuthMethod, icon: Smartphone, label: 'One Time Code', desc: 'SMS verification code', badge: isCameroonLogin ? 'Recommended' : null },
-                            { key: 'standard' as AuthMethod, icon: Shield, label: 'PIN / WhatsApp OTP', desc: 'Login with PIN or receive code via SMS/WhatsApp' },
+                            { key: 'firebase' as AuthMethod, icon: Smartphone, label: 'One Time Code', desc: 'SMS verification code', badge: null, borderColor: 'border-primary', iconBg: 'bg-primary/10', iconColor: 'text-primary', badgeBg: 'bg-primary/10', badgeColor: 'text-primary' },
+                            { key: 'standard' as AuthMethod, icon: Shield, label: 'PIN / WhatsApp OTP', desc: 'Login with PIN or receive code via SMS/WhatsApp', badge: 'Recommended', borderColor: 'border-emerald-500', iconBg: 'bg-emerald-500/10', iconColor: 'text-emerald-600', badgeBg: 'bg-emerald-500/10', badgeColor: 'text-emerald-600' },
                           ].map((m) => (
                             <button key={m.key} type="button" onClick={() => setAuthMethod(m.key)}
-                              className={`flex items-center gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${authMethod === m.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
-                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${authMethod === m.key ? 'bg-primary/10' : 'bg-muted'}`}>
-                                <m.icon className={`h-4 w-4 ${authMethod === m.key ? 'text-primary' : 'text-muted-foreground'}`} />
+                              className={`flex items-center gap-3 rounded-xl border-2 p-3.5 text-left transition-all ${authMethod === m.key ? `${m.borderColor} ${m.iconBg}` : 'border-border hover:border-primary/40'}`}>
+                              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${authMethod === m.key ? m.iconBg : 'bg-muted'}`}>
+                                <m.icon className={`h-4 w-4 ${authMethod === m.key ? m.iconColor : 'text-muted-foreground'}`} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-semibold text-foreground">{m.label}</span>
-                                  {m.badge && <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 bg-primary/10 text-primary border-0">{m.badge}</Badge>}
+                                  {m.badge && <Badge variant="secondary" className={`text-[10px] px-1.5 py-0 h-4 ${m.badgeBg} ${m.badgeColor} border-0`}>{m.badge}</Badge>}
                                 </div>
                                 <p className="text-xs text-muted-foreground mt-0.5">{m.desc}</p>
                               </div>
