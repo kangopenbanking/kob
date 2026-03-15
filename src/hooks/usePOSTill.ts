@@ -199,8 +199,9 @@ export function usePOSTill(merchantId: string | undefined) {
 
       // Wallet: generate QR code for customer to scan & pay
       if (paymentMethod === 'wallet') {
-        const qrRes = await supabase.functions.invoke('pos-qr-payment?action=generate', {
+        const qrRes = await supabase.functions.invoke('pos-qr-payment', {
           body: {
+            action: 'generate',
             merchant_id: merchantId,
             amount: total,
             order_id: order.id,

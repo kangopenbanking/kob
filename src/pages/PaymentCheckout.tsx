@@ -270,8 +270,8 @@ export default function PaymentCheckout() {
     if (!link || !walletSession) return;
     setPayingWithWallet(true);
     try {
-      const { data, error } = await supabase.functions.invoke('pos-qr-payment?action=pay', {
-        body: { merchant_id: link.merchant_id, amount: link.amount },
+      const { data, error } = await supabase.functions.invoke('pos-qr-payment', {
+        body: { action: 'pay', merchant_id: link.merchant_id, amount: link.amount },
         headers: { 'Idempotency-Key': `paylink_${link.id}_${Date.now()}` },
       });
       if (error) throw error;

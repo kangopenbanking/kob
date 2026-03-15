@@ -155,8 +155,8 @@ const CustomerScan: React.FC = () => {
       // POS QR payment via wallet
       setProcessing(true);
       try {
-        const { data, error } = await supabase.functions.invoke('pos-qr-payment?action=pay', {
-          body: { merchant_id: merchantQR.merchant_id, amount: finalAmount, order_id: merchantQR.order_id },
+        const { data, error } = await supabase.functions.invoke('pos-qr-payment', {
+          body: { action: 'pay', merchant_id: merchantQR.merchant_id, amount: finalAmount, order_id: merchantQR.order_id },
           headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
         });
         if (error) throw error;
