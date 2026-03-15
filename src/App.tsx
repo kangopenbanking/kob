@@ -322,6 +322,7 @@ const MerchantTransactions = lazy(() => import("./pages/merchant/MerchantTransac
 const MerchantPaymentLinks = lazy(() => import("./pages/merchant/MerchantPaymentLinks"));
 const MerchantCustomers = lazy(() => import("./pages/merchant/MerchantCustomers"));
 const MerchantSubscriptions = lazy(() => import("./pages/merchant/MerchantSubscriptions"));
+const MerchantEscrow = lazy(() => import("./pages/merchant/MerchantEscrow"));
 const MerchantPayouts = lazy(() => import("./pages/merchant/MerchantPayouts"));
 const MerchantFundWallet = lazy(() => import("./pages/merchant/MerchantFundWallet"));
 const MerchantSettlements = lazy(() => import("./pages/merchant/MerchantSettlements"));
@@ -586,6 +587,7 @@ function App() {
               <Route path="payment-links" element={<MerchantPaymentLinks />} />
               <Route path="customers" element={<MerchantCustomers />} />
               <Route path="subscriptions" element={<MerchantSubscriptions />} />
+              <Route path="escrow" element={<MerchantEscrow />} />
               <Route path="fund-wallet" element={<MerchantFundWallet />} />
               <Route path="payouts" element={<MerchantPayouts />} />
               <Route path="settlements" element={<MerchantSettlements />} />
