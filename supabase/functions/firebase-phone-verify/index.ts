@@ -72,9 +72,11 @@ serve(async (req) => {
       // No profile with this phone — check if auth user already exists with this email
       const tempEmail = `${phoneNumber.replace('+', '')}@phone.kob.cm`;
 
-      // Try to find existing auth user by email first
+      // Try to find existing auth user by email or phone
       const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === tempEmail);
+      const existingUser = existingUsers?.users?.find(
+        u => u.email === tempEmail || u.phone === phoneNumber
+      );
 
       if (existingUser) {
         // Auth user exists but profile didn't have phone_number set
