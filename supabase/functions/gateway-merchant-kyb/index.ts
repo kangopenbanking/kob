@@ -16,8 +16,16 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const merchantId = url.searchParams.get('merchant_id');
-    const action = url.searchParams.get('action'); // submit, status, review
+
+    // Parse body for POST requests to extract merchant_id/action
+    let body: Record<string, unknown> = {};
+    if (method === 'POST') {
+      try { body = await req.json(); } catch { /* empty body is ok for GET */ }
+    }
+
+    // Read from body first (supabase.functions.invoke sends body), fall back to query params
+    const merchantId = (body.merchant_id as string) || url.searchParams.get('merchant_id');
+    const action = (body.action as string) || url.searchParams.get('action'); // submit, status, review
 
     if (!merchantId) return new Response(JSON.stringify({ error: 'merchant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
