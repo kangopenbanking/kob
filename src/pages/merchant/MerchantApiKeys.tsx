@@ -19,6 +19,7 @@ export default function MerchantApiKeys() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ label: "", environment: "sandbox" });
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
