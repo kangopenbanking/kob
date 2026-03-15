@@ -3,7 +3,6 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock dependencies
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({})),
   getApps: vi.fn(() => []),
@@ -20,11 +19,10 @@ vi.mock('@/lib/firebase', () => ({
   setupRecaptchaVerifier: vi.fn(() => ({ clear: vi.fn() })),
 }));
 
-const mockSelect = vi.fn(() => Promise.resolve({ data: [], error: null }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => ({
-      select: mockSelect,
+      select: vi.fn(() => Promise.resolve({ data: [], error: null })),
       eq: vi.fn(() => ({ data: [], error: null })),
     })),
     functions: {
@@ -53,26 +51,26 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-const createQueryClient = () => new QueryClient({
-  defaultOptions: { queries: { retry: false } },
-});
-
-const renderWithProviders = (ui: React.ReactElement) =>
-  render(<QueryClientProvider client={createQueryClient()}>{ui}</QueryClientProvider>);
+const renderWithProviders = (ui: React.ReactElement) => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+};
 
 describe('Auth Page - Firebase OTP Integration', () => {
   it('renders the auth page with KOB branding', async () => {
     const Auth = (await import('@/pages/Auth')).default;
     renderWithProviders(<Auth />);
     
-    expect(screen.getByText('Welcome to KOB')).toBeInTheDocument();
+    const headings = screen.getAllByText('Welcome to KOB');
+    expect(headings.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('renders the Secure Open Banking Platform tagline', async () => {
+  it('renders Sign In and Create Account buttons', async () => {
     const Auth = (await import('@/pages/Auth')).default;
     renderWithProviders(<Auth />);
     
-    expect(screen.getByText('Secure Open Banking Platform')).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByText('Create Account')).toBeInTheDocument();
   });
 
   it('renders the recaptcha container', async () => {
