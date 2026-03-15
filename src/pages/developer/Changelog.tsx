@@ -6,6 +6,56 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "6.2.0",
+      date: "2026-03-15",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Per-Merchant Statement Generator — new gateway-merchant-statement edge function generates monthly merchant statements in JSON and CSV with full charge/payout/refund line items and summary analytics" },
+        { type: "feature", description: "Provider Settlement Import & Compare — new gateway-settlement-import edge function imports Stripe/Flutterwave/PayPal settlement files, compares against KOB ledger, and records mismatches for admin resolution" },
+        { type: "feature", description: "5 mismatch types detected: amount, status, fee, missing-in-platform, missing-in-provider" },
+        { type: "improvement", description: "All gaps from Stripe/Flutterwave comparison audit now resolved — KOB achieves full gateway parity" },
+      ]
+    },
+    {
+      version: "6.1.0",
+      date: "2026-03-15",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Live API Status Page — connected ApiStatusPage to api-health edge function for real-time service status display with refresh and FAPI compliance details" },
+        { type: "feature", description: "API Playground sandbox-only auth warning banner — X-API-Key for sandbox, OAuth2 Bearer for production" },
+        { type: "feature", description: "2 new playground endpoints: Generate Test Data, List Banks (Gateway)" },
+        { type: "improvement", description: "Migrated api-health edge function from deprecated serve import to native Deno.serve" },
+        { type: "improvement", description: "Added Sandbox vs Production Authentication section to developer quickstart guide" },
+      ]
+    },
+    {
+      version: "6.0.0",
+      date: "2026-03-15",
+      type: "major",
+      changes: [
+        { type: "feature", description: "Master Documentation Pack — integration-contracts.md, feature-matrix.md (170 features across 16 domains), and test-plan.md with 4 E2E journeys" },
+        { type: "feature", description: "Public Developer Docs — quickstart guides for Merchants, Developers, and Institutions with XAF examples and Cameroon phone formatting" },
+        { type: "feature", description: "Webhook integration guide, error codes reference (AUTH_, GW_, CONSENT_, KYB_, LEDGER_, STD_ domains), and status lifecycle reference" },
+        { type: "feature", description: "Postman Collection Alignment — added 8 missing folders (Wallets, Escrow, Instant Payouts, Treasury, Compliance Screening, SLA Monitoring, POS & Commerce). Total endpoints: ~190" },
+        { type: "feature", description: "Final Audit Report — 169/170 features implemented, 20/20 security controls passed, production readiness confirmed" },
+      ]
+    },
+    {
+      version: "5.0.0",
+      date: "2026-03-09",
+      type: "major",
+      changes: [
+        { type: "feature", description: "Merchant API Key Management — gateway_merchant_keys table with create/revoke/list/rotate actions and backward-compatible legacy table writes" },
+        { type: "feature", description: "Bulk Operations — gateway_bulk_operations table and edge function for bulk payouts, refunds, and customer imports via CSV" },
+        { type: "feature", description: "Enterprise Merchant Features — branding customization with live checkout preview, white-label config (custom domain, email), advanced analytics" },
+        { type: "feature", description: "POS Commerce — subscription plan CRUD, multi-location + POS staff management, WooCommerce sync dashboard" },
+        { type: "feature", description: "Merchant Store Guide — comprehensive 12-section merchant user guide including Enterprise features" },
+        { type: "fix", description: "Fixed missing gateway_bulk_operations table (BulkOperations page was non-functional)" },
+        { type: "fix", description: "Fixed missing enterprise columns on gateway_merchants (branding/white-label pages would error)" },
+        { type: "improvement", description: "gateway-merchant-keys edge function updated to use shared CORS headers" },
+      ]
+    },
+    {
       version: "3.7.0",
       date: "2026-03-08",
       type: "minor",
