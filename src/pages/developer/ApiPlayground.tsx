@@ -160,6 +160,18 @@ console.log(data);`;
           </p>
         </div>
 
+        <div className="mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-semibold text-yellow-700 dark:text-yellow-400">Sandbox Only</p>
+            <p className="text-muted-foreground mt-1">
+              This playground uses sandbox API keys (<code className="bg-muted px-1 rounded text-xs">X-API-Key: sbx_...</code>). 
+              Production APIs require <strong>OAuth2 Bearer tokens</strong> obtained via the{" "}
+              <a href="/developer/gateway/authentication" className="text-primary underline">OAuth token endpoint</a>.
+            </p>
+          </div>
+        </div>
+
         <div className="grid lg:grid-cols-2 gap-6">
           {/* Left: Request Builder */}
           <div className="space-y-6">
