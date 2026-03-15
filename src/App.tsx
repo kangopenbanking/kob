@@ -12,6 +12,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
+import { DashboardRouter } from "@/components/DashboardRouter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { NestedNotFound } from "@/components/NestedNotFound";

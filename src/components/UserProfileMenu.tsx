@@ -96,6 +96,14 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
   const securityPath = variant === "admin" ? "/admin/security" : "/security";
   const settingsPath = variant === "institution" ? "/fi-portal/settings" : "/profile";
 
+  const dashboardPathMap: Record<string, string> = {
+    admin: "/admin",
+    institution: "/fi-portal",
+    developer: "/developer",
+    dashboard: "/dashboard",
+  };
+  const myDashboardPath = dashboardPathMap[variant] || "/dashboard";
+
   // Don't render anything if not authenticated
   if (!isAuthenticated) return null;
 
