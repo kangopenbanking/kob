@@ -84,6 +84,14 @@ Deno.serve(async (req) => {
       userId = authData.user.id;
     }
 
+    // Update profile with full_name and phone if not already set
+    if (full_name || phone) {
+      await adminClient.from('profiles').update({
+        ...(full_name ? { full_name } : {}),
+        ...(phone ? { phone_number: phone } : {}),
+      }).eq('id', userId);
+    }
+
     // Step 2: Assign role
     const roleMap: Record<string, string> = {
       personal: 'personal',
@@ -108,6 +116,8 @@ Deno.serve(async (req) => {
         break;
       }
       case 'merchant': {
+        // gateway_merchants does NOT have country/currency columns
+        // Store extra registration data in the metadata JSONB column
         const { data: merchant, error: merchantError } = await adminClient
           .from('gateway_merchants')
           .insert({
@@ -136,27 +146,13 @@ Deno.serve(async (req) => {
         break;
       }
       case 'institution': {
-        // Delegate to existing institution-register edge function internally
-        const { data: institution, error: instError } = await adminClient
-          .from('institutions')
-          .insert({
-            user_id: userId,
-            institution_name: institution_name || org_name || 'My Institution',
-            institution_type: institution_type || 'fintech_institution',
-            status: 'draft',
-            country: 'CM'
-          })
-          .select('id')
-          .single();
-
-        if (instError) {
-          console.error('Institution creation error:', instError);
-          return new Response(JSON.stringify({ error: 'Failed to create institution record' }), {
-            status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
-        }
-        entityId = institution.id;
-        nextSteps.push('complete_institution_profile', 'upload_kyb_documents', 'await_admin_approval');
+        // Institution registration is a multi-step process.
+        // The institutions table requires NOT NULL columns (address, phone, registration_number)
+        // that are collected in the dedicated institution-register flow.
+        // At this stage we only create the auth user + role assignment.
+        // The user will be redirected to complete the institution registration form.
+        entityId = userId;
+        nextSteps.push('complete_institution_registration', 'upload_kyb_documents', 'await_admin_approval');
         break;
       }
       case 'developer': {
@@ -190,7 +186,11 @@ Deno.serve(async (req) => {
       entity_id: entityId,
       user_id: userId,
       status: account_type === 'developer' ? 'approved' : 'draft',
-      metadata: { account_type, registered_via: 'identity-register' }
+      metadata: { 
+        account_type, 
+        registered_via: 'identity-register',
+        ...(account_type === 'institution' ? { institution_name, institution_type } : {}),
+      }
     });
 
     // Step 5: Create identity membership
