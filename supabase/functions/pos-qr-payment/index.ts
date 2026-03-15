@@ -23,8 +23,8 @@ Deno.serve(async (req) => {
     }
 
     const url = new URL(req.url);
-    const action = url.searchParams.get('action');
     const body = await req.json();
+    const action = url.searchParams.get('action') || body.action;
 
     // GENERATE: Merchant generates QR payload
     if (action === 'generate') {

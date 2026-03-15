@@ -65,8 +65,9 @@ const BusinessReceive: React.FC = () => {
     if (!merchantId) return;
     setGeneratingQR(true);
     try {
-      const { data, error } = await supabase.functions.invoke('pos-qr-payment?action=generate', {
+      const { data, error } = await supabase.functions.invoke('pos-qr-payment', {
         body: {
+          action: 'generate',
           merchant_id: merchantId,
           ...(qrAmount ? { amount: Number(qrAmount) } : {}),
           ...(qrDescription ? { description: qrDescription } : {}),
