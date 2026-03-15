@@ -756,6 +756,7 @@ export default function Auth() {
                             <Button variant="link" size="sm" className="text-xs text-muted-foreground px-0" onClick={() => setLoginStep('forgot-password')}>Forgot Password?</Button>
                             <Button variant="link" size="sm" className="text-xs text-muted-foreground px-0" onClick={() => setLoginStep('reset-pin')}>Reset PIN?</Button>
                           </div>
+                        </>
                       )}
                       {(firebasePhone.step === 'otp' || firebasePhone.step === 'verifying') && (
                         <>
