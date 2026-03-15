@@ -29,6 +29,7 @@ export const merchantNavigation = [
   {
     title: "Money Out",
     items: [
+      { title: "Escrow", path: "/merchant/escrow", icon: ShieldCheck },
       { title: "Fund Wallet", path: "/merchant/fund-wallet", icon: PlusCircle },
       { title: "Payouts", path: "/merchant/payouts", icon: Wallet },
       { title: "Settlements", path: "/merchant/settlements", icon: DollarSign },

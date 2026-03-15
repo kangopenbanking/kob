@@ -587,6 +587,7 @@ function App() {
               <Route path="payment-links" element={<MerchantPaymentLinks />} />
               <Route path="customers" element={<MerchantCustomers />} />
               <Route path="subscriptions" element={<MerchantSubscriptions />} />
+              <Route path="escrow" element={<MerchantEscrow />} />
               <Route path="fund-wallet" element={<MerchantFundWallet />} />
               <Route path="payouts" element={<MerchantPayouts />} />
               <Route path="settlements" element={<MerchantSettlements />} />
