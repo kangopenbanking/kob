@@ -123,6 +123,50 @@ async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<Wh
   }
 }
 
+// Send OTP via Email using managed-send-email
+async function sendViaEmail(emailAddress: string, otpCode: string): Promise<EmailResult> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/managed-send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({
+        to: emailAddress,
+        subject: 'Your KOB Verification Code',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+            <h2 style="color: #1a1a1a; margin-bottom: 16px;">Verification Code</h2>
+            <p style="color: #555; font-size: 15px; line-height: 1.5;">Your Kang Open Banking verification code is:</p>
+            <div style="background: #f4f4f5; border-radius: 12px; padding: 24px; text-align: center; margin: 20px 0;">
+              <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #1a1a1a;">${otpCode}</span>
+            </div>
+            <p style="color: #555; font-size: 14px;">This code is valid for <strong>10 minutes</strong>. Do not share it with anyone.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 24px;">If you didn't request this code, please ignore this email.</p>
+          </div>
+        `,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok && !result.error) {
+      console.log('OTP email sent successfully to:', emailAddress);
+      return { success: true };
+    } else {
+      console.error('Email send failed:', result);
+      return { success: false, error_code: 'DELIVERY_FAILED', error_message: result.error || 'Failed to send email' };
+    }
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    return { success: false, error_code: 'SERVICE_UNAVAILABLE', error_message: 'Email service unavailable' };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -133,7 +177,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { phone_number, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
+    const { phone_number, email_address, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
 
     // Validate input
     const phoneValidation = validatePhone(phone_number);
