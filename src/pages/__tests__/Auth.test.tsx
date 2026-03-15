@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 // @ts-ignore - screen is re-exported from @testing-library/dom
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 // Mock dependencies
 vi.mock('firebase/app', () => ({
@@ -47,31 +48,38 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { retry: false } },
+});
+
+const renderWithProviders = (ui: React.ReactElement) =>
+  render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+
 describe('Auth Page - Firebase OTP Integration', () => {
   it('renders auth method selection with One Time Code option', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
     expect(screen.getByText('One Time Code')).toBeInTheDocument();
   });
 
   it('shows Recommended badge for Cameroon', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
     expect(screen.getByText('Recommended')).toBeInTheDocument();
   });
 
   it('shows PIN / WhatsApp OTP as alternative', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
     expect(screen.getByText('PIN / WhatsApp OTP')).toBeInTheDocument();
   });
 
   it('renders security check captcha', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
     expect(screen.getByText('Security Check')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('Your answer')).toBeInTheDocument();
@@ -79,7 +87,7 @@ describe('Auth Page - Firebase OTP Integration', () => {
 
   it('renders Welcome Back title for login mode', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
     expect(screen.getByText('Welcome Back')).toBeInTheDocument();
   });
