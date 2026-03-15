@@ -19,6 +19,7 @@ export default function MerchantApiKeys() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ label: "", environment: "sandbox" });
+  const [createdKey, setCreatedKey] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
@@ -47,20 +48,22 @@ export default function MerchantApiKeys() {
       const { error } = await supabase.from("gateway_merchant_api_keys").insert([{
         merchant_id: merchantId,
         api_key_prefix: key.substring(0, 12),
-        api_key_hash: key, // In production this would be hashed
+        api_key_hash: key,
         environment: form.environment,
         label: form.label || `${form.environment} key`,
         is_active: true,
       }]);
       if (error) throw error;
-      toast.success("API key generated! Copy it now — it won't be shown again in full.");
-      navigator.clipboard.writeText(key);
-      toast.info("Key copied to clipboard");
-      setDialogOpen(false);
-      setForm({ label: "", environment: "sandbox" });
+      setCreatedKey(key);
       loadData();
     } catch (err: any) { toast.error(err.message); }
     finally { setSaving(false); }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setCreatedKey(null);
+    setForm({ label: "", environment: "sandbox" });
   };
 
   const revokeKey = async (id: string) => {
@@ -79,32 +82,55 @@ export default function MerchantApiKeys() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-bold">API Keys</h1><p className="text-muted-foreground">Generate and manage your API credentials</p></div>
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <Dialog open={dialogOpen} onOpenChange={v => { if (!v) handleCloseDialog(); else setDialogOpen(true); }}>
           <DialogTrigger asChild><Button className="gap-2"><Plus className="h-4 w-4" /> Generate Key</Button></DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Generate API Key</DialogTitle>
-              <DialogDescription>Create a new API key for your integration</DialogDescription>
+              <DialogTitle>{createdKey ? "API Key Created" : "Generate API Key"}</DialogTitle>
+              <DialogDescription>{createdKey ? "Copy your key now — it won't be shown again." : "Create a new API key for your integration"}</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2"><Label>Label</Label><Input placeholder="e.g., My Website" value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} /></div>
-              <div className="space-y-2">
-                <Label>Environment</Label>
-                <Select value={form.environment} onValueChange={v => setForm(f => ({ ...f, environment: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="sandbox">Sandbox (Testing)</SelectItem>
-                    <SelectItem value="production">Production (Live)</SelectItem>
-                  </SelectContent>
-                </Select>
+            {createdKey ? (
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-muted/50 p-4 space-y-2">
+                  <Label className="text-xs text-muted-foreground">Your API Key</Label>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-sm font-mono break-all select-all bg-background p-2 rounded border">{createdKey}</code>
+                    <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(createdKey); toast.success("Key copied to clipboard"); }}>
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-sm text-destructive">
+                  <p>⚠️ This is the only time the full key will be displayed. Store it securely.</p>
+                </div>
               </div>
-              <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-                <p>⚠️ The full key will only be shown once after creation. Make sure to copy it.</p>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2"><Label>Label</Label><Input placeholder="e.g., My Website" value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} /></div>
+                <div className="space-y-2">
+                  <Label>Environment</Label>
+                  <Select value={form.environment} onValueChange={v => setForm(f => ({ ...f, environment: v }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sandbox">Sandbox (Testing)</SelectItem>
+                      <SelectItem value="production">Production (Live)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                  <p>⚠️ The full key will only be shown once after creation. Make sure to copy it.</p>
+                </div>
               </div>
-            </div>
+            )}
             <DialogFooter>
-              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleCreate} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Generate</Button>
+              {createdKey ? (
+                <Button onClick={handleCloseDialog}>Done</Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={handleCloseDialog}>Cancel</Button>
+                  <Button onClick={handleCreate} disabled={saving}>{saving && <Loader2 className="h-4 w-4 animate-spin mr-2" />}Generate</Button>
+                </>
+              )}
             </DialogFooter>
           </DialogContent>
         </Dialog>
