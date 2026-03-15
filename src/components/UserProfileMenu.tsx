@@ -15,7 +15,7 @@ import { User, Settings, Shield, LogOut, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserProfileMenuProps {
-  variant?: "admin" | "dashboard" | "developer" | "institution";
+  variant?: "admin" | "dashboard" | "developer" | "institution" | "merchant";
 }
 
 export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps) {
