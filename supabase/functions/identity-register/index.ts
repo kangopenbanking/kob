@@ -14,7 +14,8 @@ Deno.serve(async (req) => {
     const { 
       account_type, email, phone, full_name, password, org_name, 
       business_name, business_description, contact_person, default_currency,
-      institution_name, institution_type 
+      business_email, business_phone, business_type,
+      institution_name, institution_type, registration_number
     } = body;
 
     if (!account_type || !['personal', 'merchant', 'institution', 'developer'].includes(account_type)) {
