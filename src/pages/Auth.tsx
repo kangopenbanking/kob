@@ -560,7 +560,7 @@ export default function Auth() {
 
   const loginGoBack = () => {
     if (loginStep === 'otp') { setLoginStep('phone'); setLoginOtpCode(''); }
-    else if (loginStep === 'pin') { setLoginStep('phone'); setLoginPinCode(''); setUsesPINLogin(false); }
+    else if (loginStep === 'pin') { setLoginStep(authMethod === 'firebase' ? 'firebase-otp' : 'phone'); setLoginPinCode(''); setUsesPINLogin(false); }
     else if (loginStep === 'phone') { setLoginStep('captcha'); generateCaptcha(); }
     else if (loginStep === 'firebase-otp') { firebasePhone.reset(); setFirebaseOtpCode(''); setLoginStep('captcha'); generateCaptcha(); }
     else if (loginStep === 'forgot-password') { setLoginStep('phone'); setForgotSent(false); }
@@ -732,6 +732,30 @@ export default function Auth() {
                           <Button onClick={handleFirebaseSendOTP} className="w-full h-11" disabled={firebasePhone.loading}>
                             {firebasePhone.loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Code
                           </Button>
+                          <div className="relative my-2">
+                            <div className="absolute inset-0 flex items-center"><span className="w-full border-t border-border/50" /></div>
+                            <div className="relative flex justify-center text-xs uppercase"><span className="bg-background px-2 text-muted-foreground">or</span></div>
+                          </div>
+                          <Button variant="outline" className="w-full h-11" disabled={loginLoading} onClick={async () => {
+                            if (!loginPhone || loginPhone.length < 5) { toast({ title: 'Enter phone number', description: 'Please enter your phone number first.', variant: 'destructive' }); return; }
+                            setLoginLoading(true);
+                            try {
+                              const { exists, hasPIN } = await checkIfUserHasPIN();
+                              if (!exists) { toast({ title: 'Not Found', description: 'No account found with this phone number.', variant: 'destructive' }); return; }
+                              if (!hasPIN) { toast({ title: 'No PIN Set', description: 'No PIN is set for this account. Please use OTP to log in.', variant: 'destructive' }); return; }
+                              setUsesPINLogin(true);
+                              setLoginStep('pin');
+                            } catch (err) {
+                              console.error('PIN check error:', err);
+                              toast({ title: 'Error', description: 'Could not check PIN status. Please try OTP.', variant: 'destructive' });
+                            } finally { setLoginLoading(false); }
+                          }}>
+                            {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Login with PIN
+                          </Button>
+                          <div className="flex justify-between">
+                            <Button variant="link" size="sm" className="text-xs text-muted-foreground px-0" onClick={() => setLoginStep('forgot-password')}>Forgot Password?</Button>
+                            <Button variant="link" size="sm" className="text-xs text-muted-foreground px-0" onClick={() => setLoginStep('reset-pin')}>Reset PIN?</Button>
+                          </div>
                         </>
                       )}
                       {(firebasePhone.step === 'otp' || firebasePhone.step === 'verifying') && (
