@@ -212,6 +212,7 @@ export default function Auth() {
   const [loginPinCode, setLoginPinCode] = useState('');
   const [loginOtpCode, setLoginOtpCode] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
+  const [loginEmail, setLoginEmail] = useState('');
   const [otpExpiresAt, setOtpExpiresAt] = useState('');
   const [captchaQuestion, setCaptchaQuestion] = useState('');
   const [captchaAnswer, setCaptchaAnswer] = useState('');
