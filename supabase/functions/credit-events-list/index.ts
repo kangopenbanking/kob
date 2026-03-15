@@ -17,12 +17,18 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
+    // Support both URL params (GET) and body params (POST) for flexibility
     const url = new URL(req.url);
-    const from = url.searchParams.get('from');
-    const to = url.searchParams.get('to');
-    const type = url.searchParams.get('type');
-    const limit = Math.min(parseInt(url.searchParams.get('limit') || '50'), 100);
-    const offset = parseInt(url.searchParams.get('offset') || '0');
+    let bodyParams: any = {};
+    if (req.method === 'POST') {
+      try { bodyParams = await req.json(); } catch { bodyParams = {}; }
+    }
+
+    const from = url.searchParams.get('from') || bodyParams.from || null;
+    const to = url.searchParams.get('to') || bodyParams.to || null;
+    const type = url.searchParams.get('type') || bodyParams.type || null;
+    const limit = Math.min(parseInt(url.searchParams.get('limit') || bodyParams.limit || '50'), 100);
+    const offset = parseInt(url.searchParams.get('offset') || bodyParams.offset || '0');
 
     let query = supabase
       .from('credit_events')
