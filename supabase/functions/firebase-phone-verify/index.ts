@@ -97,11 +97,29 @@ serve(async (req) => {
         });
 
         if (createError) {
-          console.error('Failed to create user:', createError);
-          return new Response(
-            JSON.stringify({ error: 'Failed to create user account' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-          );
+          // Handle phone_exists: the user was registered via identity-register with phone
+          if (createError.message?.includes('phone') || createError.message?.includes('already')) {
+            // Look up by phone in auth
+            const { data: phoneUsers } = await supabase.auth.admin.listUsers();
+            const phoneUser = phoneUsers?.users?.find(u => u.phone === phoneNumber);
+            if (phoneUser) {
+              userId = phoneUser.id;
+              userEmail = phoneUser.email || tempEmail;
+              await supabase.from('profiles').update({ phone_number: phoneNumber }).eq('id', userId);
+            } else {
+              console.error('Failed to create user and could not find existing:', createError);
+              return new Response(
+                JSON.stringify({ error: 'Failed to create user account' }),
+                { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+              );
+            }
+          } else {
+            console.error('Failed to create user:', createError);
+            return new Response(
+              JSON.stringify({ error: 'Failed to create user account' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            );
+          }
         }
 
         userId = newUser.user.id;
