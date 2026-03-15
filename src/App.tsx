@@ -819,7 +819,10 @@ function App() {
             <Route path="/monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
             
             {/* User Dashboard Routes - Nested with DashboardLayout */}
-            <Route path="/dashboard" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>}>
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
+            
+            {/* Personal Dashboard (only for non-institution, non-personal-restricted users) */}
+            <Route path="/personal-dashboard" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
             </Route>
             <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />

@@ -139,7 +139,7 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
           Security
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+        <DropdownMenuItem onClick={() => navigate(myDashboardPath)}>
           <LayoutDashboard className="mr-2 h-4 w-4" />
           My Dashboard
         </DropdownMenuItem>

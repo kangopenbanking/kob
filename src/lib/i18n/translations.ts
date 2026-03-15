@@ -1997,6 +1997,31 @@ export const translations = {
     tomorrow: "Demain",
     nextWeek: "Semaine Prochaine",
     nextMonth: "Mois Prochain",
+
+    // Notifications & Review Pipeline
+    kybSubmitted: "KYB Soumis",
+    kybApproved: "KYB Approuvé",
+    kybRejected: "KYB Rejeté",
+    kycSubmitted: "KYC Soumis",
+    kycApproved: "KYC Approuvé",
+    kycRejected: "KYC Rejeté",
+    onboardingSubmitted: "Intégration Soumise",
+    onboardingApproved: "Intégration Approuvée",
+    onboardingRejected: "Intégration Rejetée",
+    reviewPending: "Révision en Attente",
+    underReview: "En Cours de Révision",
+    submissionReceived: "Soumission Reçue",
+    awaitingAdminReview: "En Attente de Révision Admin",
+    applicationApproved: "Demande Approuvée",
+    applicationRejected: "Demande Rejetée",
+    newSubmissionRequiresReview: "Nouvelle soumission nécessite une révision",
+    merchantKybSubmitted: "KYB Marchand Soumis",
+    institutionKybSubmitted: "KYB Institution Soumis",
+    developerRegistrationReview: "Révision Inscription Développeur",
+    personalKycSubmitted: "KYC Personnel Soumis",
+    tppApproved: "Inscription TPP Approuvée",
+    tppRejected: "Inscription TPP Rejetée",
+    myDashboard: "Mon Tableau de Bord",
   }
 } as const;
 
