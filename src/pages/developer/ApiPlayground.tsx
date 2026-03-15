@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Copy, CheckCircle, Key } from "lucide-react";
+import { Play, Copy, CheckCircle, Key, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import { API_CONFIG } from "@/config/api";
