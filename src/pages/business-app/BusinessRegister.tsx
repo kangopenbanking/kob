@@ -71,7 +71,7 @@ const BusinessRegister: React.FC = () => {
         business_name: form.business_name.trim(),
         business_email: form.business_email.trim() || null,
         business_phone: form.business_phone.trim() || null,
-        status: 'DRAFT',
+        status: 'draft',
         kyb_status: 'not_submitted',
         environment: 'sandbox',
         metadata: {

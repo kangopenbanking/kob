@@ -30,34 +30,70 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Step 1: Create user via Supabase Auth
-    let userId: string;
-    let provisionalToken: string | null = null;
+    // ──────────────────────────────────────────────────────────
+    // FIX 1: Check Authorization header to reuse authenticated user
+    // ──────────────────────────────────────────────────────────
+    let userId: string | null = null;
 
-    if (email && password) {
-      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: false,
-        user_metadata: { full_name, account_type }
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      const anonKey = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+      const userClient = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
       });
-      if (authError) {
-        return new Response(JSON.stringify({ error: authError.message }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+      const { data: { user: authUser } } = await userClient.auth.getUser();
+      if (authUser) {
+        userId = authUser.id;
+        console.log('identity-register: reusing authenticated user', userId);
       }
-      userId = authData.user.id;
-    } else if (phone) {
-      // For phone-based registration, check if user exists
-      const { data: existingProfile } = await adminClient
-        .from('profiles')
-        .select('id')
-        .eq('phone_number', phone)
-        .maybeSingle();
+    }
 
-      if (existingProfile) {
-        userId = existingProfile.id;
-      } else {
+    // ──────────────────────────────────────────────────────────
+    // FIX 2: If no authenticated user, reconcile by phone/email
+    // ──────────────────────────────────────────────────────────
+    if (!userId) {
+      // Check profiles table first
+      if (phone) {
+        const { data: profile } = await adminClient
+          .from('profiles')
+          .select('id')
+          .eq('phone_number', phone)
+          .maybeSingle();
+        if (profile) userId = profile.id;
+      }
+
+      // Check auth.users if still not found
+      if (!userId) {
+        const tempEmail = phone ? `${phone.replace('+', '')}@phone.kob.cm` : email;
+        const { data: existingUsers } = await adminClient.auth.admin.listUsers();
+        const existingUser = existingUsers?.users?.find(
+          u => u.email === tempEmail || u.phone === phone || (email && u.email === email)
+        );
+        if (existingUser) {
+          userId = existingUser.id;
+          console.log('identity-register: found existing auth user', userId);
+        }
+      }
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // Only create a new user if absolutely necessary
+    // ──────────────────────────────────────────────────────────
+    if (!userId) {
+      if (email && password) {
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+          email,
+          password,
+          email_confirm: false,
+          user_metadata: { full_name, account_type }
+        });
+        if (authError) {
+          return new Response(JSON.stringify({ error: authError.message }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        userId = authData.user.id;
+      } else if (phone) {
         const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
           phone,
           phone_confirm: true,
@@ -69,31 +105,32 @@ Deno.serve(async (req) => {
           });
         }
         userId = authData.user.id;
-      }
-    } else {
-      // Email without password - send magic link flow
-      const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
-        email,
-        email_confirm: false,
-        user_metadata: { full_name, account_type }
-      });
-      if (authError) {
-        return new Response(JSON.stringify({ error: authError.message }), {
-          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      } else {
+        const { data: authData, error: authError } = await adminClient.auth.admin.createUser({
+          email: email!,
+          email_confirm: false,
+          user_metadata: { full_name, account_type }
         });
+        if (authError) {
+          return new Response(JSON.stringify({ error: authError.message }), {
+            status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+        userId = authData.user.id;
       }
-      userId = authData.user.id;
     }
 
-    // Update profile with full_name and phone if not already set
-    if (full_name || phone) {
-      await adminClient.from('profiles').update({
-        ...(full_name ? { full_name } : {}),
-        ...(phone ? { phone_number: phone } : {}),
-      }).eq('id', userId);
-    }
+    // ──────────────────────────────────────────────────────────
+    // FIX 3: UPSERT profile instead of UPDATE
+    // ──────────────────────────────────────────────────────────
+    await adminClient.from('profiles').upsert({
+      id: userId,
+      ...(full_name ? { full_name } : {}),
+      ...(phone ? { phone_number: phone } : {}),
+      ...(email ? { email } : {}),
+    }, { onConflict: 'id' });
 
-    // Step 2: Assign role
+    // Assign role
     const roleMap: Record<string, string> = {
       personal: 'personal',
       merchant: 'merchant',
@@ -106,7 +143,7 @@ Deno.serve(async (req) => {
       role: roleMap[account_type]
     }, { onConflict: 'user_id,role' });
 
-    // Step 3: Create entity record based on account_type
+    // Create entity record based on account_type
     let entityId: string = userId;
     let entityType = account_type;
     const nextSteps: string[] = [];
@@ -117,8 +154,6 @@ Deno.serve(async (req) => {
         break;
       }
       case 'merchant': {
-        // gateway_merchants does NOT have country/currency columns
-        // Store extra registration data in the metadata JSONB column
         const { data: merchant, error: merchantError } = await adminClient
           .from('gateway_merchants')
           .insert({
@@ -150,11 +185,6 @@ Deno.serve(async (req) => {
         break;
       }
       case 'institution': {
-        // Institution registration is a multi-step process.
-        // The institutions table requires NOT NULL columns (address, phone, registration_number)
-        // that are collected in the dedicated institution-register flow.
-        // At this stage we only create the auth user + role assignment.
-        // The user will be redirected to complete the institution registration form.
         entityId = userId;
         nextSteps.push('complete_institution_registration', 'upload_kyb_documents', 'await_admin_approval');
         break;
@@ -184,7 +214,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Step 4: Create onboarding application
+    // Create onboarding application
     await adminClient.from('onboarding_applications').insert({
       entity_type: entityType === 'developer' ? 'developer_org' : entityType,
       entity_id: entityId,
@@ -197,7 +227,7 @@ Deno.serve(async (req) => {
       }
     });
 
-    // Step 5: Create identity membership
+    // Create identity membership
     await adminClient.from('identity_memberships').insert({
       user_id: userId,
       entity_type: entityType === 'developer' ? 'developer_org' : (entityType === 'personal' ? 'platform' : entityType),
@@ -206,7 +236,7 @@ Deno.serve(async (req) => {
       status: 'active'
     });
 
-    // Step 6: Audit log
+    // Audit log
     await adminClient.from('audit_logs').insert({
       action_type: 'identity_register',
       entity_type: entityType,
@@ -221,7 +251,6 @@ Deno.serve(async (req) => {
       entity_type: entityType,
       account_type,
       next_steps: nextSteps,
-      provisional_token: provisionalToken
     }), {
       status: 201,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }

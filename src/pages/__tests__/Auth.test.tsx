@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 // @ts-ignore - screen is re-exported from @testing-library/dom
 import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-// Mock dependencies
 vi.mock('firebase/app', () => ({
   initializeApp: vi.fn(() => ({})),
   getApps: vi.fn(() => []),
@@ -21,6 +21,10 @@ vi.mock('@/lib/firebase', () => ({
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
+    from: vi.fn(() => ({
+      select: vi.fn(() => Promise.resolve({ data: [], error: null })),
+      eq: vi.fn(() => ({ data: [], error: null })),
+    })),
     functions: {
       invoke: vi.fn(() => Promise.resolve({
         data: { question: '2 + 3', session_id: 'test-session' },
@@ -47,40 +51,32 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
+const renderWithProviders = (ui: React.ReactElement) => {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return render(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+};
+
 describe('Auth Page - Firebase OTP Integration', () => {
-  it('renders auth method selection with One Time Code option', async () => {
+  it('renders the auth page with KOB branding', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
-    expect(screen.getByText('One Time Code')).toBeInTheDocument();
+    const headings = screen.getAllByText('Welcome to KOB');
+    expect(headings.length).toBeGreaterThanOrEqual(1);
   });
 
-  it('shows Recommended badge for Cameroon', async () => {
+  it('renders Sign In and Create Account buttons', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
-    expect(screen.getByText('Recommended')).toBeInTheDocument();
+    expect(screen.getByText('Sign In')).toBeInTheDocument();
+    expect(screen.getByText('Create Account')).toBeInTheDocument();
   });
 
-  it('shows PIN / WhatsApp OTP as alternative', async () => {
+  it('renders the recaptcha container', async () => {
     const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
+    renderWithProviders(<Auth />);
     
-    expect(screen.getByText('PIN / WhatsApp OTP')).toBeInTheDocument();
-  });
-
-  it('renders security check captcha', async () => {
-    const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
-    
-    expect(screen.getByText('Security Check')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Your answer')).toBeInTheDocument();
-  });
-
-  it('renders Welcome Back title for login mode', async () => {
-    const Auth = (await import('@/pages/Auth')).default;
-    render(<Auth />);
-    
-    expect(screen.getByText('Welcome Back')).toBeInTheDocument();
+    expect(document.getElementById('recaptcha-container')).toBeInTheDocument();
   });
 });

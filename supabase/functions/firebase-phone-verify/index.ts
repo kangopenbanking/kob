@@ -83,11 +83,10 @@ serve(async (req) => {
         userId = existingUser.id;
         userEmail = tempEmail;
 
-        // Ensure profile has phone number
+        // Ensure profile has phone number (UPSERT to handle missing profiles)
         await supabase
           .from('profiles')
-          .update({ phone_number: phoneNumber })
-          .eq('id', userId);
+          .upsert({ id: userId, phone_number: phoneNumber }, { onConflict: 'id' });
       } else {
         // Truly new user: create auth user + profile
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
@@ -117,14 +116,18 @@ serve(async (req) => {
           userId = newUser.user.id;
           userEmail = tempEmail;
 
-          // Update profile with phone number
+    // UPSERT profile with phone number (ensures profile exists even if trigger didn't fire)
           await supabase
             .from('profiles')
-            .update({ phone_number: phoneNumber })
-            .eq('id', userId);
+            .upsert({ id: userId, phone_number: phoneNumber }, { onConflict: 'id' });
         }
       }
     }
+
+    // Ensure profile exists for ALL paths (not just new user creation)
+    await supabase
+      .from('profiles')
+      .upsert({ id: userId, phone_number: phoneNumber }, { onConflict: 'id' });
 
     // Generate magic link for session
     const { data: sessionData, error: sessionError } = await supabase.auth.admin.generateLink({
