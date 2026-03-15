@@ -518,11 +518,15 @@ export default function Auth() {
         body.business_description = businessDescription || undefined;
         body.contact_person = businessContactPerson || undefined;
         body.default_currency = businessCurrency || undefined;
+        body.business_email = businessEmail || undefined;
+        body.business_phone = businessPhone || undefined;
+        body.business_type = businessType || undefined;
       }
       if (selectedAccountType === 'institution') {
         body.institution_name = institutionName;
         body.institution_type = institutionType;
         body.org_name = institutionName;
+        body.registration_number = registrationNumber || undefined;
       }
       if (selectedAccountType === 'developer') {
         body.org_name = orgName;
