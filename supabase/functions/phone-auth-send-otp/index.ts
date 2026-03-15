@@ -356,6 +356,7 @@ Deno.serve(async (req) => {
         delivery_status: {
           sms: smsResult.success,
           whatsapp: whatsappResult.success,
+          email: emailResult.success,
         },
         expires_at: expiresAt,
         otp_id: otpRecord.id,
