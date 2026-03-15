@@ -78,16 +78,16 @@ export default function MerchantManagement() {
 
   const kybMutation = useMutation({
     mutationFn: async ({ merchantId, decision, reason }: { merchantId: string; decision: string; reason?: string }) => {
-      const updates: any = {
-        kyb_status: decision,
-        status: decision === "approved" ? "verified" : "rejected",
-        updated_at: new Date().toISOString(),
-      };
-      const { error } = await (supabase as any)
-        .from("gateway_merchants")
-        .update(updates)
-        .eq("id", merchantId);
+      const { data, error } = await supabase.functions.invoke('gateway-merchant-kyb-review', {
+        body: {
+          action: 'review',
+          merchant_id: merchantId,
+          decision: decision === 'approved' ? 'approve' : 'reject',
+          reason,
+        },
+      });
       if (error) throw error;
+      if (data?.status && data.status >= 400) throw new Error(data?.detail || 'Review failed');
     },
     onSuccess: () => {
       toast.success("Merchant KYB status updated");

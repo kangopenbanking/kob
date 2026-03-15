@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 import { safeErrorResponse } from '../_shared/errors.ts';
+import { notifyAdmins } from '../_shared/admin-notify.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -115,6 +116,22 @@ Deno.serve(async (req) => {
           entity_id: app.id,
           performed_by: userId,
           details: { application_id: app.id }
+        });
+
+        // Notify admins about new submission
+        const { data: profile } = await adminClient
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .single();
+
+        await notifyAdmins(adminClient, {
+          event_type: 'onboarding_submitted',
+          entity_type: app.entity_type,
+          entity_id: app.id,
+          title: 'New Onboarding Submission',
+          message: `${profile?.full_name || 'A user'} submitted a ${app.entity_type} onboarding application for review.`,
+          metadata: { application_id: app.id, entity_type: app.entity_type },
         });
 
         return new Response(JSON.stringify({

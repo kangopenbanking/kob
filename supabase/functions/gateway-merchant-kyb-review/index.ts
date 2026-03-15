@@ -1,7 +1,8 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/admin-notify.ts";
+import { notifyUser } from "../_shared/admin-notify.ts";
 
 const json = (data: unknown, status = 200) =>
   new Response(JSON.stringify(data), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -11,7 +12,7 @@ const rfc7807 = (type: string, title: string, status: number, detail: string) =>
     status, headers: { ...corsHeaders, 'Content-Type': 'application/problem+json' },
   });
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -112,6 +113,16 @@ serve(async (req) => {
         details: { document_count: documents.length },
       });
 
+      // Notify admins about new KYB submission
+      await notifyAdmins(supabase, {
+        event_type: 'merchant_kyb_submitted',
+        entity_type: 'gateway_merchant',
+        entity_id: merchant_id,
+        title: 'Merchant KYB Submitted',
+        message: `${merchant.business_name} has submitted KYB documents for review.`,
+        metadata: { business_name: merchant.business_name },
+      });
+
       return json({ merchant_id, kyb_status: 'submitted', submitted_at: new Date().toISOString() });
     }
 
@@ -155,6 +166,20 @@ serve(async (req) => {
         performed_by: user.id,
         details: { decision, reason, previous_kyb_status: merchant.kyb_status },
       });
+
+      // Notify merchant owner about review decision
+      if (merchant.user_id) {
+        await notifyUser(supabase, {
+          user_id: merchant.user_id,
+          type: decision === 'approve' ? 'success' : 'warning',
+          title: decision === 'approve' ? 'KYB Approved' : 'KYB Rejected',
+          message: decision === 'approve'
+            ? `Your business "${merchant.business_name}" has been verified. You can now accept live payments.`
+            : `Your KYB application was not approved. Reason: ${reason || 'Please contact support.'}`,
+          icon: 'kyc',
+          metadata: { merchant_id, decision, reason },
+        });
+      }
 
       return json({
         merchant_id,

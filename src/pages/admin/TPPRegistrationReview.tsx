@@ -48,6 +48,7 @@ export default function TPPRegistrationReview() {
 
   const reviewMutation = useMutation({
     mutationFn: async ({ id, status, notes }: { id: string; status: boolean; notes: string }) => {
+      // Update TPP status
       const { error } = await supabase
         .from("tpp_registrations")
         .update({ 
@@ -57,6 +58,44 @@ export default function TPPRegistrationReview() {
         .eq("id", id);
 
       if (error) throw error;
+
+      // Get TPP details for audit and notification
+      const { data: tpp } = await supabase
+        .from("tpp_registrations")
+        .select("client_name, institution_id")
+        .eq("id", id)
+        .single();
+
+      // Log audit event
+      await supabase.from("audit_logs").insert({
+        action_type: status ? 'tpp_approved' : 'tpp_rejected',
+        entity_type: 'tpp_registration',
+        entity_id: id,
+        performed_by: (await supabase.auth.getUser()).data.user?.id || '',
+        details: { decision: status ? 'approved' : 'rejected', notes, client_name: tpp?.client_name },
+      });
+
+      // Get institution owner to notify
+      if (tpp?.institution_id) {
+        const { data: inst } = await supabase
+          .from("institutions")
+          .select("user_id")
+          .eq("id", tpp.institution_id)
+          .single();
+
+        if (inst?.user_id) {
+          await supabase.from("app_notifications").insert({
+            user_id: inst.user_id,
+            type: status ? 'success' : 'warning',
+            title: status ? 'TPP Registration Approved' : 'TPP Registration Rejected',
+            message: status
+              ? `Your TPP "${tpp.client_name}" has been approved and is now active.`
+              : `Your TPP "${tpp.client_name}" registration was rejected. ${notes || 'Please contact support.'}`,
+            icon: 'key',
+            metadata: { tpp_id: id, decision: status ? 'approved' : 'rejected' },
+          });
+        }
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["tpp-registrations"] });
