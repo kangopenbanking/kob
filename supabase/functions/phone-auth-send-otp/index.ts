@@ -24,6 +24,12 @@ type WhatsAppResult = {
   error_message?: string;
 };
 
+type EmailResult = {
+  success: boolean;
+  error_code?: 'SERVICE_UNAVAILABLE' | 'DELIVERY_FAILED' | 'INVALID_EMAIL';
+  error_message?: string;
+};
+
 // Send OTP via SMS using Vonage
 async function sendViaSMS(phoneNumber: string, otpCode: string): Promise<SMSResult> {
   try {
