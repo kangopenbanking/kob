@@ -322,11 +322,11 @@ Deno.serve(async (req) => {
     const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(otpCode));
     const otpHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Store hashed OTP in database
+    // Store hashed OTP in database (use email as phone_number field for email delivery)
     const { data: otpRecord, error: insertError } = await supabase
       .from('phone_otp_codes')
       .insert({
-        phone_number,
+        phone_number: isEmailDelivery ? email_address : phone_number,
         otp_code: otpHash,
         otp_type,
         delivery_method: actualDeliveryMethod,
@@ -346,7 +346,8 @@ Deno.serve(async (req) => {
       throw new Error('Failed to store OTP record');
     }
 
-    console.log(`OTP sent to ${phone_number} via ${delivery_method}: [REDACTED]`);
+    const identifier = isEmailDelivery ? email_address : phone_number;
+    console.log(`OTP sent to ${identifier} via ${delivery_method}: [REDACTED]`);
 
     return new Response(
       JSON.stringify({
