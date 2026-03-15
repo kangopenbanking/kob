@@ -101,12 +101,10 @@ const ACCOUNT_TYPES: {
 ];
 
 const INSTITUTION_TYPES = [
-  { value: 'commercial_bank', label: 'Commercial Bank' },
-  { value: 'microfinance', label: 'Microfinance Institution' },
-  { value: 'fintech_institution', label: 'Fintech Institution' },
-  { value: 'credit_union', label: 'Credit Union' },
-  { value: 'insurance', label: 'Insurance Company' },
-  { value: 'mobile_money_operator', label: 'Mobile Money Operator' },
+  { value: 'bank', label: 'Commercial Bank' },
+  { value: 'credit_union', label: 'Credit Union / Microfinance' },
+  { value: 'fintech', label: 'Fintech Institution' },
+  { value: 'developer', label: 'Developer / API Provider' },
 ];
 
 const BUSINESS_TYPES = [
@@ -520,11 +518,15 @@ export default function Auth() {
         body.business_description = businessDescription || undefined;
         body.contact_person = businessContactPerson || undefined;
         body.default_currency = businessCurrency || undefined;
+        body.business_email = businessEmail || undefined;
+        body.business_phone = businessPhone || undefined;
+        body.business_type = businessType || undefined;
       }
       if (selectedAccountType === 'institution') {
         body.institution_name = institutionName;
         body.institution_type = institutionType;
         body.org_name = institutionName;
+        body.registration_number = registrationNumber || undefined;
       }
       if (selectedAccountType === 'developer') {
         body.org_name = orgName;

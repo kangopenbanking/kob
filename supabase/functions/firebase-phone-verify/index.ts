@@ -72,9 +72,11 @@ serve(async (req) => {
       // No profile with this phone — check if auth user already exists with this email
       const tempEmail = `${phoneNumber.replace('+', '')}@phone.kob.cm`;
 
-      // Try to find existing auth user by email first
+      // Try to find existing auth user by email or phone
       const { data: existingUsers } = await supabase.auth.admin.listUsers();
-      const existingUser = existingUsers?.users?.find(u => u.email === tempEmail);
+      const existingUser = existingUsers?.users?.find(
+        u => u.email === tempEmail || u.phone === phoneNumber
+      );
 
       if (existingUser) {
         // Auth user exists but profile didn't have phone_number set
@@ -95,21 +97,32 @@ serve(async (req) => {
         });
 
         if (createError) {
-          console.error('Failed to create user:', createError);
-          return new Response(
-            JSON.stringify({ error: 'Failed to create user account' }),
-            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          // Handle phone_exists or email conflict: user was registered via another flow
+          const { data: retryUsers } = await supabase.auth.admin.listUsers();
+          const fallbackUser = retryUsers?.users?.find(
+            u => u.phone === phoneNumber || u.email === tempEmail
           );
+          if (fallbackUser) {
+            userId = fallbackUser.id;
+            userEmail = fallbackUser.email || tempEmail;
+            await supabase.from('profiles').update({ phone_number: phoneNumber }).eq('id', userId);
+          } else {
+            console.error('Failed to create user:', createError);
+            return new Response(
+              JSON.stringify({ error: 'Failed to create user account' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+            );
+          }
+        } else {
+          userId = newUser.user.id;
+          userEmail = tempEmail;
+
+          // Update profile with phone number
+          await supabase
+            .from('profiles')
+            .update({ phone_number: phoneNumber })
+            .eq('id', userId);
         }
-
-        userId = newUser.user.id;
-        userEmail = tempEmail;
-
-        // Update profile with phone number
-        await supabase
-          .from('profiles')
-          .update({ phone_number: phoneNumber })
-          .eq('id', userId);
       }
     }
 
