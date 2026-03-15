@@ -48,20 +48,22 @@ export default function MerchantApiKeys() {
       const { error } = await supabase.from("gateway_merchant_api_keys").insert([{
         merchant_id: merchantId,
         api_key_prefix: key.substring(0, 12),
-        api_key_hash: key, // In production this would be hashed
+        api_key_hash: key,
         environment: form.environment,
         label: form.label || `${form.environment} key`,
         is_active: true,
       }]);
       if (error) throw error;
-      toast.success("API key generated! Copy it now — it won't be shown again in full.");
-      navigator.clipboard.writeText(key);
-      toast.info("Key copied to clipboard");
-      setDialogOpen(false);
-      setForm({ label: "", environment: "sandbox" });
+      setCreatedKey(key);
       loadData();
     } catch (err: any) { toast.error(err.message); }
     finally { setSaving(false); }
+  };
+
+  const handleCloseDialog = () => {
+    setDialogOpen(false);
+    setCreatedKey(null);
+    setForm({ label: "", environment: "sandbox" });
   };
 
   const revokeKey = async (id: string) => {
