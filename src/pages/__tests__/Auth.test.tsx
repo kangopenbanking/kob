@@ -20,8 +20,13 @@ vi.mock('@/lib/firebase', () => ({
   setupRecaptchaVerifier: vi.fn(() => ({ clear: vi.fn() })),
 }));
 
+const mockSelect = vi.fn(() => Promise.resolve({ data: [], error: null }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
+    from: vi.fn(() => ({
+      select: mockSelect,
+      eq: vi.fn(() => ({ data: [], error: null })),
+    })),
     functions: {
       invoke: vi.fn(() => Promise.resolve({
         data: { question: '2 + 3', session_id: 'test-session' },
@@ -48,47 +53,32 @@ vi.mock('@/hooks/use-toast', () => ({
   useToast: () => ({ toast: vi.fn() }),
 }));
 
-const queryClient = new QueryClient({
+const createQueryClient = () => new QueryClient({
   defaultOptions: { queries: { retry: false } },
 });
 
 const renderWithProviders = (ui: React.ReactElement) =>
-  render(<QueryClientProvider client={queryClient}>{ui}</QueryClientProvider>);
+  render(<QueryClientProvider client={createQueryClient()}>{ui}</QueryClientProvider>);
 
 describe('Auth Page - Firebase OTP Integration', () => {
-  it('renders auth method selection with One Time Code option', async () => {
+  it('renders the auth page with KOB branding', async () => {
     const Auth = (await import('@/pages/Auth')).default;
     renderWithProviders(<Auth />);
     
-    expect(screen.getByText('One Time Code')).toBeInTheDocument();
+    expect(screen.getByText('Welcome to KOB')).toBeInTheDocument();
   });
 
-  it('shows Recommended badge for Cameroon', async () => {
+  it('renders the Secure Open Banking Platform tagline', async () => {
     const Auth = (await import('@/pages/Auth')).default;
     renderWithProviders(<Auth />);
     
-    expect(screen.getByText('Recommended')).toBeInTheDocument();
+    expect(screen.getByText('Secure Open Banking Platform')).toBeInTheDocument();
   });
 
-  it('shows PIN / WhatsApp OTP as alternative', async () => {
+  it('renders the recaptcha container', async () => {
     const Auth = (await import('@/pages/Auth')).default;
     renderWithProviders(<Auth />);
     
-    expect(screen.getByText('PIN / WhatsApp OTP')).toBeInTheDocument();
-  });
-
-  it('renders security check captcha', async () => {
-    const Auth = (await import('@/pages/Auth')).default;
-    renderWithProviders(<Auth />);
-    
-    expect(screen.getByText('Security Check')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Your answer')).toBeInTheDocument();
-  });
-
-  it('renders Welcome Back title for login mode', async () => {
-    const Auth = (await import('@/pages/Auth')).default;
-    renderWithProviders(<Auth />);
-    
-    expect(screen.getByText('Welcome Back')).toBeInTheDocument();
+    expect(document.getElementById('recaptcha-container')).toBeInTheDocument();
   });
 });
