@@ -95,8 +95,7 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ error: 'not_reviewable', current: merchant.kyb_status }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        const body = await req.json();
-        const { decision, reason } = body; // approved | rejected
+        const { decision, reason } = body as { decision?: string; reason?: string }; // approved | rejected
         if (!decision || !['approved', 'rejected'].includes(decision)) {
           return new Response(JSON.stringify({ error: 'invalid_decision', valid: ['approved', 'rejected'] }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
