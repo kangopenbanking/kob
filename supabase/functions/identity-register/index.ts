@@ -124,11 +124,14 @@ Deno.serve(async (req) => {
           .insert({
             user_id: userId,
             business_name: business_name || org_name || full_name || 'My Business',
+            business_email: business_email || email || null,
+            business_phone: business_phone || phone || null,
             status: 'active',
             onboarding_status: 'draft',
             metadata: {
               contact_person: contact_person || null,
               business_description: business_description || null,
+              business_type: business_type || null,
               default_currency: default_currency || 'XAF',
               country: 'CM',
             }
