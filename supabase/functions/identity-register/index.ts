@@ -11,7 +11,11 @@ Deno.serve(async (req) => {
     const adminClient = createClient(supabaseUrl, serviceKey);
 
     const body = await req.json();
-    const { account_type, email, phone, full_name, password, org_name, business_name, institution_name, institution_type } = body;
+    const { 
+      account_type, email, phone, full_name, password, org_name, 
+      business_name, business_description, contact_person, default_currency,
+      institution_name, institution_type 
+    } = body;
 
     if (!account_type || !['personal', 'merchant', 'institution', 'developer'].includes(account_type)) {
       return new Response(JSON.stringify({ error: 'Invalid account_type. Must be: personal, merchant, institution, or developer' }), {
