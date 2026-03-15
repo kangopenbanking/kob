@@ -1,5 +1,28 @@
 # Changelog
 
+## [6.0.0] - 2026-03-15 — Integration Readiness Audit: Zero-Gaps Documentation & API Alignment
+
+### Master Documentation
+- Created `docs/master/integration-contracts.md` — Integration prerequisites, auth methods, required endpoints, webhook requirements, and error contracts for Institutions, Merchants, and Developers
+- Created `docs/master/feature-matrix.md` — 170 features across 16 domains with Implemented/Partial/Missing status
+- Created `docs/master/test-plan.md` — 4 E2E integrator journeys with acceptance criteria
+
+### Public Developer Docs
+- Created `docs/public/quickstarts/merchant-quickstart.md` — MoMo charge, webhook verification, refund, export (XAF/CM examples)
+- Created `docs/public/quickstarts/developer-quickstart.md` — OAuth PKCE flow, sandbox tools, rate limits
+- Created `docs/public/quickstarts/institution-quickstart.md` — DCR, AISP consent, PISP payment, CM account formats, mTLS
+- Created `docs/public/webhooks/merchant-webhooks.md` — Event catalogue, signature verification (Node.js/Python), retry policy
+- Created `docs/public/errors.md` — Unified error codes across AUTH_, GW_, CONSENT_, KYB_, LEDGER_, STD_ domains
+- Created `docs/public/statuses.md` — Status lifecycles for charges, refunds, payouts, consents, KYB, loans, savings
+
+### Postman Collection Alignment
+- Added 8 missing folders: Wallets, Escrow, Instant Payouts, Treasury, Compliance Screening, SLA Monitoring, POS & Commerce
+- Total Postman endpoints: ~190 (up from ~165)
+
+### Final Audit Report
+- Created `docs/master/final-audit-report.md` — 169/170 features implemented, 20/20 security controls passed, production readiness confirmed
+
+
 ## [5.0.0] - 2026-03-09 — Phase 1-5 Production Audit & Enterprise Gap Closure
 
 ### Database Migrations
