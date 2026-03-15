@@ -997,7 +997,6 @@ export const translations = {
     onboardingApproved: "Onboarding Approved",
     onboardingRejected: "Onboarding Rejected",
     reviewPending: "Review Pending",
-    underReview: "Under Review",
     submissionReceived: "Submission Received",
     awaitingAdminReview: "Awaiting Admin Review",
     applicationApproved: "Application Approved",
