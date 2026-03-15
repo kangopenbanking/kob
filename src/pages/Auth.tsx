@@ -101,12 +101,10 @@ const ACCOUNT_TYPES: {
 ];
 
 const INSTITUTION_TYPES = [
-  { value: 'commercial_bank', label: 'Commercial Bank' },
-  { value: 'microfinance', label: 'Microfinance Institution' },
-  { value: 'fintech_institution', label: 'Fintech Institution' },
-  { value: 'credit_union', label: 'Credit Union' },
-  { value: 'insurance', label: 'Insurance Company' },
-  { value: 'mobile_money_operator', label: 'Mobile Money Operator' },
+  { value: 'bank', label: 'Commercial Bank' },
+  { value: 'credit_union', label: 'Credit Union / Microfinance' },
+  { value: 'fintech', label: 'Fintech Institution' },
+  { value: 'developer', label: 'Developer / API Provider' },
 ];
 
 const BUSINESS_TYPES = [
