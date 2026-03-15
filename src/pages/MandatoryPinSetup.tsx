@@ -55,6 +55,7 @@ export default function MandatoryPinSetup() {
       }
 
       toast({ title: 'PIN Created', description: 'Your 6-digit security PIN has been set successfully.' });
+      markPinAsJustSet();
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
       toast({ title: 'Error', description: error.message || 'Failed to set PIN', variant: 'destructive' });
