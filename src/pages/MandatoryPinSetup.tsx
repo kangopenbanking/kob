@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { markPinAsJustSet } from '@/hooks/useMandatoryPin';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
@@ -54,6 +55,7 @@ export default function MandatoryPinSetup() {
       }
 
       toast({ title: 'PIN Created', description: 'Your 6-digit security PIN has been set successfully.' });
+      markPinAsJustSet();
       navigate('/dashboard', { replace: true });
     } catch (error: any) {
       toast({ title: 'Error', description: error.message || 'Failed to set PIN', variant: 'destructive' });
