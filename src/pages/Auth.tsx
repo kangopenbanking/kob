@@ -835,9 +835,9 @@ export default function Auth() {
                     <motion.div key="l-otp" {...fadeSlide} className="space-y-4">
                       <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
                       <div className="text-center space-y-1">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Smartphone className="h-5 w-5 text-primary" /></div>
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">{deliveryMethod === 'email' ? <Mail className="h-5 w-5 text-primary" /> : <Smartphone className="h-5 w-5 text-primary" />}</div>
                         <h3 className="text-lg font-semibold">Verify Your Code</h3>
-                        <p className="text-sm text-muted-foreground">Code sent to {loginCountryCode}{loginPhone}</p>
+                        <p className="text-sm text-muted-foreground">Code sent to {deliveryMethod === 'email' ? loginEmail : `${loginCountryCode}${loginPhone}`}</p>
                       </div>
                       <div className="flex justify-center py-2">
                         <InputOTP maxLength={6} value={loginOtpCode} onChange={setLoginOtpCode}>
