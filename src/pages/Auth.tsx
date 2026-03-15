@@ -771,6 +771,33 @@ export default function Auth() {
                           <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                         </div>
                       </div>
+
+                      {/* Delivery Method Selection */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Receive code via</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { key: 'sms' as DeliveryMethod, icon: Smartphone, label: 'SMS' },
+                            { key: 'whatsapp' as DeliveryMethod, icon: Shield, label: 'WhatsApp' },
+                            { key: 'email' as DeliveryMethod, icon: Mail, label: 'Email' },
+                          ] as const).map((dm) => (
+                            <button key={dm.key} type="button" onClick={() => setDeliveryMethod(dm.key)}
+                              className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center transition-all ${deliveryMethod === dm.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
+                              <dm.icon className={`h-4 w-4 ${deliveryMethod === dm.key ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <span className={`text-xs font-medium ${deliveryMethod === dm.key ? 'text-primary' : 'text-muted-foreground'}`}>{dm.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Email input for email delivery */}
+                      {deliveryMethod === 'email' && (
+                        <div className="space-y-2">
+                          <Label>Email Address</Label>
+                          <Input type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} className="h-11" />
+                        </div>
+                      )}
+
                       <Button onClick={handleLoginPhoneSubmit} className="w-full h-11" disabled={loginLoading}>
                         {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Continue
                       </Button>
