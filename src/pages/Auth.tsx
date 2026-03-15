@@ -310,9 +310,17 @@ export default function Auth() {
 
   const handleLoginSendOTP = async () => {
     const fullPhone = `${loginCountryCode}${loginPhone}`;
-    const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', {
-      body: { phone_number: fullPhone, otp_type: 'login', delivery_method: deliveryMethod, captcha_session_id: captchaSessionId },
-    });
+    const body: Record<string, any> = {
+      otp_type: 'login',
+      delivery_method: deliveryMethod,
+      captcha_session_id: captchaSessionId,
+    };
+    if (deliveryMethod === 'email') {
+      body.email_address = loginEmail;
+    } else {
+      body.phone_number = fullPhone;
+    }
+    const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', { body });
     if (error) throw error;
     setOtpExpiresAt(data.expires_at);
     setLoginStep('otp');
