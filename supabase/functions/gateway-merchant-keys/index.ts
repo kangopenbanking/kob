@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ data: keys || [] }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
-    if (method === 'PATCH' && action === 'rotate') {
+    if (action === 'rotate') {
       const { key_id, merchant_id, environment, label } = body;
       if (!key_id || !merchant_id) return problem(400, 'Bad Request', 'key_id and merchant_id are required');
 
