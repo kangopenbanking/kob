@@ -16,8 +16,16 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const method = req.method;
-    const merchantId = url.searchParams.get('merchant_id');
-    const action = url.searchParams.get('action'); // submit, status, review
+
+    // Parse body for POST requests to extract merchant_id/action
+    let body: Record<string, unknown> = {};
+    if (method === 'POST') {
+      try { body = await req.json(); } catch { /* empty body is ok for GET */ }
+    }
+
+    // Read from body first (supabase.functions.invoke sends body), fall back to query params
+    const merchantId = (body.merchant_id as string) || url.searchParams.get('merchant_id');
+    const action = (body.action as string) || url.searchParams.get('action'); // submit, status, review
 
     if (!merchantId) return new Response(JSON.stringify({ error: 'merchant_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
 
@@ -46,10 +54,9 @@ Deno.serve(async (req) => {
     if (method === 'POST') {
       // Submit KYB
       if (action === 'submit') {
-        if (merchant.kyb_status !== 'not_submitted' && merchant.kyb_status !== 'rejected') {
+        if (!['not_submitted', 'draft', 'rejected'].includes(merchant.kyb_status)) {
           return new Response(JSON.stringify({ error: 'kyb_already_submitted', current: merchant.kyb_status }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        const body = await req.json();
         const { documents, registration_number, tax_id, business_address } = body;
 
         const updates: Record<string, unknown> = {
@@ -88,8 +95,7 @@ Deno.serve(async (req) => {
           return new Response(JSON.stringify({ error: 'not_reviewable', current: merchant.kyb_status }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
 
-        const body = await req.json();
-        const { decision, reason } = body; // approved | rejected
+        const { decision, reason } = body as { decision?: string; reason?: string }; // approved | rejected
         if (!decision || !['approved', 'rejected'].includes(decision)) {
           return new Response(JSON.stringify({ error: 'invalid_decision', valid: ['approved', 'rejected'] }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }

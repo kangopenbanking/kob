@@ -156,7 +156,7 @@ export default function MerchantKYB() {
         articles_of_association_url: docs.articles_of_association,
       };
       const res = await supabase.functions.invoke("gateway-merchant-kyb", {
-        body: { documents: [], ...submission },
+        body: { merchant_id: merchant.id, action: 'submit', documents: [], ...submission },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (res.error) {
