@@ -47,7 +47,7 @@ Deno.serve(async (req) => {
       const { data: existingProfile } = await adminClient
         .from('profiles')
         .select('id')
-        .eq('phone', phone)
+        .eq('phone_number', phone)
         .maybeSingle();
 
       if (existingProfile) {
