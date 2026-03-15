@@ -104,6 +104,29 @@ curl -X POST https://api.kangopenbanking.com/functions/v1/sandbox-register-webho
 
 Exceeding limits returns HTTP 429 with `Retry-After` header.
 
+## 8. Sandbox vs Production Authentication
+
+| Environment | Auth Method | Header | How to Obtain |
+|---|---|---|---|
+| **Sandbox** | API Key | `X-API-Key: sbx_...` | Generated in Developer Portal → Sandbox |
+| **Production** | OAuth2 Bearer | `Authorization: Bearer <token>` | `/v1/oauth/token` (client_credentials or authorization_code) |
+
+**Important rules:**
+- `X-API-Key` headers are **only accepted** on sandbox endpoints (`/sandbox-*`, `/api-health`, playground endpoints).
+- Production gateway, AISP, and PISP endpoints **require** an OAuth2 Bearer token.
+- Sandbox keys use the `sbx_` prefix. Any key without this prefix will be rejected in sandbox mode.
+- Production OAuth tokens are issued via the standard OAuth 2.0 flows documented in Section 4.
+
+```bash
+# Sandbox request
+curl https://api.kangopenbanking.com/functions/v1/api-health \
+  -H "X-API-Key: sbx_your_sandbox_key"
+
+# Production request
+curl https://api.kangopenbanking.com/functions/v1/aisp-accounts \
+  -H "Authorization: Bearer eyJhbGciOi..."
+```
+
 ## Next Steps
 
 - [OAuth & OIDC Reference](/docs/portal/authentication.md)

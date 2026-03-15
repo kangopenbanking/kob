@@ -1,5 +1,24 @@
 # Changelog
 
+## [6.1.0] - 2026-03-15 — Developer Portal + Integrator Readiness Audit
+
+### API Status Page
+- Connected `ApiStatusPage.tsx` to live `api-health` edge function (previously static/hardcoded)
+- Added refresh button and dynamic overall status banner
+- Shows FAPI compliance details when available from health endpoint
+
+### API Playground
+- Added sandbox-only authentication warning banner with link to OAuth docs
+- Added 2 new endpoints: Generate Test Data, List Banks (Gateway)
+- Clear guidance: X-API-Key for sandbox, OAuth2 Bearer for production
+
+### Edge Function Modernization
+- Migrated `api-health` from deprecated `serve` import to native `Deno.serve`
+
+### Developer Documentation
+- Added "Sandbox vs Production Authentication" section to developer quickstart
+- Documented header requirements, key prefixes, and environment rules
+
 ## [6.0.0] - 2026-03-15 — Integration Readiness Audit: Zero-Gaps Documentation & API Alignment
 
 ### Master Documentation

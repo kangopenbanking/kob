@@ -31,6 +31,12 @@ export default function ApiPlayground() {
     { value: "credit-score-tips", label: "Credit Score Tips", method: "GET", requiresBody: false },
     { value: "aisp-accounts", label: "List Accounts (AISP)", method: "GET", requiresBody: false },
     { value: "exchange-rate-get", label: "Exchange Rates", method: "GET", requiresBody: false },
+    { value: "sandbox-generate-data", label: "Generate Test Data", method: "POST", requiresBody: true,
+      exampleBody: `{
+  "type": "transactions",
+  "count": 10
+}` },
+    { value: "gateway-list-banks", label: "List Banks (Gateway)", method: "GET", requiresBody: false },
   ];
 
   const selectedEndpointData = endpoints.find(e => e.value === selectedEndpoint);
