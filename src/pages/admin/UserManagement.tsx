@@ -278,6 +278,8 @@ export default function UserManagement() {
         </Button>
       </div>
 
+      <MerchantIntegrityAlert />
+
       <Card>
         <CardHeader>
           <CardTitle>All Users ({filteredUsers.length})</CardTitle>
