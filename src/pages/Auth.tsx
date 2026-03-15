@@ -804,11 +804,12 @@ export default function Auth() {
                       {/* Delivery Method Selection */}
                       <div className="space-y-2">
                         <Label className="text-sm font-medium">Receive code via</Label>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-4 gap-2">
                           {([
                             { key: 'sms' as DeliveryMethod, icon: Smartphone, label: 'SMS' },
                             { key: 'whatsapp' as DeliveryMethod, icon: Shield, label: 'WhatsApp' },
                             { key: 'email' as DeliveryMethod, icon: Mail, label: 'Email' },
+                            { key: 'pin' as DeliveryMethod, icon: KeyRound, label: 'PIN' },
                           ] as const).map((dm) => (
                             <button key={dm.key} type="button" onClick={() => setDeliveryMethod(dm.key)}
                               className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center transition-all ${deliveryMethod === dm.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
