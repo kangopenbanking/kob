@@ -1,9 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/admin-notify.ts";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
 
   try {
@@ -66,6 +66,16 @@ serve(async (req) => {
         await supabase.from('audit_logs').insert({
           action_type: 'merchant.kyb_submitted', entity_type: 'gateway_merchant', entity_id: merchantId,
           performed_by: user.id, details: { registration_number },
+        });
+
+        // Notify admins about new merchant KYB submission
+        await notifyAdmins(supabase, {
+          event_type: 'merchant_kyb_submitted',
+          entity_type: 'gateway_merchant',
+          entity_id: merchantId,
+          title: 'Merchant KYB Submitted',
+          message: `${merchant.business_name} has submitted KYB documents for review.`,
+          metadata: { business_name: merchant.business_name, merchant_id: merchantId },
         });
 
         return new Response(JSON.stringify({ data: updated }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });

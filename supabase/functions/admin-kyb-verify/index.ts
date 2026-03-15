@@ -1,7 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyUser } from "../_shared/admin-notify.ts";
 
 interface KYBVerifyRequest {
   kyb_id: string;
@@ -10,7 +10,7 @@ interface KYBVerifyRequest {
   rejection_reason?: string;
 }
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -110,7 +110,7 @@ serve(async (req) => {
           details: { institution_id, action: 'approved' }
         });
 
-      // Send approval notification email
+      // Get institution info for notifications
       const { data: institution } = await supabaseAdmin
         .from('institutions')
         .select('institution_name, user_id')
@@ -118,6 +118,17 @@ serve(async (req) => {
         .single();
 
       if (institution) {
+        // In-app notification for the user
+        await notifyUser(supabaseAdmin, {
+          user_id: institution.user_id,
+          type: 'success',
+          title: 'KYB Approved',
+          message: `Your business verification for "${institution.institution_name}" has been approved. You can now create your main branch.`,
+          icon: 'kyc',
+          metadata: { kyb_id, institution_id, decision: 'approved' },
+        });
+
+        // Send approval notification email
         const { data: profile } = await supabaseAdmin
           .from('profiles')
           .select('email, full_name')
@@ -200,7 +211,7 @@ serve(async (req) => {
           details: { institution_id, action: 'rejected', reason: rejection_reason }
         });
 
-      // Send rejection notification email
+      // Get institution info for notifications
       const { data: institution } = await supabaseAdmin
         .from('institutions')
         .select('institution_name, user_id')
@@ -208,6 +219,17 @@ serve(async (req) => {
         .single();
 
       if (institution) {
+        // In-app notification for the user
+        await notifyUser(supabaseAdmin, {
+          user_id: institution.user_id,
+          type: 'warning',
+          title: 'KYB Rejected',
+          message: `Your business verification for "${institution.institution_name}" was not approved. Reason: ${rejection_reason}`,
+          icon: 'kyc',
+          metadata: { kyb_id, institution_id, decision: 'rejected', reason: rejection_reason },
+        });
+
+        // Send rejection notification email
         const { data: profile } = await supabaseAdmin
           .from('profiles')
           .select('email, full_name')

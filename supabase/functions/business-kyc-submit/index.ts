@@ -1,9 +1,9 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/admin-notify.ts";
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -135,6 +135,22 @@ serve(async (req) => {
         .eq('step_type', 'kyb_verification');
     }
 
+    // Link onboarding_applications to this KYB submission
+    await supabaseAdmin
+      .from('onboarding_applications')
+      .update({
+        status: 'submitted',
+        submitted_at: new Date().toISOString(),
+        metadata: {
+          kyb_id: kycData.id,
+          business_name,
+          business_type,
+        },
+        updated_at: new Date().toISOString(),
+      })
+      .eq('user_id', user.id)
+      .in('status', ['draft', 'pending']);
+
     // Log audit event
     await supabaseAdmin
       .from('audit_logs')
@@ -152,6 +168,17 @@ serve(async (req) => {
           has_documents: !!(registration_certificate_url || articles_of_association_url),
         }
       }]);
+
+    // Notify all admins
+    await notifyAdmins(supabaseAdmin, {
+      event_type: 'kyb_submitted',
+      entity_type: 'business_kyc',
+      entity_id: kycData.id,
+      title: 'New Business KYB Submission',
+      message: `${business_name} has submitted KYB documents for review.`,
+      institution_id: institution?.id,
+      metadata: { business_name, business_type },
+    });
 
     return new Response(
       JSON.stringify({

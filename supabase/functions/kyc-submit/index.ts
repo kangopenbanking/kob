@@ -2,6 +2,7 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/admin-notify.ts";
 
 // Validation schema for KYC submission
 const kycSubmissionSchema = z.object({
@@ -120,6 +121,22 @@ Deno.serve(async (req) => {
       _event_type: 'kyc_submission',
       _event_category: 'compliance',
       _metadata: { verification_id: verification.id, verification_type }
+    });
+
+    // Notify all admins about new KYC submission
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+
+    await notifyAdmins(supabase, {
+      event_type: 'kyc_submitted',
+      entity_type: 'kyc_verifications',
+      entity_id: verification.id,
+      title: 'New KYC Submission',
+      message: `${profile?.full_name || user.email} submitted ${verification_type} verification for review.`,
+      metadata: { verification_type, document_type, document_country },
     });
 
     // Trigger automated sanctions screening
