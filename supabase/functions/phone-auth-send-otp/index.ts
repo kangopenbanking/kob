@@ -229,11 +229,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Rate limiting: check recent OTP requests for this phone
+    // Rate limiting: check recent OTP requests for this identifier
+    const rateLimitIdentifier = isEmailDelivery ? email_address : phone_number;
     const { data: recentOTPs } = await supabase
       .from('phone_otp_codes')
       .select('created_at')
-      .eq('phone_number', phone_number)
+      .eq('phone_number', rateLimitIdentifier)
       .gte('created_at', new Date(Date.now() - 15 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false });
 
@@ -256,51 +257,60 @@ Deno.serve(async (req) => {
     // Send via selected delivery method(s) with automatic fallback
     let smsResult: SMSResult = { success: false };
     let whatsappResult: WhatsAppResult = { success: false };
+    let emailResult: EmailResult = { success: false };
     let actualDeliveryMethod = delivery_method;
     let lastErrorCode: string | undefined;
     let lastErrorMessage: string | undefined;
 
-    if (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both') {
-      smsResult = await sendViaSMS(phone_number, otpCode);
-      if (!smsResult.success) {
-        lastErrorCode = smsResult.error_code;
-        lastErrorMessage = smsResult.error_message;
+    if (isEmailDelivery) {
+      emailResult = await sendViaEmail(email_address, otpCode);
+      if (!emailResult.success) {
+        lastErrorCode = emailResult.error_code;
+        lastErrorMessage = emailResult.error_message;
       }
-    }
-
-    if (delivery_method === 'whatsapp' || delivery_method === 'auto' || delivery_method === 'both') {
-      whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
-      if (!whatsappResult.success) {
-        lastErrorCode = whatsappResult.error_code;
-        lastErrorMessage = whatsappResult.error_message;
-      }
-      
-      // Automatic fallback to SMS if WhatsApp fails and SMS wasn't already tried
-      if (!whatsappResult.success && delivery_method === 'whatsapp') {
-        console.log('WhatsApp failed, falling back to SMS');
+    } else {
+      if (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both') {
         smsResult = await sendViaSMS(phone_number, otpCode);
-        if (smsResult.success) {
-          actualDeliveryMethod = 'sms';
-        } else {
+        if (!smsResult.success) {
           lastErrorCode = smsResult.error_code;
           lastErrorMessage = smsResult.error_message;
+        }
+      }
+
+      if (delivery_method === 'whatsapp' || delivery_method === 'auto' || delivery_method === 'both') {
+        whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
+        if (!whatsappResult.success) {
+          lastErrorCode = whatsappResult.error_code;
+          lastErrorMessage = whatsappResult.error_message;
+        }
+        
+        // Automatic fallback to SMS if WhatsApp fails and SMS wasn't already tried
+        if (!whatsappResult.success && delivery_method === 'whatsapp') {
+          console.log('WhatsApp failed, falling back to SMS');
+          smsResult = await sendViaSMS(phone_number, otpCode);
+          if (smsResult.success) {
+            actualDeliveryMethod = 'sms';
+          } else {
+            lastErrorCode = smsResult.error_code;
+            lastErrorMessage = smsResult.error_message;
+          }
         }
       }
     }
 
     // Check if at least one delivery succeeded
-    const deliverySuccessful = smsResult.success || whatsappResult.success;
+    const deliverySuccessful = smsResult.success || whatsappResult.success || emailResult.success;
 
     if (!deliverySuccessful) {
-      // Return specific error code for better client-side handling
       return new Response(
         JSON.stringify({ 
           error: 'Failed to send OTP',
           error_code: lastErrorCode || 'DELIVERY_FAILED',
-          details: lastErrorMessage || 'Unable to deliver verification code. Please check your phone number and try again.',
+          details: lastErrorMessage || 'Unable to deliver verification code. Please try again.',
           delivery_attempts: {
             sms: { success: smsResult.success, error: smsResult.error_message },
-            whatsapp: { success: whatsappResult.success, error: whatsappResult.error_message }
+            whatsapp: { success: whatsappResult.success, error: whatsappResult.error_message },
+            email: { success: emailResult.success, error: emailResult.error_message }
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
