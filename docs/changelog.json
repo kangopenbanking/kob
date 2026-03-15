@@ -1,5 +1,41 @@
 [
   {
+    "version": "6.1.0",
+    "date": "2026-03-15",
+    "title": "Developer Portal + Integrator Readiness Audit",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Live API Status Page",
+        "description": "Connected ApiStatusPage to api-health edge function for real-time service status display with refresh and FAPI compliance details.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "API Playground Enhancements",
+        "description": "Added sandbox-only auth warning banner, 2 new endpoints (Generate Test Data, List Banks), and OAuth docs link.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Edge Function Modernization",
+        "description": "Migrated api-health from deprecated serve import to native Deno.serve.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Sandbox vs Production Auth Documentation",
+        "description": "Added authentication environment rules section to developer quickstart guide.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      }
+    ]
+  },
+  {
     "version": "6.0.0",
     "date": "2026-03-15",
     "title": "Integration Readiness Audit — Zero-Gaps Documentation & API Alignment",

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Play, Copy, CheckCircle, Key } from "lucide-react";
+import { Play, Copy, CheckCircle, Key, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 import { API_CONFIG } from "@/config/api";
@@ -31,6 +31,12 @@ export default function ApiPlayground() {
     { value: "credit-score-tips", label: "Credit Score Tips", method: "GET", requiresBody: false },
     { value: "aisp-accounts", label: "List Accounts (AISP)", method: "GET", requiresBody: false },
     { value: "exchange-rate-get", label: "Exchange Rates", method: "GET", requiresBody: false },
+    { value: "sandbox-generate-data", label: "Generate Test Data", method: "POST", requiresBody: true,
+      exampleBody: `{
+  "type": "transactions",
+  "count": 10
+}` },
+    { value: "gateway-list-banks", label: "List Banks (Gateway)", method: "GET", requiresBody: false },
   ];
 
   const selectedEndpointData = endpoints.find(e => e.value === selectedEndpoint);
@@ -158,6 +164,18 @@ console.log(data);`;
           <p className="text-xl text-muted-foreground">
             Test API endpoints with your sandbox API key
           </p>
+        </div>
+
+        <div className="mb-6 rounded-lg border border-yellow-500/30 bg-yellow-500/5 p-4 flex items-start gap-3">
+          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 shrink-0" />
+          <div className="text-sm">
+            <p className="font-semibold text-yellow-700 dark:text-yellow-400">Sandbox Only</p>
+            <p className="text-muted-foreground mt-1">
+              This playground uses sandbox API keys (<code className="bg-muted px-1 rounded text-xs">X-API-Key: sbx_...</code>). 
+              Production APIs require <strong>OAuth2 Bearer tokens</strong> obtained via the{" "}
+              <a href="/developer/gateway/authentication" className="text-primary underline">OAuth token endpoint</a>.
+            </p>
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">
