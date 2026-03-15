@@ -1,5 +1,27 @@
 [
   {
+    "version": "6.2.0",
+    "date": "2026-03-15",
+    "title": "Gateway Parity: Merchant Statements + Settlement Import",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Per-Merchant Statement Generator",
+        "description": "New gateway-merchant-statement edge function generates monthly merchant statements in JSON/CSV with full charge/payout/refund line items and summary analytics.",
+        "endpoints_added": ["GET /v1/gateway/merchants/{id}/statement?month=YYYY-MM&format=csv|json"],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Provider Settlement Import & Compare",
+        "description": "New gateway-settlement-import edge function imports Stripe/Flutterwave/PayPal settlement files, compares against KOB ledger, and records mismatches for admin resolution.",
+        "endpoints_added": ["POST /v1/gateway/settlement-import"],
+        "migrations": [],
+        "tests": []
+      }
+    ]
+  },
+  {
     "version": "6.1.0",
     "date": "2026-03-15",
     "title": "Developer Portal + Integrator Readiness Audit",

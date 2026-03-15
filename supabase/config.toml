@@ -483,6 +483,12 @@ verify_jwt = false
 [functions.gateway-merchant-lifecycle]
 verify_jwt = false
 
+[functions.gateway-merchant-statement]
+verify_jwt = false
+
+[functions.gateway-settlement-import]
+verify_jwt = false
+
 [functions.gateway-merchant-settlement-accounts]
 verify_jwt = false
 

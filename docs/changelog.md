@@ -1,5 +1,24 @@
 # Changelog
 
+## [6.2.0] - 2026-03-15 — Gateway Parity: Merchant Statements + Settlement Import
+
+### Per-Merchant Statement Generator
+- New edge function `gateway-merchant-statement` generates monthly merchant statements
+- Supports JSON and CSV export formats with full line items (charges, payouts, refunds)
+- Summary includes collections by channel, fee breakdown, wallet balances, and failed transaction counts
+- Merchant-scoped access control with admin override
+
+### Provider Settlement Import & Compare
+- New edge function `gateway-settlement-import` imports provider settlement files and compares against KOB ledger
+- Supports Flutterwave, Stripe, and PayPal JSON/CSV formats with provider-specific normalization
+- Detects 5 mismatch types: amount, status, fee, missing-in-platform, missing-in-provider
+- Results stored in `reconciliation_runs` and `reconciliation_mismatches` for admin resolution
+- Full audit trail via `audit_logs`
+
+### Gateway Parity Status
+- All gaps from Stripe/Flutterwave comparison audit are now resolved
+- KOB achieves full gateway parity plus banking-core, Open Banking, and escrow capabilities
+
 ## [6.1.0] - 2026-03-15 — Developer Portal + Integrator Readiness Audit
 
 ### API Status Page
