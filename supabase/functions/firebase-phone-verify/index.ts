@@ -65,35 +65,52 @@ serve(async (req) => {
     let userEmail: string;
 
     if (profile) {
-      // Existing user
+      // Existing user found by phone in profiles
       userId = profile.id;
       userEmail = profile.email || `${phoneNumber.replace('+', '')}@phone.kob.cm`;
     } else {
-      // New user: create auth user + profile
+      // No profile with this phone — check if auth user already exists with this email
       const tempEmail = `${phoneNumber.replace('+', '')}@phone.kob.cm`;
-      
-      const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-        email: tempEmail,
-        email_confirm: true,
-        user_metadata: { phone_number: phoneNumber, auth_method: 'firebase_phone' },
-      });
 
-      if (createError) {
-        console.error('Failed to create user:', createError);
-        return new Response(
-          JSON.stringify({ error: 'Failed to create user account' }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
-        );
+      // Try to find existing auth user by email first
+      const { data: existingUsers } = await supabase.auth.admin.listUsers();
+      const existingUser = existingUsers?.users?.find(u => u.email === tempEmail);
+
+      if (existingUser) {
+        // Auth user exists but profile didn't have phone_number set
+        userId = existingUser.id;
+        userEmail = tempEmail;
+
+        // Ensure profile has phone number
+        await supabase
+          .from('profiles')
+          .update({ phone_number: phoneNumber })
+          .eq('id', userId);
+      } else {
+        // Truly new user: create auth user + profile
+        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+          email: tempEmail,
+          email_confirm: true,
+          user_metadata: { phone_number: phoneNumber, auth_method: 'firebase_phone' },
+        });
+
+        if (createError) {
+          console.error('Failed to create user:', createError);
+          return new Response(
+            JSON.stringify({ error: 'Failed to create user account' }),
+            { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+          );
+        }
+
+        userId = newUser.user.id;
+        userEmail = tempEmail;
+
+        // Update profile with phone number
+        await supabase
+          .from('profiles')
+          .update({ phone_number: phoneNumber })
+          .eq('id', userId);
       }
-
-      userId = newUser.user.id;
-      userEmail = tempEmail;
-
-      // Update profile with phone number
-      await supabase
-        .from('profiles')
-        .update({ phone_number: phoneNumber })
-        .eq('id', userId);
     }
 
     // Generate magic link for session
