@@ -209,7 +209,7 @@ export default function Auth() {
   const loginCountryCode = countryList.find(c => c.country === loginCountry)?.code || '+237';
   const [loginPinCode, setLoginPinCode] = useState('');
   const [loginOtpCode, setLoginOtpCode] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('pin');
   const [loginEmail, setLoginEmail] = useState('');
   const [otpExpiresAt, setOtpExpiresAt] = useState('');
   const [captchaQuestion, setCaptchaQuestion] = useState('');
@@ -803,18 +803,23 @@ export default function Auth() {
 
                       {/* Delivery Method Selection */}
                       <div className="space-y-2">
-                        <Label className="text-sm font-medium">Receive code via</Label>
+                        <Label className="text-sm font-medium">Sign in with</Label>
                         <div className="grid grid-cols-4 gap-2">
                           {([
-                            { key: 'sms' as DeliveryMethod, icon: Smartphone, label: 'SMS' },
-                            { key: 'whatsapp' as DeliveryMethod, icon: Shield, label: 'WhatsApp' },
-                            { key: 'email' as DeliveryMethod, icon: Mail, label: 'Email' },
-                            { key: 'pin' as DeliveryMethod, icon: KeyRound, label: 'PIN' },
+                            { key: 'pin' as DeliveryMethod, icon: KeyRound, label: 'PIN', badge: 'Recommended', colorActive: 'border-primary bg-primary/10 ring-1 ring-primary/30', colorIcon: 'text-primary', disabled: false },
+                            { key: 'sms' as DeliveryMethod, icon: Smartphone, label: 'SMS', badge: null, colorActive: 'border-secondary bg-secondary/10 ring-1 ring-secondary/30', colorIcon: 'text-secondary', disabled: false },
+                            { key: 'whatsapp' as DeliveryMethod, icon: Shield, label: 'WhatsApp', badge: 'Soon', colorActive: '', colorIcon: 'text-muted-foreground', disabled: true },
+                            { key: 'email' as DeliveryMethod, icon: Mail, label: 'Email', badge: null, colorActive: 'border-amber-500 bg-amber-500/10 ring-1 ring-amber-500/30', colorIcon: 'text-amber-600', disabled: false },
                           ] as const).map((dm) => (
-                            <button key={dm.key} type="button" onClick={() => setDeliveryMethod(dm.key)}
-                              className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center transition-all ${deliveryMethod === dm.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
-                              <dm.icon className={`h-4 w-4 ${deliveryMethod === dm.key ? 'text-primary' : 'text-muted-foreground'}`} />
-                              <span className={`text-xs font-medium ${deliveryMethod === dm.key ? 'text-primary' : 'text-muted-foreground'}`}>{dm.label}</span>
+                            <button key={dm.key} type="button" onClick={() => !dm.disabled && setDeliveryMethod(dm.key)} disabled={dm.disabled}
+                              className={`relative flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center transition-all ${dm.disabled ? 'opacity-50 cursor-not-allowed border-border bg-muted/30' : deliveryMethod === dm.key ? dm.colorActive : 'border-border hover:border-primary/40'}`}>
+                              {dm.badge && (
+                                <span className={`absolute -top-2 left-1/2 -translate-x-1/2 text-[9px] font-bold px-1.5 py-0.5 rounded-full whitespace-nowrap ${dm.badge === 'Recommended' ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                                  {dm.badge}
+                                </span>
+                              )}
+                              <dm.icon className={`h-4 w-4 ${dm.disabled ? 'text-muted-foreground' : deliveryMethod === dm.key ? dm.colorIcon : 'text-muted-foreground'}`} />
+                              <span className={`text-xs font-medium ${dm.disabled ? 'text-muted-foreground' : deliveryMethod === dm.key ? dm.colorIcon : 'text-muted-foreground'}`}>{dm.label}</span>
                             </button>
                           ))}
                         </div>
