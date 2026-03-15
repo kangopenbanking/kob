@@ -193,7 +193,7 @@ Deno.serve(async (req) => {
       metadata: { 
         account_type, 
         registered_via: 'identity-register',
-        ...(account_type === 'institution' ? { institution_name, institution_type } : {}),
+        ...(account_type === 'institution' ? { institution_name, institution_type, registration_number } : {}),
       }
     });
 
