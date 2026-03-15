@@ -30,7 +30,7 @@ type AuthMode = 'select' | 'login' | 'register';
 type RegisterStep = 'account-type' | 'identity' | 'details' | 'pin-setup' | 'success';
 type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthMethod = 'standard' | 'firebase';
-type DeliveryMethod = 'sms' | 'whatsapp' | 'both' | 'email';
+type DeliveryMethod = 'sms' | 'whatsapp' | 'both' | 'email' | 'pin';
 
 // ── Schemas ────────────────────────────────────────────────────────
 const phoneSchema = z.string().regex(/^\d{6,15}$/, 'Invalid phone number');
