@@ -633,6 +633,9 @@ verify_jwt = false
 [functions.institution-register]
 verify_jwt = false
 
+[functions.identity-register]
+verify_jwt = false
+
 [functions.iso20022-camt053-parser]
 verify_jwt = false
 

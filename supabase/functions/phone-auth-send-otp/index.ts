@@ -24,6 +24,12 @@ type WhatsAppResult = {
   error_message?: string;
 };
 
+type EmailResult = {
+  success: boolean;
+  error_code?: 'SERVICE_UNAVAILABLE' | 'DELIVERY_FAILED' | 'INVALID_EMAIL';
+  error_message?: string;
+};
+
 // Send OTP via SMS using Vonage
 async function sendViaSMS(phoneNumber: string, otpCode: string): Promise<SMSResult> {
   try {
@@ -117,6 +123,50 @@ async function sendViaWhatsApp(phoneNumber: string, otpCode: string): Promise<Wh
   }
 }
 
+// Send OTP via Email using managed-send-email
+async function sendViaEmail(emailAddress: string, otpCode: string): Promise<EmailResult> {
+  try {
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/managed-send-email`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({
+        to: emailAddress,
+        subject: 'Your KOB Verification Code',
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; padding: 32px;">
+            <h2 style="color: #1a1a1a; margin-bottom: 16px;">Verification Code</h2>
+            <p style="color: #555; font-size: 15px; line-height: 1.5;">Your Kang Open Banking verification code is:</p>
+            <div style="background: #f4f4f5; border-radius: 12px; padding: 24px; text-align: center; margin: 20px 0;">
+              <span style="font-size: 32px; font-weight: 700; letter-spacing: 8px; color: #1a1a1a;">${otpCode}</span>
+            </div>
+            <p style="color: #555; font-size: 14px;">This code is valid for <strong>10 minutes</strong>. Do not share it with anyone.</p>
+            <p style="color: #999; font-size: 12px; margin-top: 24px;">If you didn't request this code, please ignore this email.</p>
+          </div>
+        `,
+      }),
+    });
+
+    const result = await response.json();
+
+    if (response.ok && !result.error) {
+      console.log('OTP email sent successfully to:', emailAddress);
+      return { success: true };
+    } else {
+      console.error('Email send failed:', result);
+      return { success: false, error_code: 'DELIVERY_FAILED', error_message: result.error || 'Failed to send email' };
+    }
+  } catch (error) {
+    console.error('Email sending failed:', error);
+    return { success: false, error_code: 'SERVICE_UNAVAILABLE', error_message: 'Email service unavailable' };
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -127,20 +177,39 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { phone_number, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
+    const { phone_number, email_address, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
 
-    // Validate input
-    const phoneValidation = validatePhone(phone_number);
-    if (!phoneValidation.valid) {
+    // For email delivery, phone_number is optional; for phone delivery, phone_number is required
+    const isEmailDelivery = delivery_method === 'email';
+    
+    if (!isEmailDelivery) {
+      // Validate phone input for non-email delivery
+      const phoneValidation = validatePhone(phone_number);
+      if (!phoneValidation.valid) {
+        return new Response(
+          JSON.stringify({ error: phoneValidation.error }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (isEmailDelivery && !email_address) {
       return new Response(
-        JSON.stringify({ error: phoneValidation.error }),
+        JSON.stringify({ error: 'email_address is required for email delivery' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!phone_number || !otp_type || !captcha_session_id) {
+    if (!isEmailDelivery && !phone_number) {
       return new Response(
-        JSON.stringify({ error: 'phone_number, otp_type, and captcha_session_id are required' }),
+        JSON.stringify({ error: 'phone_number is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!otp_type || !captcha_session_id) {
+      return new Response(
+        JSON.stringify({ error: 'otp_type and captcha_session_id are required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
@@ -160,11 +229,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Rate limiting: check recent OTP requests for this phone
+    // Rate limiting: check recent OTP requests for this identifier
+    const rateLimitIdentifier = isEmailDelivery ? email_address : phone_number;
     const { data: recentOTPs } = await supabase
       .from('phone_otp_codes')
       .select('created_at')
-      .eq('phone_number', phone_number)
+      .eq('phone_number', rateLimitIdentifier)
       .gte('created_at', new Date(Date.now() - 15 * 60 * 1000).toISOString())
       .order('created_at', { ascending: false });
 
@@ -187,51 +257,60 @@ Deno.serve(async (req) => {
     // Send via selected delivery method(s) with automatic fallback
     let smsResult: SMSResult = { success: false };
     let whatsappResult: WhatsAppResult = { success: false };
+    let emailResult: EmailResult = { success: false };
     let actualDeliveryMethod = delivery_method;
     let lastErrorCode: string | undefined;
     let lastErrorMessage: string | undefined;
 
-    if (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both') {
-      smsResult = await sendViaSMS(phone_number, otpCode);
-      if (!smsResult.success) {
-        lastErrorCode = smsResult.error_code;
-        lastErrorMessage = smsResult.error_message;
+    if (isEmailDelivery) {
+      emailResult = await sendViaEmail(email_address, otpCode);
+      if (!emailResult.success) {
+        lastErrorCode = emailResult.error_code;
+        lastErrorMessage = emailResult.error_message;
       }
-    }
-
-    if (delivery_method === 'whatsapp' || delivery_method === 'auto' || delivery_method === 'both') {
-      whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
-      if (!whatsappResult.success) {
-        lastErrorCode = whatsappResult.error_code;
-        lastErrorMessage = whatsappResult.error_message;
-      }
-      
-      // Automatic fallback to SMS if WhatsApp fails and SMS wasn't already tried
-      if (!whatsappResult.success && delivery_method === 'whatsapp') {
-        console.log('WhatsApp failed, falling back to SMS');
+    } else {
+      if (delivery_method === 'sms' || delivery_method === 'auto' || delivery_method === 'both') {
         smsResult = await sendViaSMS(phone_number, otpCode);
-        if (smsResult.success) {
-          actualDeliveryMethod = 'sms';
-        } else {
+        if (!smsResult.success) {
           lastErrorCode = smsResult.error_code;
           lastErrorMessage = smsResult.error_message;
+        }
+      }
+
+      if (delivery_method === 'whatsapp' || delivery_method === 'auto' || delivery_method === 'both') {
+        whatsappResult = await sendViaWhatsApp(phone_number, otpCode);
+        if (!whatsappResult.success) {
+          lastErrorCode = whatsappResult.error_code;
+          lastErrorMessage = whatsappResult.error_message;
+        }
+        
+        // Automatic fallback to SMS if WhatsApp fails and SMS wasn't already tried
+        if (!whatsappResult.success && delivery_method === 'whatsapp') {
+          console.log('WhatsApp failed, falling back to SMS');
+          smsResult = await sendViaSMS(phone_number, otpCode);
+          if (smsResult.success) {
+            actualDeliveryMethod = 'sms';
+          } else {
+            lastErrorCode = smsResult.error_code;
+            lastErrorMessage = smsResult.error_message;
+          }
         }
       }
     }
 
     // Check if at least one delivery succeeded
-    const deliverySuccessful = smsResult.success || whatsappResult.success;
+    const deliverySuccessful = smsResult.success || whatsappResult.success || emailResult.success;
 
     if (!deliverySuccessful) {
-      // Return specific error code for better client-side handling
       return new Response(
         JSON.stringify({ 
           error: 'Failed to send OTP',
           error_code: lastErrorCode || 'DELIVERY_FAILED',
-          details: lastErrorMessage || 'Unable to deliver verification code. Please check your phone number and try again.',
+          details: lastErrorMessage || 'Unable to deliver verification code. Please try again.',
           delivery_attempts: {
             sms: { success: smsResult.success, error: smsResult.error_message },
-            whatsapp: { success: whatsappResult.success, error: whatsappResult.error_message }
+            whatsapp: { success: whatsappResult.success, error: whatsappResult.error_message },
+            email: { success: emailResult.success, error: emailResult.error_message }
           }
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
@@ -243,11 +322,11 @@ Deno.serve(async (req) => {
     const hashBuf = await crypto.subtle.digest('SHA-256', encoder.encode(otpCode));
     const otpHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Store hashed OTP in database
+    // Store hashed OTP in database (use email as phone_number field for email delivery)
     const { data: otpRecord, error: insertError } = await supabase
       .from('phone_otp_codes')
       .insert({
-        phone_number,
+        phone_number: isEmailDelivery ? email_address : phone_number,
         otp_code: otpHash,
         otp_type,
         delivery_method: actualDeliveryMethod,
@@ -267,7 +346,8 @@ Deno.serve(async (req) => {
       throw new Error('Failed to store OTP record');
     }
 
-    console.log(`OTP sent to ${phone_number} via ${delivery_method}: [REDACTED]`);
+    const identifier = isEmailDelivery ? email_address : phone_number;
+    console.log(`OTP sent to ${identifier} via ${delivery_method}: [REDACTED]`);
 
     return new Response(
       JSON.stringify({
@@ -276,6 +356,7 @@ Deno.serve(async (req) => {
         delivery_status: {
           sms: smsResult.success,
           whatsapp: whatsappResult.success,
+          email: emailResult.success,
         },
         expires_at: expiresAt,
         otp_id: otpRecord.id,

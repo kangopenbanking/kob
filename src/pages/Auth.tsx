@@ -30,7 +30,7 @@ type AuthMode = 'select' | 'login' | 'register';
 type RegisterStep = 'account-type' | 'identity' | 'details' | 'pin-setup' | 'success';
 type LoginStep = 'captcha' | 'phone' | 'pin' | 'otp' | 'firebase-otp' | 'complete' | 'forgot-password' | 'reset-pin' | 'setup-pin';
 type AuthMethod = 'standard' | 'firebase';
-type DeliveryMethod = 'sms' | 'whatsapp' | 'both';
+type DeliveryMethod = 'sms' | 'whatsapp' | 'both' | 'email';
 
 // ── Schemas ────────────────────────────────────────────────────────
 const phoneSchema = z.string().regex(/^\d{6,15}$/, 'Invalid phone number');
@@ -212,6 +212,7 @@ export default function Auth() {
   const [loginPinCode, setLoginPinCode] = useState('');
   const [loginOtpCode, setLoginOtpCode] = useState('');
   const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
+  const [loginEmail, setLoginEmail] = useState('');
   const [otpExpiresAt, setOtpExpiresAt] = useState('');
   const [captchaQuestion, setCaptchaQuestion] = useState('');
   const [captchaAnswer, setCaptchaAnswer] = useState('');
@@ -309,9 +310,17 @@ export default function Auth() {
 
   const handleLoginSendOTP = async () => {
     const fullPhone = `${loginCountryCode}${loginPhone}`;
-    const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', {
-      body: { phone_number: fullPhone, otp_type: 'login', delivery_method: deliveryMethod, captcha_session_id: captchaSessionId },
-    });
+    const body: Record<string, any> = {
+      otp_type: 'login',
+      delivery_method: deliveryMethod,
+      captcha_session_id: captchaSessionId,
+    };
+    if (deliveryMethod === 'email') {
+      body.email_address = loginEmail;
+    } else {
+      body.phone_number = fullPhone;
+    }
+    const { data, error } = await supabase.functions.invoke('phone-auth-send-otp', { body });
     if (error) throw error;
     setOtpExpiresAt(data.expires_at);
     setLoginStep('otp');
@@ -357,9 +366,9 @@ export default function Auth() {
     try { otpSchema.parse(loginOtpCode); } catch { toast({ title: 'Invalid OTP', description: '6 digits required', variant: 'destructive' }); return; }
     setLoginLoading(true);
     try {
-      const fullPhone = `${loginCountryCode}${loginPhone}`;
+      const identifier = deliveryMethod === 'email' ? loginEmail : `${loginCountryCode}${loginPhone}`;
       const { data, error } = await supabase.functions.invoke('phone-auth-verify-otp', {
-        body: { phone_number: fullPhone, otp_code: loginOtpCode, otp_type: 'login', country_code: loginCountryCode },
+        body: { phone_number: identifier, otp_code: loginOtpCode, otp_type: 'login', country_code: loginCountryCode },
       });
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Failed');
@@ -762,6 +771,33 @@ export default function Auth() {
                           <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                         </div>
                       </div>
+
+                      {/* Delivery Method Selection */}
+                      <div className="space-y-2">
+                        <Label className="text-sm font-medium">Receive code via</Label>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { key: 'sms' as DeliveryMethod, icon: Smartphone, label: 'SMS' },
+                            { key: 'whatsapp' as DeliveryMethod, icon: Shield, label: 'WhatsApp' },
+                            { key: 'email' as DeliveryMethod, icon: Mail, label: 'Email' },
+                          ] as const).map((dm) => (
+                            <button key={dm.key} type="button" onClick={() => setDeliveryMethod(dm.key)}
+                              className={`flex flex-col items-center gap-1 rounded-xl border-2 p-3 text-center transition-all ${deliveryMethod === dm.key ? 'border-primary bg-primary/5' : 'border-border hover:border-primary/40'}`}>
+                              <dm.icon className={`h-4 w-4 ${deliveryMethod === dm.key ? 'text-primary' : 'text-muted-foreground'}`} />
+                              <span className={`text-xs font-medium ${deliveryMethod === dm.key ? 'text-primary' : 'text-muted-foreground'}`}>{dm.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Email input for email delivery */}
+                      {deliveryMethod === 'email' && (
+                        <div className="space-y-2">
+                          <Label>Email Address</Label>
+                          <Input type="email" placeholder="you@example.com" value={loginEmail} onChange={e => setLoginEmail(e.target.value)} className="h-11" />
+                        </div>
+                      )}
+
                       <Button onClick={handleLoginPhoneSubmit} className="w-full h-11" disabled={loginLoading}>
                         {loginLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Continue
                       </Button>
@@ -799,9 +835,9 @@ export default function Auth() {
                     <motion.div key="l-otp" {...fadeSlide} className="space-y-4">
                       <Button variant="ghost" size="sm" onClick={loginGoBack} className="gap-1 -ml-2 text-muted-foreground"><ArrowLeft className="h-4 w-4" /> Back</Button>
                       <div className="text-center space-y-1">
-                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3"><Smartphone className="h-5 w-5 text-primary" /></div>
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">{deliveryMethod === 'email' ? <Mail className="h-5 w-5 text-primary" /> : <Smartphone className="h-5 w-5 text-primary" />}</div>
                         <h3 className="text-lg font-semibold">Verify Your Code</h3>
-                        <p className="text-sm text-muted-foreground">Code sent to {loginCountryCode}{loginPhone}</p>
+                        <p className="text-sm text-muted-foreground">Code sent to {deliveryMethod === 'email' ? loginEmail : `${loginCountryCode}${loginPhone}`}</p>
                       </div>
                       <div className="flex justify-center py-2">
                         <InputOTP maxLength={6} value={loginOtpCode} onChange={setLoginOtpCode}>
