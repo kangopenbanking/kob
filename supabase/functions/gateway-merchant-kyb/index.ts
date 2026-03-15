@@ -54,10 +54,9 @@ Deno.serve(async (req) => {
     if (method === 'POST') {
       // Submit KYB
       if (action === 'submit') {
-        if (merchant.kyb_status !== 'not_submitted' && merchant.kyb_status !== 'rejected') {
+        if (!['not_submitted', 'draft', 'rejected'].includes(merchant.kyb_status)) {
           return new Response(JSON.stringify({ error: 'kyb_already_submitted', current: merchant.kyb_status }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        const body = await req.json();
         const { documents, registration_number, tax_id, business_address } = body;
 
         const updates: Record<string, unknown> = {
