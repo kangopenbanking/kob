@@ -179,18 +179,37 @@ Deno.serve(async (req) => {
 
     const { phone_number, email_address, otp_type, delivery_method = 'both', captcha_session_id } = await req.json();
 
-    // Validate input
-    const phoneValidation = validatePhone(phone_number);
-    if (!phoneValidation.valid) {
+    // For email delivery, phone_number is optional; for phone delivery, phone_number is required
+    const isEmailDelivery = delivery_method === 'email';
+    
+    if (!isEmailDelivery) {
+      // Validate phone input for non-email delivery
+      const phoneValidation = validatePhone(phone_number);
+      if (!phoneValidation.valid) {
+        return new Response(
+          JSON.stringify({ error: phoneValidation.error }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
+    if (isEmailDelivery && !email_address) {
       return new Response(
-        JSON.stringify({ error: phoneValidation.error }),
+        JSON.stringify({ error: 'email_address is required for email delivery' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    if (!phone_number || !otp_type || !captcha_session_id) {
+    if (!isEmailDelivery && !phone_number) {
       return new Response(
-        JSON.stringify({ error: 'phone_number, otp_type, and captcha_session_id are required' }),
+        JSON.stringify({ error: 'phone_number is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!otp_type || !captcha_session_id) {
+      return new Response(
+        JSON.stringify({ error: 'otp_type and captcha_session_id are required' }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
       );
     }
