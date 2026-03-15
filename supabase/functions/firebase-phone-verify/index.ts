@@ -83,11 +83,10 @@ serve(async (req) => {
         userId = existingUser.id;
         userEmail = tempEmail;
 
-        // Ensure profile has phone number
+        // Ensure profile has phone number (UPSERT to handle missing profiles)
         await supabase
           .from('profiles')
-          .update({ phone_number: phoneNumber })
-          .eq('id', userId);
+          .upsert({ id: userId, phone_number: phoneNumber }, { onConflict: 'id' });
       } else {
         // Truly new user: create auth user + profile
         const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
