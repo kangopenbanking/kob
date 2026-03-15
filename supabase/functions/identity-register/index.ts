@@ -115,8 +115,12 @@ Deno.serve(async (req) => {
             business_name: business_name || org_name || full_name || 'My Business',
             status: 'active',
             onboarding_status: 'draft',
-            country: 'CM',
-            currency: 'XAF'
+            metadata: {
+              contact_person: contact_person || null,
+              business_description: business_description || null,
+              default_currency: default_currency || 'XAF',
+              country: 'CM',
+            }
           })
           .select('id')
           .single();
