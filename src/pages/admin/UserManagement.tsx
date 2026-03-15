@@ -17,6 +17,7 @@ import { logger } from '@/lib/logger';
 import { UserDetailsDialog } from '@/components/admin/UserDetailsDialog';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { SearchFilter } from '@/components/SearchFilter';
+import { MerchantIntegrityAlert } from '@/components/admin/MerchantIntegrityAlert';
 
 interface UserProfile {
   id: string;
@@ -276,6 +277,8 @@ export default function UserManagement() {
           Create User
         </Button>
       </div>
+
+      <MerchantIntegrityAlert />
 
       <Card>
         <CardHeader>
