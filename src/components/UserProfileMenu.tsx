@@ -15,7 +15,7 @@ import { User, Settings, Shield, LogOut, LayoutDashboard } from "lucide-react";
 import { toast } from "sonner";
 
 interface UserProfileMenuProps {
-  variant?: "admin" | "dashboard" | "developer" | "institution";
+  variant?: "admin" | "dashboard" | "developer" | "institution" | "merchant";
 }
 
 export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps) {
@@ -96,6 +96,14 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
   const securityPath = variant === "admin" ? "/admin/security" : "/security";
   const settingsPath = variant === "institution" ? "/fi-portal/settings" : "/profile";
 
+  const dashboardPathMap: Record<string, string> = {
+    admin: "/admin",
+    institution: "/fi-portal",
+    developer: "/developer",
+    dashboard: "/dashboard",
+  };
+  const myDashboardPath = dashboardPathMap[variant] || "/dashboard";
+
   // Don't render anything if not authenticated
   if (!isAuthenticated) return null;
 
@@ -131,7 +139,7 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
           Security
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => navigate("/dashboard")}>
+        <DropdownMenuItem onClick={() => navigate(myDashboardPath)}>
           <LayoutDashboard className="mr-2 h-4 w-4" />
           My Dashboard
         </DropdownMenuItem>

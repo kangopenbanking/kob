@@ -12,6 +12,7 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { PersonalAccountRoute } from "@/components/PersonalAccountRoute";
 import { NonInstitutionRoute } from "@/components/auth/NonInstitutionRoute";
+import { DashboardRouter } from "@/components/DashboardRouter";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { PortalErrorBoundary } from "@/components/PortalErrorBoundary";
 import { NestedNotFound } from "@/components/NestedNotFound";
@@ -818,7 +819,10 @@ function App() {
             <Route path="/monitoring" element={<Layout><ProtectedRoute requiredRole="admin"><SystemMonitoring /></ProtectedRoute></Layout>} />
             
             {/* User Dashboard Routes - Nested with DashboardLayout */}
-            <Route path="/dashboard" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>}>
+            <Route path="/dashboard" element={<ProtectedRoute><DashboardRouter /></ProtectedRoute>} />
+            
+            {/* Personal Dashboard (only for non-institution, non-personal-restricted users) */}
+            <Route path="/personal-dashboard" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>}>
               <Route index element={<Dashboard />} />
             </Route>
             <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />

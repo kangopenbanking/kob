@@ -1,5 +1,84 @@
 [
   {
+    "version": "2.5.0",
+    "date": "2026-03-15",
+    "title": "Account Routing Isolation & Translation Pipeline",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Smart Dashboard Router",
+        "description": "All login flows now route through DashboardRouter which redirects each account type (admin, merchant, institution, developer, personal) to their correct portal — eliminating cross-contamination",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "UserProfileMenu Role-Aware Navigation",
+        "description": "My Dashboard link now uses variant-based path mapping instead of hardcoded /dashboard",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Notification Translation Strings",
+        "description": "28 new translatable strings (EN + FR) for KYB/KYC/onboarding notification pipeline",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      }
+    ]
+  },
+  {
+    "version": "2.4.0",
+    "date": "2026-03-15",
+    "title": "E2E Data-Flow Consistency & Admin Notification Pipeline",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Admin Notification Helper",
+        "description": "Shared admin-notify.ts helper that notifies all admin users via app_notifications on KYB/KYC/onboarding submissions",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "KYB/KYC Submit Notifications",
+        "description": "business-kyc-submit, gateway-merchant-kyb, kyc-submit, identity-onboarding now create admin notifications on submission",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Review Decision Notifications",
+        "description": "gateway-merchant-kyb-review and admin-kyb-verify now create in-app notifications for users on approval/rejection",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Merchant KYB Review via Edge Function",
+        "description": "MerchantManagement admin page now calls gateway-merchant-kyb-review instead of direct DB update, ensuring audit logs and notifications fire",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "TPP Review Audit Logging",
+        "description": "TPPRegistrationReview now creates audit_logs entries and user notifications on approve/reject",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Edge Function Modernization",
+        "description": "Migrated admin-kyb-verify, gateway-merchant-kyb, gateway-merchant-kyb-review, business-kyc-submit from deprecated serve() to Deno.serve()",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      }
+    ]
+  },
+  {
     "version": "2.3.0",
     "date": "2026-03-02",
     "title": "Fully Automated Payouts",
