@@ -366,9 +366,9 @@ export default function Auth() {
     try { otpSchema.parse(loginOtpCode); } catch { toast({ title: 'Invalid OTP', description: '6 digits required', variant: 'destructive' }); return; }
     setLoginLoading(true);
     try {
-      const fullPhone = `${loginCountryCode}${loginPhone}`;
+      const identifier = deliveryMethod === 'email' ? loginEmail : `${loginCountryCode}${loginPhone}`;
       const { data, error } = await supabase.functions.invoke('phone-auth-verify-otp', {
-        body: { phone_number: fullPhone, otp_code: loginOtpCode, otp_type: 'login', country_code: loginCountryCode },
+        body: { phone_number: identifier, otp_code: loginOtpCode, otp_type: 'login', country_code: loginCountryCode },
       });
       if (error) throw new Error(error.message);
       if (!data.success) throw new Error(data.error || 'Failed');
