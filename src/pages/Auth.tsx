@@ -209,7 +209,7 @@ export default function Auth() {
   const loginCountryCode = countryList.find(c => c.country === loginCountry)?.code || '+237';
   const [loginPinCode, setLoginPinCode] = useState('');
   const [loginOtpCode, setLoginOtpCode] = useState('');
-  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('sms');
+  const [deliveryMethod, setDeliveryMethod] = useState<DeliveryMethod>('pin');
   const [loginEmail, setLoginEmail] = useState('');
   const [otpExpiresAt, setOtpExpiresAt] = useState('');
   const [captchaQuestion, setCaptchaQuestion] = useState('');
