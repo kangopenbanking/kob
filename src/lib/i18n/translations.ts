@@ -2008,7 +2008,6 @@ export const translations = {
     onboardingApproved: "Intégration Approuvée",
     onboardingRejected: "Intégration Rejetée",
     reviewPending: "Révision en Attente",
-    underReview: "En Cours de Révision",
     submissionReceived: "Soumission Reçue",
     awaitingAdminReview: "En Attente de Révision Admin",
     applicationApproved: "Demande Approuvée",
