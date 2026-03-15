@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+const PIN_JUST_SET_KEY = 'pin_just_set';
+
 interface MandatoryPinState {
   isLoading: boolean;
   requiresPinSetup: boolean;
@@ -22,6 +24,13 @@ export function useMandatoryPin() {
 
   const checkPinRequirement = async () => {
     try {
+      // If PIN was just set in this session, skip the DB check
+      if (sessionStorage.getItem(PIN_JUST_SET_KEY) === 'true') {
+        sessionStorage.removeItem(PIN_JUST_SET_KEY);
+        setState({ isLoading: false, requiresPinSetup: false });
+        return;
+      }
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         setState({ isLoading: false, requiresPinSetup: false });
@@ -45,4 +54,9 @@ export function useMandatoryPin() {
   };
 
   return state;
+}
+
+/** Call before navigating away after a successful PIN set */
+export function markPinAsJustSet() {
+  sessionStorage.setItem(PIN_JUST_SET_KEY, 'true');
 }
