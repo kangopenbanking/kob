@@ -297,10 +297,13 @@ export default function Auth() {
     }
     setLoginLoading(true);
     try {
-      const { exists, hasPIN } = await checkIfUserHasPIN();
-      if (exists === null) { setLoginLoading(false); return; }
-      if (!exists) { toast({ title: 'Not Found', description: 'No account found. Please sign up.', variant: 'destructive' }); setLoginLoading(false); return; }
-      if (hasPIN) { setUsesPINLogin(true); setLoginStep('pin'); setLoginLoading(false); return; }
+      if (deliveryMethod === 'pin') {
+        const { exists, hasPIN } = await checkIfUserHasPIN();
+        if (exists === null) { setLoginLoading(false); return; }
+        if (!exists) { toast({ title: 'Not Found', description: 'No account found. Please sign up.', variant: 'destructive' }); setLoginLoading(false); return; }
+        if (!hasPIN) { toast({ title: 'No PIN Set', description: 'No PIN is set for this account. Please use SMS or Email to log in.', variant: 'destructive' }); setLoginLoading(false); return; }
+        setUsesPINLogin(true); setLoginStep('pin'); setLoginLoading(false); return;
+      }
       setUsesPINLogin(false);
       await handleLoginSendOTP();
     } finally { setLoginLoading(false); }
