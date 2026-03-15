@@ -1,5 +1,41 @@
 [
   {
+    "version": "6.0.0",
+    "date": "2026-03-15",
+    "title": "Integration Readiness Audit — Zero-Gaps Documentation & API Alignment",
+    "breaking_changes": false,
+    "features": [
+      {
+        "name": "Master Documentation Pack",
+        "description": "Created integration-contracts.md, feature-matrix.md (170 features across 16 domains), and test-plan.md with 4 E2E journeys",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Public Developer Docs",
+        "description": "Quickstart guides for Merchants, Developers, and Institutions with XAF examples and Cameroon phone formatting. Webhook integration guide, error codes reference, and status lifecycle reference.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Postman Collection Alignment",
+        "description": "Added 8 missing folders to Postman collection: Wallets, Escrow, Instant Payouts, Treasury, Compliance Screening, SLA Monitoring, POS & Commerce. Total endpoints now ~190.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      },
+      {
+        "name": "Final Audit Report",
+        "description": "Comprehensive integration readiness report with feature matrix, security controls checklist (20/20 passed), known limitations, and production readiness statement.",
+        "endpoints_added": [],
+        "migrations": [],
+        "tests": []
+      }
+    ]
+  },
+  {
     "version": "2.5.0",
     "date": "2026-03-15",
     "title": "Account Routing Isolation & Translation Pipeline",

@@ -991,6 +991,126 @@ Deno.serve(async (req) => {
           }),
         ],
       },
+
+      // ── Wallets ─────────────────────────────────────────────────────
+      {
+        name: 'Wallets',
+        item: [
+          r('Get Merchant Wallet', 'GET', '/v1/gateway/wallets', {
+            desc: 'Get merchant wallet balances (available, pending, ledger)',
+          }),
+          r('Get Wallet Balance', 'GET', '/v1/gateway/wallets/balance', {
+            query: [{ key: 'currency', value: 'XAF' }],
+          }),
+          r('Wallet Transactions', 'GET', '/v1/gateway/wallets/transactions', {
+            query: [{ key: 'limit', value: '25' }, { key: 'offset', value: '0' }],
+          }),
+        ],
+      },
+
+      // ── Escrow ──────────────────────────────────────────────────────
+      {
+        name: 'Escrow',
+        item: [
+          r('Create Escrow', 'POST', '/v1/gateway/escrow', {
+            body: { amount: 100000, currency: 'XAF', beneficiary_id: '{{beneficiary_id}}', release_conditions: 'delivery_confirmed' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Create an escrow hold for a transaction',
+          }),
+          r('Release Escrow', 'POST', '/v1/gateway/escrow/release', {
+            body: { escrow_id: 'ESCROW_UUID' },
+          }),
+          r('Cancel Escrow', 'POST', '/v1/gateway/escrow/cancel', {
+            body: { escrow_id: 'ESCROW_UUID', reason: 'Buyer cancelled' },
+          }),
+          r('Get Escrow', 'GET', '/v1/gateway/escrow/{{escrow_id}}'),
+        ],
+      },
+
+      // ── Instant Payouts ─────────────────────────────────────────────
+      {
+        name: 'Instant Payouts',
+        item: [
+          r('Create Instant Payout', 'POST', '/v1/gateway/instant-payouts', {
+            body: { amount: 50000, currency: 'XAF', destination: { type: 'mobile_money', phone: '237650000000' } },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Instant payout to MoMo or bank account',
+          }),
+          r('Push to Card', 'POST', '/v1/gateway/push-to-card', {
+            body: { amount: 25000, currency: 'XAF', card_token: 'tok_xxxx' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Push funds directly to a debit card',
+          }),
+        ],
+      },
+
+      // ── Treasury ────────────────────────────────────────────────────
+      {
+        name: 'Treasury',
+        item: [
+          r('Get Treasury Summary', 'GET', '/v1/gateway/treasury/summary', {
+            desc: 'Aggregated treasury position across all currencies',
+          }),
+          r('Get Treasury Movements', 'GET', '/v1/gateway/treasury/movements', {
+            query: [{ key: 'from', value: '2026-01-01' }, { key: 'to', value: '2026-03-15' }],
+          }),
+          r('Safeguarding Ledger', 'GET', '/v1/gateway/safeguarding-ledger', {
+            desc: 'Client money safeguarding report',
+          }),
+        ],
+      },
+
+      // ── Compliance Screening ────────────────────────────────────────
+      {
+        name: 'Compliance Screening',
+        item: [
+          r('Screen Entity', 'POST', '/v1/gateway/compliance/screen', {
+            body: { name: 'Jean Kamga', country: 'CM', type: 'individual' },
+            desc: 'AML/CFT sanctions and PEP screening',
+          }),
+          r('Submit SAR', 'POST', '/v1/gateway/sar', {
+            body: { transaction_id: '{{charge_id}}', reason: 'Unusual transaction pattern', severity: 'high' },
+            desc: 'Submit a Suspicious Activity Report',
+          }),
+        ],
+      },
+
+      // ── SLA Monitoring ──────────────────────────────────────────────
+      {
+        name: 'SLA Monitoring',
+        item: [
+          r('Get SLA Metrics', 'GET', '/v1/gateway/sla/metrics', {
+            desc: 'Platform SLA compliance metrics (uptime, latency, error rates)',
+          }),
+          r('Get SLA Report', 'GET', '/v1/gateway/sla/report', {
+            query: [{ key: 'period', value: 'monthly' }],
+          }),
+        ],
+      },
+
+      // ── POS & Commerce ──────────────────────────────────────────────
+      {
+        name: 'POS & Commerce',
+        item: [
+          r('List Products', 'GET', '/v1/pos/products', {
+            query: [{ key: 'merchant_id', value: '{{merchant_id}}' }],
+          }),
+          r('Create Product', 'POST', '/v1/pos/products', {
+            body: { name: 'Café Latte', price: 2500, currency: 'XAF', category: 'beverages' },
+          }),
+          r('Create QR Payment', 'POST', '/v1/pos/qr-payment', {
+            body: { merchant_id: '{{merchant_id}}', amount: 5000, currency: 'XAF' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Browse Stores', 'GET', '/v1/pos/stores', {
+            desc: 'Browse published marketplace stores',
+          }),
+          r('Submit Order', 'POST', '/v1/pos/orders', {
+            body: { merchant_id: '{{merchant_id}}', items: [{ product_id: 'PRODUCT_UUID', quantity: 2 }] },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+        ],
+      },
     ],
   };
 
