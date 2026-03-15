@@ -160,11 +160,7 @@ export default function MerchantKYB() {
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (res.error) {
-        const meta = (merchant.metadata as any) || {};
-        await supabase.from("gateway_merchants").update({
-          kyb_status: "submitted",
-          metadata: { ...meta, kyb_submission: { ...submission, submitted_at: new Date().toISOString() } },
-        }).eq("id", merchant.id);
+        throw new Error(res.error.message || 'Failed to submit KYB. Please try again.');
       }
       toast.success("KYB application submitted for review");
       loadData();

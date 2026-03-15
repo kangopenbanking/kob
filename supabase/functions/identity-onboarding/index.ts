@@ -118,6 +118,22 @@ Deno.serve(async (req) => {
           details: { application_id: app.id }
         });
 
+        // Notify admins about new submission
+        const { data: profile } = await adminClient
+          .from('profiles')
+          .select('full_name')
+          .eq('id', userId)
+          .single();
+
+        await notifyAdmins(adminClient, {
+          event_type: 'onboarding_submitted',
+          entity_type: app.entity_type,
+          entity_id: app.id,
+          title: 'New Onboarding Submission',
+          message: `${profile?.full_name || 'A user'} submitted a ${app.entity_type} onboarding application for review.`,
+          metadata: { application_id: app.id, entity_type: app.entity_type },
+        });
+
         return new Response(JSON.stringify({
           application_id: app.id,
           status: 'submitted',
