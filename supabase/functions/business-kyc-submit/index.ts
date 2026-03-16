@@ -80,7 +80,7 @@ Deno.serve(async (req) => {
       .from('business_kyc')
       .insert([{
         user_id: user.id,
-        account_id: account_id || null,
+        account_id: safeAccountId,
         business_name,
         registration_number,
         business_type,
