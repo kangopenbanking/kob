@@ -47,15 +47,24 @@ Deno.serve(async (req) => {
       bank_statement_url,
     } = await req.json();
 
-    console.log('Submitting Business KYC for user:', user.id);
+    // Normalise account_id: empty strings → null (column is UUID, '' would crash)
+    const safeAccountId = account_id && account_id.trim() !== '' ? account_id : null;
 
-    // Check if business KYC already exists for this account
-    const { data: existingKYC } = await supabaseAdmin
+    console.log('Submitting Business KYC for user:', user.id, 'account:', safeAccountId);
+
+    // Check if business KYC already exists for this user (and optionally account)
+    let existingQuery = supabaseAdmin
       .from('business_kyc')
       .select('id, verification_status')
-      .eq('user_id', user.id)
-      .eq('account_id', account_id)
-      .single();
+      .eq('user_id', user.id);
+
+    if (safeAccountId) {
+      existingQuery = existingQuery.eq('account_id', safeAccountId);
+    } else {
+      existingQuery = existingQuery.is('account_id', null);
+    }
+
+    const { data: existingKYC } = await existingQuery.maybeSingle();
 
     if (existingKYC) {
       if (existingKYC.verification_status === 'approved') {
@@ -71,7 +80,7 @@ Deno.serve(async (req) => {
       .from('business_kyc')
       .insert([{
         user_id: user.id,
-        account_id: account_id || null,
+        account_id: safeAccountId,
         business_name,
         registration_number,
         business_type,
