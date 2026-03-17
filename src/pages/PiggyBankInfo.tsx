@@ -29,8 +29,9 @@ const PiggyBankInfo = () => {
       </Helmet>
 
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary via-primary/90 to-accent py-24">
-        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:32px_32px]" />
+      <section className="relative overflow-hidden py-24">
+        <img src={piggyBanner} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-primary/60" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center text-primary-foreground">
             <Badge variant="outline" className="mb-6 border-white/30 bg-white/10 text-white px-4 py-2">
