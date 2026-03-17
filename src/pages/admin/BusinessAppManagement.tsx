@@ -607,7 +607,7 @@ const BusinessAppManagement: React.FC = () => {
           <SheetHeader>
             <SheetTitle className="text-lg">{selectedMerchant?.business_name}</SheetTitle>
             <SheetDescription className="text-xs">
-              ID: {selectedMerchant?.id?.slice(0, 8)}… • {selectedMerchant?.business_type || 'N/A'} • Joined {selectedMerchant ? new Date(selectedMerchant.created_at).toLocaleDateString() : ''}
+              ID: {selectedMerchant?.id?.slice(0, 8)}… • Joined {selectedMerchant ? new Date(selectedMerchant.created_at).toLocaleDateString() : ''}
             </SheetDescription>
           </SheetHeader>
 
