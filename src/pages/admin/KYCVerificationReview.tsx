@@ -326,8 +326,18 @@ export default function KYCVerificationReview() {
                           </div>
                         </>
                       ) : (
-                        <div className="flex flex-col items-center justify-center h-full">
-                          <ImageIcon className="h-6 w-6 text-muted-foreground/30" />
+                        <div className="flex flex-col items-center justify-center h-full gap-1">
+                          {storedPath ? (
+                            <>
+                              <FileText className="h-6 w-6 text-primary/40" />
+                              <span className="text-[10px] text-muted-foreground font-medium">Click to view</span>
+                            </>
+                          ) : (
+                            <>
+                              <ImageIcon className="h-6 w-6 text-muted-foreground/20" />
+                              <span className="text-[9px] text-muted-foreground/40">Not uploaded</span>
+                            </>
+                          )}
                         </div>
                       )}
                       <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/60 to-transparent px-2 py-1.5">
