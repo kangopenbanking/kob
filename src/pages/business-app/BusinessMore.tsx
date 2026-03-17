@@ -88,6 +88,12 @@ const BusinessMore: React.FC = () => {
         { icon: Bell, label: 'Notifications', subtitle: 'Alert preferences', path: `${basePath}/notifications`, color: 'bg-blue-500/10 text-blue-600' },
       ],
     },
+    {
+      title: 'Other Apps',
+      items: [
+        { icon: Building2, label: 'Banking App', subtitle: 'Access your bank accounts', path: '/bank', color: 'bg-violet-500/10 text-violet-600' },
+      ],
+    },
   ];
 
   return (

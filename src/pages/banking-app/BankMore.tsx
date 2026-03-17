@@ -88,6 +88,19 @@ const BankMore: React.FC = () => {
         </div>
       </div>
 
+      {/* Cross-App Navigation */}
+      <div className="mb-6">
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Other Apps</h3>
+        <div className="flex flex-col gap-1">
+          {crossAppItems.map((item, i) => renderItem(item, i + financialItems.length + accountItems.length))}
+        </div>
+      </div>
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Account</h3>
+        <div className="flex flex-col gap-1">
+          {accountItems.map((item, i) => renderItem(item, i + financialItems.length))}
+        </div>
+      </div>
+
       <motion.button
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

@@ -21,6 +21,7 @@ const allQuickActions = [
 ];
 
 const utilityItems = [
+  { label: 'My Orders', icon: Package, path: 'orders', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
   { label: 'Settings', icon: Settings, path: 'settings', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Alerts', icon: Bell, path: 'alerts', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Help', icon: HelpCircle, path: 'help', color: 'bg-muted', iconColor: 'text-foreground' },
