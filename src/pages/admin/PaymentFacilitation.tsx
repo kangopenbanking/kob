@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useMemo, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { SettlementManagement } from "@/components/admin/SettlementManagement";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -127,6 +127,7 @@ const charge = await kp.charges.create({
 };
 
 const PaymentFacilitation = () => {
+  const queryClient = useQueryClient();
   const [methodFilter, setMethodFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>({
@@ -196,6 +197,37 @@ const PaymentFacilitation = () => {
   });
 
   const isLoading = mmLoading || btLoading;
+
+  // ─── Realtime Subscriptions ───
+  useEffect(() => {
+    const channel = supabase
+      .channel('pf-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mobile_money_transactions' },
+        (payload) => {
+          const row = (payload.new as any);
+          if (row?.is_kob_facilitated) {
+            queryClient.invalidateQueries({ queryKey: ['admin-pf-mm'] });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bank_transfer_transactions' },
+        (payload) => {
+          const row = (payload.new as any);
+          if (row?.is_kob_facilitated) {
+            queryClient.invalidateQueries({ queryKey: ['admin-pf-bt'] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   // ─── Computed ───
   const allTransactions = useMemo<UnifiedTx[]>(() => {

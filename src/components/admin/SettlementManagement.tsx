@@ -287,10 +287,10 @@ export function SettlementManagement() {
                   { label: "Institution", value: selectedSettlement.institutions?.institution_name },
                   { label: "Net Amount", value: `${selectedSettlement.net_settlement_amount?.toLocaleString()} XAF` },
                   { label: "Total Inflows", value: `${selectedSettlement.total_inflows?.toLocaleString() || "—"} XAF` },
-                  { label: "Total Fees", value: `${selectedSettlement.total_kob_fees?.toLocaleString() || "—"} XAF` },
+                  { label: "Total Outflows", value: `${selectedSettlement.total_outflows?.toLocaleString() || "—"} XAF` },
+                  { label: "KOB Fees", value: `${selectedSettlement.kob_fees_charged?.toLocaleString() || "—"} XAF` },
                   { label: "Period Start", value: format(new Date(selectedSettlement.period_start), "MMM dd, yyyy") },
                   { label: "Period End", value: format(new Date(selectedSettlement.period_end), "MMM dd, yyyy") },
-                  { label: "Tx Count", value: selectedSettlement.transaction_count || "—" },
                   { label: "Processed", value: format(new Date(selectedSettlement.created_at), "MMM dd, yyyy HH:mm") },
                 ].map((item) => (
                   <div key={item.label} className="rounded-lg bg-muted/50 p-2.5">
