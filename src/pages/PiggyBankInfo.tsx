@@ -52,7 +52,7 @@ const PiggyBankInfo = () => {
                 </Button>
               </Link>
               <Link to="/crediq">
-                <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-white/30 text-white hover:bg-white/10">
+                <Button size="lg" variant="outline" className="text-lg px-10 py-6 border-white/30 text-white bg-transparent hover:bg-white/10">
                   Learn About CrediQ
                 </Button>
               </Link>
