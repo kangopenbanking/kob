@@ -29,12 +29,9 @@ const CustomerScan: React.FC = () => {
   const [merchantQR, setMerchantQR] = useState<any>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
 
-  // Camera state
+  // Camera state (managed by useQRScanner hook)
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Receive tab state - use real account data
   const [receiveAmount, setReceiveAmount] = useState('');
