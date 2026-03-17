@@ -55,19 +55,31 @@ export const KYCOnboardingWizard: React.FC<KYCOnboardingWizardProps> = ({ onComp
       if (idFront) {
         const path = `${user.id}/kyc/id-front-${Date.now()}.${idFront.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('kyc-documents').upload(path, idFront);
-        if (!error) documentFrontUrl = path;
+        if (error) {
+          console.error('ID front upload failed:', error);
+          throw new Error(`Failed to upload ID front: ${error.message}`);
+        }
+        documentFrontUrl = path;
       }
 
       if (idBack) {
         const path = `${user.id}/kyc/id-back-${Date.now()}.${idBack.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('kyc-documents').upload(path, idBack);
-        if (!error) documentBackUrl = path;
+        if (error) {
+          console.error('ID back upload failed:', error);
+          throw new Error(`Failed to upload ID back: ${error.message}`);
+        }
+        documentBackUrl = path;
       }
 
       if (selfie) {
         const path = `${user.id}/kyc/selfie-${Date.now()}.${selfie.name.split('.').pop()}`;
         const { error } = await supabase.storage.from('kyc-documents').upload(path, selfie);
-        if (!error) selfieUrl = path;
+        if (error) {
+          console.error('Selfie upload failed:', error);
+          throw new Error(`Failed to upload selfie: ${error.message}`);
+        }
+        selfieUrl = path;
       }
 
       // Insert KYC verification record (banking app → with institution_id)
