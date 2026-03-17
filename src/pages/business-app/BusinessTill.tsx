@@ -32,6 +32,7 @@ const TILL_VISITED_KEY = 'biz-till-visited';
 
 const BusinessTill: React.FC = () => {
   const { merchantId: paramMerchantId } = useMerchantContext();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
