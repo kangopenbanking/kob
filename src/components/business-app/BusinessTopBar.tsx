@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, Search } from 'lucide-react';
+import { Bell, Search, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
+import { cn } from '@/lib/utils';
 
 interface BusinessTopBarProps {
   isDesktop?: boolean;
@@ -11,16 +13,27 @@ interface BusinessTopBarProps {
 export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => {
   const navigate = useNavigate();
   const { isOwner, isStaff } = useMerchantContext();
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setSearchOpen(false);
+      navigate(`/biz/products?q=${encodeURIComponent(searchQuery.trim())}`);
+      setSearchQuery('');
+    }
+  };
 
   if (isDesktop) {
     return (
       <div className="flex flex-1 items-center justify-between">
         <div />
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground">
+          <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground" onClick={() => setSearchOpen(s => !s)}>
             <Search className="h-4.5 w-4.5" strokeWidth={1.6} />
           </Button>
-          <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground relative">
+          <Button variant="ghost" size="icon" className="rounded-xl text-muted-foreground relative" onClick={() => navigate('/biz/notifications')}>
             <Bell className="h-4.5 w-4.5" strokeWidth={1.6} />
             <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
           </Button>
@@ -32,18 +45,38 @@ export const BusinessTopBar: React.FC<BusinessTopBarProps> = ({ isDesktop }) => 
   // Mobile top bar
   return (
     <div className="sticky top-0 z-30 flex h-14 items-center justify-between px-4 bg-background/80 backdrop-blur-xl border-b border-border/30">
-      <p className="text-base font-bold text-foreground tracking-tight">
-        Kang Business
-      </p>
-      <div className="flex items-center gap-1">
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground">
-          <Search className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.6} />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground relative">
-          <Bell className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.6} />
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
-        </Button>
-      </div>
+      {searchOpen ? (
+        <form onSubmit={handleSearch} className="flex flex-1 items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              autoFocus
+              placeholder="Search products, orders…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="h-9 pl-9 pr-3 rounded-xl border-border/50 bg-muted/40 text-sm"
+            />
+          </div>
+          <Button type="button" variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground shrink-0" onClick={() => { setSearchOpen(false); setSearchQuery(''); }}>
+            <X className="h-4 w-4" />
+          </Button>
+        </form>
+      ) : (
+        <>
+          <p className="text-base font-bold text-foreground tracking-tight">
+            Kang Business
+          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground" onClick={() => setSearchOpen(true)}>
+              <Search className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.6} />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground relative" onClick={() => navigate('/biz/notifications')}>
+              <Bell className="h-[1.1rem] w-[1.1rem]" strokeWidth={1.6} />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-destructive" />
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
