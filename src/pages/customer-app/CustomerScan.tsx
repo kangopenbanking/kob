@@ -333,26 +333,34 @@ const CustomerScan: React.FC = () => {
               /* ─── Camera Scanner ─── */
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
                 <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
-                  {/* Camera Feed */}
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    playsInline
-                    muted
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
+                  {/* html5-qrcode renders its own video when native detector unavailable */}
+                  {isHtml5 ? (
+                    <div id="customer-qr-scanner" className="absolute inset-0 h-full w-full" />
+                  ) : (
+                    <>
+                      {/* Native camera feed */}
+                      <video
+                        ref={qrVideoRef}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        playsInline
+                        muted
+                      />
+                      <canvas ref={canvasRef} className="hidden" />
+                    </>
+                  )}
 
                   {/* Overlay scanning frame */}
-                  <div className="absolute inset-0 z-10">
-                    {/* Corner markers */}
-                    <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
-                    <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
-                    <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
-                    <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
-                  </div>
+                  {!isHtml5 && (
+                    <div className="absolute inset-0 z-10">
+                      <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
+                      <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
+                      <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
+                      <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
+                    </div>
+                  )}
 
                   {/* Scanning line animation */}
-                  {cameraActive && (
+                  {qrCameraActive && !isHtml5 && (
                     <motion.div
                       className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
                       initial={{ top: '15%' }}
@@ -362,7 +370,7 @@ const CustomerScan: React.FC = () => {
                   )}
 
                   {/* Camera not active state */}
-                  {!cameraActive && !cameraError && (
+                  {!qrCameraActive && !qrCameraError && (
                     <div className="z-20 flex flex-col items-center gap-3">
                       <Camera className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
                       <p className="text-xs text-muted-foreground">Starting camera…</p>
@@ -370,19 +378,16 @@ const CustomerScan: React.FC = () => {
                   )}
 
                   {/* Camera error state */}
-                  {cameraError && (
+                  {qrCameraError && (
                     <div className="z-20 flex flex-col items-center gap-3 px-6 text-center">
                       <Camera className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
-                      <p className="text-xs text-muted-foreground">{cameraError}</p>
-                      <Button size="sm" variant="outline" className="rounded-xl" onClick={startCamera}>
-                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} /> Retry
-                      </Button>
+                      <p className="text-xs text-muted-foreground">{qrCameraError}</p>
                     </div>
                   )}
                 </div>
 
                 <p className="text-center text-sm text-muted-foreground">
-                  {cameraActive
+                  {qrCameraActive
                     ? 'Point your camera at a QR code'
                     : 'Allow camera access to scan QR codes'}
                 </p>
