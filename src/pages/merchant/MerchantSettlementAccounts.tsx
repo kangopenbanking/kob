@@ -123,9 +123,10 @@ export default function MerchantSettlementAccounts() {
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: m } = await supabase.from("gateway_merchants").select("id").eq("user_id", user.id).maybeSingle();
+    const { data: m } = await supabase.from("gateway_merchants").select("id, plan_tier").eq("user_id", user.id).maybeSingle();
     if (m) {
       setMerchantId(m.id);
+      setIsEnterprise(m.plan_tier === 'enterprise');
       const { data } = await supabase
         .from("gateway_merchant_settlement_accounts")
         .select("*")
