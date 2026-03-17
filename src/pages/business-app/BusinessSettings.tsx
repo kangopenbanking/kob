@@ -18,7 +18,7 @@ import { toast } from 'sonner';
 import { useState, useEffect } from 'react';
 
 const settingsLinks = [
-  { icon: CreditCard, label: 'Settlement Accounts', subtitle: 'Bank, MoMo, PayPal, Card, RTGS', path: '/biz/settlement-accounts', color: 'text-emerald-600 bg-emerald-500/10' },
+  { icon: CreditCard, label: 'Settlement Accounts', subtitle: 'Bank, MoMo, Kang Wallet (max 2)', path: '/biz/settlement-accounts', color: 'text-emerald-600 bg-emerald-500/10' },
   { icon: Key, label: 'API Keys', subtitle: 'View & rotate credentials', path: '/biz/api-keys', color: 'text-violet-600 bg-violet-500/10' },
   { icon: Webhook, label: 'Webhooks', subtitle: 'Configure event endpoints', path: '/biz/webhooks', color: 'text-sky-600 bg-sky-500/10' },
   { icon: Bell, label: 'Notifications', subtitle: 'Alert preferences', path: '/biz/notifications', color: 'text-amber-600 bg-amber-500/10' },

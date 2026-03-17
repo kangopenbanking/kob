@@ -363,6 +363,21 @@ export default function MerchantSettlementAccounts() {
             </div>
           </>
         );
+      case "kob_wallet":
+        return (
+          <>
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+              <p className="text-sm font-medium text-primary">⚡ Instant Transfer</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Funds will transfer instantly to your Kang consumer wallet. Your consumer account will be auto-detected.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Display Name</Label>
+              <Input value={form.account_name} onChange={e => setForm(f => ({ ...f, account_name: e.target.value }))} placeholder="e.g. My Kang Wallet" />
+            </div>
+          </>
+        );
       case "mobile_money":
         return (
           <>
