@@ -36,14 +36,21 @@ const MOMO_PROVIDERS = [
   { id: "orange_money", name: "Orange Money", prefix: "+237 69/65" },
 ];
 
-const ACCOUNT_TYPES = [
+// Base accounts available to all merchants
+const BASE_ACCOUNT_TYPES = [
   { value: "bank_transfer", label: "Bank Transfer", icon: Building2, description: "Receive payouts to your bank account via domestic transfer" },
   { value: "mobile_money", label: "Mobile Money", icon: Smartphone, description: "Receive payouts to MTN MoMo or Orange Money" },
   { value: "kob_wallet", label: "Kang Consumer Wallet", icon: Wallet, description: "Instant transfer to your Kang consumer app wallet" },
-  { value: "paypal", label: "PayPal", icon: Globe, description: "Receive payouts to your PayPal account" },
-  { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard, description: "Push-to-card payouts via Visa Direct or Mastercard Send" },
-  { value: "rtgs", label: "RTGS / Wire Transfer", icon: Landmark, description: "Real-time gross settlement for large-value transfers" },
 ] as const;
+
+// Enterprise-only payment methods
+const ENTERPRISE_ACCOUNT_TYPES = [
+  { value: "paypal", label: "PayPal", icon: Globe, description: "Receive payouts to your PayPal account", enterprise: true },
+  { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard, description: "Push-to-card payouts via Visa Direct or Mastercard Send", enterprise: true },
+  { value: "rtgs", label: "RTGS / Wire Transfer", icon: Landmark, description: "Real-time gross settlement for large-value transfers", enterprise: true },
+] as const;
+
+const ALL_ACCOUNT_TYPES = [...BASE_ACCOUNT_TYPES, ...ENTERPRISE_ACCOUNT_TYPES] as const;
 
 const CURRENCIES = [
   { code: "XAF", name: "CFA Franc BEAC", flag: "🇨🇲" },

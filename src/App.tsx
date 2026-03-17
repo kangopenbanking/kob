@@ -1031,7 +1031,7 @@ function App() {
               <Route path="notifications" element={<NotificationPreferences />} />
               {/* Travel */}
               <Route path="travel" element={<BusinessTravel />} />
-              <Route path="travel/services" element={<MerchantTravelServices />} />
+              <Route path="travel/services" element={<BusinessTravelServices />} />
               <Route path="travel/routes" element={<MerchantTravelRoutes />} />
               <Route path="travel/seating" element={<MerchantTravelSeating />} />
               <Route path="travel/timetable" element={<MerchantTravelTimetable />} />
