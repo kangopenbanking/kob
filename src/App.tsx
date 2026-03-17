@@ -25,7 +25,7 @@ import { MerchantLayout } from "@/components/merchant/MerchantLayout";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 import { FeatureGate } from "./components/pwa/FeatureGate";
 import { CustomerAppLayout } from "./components/customer-app/CustomerAppLayout";
-import { BusinessAppLayout } from "./components/business-app/BusinessAppLayout";
+import { UnifiedBusinessLayout } from "./components/business-app/UnifiedBusinessLayout";
 import { Loader2 } from "lucide-react";
 
 // Global lazy loading fallback
