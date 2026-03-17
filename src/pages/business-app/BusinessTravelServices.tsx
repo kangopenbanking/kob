@@ -435,9 +435,9 @@ const BusinessTravelServices: React.FC = () => {
                 {route && (
                   <div className="rounded-xl bg-muted/40 p-3 text-center">
                     <p className="text-sm font-bold text-foreground">{route.origin} → {route.destination}</p>
-                    {trip?.departure_time && (
+                    {trip?.departure_at && (
                       <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {format(new Date(trip.departure_time), 'PPp')}
+                        {format(new Date(trip.departure_at), 'PPp')}
                       </p>
                     )}
                   </div>
