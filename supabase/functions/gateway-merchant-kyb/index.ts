@@ -57,13 +57,29 @@ Deno.serve(async (req) => {
         if (!['not_submitted', 'draft', 'rejected'].includes(merchant.kyb_status)) {
           return new Response(JSON.stringify({ error: 'kyb_already_submitted', current: merchant.kyb_status }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
         }
-        const { documents, registration_number, tax_id, business_address } = body;
+        const { documents, registration_number, tax_id, business_address,
+          registration_certificate_url, articles_of_association_url,
+          tax_certificate_url, proof_of_address_url, bank_statement_url,
+          director_id_document_url, director_name, director_id_number, additional_notes,
+        } = body;
 
         const updates: Record<string, unknown> = {
           kyb_status: 'submitted',
           metadata: {
             ...(merchant.metadata as Record<string, unknown> || {}),
-            kyb_submission: { documents, registration_number, tax_id, business_address, submitted_at: new Date().toISOString(), submitted_by: user.id },
+            kyb_submission: {
+              documents,
+              registration_number, tax_id, business_address,
+              director_name, director_id_number, additional_notes,
+              registration_certificate_url: registration_certificate_url || null,
+              articles_of_association_url: articles_of_association_url || null,
+              tax_certificate_url: tax_certificate_url || null,
+              proof_of_address_url: proof_of_address_url || null,
+              bank_statement_url: bank_statement_url || null,
+              director_id_document_url: director_id_document_url || null,
+              submitted_at: new Date().toISOString(),
+              submitted_by: user.id,
+            },
           },
         };
 

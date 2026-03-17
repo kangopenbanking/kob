@@ -75,7 +75,6 @@ export default function BusinessKYCReview() {
       const merchantKybs = (merchantData || []).map((m: any) => {
         const meta = m.metadata || {};
         const kybSub = meta.kyb_submission || {};
-        const merchantDocs = Array.isArray(kybSub.documents) ? kybSub.documents : [];
 
         return {
           id: m.id,
@@ -98,12 +97,12 @@ export default function BusinessKYCReview() {
           user_id: m.user_id,
           business_email: m.business_email,
           business_phone: m.business_phone,
-          registration_certificate_url: merchantDocs[0] || null,
-          articles_of_association_url: merchantDocs[1] || null,
-          tax_certificate_url: merchantDocs[2] || null,
-          proof_of_address_url: merchantDocs[3] || null,
-          bank_statement_url: merchantDocs[4] || null,
-          kyb_documents: merchantDocs,
+          // Read doc URLs from individual kyb_submission fields first, fall back to documents array
+          registration_certificate_url: kybSub.registration_certificate_url || null,
+          articles_of_association_url: kybSub.articles_of_association_url || null,
+          tax_certificate_url: kybSub.tax_certificate_url || null,
+          proof_of_address_url: kybSub.proof_of_address_url || null,
+          bank_statement_url: kybSub.bank_statement_url || null,
         };
       });
 
