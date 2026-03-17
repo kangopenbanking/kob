@@ -733,11 +733,28 @@ const PaymentFacilitation = () => {
         {/* ─── INTEGRATION GUIDE ─── */}
         <TabsContent value="guide">
           <div className="space-y-6">
+            {/* Guide Hero */}
+            <div className="relative rounded-2xl overflow-hidden">
+              <img src={pfBanner} alt="Integration Guide" className="w-full h-36 object-cover object-top" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl p-2.5 bg-primary/20 backdrop-blur-sm text-primary">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Merchant & Developer Onboarding</h3>
+                    <p className="text-xs text-muted-foreground">Step-by-step guide for integrating payment facilitation</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Steps */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" />Merchant & Developer Onboarding</CardTitle>
-                <CardDescription>Step-by-step guide for integrating payment facilitation</CardDescription>
+                <CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5 text-primary" />Integration Steps</CardTitle>
+                <CardDescription>Follow these steps to onboard merchants and developers</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3 sm:grid-cols-2">
