@@ -6,7 +6,7 @@ import { MobileAuthForm } from '@/components/pwa/MobileAuthForm';
 import { StaffPinLogin } from '@/components/business-app/StaffPinLogin';
 import { useSingleSession } from '@/hooks/useSingleSession';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, Store, Users } from 'lucide-react';
+import { Loader2, Store, Users, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import kangLogo from '@/assets/kang-logo.png';
 
@@ -51,45 +51,68 @@ const BusinessAuthInner: React.FC = () => {
   if (checkingRole) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-4"
+        >
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Verifying access…</p>
+        </motion.div>
       </div>
     );
   }
 
-  // Role selection screen
+  const logoSrc = tenant.logoUrl || kangLogo;
+
+  // ── Hero header (shared across select & staff) ──
+  const HeroHeader: React.FC<{ title: string; subtitle: string; showBack?: boolean }> = ({ title, subtitle, showBack }) => (
+    <div className="relative overflow-hidden bg-primary px-6 pb-16 pt-12">
+      <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[hsl(0,0%,100%)]/[0.08]" />
+      <div className="absolute -left-8 bottom-4 h-28 w-28 rounded-full bg-[hsl(0,0%,100%)]/[0.05]" />
+      {showBack && (
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          onClick={() => setAuthMode('select')}
+          className="absolute left-4 top-4 z-20 flex h-10 w-10 items-center justify-center rounded-xl bg-[hsl(0,0%,100%)]/10 text-primary-foreground backdrop-blur-sm"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </motion.button>
+      )}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 flex flex-col items-center text-center"
+      >
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20 shadow-lg backdrop-blur-sm">
+          <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
+        </div>
+        <h1 className="text-xl font-bold text-primary-foreground">{title}</h1>
+        <p className="mt-1 text-sm text-primary-foreground/70">{subtitle}</p>
+      </motion.div>
+    </div>
+  );
+
+  // ── Role selection ──
   if (authMode === 'select') {
-    const logoSrc = tenant.logoUrl || kangLogo;
     return (
       <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
-        <div className="relative overflow-hidden bg-primary px-6 pb-16 pt-12">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[hsl(0,0%,100%)]/[0.08]" />
-          <div className="absolute -left-8 bottom-4 h-28 w-28 rounded-full bg-[hsl(0,0%,100%)]/[0.05]" />
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative z-10 flex flex-col items-center text-center"
-          >
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20 shadow-lg backdrop-blur-sm">
-              <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
-            </div>
-            <h1 className="text-xl font-bold text-primary-foreground">Kang Business</h1>
-            <p className="mt-1 text-sm text-primary-foreground/70">Manage your business on the go</p>
-          </motion.div>
-        </div>
+        <HeroHeader title="Kang Business" subtitle="Manage your business on the go" />
 
         <div className="relative z-10 -mt-8 flex flex-1 flex-col px-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="rounded-2xl border border-border/50 bg-card p-6 shadow-xl shadow-black/5"
+            className="rounded-3xl border border-border/50 bg-card p-6 shadow-xl shadow-black/5"
           >
             <p className="mb-5 text-center text-sm font-medium text-foreground">How are you signing in?</p>
 
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => setAuthMode('owner')}
-                className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.98]"
+                className="flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.98]"
               >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10">
                   <Store className="h-6 w-6 text-primary" strokeWidth={1.5} />
@@ -102,9 +125,9 @@ const BusinessAuthInner: React.FC = () => {
 
               <button
                 onClick={() => setAuthMode('staff')}
-                className="flex items-center gap-4 rounded-xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.98]"
+                className="flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-4 text-left transition-all hover:border-primary/40 hover:shadow-md active:scale-[0.98]"
               >
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10">
                   <Users className="h-6 w-6 text-accent-foreground" strokeWidth={1.5} />
                 </div>
                 <div>
@@ -126,33 +149,18 @@ const BusinessAuthInner: React.FC = () => {
     );
   }
 
-  // Staff PIN login
+  // ── Staff PIN login ──
   if (authMode === 'staff') {
-    const logoSrc = tenant.logoUrl || kangLogo;
     return (
       <div className="flex min-h-screen flex-col bg-gradient-to-b from-primary/5 via-background to-background">
-        <div className="relative overflow-hidden bg-primary px-6 pb-16 pt-12">
-          <div className="absolute -right-12 -top-12 h-40 w-40 rounded-full bg-[hsl(0,0%,100%)]/[0.08]" />
-          <div className="absolute -left-8 bottom-4 h-28 w-28 rounded-full bg-[hsl(0,0%,100%)]/[0.05]" />
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative z-10 flex flex-col items-center text-center"
-          >
-            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[hsl(0,0%,100%)]/20 shadow-lg backdrop-blur-sm">
-              <img src={logoSrc} alt={tenant.name} className="h-10 w-10 rounded-xl object-contain" />
-            </div>
-            <h1 className="text-xl font-bold text-primary-foreground">Staff Login</h1>
-            <p className="mt-1 text-sm text-primary-foreground/70">Sign in with your staff credentials</p>
-          </motion.div>
-        </div>
+        <HeroHeader title="Staff Login" subtitle="Sign in with your staff credentials" showBack />
 
         <div className="relative z-10 -mt-8 flex flex-1 flex-col px-5">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="rounded-2xl border border-border/50 bg-card p-6 shadow-xl shadow-black/5"
+            className="rounded-3xl border border-border/50 bg-card p-6 shadow-xl shadow-black/5"
           >
             <StaffPinLogin onAuthSuccess={handleAuthSuccess} onBack={() => setAuthMode('select')} />
           </motion.div>
@@ -161,7 +169,7 @@ const BusinessAuthInner: React.FC = () => {
     );
   }
 
-  // Owner login (existing MobileAuthForm)
+  // ── Owner login (existing MobileAuthForm) ──
   return (
     <MobileAuthForm
       onAuthSuccess={handleAuthSuccess}
@@ -170,12 +178,10 @@ const BusinessAuthInner: React.FC = () => {
   );
 };
 
-const BusinessAuth: React.FC = () => {
-  return (
-    <TenantProvider>
-      <BusinessAuthInner />
-    </TenantProvider>
-  );
-};
+const BusinessAuth: React.FC = () => (
+  <TenantProvider>
+    <BusinessAuthInner />
+  </TenantProvider>
+);
 
 export default BusinessAuth;

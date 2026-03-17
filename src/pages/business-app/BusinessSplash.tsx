@@ -1,35 +1,114 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Store } from 'lucide-react';
+import { TenantProvider, useTenant } from '@/components/pwa/TenantProvider';
+import { SplashScreen } from '@/components/pwa/SplashScreen';
+import { WalkthroughCarousel } from '@/components/pwa/WalkthroughCarousel';
+import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { supabase } from '@/integrations/supabase/client';
+import kangLogo from '@/assets/kang-logo.png';
+import {
+  Store, CreditCard, BarChart3, Users,
+} from 'lucide-react';
 
-const BusinessSplash: React.FC = () => {
+const WALKTHROUGH_KEY = 'walkthrough_seen_kang-business';
+
+const businessSlides = [
+  {
+    icon: Store,
+    title: 'Manage Your Business',
+    description: 'Everything you need to run your business — orders, products, inventory, and storefront — all in one place.',
+  },
+  {
+    icon: CreditCard,
+    title: 'Accept Payments Anywhere',
+    description: 'QR codes, mobile money, bank transfers, and POS till. Get paid instantly with real-time notifications.',
+  },
+  {
+    icon: BarChart3,
+    title: 'Track Performance',
+    description: 'Revenue analytics, customer insights, and detailed reports to help you grow smarter.',
+  },
+  {
+    icon: Users,
+    title: 'Grow Your Team',
+    description: 'Add staff members with role-based access. Manage multiple locations from a single dashboard.',
+  },
+];
+
+const BusinessSplashInner: React.FC = () => {
   const navigate = useNavigate();
+  const tenant = useTenant();
+  const [phase, setPhase] = useState<'loading' | 'splash' | 'walkthrough' | 'install'>('loading');
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setTimeout(() => {
+    const checkState = async () => {
+      const seen = localStorage.getItem(WALKTHROUGH_KEY) === 'true';
+      if (seen) {
+        const { data: { session } } = await supabase.auth.getSession();
         if (session) {
           navigate('/biz/home', { replace: true });
         } else {
           navigate('/biz/auth', { replace: true });
         }
-      }, 1500);
+      } else {
+        setPhase('splash');
+      }
     };
-    checkAuth();
+    checkState();
   }, [navigate]);
 
+  const handleWalkthroughComplete = () => {
+    try { localStorage.setItem(WALKTHROUGH_KEY, 'true'); } catch {}
+    setPhase('install');
+  };
+
+  const handleInstallComplete = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      navigate('/biz/home', { replace: true });
+    } else {
+      navigate('/biz/auth', { replace: true });
+    }
+  };
+
+  if (phase === 'loading') return null;
+
+  if (phase === 'splash') {
+    return (
+      <SplashScreen
+        onComplete={() => setPhase('walkthrough')}
+        duration={2500}
+        name="Kang Business"
+        logoUrl={kangLogo}
+        tagline="Run your business, your way"
+      />
+    );
+  }
+
+  if (phase === 'walkthrough') {
+    return (
+      <WalkthroughCarousel
+        slides={businessSlides}
+        onComplete={handleWalkthroughComplete}
+      />
+    );
+  }
+
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-primary">
-      <div className="flex flex-col items-center justify-center space-y-6">
-        <div className="flex h-24 w-24 items-center justify-center rounded-3xl bg-white text-primary shadow-xl">
-          <Store className="h-12 w-12" strokeWidth={2.5} />
-        </div>
-        <h1 className="text-3xl font-bold tracking-tight text-white">Business</h1>
-      </div>
-    </div>
+    <PWAInstallPrompt
+      onContinue={handleInstallComplete}
+      appName="Kang Business"
+      logoUrl={kangLogo}
+      tagline="Your business management app"
+      appKey="kang-business"
+    />
   );
 };
+
+const BusinessSplash: React.FC = () => (
+  <TenantProvider>
+    <BusinessSplashInner />
+  </TenantProvider>
+);
 
 export default BusinessSplash;
