@@ -103,11 +103,12 @@ const tenantDemos = [
 function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
   const sectionBgs = [
     'from-[#0c1929] to-[#0f1f35]',
+    'from-[#1a1508] to-[#211c0d]',
     'from-[#0a1a14] to-[#0d2219]',
     'from-[#150c24] to-[#1a1030]',
   ];
 
-  const sectionImages = [kfsSendImg, kfsReceiveImg, kfs3secImg];
+  const sectionImages = [kfsSendImg, kfsReceiveImg, kfs3secImg, kfsSendImg];
 
   return (
     <section className={`relative py-28 overflow-hidden bg-gradient-to-b ${sectionBgs[index]}`}>
