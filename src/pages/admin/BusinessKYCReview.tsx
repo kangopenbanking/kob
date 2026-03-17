@@ -32,9 +32,60 @@ export default function BusinessKYCReview() {
   const { data: kybSubmissions, isLoading } = useQuery({
     queryKey: ["business-kyc-submissions"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("business_kyc").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
+      // Fetch from business_kyc table (institution KYB submissions)
+      const { data: bkycData, error: bkycErr } = await supabase.from("business_kyc").select("*").order("created_at", { ascending: false });
+      if (bkycErr) throw bkycErr;
+
+      // Also fetch gateway merchant KYB submissions
+      const { data: merchantData, error: mErr } = await supabase
+        .from("gateway_merchants")
+        .select("id, business_name, status, kyb_status, kyb_documents, kyb_rejection_reason, metadata, created_at, updated_at, user_id, business_email, business_phone")
+        .neq("kyb_status", "not_submitted")
+        .order("created_at", { ascending: false });
+      if (mErr) throw mErr;
+
+      // Normalize merchant KYB records into the same shape as business_kyc
+      const merchantKybs = (merchantData || []).map((m: any) => {
+        const meta = m.metadata || {};
+        const kybSub = meta.kyb_submission || {};
+        return {
+          id: m.id,
+          _source: "gateway_merchant" as const,
+          business_name: m.business_name,
+          business_type: meta.business_type || "merchant",
+          registration_number: kybSub.registration_number || meta.kyb_business_registration || "—",
+          industry: meta.industry || "Commerce",
+          tax_id: kybSub.tax_id || meta.kyb_tax_id || null,
+          vat_number: null,
+          business_address: kybSub.business_address || meta.kyb_business_address || null,
+          business_description: meta.business_description || null,
+          annual_turnover: null,
+          number_of_employees: null,
+          verification_status: m.kyb_status === "verified" ? "approved" : m.kyb_status === "rejected" ? "rejected" : "pending",
+          risk_rating: null,
+          rejection_reason: m.kyb_rejection_reason,
+          created_at: kybSub.submitted_at || m.created_at,
+          updated_at: m.updated_at,
+          user_id: m.user_id,
+          // Document fields – merchant KYB stores docs differently
+          registration_certificate_url: null,
+          articles_of_association_url: null,
+          tax_certificate_url: null,
+          proof_of_address_url: null,
+          bank_statement_url: null,
+          kyb_documents: m.kyb_documents || (kybSub.documents?.length ? kybSub.documents : null),
+        };
+      });
+
+      // Tag business_kyc records with source
+      const bkycTagged = (bkycData || []).map((b: any) => ({ ...b, _source: "business_kyc" as const }));
+
+      // Merge and sort by created_at descending
+      const merged = [...bkycTagged, ...merchantKybs].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      return merged;
     },
   });
 
