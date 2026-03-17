@@ -390,7 +390,7 @@ const BusinessAppManagement: React.FC = () => {
               <TableHeader>
                 <TableRow>
                   <TableHead>Business</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Contact</TableHead>
                   <TableHead className="text-right">Orders</TableHead>
                   <TableHead className="text-right">Revenue</TableHead>
                   <TableHead>Status</TableHead>
