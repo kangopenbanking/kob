@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Home, FileText, Package, ShoppingBag, Wallet, Monitor, ScanLine,
   Users, BarChart3, Store, Settings, Shield, Truck, Tag, Star,
-  ChevronRight, LogOut, Building2,
+  ChevronRight, LogOut, Building2, Crown,
 } from 'lucide-react';
 import {
   Sidebar,
@@ -81,6 +81,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Settings', icon: Settings, path: `${basePath}/settings` },
       { label: 'Compliance', icon: Shield, path: `${basePath}/compliance` },
+      { label: 'Enterprise', icon: Crown, path: `${basePath}/enterprise` },
     ],
   },
 ];

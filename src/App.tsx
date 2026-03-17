@@ -445,6 +445,9 @@ const BusinessStorefront = lazy(() => import("./pages/business-app/BusinessStore
 const BusinessInventory = lazy(() => import("./pages/business-app/BusinessInventory"));
 const BusinessProductForm = lazy(() => import("./pages/business-app/BusinessProductForm"));
 const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"));
+const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
+const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
+const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
@@ -1030,6 +1033,17 @@ function App() {
               <Route path="travel/discounts" element={<MerchantTravelDiscounts />} />
               <Route path="travel/staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel/notifications" element={<MerchantTravelNotifications />} />
+              <Route path="settings" element={<BusinessSettings />} />
+              <Route path="compliance" element={<BusinessCompliance />} />
+              <Route path="enterprise" element={<BusinessEnterprise />} />
+              <Route path="kyb" element={<MerchantKYB />} />
+              <Route path="disputes" element={<MerchantDisputes />} />
+              <Route path="api-keys" element={<MerchantApiKeys />} />
+              <Route path="webhooks" element={<MerchantWebhooks />} />
+              <Route path="settlement-accounts" element={<MerchantSettlementAccounts />} />
+              <Route path="subaccounts" element={<MerchantSubaccounts />} />
+              <Route path="settlements" element={<MerchantSettlements />} />
+              <Route path="payouts" element={<MerchantPayouts />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
