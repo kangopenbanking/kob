@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 type OrderStatus = 'all' | 'paid' | 'pending_payment' | 'draft' | 'cancelled' | 'refunded';
 
@@ -34,6 +35,7 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 
 const BusinessOrders: React.FC = () => {
   const { merchantId } = useMerchantContext();
+  const isMobile = useIsMobile();
   const [filter, setFilter] = useState<OrderStatus>('all');
   const [search, setSearch] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
@@ -109,11 +111,12 @@ const BusinessOrders: React.FC = () => {
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const filters: { key: OrderStatus; label: string; count?: number }[] = [
+  const filters: { key: OrderStatus; label: string }[] = [
     { key: 'all', label: 'All' },
     { key: 'paid', label: 'Paid' },
     { key: 'pending_payment', label: 'Pending' },
     { key: 'draft', label: 'Draft' },
+    { key: 'cancelled', label: 'Cancelled' },
   ];
 
   const filteredOrders = orders?.filter(o => {
@@ -125,105 +128,150 @@ const BusinessOrders: React.FC = () => {
   const nextStatuses = selectedOrder ? (STATUS_TRANSITIONS[selectedOrder.status] || []) : [];
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40 px-5 pt-[max(0.75rem,env(safe-area-inset-top))] pb-3">
-        <div className="flex items-center justify-between mb-3">
-          <h1 className="text-xl font-bold tracking-tight text-foreground">Orders</h1>
-          <button onClick={() => refetch()} className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/60 hover:bg-muted transition-colors">
-            <RefreshCw className="h-4 w-4 text-foreground" strokeWidth={2} />
+    <div className="space-y-4 px-5 md:px-0 pt-4 pb-6">
+      {/* Header row */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">Orders</h1>
+          <p className="text-xs text-muted-foreground font-medium mt-0.5">
+            {orders?.length || 0} total order{(orders?.length || 0) !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <button onClick={() => refetch()} className="flex h-9 w-9 items-center justify-center rounded-full bg-muted/60 hover:bg-muted transition-colors">
+          <RefreshCw className="h-4 w-4 text-foreground" strokeWidth={2} />
+        </button>
+      </div>
+
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={2} />
+        <Input
+          placeholder="Search orders..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="pl-9 h-10 rounded-xl border-border/50 bg-muted/40 text-sm"
+        />
+      </div>
+
+      {/* Filter pills */}
+      <div className="flex gap-1.5 overflow-x-auto hide-scrollbar -mx-1 px-1">
+        {filters.map(({ key, label }) => (
+          <button
+            key={key}
+            onClick={() => setFilter(key)}
+            className={cn(
+              'whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-all',
+              filter === key
+                ? 'bg-foreground text-background'
+                : 'bg-muted/60 text-muted-foreground hover:bg-muted',
+            )}
+          >
+            {label}
           </button>
-        </div>
+        ))}
+      </div>
 
-        {/* Search */}
-        <div className="relative mb-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" strokeWidth={2} />
-          <Input
-            placeholder="Search orders..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-10 rounded-xl border-border/50 bg-muted/40 text-sm"
-          />
+      {/* Orders */}
+      {isLoading ? (
+        <div className="space-y-3">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[72px] rounded-2xl" />)}
         </div>
-
-        {/* Filter pills */}
-        <div className="flex gap-1.5 overflow-x-auto hide-scrollbar -mx-1 px-1">
-          {filters.map(({ key, label }) => (
-            <button
-              key={key}
-              onClick={() => setFilter(key)}
-              className={cn(
-                'whitespace-nowrap rounded-full px-4 py-1.5 text-xs font-semibold transition-all',
-                filter === key
-                  ? 'bg-foreground text-background'
-                  : 'bg-muted/60 text-muted-foreground hover:bg-muted',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </header>
-
-      {/* Orders List */}
-      <div className="flex-1 px-5 pt-4 pb-24">
-        {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[72px] rounded-2xl" />)}
+      ) : !filteredOrders?.length ? (
+        <div className="flex flex-col items-center justify-center py-20">
+          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 mb-4">
+            <ShoppingBag className="h-7 w-7 text-muted-foreground/50" strokeWidth={1.5} />
           </div>
-        ) : !filteredOrders?.length ? (
-          <div className="flex flex-col items-center justify-center py-20">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/60 mb-4">
-              <ShoppingBag className="h-7 w-7 text-muted-foreground/50" strokeWidth={1.5} />
-            </div>
-            <p className="text-sm font-medium text-muted-foreground">
-              {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
-            </p>
+          <p className="text-sm font-medium text-muted-foreground">
+            {filter === 'all' ? 'No orders yet' : `No ${filter.replace('_', ' ')} orders`}
+          </p>
+        </div>
+      ) : isMobile ? (
+        /* Mobile: Card List */
+        <AnimatePresence>
+          <div className="space-y-2">
+            {filteredOrders.map((order: any, i: number) => {
+              const sc = statusConfig[order.status] || statusConfig.draft;
+              return (
+                <motion.button
+                  key={order.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.025 }}
+                  className="w-full flex items-center gap-3.5 rounded-2xl border border-border/40 bg-card p-4 text-left transition-all hover:border-border/80 active:scale-[0.99]"
+                  onClick={() => setSelectedOrder(order)}
+                >
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <p className="text-[13px] font-bold text-foreground truncate">
+                        {order.order_number || `#${order.id.slice(0, 8)}`}
+                      </p>
+                      <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold', sc.bg)}>
+                        <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
+                        {sc.label}
+                      </span>
+                    </div>
+                    <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
+                      <span>{formatTime(order.created_at)}</span>
+                      {order.customer_name && <><span>·</span><span className="truncate">{order.customer_name}</span></>}
+                    </div>
+                  </div>
+                  <p className="text-sm font-bold text-foreground whitespace-nowrap">{formatXAF(order.total || 0)}</p>
+                  <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/40" strokeWidth={2} />
+                </motion.button>
+              );
+            })}
           </div>
-        ) : (
-          <AnimatePresence>
-            <div className="space-y-2">
-              {filteredOrders.map((order: any, i: number) => {
+        </AnimatePresence>
+      ) : (
+        /* Desktop: Table View */
+        <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border/30 text-left">
+                <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Order</th>
+                <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Customer</th>
+                <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Status</th>
+                <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Date</th>
+                <th className="px-4 py-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground text-right">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/30">
+              {filteredOrders.map((order: any) => {
                 const sc = statusConfig[order.status] || statusConfig.draft;
                 return (
-                  <motion.button
+                  <tr
                     key={order.id}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.025 }}
-                    className="w-full flex items-center gap-3.5 rounded-2xl border border-border/40 bg-card p-4 text-left transition-all hover:border-border/80 active:scale-[0.99]"
+                    className="cursor-pointer hover:bg-muted/40 transition-colors"
                     onClick={() => setSelectedOrder(order)}
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-[13px] font-bold text-foreground truncate">
-                          {order.order_number || `#${order.id.slice(0, 8)}`}
-                        </p>
-                        <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold', sc.bg)}>
-                          <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
-                          {sc.label}
-                        </span>
-                      </div>
-                      <div className="mt-1 flex items-center gap-2 text-[11px] text-muted-foreground">
-                        <span>{formatTime(order.created_at)}</span>
-                        {order.customer_name && <><span>·</span><span className="truncate">{order.customer_name}</span></>}
-                      </div>
-                    </div>
-                    <p className="text-sm font-bold text-foreground whitespace-nowrap">{formatXAF(order.total || 0)}</p>
-                    <ChevronRight className="h-4 w-4 flex-shrink-0 text-muted-foreground/40" strokeWidth={2} />
-                  </motion.button>
+                    <td className="px-4 py-3 font-semibold text-foreground">
+                      {order.order_number || `#${order.id.slice(0, 8)}`}
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground">{order.customer_name || '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn('inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold', sc.bg)}>
+                        <span className={cn('h-1.5 w-1.5 rounded-full', sc.dot)} />
+                        {sc.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{formatTime(order.created_at)}</td>
+                    <td className="px-4 py-3 font-bold text-foreground text-right">{formatXAF(order.total || 0)}</td>
+                  </tr>
                 );
               })}
-            </div>
-          </AnimatePresence>
-        )}
-      </div>
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Order Detail Sheet */}
       <Sheet open={!!selectedOrder} onOpenChange={open => !open && setSelectedOrder(null)}>
-        <SheetContent side="bottom" className="max-h-[85vh] rounded-t-[2rem] overflow-y-auto border-t-0 px-5 pb-10">
+        <SheetContent side={isMobile ? 'bottom' : 'right'} className={cn(
+          isMobile ? 'max-h-[85vh] rounded-t-[2rem] border-t-0' : 'w-[420px]',
+          'overflow-y-auto px-5 pb-10',
+        )}>
           <SheetHeader className="pb-1">
-            <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/20" />
+            {isMobile && <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-muted-foreground/20" />}
             <SheetTitle className="text-left">{selectedOrder?.order_number || `#${selectedOrder?.id?.slice(0, 8)}`}</SheetTitle>
           </SheetHeader>
           {selectedOrder && (
