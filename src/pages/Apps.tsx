@@ -46,12 +46,25 @@ const apps: AppPhase[] = [
     ],
   },
   {
-    title: 'Merchant App',
-    subtitle: 'Accept payments, travel booking & staff management',
+    title: 'Business App',
+    subtitle: 'Unified commerce & operations hub for merchants',
+    description: 'A modern, responsive business portal — manage products, orders, POS, payments, staff, analytics, travel services, and enterprise features from one app.',
+    status: 'live',
+    accent: '#F59E0B', accentBorder: 'border-amber-500/30', accentBg: 'bg-amber-500/10', accentText: 'text-amber-400',
+    phase: 2, link: '/biz',
+    features: [
+      { icon: Monitor, label: 'POS Till & Orders' }, { icon: Package, label: 'Products & Inventory' },
+      { icon: BarChart3, label: 'Sales Analytics' }, { icon: Bus, label: 'Travel & Transport' },
+      { icon: Users, label: 'Staff & CRM' }, { icon: Store, label: 'Storefront & Coupons' },
+    ],
+  },
+  {
+    title: 'Merchant Portal',
+    subtitle: 'Full-featured payment gateway dashboard',
     description: 'Give merchants the tools to accept payments, manage transport & tourism services, and control staff access — all from a single platform.',
     status: 'live',
     accent: '#22C55E', accentBorder: 'border-green-500/30', accentBg: 'bg-green-500/10', accentText: 'text-green-400',
-    phase: 2, link: '/merchant',
+    phase: 3, link: '/merchant',
     features: [
       { icon: Monitor, label: 'POS Till & Orders' }, { icon: ShoppingCart, label: 'WooCommerce Sync' },
       { icon: Bus, label: 'Travel & Transport' }, { icon: BarChart3, label: 'Sales Analytics' },
@@ -65,7 +78,7 @@ const apps: AppPhase[] = [
     description: 'A single app for consumers to manage accounts across all institutions — transfers, savings, cards, and more.',
     status: 'live',
     accent: '#A855F7', accentBorder: 'border-purple-500/30', accentBg: 'bg-purple-500/10', accentText: 'text-purple-400',
-    phase: 3, link: '/app',
+    phase: 4, link: '/app',
     features: [
       { icon: QrCode, label: 'QR Scan Pay' }, { icon: Send, label: 'Transfer & Request' },
       { icon: CreditCard, label: 'Cards & Banking' }, { icon: Receipt, label: 'Bills & Invoices' },
@@ -90,11 +103,12 @@ const tenantDemos = [
 function AppShowcaseCard({ app, index }: { app: AppPhase; index: number }) {
   const sectionBgs = [
     'from-[#0c1929] to-[#0f1f35]',
+    'from-[#1a1508] to-[#211c0d]',
     'from-[#0a1a14] to-[#0d2219]',
     'from-[#150c24] to-[#1a1030]',
   ];
 
-  const sectionImages = [kfsSendImg, kfsReceiveImg, kfs3secImg];
+  const sectionImages = [kfsSendImg, kfsReceiveImg, kfs3secImg, kfsSendImg];
 
   return (
     <section className={`relative py-28 overflow-hidden bg-gradient-to-b ${sectionBgs[index]}`}>
@@ -298,7 +312,7 @@ export default function Apps() {
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="mx-auto mt-24 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6"
+            className="mx-auto mt-24 grid max-w-4xl grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5"
           >
             {apps.map((app, i) => (
               <motion.div
