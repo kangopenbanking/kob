@@ -32,28 +32,89 @@ export default function BusinessKYCReview() {
   const { data: kybSubmissions, isLoading } = useQuery({
     queryKey: ["business-kyc-submissions"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("business_kyc").select("*").order("created_at", { ascending: false });
-      if (error) throw error;
-      return data || [];
+      // Fetch from business_kyc table (institution KYB submissions)
+      const { data: bkycData, error: bkycErr } = await supabase.from("business_kyc").select("*").order("created_at", { ascending: false });
+      if (bkycErr) throw bkycErr;
+
+      // Also fetch gateway merchant KYB submissions
+      const { data: merchantData, error: mErr } = await supabase
+        .from("gateway_merchants")
+        .select("id, business_name, status, kyb_status, kyb_documents, kyb_rejection_reason, metadata, created_at, updated_at, user_id, business_email, business_phone")
+        .neq("kyb_status", "not_submitted")
+        .order("created_at", { ascending: false });
+      if (mErr) throw mErr;
+
+      // Normalize merchant KYB records into the same shape as business_kyc
+      const merchantKybs = (merchantData || []).map((m: any) => {
+        const meta = m.metadata || {};
+        const kybSub = meta.kyb_submission || {};
+        return {
+          id: m.id,
+          _source: "gateway_merchant" as const,
+          business_name: m.business_name,
+          business_type: meta.business_type || "merchant",
+          registration_number: kybSub.registration_number || meta.kyb_business_registration || "—",
+          industry: meta.industry || "Commerce",
+          tax_id: kybSub.tax_id || meta.kyb_tax_id || null,
+          vat_number: null,
+          business_address: kybSub.business_address || meta.kyb_business_address || null,
+          business_description: meta.business_description || null,
+          annual_turnover: null,
+          number_of_employees: null,
+          verification_status: m.kyb_status === "verified" ? "approved" : m.kyb_status === "rejected" ? "rejected" : "pending",
+          risk_rating: null,
+          rejection_reason: m.kyb_rejection_reason,
+          created_at: kybSub.submitted_at || m.created_at,
+          updated_at: m.updated_at,
+          user_id: m.user_id,
+          // Document fields – merchant KYB stores docs differently
+          registration_certificate_url: null,
+          articles_of_association_url: null,
+          tax_certificate_url: null,
+          proof_of_address_url: null,
+          bank_statement_url: null,
+          kyb_documents: m.kyb_documents || (kybSub.documents?.length ? kybSub.documents : null),
+        };
+      });
+
+      // Tag business_kyc records with source
+      const bkycTagged = (bkycData || []).map((b: any) => ({ ...b, _source: "business_kyc" as const }));
+
+      // Merge and sort by created_at descending
+      const merged = [...bkycTagged, ...merchantKybs].sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      return merged;
     },
   });
 
   const reviewMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      // Get the institution_id linked to this KYB record
-      const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
-      let institutionId: string | null = null;
-      if (kybRecord) {
-        const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", kybRecord.user_id).maybeSingle();
-        institutionId = inst?.id || null;
-      }
+    mutationFn: async ({ id, status, notes, source }: { id: string; status: string; notes: string; source?: string }) => {
+      if (source === "gateway_merchant") {
+        // Use the gateway merchant KYB review edge function
+        const decision = status === "approved" ? "approve" : "reject";
+        const { data, error } = await supabase.functions.invoke("gateway-merchant-kyb-review", {
+          body: { action: "review", merchant_id: id, decision, reason: notes || undefined },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error || data.detail);
+      } else {
+        // Original business_kyc review flow
+        const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
+        let institutionId: string | null = null;
+        if (kybRecord) {
+          const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", kybRecord.user_id).maybeSingle();
+          institutionId = inst?.id || null;
+        }
 
-      const action = status === 'approved' ? 'approve' : 'reject';
-      const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
-        body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+        const action = status === 'approved' ? 'approve' : 'reject';
+        const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
+          body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["business-kyc-submissions"] });
@@ -76,7 +137,7 @@ export default function BusinessKYCReview() {
 
   const submitReview = () => {
     if (selectedKYB) {
-      reviewMutation.mutate({ id: selectedKYB.id, status: reviewAction, notes: reviewNotes });
+      reviewMutation.mutate({ id: selectedKYB.id, status: reviewAction, notes: reviewNotes, source: selectedKYB._source });
     }
   };
 
@@ -153,6 +214,7 @@ export default function BusinessKYCReview() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold">Business</TableHead>
+                <TableHead className="text-xs font-semibold">Source</TableHead>
                 <TableHead className="text-xs font-semibold">Industry</TableHead>
                 <TableHead className="text-xs font-semibold">Status</TableHead>
                 <TableHead className="text-xs font-semibold">Risk</TableHead>
@@ -163,12 +225,17 @@ export default function BusinessKYCReview() {
             </TableHeader>
             <TableBody>
               {items.map((kyb) => (
-                <TableRow key={kyb.id} className="group">
+                <TableRow key={`${kyb._source}-${kyb.id}`} className="group">
                   <TableCell>
                     <div>
                       <p className="font-medium text-sm">{kyb.business_name}</p>
                       <p className="text-xs text-muted-foreground">{kyb.business_type} • {kyb.registration_number}</p>
                     </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[10px]">
+                      {kyb._source === "gateway_merchant" ? "Merchant" : "Institution"}
+                    </Badge>
                   </TableCell>
                   <TableCell className="text-sm">{kyb.industry}</TableCell>
                   <TableCell>{getStatusBadge(kyb.verification_status)}</TableCell>
