@@ -77,7 +77,7 @@ const CustomerScan: React.FC = () => {
 
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
-    stopCamera();
+    qrStopCamera();
     if (data.type === 'kob_store' && data.merchant_id) {
       // Deep-link to merchant storefront
       toast.success(`Opening store...`);
