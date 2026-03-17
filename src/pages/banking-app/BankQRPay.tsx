@@ -65,6 +65,7 @@ const BankQRPay: React.FC = () => {
     cameraActive,
     cameraError,
     isHtml5,
+    needsHtml5Container,
     stopCamera,
   } = useQRScanner({
     onScan: handleRawScan,
