@@ -18,6 +18,7 @@ import {
   Landmark, TrendingUp, Search, Copy, ExternalLink, Store, BookOpen, Code2,
   ChevronRight, Zap, Shield, ArrowRight, Clock, DollarSign, Users,
 } from "lucide-react";
+import pfBanner from "@/assets/payment-facilitation-banner.png";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
