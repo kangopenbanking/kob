@@ -29,9 +29,9 @@ const NjangiInfo = () => {
       </Helmet>
 
       {/* Hero */}
-      <section className="relative overflow-hidden py-24">
-        <img src={njangiBanner} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-primary/60" />
+      <section className="relative overflow-hidden py-32 md:py-40">
+        <img src={njangiBanner} alt="" className="absolute inset-0 w-full h-full object-contain md:object-cover object-center bg-primary/80" />
+        <div className="absolute inset-0 bg-primary/50" />
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center text-white">
             <Badge variant="outline" className="mb-6 border-white/30 bg-white/10 text-white px-4 py-2">
