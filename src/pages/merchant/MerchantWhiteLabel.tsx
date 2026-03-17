@@ -95,11 +95,32 @@ export default function MerchantWhiteLabel() {
           {!isEnterprise && (
             <Badge variant="secondary" className="text-xs">Enterprise Feature</Badge>
           )}
-          <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
-            <Save className="h-4 w-4 mr-1" /> Save Changes
-          </Button>
+          {isEnterprise && (
+            <Button size="sm" onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
+              <Save className="h-4 w-4 mr-1" /> Save Changes
+            </Button>
+          )}
         </div>
       </div>
+
+      {!isEnterprise && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-6 text-center space-y-3">
+          <div className="mx-auto w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center">
+            <Shield className="h-6 w-6 text-amber-600" />
+          </div>
+          <h3 className="text-lg font-bold text-foreground">Enterprise Feature</h3>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            White-label customization requires an Enterprise plan. Upgrade to remove platform branding and use your own domain, emails, and checkout.
+          </p>
+          <Button
+            variant="outline"
+            className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
+            onClick={() => toast.info('Contact support to upgrade your plan.')}
+          >
+            <ExternalLink className="h-4 w-4 mr-1.5" /> Contact Sales
+          </Button>
+        </div>
+      )}
 
       {/* Custom Domain */}
       <Card>
