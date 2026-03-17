@@ -162,12 +162,37 @@ export default function MerchantSettlementAccounts() {
       switch (form.account_type) {
         case "mobile_money":
           phoneNumber = form.phone_number;
-          accountNumber = form.phone_number; // account_number is required
+          accountNumber = form.phone_number;
           const provider = MOMO_PROVIDERS.find(p => p.id === form.bank_code);
           bankName = provider?.name || form.bank_code;
           bankCode = form.bank_code;
           metadata.momo_provider = form.bank_code;
           break;
+        case "kob_wallet": {
+          // Auto-detect consumer account
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            const { data: consumerAcct } = await supabase
+              .from("accounts")
+              .select("id, account_id, account_holder_name")
+              .eq("user_id", currentUser.id)
+              .eq("is_active", true)
+              .limit(1)
+              .maybeSingle();
+            if (consumerAcct) {
+              accountNumber = consumerAcct.account_id;
+              metadata.consumer_account_id = consumerAcct.id;
+              metadata.consumer_account_holder = consumerAcct.account_holder_name;
+            } else {
+              toast.error("No Kang consumer wallet found. Create one in the Consumer App first.");
+              setSaving(false);
+              return;
+            }
+          }
+          bankName = "Kang Wallet";
+          bankCode = null;
+          break;
+        }
         case "paypal":
           accountNumber = form.paypal_email;
           metadata.paypal_email = form.paypal_email;
