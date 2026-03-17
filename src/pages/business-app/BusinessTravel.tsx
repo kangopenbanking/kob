@@ -33,7 +33,7 @@ const BusinessTravel: React.FC = () => {
       if (!merchantId) return [];
       const { data, error } = await supabase
         .from('travel_services')
-        .select('id, name, category, is_active')
+        .select('id, display_name, service_type, is_active')
         .eq('merchant_id', merchantId);
       if (error) throw error;
       return data || [];

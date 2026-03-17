@@ -1019,6 +1019,17 @@ function App() {
               <Route path="staff" element={<BusinessStaff />} />
               <Route path="storefront" element={<BusinessStorefront />} />
               <Route path="inventory" element={<BusinessInventory />} />
+              <Route path="travel" element={<BusinessTravel />} />
+              <Route path="travel/services" element={<MerchantTravelServices />} />
+              <Route path="travel/routes" element={<MerchantTravelRoutes />} />
+              <Route path="travel/seating" element={<MerchantTravelSeating />} />
+              <Route path="travel/timetable" element={<MerchantTravelTimetable />} />
+              <Route path="travel/bookings" element={<MerchantTravelBookings />} />
+              <Route path="travel/counter-booking" element={<MerchantTravelCounterBooking />} />
+              <Route path="travel/scanner" element={<MerchantTravelScanner />} />
+              <Route path="travel/discounts" element={<MerchantTravelDiscounts />} />
+              <Route path="travel/staff-roles" element={<MerchantTravelStaffRoles />} />
+              <Route path="travel/notifications" element={<MerchantTravelNotifications />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
