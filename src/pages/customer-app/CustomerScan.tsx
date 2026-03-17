@@ -81,36 +81,41 @@ const CustomerScan: React.FC = () => {
     return () => stopCamera();
   }, [activeTab, showManualEntry, scanResult, paymentSuccess, startCamera, stopCamera]);
 
-  /* ─── QR Scan Detection via BarcodeDetector API ─── */
+  /* ─── QR Scan Detection — native BarcodeDetector + html5-qrcode fallback ─── */
+  const handleRawScan = useCallback((rawValue: string) => {
+    if (scanResult) return;
+    try {
+      const parsed = JSON.parse(rawValue);
+      handleScanDetected(parsed);
+    } catch {
+      handleScanDetected({ type: 'kob_pay', account: rawValue });
+    }
+  }, [scanResult]);
+
+  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
+
+  const {
+    videoRef: qrVideoRef,
+    cameraActive: qrCameraActive,
+    cameraError: qrCameraError,
+    isHtml5,
+    stopCamera: qrStopCamera,
+  } = useQRScanner({
+    onScan: handleRawScan,
+    enabled: scanEnabled,
+    containerId: 'customer-qr-scanner',
+  });
+
+  // Sync refs for backward compat
   useEffect(() => {
-    if (!cameraActive || !videoRef.current) return;
-    // Use BarcodeDetector API where available (Chrome, Edge, Samsung Internet)
-    if (!('BarcodeDetector' in window)) return;
-    const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-    let cancelled = false;
-    const scan = async () => {
-      if (cancelled || !videoRef.current || videoRef.current.readyState < 2) {
-        if (!cancelled) requestAnimationFrame(scan);
-        return;
-      }
-      try {
-        const barcodes = await detector.detect(videoRef.current);
-        if (barcodes.length > 0 && !scanResult) {
-          try {
-            const parsed = JSON.parse(barcodes[0].rawValue);
-            handleScanDetected(parsed);
-          } catch {
-            // Not a JSON QR — treat raw value as account code
-            handleScanDetected({ type: 'kob_pay', account: barcodes[0].rawValue });
-          }
-          return;
-        }
-      } catch { /* detection frame error — continue */ }
-      if (!cancelled) requestAnimationFrame(scan);
-    };
-    requestAnimationFrame(scan);
-    return () => { cancelled = true; };
-  }, [cameraActive, scanResult]);
+    if (qrVideoRef.current && videoRef.current !== qrVideoRef.current) {
+      (videoRef as any).current = qrVideoRef.current;
+    }
+  }, [qrVideoRef.current]);
+
+  // Override camera state from hook
+  const cameraActiveResolved = qrCameraActive;
+  const cameraErrorResolved = qrCameraError;
 
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
