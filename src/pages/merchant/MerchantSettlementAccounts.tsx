@@ -105,7 +105,7 @@ function getAccountIcon(type: string) {
 }
 
 function getAccountLabel(type: string) {
-  return ACCOUNT_TYPES.find(t => t.value === type)?.label || type;
+  return ALL_ACCOUNT_TYPES.find(t => t.value === type)?.label || type;
 }
 
 export default function MerchantSettlementAccounts() {
