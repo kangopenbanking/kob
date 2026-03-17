@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
-  Palette, Key, MapPin, Users, ScanLine, BarChart3, Clock,
+  Palette, Key, MapPin, Users, ScanLine, BarChart3, Clock, CreditCard,
   ChevronRight, Crown, Lock, CheckCircle2, Shield, ArrowRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
