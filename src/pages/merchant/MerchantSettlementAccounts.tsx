@@ -487,36 +487,56 @@ export default function MerchantSettlementAccounts() {
               <div className="px-6 py-5 space-y-4">
                 {step === "method" ? (
                   <div className="grid grid-cols-1 gap-2">
-                    {ACCOUNT_TYPES.map(t => {
+                    {ALL_ACCOUNT_TYPES.map(t => {
                       const Icon = t.icon;
                       const selected = form.account_type === t.value;
+                      const isEnterpriseType = 'enterprise' in t && t.enterprise;
+                      const locked = isEnterpriseType && !isEnterprise;
                       return (
                         <button
                           key={t.value}
                           type="button"
+                          disabled={locked}
                           onClick={() => {
-                            setForm(f => ({ ...INITIAL_FORM, account_type: t.value, currency: f.currency }));
+                            if (locked) return;
+                            setForm(f => ({ ...INITIAL_FORM, account_type: t.value as AccountType, currency: f.currency }));
                             setStep("details");
                           }}
                           className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all group ${
-                            selected
-                              ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                              : "border-border hover:border-primary/40 hover:bg-muted/50"
+                            locked
+                              ? "border-border/40 bg-muted/30 opacity-60 cursor-not-allowed"
+                              : selected
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                                : "border-border hover:border-primary/40 hover:bg-muted/50"
                           }`}
                         >
                           <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                            selected ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-primary/10"
+                            locked ? "bg-muted" : selected ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-primary/10"
                           }`}>
                             <Icon className="h-5 w-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>{t.label}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className={`text-sm font-semibold ${locked ? "text-muted-foreground" : selected ? "text-primary" : "text-foreground"}`}>{t.label}</p>
+                              {isEnterpriseType && (
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-amber-500/30 text-amber-600 bg-amber-500/5">Enterprise</Badge>
+                              )}
+                            </div>
                             <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
                           </div>
-                          <ChevronRight className={`h-4 w-4 shrink-0 transition-colors ${selected ? "text-primary" : "text-muted-foreground/50"}`} />
+                          {locked ? (
+                            <Shield className="h-4 w-4 shrink-0 text-amber-500/50" />
+                          ) : (
+                            <ChevronRight className={`h-4 w-4 shrink-0 transition-colors ${selected ? "text-primary" : "text-muted-foreground/50"}`} />
+                          )}
                         </button>
                       );
                     })}
+                    {!isEnterprise && (
+                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-1">
+                        <p className="text-[11px] text-amber-700 font-medium">Upgrade to Enterprise to unlock PayPal, Card (Visa Direct / MC Send), and RTGS Wire Transfer payouts.</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
