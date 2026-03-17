@@ -111,6 +111,7 @@ function getAccountLabel(type: string) {
 export default function MerchantSettlementAccounts() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [isEnterprise, setIsEnterprise] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
