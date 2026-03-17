@@ -74,7 +74,15 @@ const BusinessMore: React.FC = () => {
       ],
     },
     {
-      title: 'Settings',
+      title: 'Management',
+      items: [
+        { icon: Settings, label: 'Settings', subtitle: 'Business profile & config', path: `${basePath}/settings`, color: 'bg-slate-500/10 text-slate-600' },
+        { icon: QrCode, label: 'Compliance', subtitle: 'KYB & verification', path: `${basePath}/compliance`, color: 'bg-emerald-500/10 text-emerald-700' },
+        { icon: Star, label: 'Enterprise', subtitle: 'Advanced features', path: `${basePath}/enterprise`, color: 'bg-amber-500/10 text-amber-700' },
+      ],
+    },
+    {
+      title: 'Preferences',
       items: [
         { icon: QrCode, label: 'Store QR Code', subtitle: 'Share with customers', action: () => setShowStoreQR(true), color: 'bg-stone-500/10 text-stone-600' },
         { icon: Bell, label: 'Notifications', subtitle: 'Alert preferences', path: `${basePath}/notifications`, color: 'bg-blue-500/10 text-blue-600' },
