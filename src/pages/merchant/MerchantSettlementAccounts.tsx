@@ -63,7 +63,7 @@ const CURRENCIES = [
   { code: "KES", name: "Kenyan Shilling", flag: "🇰🇪" },
 ];
 
-type AccountType = typeof ACCOUNT_TYPES[number]["value"];
+type AccountType = typeof ALL_ACCOUNT_TYPES[number]["value"];
 
 interface FormState {
   account_type: AccountType;
