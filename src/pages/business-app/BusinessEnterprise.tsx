@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import {
-  Palette, Key, MapPin, Users, ScanLine, BarChart3, Clock,
+  Palette, Key, MapPin, Users, ScanLine, BarChart3, Clock, CreditCard,
   ChevronRight, Crown, Lock, CheckCircle2, Shield, ArrowRight,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -55,6 +55,13 @@ const enterpriseFeatures = [
     label: 'Shift Management',
     subtitle: 'Staff shifts, cash drawer tracking & end-of-day',
     path: '/biz/till',
+    gated: true,
+  },
+  {
+    icon: CreditCard,
+    label: 'Additional Payout Methods',
+    subtitle: 'PayPal, Visa Direct, RTGS & more beyond the 2 free accounts',
+    path: '/biz/wallet',
     gated: true,
   },
   {
