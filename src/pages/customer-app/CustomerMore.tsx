@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Send, Download, Receipt, Building2, Users,
   Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
-  Lock, ChevronRight, Loader2
+  Lock, ChevronRight, Loader2, Package
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
