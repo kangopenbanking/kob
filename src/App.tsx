@@ -338,6 +338,7 @@ const MerchantProfile = lazy(() => import("./pages/merchant/MerchantProfile"));
 const MerchantAnalytics = lazy(() => import("./pages/merchant/MerchantAnalytics"));
 const MerchantRegister = lazy(() => import("./pages/merchant/MerchantRegister"));
 const MerchantTravelServices = lazy(() => import("./pages/merchant/MerchantTravelServices"));
+const BusinessTravelServices = lazy(() => import("./pages/business-app/BusinessTravelServices"));
 const MerchantTravelSeating = lazy(() => import("./pages/merchant/MerchantTravelSeating"));
 const MerchantTravelRoutes = lazy(() => import("./pages/merchant/MerchantTravelRoutes"));
 const MerchantTravelBookings = lazy(() => import("./pages/merchant/MerchantTravelBookings"));
@@ -1030,7 +1031,7 @@ function App() {
               <Route path="notifications" element={<NotificationPreferences />} />
               {/* Travel */}
               <Route path="travel" element={<BusinessTravel />} />
-              <Route path="travel/services" element={<MerchantTravelServices />} />
+              <Route path="travel/services" element={<BusinessTravelServices />} />
               <Route path="travel/routes" element={<MerchantTravelRoutes />} />
               <Route path="travel/seating" element={<MerchantTravelSeating />} />
               <Route path="travel/timetable" element={<MerchantTravelTimetable />} />

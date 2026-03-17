@@ -36,14 +36,21 @@ const MOMO_PROVIDERS = [
   { id: "orange_money", name: "Orange Money", prefix: "+237 69/65" },
 ];
 
-const ACCOUNT_TYPES = [
+// Base accounts available to all merchants
+const BASE_ACCOUNT_TYPES = [
   { value: "bank_transfer", label: "Bank Transfer", icon: Building2, description: "Receive payouts to your bank account via domestic transfer" },
   { value: "mobile_money", label: "Mobile Money", icon: Smartphone, description: "Receive payouts to MTN MoMo or Orange Money" },
   { value: "kob_wallet", label: "Kang Consumer Wallet", icon: Wallet, description: "Instant transfer to your Kang consumer app wallet" },
-  { value: "paypal", label: "PayPal", icon: Globe, description: "Receive payouts to your PayPal account" },
-  { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard, description: "Push-to-card payouts via Visa Direct or Mastercard Send" },
-  { value: "rtgs", label: "RTGS / Wire Transfer", icon: Landmark, description: "Real-time gross settlement for large-value transfers" },
 ] as const;
+
+// Enterprise-only payment methods
+const ENTERPRISE_ACCOUNT_TYPES = [
+  { value: "paypal", label: "PayPal", icon: Globe, description: "Receive payouts to your PayPal account", enterprise: true },
+  { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard, description: "Push-to-card payouts via Visa Direct or Mastercard Send", enterprise: true },
+  { value: "rtgs", label: "RTGS / Wire Transfer", icon: Landmark, description: "Real-time gross settlement for large-value transfers", enterprise: true },
+] as const;
+
+const ALL_ACCOUNT_TYPES = [...BASE_ACCOUNT_TYPES, ...ENTERPRISE_ACCOUNT_TYPES] as const;
 
 const CURRENCIES = [
   { code: "XAF", name: "CFA Franc BEAC", flag: "🇨🇲" },
@@ -56,7 +63,7 @@ const CURRENCIES = [
   { code: "KES", name: "Kenyan Shilling", flag: "🇰🇪" },
 ];
 
-type AccountType = typeof ACCOUNT_TYPES[number]["value"];
+type AccountType = typeof ALL_ACCOUNT_TYPES[number]["value"];
 
 interface FormState {
   account_type: AccountType;
@@ -98,12 +105,13 @@ function getAccountIcon(type: string) {
 }
 
 function getAccountLabel(type: string) {
-  return ACCOUNT_TYPES.find(t => t.value === type)?.label || type;
+  return ALL_ACCOUNT_TYPES.find(t => t.value === type)?.label || type;
 }
 
 export default function MerchantSettlementAccounts() {
   const [accounts, setAccounts] = useState<any[]>([]);
   const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [isEnterprise, setIsEnterprise] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -115,9 +123,10 @@ export default function MerchantSettlementAccounts() {
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
-    const { data: m } = await supabase.from("gateway_merchants").select("id").eq("user_id", user.id).maybeSingle();
+    const { data: m } = await supabase.from("gateway_merchants").select("id, plan_tier").eq("user_id", user.id).maybeSingle();
     if (m) {
       setMerchantId(m.id);
+      setIsEnterprise(m.plan_tier === 'enterprise');
       const { data } = await supabase
         .from("gateway_merchant_settlement_accounts")
         .select("*")
@@ -478,36 +487,56 @@ export default function MerchantSettlementAccounts() {
               <div className="px-6 py-5 space-y-4">
                 {step === "method" ? (
                   <div className="grid grid-cols-1 gap-2">
-                    {ACCOUNT_TYPES.map(t => {
+                    {ALL_ACCOUNT_TYPES.map(t => {
                       const Icon = t.icon;
                       const selected = form.account_type === t.value;
+                      const isEnterpriseType = 'enterprise' in t && t.enterprise;
+                      const locked = isEnterpriseType && !isEnterprise;
                       return (
                         <button
                           key={t.value}
                           type="button"
+                          disabled={locked}
                           onClick={() => {
-                            setForm(f => ({ ...INITIAL_FORM, account_type: t.value, currency: f.currency }));
+                            if (locked) return;
+                            setForm(f => ({ ...INITIAL_FORM, account_type: t.value as AccountType, currency: f.currency }));
                             setStep("details");
                           }}
                           className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all group ${
-                            selected
-                              ? "border-primary bg-primary/5 ring-1 ring-primary/30"
-                              : "border-border hover:border-primary/40 hover:bg-muted/50"
+                            locked
+                              ? "border-border/40 bg-muted/30 opacity-60 cursor-not-allowed"
+                              : selected
+                                ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                                : "border-border hover:border-primary/40 hover:bg-muted/50"
                           }`}
                         >
                           <div className={`h-10 w-10 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
-                            selected ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-primary/10"
+                            locked ? "bg-muted" : selected ? "bg-primary text-primary-foreground" : "bg-muted group-hover:bg-primary/10"
                           }`}>
                             <Icon className="h-5 w-5" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={`text-sm font-semibold ${selected ? "text-primary" : "text-foreground"}`}>{t.label}</p>
+                            <div className="flex items-center gap-1.5">
+                              <p className={`text-sm font-semibold ${locked ? "text-muted-foreground" : selected ? "text-primary" : "text-foreground"}`}>{t.label}</p>
+                              {isEnterpriseType && (
+                                <Badge variant="outline" className="text-[9px] h-4 px-1.5 border-amber-500/30 text-amber-600 bg-amber-500/5">Enterprise</Badge>
+                              )}
+                            </div>
                             <p className="text-xs text-muted-foreground line-clamp-1">{t.description}</p>
                           </div>
-                          <ChevronRight className={`h-4 w-4 shrink-0 transition-colors ${selected ? "text-primary" : "text-muted-foreground/50"}`} />
+                          {locked ? (
+                            <Shield className="h-4 w-4 shrink-0 text-amber-500/50" />
+                          ) : (
+                            <ChevronRight className={`h-4 w-4 shrink-0 transition-colors ${selected ? "text-primary" : "text-muted-foreground/50"}`} />
+                          )}
                         </button>
                       );
                     })}
+                    {!isEnterprise && (
+                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-1">
+                        <p className="text-[11px] text-amber-700 font-medium">Upgrade to Enterprise to unlock PayPal, Card (Visa Direct / MC Send), and RTGS Wire Transfer payouts.</p>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
