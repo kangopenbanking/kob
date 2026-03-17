@@ -134,8 +134,8 @@ export const BusinessDesktopSidebar: React.FC = () => {
                         className={cn(
                           'rounded-xl transition-all',
                           active
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                            ? 'bg-white/20 text-white font-medium'
+                            : 'text-white/70 hover:bg-white/10 hover:text-white',
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2 : 1.6} />
