@@ -312,7 +312,7 @@ export default function Apps() {
             initial={{ opacity: 0, y: 60 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="mx-auto mt-24 grid max-w-3xl grid-cols-3 gap-4 sm:gap-6"
+            className="mx-auto mt-24 grid max-w-4xl grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-5"
           >
             {apps.map((app, i) => (
               <motion.div
