@@ -25,7 +25,7 @@ import { MerchantLayout } from "@/components/merchant/MerchantLayout";
 import { BankingAppLayout } from "./components/banking-app/BankingAppLayout";
 import { FeatureGate } from "./components/pwa/FeatureGate";
 import { CustomerAppLayout } from "./components/customer-app/CustomerAppLayout";
-import { BusinessAppLayout } from "./components/business-app/BusinessAppLayout";
+import { UnifiedBusinessLayout } from "./components/business-app/UnifiedBusinessLayout";
 import { Loader2 } from "lucide-react";
 
 // Global lazy loading fallback
@@ -998,7 +998,7 @@ function App() {
             <Route path="/biz/auth" element={<BusinessAuth />} />
             <Route path="/biz/register" element={<BusinessRegister />} />
             <Route path="/biz/reset-password" element={<ResetPassword />} />
-            <Route path="/biz" element={<BusinessAppLayout />}>
+            <Route path="/biz" element={<UnifiedBusinessLayout />}>
               <Route path="home" element={<BusinessHome />} />
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
