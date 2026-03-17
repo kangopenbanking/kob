@@ -315,19 +315,23 @@ const PaymentFacilitation = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Payment Facilitation</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage KOB payment facilitation, settlements, and merchant integrations
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
-          <Button variant="outline" size="sm" onClick={() => { refetchMM(); refetchBT(); }}>
-            <RefreshCw className="h-4 w-4 mr-1.5" />Refresh
-          </Button>
+      {/* Hero Banner */}
+      <div className="relative rounded-3xl overflow-hidden">
+        <img src={pfBanner} alt="Payment Facilitation" className="w-full h-44 sm:h-52 object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-between px-6 sm:px-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Payment Facilitation</h1>
+            <p className="text-sm text-muted-foreground mt-1 max-w-md">
+              Manage KOB payment facilitation, settlements, and merchant integrations
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
+            <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm" onClick={() => { refetchMM(); refetchBT(); }}>
+              <RefreshCw className="h-4 w-4 mr-1.5" />Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
