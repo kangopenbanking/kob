@@ -40,47 +40,7 @@ const CustomerScan: React.FC = () => {
   const [receiveAmount, setReceiveAmount] = useState('');
   const userAccountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
 
-  /* ─── Camera Controls ─── */
-  const startCamera = useCallback(async () => {
-    try {
-      setCameraError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setCameraActive(true);
-      }
-    } catch (err: any) {
-      console.error('Camera error:', err);
-      if (err.name === 'NotAllowedError') {
-        setCameraError('Camera access denied. Please allow camera permissions.');
-      } else if (err.name === 'NotFoundError') {
-        setCameraError('No camera found on this device.');
-      } else {
-        setCameraError('Could not start camera. Try manual entry instead.');
-      }
-    }
-  }, []);
-
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setCameraActive(false);
-  }, []);
-
-  useEffect(() => {
-    if (activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess) {
-      startCamera();
-    } else {
-      stopCamera();
-    }
-    return () => stopCamera();
-  }, [activeTab, showManualEntry, scanResult, paymentSuccess, startCamera, stopCamera]);
+  /* ─── Camera Controls (managed by useQRScanner hook now) ─── */
 
   /* ─── QR Scan Detection — native BarcodeDetector + html5-qrcode fallback ─── */
   const handleRawScan = useCallback((rawValue: string) => {
