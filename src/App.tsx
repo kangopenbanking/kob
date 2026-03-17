@@ -261,6 +261,7 @@ const InvoiceManagement = lazy(() => import("./pages/admin/InvoiceManagement"));
 const AdminMarketplaceModeration = lazy(() => import("./pages/admin/AdminMarketplaceModeration"));
 const CustomerAppManagement = lazy(() => import("./pages/admin/CustomerAppManagement"));
 const BusinessAppManagement = lazy(() => import("./pages/admin/BusinessAppManagement"));
+const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletOversight"));
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
 const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
 const InstitutionManagement = lazy(() => import("./pages/admin/InstitutionManagement"));
