@@ -1019,9 +1019,12 @@ function App() {
               <Route path="products/new" element={<BusinessProductForm />} />
               <Route path="products/:id" element={<BusinessProductForm />} />
               <Route path="analytics" element={<BusinessAnalytics />} />
+              <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
               <Route path="staff" element={<BusinessStaff />} />
               <Route path="storefront" element={<BusinessStorefront />} />
               <Route path="inventory" element={<BusinessInventory />} />
+              <Route path="notifications" element={<NotificationPreferences />} />
+              {/* Travel */}
               <Route path="travel" element={<BusinessTravel />} />
               <Route path="travel/services" element={<MerchantTravelServices />} />
               <Route path="travel/routes" element={<MerchantTravelRoutes />} />
@@ -1033,17 +1036,34 @@ function App() {
               <Route path="travel/discounts" element={<MerchantTravelDiscounts />} />
               <Route path="travel/staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel/notifications" element={<MerchantTravelNotifications />} />
+              {/* Settings & Configuration */}
               <Route path="settings" element={<BusinessSettings />} />
               <Route path="compliance" element={<BusinessCompliance />} />
               <Route path="enterprise" element={<BusinessEnterprise />} />
               <Route path="kyb" element={<MerchantKYB />} />
               <Route path="disputes" element={<MerchantDisputes />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
+              <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
               <Route path="webhooks" element={<MerchantWebhooks />} />
               <Route path="settlement-accounts" element={<MerchantSettlementAccounts />} />
               <Route path="subaccounts" element={<MerchantSubaccounts />} />
               <Route path="settlements" element={<MerchantSettlements />} />
               <Route path="payouts" element={<MerchantPayouts />} />
+              <Route path="fund-wallet" element={<MerchantFundWallet />} />
+              <Route path="escrow" element={<MerchantEscrow />} />
+              <Route path="bulk-operations" element={<MerchantBulkOperations />} />
+              <Route path="transactions" element={<MerchantTransactions />} />
+              <Route path="payment-links" element={<MerchantPaymentLinks />} />
+              <Route path="subscriptions" element={<MerchantSubscriptions />} />
+              <Route path="plans" element={<MerchantPlans />} />
+              <Route path="woo-sync" element={<MerchantWooSync />} />
+              <Route path="locations" element={<MerchantLocations />} />
+              <Route path="branding" element={<MerchantBranding />} />
+              <Route path="white-label" element={<MerchantWhiteLabel />} />
+              <Route path="profile" element={<MerchantProfile />} />
+              <Route path="pos-till" element={<MerchantPOSTill />} />
+              {/* Catch-all 404 */}
+              <Route path="*" element={<NestedNotFound portalName="Business App" homePath="/biz/home" />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
