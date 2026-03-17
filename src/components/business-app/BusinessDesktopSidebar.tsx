@@ -101,25 +101,25 @@ export const BusinessDesktopSidebar: React.FC = () => {
   };
 
   return (
-    <Sidebar collapsible="icon" className="border-r border-border/40">
+    <Sidebar collapsible="icon" className="border-r border-border/40 [&_[data-sidebar=sidebar]]:bg-primary [&_[data-sidebar=sidebar]]:text-primary-foreground">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
             <img src={kangLogo} alt="Kang Business" className="h-6 w-6 rounded-lg object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">Kang Business</p>
-              <p className="text-[10px] text-muted-foreground">Merchant Portal</p>
+              <p className="text-sm font-bold text-white truncate">Kang Business</p>
+              <p className="text-[10px] text-white/60">Merchant Portal</p>
             </div>
           )}
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {navGroups.map((group) => (
           <SidebarGroup key={group.title}>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">
               {group.title}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -134,8 +134,8 @@ export const BusinessDesktopSidebar: React.FC = () => {
                         className={cn(
                           'rounded-xl transition-all',
                           active
-                            ? 'bg-primary/10 text-primary font-medium'
-                            : 'text-muted-foreground hover:bg-muted/60 hover:text-foreground',
+                            ? 'bg-white/20 text-white font-medium'
+                            : 'text-white/70 hover:bg-white/10 hover:text-white',
                         )}
                       >
                         <Icon className="h-4 w-4 shrink-0" strokeWidth={active ? 2 : 1.6} />
@@ -155,7 +155,7 @@ export const BusinessDesktopSidebar: React.FC = () => {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className="rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-xl text-white/70 hover:bg-red-500/20 hover:text-red-200"
             >
               <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.6} />
               {!collapsed && <span>Sign Out</span>}
