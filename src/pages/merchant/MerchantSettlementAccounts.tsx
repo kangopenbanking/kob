@@ -39,6 +39,7 @@ const MOMO_PROVIDERS = [
 const ACCOUNT_TYPES = [
   { value: "bank_transfer", label: "Bank Transfer", icon: Building2, description: "Receive payouts to your bank account via domestic transfer" },
   { value: "mobile_money", label: "Mobile Money", icon: Smartphone, description: "Receive payouts to MTN MoMo or Orange Money" },
+  { value: "kob_wallet", label: "Kang Consumer Wallet", icon: Wallet, description: "Instant transfer to your Kang consumer app wallet" },
   { value: "paypal", label: "PayPal", icon: Globe, description: "Receive payouts to your PayPal account" },
   { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard, description: "Push-to-card payouts via Visa Direct or Mastercard Send" },
   { value: "rtgs", label: "RTGS / Wire Transfer", icon: Landmark, description: "Real-time gross settlement for large-value transfers" },
