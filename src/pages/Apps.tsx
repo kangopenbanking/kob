@@ -46,12 +46,25 @@ const apps: AppPhase[] = [
     ],
   },
   {
-    title: 'Merchant App',
-    subtitle: 'Accept payments, travel booking & staff management',
+    title: 'Business App',
+    subtitle: 'Unified commerce & operations hub for merchants',
+    description: 'A modern, responsive business portal — manage products, orders, POS, payments, staff, analytics, travel services, and enterprise features from one app.',
+    status: 'live',
+    accent: '#F59E0B', accentBorder: 'border-amber-500/30', accentBg: 'bg-amber-500/10', accentText: 'text-amber-400',
+    phase: 2, link: '/biz',
+    features: [
+      { icon: Monitor, label: 'POS Till & Orders' }, { icon: Package, label: 'Products & Inventory' },
+      { icon: BarChart3, label: 'Sales Analytics' }, { icon: Bus, label: 'Travel & Transport' },
+      { icon: Users, label: 'Staff & CRM' }, { icon: Store, label: 'Storefront & Coupons' },
+    ],
+  },
+  {
+    title: 'Merchant Portal',
+    subtitle: 'Full-featured payment gateway dashboard',
     description: 'Give merchants the tools to accept payments, manage transport & tourism services, and control staff access — all from a single platform.',
     status: 'live',
     accent: '#22C55E', accentBorder: 'border-green-500/30', accentBg: 'bg-green-500/10', accentText: 'text-green-400',
-    phase: 2, link: '/merchant',
+    phase: 3, link: '/merchant',
     features: [
       { icon: Monitor, label: 'POS Till & Orders' }, { icon: ShoppingCart, label: 'WooCommerce Sync' },
       { icon: Bus, label: 'Travel & Transport' }, { icon: BarChart3, label: 'Sales Analytics' },
@@ -65,7 +78,7 @@ const apps: AppPhase[] = [
     description: 'A single app for consumers to manage accounts across all institutions — transfers, savings, cards, and more.',
     status: 'live',
     accent: '#A855F7', accentBorder: 'border-purple-500/30', accentBg: 'bg-purple-500/10', accentText: 'text-purple-400',
-    phase: 3, link: '/app',
+    phase: 4, link: '/app',
     features: [
       { icon: QrCode, label: 'QR Scan Pay' }, { icon: Send, label: 'Transfer & Request' },
       { icon: CreditCard, label: 'Cards & Banking' }, { icon: Receipt, label: 'Bills & Invoices' },
