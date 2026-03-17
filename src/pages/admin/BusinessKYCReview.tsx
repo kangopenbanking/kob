@@ -214,6 +214,7 @@ export default function BusinessKYCReview() {
             <TableHeader>
               <TableRow className="hover:bg-transparent">
                 <TableHead className="text-xs font-semibold">Business</TableHead>
+                <TableHead className="text-xs font-semibold">Source</TableHead>
                 <TableHead className="text-xs font-semibold">Industry</TableHead>
                 <TableHead className="text-xs font-semibold">Status</TableHead>
                 <TableHead className="text-xs font-semibold">Risk</TableHead>
@@ -224,11 +225,18 @@ export default function BusinessKYCReview() {
             </TableHeader>
             <TableBody>
               {items.map((kyb) => (
-                <TableRow key={kyb.id} className="group">
+                <TableRow key={`${kyb._source}-${kyb.id}`} className="group">
                   <TableCell>
                     <div>
                       <p className="font-medium text-sm">{kyb.business_name}</p>
                       <p className="text-xs text-muted-foreground">{kyb.business_type} • {kyb.registration_number}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant="outline" className="text-[10px]">
+                      {kyb._source === "gateway_merchant" ? "Merchant" : "Institution"}
+                    </Badge>
+                  </TableCell>
                     </div>
                   </TableCell>
                   <TableCell className="text-sm">{kyb.industry}</TableCell>
