@@ -39,6 +39,7 @@ const MOMO_PROVIDERS = [
 const ACCOUNT_TYPES = [
   { value: "bank_transfer", label: "Bank Transfer", icon: Building2, description: "Receive payouts to your bank account via domestic transfer" },
   { value: "mobile_money", label: "Mobile Money", icon: Smartphone, description: "Receive payouts to MTN MoMo or Orange Money" },
+  { value: "kob_wallet", label: "Kang Consumer Wallet", icon: Wallet, description: "Instant transfer to your Kang consumer app wallet" },
   { value: "paypal", label: "PayPal", icon: Globe, description: "Receive payouts to your PayPal account" },
   { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard, description: "Push-to-card payouts via Visa Direct or Mastercard Send" },
   { value: "rtgs", label: "RTGS / Wire Transfer", icon: Landmark, description: "Real-time gross settlement for large-value transfers" },
@@ -88,6 +89,7 @@ const INITIAL_FORM: FormState = {
 function getAccountIcon(type: string) {
   switch (type) {
     case "mobile_money": return Smartphone;
+    case "kob_wallet": return Wallet;
     case "paypal": return Globe;
     case "card": return CreditCard;
     case "rtgs": return Landmark;
@@ -136,6 +138,8 @@ export default function MerchantSettlementAccounts() {
         return !!form.bank_code && !!form.account_number;
       case "mobile_money":
         return !!form.phone_number;
+      case "kob_wallet":
+        return true; // account_name is enough, consumer account auto-detected
       case "paypal":
         return !!form.paypal_email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.paypal_email);
       case "card":
@@ -158,12 +162,37 @@ export default function MerchantSettlementAccounts() {
       switch (form.account_type) {
         case "mobile_money":
           phoneNumber = form.phone_number;
-          accountNumber = form.phone_number; // account_number is required
+          accountNumber = form.phone_number;
           const provider = MOMO_PROVIDERS.find(p => p.id === form.bank_code);
           bankName = provider?.name || form.bank_code;
           bankCode = form.bank_code;
           metadata.momo_provider = form.bank_code;
           break;
+        case "kob_wallet": {
+          // Auto-detect consumer account
+          const { data: { user: currentUser } } = await supabase.auth.getUser();
+          if (currentUser) {
+            const { data: consumerAcct } = await supabase
+              .from("accounts")
+              .select("id, account_id, account_holder_name")
+              .eq("user_id", currentUser.id)
+              .eq("is_active", true)
+              .limit(1)
+              .maybeSingle();
+            if (consumerAcct) {
+              accountNumber = consumerAcct.account_id;
+              metadata.consumer_account_id = consumerAcct.id;
+              metadata.consumer_account_holder = consumerAcct.account_holder_name;
+            } else {
+              toast.error("No Kang consumer wallet found. Create one in the Consumer App first.");
+              setSaving(false);
+              return;
+            }
+          }
+          bankName = "Kang Wallet";
+          bankCode = null;
+          break;
+        }
         case "paypal":
           accountNumber = form.paypal_email;
           metadata.paypal_email = form.paypal_email;
@@ -331,6 +360,21 @@ export default function MerchantSettlementAccounts() {
             <div className="space-y-2">
               <Label>Account Holder Name</Label>
               <Input value={form.account_name} onChange={e => setForm(f => ({ ...f, account_name: e.target.value }))} placeholder="Full legal name on the account" />
+            </div>
+          </>
+        );
+      case "kob_wallet":
+        return (
+          <>
+            <div className="rounded-lg bg-primary/5 border border-primary/20 p-3">
+              <p className="text-sm font-medium text-primary">⚡ Instant Transfer</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Funds will transfer instantly to your Kang consumer wallet. Your consumer account will be auto-detected.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Label>Display Name</Label>
+              <Input value={form.account_name} onChange={e => setForm(f => ({ ...f, account_name: e.target.value }))} placeholder="e.g. My Kang Wallet" />
             </div>
           </>
         );
