@@ -687,6 +687,7 @@ function App() {
               <Route path="email-templates" element={<EmailTemplates />} />
               <Route path="managed-emails" element={<ManagedEmailAdmin />} />
               <Route path="merchants" element={<MerchantManagementAdmin />} />
+              <Route path="merchant-wallet-oversight" element={<MerchantWalletOversight />} />
               <Route path="auth-branding" element={<AuthBrandingManager />} />
               <Route path="banking-apps" element={<BankingAppManagement />} />
               <Route path="customer-apps" element={<CustomerAppManagement />} />

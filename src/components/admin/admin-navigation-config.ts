@@ -71,6 +71,7 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Payments & Settlements",
     items: [
       { title: "Merchant Management", path: "/admin/merchants", icon: Store },
+      { title: "Merchant Wallets", path: "/admin/merchant-wallet-oversight", icon: Banknote },
       { title: "Payment Facilitation", path: "/admin/payment-facilitation", icon: CreditCard },
       { title: "Dispute Management", path: "/admin/disputes", icon: Scale },
       { title: "Payout Management", path: "/admin/payouts", icon: Banknote },
