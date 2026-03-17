@@ -237,8 +237,6 @@ export default function BusinessKYCReview() {
                       {kyb._source === "gateway_merchant" ? "Merchant" : "Institution"}
                     </Badge>
                   </TableCell>
-                    </div>
-                  </TableCell>
                   <TableCell className="text-sm">{kyb.industry}</TableCell>
                   <TableCell>{getStatusBadge(kyb.verification_status)}</TableCell>
                   <TableCell>
