@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus } from 'lucide-react';
+import { Settings, QrCode, Copy, Share2, Wallet, Store, ShoppingBag, BarChart3, Users, Star, Ticket, Package, Monitor, ScanLine, Bell, ChevronRight, LogOut, UserCog, Bus, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -86,6 +86,12 @@ const BusinessMore: React.FC = () => {
       items: [
         { icon: QrCode, label: 'Store QR Code', subtitle: 'Share with customers', action: () => setShowStoreQR(true), color: 'bg-stone-500/10 text-stone-600' },
         { icon: Bell, label: 'Notifications', subtitle: 'Alert preferences', path: `${basePath}/notifications`, color: 'bg-blue-500/10 text-blue-600' },
+      ],
+    },
+    {
+      title: 'Other Apps',
+      items: [
+        { icon: Building2, label: 'Banking App', subtitle: 'Access your bank accounts', path: '/bank', color: 'bg-violet-500/10 text-violet-600' },
       ],
     },
   ];

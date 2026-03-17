@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Wallet } from 'lucide-react';
+import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Wallet, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/components/pwa/TenantProvider';
@@ -26,12 +26,16 @@ const BankMore: React.FC = () => {
     { icon: HelpCircle, label: 'Help & Support', description: 'FAQs & contact', path: 'more/help', color: 'bg-[hsl(var(--bank-lime))]', iconColor: 'text-[hsl(var(--bank-lime-fg))]' },
   ];
 
+  const crossAppItems = [
+    { icon: Store, label: 'Business App', description: 'Manage your business', path: '/biz', color: 'bg-[hsl(var(--bank-coral))]', iconColor: 'text-white', external: true },
+  ];
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate(`/bank/${institutionId}/auth`, { replace: true });
   };
 
-  const renderItem = (item: typeof accountItems[0], i: number) => {
+  const renderItem = (item: typeof accountItems[0] & { external?: boolean }, i: number) => {
     const Icon = item.icon;
     return (
       <motion.button
@@ -40,7 +44,13 @@ const BankMore: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: i * 0.04 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => item.path && navigate(`/bank/${institutionId}/${item.path}`)}
+        onClick={() => {
+          if ((item as any).external) {
+            navigate(item.path);
+          } else {
+            navigate(`/bank/${institutionId}/${item.path}`);
+          }
+        }}
         className="flex items-center gap-4 rounded-2xl px-3 py-3.5 text-left transition-colors hover:bg-muted/50"
       >
         <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.color}`}>
@@ -75,6 +85,14 @@ const BankMore: React.FC = () => {
         <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Account</h3>
         <div className="flex flex-col gap-1">
           {accountItems.map((item, i) => renderItem(item, i + financialItems.length))}
+        </div>
+      </div>
+
+      {/* Cross-App Navigation */}
+      <div className="mb-6">
+        <h3 className="mb-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">Other Apps</h3>
+        <div className="flex flex-col gap-1">
+          {crossAppItems.map((item, i) => renderItem(item, i + financialItems.length + accountItems.length))}
         </div>
       </div>
 

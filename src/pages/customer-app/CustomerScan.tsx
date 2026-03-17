@@ -10,6 +10,7 @@ import { useCustomerAccounts, useCustomerProfile } from '@/hooks/useCustomerData
 import { supabase } from '@/integrations/supabase/client';
 import { QRCodeSVG } from 'qrcode.react';
 import { QRPaymentSuccess } from '@/components/customer-app/QRPaymentSuccess';
+import { useQRScanner } from '@/hooks/useQRScanner';
 
 type Tab = 'scan' | 'receive';
 
@@ -28,93 +29,55 @@ const CustomerScan: React.FC = () => {
   const [merchantQR, setMerchantQR] = useState<any>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
 
-  // Camera state
+  // Camera state (managed by useQRScanner hook)
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const [cameraActive, setCameraActive] = useState(false);
-  const [cameraError, setCameraError] = useState<string | null>(null);
 
   // Receive tab state - use real account data
   const [receiveAmount, setReceiveAmount] = useState('');
   const userAccountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
 
-  /* ─── Camera Controls ─── */
-  const startCamera = useCallback(async () => {
+  /* ─── Camera Controls (managed by useQRScanner hook now) ─── */
+
+  /* ─── QR Scan Detection — native BarcodeDetector + html5-qrcode fallback ─── */
+  const handleRawScan = useCallback((rawValue: string) => {
+    if (scanResult) return;
     try {
-      setCameraError(null);
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
-      });
-      streamRef.current = stream;
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play();
-        setCameraActive(true);
-      }
-    } catch (err: any) {
-      console.error('Camera error:', err);
-      if (err.name === 'NotAllowedError') {
-        setCameraError('Camera access denied. Please allow camera permissions.');
-      } else if (err.name === 'NotFoundError') {
-        setCameraError('No camera found on this device.');
-      } else {
-        setCameraError('Could not start camera. Try manual entry instead.');
-      }
+      const parsed = JSON.parse(rawValue);
+      handleScanDetected(parsed);
+    } catch {
+      handleScanDetected({ type: 'kob_pay', account: rawValue });
     }
-  }, []);
+  }, [scanResult]);
 
-  const stopCamera = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-    setCameraActive(false);
-  }, []);
+  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
 
+  const {
+    videoRef: qrVideoRef,
+    cameraActive: qrCameraActive,
+    cameraError: qrCameraError,
+    isHtml5,
+    stopCamera: qrStopCamera,
+  } = useQRScanner({
+    onScan: handleRawScan,
+    enabled: scanEnabled,
+    containerId: 'customer-qr-scanner',
+  });
+
+  // Sync refs for backward compat
   useEffect(() => {
-    if (activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess) {
-      startCamera();
-    } else {
-      stopCamera();
+    if (qrVideoRef.current && videoRef.current !== qrVideoRef.current) {
+      (videoRef as any).current = qrVideoRef.current;
     }
-    return () => stopCamera();
-  }, [activeTab, showManualEntry, scanResult, paymentSuccess, startCamera, stopCamera]);
+  }, [qrVideoRef.current]);
 
-  /* ─── QR Scan Detection via BarcodeDetector API ─── */
-  useEffect(() => {
-    if (!cameraActive || !videoRef.current) return;
-    // Use BarcodeDetector API where available (Chrome, Edge, Samsung Internet)
-    if (!('BarcodeDetector' in window)) return;
-    const detector = new (window as any).BarcodeDetector({ formats: ['qr_code'] });
-    let cancelled = false;
-    const scan = async () => {
-      if (cancelled || !videoRef.current || videoRef.current.readyState < 2) {
-        if (!cancelled) requestAnimationFrame(scan);
-        return;
-      }
-      try {
-        const barcodes = await detector.detect(videoRef.current);
-        if (barcodes.length > 0 && !scanResult) {
-          try {
-            const parsed = JSON.parse(barcodes[0].rawValue);
-            handleScanDetected(parsed);
-          } catch {
-            // Not a JSON QR — treat raw value as account code
-            handleScanDetected({ type: 'kob_pay', account: barcodes[0].rawValue });
-          }
-          return;
-        }
-      } catch { /* detection frame error — continue */ }
-      if (!cancelled) requestAnimationFrame(scan);
-    };
-    requestAnimationFrame(scan);
-    return () => { cancelled = true; };
-  }, [cameraActive, scanResult]);
+  // Override camera state from hook
+  const cameraActiveResolved = qrCameraActive;
+  const cameraErrorResolved = qrCameraError;
 
   /* ─── Handlers ─── */
   const handleScanDetected = (data: any) => {
-    stopCamera();
+    qrStopCamera();
     if (data.type === 'kob_store' && data.merchant_id) {
       // Deep-link to merchant storefront
       toast.success(`Opening store...`);
@@ -370,26 +333,34 @@ const CustomerScan: React.FC = () => {
               /* ─── Camera Scanner ─── */
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
                 <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
-                  {/* Camera Feed */}
-                  <video
-                    ref={videoRef}
-                    className="absolute inset-0 h-full w-full object-cover"
-                    playsInline
-                    muted
-                  />
-                  <canvas ref={canvasRef} className="hidden" />
+                  {/* html5-qrcode renders its own video when native detector unavailable */}
+                  {isHtml5 ? (
+                    <div id="customer-qr-scanner" className="absolute inset-0 h-full w-full" />
+                  ) : (
+                    <>
+                      {/* Native camera feed */}
+                      <video
+                        ref={qrVideoRef}
+                        className="absolute inset-0 h-full w-full object-cover"
+                        playsInline
+                        muted
+                      />
+                      <canvas ref={canvasRef} className="hidden" />
+                    </>
+                  )}
 
                   {/* Overlay scanning frame */}
-                  <div className="absolute inset-0 z-10">
-                    {/* Corner markers */}
-                    <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
-                    <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
-                    <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
-                    <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
-                  </div>
+                  {!isHtml5 && (
+                    <div className="absolute inset-0 z-10">
+                      <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
+                      <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
+                      <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
+                      <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
+                    </div>
+                  )}
 
                   {/* Scanning line animation */}
-                  {cameraActive && (
+                  {qrCameraActive && !isHtml5 && (
                     <motion.div
                       className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
                       initial={{ top: '15%' }}
@@ -399,7 +370,7 @@ const CustomerScan: React.FC = () => {
                   )}
 
                   {/* Camera not active state */}
-                  {!cameraActive && !cameraError && (
+                  {!qrCameraActive && !qrCameraError && (
                     <div className="z-20 flex flex-col items-center gap-3">
                       <Camera className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
                       <p className="text-xs text-muted-foreground">Starting camera…</p>
@@ -407,19 +378,16 @@ const CustomerScan: React.FC = () => {
                   )}
 
                   {/* Camera error state */}
-                  {cameraError && (
+                  {qrCameraError && (
                     <div className="z-20 flex flex-col items-center gap-3 px-6 text-center">
                       <Camera className="h-12 w-12 text-muted-foreground" strokeWidth={1} />
-                      <p className="text-xs text-muted-foreground">{cameraError}</p>
-                      <Button size="sm" variant="outline" className="rounded-xl" onClick={startCamera}>
-                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" strokeWidth={1.5} /> Retry
-                      </Button>
+                      <p className="text-xs text-muted-foreground">{qrCameraError}</p>
                     </div>
                   )}
                 </div>
 
                 <p className="text-center text-sm text-muted-foreground">
-                  {cameraActive
+                  {qrCameraActive
                     ? 'Point your camera at a QR code'
                     : 'Allow camera access to scan QR codes'}
                 </p>
