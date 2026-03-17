@@ -116,10 +116,10 @@ export const BusinessDesktopSidebar: React.FC = () => {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="px-2">
+      <SidebarContent className="px-2 scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {navGroups.map((group) => (
           <SidebarGroup key={group.title}>
-            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-muted-foreground/70 font-semibold">
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-wider text-white/50 font-semibold">
               {group.title}
             </SidebarGroupLabel>
             <SidebarGroupContent>
