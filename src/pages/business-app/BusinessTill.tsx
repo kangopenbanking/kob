@@ -307,7 +307,7 @@ const BusinessTill: React.FC = () => {
                       <Banknote className="h-5 w-5" /><span className="text-xs">Cash</span>
                     </Button>
                     <Button className="flex-col gap-1 h-auto py-3 rounded-xl" onClick={() => { setCartOpen(false); till.checkout('wallet'); }} disabled={till.isCheckingOut}>
-                      <Wallet className="h-5 w-5" /><span className="text-xs">Wallet</span>
+                      <Wallet className="h-5 w-5" /><span className="text-xs">Scan Pay</span>
                     </Button>
                     <Button className="flex-col gap-1 h-auto py-3 bg-orange-600 hover:bg-orange-700 text-white rounded-xl" onClick={() => { setCartOpen(false); till.checkout('mobile_money'); }} disabled={till.isCheckingOut}>
                       <Smartphone className="h-5 w-5" /><span className="text-xs">MoMo</span>
