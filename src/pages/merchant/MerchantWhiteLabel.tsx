@@ -265,6 +265,7 @@ export default function MerchantWhiteLabel() {
           </div>
         </CardContent>
       </Card>
+      </>}
     </div>
   );
 }
