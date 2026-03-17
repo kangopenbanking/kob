@@ -1033,6 +1033,17 @@ function App() {
               <Route path="travel/discounts" element={<MerchantTravelDiscounts />} />
               <Route path="travel/staff-roles" element={<MerchantTravelStaffRoles />} />
               <Route path="travel/notifications" element={<MerchantTravelNotifications />} />
+              <Route path="settings" element={<BusinessSettings />} />
+              <Route path="compliance" element={<BusinessCompliance />} />
+              <Route path="enterprise" element={<BusinessEnterprise />} />
+              <Route path="kyb" element={<MerchantKYB />} />
+              <Route path="disputes" element={<MerchantDisputes />} />
+              <Route path="api-keys" element={<MerchantApiKeys />} />
+              <Route path="webhooks" element={<MerchantWebhooks />} />
+              <Route path="settlement-accounts" element={<MerchantSettlementAccounts />} />
+              <Route path="subaccounts" element={<MerchantSubaccounts />} />
+              <Route path="settlements" element={<MerchantSettlements />} />
+              <Route path="payouts" element={<MerchantPayouts />} />
             </Route>
 
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
