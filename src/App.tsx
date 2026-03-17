@@ -444,6 +444,7 @@ const BusinessStaff = lazy(() => import("./pages/business-app/BusinessStaff"));
 const BusinessStorefront = lazy(() => import("./pages/business-app/BusinessStorefront"));
 const BusinessInventory = lazy(() => import("./pages/business-app/BusinessInventory"));
 const BusinessProductForm = lazy(() => import("./pages/business-app/BusinessProductForm"));
+const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
