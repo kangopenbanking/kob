@@ -58,6 +58,13 @@ const enterpriseFeatures = [
     gated: true,
   },
   {
+    icon: CreditCard,
+    label: 'Additional Payout Methods',
+    subtitle: 'PayPal, Visa Direct, RTGS & more beyond the 2 free accounts',
+    path: '/biz/wallet',
+    gated: true,
+  },
+  {
     icon: BarChart3,
     label: 'Advanced Analytics',
     subtitle: 'Detailed reports, exports & custom dashboards',
