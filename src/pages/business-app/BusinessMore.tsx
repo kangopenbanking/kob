@@ -70,6 +70,7 @@ const BusinessMore: React.FC = () => {
         { icon: BarChart3, label: 'Analytics', subtitle: 'Revenue stats', path: `${basePath}/analytics`, color: 'bg-orange-500/10 text-orange-600' },
         { icon: Users, label: 'Customers', subtitle: 'Customer directory', path: `${basePath}/customers`, color: 'bg-pink-500/10 text-pink-600' },
         { icon: Star, label: 'Reviews', subtitle: 'Feedback & ratings', path: `${basePath}/reviews`, color: 'bg-yellow-500/10 text-yellow-600' },
+        { icon: Bus, label: 'Travel', subtitle: 'Transport services', path: `${basePath}/travel`, color: 'bg-amber-500/10 text-amber-700' },
       ],
     },
     {
