@@ -138,6 +138,8 @@ export default function MerchantSettlementAccounts() {
         return !!form.bank_code && !!form.account_number;
       case "mobile_money":
         return !!form.phone_number;
+      case "kob_wallet":
+        return true; // account_name is enough, consumer account auto-detected
       case "paypal":
         return !!form.paypal_email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.paypal_email);
       case "card":
