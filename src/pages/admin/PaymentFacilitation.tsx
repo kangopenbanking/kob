@@ -127,6 +127,7 @@ const charge = await kp.charges.create({
 };
 
 const PaymentFacilitation = () => {
+  const queryClient = useQueryClient();
   const [methodFilter, setMethodFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [dateRange, setDateRange] = useState<DateRange>({
