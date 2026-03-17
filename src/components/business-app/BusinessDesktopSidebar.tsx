@@ -104,13 +104,13 @@ export const BusinessDesktopSidebar: React.FC = () => {
     <Sidebar collapsible="icon" className="border-r border-border/40 [&_[data-sidebar=sidebar]]:bg-primary [&_[data-sidebar=sidebar]]:text-primary-foreground">
       <SidebarHeader className="p-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/15">
             <img src={kangLogo} alt="Kang Business" className="h-6 w-6 rounded-lg object-contain" />
           </div>
           {!collapsed && (
             <div className="min-w-0">
-              <p className="text-sm font-bold text-foreground truncate">Kang Business</p>
-              <p className="text-[10px] text-muted-foreground">Merchant Portal</p>
+              <p className="text-sm font-bold text-white truncate">Kang Business</p>
+              <p className="text-[10px] text-white/60">Merchant Portal</p>
             </div>
           )}
         </div>
