@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
 import { WalletQRDialog } from '@/components/pos/WalletQRDialog';
@@ -31,6 +32,7 @@ const TILL_VISITED_KEY = 'biz-till-visited';
 
 const BusinessTill: React.FC = () => {
   const { merchantId: paramMerchantId } = useMerchantContext();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -99,6 +101,16 @@ const BusinessTill: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">POS Till</h1>
+        {!isEnterprise && (
+          <Button
+            size="sm"
+            onClick={() => navigate('/biz/enterprise')}
+            className="rounded-xl gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs"
+          >
+            <Crown className="h-3.5 w-3.5" />
+            Upgrade
+          </Button>
+        )}
       </div>
 
       {/* Enterprise Quick Actions */}
