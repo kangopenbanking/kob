@@ -89,6 +89,7 @@ const INITIAL_FORM: FormState = {
 function getAccountIcon(type: string) {
   switch (type) {
     case "mobile_money": return Smartphone;
+    case "kob_wallet": return Wallet;
     case "paypal": return Globe;
     case "card": return CreditCard;
     case "rtgs": return Landmark;
