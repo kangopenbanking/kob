@@ -67,7 +67,7 @@ export default function BusinessKYCReview() {
 
       const { data: merchantData, error: mErr } = await supabase
         .from("gateway_merchants")
-        .select("id, business_name, status, kyb_status, kyb_documents, kyb_rejection_reason, metadata, created_at, updated_at, user_id, business_email, business_phone")
+        .select("id, business_name, business_email, business_phone, status, kyb_status, metadata, created_at, updated_at, user_id")
         .neq("kyb_status", "not_submitted")
         .order("created_at", { ascending: false });
       if (mErr) throw mErr;
@@ -75,6 +75,8 @@ export default function BusinessKYCReview() {
       const merchantKybs = (merchantData || []).map((m: any) => {
         const meta = m.metadata || {};
         const kybSub = meta.kyb_submission || {};
+        const merchantDocs = Array.isArray(kybSub.documents) ? kybSub.documents : [];
+
         return {
           id: m.id,
           _source: "gateway_merchant" as const,
@@ -90,18 +92,18 @@ export default function BusinessKYCReview() {
           number_of_employees: null,
           verification_status: m.kyb_status === "verified" ? "approved" : m.kyb_status === "rejected" ? "rejected" : "pending",
           risk_rating: null,
-          rejection_reason: m.kyb_rejection_reason,
+          rejection_reason: kybSub.rejection_reason || meta.kyb_rejection_reason || null,
           created_at: kybSub.submitted_at || m.created_at,
           updated_at: m.updated_at,
           user_id: m.user_id,
           business_email: m.business_email,
           business_phone: m.business_phone,
-          registration_certificate_url: null,
-          articles_of_association_url: null,
-          tax_certificate_url: null,
-          proof_of_address_url: null,
-          bank_statement_url: null,
-          kyb_documents: m.kyb_documents || (kybSub.documents?.length ? kybSub.documents : null),
+          registration_certificate_url: merchantDocs[0] || null,
+          articles_of_association_url: merchantDocs[1] || null,
+          tax_certificate_url: merchantDocs[2] || null,
+          proof_of_address_url: merchantDocs[3] || null,
+          bank_statement_url: merchantDocs[4] || null,
+          kyb_documents: merchantDocs,
         };
       });
 
