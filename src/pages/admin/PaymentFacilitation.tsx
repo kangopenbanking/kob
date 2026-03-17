@@ -198,6 +198,37 @@ const PaymentFacilitation = () => {
 
   const isLoading = mmLoading || btLoading;
 
+  // ─── Realtime Subscriptions ───
+  useEffect(() => {
+    const channel = supabase
+      .channel('pf-realtime')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'mobile_money_transactions' },
+        (payload) => {
+          const row = (payload.new as any);
+          if (row?.is_kob_facilitated) {
+            queryClient.invalidateQueries({ queryKey: ['admin-pf-mm'] });
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'bank_transfer_transactions' },
+        (payload) => {
+          const row = (payload.new as any);
+          if (row?.is_kob_facilitated) {
+            queryClient.invalidateQueries({ queryKey: ['admin-pf-bt'] });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
+
   // ─── Computed ───
   const allTransactions = useMemo<UnifiedTx[]>(() => {
     const mm = (mmTransactions || []).map((t: any) => ({ ...t, method: "Mobile Money" as const }));
