@@ -57,6 +57,7 @@ const CustomerScan: React.FC = () => {
     cameraActive: qrCameraActive,
     cameraError: qrCameraError,
     isHtml5,
+    needsHtml5Container,
     stopCamera: qrStopCamera,
   } = useQRScanner({
     onScan: handleRawScan,
