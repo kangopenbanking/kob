@@ -81,6 +81,7 @@ const navGroups: NavGroup[] = [
     items: [
       { label: 'Settings', icon: Settings, path: `${basePath}/settings` },
       { label: 'Compliance', icon: Shield, path: `${basePath}/compliance` },
+      { label: 'Enterprise', icon: Crown, path: `${basePath}/enterprise` },
     ],
   },
 ];
