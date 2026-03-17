@@ -40,11 +40,9 @@ const PaymentFacilitation = () => {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img src={pfBanner} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         </div>
         <div className="container mx-auto px-4 relative py-28 md:py-36">
-          <div className="max-w-3xl">
+          <div className="max-w-3xl mx-auto text-center">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
               <Badge variant="outline" className="mb-6 px-4 py-2 bg-background/60 backdrop-blur-sm border-primary/30">
                 <Zap className="h-4 w-4 mr-2 inline text-primary" />
