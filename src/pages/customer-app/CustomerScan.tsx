@@ -365,7 +365,7 @@ const CustomerScan: React.FC = () => {
                   )}
 
                   {/* Scanning line animation */}
-                  {qrCameraActive && !isHtml5 && (
+                  {qrCameraActive && !needsHtml5Container && (
                     <motion.div
                       className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
                       initial={{ top: '15%' }}

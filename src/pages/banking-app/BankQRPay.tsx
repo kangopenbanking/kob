@@ -244,12 +244,16 @@ const BankQRPay: React.FC = () => {
             ) : (
               <div className="flex flex-col items-center gap-6">
                 <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
-                  {isHtml5 ? (
-                    <div id="bank-qr-scanner" className="absolute inset-0 h-full w-full" />
-                  ) : (
+                  {/* html5-qrcode container — MUST be in DOM before scanner starts */}
+                  <div
+                    id="bank-qr-scanner"
+                    className="absolute inset-0 h-full w-full"
+                    style={{ display: needsHtml5Container ? 'block' : 'none' }}
+                  />
+                  {!needsHtml5Container && (
                     <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
                   )}
-                  {!isHtml5 && (
+                  {!needsHtml5Container && (
                     <div className="absolute inset-0 z-10">
                       <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
                       <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
@@ -257,7 +261,7 @@ const BankQRPay: React.FC = () => {
                       <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
                     </div>
                   )}
-                  {cameraActive && !isHtml5 && (
+                  {cameraActive && !needsHtml5Container && (
                     <motion.div
                       className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
                       initial={{ top: '15%' }}

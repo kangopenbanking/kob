@@ -144,5 +144,7 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
     stopCamera,
     /** True when using html5-qrcode (video rendered internally, not via videoRef) */
     isHtml5: scannerType === 'html5',
+    /** True when native BarcodeDetector is NOT available — container div must be in DOM */
+    needsHtml5Container: !hasNativeDetector,
   };
 }
