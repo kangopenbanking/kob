@@ -146,17 +146,19 @@ export default function MerchantKYB() {
     setSubmitting(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      const submission = {
-        ...form,
-        registration_certificate_url: docs.registration_certificate,
-        tax_certificate_url: docs.tax_certificate,
-        proof_of_address_url: docs.proof_of_address,
-        director_id_document_url: docs.director_id_document,
-        bank_statement_url: docs.bank_statement,
-        articles_of_association_url: docs.articles_of_association,
-      };
       const res = await supabase.functions.invoke("gateway-merchant-kyb", {
-        body: { merchant_id: merchant.id, action: 'submit', documents: [], ...submission },
+        body: {
+          merchant_id: merchant.id,
+          action: 'submit',
+          documents: [],
+          ...form,
+          registration_certificate_url: docs.registration_certificate || null,
+          articles_of_association_url: docs.articles_of_association || null,
+          tax_certificate_url: docs.tax_certificate || null,
+          proof_of_address_url: docs.proof_of_address || null,
+          bank_statement_url: docs.bank_statement || null,
+          director_id_document_url: docs.director_id_document || null,
+        },
         headers: { Authorization: `Bearer ${session?.access_token}` },
       });
       if (res.error) {
