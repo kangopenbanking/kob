@@ -60,7 +60,7 @@ const PaymentFacilitation = () => {
               <span className="text-primary">Instantly</span>
             </motion.h1>
             <motion.p
-              className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl"
+              className="text-lg md:text-xl text-foreground mb-8 max-w-xl mx-auto"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2, duration: 0.5 }}
