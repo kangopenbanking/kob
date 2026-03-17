@@ -137,7 +137,7 @@ export default function BusinessKYCReview() {
 
   const submitReview = () => {
     if (selectedKYB) {
-      reviewMutation.mutate({ id: selectedKYB.id, status: reviewAction, notes: reviewNotes });
+      reviewMutation.mutate({ id: selectedKYB.id, status: reviewAction, notes: reviewNotes, source: selectedKYB._source });
     }
   };
 
