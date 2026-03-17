@@ -215,8 +215,8 @@ export default function BusinessSettings() {
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Status</span>
-                  <Badge variant={merchant.is_active ? 'default' : 'secondary'} className="text-[10px]">
-                    {merchant.is_active ? 'Active' : 'Inactive'}
+                  <Badge variant={merchant.status === 'active' ? 'default' : 'secondary'} className="text-[10px]">
+                    {merchant.status || 'pending'}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
@@ -224,8 +224,8 @@ export default function BusinessSettings() {
                   <span className="font-medium">{merchant.environment || 'sandbox'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Currency</span>
-                  <span className="font-medium">{merchant.default_currency || 'XAF'}</span>
+                  <span className="text-muted-foreground">Plan</span>
+                  <span className="font-medium">{merchant.plan_tier || 'standard'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Created</span>
