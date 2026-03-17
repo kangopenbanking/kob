@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wallet, TrendingUp, ShoppingBag, Clock, ArrowUpRight, ChevronRight, Bell, BarChart3 } from 'lucide-react';
+import { Wallet, TrendingUp, ShoppingBag, Clock, ArrowUpRight, ChevronRight, BarChart3, ScanLine, Monitor, CreditCard } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useBusinessData } from '@/hooks/useBusinessData';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
@@ -64,9 +64,12 @@ const BusinessHome: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="p-5 space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-6 w-40" />
         <Skeleton className="h-[140px] rounded-3xl" />
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-[100px] rounded-2xl" />)}
+        </div>
       </div>
     );
   }
@@ -78,36 +81,32 @@ const BusinessHome: React.FC = () => {
     { label: 'Pending', value: formatXAF(pendingBalance), icon: Clock, color: 'text-amber-600 bg-amber-500/10' },
   ];
 
-  const recentCharges = (charges || []).slice(0, 5);
+  const quickActions = [
+    { label: 'Receive Payment', icon: ScanLine, path: `${basePath}/receive`, color: 'bg-emerald-500/10 text-emerald-600' },
+    { label: 'New Order', icon: ShoppingBag, path: `${basePath}/quick-order`, color: 'bg-sky-500/10 text-sky-600' },
+    { label: 'POS Till', icon: Monitor, path: `${basePath}/till`, color: 'bg-amber-500/10 text-amber-600' },
+    { label: 'Analytics', icon: BarChart3, path: `${basePath}/analytics`, color: 'bg-violet-500/10 text-violet-600' },
+  ];
+
+  const recentCharges = (charges || []).slice(0, 6);
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="px-5 pt-[max(1.25rem,env(safe-area-inset-top))] pb-2">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-[13px] font-medium text-muted-foreground">{greeting()} 👋</p>
-            <h1 className="text-xl font-bold tracking-tight text-foreground mt-0.5">
-              {merchant?.business_name || 'Dashboard'}
-            </h1>
-          </div>
-          <button
-            onClick={() => navigate(`${basePath}/more`)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/60 transition-colors hover:bg-muted"
-          >
-            <Bell className="h-[1.1rem] w-[1.1rem] text-foreground" strokeWidth={1.8} />
-          </button>
-        </div>
-      </header>
+    <div className="space-y-6 px-5 md:px-0 pt-4 pb-6">
+      {/* Greeting */}
+      <div>
+        <p className="text-[13px] font-medium text-muted-foreground">{greeting()} 👋</p>
+        <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground mt-0.5">
+          {merchant?.business_name || 'Dashboard'}
+        </h1>
+      </div>
 
-      {/* Balance card */}
+      {/* Balance hero card */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="mx-5 mt-4"
       >
-        <div className="rounded-[1.5rem] bg-foreground p-5 text-background">
+        <div className="rounded-3xl bg-foreground p-5 md:p-6 text-background">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-background/60 uppercase tracking-widest">Total Balance</p>
             <button
@@ -117,7 +116,7 @@ const BusinessHome: React.FC = () => {
               Details <ArrowUpRight className="h-3 w-3" />
             </button>
           </div>
-          <p className="mt-3 text-[2rem] font-bold tracking-tight leading-none">
+          <p className="mt-3 text-[2rem] md:text-[2.5rem] font-bold tracking-tight leading-none">
             {walletsLoading ? <Skeleton className="h-8 w-40 bg-background/20" /> : formatXAF(availableBalance + pendingBalance)}
           </p>
           <div className="mt-4 flex items-center gap-6">
@@ -139,7 +138,7 @@ const BusinessHome: React.FC = () => {
       </motion.div>
 
       {/* Stats grid */}
-      <div className="mx-5 mt-5 grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {stats.map((s, i) => {
           const Icon = s.icon;
           return (
@@ -160,28 +159,33 @@ const BusinessHome: React.FC = () => {
         })}
       </div>
 
-      {/* Quick links */}
-      <div className="mx-5 mt-5 flex gap-2.5 overflow-x-auto pb-1 hide-scrollbar">
-        {[
-          { label: 'Analytics', icon: BarChart3, path: `${basePath}/analytics` },
-          { label: 'POS Till', icon: ShoppingBag, path: `${basePath}/till` },
-          { label: 'Wallet', icon: Wallet, path: `${basePath}/wallet` },
-        ].map(q => {
-          const Icon = q.icon;
-          return (
-            <button
-              key={q.label}
-              onClick={() => navigate(q.path)}
-              className="flex items-center gap-2 whitespace-nowrap rounded-full border border-border/50 bg-card px-4 py-2.5 text-[13px] font-semibold text-foreground transition-colors hover:bg-muted/50 active:scale-[0.97]"
-            >
-              <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} /> {q.label}
-            </button>
-          );
-        })}
+      {/* Quick Actions */}
+      <div>
+        <h2 className="text-[15px] font-bold text-foreground mb-3">Quick Actions</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
+          {quickActions.map((qa, i) => {
+            const Icon = qa.icon;
+            return (
+              <motion.button
+                key={qa.label}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 + i * 0.04 }}
+                onClick={() => navigate(qa.path)}
+                className="flex items-center gap-3 rounded-2xl border border-border/50 bg-card p-3.5 text-left transition-all hover:border-border/80 hover:shadow-sm active:scale-[0.98]"
+              >
+                <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', qa.color)}>
+                  <Icon className="h-5 w-5" strokeWidth={1.8} />
+                </div>
+                <span className="text-[13px] font-semibold text-foreground">{qa.label}</span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Recent activity */}
-      <div className="mx-5 mt-6 mb-4">
+      <div>
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-[15px] font-bold text-foreground">Recent Activity</h2>
           <button
@@ -198,17 +202,17 @@ const BusinessHome: React.FC = () => {
             <p className="text-sm text-muted-foreground">No activity yet today</p>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="rounded-2xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
             {recentCharges.map((charge: any, i: number) => (
               <motion.div
                 key={charge.id}
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="flex items-center gap-3.5 rounded-xl p-3 transition-colors hover:bg-muted/40"
+                className="flex items-center gap-3.5 p-3.5 transition-colors hover:bg-muted/40"
               >
                 <div className={cn(
-                  'flex h-9 w-9 items-center justify-center rounded-xl',
+                  'flex h-9 w-9 items-center justify-center rounded-xl shrink-0',
                   charge.status === 'successful' ? 'bg-emerald-500/10' : 'bg-muted',
                 )}>
                   <ArrowUpRight className={cn(
@@ -225,7 +229,7 @@ const BusinessHome: React.FC = () => {
                   </p>
                 </div>
                 <p className={cn(
-                  'text-[13px] font-bold',
+                  'text-[13px] font-bold shrink-0',
                   charge.status === 'successful' ? 'text-emerald-600' : 'text-muted-foreground',
                 )}>
                   +{formatXAF(charge.amount || 0)}
