@@ -18,6 +18,7 @@ import {
   Landmark, TrendingUp, Search, Copy, ExternalLink, Store, BookOpen, Code2,
   ChevronRight, Zap, Shield, ArrowRight, Clock, DollarSign, Users,
 } from "lucide-react";
+import pfBanner from "@/assets/payment-facilitation-banner.png";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -314,19 +315,23 @@ const PaymentFacilitation = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Payment Facilitation</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage KOB payment facilitation, settlements, and merchant integrations
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <DateRangePicker value={dateRange} onChange={setDateRange} />
-          <Button variant="outline" size="sm" onClick={() => { refetchMM(); refetchBT(); }}>
-            <RefreshCw className="h-4 w-4 mr-1.5" />Refresh
-          </Button>
+      {/* Hero Banner */}
+      <div className="relative rounded-3xl overflow-hidden">
+        <img src={pfBanner} alt="Payment Facilitation" className="w-full h-44 sm:h-52 object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
+        <div className="absolute inset-0 flex items-center justify-between px-6 sm:px-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Payment Facilitation</h1>
+            <p className="text-sm text-muted-foreground mt-1 max-w-md">
+              Manage KOB payment facilitation, settlements, and merchant integrations
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
+            <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm" onClick={() => { refetchMM(); refetchBT(); }}>
+              <RefreshCw className="h-4 w-4 mr-1.5" />Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -728,11 +733,28 @@ const PaymentFacilitation = () => {
         {/* ─── INTEGRATION GUIDE ─── */}
         <TabsContent value="guide">
           <div className="space-y-6">
+            {/* Guide Hero */}
+            <div className="relative rounded-2xl overflow-hidden">
+              <img src={pfBanner} alt="Integration Guide" className="w-full h-36 object-cover object-top" />
+              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-6">
+                <div className="flex items-center gap-3">
+                  <div className="rounded-xl p-2.5 bg-primary/20 backdrop-blur-sm text-primary">
+                    <BookOpen className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-foreground">Merchant & Developer Onboarding</h3>
+                    <p className="text-xs text-muted-foreground">Step-by-step guide for integrating payment facilitation</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Steps */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2"><BookOpen className="h-5 w-5 text-primary" />Merchant & Developer Onboarding</CardTitle>
-                <CardDescription>Step-by-step guide for integrating payment facilitation</CardDescription>
+                <CardTitle className="text-lg flex items-center gap-2"><Shield className="h-5 w-5 text-primary" />Integration Steps</CardTitle>
+                <CardDescription>Follow these steps to onboard merchants and developers</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-3 sm:grid-cols-2">
