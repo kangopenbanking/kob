@@ -155,7 +155,7 @@ export const BusinessDesktopSidebar: React.FC = () => {
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={handleLogout}
-              className="rounded-xl text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              className="rounded-xl text-white/70 hover:bg-red-500/20 hover:text-red-200"
             >
               <LogOut className="h-4 w-4 shrink-0" strokeWidth={1.6} />
               {!collapsed && <span>Sign Out</span>}
