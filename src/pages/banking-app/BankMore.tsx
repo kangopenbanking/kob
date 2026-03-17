@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Wallet } from 'lucide-react';
+import { PiggyBank, Landmark, BarChart3, Settings, Bell, Shield, HelpCircle, LogOut, ChevronRight, Wallet, Store } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import { useTenant } from '@/components/pwa/TenantProvider';
