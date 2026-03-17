@@ -35,7 +35,7 @@ const BankMore: React.FC = () => {
     navigate(`/bank/${institutionId}/auth`, { replace: true });
   };
 
-  const renderItem = (item: typeof accountItems[0], i: number) => {
+  const renderItem = (item: typeof accountItems[0] & { external?: boolean }, i: number) => {
     const Icon = item.icon;
     return (
       <motion.button
@@ -44,7 +44,13 @@ const BankMore: React.FC = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: i * 0.04 }}
         whileTap={{ scale: 0.97 }}
-        onClick={() => item.path && navigate(`/bank/${institutionId}/${item.path}`)}
+        onClick={() => {
+          if ((item as any).external) {
+            navigate(item.path);
+          } else {
+            navigate(`/bank/${institutionId}/${item.path}`);
+          }
+        }}
         className="flex items-center gap-4 rounded-2xl px-3 py-3.5 text-left transition-colors hover:bg-muted/50"
       >
         <div className={`flex h-12 w-12 items-center justify-center rounded-2xl ${item.color}`}>
