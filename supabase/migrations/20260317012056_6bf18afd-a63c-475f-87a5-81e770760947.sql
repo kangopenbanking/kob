@@ -1,0 +1,2 @@
+ALTER PUBLICATION supabase_realtime ADD TABLE public.mobile_money_transactions;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.bank_transfer_transactions;
