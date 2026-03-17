@@ -417,7 +417,7 @@ const BusinessAppManagement: React.FC = () => {
                   return (
                     <TableRow key={m.id} className="cursor-pointer hover:bg-muted/50" onClick={() => { setSelectedMerchant(m); setDetailTab('overview'); }}>
                       <TableCell className="font-medium max-w-[200px] truncate">{m.business_name || 'Unnamed'}</TableCell>
-                      <TableCell className="text-xs text-muted-foreground">{m.status || '—'}</TableCell>
+                      <TableCell className="text-xs text-muted-foreground truncate max-w-[150px]">{m.contact_email || '—'}</TableCell>
                       <TableCell className="text-right tabular-nums">{stats?.count ?? 0}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatXAF(stats?.revenue ?? 0)}</TableCell>
                       <TableCell>
