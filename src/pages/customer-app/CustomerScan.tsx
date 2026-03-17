@@ -333,13 +333,17 @@ const CustomerScan: React.FC = () => {
             ) : (
               /* ─── Camera Scanner ─── */
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
-                <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
-                  {/* html5-qrcode renders its own video when native detector unavailable */}
-                  {isHtml5 ? (
-                    <div id="customer-qr-scanner" className="absolute inset-0 h-full w-full" />
-                  ) : (
+              <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
+                  {/* html5-qrcode container — MUST be in DOM before scanner starts */}
+                  <div
+                    id="customer-qr-scanner"
+                    className="absolute inset-0 h-full w-full"
+                    style={{ display: needsHtml5Container ? 'block' : 'none' }}
+                  />
+
+                  {/* Native camera feed — hidden when using html5 fallback */}
+                  {!needsHtml5Container && (
                     <>
-                      {/* Native camera feed */}
                       <video
                         ref={qrVideoRef}
                         className="absolute inset-0 h-full w-full object-cover"
@@ -350,8 +354,8 @@ const CustomerScan: React.FC = () => {
                     </>
                   )}
 
-                  {/* Overlay scanning frame */}
-                  {!isHtml5 && (
+                  {/* Overlay scanning frame (native only) */}
+                  {!needsHtml5Container && (
                     <div className="absolute inset-0 z-10">
                       <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
                       <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
