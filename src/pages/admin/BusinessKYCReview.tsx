@@ -90,21 +90,31 @@ export default function BusinessKYCReview() {
   });
 
   const reviewMutation = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      // Get the institution_id linked to this KYB record
-      const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
-      let institutionId: string | null = null;
-      if (kybRecord) {
-        const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", kybRecord.user_id).maybeSingle();
-        institutionId = inst?.id || null;
-      }
+    mutationFn: async ({ id, status, notes, source }: { id: string; status: string; notes: string; source?: string }) => {
+      if (source === "gateway_merchant") {
+        // Use the gateway merchant KYB review edge function
+        const decision = status === "approved" ? "approve" : "reject";
+        const { data, error } = await supabase.functions.invoke("gateway-merchant-kyb-review", {
+          body: { action: "review", merchant_id: id, decision, reason: notes || undefined },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error || data.detail);
+      } else {
+        // Original business_kyc review flow
+        const { data: kybRecord } = await supabase.from("business_kyc").select("user_id").eq("id", id).single();
+        let institutionId: string | null = null;
+        if (kybRecord) {
+          const { data: inst } = await supabase.from("institutions").select("id").eq("user_id", kybRecord.user_id).maybeSingle();
+          institutionId = inst?.id || null;
+        }
 
-      const action = status === 'approved' ? 'approve' : 'reject';
-      const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
-        body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
-      });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+        const action = status === 'approved' ? 'approve' : 'reject';
+        const { data, error } = await supabase.functions.invoke("admin-kyb-verify", {
+          body: { kyb_id: id, institution_id: institutionId, action, rejection_reason: notes || undefined },
+        });
+        if (error) throw error;
+        if (data?.error) throw new Error(data.error);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["business-kyc-submissions"] });
