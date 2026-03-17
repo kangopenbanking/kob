@@ -40,8 +40,8 @@ const PaymentFacilitation = () => {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img src={pfBanner} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-r from-background via-background/85 to-background/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/90 via-background/50 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         </div>
         <div className="container mx-auto px-4 relative py-28 md:py-36">
           <div className="max-w-3xl">
