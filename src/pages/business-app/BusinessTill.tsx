@@ -101,6 +101,16 @@ const BusinessTill: React.FC = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-foreground">POS Till</h1>
+        {!isEnterprise && (
+          <Button
+            size="sm"
+            onClick={() => navigate('/biz/enterprise')}
+            className="rounded-xl gap-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs"
+          >
+            <Crown className="h-3.5 w-3.5" />
+            Upgrade
+          </Button>
+        )}
       </div>
 
       {/* Enterprise Quick Actions */}
