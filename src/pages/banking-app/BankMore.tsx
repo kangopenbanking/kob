@@ -26,6 +26,10 @@ const BankMore: React.FC = () => {
     { icon: HelpCircle, label: 'Help & Support', description: 'FAQs & contact', path: 'more/help', color: 'bg-[hsl(var(--bank-lime))]', iconColor: 'text-[hsl(var(--bank-lime-fg))]' },
   ];
 
+  const crossAppItems = [
+    { icon: Store, label: 'Business App', description: 'Manage your business', path: '/biz', color: 'bg-[hsl(var(--bank-coral))]', iconColor: 'text-white', external: true },
+  ];
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate(`/bank/${institutionId}/auth`, { replace: true });
