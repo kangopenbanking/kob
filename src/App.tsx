@@ -998,7 +998,7 @@ function App() {
             <Route path="/biz/auth" element={<BusinessAuth />} />
             <Route path="/biz/register" element={<BusinessRegister />} />
             <Route path="/biz/reset-password" element={<ResetPassword />} />
-            <Route path="/biz" element={<BusinessAppLayout />}>
+            <Route path="/biz" element={<UnifiedBusinessLayout />}>
               <Route path="home" element={<BusinessHome />} />
               <Route path="wallet" element={<BusinessWallet />} />
               <Route path="receive" element={<BusinessReceive />} />
