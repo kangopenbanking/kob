@@ -122,6 +122,7 @@ export default function MerchantWhiteLabel() {
         </div>
       )}
 
+      {isEnterprise && <>
       {/* Custom Domain */}
       <Card>
         <CardHeader>
