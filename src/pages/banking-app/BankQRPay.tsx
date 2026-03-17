@@ -48,33 +48,7 @@ const BankQRPay: React.FC = () => {
   }, [institutionId]);
 
   /* ─── QR Scan Detection ─── */
-  const handleRawScan = useCallback((rawValue: string) => {
-    if (scanResult) return;
-    try {
-      const parsed = JSON.parse(rawValue);
-      handleScanDetected(parsed);
-    } catch {
-      handleScanDetected({ type: 'kob_pay', account: rawValue });
-    }
-  }, [scanResult]);
-
-  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult;
-
-  const {
-    videoRef,
-    cameraActive,
-    cameraError,
-    isHtml5,
-    needsHtml5Container,
-    stopCamera,
-  } = useQRScanner({
-    onScan: handleRawScan,
-    enabled: scanEnabled,
-    containerId: 'bank-qr-scanner',
-  });
-
-  const handleScanDetected = (data: any) => {
-    stopCamera();
+  const handleScanDetected = useCallback((data: any) => {
     if (data.type === 'kob_store' && data.merchant_id) {
       toast.success('Opening store...');
       navigate(`/app/stores/${data.merchant_id}`);
@@ -93,7 +67,31 @@ const BankQRPay: React.FC = () => {
     } else {
       toast.error('Invalid QR code format');
     }
-  };
+  }, [navigate]);
+
+  const handleRawScan = useCallback((rawValue: string) => {
+    try {
+      const parsed = JSON.parse(rawValue);
+      handleScanDetected(parsed);
+    } catch {
+      handleScanDetected({ type: 'kob_pay', account: rawValue });
+    }
+  }, [handleScanDetected]);
+
+  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult;
+
+  const {
+    videoRef,
+    cameraActive,
+    cameraError,
+    needsHtml5Container,
+    stopCamera,
+    resetProcessed,
+  } = useQRScanner({
+    onScan: handleRawScan,
+    enabled: scanEnabled,
+    containerId: 'bank-qr-scanner',
+  });
 
   const handleManualSubmit = () => {
     if (!manualCode.trim()) return;
@@ -126,7 +124,6 @@ const BankQRPay: React.FC = () => {
       return;
     }
 
-    // P2P — navigate to transfer
     navigate(`/bank/${institutionId}/transfer`, {
       state: { prefill: { recipient: scanResult.account, amount: finalAmount } },
     });
@@ -137,6 +134,7 @@ const BankQRPay: React.FC = () => {
     setManualCode('');
     setPayAmount('');
     setMerchantQR(null);
+    resetProcessed();
   };
 
   const handleShare = async () => {
@@ -243,27 +241,33 @@ const BankQRPay: React.FC = () => {
               </motion.div>
             ) : (
               <div className="flex flex-col items-center gap-6">
-                <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
-                  {/* html5-qrcode container — MUST be in DOM before scanner starts */}
+                {/* Scanner viewport — responsive width */}
+                <div className="relative mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
+                  {/* html5-qrcode container — always in DOM */}
                   <div
                     id="bank-qr-scanner"
-                    className="absolute inset-0 h-full w-full"
-                    style={{ display: needsHtml5Container ? 'block' : 'none' }}
+                    className="absolute inset-0 z-[1] [&>div]:!w-full [&>div]:!h-full [&_video]:!w-full [&_video]:!h-full [&_video]:!object-cover [&_video]:!max-w-none"
+                    style={{
+                      display: needsHtml5Container ? 'block' : 'none',
+                      width: '100%',
+                      height: '100%',
+                    }}
                   />
                   {!needsHtml5Container && (
                     <video ref={videoRef} className="absolute inset-0 h-full w-full object-cover" playsInline muted />
                   )}
-                  {!needsHtml5Container && (
-                    <div className="absolute inset-0 z-10">
-                      <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
-                      <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
-                      <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
-                      <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
-                    </div>
-                  )}
-                  {cameraActive && !needsHtml5Container && (
+
+                  {/* Scanning frame overlay */}
+                  <div className="absolute inset-0 z-10 pointer-events-none">
+                    <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
+                    <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
+                    <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
+                    <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
+                  </div>
+
+                  {cameraActive && (
                     <motion.div
-                      className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                      className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))] pointer-events-none"
                       initial={{ top: '15%' }}
                       animate={{ top: ['15%', '85%', '15%'] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}

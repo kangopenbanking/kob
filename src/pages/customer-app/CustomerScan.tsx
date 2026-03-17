@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ScanLine, Keyboard, QrCode, Camera, Share2, Copy, CheckCircle2, X, Flashlight, FlashlightOff, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ScanLine, Keyboard, QrCode, Camera, Share2, Copy, CheckCircle2, X, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -29,59 +29,16 @@ const CustomerScan: React.FC = () => {
   const [merchantQR, setMerchantQR] = useState<any>(null);
   const [paymentSuccess, setPaymentSuccess] = useState<any>(null);
 
-  // Camera state (managed by useQRScanner hook)
-  const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
-  // Receive tab state - use real account data
+  // Receive tab state
   const [receiveAmount, setReceiveAmount] = useState('');
   const userAccountId = accounts?.[0]?.account_id || profile?.linked_account_number || user?.id?.slice(0, 16).toUpperCase() || '';
 
-  /* ─── Camera Controls (managed by useQRScanner hook now) ─── */
-
-  /* ─── QR Scan Detection — native BarcodeDetector + html5-qrcode fallback ─── */
-  const handleRawScan = useCallback((rawValue: string) => {
-    if (scanResult) return;
-    try {
-      const parsed = JSON.parse(rawValue);
-      handleScanDetected(parsed);
-    } catch {
-      handleScanDetected({ type: 'kob_pay', account: rawValue });
-    }
-  }, [scanResult]);
-
-  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
-
-  const {
-    videoRef: qrVideoRef,
-    cameraActive: qrCameraActive,
-    cameraError: qrCameraError,
-    isHtml5,
-    needsHtml5Container,
-    stopCamera: qrStopCamera,
-  } = useQRScanner({
-    onScan: handleRawScan,
-    enabled: scanEnabled,
-    containerId: 'customer-qr-scanner',
-  });
-
-  // Sync refs for backward compat
-  useEffect(() => {
-    if (qrVideoRef.current && videoRef.current !== qrVideoRef.current) {
-      (videoRef as any).current = qrVideoRef.current;
-    }
-  }, [qrVideoRef.current]);
-
-  // Override camera state from hook
-  const cameraActiveResolved = qrCameraActive;
-  const cameraErrorResolved = qrCameraError;
-
-  /* ─── Handlers ─── */
-  const handleScanDetected = (data: any) => {
-    qrStopCamera();
+  /* ─── Scan handler — ref-based to avoid stale closures ─── */
+  const handleScanDetected = useCallback((data: any) => {
     if (data.type === 'kob_store' && data.merchant_id) {
-      // Deep-link to merchant storefront
-      toast.success(`Opening store...`);
+      toast.success('Opening store...');
       navigate(`/app/stores/${data.merchant_id}`);
       return;
     }
@@ -98,8 +55,34 @@ const CustomerScan: React.FC = () => {
     } else {
       toast.error('Invalid QR code format');
     }
-  };
+  }, [navigate]);
 
+  const handleRawScan = useCallback((rawValue: string) => {
+    try {
+      const parsed = JSON.parse(rawValue);
+      handleScanDetected(parsed);
+    } catch {
+      handleScanDetected({ type: 'kob_pay', account: rawValue });
+    }
+  }, [handleScanDetected]);
+
+  const scanEnabled = activeTab === 'scan' && !showManualEntry && !scanResult && !paymentSuccess;
+
+  const {
+    videoRef: qrVideoRef,
+    cameraActive: qrCameraActive,
+    cameraError: qrCameraError,
+    isHtml5,
+    needsHtml5Container,
+    stopCamera: qrStopCamera,
+    resetProcessed,
+  } = useQRScanner({
+    onScan: handleRawScan,
+    enabled: scanEnabled,
+    containerId: 'customer-qr-scanner',
+  });
+
+  /* ─── Handlers ─── */
   const handleManualSubmit = () => {
     if (!manualCode.trim()) return;
     setProcessing(true);
@@ -114,9 +97,8 @@ const CustomerScan: React.FC = () => {
   const handlePayNow = async () => {
     if (!scanResult) return;
     const finalAmount = payAmount ? Number(payAmount) : undefined;
-    
+
     if (merchantQR) {
-      // POS QR payment via wallet
       setProcessing(true);
       try {
         const { data, error } = await supabase.functions.invoke('pos-qr-payment', {
@@ -128,7 +110,6 @@ const CustomerScan: React.FC = () => {
           toast.error(data.message || data.error);
           return;
         }
-        // Show success receipt screen
         setPaymentSuccess({
           merchantName: merchantQR.merchant_name || 'Merchant',
           amount: finalAmount || data.amount,
@@ -172,6 +153,7 @@ const CustomerScan: React.FC = () => {
     setPayAmount('');
     setPaymentSuccess(null);
     setMerchantQR(null);
+    resetProcessed();
   };
 
   const qrData = JSON.stringify({
@@ -196,7 +178,7 @@ const CustomerScan: React.FC = () => {
         {(['scan', 'receive'] as Tab[]).map((tab) => (
           <button
             key={tab}
-            onClick={() => { setActiveTab(tab); setScanResult(null); setShowManualEntry(false); }}
+            onClick={() => { setActiveTab(tab); setScanResult(null); setShowManualEntry(false); resetProcessed(); }}
             className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-all ${
               activeTab === tab
                 ? 'bg-background text-foreground shadow-sm'
@@ -233,7 +215,7 @@ const CustomerScan: React.FC = () => {
                     <>
                       <p className="text-lg font-bold text-foreground">{merchantQR.merchant_name || 'Merchant'}</p>
                       <p className="mt-1 text-xs text-muted-foreground">
-                        {merchantQR.description || `Order Payment`}
+                        {merchantQR.description || 'Order Payment'}
                       </p>
                     </>
                   ) : (
@@ -333,41 +315,42 @@ const CustomerScan: React.FC = () => {
             ) : (
               /* ─── Camera Scanner ─── */
               <div className="flex flex-1 flex-col items-center justify-center gap-6 p-5">
-              <div className="relative flex h-72 w-72 items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
-                  {/* html5-qrcode container — MUST be in DOM before scanner starts */}
+                {/* Scanner viewport — uses width calc to stay within safe area */}
+                <div className="relative mx-auto flex aspect-square w-full max-w-[300px] items-center justify-center overflow-hidden rounded-3xl bg-[hsl(0,0%,8%)]">
+                  {/* html5-qrcode container — always in DOM, hidden when not needed */}
                   <div
                     id="customer-qr-scanner"
-                    className="absolute inset-0 h-full w-full"
-                    style={{ display: needsHtml5Container ? 'block' : 'none' }}
+                    className="absolute inset-0 z-[1] [&>div]:!w-full [&>div]:!h-full [&_video]:!w-full [&_video]:!h-full [&_video]:!object-cover [&_video]:!max-w-none [&_video]:!min-width-0"
+                    style={{
+                      display: needsHtml5Container ? 'block' : 'none',
+                      width: '100%',
+                      height: '100%',
+                    }}
                   />
 
                   {/* Native camera feed — hidden when using html5 fallback */}
                   {!needsHtml5Container && (
-                    <>
-                      <video
-                        ref={qrVideoRef}
-                        className="absolute inset-0 h-full w-full object-cover"
-                        playsInline
-                        muted
-                      />
-                      <canvas ref={canvasRef} className="hidden" />
-                    </>
+                    <video
+                      ref={qrVideoRef}
+                      className="absolute inset-0 h-full w-full object-cover"
+                      playsInline
+                      muted
+                    />
                   )}
+                  <canvas ref={canvasRef} className="hidden" />
 
-                  {/* Overlay scanning frame (native only) */}
-                  {!needsHtml5Container && (
-                    <div className="absolute inset-0 z-10">
-                      <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
-                      <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
-                      <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
-                      <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
-                    </div>
-                  )}
+                  {/* Overlay scanning frame */}
+                  <div className="absolute inset-0 z-10 pointer-events-none">
+                    <div className="absolute left-4 top-4 h-10 w-10 rounded-tl-2xl border-l-4 border-t-4 border-primary" />
+                    <div className="absolute right-4 top-4 h-10 w-10 rounded-tr-2xl border-r-4 border-t-4 border-primary" />
+                    <div className="absolute bottom-4 left-4 h-10 w-10 rounded-bl-2xl border-b-4 border-l-4 border-primary" />
+                    <div className="absolute bottom-4 right-4 h-10 w-10 rounded-br-2xl border-b-4 border-r-4 border-primary" />
+                  </div>
 
                   {/* Scanning line animation */}
-                  {qrCameraActive && !needsHtml5Container && (
+                  {qrCameraActive && (
                     <motion.div
-                      className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))]"
+                      className="absolute left-6 right-6 z-20 h-0.5 bg-primary shadow-[0_0_8px_hsl(var(--primary))] pointer-events-none"
                       initial={{ top: '15%' }}
                       animate={{ top: ['15%', '85%', '15%'] }}
                       transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}

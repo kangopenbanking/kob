@@ -20,6 +20,9 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
   const scanCallbackRef = useRef(onScan);
   scanCallbackRef.current = onScan;
 
+  /** Prevents duplicate scan callbacks (html5-qrcode .stop() is async) */
+  const processedRef = useRef(false);
+
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
   const [scannerType, setScannerType] = useState<'native' | 'html5' | null>(null);
@@ -27,19 +30,22 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
   const hasNativeDetector = typeof window !== 'undefined' && 'BarcodeDetector' in window;
 
   const stopCamera = useCallback(() => {
-    // Stop native stream
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(t => t.stop());
       streamRef.current = null;
     }
-    // Stop html5-qrcode
     if (html5QrRef.current) {
       html5QrRef.current.stop().catch(() => {});
-      html5QrRef.current.clear();
+      try { html5QrRef.current.clear(); } catch {}
       html5QrRef.current = null;
     }
     setCameraActive(false);
     setScannerType(null);
+  }, []);
+
+  /** Reset the processed guard so a new scan can be handled */
+  const resetProcessed = useCallback(() => {
+    processedRef.current = false;
   }, []);
 
   const startNativeScanner = useCallback(async () => {
@@ -74,13 +80,24 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
         setCameraError('Scanner container not found');
         return;
       }
+      // Clear any previous children left by a prior instance
+      el.innerHTML = '';
+
       const scanner = new Html5Qrcode(containerId);
       html5QrRef.current = scanner;
 
       await scanner.start(
         { facingMode: 'environment' },
-        { fps: 10, qrbox: { width: 250, height: 250 }, aspectRatio: 1 },
+        {
+          fps: 10,
+          qrbox: { width: 220, height: 220 },
+          aspectRatio: 1,
+          disableFlip: false,
+        },
         (decodedText) => {
+          // Guard: only fire once per scan session
+          if (processedRef.current) return;
+          processedRef.current = true;
           scanCallbackRef.current(decodedText);
         },
         () => { /* ignore scan failures */ }
@@ -111,9 +128,10 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
       }
       try {
         const barcodes = await detector.detect(videoRef.current);
-        if (barcodes.length > 0) {
+        if (barcodes.length > 0 && !processedRef.current) {
+          processedRef.current = true;
           scanCallbackRef.current(barcodes[0].rawValue);
-          return;
+          return; // stop loop
         }
       } catch { /* continue */ }
       if (!cancelled) requestAnimationFrame(scan);
@@ -128,6 +146,8 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
       stopCamera();
       return;
     }
+    // Reset processed flag when (re-)enabling
+    processedRef.current = false;
     if (hasNativeDetector) {
       startNativeScanner();
     } else {
@@ -142,6 +162,7 @@ export function useQRScanner({ onScan, enabled, containerId = 'qr-scanner-region
     cameraError,
     scannerType,
     stopCamera,
+    resetProcessed,
     /** True when using html5-qrcode (video rendered internally, not via videoRef) */
     isHtml5: scannerType === 'html5',
     /** True when native BarcodeDetector is NOT available — container div must be in DOM */
