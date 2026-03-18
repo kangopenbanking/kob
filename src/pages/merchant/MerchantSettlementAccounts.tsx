@@ -276,6 +276,7 @@ export default function MerchantSettlementAccounts() {
   };
 
   const activeAccounts = accounts.filter(a => a.is_active !== false);
+  const canAddMore = isEnterprise || activeAccounts.length < MAX_BASE_ACCOUNTS;
   const bankAccounts = activeAccounts.filter(a => a.account_type === "bank_transfer" || a.account_type === "rtgs");
   const momoAccounts = activeAccounts.filter(a => a.account_type === "mobile_money");
   const otherAccounts = activeAccounts.filter(a => !["bank_transfer", "rtgs", "mobile_money"].includes(a.account_type));
