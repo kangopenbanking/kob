@@ -85,11 +85,23 @@ export default function BusinessEnterprise() {
       const { data, error } = await supabase.functions.invoke('pos-store-subscription', {
         body: { merchant_id: merchant.id, plan_id: selectedPlan.id },
       });
-      if (error) throw error;
 
-      if (data?.error === 'insufficient_balance') {
+      // Parse response body from either data or error context
+      let responseBody = data;
+      if (error) {
+        try {
+          const bodyText = typeof error?.context?.body === 'string'
+            ? error.context.body
+            : JSON.stringify(error?.context?.body || {});
+          responseBody = JSON.parse(bodyText);
+        } catch {
+          throw error;
+        }
+      }
+
+      if (responseBody?.error === 'insufficient_balance') {
         toast.error('Insufficient wallet balance', {
-          description: `You need ${data.required_amount?.toLocaleString()} ${data.currency} but only have ${data.available_balance?.toLocaleString()} ${data.currency}. Add funds to your wallet first.`,
+          description: `You need ${responseBody.required_amount?.toLocaleString()} ${responseBody.currency} but only have ${responseBody.available_balance?.toLocaleString()} ${responseBody.currency}. Add funds to your wallet first.`,
           duration: 6000,
           action: {
             label: 'Fund Wallet',
@@ -100,21 +112,29 @@ export default function BusinessEnterprise() {
         return;
       }
 
-      if (data?.error === 'already_subscribed') {
+      if (responseBody?.error === 'already_subscribed') {
         toast.info('You already have an active subscription.');
         setUpgradeModalOpen(false);
         return;
       }
 
-      if (data?.error) throw new Error(data.message || data.error);
+      if (responseBody?.error === 'not_authorized') {
+        toast.error('You are not authorized to upgrade this merchant account.');
+        setUpgradeModalOpen(false);
+        return;
+      }
+
+      if (responseBody?.error && !responseBody?.subscription) {
+        throw new Error(responseBody.message || responseBody.error);
+      }
 
       toast.success('Enterprise subscription activated! 🎉', {
         description: 'All enterprise features are now unlocked.',
       });
       setUpgradeModalOpen(false);
-      // Force page reload to reflect new plan tier
       window.location.reload();
     } catch (err: any) {
+      console.error('Enterprise subscription error:', err);
       toast.error(err.message || 'Subscription failed. Please try again.');
     } finally {
       setSubscribing(false);
