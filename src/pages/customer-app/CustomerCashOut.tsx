@@ -571,6 +571,15 @@ const CustomerCashOut: React.FC = () => {
         )}
       </AnimatePresence>
 
+      {/* Auto Cash Out Rules */}
+      {user?.id && step === 'dest' && filteredAccounts.length > 0 && (
+        <AutoCashOutRules
+          userId={user.id}
+          linkedAccounts={filteredAccounts}
+          ownerType="consumer"
+        />
+      )}
+
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleWithdraw} />
     </div>
   );
