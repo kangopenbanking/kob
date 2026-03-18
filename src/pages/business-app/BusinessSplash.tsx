@@ -40,6 +40,14 @@ const BusinessSplashInner: React.FC = () => {
   const tenant = useTenant();
   const [phase, setPhase] = useState<'loading' | 'splash' | 'walkthrough' | 'install'>('loading');
 
+  // Swap manifest to business-specific one
+  useEffect(() => {
+    const link = document.querySelector('link[rel="manifest"]');
+    const original = link?.getAttribute('href');
+    if (link) link.setAttribute('href', '/manifest-biz.json');
+    return () => { if (link && original) link.setAttribute('href', original); };
+  }, []);
+
   useEffect(() => {
     const checkState = async () => {
       const seen = localStorage.getItem(WALKTHROUGH_KEY) === 'true';
