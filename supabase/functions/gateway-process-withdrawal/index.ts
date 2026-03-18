@@ -138,6 +138,75 @@ serve(async (req) => {
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
+    // ─── Compliance pre-screening ───
+    try {
+      const complianceResp = await supabase.functions.invoke('gateway-compliance-screen', {
+        body: { user_id: user.id, amount, currency, destination_type },
+        headers: { Authorization: authHeader },
+      });
+      const complianceResult = complianceResp.data;
+      if (complianceResult?.decision === 'denied') {
+        return new Response(JSON.stringify({
+          error: 'compliance_denied',
+          message: complianceResult.reason || 'Withdrawal blocked by compliance screening',
+          flags: complianceResult.flags,
+        }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (complianceResult?.decision === 'review') {
+        console.log(`[Withdrawal] Compliance flagged for review: user=${user.id} amount=${amount}`);
+        // Proceed but flag in metadata below
+      }
+    } catch (compErr) {
+      console.error('[Withdrawal] Compliance screening error (non-blocking):', compErr);
+    }
+
+    // ─── Velocity limits (daily/monthly caps) ───
+    const { sumUsageForPeriod } = await import("../_shared/limits-enforcement.ts");
+    const DAILY_WITHDRAWAL_LIMIT = 500000;
+    const MONTHLY_WITHDRAWAL_LIMIT = 5000000;
+
+    const dailyUsage = await sumUsageForPeriod({
+      supabase,
+      table: 'gateway_payouts',
+      amountColumn: 'amount',
+      dateColumn: 'created_at',
+      filters: { 'metadata->>user_id': user.id },
+      statuses: ['processing', 'completed', 'pending'],
+      period: 'day',
+    });
+
+    if (dailyUsage + amount > DAILY_WITHDRAWAL_LIMIT) {
+      const remaining = Math.max(DAILY_WITHDRAWAL_LIMIT - dailyUsage, 0);
+      return new Response(JSON.stringify({
+        error: 'daily_limit_exceeded',
+        message: `Daily withdrawal limit of XAF ${DAILY_WITHDRAWAL_LIMIT.toLocaleString()} reached. Remaining: XAF ${remaining.toLocaleString()}`,
+        daily_used: dailyUsage,
+        daily_limit: DAILY_WITHDRAWAL_LIMIT,
+        remaining,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const monthlyUsage = await sumUsageForPeriod({
+      supabase,
+      table: 'gateway_payouts',
+      amountColumn: 'amount',
+      dateColumn: 'created_at',
+      filters: { 'metadata->>user_id': user.id },
+      statuses: ['processing', 'completed', 'pending'],
+      period: 'month',
+    });
+
+    if (monthlyUsage + amount > MONTHLY_WITHDRAWAL_LIMIT) {
+      const remaining = Math.max(MONTHLY_WITHDRAWAL_LIMIT - monthlyUsage, 0);
+      return new Response(JSON.stringify({
+        error: 'monthly_limit_exceeded',
+        message: `Monthly withdrawal limit of XAF ${MONTHLY_WITHDRAWAL_LIMIT.toLocaleString()} reached. Remaining: XAF ${remaining.toLocaleString()}`,
+        monthly_used: monthlyUsage,
+        monthly_limit: MONTHLY_WITHDRAWAL_LIMIT,
+        remaining,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     // Fetch linked account details if needed
     let linkedAccount: any = null;
     if (linked_account_id) {
