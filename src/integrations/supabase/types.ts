@@ -1644,6 +1644,488 @@ export type Database = {
           },
         ]
       }
+      bill_categories: {
+        Row: {
+          color: string
+          created_at: string
+          description: string | null
+          icon: string
+          id: string
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string | null
+          icon?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bill_payment_intents: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          expires_at: string
+          fee_amount: number
+          id: string
+          idempotency_key: string | null
+          location_id: string | null
+          payer_details: Json
+          product_id: string
+          provider_id: string
+          status: string
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          fee_amount?: number
+          id?: string
+          idempotency_key?: string | null
+          location_id?: string | null
+          payer_details?: Json
+          product_id: string
+          provider_id: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          expires_at?: string
+          fee_amount?: number
+          id?: string
+          idempotency_key?: string | null
+          location_id?: string | null
+          payer_details?: Json
+          product_id?: string
+          provider_id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_payment_intents_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "bill_provider_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payment_intents_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "bill_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payment_intents_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "bill_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          fee_amount: number
+          id: string
+          intent_id: string
+          location_id: string | null
+          paid_at: string
+          payer_details: Json
+          product_id: string
+          provider_id: string
+          receipt_number: string
+          status: string
+          total_amount: number
+          trace_id: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          id?: string
+          intent_id: string
+          location_id?: string | null
+          paid_at?: string
+          payer_details?: Json
+          product_id: string
+          provider_id: string
+          receipt_number: string
+          status?: string
+          total_amount: number
+          trace_id: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          id?: string
+          intent_id?: string
+          location_id?: string | null
+          paid_at?: string
+          payer_details?: Json
+          product_id?: string
+          provider_id?: string
+          receipt_number?: string
+          status?: string
+          total_amount?: number
+          trace_id?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_payments_intent_id_fkey"
+            columns: ["intent_id"]
+            isOneToOne: false
+            referencedRelation: "bill_payment_intents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payments_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "bill_provider_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payments_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "bill_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_payments_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "bill_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_product_fields: {
+        Row: {
+          field_key: string
+          field_type: string
+          id: string
+          is_required: boolean
+          label: string
+          options: Json | null
+          placeholder: string | null
+          product_id: string
+          sort_order: number
+          validation_regex: string | null
+        }
+        Insert: {
+          field_key: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          label: string
+          options?: Json | null
+          placeholder?: string | null
+          product_id: string
+          sort_order?: number
+          validation_regex?: string | null
+        }
+        Update: {
+          field_key?: string
+          field_type?: string
+          id?: string
+          is_required?: boolean
+          label?: string
+          options?: Json | null
+          placeholder?: string | null
+          product_id?: string
+          sort_order?: number
+          validation_regex?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_product_fields_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "bill_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_products: {
+        Row: {
+          amount_type: string
+          created_at: string
+          currency: string
+          description: string | null
+          fixed_amount: number | null
+          id: string
+          is_active: boolean
+          location_id: string | null
+          max_amount: number | null
+          metadata: Json | null
+          min_amount: number | null
+          name: string
+          provider_id: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          amount_type?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean
+          location_id?: string | null
+          max_amount?: number | null
+          metadata?: Json | null
+          min_amount?: number | null
+          name: string
+          provider_id: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          amount_type?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          fixed_amount?: number | null
+          id?: string
+          is_active?: boolean
+          location_id?: string | null
+          max_amount?: number | null
+          metadata?: Json | null
+          min_amount?: number | null
+          name?: string
+          provider_id?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_products_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "bill_provider_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bill_products_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "bill_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_provider_locations: {
+        Row: {
+          address: string | null
+          city: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          provider_id: string
+          region: string | null
+          sort_order: number
+        }
+        Insert: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          provider_id: string
+          region?: string | null
+          sort_order?: number
+        }
+        Update: {
+          address?: string | null
+          city?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          provider_id?: string
+          region?: string | null
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_provider_locations_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "bill_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_providers: {
+        Row: {
+          category_id: string
+          contact_email: string | null
+          contact_phone: string | null
+          country: string
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          is_active: boolean
+          logo_url: string | null
+          metadata: Json | null
+          name: string
+          settlement_details: Json | null
+          settlement_type: string
+          short_name: string | null
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          metadata?: Json | null
+          name: string
+          settlement_details?: Json | null
+          settlement_type?: string
+          short_name?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          country?: string
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean
+          logo_url?: string | null
+          metadata?: Json | null
+          name?: string
+          settlement_details?: Json | null
+          settlement_type?: string
+          short_name?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_providers_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "bill_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bill_settlements: {
+        Row: {
+          created_at: string
+          currency: string
+          fee_amount: number
+          id: string
+          net_amount: number
+          payment_ids: string[]
+          provider_id: string
+          settled_at: string | null
+          settlement_details: Json
+          settlement_type: string
+          status: string
+          total_amount: number
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          id?: string
+          net_amount: number
+          payment_ids?: string[]
+          provider_id: string
+          settled_at?: string | null
+          settlement_details?: Json
+          settlement_type: string
+          status?: string
+          total_amount: number
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          fee_amount?: number
+          id?: string
+          net_amount?: number
+          payment_ids?: string[]
+          provider_id?: string
+          settled_at?: string | null
+          settlement_details?: Json
+          settlement_type?: string
+          status?: string
+          total_amount?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_settlements_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "bill_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       branches: {
         Row: {
           address: Json
