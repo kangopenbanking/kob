@@ -227,7 +227,7 @@ export function FeeSimulator({ institutions = [], merchants = [] }: FeeSimulator
                     <SelectValue placeholder="Platform default" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Platform Default</SelectItem>
+                    <SelectItem value="platform_default">Platform Default</SelectItem>
                     {institutions.map((inst: any) => (
                       <SelectItem key={inst.id} value={inst.id}>
                         {inst.institution_name}
