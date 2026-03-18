@@ -15,6 +15,8 @@ interface PWAInstallPromptProps {
   tagline?: string;
   /** Unique key to track install state per app (e.g. 'kang' or institutionId) */
   appKey?: string;
+  /** Default install URL for sharing/fallback */
+  defaultInstallUrl?: string;
 }
 
 const INSTALL_STORAGE_PREFIX = 'pwa_installed_';
