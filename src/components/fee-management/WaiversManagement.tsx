@@ -31,7 +31,11 @@ const TRANSACTION_TYPES = [
   "bank_transfer", "card_payment", "virtual_card_topup", "qr_payment",
   "piggybank_deposit", "piggybank_withdrawal", "njangi_contribution", "njangi_payout",
   "rent_payment", "loan_disbursement", "loan_repayment", "savings_deposit", "savings_withdrawal",
-  "international_transfer", "ussd_payment",
+  "international_transfer", "ussd_payment", "withdrawal", "account_funding",
+  "gateway_charge", "gateway_payout", "paypal_payment", "fx_conversion",
+  "escrow_payment", "api_request", "mobile_recharge", "invoice_create",
+  "credit_report_purchase", "overdraft_fee", "loan_processing_fee",
+  "atm_withdrawal", "standing_order", "dormancy_fee",
 ];
 
 interface WaiversManagementProps {

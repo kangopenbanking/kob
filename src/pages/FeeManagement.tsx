@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity } from "lucide-react";
+import { DollarSign, FileText, Settings, TrendingUp, Plus, BarChart3, Gift, Loader2, Store, ArrowUpRight, Activity, Calculator } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { CreateFeeStructureForm } from "@/components/fee-management/CreateFeeStructureForm";
 import { FeeStructuresTable } from "@/components/fee-management/FeeStructuresTable";
@@ -12,6 +12,7 @@ import { TransactionFeesTable } from "@/components/fee-management/TransactionFee
 import { InvoicesTable } from "@/components/fee-management/InvoicesTable";
 import { WaiversManagement } from "@/components/fee-management/WaiversManagement";
 import { FeeAnalytics } from "@/components/fee-management/FeeAnalytics";
+import { FeeSimulator } from "@/components/fee-management/FeeSimulator";
 
 import { MerchantFeesTab } from "@/components/fee-management/MerchantFeesTab";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -271,6 +272,9 @@ export default function FeeManagement() {
             <TabsTrigger value="merchant-fees" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(217,91%,55%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
               <Store className="h-3.5 w-3.5" /> Merchants
             </TabsTrigger>
+            <TabsTrigger value="simulator" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(351,88%,46%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
+              <Calculator className="h-3.5 w-3.5" /> Simulator
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -315,6 +319,10 @@ export default function FeeManagement() {
 
         <TabsContent value="merchant-fees">
           <MerchantFeesTab />
+        </TabsContent>
+
+        <TabsContent value="simulator">
+          <FeeSimulator institutions={institutions} />
         </TabsContent>
       </Tabs>
 
