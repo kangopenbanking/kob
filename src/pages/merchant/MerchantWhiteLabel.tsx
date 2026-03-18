@@ -28,6 +28,7 @@ const defaultWhiteLabel = {
 };
 
 export default function MerchantWhiteLabel() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [config, setConfig] = useState(defaultWhiteLabel);
 
