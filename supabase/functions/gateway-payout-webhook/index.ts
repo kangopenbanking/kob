@@ -37,6 +37,7 @@ serve(async (req) => {
     let providerRef = '';
     let newStatus = '';
     let txRef = '';
+    let dedupeEventId = '';
 
     // ─── Stripe: refund.updated or charge.refunded ───
     if (provider === 'stripe') {
@@ -46,6 +47,7 @@ serve(async (req) => {
 
       providerRef = obj.id || '';
       txRef = obj.metadata?.tx_ref || '';
+      dedupeEventId = stripeEvent.id || `stripe-${providerRef}`;
 
       if (obj.status === 'succeeded') newStatus = 'completed';
       else if (obj.status === 'failed') newStatus = 'failed';
@@ -59,6 +61,7 @@ serve(async (req) => {
       const flwData = event.data || event;
       providerRef = flwData.id?.toString() || '';
       txRef = flwData.reference || '';
+      dedupeEventId = event.event || `flw-${providerRef}-${flwData.status}`;
       const flwStatus = mapFlutterwaveStatus(flwData.status || 'pending');
 
       if (flwStatus === 'successful') newStatus = 'completed';
@@ -73,13 +76,41 @@ serve(async (req) => {
       const ppResource = event.resource || {};
       providerRef = ppResource.payout_batch_id || ppResource.payout_item_id || '';
       txRef = ppResource.payout_item?.sender_item_id || '';
-      const ppStatus = mapPayPalStatus(ppResource.transaction_status || event.event_type?.includes('SUCCEEDED') ? 'SUCCESS' : 'PENDING');
+      dedupeEventId = event.id || `pp-${providerRef}`;
+      const ppStatus = mapPayPalStatus(ppResource.transaction_status || (event.event_type?.includes('SUCCEEDED') ? 'SUCCESS' : 'PENDING'));
 
       if (ppStatus === 'successful') newStatus = 'completed';
       else if (ppStatus === 'failed') newStatus = 'failed';
       else newStatus = 'processing';
 
       console.log(`[PayPal Webhook] Payout ${providerRef} → ${newStatus}`);
+    }
+
+    // ─── Deduplication via webhook_inbox ───
+    if (dedupeEventId) {
+      const dedupeHash = `payout-${provider}-${dedupeEventId}`;
+      const { data: existing } = await supabase
+        .from('webhook_inbox')
+        .select('id')
+        .eq('dedupe_hash', dedupeHash)
+        .maybeSingle();
+
+      if (existing) {
+        console.log(`[Payout Webhook] Duplicate event skipped: ${dedupeHash}`);
+        return new Response(JSON.stringify({ received: true, status: 'duplicate' }), {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Insert into webhook_inbox for deduplication
+      await supabase.from('webhook_inbox').insert({
+        provider,
+        event_id: dedupeEventId,
+        event_type: `payout_${newStatus || 'unknown'}`,
+        payload: event,
+        dedupe_hash: dedupeHash,
+        status: 'processing',
+      }).then(() => {}).catch(() => {});
     }
 
     if (!newStatus || newStatus === 'processing') {
@@ -144,6 +175,15 @@ serve(async (req) => {
 
         console.log(`[Payout Webhook] Reversed ${payout.amount} + fee ${payout.fee_amount} back to account ${payout.metadata.account_id}`);
       }
+    }
+
+    // Mark webhook_inbox as processed
+    if (dedupeEventId) {
+      const dedupeHash = `payout-${provider}-${dedupeEventId}`;
+      await supabase.from('webhook_inbox')
+        .update({ status: 'processed', processed_at: new Date().toISOString() })
+        .eq('dedupe_hash', dedupeHash)
+        .then(() => {}).catch(() => {});
     }
 
     // Audit log

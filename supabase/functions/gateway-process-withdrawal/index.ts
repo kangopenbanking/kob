@@ -128,8 +128,8 @@ serve(async (req) => {
       fee = Math.round(fee);
     }
 
-    const totalDebit = amount;
-    const netAmount = amount - fee;
+    const totalDebit = amount + fee;
+    const netAmount = amount;
 
     if (currentBalance < totalDebit) {
       return new Response(JSON.stringify({
