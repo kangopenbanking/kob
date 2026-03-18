@@ -399,7 +399,7 @@ const CustomerMore = lazy(() => import("./pages/customer-app/CustomerMore"));
 const CustomerOrderTracking = lazy(() => import("./pages/customer-app/CustomerOrderTracking").then(m => ({ default: m.CustomerOrderTracking })));
 const CustomerTransfer = lazy(() => import("./pages/customer-app/CustomerTransfer"));
 const CustomerRequest = lazy(() => import("./pages/customer-app/CustomerRequest"));
-const CustomerBills = lazy(() => import("./pages/customer-app/CustomerBills"));
+const CustomerBills = lazy(() => import("./pages/customer-app/CustomerBillsV2"));
 const CustomerInvoices = lazy(() => import("./pages/customer-app/CustomerInvoices"));
 const CustomerBank = lazy(() => import("./pages/customer-app/CustomerBank"));
 const CustomerSplitBills = lazy(() => import("./pages/customer-app/CustomerSplitBills"));
