@@ -320,6 +320,10 @@ export default function FeeManagement() {
         <TabsContent value="merchant-fees">
           <MerchantFeesTab />
         </TabsContent>
+
+        <TabsContent value="simulator">
+          <FeeSimulator institutions={institutions} />
+        </TabsContent>
       </Tabs>
 
       {/* Create Fee Structure Dialog */}
