@@ -105,10 +105,12 @@ const BusinessSplashInner: React.FC = () => {
   return (
     <PWAInstallPrompt
       onContinue={handleInstallComplete}
-      appName="Kang Business"
+      appName="KOB Business"
       logoUrl={kobLogo}
       tagline="Your business management app"
-      appKey="kang-business"
+      appKey="kob-business"
+      defaultInstallUrl="https://kangopenbanking.com/biz"
+    />
     />
   );
 };
