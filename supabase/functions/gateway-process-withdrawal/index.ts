@@ -128,13 +128,82 @@ serve(async (req) => {
       fee = Math.round(fee);
     }
 
-    const totalDebit = amount;
-    const netAmount = amount - fee;
+    const totalDebit = amount + fee;
+    const netAmount = amount;
 
     if (currentBalance < totalDebit) {
       return new Response(JSON.stringify({
         error: 'insufficient_balance',
         message: `Available: ${currentBalance}, Required: ${totalDebit}`,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    // ─── Compliance pre-screening ───
+    try {
+      const complianceResp = await supabase.functions.invoke('gateway-compliance-screen', {
+        body: { user_id: user.id, amount, currency, destination_type },
+        headers: { Authorization: authHeader },
+      });
+      const complianceResult = complianceResp.data;
+      if (complianceResult?.decision === 'denied') {
+        return new Response(JSON.stringify({
+          error: 'compliance_denied',
+          message: complianceResult.reason || 'Withdrawal blocked by compliance screening',
+          flags: complianceResult.flags,
+        }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+      if (complianceResult?.decision === 'review') {
+        console.log(`[Withdrawal] Compliance flagged for review: user=${user.id} amount=${amount}`);
+        // Proceed but flag in metadata below
+      }
+    } catch (compErr) {
+      console.error('[Withdrawal] Compliance screening error (non-blocking):', compErr);
+    }
+
+    // ─── Velocity limits (daily/monthly caps) ───
+    const { sumUsageForPeriod } = await import("../_shared/limits-enforcement.ts");
+    const DAILY_WITHDRAWAL_LIMIT = 500000;
+    const MONTHLY_WITHDRAWAL_LIMIT = 5000000;
+
+    const dailyUsage = await sumUsageForPeriod({
+      supabase,
+      table: 'gateway_payouts',
+      amountColumn: 'amount',
+      dateColumn: 'created_at',
+      filters: { 'metadata->>user_id': user.id },
+      statuses: ['processing', 'completed', 'pending'],
+      period: 'day',
+    });
+
+    if (dailyUsage + amount > DAILY_WITHDRAWAL_LIMIT) {
+      const remaining = Math.max(DAILY_WITHDRAWAL_LIMIT - dailyUsage, 0);
+      return new Response(JSON.stringify({
+        error: 'daily_limit_exceeded',
+        message: `Daily withdrawal limit of XAF ${DAILY_WITHDRAWAL_LIMIT.toLocaleString()} reached. Remaining: XAF ${remaining.toLocaleString()}`,
+        daily_used: dailyUsage,
+        daily_limit: DAILY_WITHDRAWAL_LIMIT,
+        remaining,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
+    const monthlyUsage = await sumUsageForPeriod({
+      supabase,
+      table: 'gateway_payouts',
+      amountColumn: 'amount',
+      dateColumn: 'created_at',
+      filters: { 'metadata->>user_id': user.id },
+      statuses: ['processing', 'completed', 'pending'],
+      period: 'month',
+    });
+
+    if (monthlyUsage + amount > MONTHLY_WITHDRAWAL_LIMIT) {
+      const remaining = Math.max(MONTHLY_WITHDRAWAL_LIMIT - monthlyUsage, 0);
+      return new Response(JSON.stringify({
+        error: 'monthly_limit_exceeded',
+        message: `Monthly withdrawal limit of XAF ${MONTHLY_WITHDRAWAL_LIMIT.toLocaleString()} reached. Remaining: XAF ${remaining.toLocaleString()}`,
+        monthly_used: monthlyUsage,
+        monthly_limit: MONTHLY_WITHDRAWAL_LIMIT,
+        remaining,
       }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
@@ -155,10 +224,21 @@ serve(async (req) => {
     const fmtNet = new Intl.NumberFormat('fr-CM').format(netAmount);
     const destName = linkedAccount?.account_name || destination_type;
 
-    // Debit wallet immediately
-    await supabase.from('account_balances')
-      .update({ amount: currentBalance - totalDebit, balance_datetime: new Date().toISOString() })
-      .eq('id', balanceRecord.id);
+    // Debit wallet atomically (row-level lock prevents race conditions)
+    const { data: debitResult, error: debitErr } = await supabase.rpc('atomic_consumer_withdrawal_debit', {
+      _balance_id: balanceRecord.id,
+      _debit_amount: totalDebit,
+    });
+
+    if (debitErr || !debitResult?.success) {
+      const errMsg = debitResult?.error || debitErr?.message || 'Debit failed';
+      return new Response(JSON.stringify({
+        error: errMsg === 'insufficient_balance' ? 'insufficient_balance' : 'debit_failed',
+        message: errMsg === 'insufficient_balance' 
+          ? `Available: ${debitResult?.available}, Required: ${totalDebit}`
+          : errMsg,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Route to correct provider
     let providerResult: any = null;

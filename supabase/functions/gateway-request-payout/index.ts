@@ -67,6 +67,24 @@ serve(async (req) => {
 
     const fmtAmount = new Intl.NumberFormat('fr-CM').format(amount);
 
+    // ─── Compliance pre-screening ───
+    try {
+      const complianceResp = await supabase.functions.invoke('gateway-compliance-screen', {
+        body: { user_id: user.id, amount, currency, destination_type: settlementAccount.account_type },
+        headers: { Authorization: authHeader },
+      });
+      const complianceResult = complianceResp.data;
+      if (complianceResult?.decision === 'denied') {
+        return new Response(JSON.stringify({
+          error: 'compliance_denied',
+          message: complianceResult.reason || 'Payout blocked by compliance screening',
+          flags: complianceResult.flags,
+        }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+    } catch (compErr) {
+      console.error('[Request-Payout] Compliance screening error (non-blocking):', compErr);
+    }
+
     // Create payout request
     const tx_ref = `PAYOUT_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 

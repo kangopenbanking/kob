@@ -10539,6 +10539,66 @@ export type Database = {
         }
         Relationships: []
       }
+      payout_schedules: {
+        Row: {
+          amount_mode: string
+          amount_value: number | null
+          consecutive_failures: number | null
+          created_at: string | null
+          currency: string
+          destination_id: string
+          destination_type: string
+          id: string
+          is_enabled: boolean
+          last_run_at: string | null
+          min_balance_to_keep: number | null
+          next_run_at: string | null
+          owner_id: string
+          owner_type: string
+          schedule_config: Json
+          schedule_type: string
+          updated_at: string | null
+        }
+        Insert: {
+          amount_mode?: string
+          amount_value?: number | null
+          consecutive_failures?: number | null
+          created_at?: string | null
+          currency?: string
+          destination_id: string
+          destination_type?: string
+          id?: string
+          is_enabled?: boolean
+          last_run_at?: string | null
+          min_balance_to_keep?: number | null
+          next_run_at?: string | null
+          owner_id: string
+          owner_type?: string
+          schedule_config?: Json
+          schedule_type?: string
+          updated_at?: string | null
+        }
+        Update: {
+          amount_mode?: string
+          amount_value?: number | null
+          consecutive_failures?: number | null
+          created_at?: string | null
+          currency?: string
+          destination_id?: string
+          destination_type?: string
+          id?: string
+          is_enabled?: boolean
+          last_run_at?: string | null
+          min_balance_to_keep?: number | null
+          next_run_at?: string | null
+          owner_id?: string
+          owner_type?: string
+          schedule_config?: Json
+          schedule_type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount: number
@@ -17194,6 +17254,10 @@ export type Database = {
           _new_status: string
           _provider_raw?: Json
         }
+        Returns: Json
+      }
+      atomic_consumer_withdrawal_debit: {
+        Args: { _balance_id: string; _debit_amount: number }
         Returns: Json
       }
       atomic_dispute_wallet_adjust: {
