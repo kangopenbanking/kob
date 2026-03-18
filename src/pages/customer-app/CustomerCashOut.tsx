@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 
 import { KANG_PLATFORM_ID } from '@/constants/platform';
 
@@ -569,6 +570,15 @@ const CustomerCashOut: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Auto Cash Out Rules */}
+      {user?.id && step === 'dest' && filteredAccounts.length > 0 && (
+        <AutoCashOutRules
+          userId={user.id}
+          linkedAccounts={filteredAccounts}
+          ownerType="consumer"
+        />
+      )}
 
       <PinConfirmDialog open={showPin} onOpenChange={setShowPin} onConfirmed={handleWithdraw} />
     </div>
