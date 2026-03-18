@@ -25,7 +25,6 @@ Deno.serve(async (req) => {
       const merchantId = url.searchParams.get('merchant_id');
 
       if (merchantId) {
-        // Get active subscription for merchant
         const { data: subscription } = await supabase.from('pos_store_subscriptions')
           .select('*, pos_subscription_plans(*)')
           .eq('merchant_id', merchantId)
@@ -39,7 +38,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // List available plans
       const { data: plans, error } = await supabase.from('pos_subscription_plans')
         .select('*')
         .eq('is_active', true)
@@ -51,10 +49,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    // POST: Subscribe to a plan
+    // POST: Subscribe to a plan (with wallet debit)
     if (req.method === 'POST') {
       const body = await req.json();
-      const { merchant_id, plan_id } = body;
+      const { merchant_id, plan_id, payment_method } = body;
 
       if (!merchant_id || !plan_id) {
         return new Response(JSON.stringify({ error: 'merchant_id and plan_id required' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -62,7 +60,7 @@ Deno.serve(async (req) => {
 
       // Verify merchant ownership
       const { data: merchant } = await supabase.from('gateway_merchants')
-        .select('id').eq('id', merchant_id).eq('user_id', user.id).single();
+        .select('id, plan_tier').eq('id', merchant_id).eq('user_id', user.id).single();
       if (!merchant) {
         return new Response(JSON.stringify({ error: 'not_authorized' }), { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
@@ -88,6 +86,42 @@ Deno.serve(async (req) => {
         });
       }
 
+      const planCurrency = plan.currency || 'XAF';
+      const planPrice = plan.price || 0;
+
+      // Attempt wallet debit if price > 0
+      if (planPrice > 0) {
+        // Get merchant wallet balance
+        const { data: wallet } = await supabase
+          .from('gateway_merchant_wallets')
+          .select('id, available_balance')
+          .eq('merchant_id', merchant_id)
+          .eq('currency', planCurrency)
+          .maybeSingle();
+
+        const availableBalance = wallet?.available_balance || 0;
+
+        if (availableBalance < planPrice) {
+          return new Response(JSON.stringify({
+            error: 'insufficient_balance',
+            message: `Insufficient wallet balance. You have ${availableBalance.toLocaleString()} ${planCurrency} but need ${planPrice.toLocaleString()} ${planCurrency}.`,
+            available_balance: availableBalance,
+            required_amount: planPrice,
+            shortfall: planPrice - availableBalance,
+            currency: planCurrency,
+          }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+        }
+
+        // Debit wallet atomically
+        await supabase.rpc('update_merchant_wallet', {
+          _merchant_id: merchant_id,
+          _currency: planCurrency,
+          _available_delta: -planPrice,
+          _ledger_delta: -planPrice,
+        });
+      }
+
+      // Create subscription
       const startsAt = new Date();
       const expiresAt = new Date(startsAt.getTime() + plan.duration_days * 24 * 60 * 60 * 1000);
 
@@ -100,6 +134,29 @@ Deno.serve(async (req) => {
       }).select('*, pos_subscription_plans(*)').single();
 
       if (subErr) throw subErr;
+
+      // Update merchant plan_tier if enterprise
+      if (plan.tier === 'enterprise') {
+        await supabase.from('gateway_merchants')
+          .update({ plan_tier: 'enterprise' })
+          .eq('id', merchant_id);
+      }
+
+      // Audit log
+      await supabase.from('audit_logs').insert({
+        action_type: 'subscription_activated',
+        entity_type: 'pos_store_subscription',
+        entity_id: subscription.id,
+        performed_by: user.id,
+        details: {
+          plan_name: plan.name,
+          plan_tier: plan.tier,
+          price: planPrice,
+          currency: planCurrency,
+          duration_days: plan.duration_days,
+          payment_method: planPrice > 0 ? 'wallet_debit' : 'free',
+        },
+      });
 
       return new Response(JSON.stringify({ subscription }), {
         status: 201, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
