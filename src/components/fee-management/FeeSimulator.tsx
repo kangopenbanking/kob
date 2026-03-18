@@ -61,15 +61,6 @@ export function FeeSimulator({ institutions = [], merchants = [] }: FeeSimulator
       });
       if (institutionId) params.set("institution_id", institutionId);
       if (merchantId) params.set("merchant_id", merchantId);
-
-      const { data, error: fnError } = await supabase.functions.invoke("gateway-fee-estimate", {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-        body: undefined,
-      });
-
-      // Fallback: use direct URL call since invoke doesn't support GET params well
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const url = `https://${projectId}.supabase.co/functions/v1/gateway-fee-estimate?${params.toString()}`;
       const resp = await fetch(url, {
         headers: {
