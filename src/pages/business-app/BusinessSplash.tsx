@@ -79,7 +79,7 @@ const BusinessSplashInner: React.FC = () => {
         onComplete={() => setPhase('walkthrough')}
         duration={2500}
         name="Kang Business"
-        logoUrl={kangLogo}
+        logoUrl={kobLogo}
         tagline="Run your business, your way"
       />
     );
