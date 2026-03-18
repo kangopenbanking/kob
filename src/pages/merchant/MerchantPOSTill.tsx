@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { minimumFractionDigits: 0 }).format(n);
 
 const MerchantPOSTill: React.FC = () => {
+  const navigate = useNavigate();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('till');
 
