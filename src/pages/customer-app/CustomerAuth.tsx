@@ -393,9 +393,6 @@ const CustomerAuth: React.FC = () => {
                   >
                     <Phone className="h-4 w-4" strokeWidth={1.5} />
                     Phone
-                    {countryCode === '+237' && (
-                      <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">Recommended</span>
-                    )}
                   </button>
                   <button
                     onClick={() => setTab('email')}
