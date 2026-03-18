@@ -5,7 +5,7 @@ import { SplashScreen } from '@/components/pwa/SplashScreen';
 import { WalkthroughCarousel } from '@/components/pwa/WalkthroughCarousel';
 import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { supabase } from '@/integrations/supabase/client';
-import kangLogo from '@/assets/kang-logo.png';
+import kobLogo from '@/assets/kob-logo.png';
 import {
   Store, CreditCard, BarChart3, Users,
 } from 'lucide-react';

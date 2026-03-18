@@ -1,0 +1,38 @@
+{
+  "name": "KOB Business",
+  "short_name": "KOB Biz",
+  "description": "Run your business, your way",
+  "start_url": "/biz",
+  "scope": "/biz",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0EA5E9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/kob-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/kob-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["finance", "business"],
+  "shortcuts": [
+    {
+      "name": "Orders",
+      "url": "/biz/orders",
+      "description": "View orders"
+    },
+    {
+      "name": "Wallet",
+      "url": "/biz/wallet",
+      "description": "Manage wallet"
+    }
+  ]
+}
