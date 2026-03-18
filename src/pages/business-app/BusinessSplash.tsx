@@ -98,7 +98,7 @@ const BusinessSplashInner: React.FC = () => {
     <PWAInstallPrompt
       onContinue={handleInstallComplete}
       appName="Kang Business"
-      logoUrl={kangLogo}
+      logoUrl={kobLogo}
       tagline="Your business management app"
       appKey="kang-business"
     />
