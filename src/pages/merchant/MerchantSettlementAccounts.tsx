@@ -110,6 +110,7 @@ function getAccountLabel(type: string) {
 }
 
 export default function MerchantSettlementAccounts() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [isEnterprise, setIsEnterprise] = useState(false);
@@ -118,6 +119,8 @@ export default function MerchantSettlementAccounts() {
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<"method" | "details">("method");
   const [form, setForm] = useState<FormState>({ ...INITIAL_FORM });
+
+  const MAX_BASE_ACCOUNTS = 2;
 
   useEffect(() => { loadData(); }, []);
 
