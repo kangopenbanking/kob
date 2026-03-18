@@ -166,7 +166,7 @@ export default function MerchantSettlementAccounts() {
     if (!merchantId) return;
 
     // Enforce account limit for non-enterprise
-    if (!isEnterprise && activeAccounts.length >= MAX_BASE_ACCOUNTS) {
+    if (!isEnterprise && accounts.filter(a => a.is_active !== false).length >= MAX_BASE_ACCOUNTS) {
       toast.error(`Free plan allows up to ${MAX_BASE_ACCOUNTS} settlement accounts. Upgrade to Enterprise for unlimited.`);
       return;
     }
