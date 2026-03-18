@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { useCustomerAccounts, useAccountBalances } from '@/hooks/useCustomerData';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 
 import { KANG_PLATFORM_ID } from '@/constants/platform';
 
