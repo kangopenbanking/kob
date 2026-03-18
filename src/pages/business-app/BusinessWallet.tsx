@@ -8,6 +8,7 @@ import { useBusinessData } from '@/hooks/useBusinessData';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { PinConfirmDialog } from '@/components/pwa/PinConfirmDialog';
+import { AutoCashOutRules } from '@/components/pwa/AutoCashOutRules';
 import { toast } from 'sonner';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
