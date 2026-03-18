@@ -98,7 +98,7 @@ const CustomerSplashInner: React.FC = () => {
     <PWAInstallPrompt
       onContinue={handleInstallComplete}
       appName="Kang"
-      logoUrl="/kang-app-logo.png"
+      logoUrl="/kfs-logo.png"
       accentColor={tenant.walkthroughConfig?.accent_color}
       tagline={tenant.tagline || 'Your unified financial companion'}
       appKey="kang-customer"

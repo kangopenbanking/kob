@@ -9,13 +9,13 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/kang-app-logo.png",
+      "src": "/kfs-logo.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/kang-app-logo.png",
+      "src": "/kfs-logo.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
