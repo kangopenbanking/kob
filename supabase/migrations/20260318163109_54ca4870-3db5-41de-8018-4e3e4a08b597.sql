@@ -1,0 +1,1 @@
+UPDATE pos_subscription_plans SET tier = 'enterprise' WHERE id = 'efce18d0-665d-406f-85e7-1a45d52c8629';
