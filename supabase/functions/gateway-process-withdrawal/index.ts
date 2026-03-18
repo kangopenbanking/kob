@@ -224,10 +224,21 @@ serve(async (req) => {
     const fmtNet = new Intl.NumberFormat('fr-CM').format(netAmount);
     const destName = linkedAccount?.account_name || destination_type;
 
-    // Debit wallet immediately
-    await supabase.from('account_balances')
-      .update({ amount: currentBalance - totalDebit, balance_datetime: new Date().toISOString() })
-      .eq('id', balanceRecord.id);
+    // Debit wallet atomically (row-level lock prevents race conditions)
+    const { data: debitResult, error: debitErr } = await supabase.rpc('atomic_consumer_withdrawal_debit', {
+      _balance_id: balanceRecord.id,
+      _debit_amount: totalDebit,
+    });
+
+    if (debitErr || !debitResult?.success) {
+      const errMsg = debitResult?.error || debitErr?.message || 'Debit failed';
+      return new Response(JSON.stringify({
+        error: errMsg === 'insufficient_balance' ? 'insufficient_balance' : 'debit_failed',
+        message: errMsg === 'insufficient_balance' 
+          ? `Available: ${debitResult?.available}, Required: ${totalDebit}`
+          : errMsg,
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
 
     // Route to correct provider
     let providerResult: any = null;
