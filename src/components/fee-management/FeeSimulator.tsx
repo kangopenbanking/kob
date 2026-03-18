@@ -61,7 +61,8 @@ export function FeeSimulator({ institutions = [], merchants = [] }: FeeSimulator
       });
       if (institutionId) params.set("institution_id", institutionId);
       if (merchantId) params.set("merchant_id", merchantId);
-      const url = `https://${projectId}.supabase.co/functions/v1/gateway-fee-estimate?${params.toString()}`;
+      const pid = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const url = `https://${pid}.supabase.co/functions/v1/gateway-fee-estimate?${params.toString()}`;
       const resp = await fetch(url, {
         headers: {
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
