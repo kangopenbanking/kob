@@ -5,7 +5,7 @@ import { SplashScreen } from '@/components/pwa/SplashScreen';
 import { WalkthroughCarousel } from '@/components/pwa/WalkthroughCarousel';
 import { PWAInstallPrompt } from '@/components/pwa/PWAInstallPrompt';
 import { supabase } from '@/integrations/supabase/client';
-import kangLogo from '@/assets/kang-logo.png';
+import kobLogo from '@/assets/kob-logo.png';
 import {
   Store, CreditCard, BarChart3, Users,
 } from 'lucide-react';
@@ -39,6 +39,14 @@ const BusinessSplashInner: React.FC = () => {
   const navigate = useNavigate();
   const tenant = useTenant();
   const [phase, setPhase] = useState<'loading' | 'splash' | 'walkthrough' | 'install'>('loading');
+
+  // Swap manifest to business-specific one
+  useEffect(() => {
+    const link = document.querySelector('link[rel="manifest"]');
+    const original = link?.getAttribute('href');
+    if (link) link.setAttribute('href', '/manifest-biz.json');
+    return () => { if (link && original) link.setAttribute('href', original); };
+  }, []);
 
   useEffect(() => {
     const checkState = async () => {
@@ -78,8 +86,8 @@ const BusinessSplashInner: React.FC = () => {
       <SplashScreen
         onComplete={() => setPhase('walkthrough')}
         duration={2500}
-        name="Kang Business"
-        logoUrl={kangLogo}
+        name="KOB Business"
+        logoUrl={kobLogo}
         tagline="Run your business, your way"
       />
     );
@@ -97,10 +105,10 @@ const BusinessSplashInner: React.FC = () => {
   return (
     <PWAInstallPrompt
       onContinue={handleInstallComplete}
-      appName="Kang Business"
-      logoUrl={kangLogo}
+      appName="KOB Business"
+      logoUrl={kobLogo}
       tagline="Your business management app"
-      appKey="kang-business"
+      appKey="kob-business"
     />
   );
 };
