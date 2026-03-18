@@ -272,6 +272,9 @@ export default function FeeManagement() {
             <TabsTrigger value="merchant-fees" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(217,91%,55%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
               <Store className="h-3.5 w-3.5" /> Merchants
             </TabsTrigger>
+            <TabsTrigger value="simulator" className="rounded-xl gap-1.5 px-4 text-xs font-semibold data-[state=active]:bg-[hsl(351,88%,46%)] data-[state=active]:text-primary-foreground data-[state=active]:shadow-md transition-all">
+              <Calculator className="h-3.5 w-3.5" /> Simulator
+            </TabsTrigger>
           </TabsList>
         </div>
 
