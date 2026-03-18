@@ -140,7 +140,7 @@ const InstitutionAppUrls: React.FC = () => {
 
       <div className="rounded-lg border border-border bg-card p-4 space-y-2">
         <div className="flex items-center gap-3">
-          <img src="/kang-app-logo.png" alt="Kang" className="h-8 w-8 rounded-md object-contain" />
+          <img src="/kfs-logo.png" alt="Kang" className="h-8 w-8 rounded-md object-contain" />
           <div>
             <p className="text-sm font-semibold text-foreground">Kang Consumer App</p>
             <code className="rounded bg-muted px-2 py-1 text-xs text-foreground">https://kangopenbanking.com/app</code>
