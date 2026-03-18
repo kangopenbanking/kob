@@ -562,8 +562,11 @@ export default function MerchantSettlementAccounts() {
                       );
                     })}
                     {!isEnterprise && (
-                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-1">
+                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-1 space-y-2">
                         <p className="text-[11px] text-amber-700 font-medium">Upgrade to Enterprise to unlock PayPal, Card (Visa Direct / MC Send), and RTGS Wire Transfer payouts.</p>
+                        <Button variant="outline" size="sm" className="w-full text-xs border-amber-500/30 text-amber-700 hover:bg-amber-500/10 gap-1.5" onClick={() => { setDialogOpen(false); navigate('/biz/enterprise'); }}>
+                          <Shield className="h-3 w-3" /> Upgrade to Enterprise
+                        </Button>
                       </div>
                     )}
                   </div>
