@@ -475,7 +475,24 @@ export default function MerchantSettlementAccounts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Settlement Accounts</h1>
-          <p className="text-muted-foreground">Manage payout destinations across all supported rails</p>
+          <p className="text-muted-foreground">
+            Manage payout destinations across all supported rails
+            {!isEnterprise && <span className="ml-1 text-xs">({activeAccounts.length}/{MAX_BASE_ACCOUNTS} used)</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isEnterprise && !canAddMore && (
+            <Button variant="outline" size="sm" className="gap-1.5 border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => navigate('/biz/enterprise')}>
+              <Shield className="h-3.5 w-3.5" /> Upgrade
+            </Button>
+          )}
+          <Button
+            className="gap-2"
+            onClick={() => setDialogOpen(true)}
+            disabled={!canAddMore}
+          >
+            <Plus className="h-4 w-4" /> Add Account
+          </Button>
         </div>
         <Sheet open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) { setForm({ ...INITIAL_FORM }); setStep("method"); } }}>
           <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
