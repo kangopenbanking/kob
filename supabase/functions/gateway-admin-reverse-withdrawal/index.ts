@@ -154,6 +154,36 @@ serve(async (req) => {
       },
     });
 
+    const fmtAmt = new Intl.NumberFormat('fr-CM').format(reversalAmount);
+
+    // ═══ NOTIFY: All admins about the reversal ═══
+    notifyAdmins(supabase, {
+      event_type: 'withdrawal_reversed',
+      entity_type: 'transaction',
+      entity_id: transaction_id,
+      title: '🔄 Withdrawal Reversed by Admin',
+      message: `${tx.currency} ${fmtAmt} withdrawal reversed and credited back. Reason: ${reason || 'Provider failure'}. Performed by admin.`,
+      metadata: { transaction_id, amount: reversalAmount, reversed_by: user.id, reason },
+    });
+
+    // ═══ NOTIFY: Affected user ═══
+    if (tx.user_id) {
+      notifyUser(supabase, {
+        user_id: tx.user_id,
+        type: 'success',
+        title: 'Withdrawal Reversed — Funds Restored',
+        message: `${tx.currency} ${fmtAmt} has been credited back to your account. Reason: ${reason || 'The withdrawal could not be completed.'}`,
+        icon: 'cash_out',
+        metadata: { transaction_id, amount: reversalAmount },
+      });
+
+      sendManagedEmail(supabase, {
+        email_key: 'withdrawal_reversal_notification',
+        recipient_user_id: tx.user_id,
+        variables: { currency: tx.currency, amount: fmtAmt, reason: reason || 'Provider failed to deliver funds', tx_ref: txMeta?.tx_ref || transaction_id },
+      });
+    }
+
     return new Response(JSON.stringify({
       success: true,
       message: `Successfully reversed XAF ${reversalAmount} back to user wallet`,
