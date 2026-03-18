@@ -27,7 +27,7 @@ type TopTab = "payouts" | "auto-rules" | "batches";
 const fadeUp = {
   initial: { opacity: 0, y: 12 },
   animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.35, ease: "easeOut" },
+  transition: { duration: 0.35, ease: "easeOut" as const },
 };
 
 export default function PayoutManagement() {
