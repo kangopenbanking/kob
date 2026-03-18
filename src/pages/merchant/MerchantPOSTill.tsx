@@ -122,7 +122,7 @@ const MerchantPOSTill: React.FC = () => {
                     variant="outline"
                     size="icon"
                     className="h-10 w-10 shrink-0 rounded-xl border-border/60 opacity-50"
-                    onClick={() => toast.info('Upgrade to Enterprise for barcode scanning')}
+                    onClick={() => navigate('/biz/enterprise')}
                   >
                     <ScanBarcode className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                   </Button>
