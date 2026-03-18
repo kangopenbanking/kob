@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
 import { WalletQRDialog } from '@/components/pos/WalletQRDialog';
@@ -24,6 +25,7 @@ import { toast } from 'sonner';
 const fmt = (n: number) => new Intl.NumberFormat('fr-CM', { minimumFractionDigits: 0 }).format(n);
 
 const MerchantPOSTill: React.FC = () => {
+  const navigate = useNavigate();
   const [scannerOpen, setScannerOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('till');
 
@@ -121,7 +123,7 @@ const MerchantPOSTill: React.FC = () => {
                     variant="outline"
                     size="icon"
                     className="h-10 w-10 shrink-0 rounded-xl border-border/60 opacity-50"
-                    onClick={() => toast.info('Upgrade to Enterprise for barcode scanning')}
+                    onClick={() => navigate('/biz/enterprise')}
                   >
                     <ScanBarcode className="h-5 w-5 text-muted-foreground" strokeWidth={1.5} />
                   </Button>
@@ -319,7 +321,7 @@ const MerchantPOSTill: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="shifts" className="mt-0 flex-1 overflow-auto p-4">
-          <EnterpriseGate isEnterprise={isEnterprise} onUpgrade={() => toast.info('Upgrade to Enterprise for shift management')}>
+          <EnterpriseGate isEnterprise={isEnterprise} onUpgrade={() => navigate('/biz/enterprise')}>
             {merchantId && <ShiftManager merchantId={merchantId} />}
           </EnterpriseGate>
         </TabsContent>

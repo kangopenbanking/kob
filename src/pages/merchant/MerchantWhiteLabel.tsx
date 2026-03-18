@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,7 @@ const defaultWhiteLabel = {
 };
 
 export default function MerchantWhiteLabel() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [config, setConfig] = useState(defaultWhiteLabel);
 
@@ -115,9 +117,9 @@ export default function MerchantWhiteLabel() {
           <Button
             variant="outline"
             className="border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
-            onClick={() => toast.info('Contact support to upgrade your plan.')}
+            onClick={() => navigate('/biz/enterprise')}
           >
-            <ExternalLink className="h-4 w-4 mr-1.5" /> Contact Sales
+            <ExternalLink className="h-4 w-4 mr-1.5" /> Upgrade to Enterprise
           </Button>
         </div>
       )}
