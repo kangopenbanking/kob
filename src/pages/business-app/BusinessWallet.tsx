@@ -320,6 +320,16 @@ const BusinessWallet: React.FC = () => {
         )}
       </div>
 
+      {/* Auto-Withdraw Rules */}
+      {merchantId && linkedAccounts.length > 0 && (
+        <AutoCashOutRules
+          userId={merchantId}
+          linkedAccounts={linkedAccounts}
+          ownerType="merchant"
+          ownerId={merchantId}
+        />
+      )}
+
       {/* Recent Settlements */}
       {settlements && settlements.length > 0 && (
         <div>
