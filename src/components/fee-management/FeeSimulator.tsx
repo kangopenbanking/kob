@@ -222,7 +222,7 @@ export function FeeSimulator({ institutions = [], merchants = [] }: FeeSimulator
                 <Label className="text-sm font-semibold flex items-center gap-1.5">
                   <Building2 className="h-3.5 w-3.5" /> Institution (optional)
                 </Label>
-                <Select value={institutionId} onValueChange={setInstitutionId}>
+                <Select value={institutionId || "platform_default"} onValueChange={(val) => setInstitutionId(val === "platform_default" ? "" : val)}>
                   <SelectTrigger className="h-10">
                     <SelectValue placeholder="Platform default" />
                   </SelectTrigger>
