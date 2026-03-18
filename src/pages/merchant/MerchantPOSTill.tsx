@@ -320,7 +320,7 @@ const MerchantPOSTill: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="shifts" className="mt-0 flex-1 overflow-auto p-4">
-          <EnterpriseGate isEnterprise={isEnterprise} onUpgrade={() => toast.info('Upgrade to Enterprise for shift management')}>
+          <EnterpriseGate isEnterprise={isEnterprise} onUpgrade={() => navigate('/biz/enterprise')}>
             {merchantId && <ShiftManager merchantId={merchantId} />}
           </EnterpriseGate>
         </TabsContent>
