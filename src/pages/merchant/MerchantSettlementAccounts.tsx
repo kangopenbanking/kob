@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -109,6 +110,7 @@ function getAccountLabel(type: string) {
 }
 
 export default function MerchantSettlementAccounts() {
+  const navigate = useNavigate();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [isEnterprise, setIsEnterprise] = useState(false);
@@ -117,6 +119,8 @@ export default function MerchantSettlementAccounts() {
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<"method" | "details">("method");
   const [form, setForm] = useState<FormState>({ ...INITIAL_FORM });
+
+  const MAX_BASE_ACCOUNTS = 2;
 
   useEffect(() => { loadData(); }, []);
 
@@ -160,6 +164,13 @@ export default function MerchantSettlementAccounts() {
 
   const handleCreate = async () => {
     if (!merchantId) return;
+
+    // Enforce account limit for non-enterprise
+    if (!isEnterprise && accounts.filter(a => a.is_active !== false).length >= MAX_BASE_ACCOUNTS) {
+      toast.error(`Free plan allows up to ${MAX_BASE_ACCOUNTS} settlement accounts. Upgrade to Enterprise for unlimited.`);
+      return;
+    }
+
     setSaving(true);
     try {
       let accountNumber = form.account_number;
@@ -265,6 +276,7 @@ export default function MerchantSettlementAccounts() {
   };
 
   const activeAccounts = accounts.filter(a => a.is_active !== false);
+  const canAddMore = isEnterprise || activeAccounts.length < MAX_BASE_ACCOUNTS;
   const bankAccounts = activeAccounts.filter(a => a.account_type === "bank_transfer" || a.account_type === "rtgs");
   const momoAccounts = activeAccounts.filter(a => a.account_type === "mobile_money");
   const otherAccounts = activeAccounts.filter(a => !["bank_transfer", "rtgs", "mobile_money"].includes(a.account_type));
@@ -463,7 +475,24 @@ export default function MerchantSettlementAccounts() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Settlement Accounts</h1>
-          <p className="text-muted-foreground">Manage payout destinations across all supported rails</p>
+          <p className="text-muted-foreground">
+            Manage payout destinations across all supported rails
+            {!isEnterprise && <span className="ml-1 text-xs">({activeAccounts.length}/{MAX_BASE_ACCOUNTS} used)</span>}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {!isEnterprise && !canAddMore && (
+            <Button variant="outline" size="sm" className="gap-1.5 border-amber-500/30 text-amber-700 hover:bg-amber-500/10" onClick={() => navigate('/biz/enterprise')}>
+              <Shield className="h-3.5 w-3.5" /> Upgrade
+            </Button>
+          )}
+          <Button
+            className="gap-2"
+            onClick={() => setDialogOpen(true)}
+            disabled={!canAddMore}
+          >
+            <Plus className="h-4 w-4" /> Add Account
+          </Button>
         </div>
         <Sheet open={dialogOpen} onOpenChange={v => { setDialogOpen(v); if (!v) { setForm({ ...INITIAL_FORM }); setStep("method"); } }}>
           <SheetContent side="right" className="w-full sm:max-w-lg p-0 flex flex-col">
@@ -533,8 +562,11 @@ export default function MerchantSettlementAccounts() {
                       );
                     })}
                     {!isEnterprise && (
-                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-1">
+                      <div className="rounded-lg bg-amber-500/5 border border-amber-500/20 p-3 mt-1 space-y-2">
                         <p className="text-[11px] text-amber-700 font-medium">Upgrade to Enterprise to unlock PayPal, Card (Visa Direct / MC Send), and RTGS Wire Transfer payouts.</p>
+                        <Button variant="outline" size="sm" className="w-full text-xs border-amber-500/30 text-amber-700 hover:bg-amber-500/10 gap-1.5" onClick={() => { setDialogOpen(false); navigate('/biz/enterprise'); }}>
+                          <Shield className="h-3 w-3" /> Upgrade to Enterprise
+                        </Button>
                       </div>
                     )}
                   </div>
