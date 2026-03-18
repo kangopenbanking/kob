@@ -52,6 +52,7 @@ export const PWAInstallPrompt: React.FC<PWAInstallPromptProps> = ({
   accentColor,
   tagline,
   appKey = 'default',
+  defaultInstallUrl,
 }) => {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [installing, setInstalling] = useState(false);
