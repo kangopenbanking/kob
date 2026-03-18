@@ -6,8 +6,9 @@ import {
   createPayPalPayout,
   calculateGatewayFee,
 } from "../_shared/gateway-adapters.ts";
-
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyAdmins, notifyUser } from "../_shared/admin-notify.ts";
+import { sendManagedEmail } from "../_shared/send-managed-email.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -150,6 +151,9 @@ serve(async (req) => {
     }
 
     const txRef = `WD-${destination_type.toUpperCase().slice(0, 4)}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const fmtAmount = new Intl.NumberFormat('fr-CM').format(amount);
+    const fmtNet = new Intl.NumberFormat('fr-CM').format(netAmount);
+    const destName = linkedAccount?.account_name || destination_type;
 
     // Debit wallet immediately
     await supabase.from('account_balances')
@@ -163,16 +167,12 @@ serve(async (req) => {
 
     try {
       if (destination_type === 'bank_card') {
-        // Stripe card withdrawal — refund to the original card that funded the wallet
         const STRIPE_SECRET = Deno.env.get('STRIPE_SECRET_KEY');
         if (!STRIPE_SECRET) throw new Error('STRIPE_SECRET_KEY not configured');
 
         providerName = 'stripe';
-
-        // Look for a payment intent on the linked account first
         let paymentIntentId = linkedAccount?.metadata?.stripe_payment_intent_id;
 
-        // If not on linked account, find the most recent successful Stripe funding transaction for this user
         if (!paymentIntentId) {
           const { data: recentFunding } = await supabase
             .from('funding_intents')
@@ -183,7 +183,6 @@ serve(async (req) => {
             .order('created_at', { ascending: false })
             .limit(1)
             .maybeSingle();
-
           paymentIntentId = recentFunding?.provider_reference;
         }
 
@@ -191,14 +190,11 @@ serve(async (req) => {
           throw new Error('No prior card deposit found. Card withdrawals require a previous Stripe card payment to refund against. Please use a different withdrawal method.');
         }
 
-        console.log('[Stripe] Refunding to original card via payment intent:', paymentIntentId, { amount: netAmount, txRef });
-
         const { createStripeCardPayout: stripePayout } = await import("../_shared/gateway-adapters.ts");
         providerResult = await stripePayout(paymentIntentId, netAmount, currency);
         payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'bank_account') {
-        // Automated Flutterwave bank transfer — no admin approval needed
         providerName = 'flutterwave';
         providerResult = await createFlutterwavePayout({
           amount: netAmount,
@@ -213,7 +209,6 @@ serve(async (req) => {
         payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'momo_mtn' || destination_type === 'momo_orange') {
-        // Automated Flutterwave MoMo payout — instant processing
         providerName = 'flutterwave';
         providerResult = await createFlutterwaveMomoPayout({
           amount: netAmount,
@@ -227,7 +222,6 @@ serve(async (req) => {
         payoutStatus = providerResult.status === 'successful' ? 'completed' : 'processing';
 
       } else if (destination_type === 'paypal') {
-        // Automated PayPal payout — batch API, no admin step
         providerName = 'paypal';
         const paypalEmail = linkedAccount?.account_number || linkedAccount?.metadata?.paypal_email;
         if (!paypalEmail) throw new Error('PayPal email not found on linked account');
@@ -277,6 +271,33 @@ serve(async (req) => {
         details: { amount, fee, error: providerErr.message, tx_ref: txRef, destination_type },
       });
 
+      // ═══ NOTIFY: Admin alert on failed withdrawal ═══
+      notifyAdmins(supabase, {
+        event_type: 'withdrawal_failed',
+        entity_type: 'account',
+        entity_id: account_id,
+        title: '⚠️ Consumer Withdrawal Failed',
+        message: `Withdrawal of ${currency} ${fmtAmount} to ${destName} (${destination_type}) failed and was auto-reversed. Error: ${providerErr.message}`,
+        metadata: { user_id: user.id, amount, fee, destination_type, tx_ref: txRef, error: providerErr.message },
+      });
+
+      // ═══ NOTIFY: User in-app alert on failure ═══
+      notifyUser(supabase, {
+        user_id: user.id,
+        type: 'warning',
+        title: 'Withdrawal Failed',
+        message: `Your ${currency} ${fmtAmount} withdrawal to ${destName} could not be processed. Your balance has been restored.`,
+        icon: 'cash_out',
+        metadata: { tx_ref: txRef, amount, destination_type },
+      });
+
+      // ═══ EMAIL: User failure notification ═══
+      sendManagedEmail(supabase, {
+        email_key: 'consumer_withdrawal_failed',
+        recipient_user_id: user.id,
+        variables: { currency, amount: fmtAmount, destination: destName, destination_type, error: providerErr.message, tx_ref: txRef },
+      });
+
       return new Response(JSON.stringify({
         error: 'provider_error',
         message: providerErr.message,
@@ -294,7 +315,7 @@ serve(async (req) => {
       currency,
       status: payoutStatus === 'completed' ? 'completed' : 'Pending',
       credit_debit_indicator: 'Debit',
-      transaction_information: `Withdrawal to ${linkedAccount?.account_name || destination_type} via ${providerName}`,
+      transaction_information: `Withdrawal to ${destName} via ${providerName}`,
       booking_datetime: new Date().toISOString(),
       value_datetime: new Date().toISOString(),
       metadata: {
@@ -318,7 +339,7 @@ serve(async (req) => {
       provider: providerName,
       provider_ref: providerResult?.provider_ref || '',
       provider_raw: providerResult?.provider_raw || {},
-      beneficiary_name: linkedAccount?.account_name || destination_type,
+      beneficiary_name: destName,
       beneficiary_account: linkedAccount?.account_number || null,
       tx_ref: txRef,
       fee_amount: fee,
@@ -332,6 +353,39 @@ serve(async (req) => {
       entity_id: account_id,
       performed_by: user.id,
       details: { amount, fee, net_amount: netAmount, destination_type, provider: providerName, tx_ref: txRef, status: payoutStatus },
+    });
+
+    // ═══ NOTIFY: Admin alert on all withdrawals ═══
+    const isHighValue = amount >= 1000000;
+    notifyAdmins(supabase, {
+      event_type: 'withdrawal_initiated',
+      entity_type: 'account',
+      entity_id: account_id,
+      title: isHighValue ? '🔴 High-Value Consumer Withdrawal' : '💸 Consumer Withdrawal Initiated',
+      message: `${currency} ${fmtAmount} withdrawal to ${destName} (${destination_type}) via ${providerName}. Status: ${payoutStatus}. Ref: ${txRef}`,
+      metadata: { user_id: user.id, amount, fee, net_amount: netAmount, destination_type, provider: providerName, tx_ref: txRef, status: payoutStatus, high_value: isHighValue },
+    });
+
+    // ═══ EMAIL: Admin alert for high-value (>= 1M XAF) ═══
+    if (isHighValue) {
+      sendManagedEmail(supabase, {
+        email_key: 'high_value_withdrawal_alert',
+        recipient_user_id: undefined,
+        variables: {
+          currency, amount: fmtAmount, net_amount: fmtNet, fee: new Intl.NumberFormat('fr-CM').format(fee),
+          destination: destName, destination_type, provider: providerName, tx_ref: txRef, user_email: user.email || 'N/A',
+        },
+      });
+    }
+
+    // ═══ EMAIL: Consumer withdrawal confirmation ═══
+    sendManagedEmail(supabase, {
+      email_key: payoutStatus === 'completed' ? 'consumer_withdrawal_completed' : 'consumer_withdrawal_initiated',
+      recipient_user_id: user.id,
+      variables: {
+        currency, amount: fmtAmount, net_amount: fmtNet, fee: new Intl.NumberFormat('fr-CM').format(fee),
+        destination: destName, destination_type, provider: providerName, tx_ref: txRef,
+      },
     });
 
     const responseBody = {

@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { createPayPalPayout, calculateGatewayFee } from "../_shared/gateway-adapters.ts";
-
 import { corsHeaders } from "../_shared/cors.ts";
+import { notifyAdmins } from "../_shared/admin-notify.ts";
+import { sendManagedEmail } from "../_shared/send-managed-email.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -119,6 +120,24 @@ serve(async (req) => {
       entity_id: payout?.id || txRef,
       performed_by: user.id,
       details: { amount, fee, total_debited: totalDebit, account_id, paypal_email, batch_id: result.batch_id },
+    });
+
+    // ═══ ADMIN ALERT ═══
+    const fmtAmt = new Intl.NumberFormat('fr-CM').format(amount);
+    notifyAdmins(supabase, {
+      event_type: 'withdrawal_initiated',
+      entity_type: 'gateway_payout',
+      entity_id: payout?.id || txRef,
+      title: amount >= 1000000 ? '🔴 High-Value PayPal Withdrawal' : '💸 PayPal Withdrawal',
+      message: `${currency} ${fmtAmt} withdrawal to PayPal (${paypal_email}). Ref: ${txRef}`,
+      metadata: { user_id: user.id, amount, fee, paypal_email, tx_ref: txRef },
+    });
+
+    // ═══ EMAIL: Confirmation to user ═══
+    sendManagedEmail(supabase, {
+      email_key: 'consumer_withdrawal_initiated',
+      recipient_user_id: user.id,
+      variables: { currency, amount: fmtAmt, destination: paypal_email, destination_type: 'paypal', tx_ref: txRef },
     });
 
     return new Response(JSON.stringify({
