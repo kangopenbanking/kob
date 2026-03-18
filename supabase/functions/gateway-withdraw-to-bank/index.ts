@@ -179,6 +179,24 @@ serve(async (req) => {
       performed_by: user.id, details: { amount, fee, bank_code, account_number, tx_ref: txRef, provider_status: payoutResult.status },
     }).then(() => {}).catch(() => {});
 
+    // ═══ ADMIN ALERT ═══
+    const fmtAmt = new Intl.NumberFormat('fr-CM').format(amount);
+    notifyAdmins(supabase, {
+      event_type: 'withdrawal_initiated',
+      entity_type: 'account',
+      entity_id: account_id,
+      title: amount >= 1000000 ? '🔴 High-Value Bank Withdrawal' : '💸 Bank Withdrawal',
+      message: `${account.currency} ${fmtAmt} withdrawal to ${beneficiary_name} (${account_number}). Ref: ${txRef}`,
+      metadata: { user_id: user.id, amount, fee, bank_code, account_number, tx_ref: txRef },
+    });
+
+    // ═══ EMAIL: Confirmation to user ═══
+    sendManagedEmail(supabase, {
+      email_key: 'consumer_withdrawal_initiated',
+      recipient_user_id: user.id,
+      variables: { currency: account.currency, amount: fmtAmt, destination: beneficiary_name, destination_type: 'bank_account', tx_ref: txRef },
+    });
+
     const response = {
       id: payout?.id,
       account_id,
