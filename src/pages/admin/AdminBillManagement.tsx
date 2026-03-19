@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { Receipt, Store, MapPin, Package, BarChart3, Plus, Pencil, Trash2, Eye, ToggleLeft, ChevronRight } from "lucide-react";
+import { Receipt, Store, MapPin, Package, BarChart3, Plus, Pencil, Trash2, Eye, ToggleLeft, ChevronRight, Wallet, Building2, Smartphone, CreditCard, Globe, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 
