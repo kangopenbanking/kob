@@ -14,7 +14,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/hooks/use-toast";
-import { Receipt, Store, MapPin, Package, BarChart3, Plus, Pencil, Trash2, Eye, ToggleLeft, ChevronRight } from "lucide-react";
+import { Receipt, Store, MapPin, Package, BarChart3, Plus, Pencil, Trash2, Eye, ToggleLeft, ChevronRight, Wallet, Building2, Smartphone, CreditCard, Globe, Star } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 
@@ -226,8 +226,6 @@ function ProvidersTab() {
       icon: fd.get("icon") as string || "building",
       description: fd.get("description") as string,
       country: "CM",
-      settlement_type: fd.get("settlement_type") as string || "bank",
-      settlement_destination: fd.get("settlement_destination") as string,
       is_active: editItem ? editItem.is_active : true,
     });
   };
@@ -268,19 +266,11 @@ function ProvidersTab() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Icon</Label><Input name="icon" defaultValue={editItem?.icon || "building"} /></div>
-                <div><Label>Settlement Type</Label>
-                  <Select name="settlement_type" defaultValue={editItem?.settlement_type || "bank"}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank">Bank</SelectItem>
-                      <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                      <SelectItem value="kang_wallet">Kang Wallet</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div><Label>Contact Email</Label><Input name="contact_email" type="email" defaultValue={editItem?.contact_email} /></div>
               </div>
-              <div><Label>Settlement Destination</Label><Input name="settlement_destination" defaultValue={editItem?.settlement_destination} placeholder="Account number or phone" /></div>
+              <div><Label>Contact Phone</Label><Input name="contact_phone" defaultValue={editItem?.contact_phone} /></div>
               <div><Label>Description</Label><Textarea name="description" defaultValue={editItem?.description} rows={2} /></div>
+              <p className="text-xs text-muted-foreground">Settlement accounts are managed in the provider detail view after creation.</p>
               <Button type="submit" disabled={upsertMutation.isPending} className="w-full">
                 {upsertMutation.isPending ? "Saving..." : "Save"}
               </Button>
@@ -307,7 +297,7 @@ function ProvidersTab() {
               <TableRow key={prov.id} className="cursor-pointer" onClick={() => setSelectedProvider(prov)}>
                 <TableCell className="font-medium">{prov.name}</TableCell>
                 <TableCell className="text-muted-foreground">{prov.bill_categories?.name || "—"}</TableCell>
-                <TableCell><Badge variant="outline">{prov.settlement_type}</Badge></TableCell>
+                <TableCell><Badge variant="outline">{prov.settlement_type || "—"}</Badge></TableCell>
                 <TableCell>
                   <Switch checked={prov.is_active} onCheckedChange={(v) => { toggleMutation.mutate({ id: prov.id, is_active: v }); }} onClick={(e) => e.stopPropagation()} />
                 </TableCell>
@@ -324,6 +314,229 @@ function ProvidersTab() {
         </Table>
       </Card>
     </div>
+  );
+}
+
+// ─── Settlement Accounts Card ───
+const SETTLEMENT_METHODS = [
+  { value: "bank_transfer", label: "Bank Transfer", icon: Building2 },
+  { value: "mobile_money", label: "Mobile Money", icon: Smartphone },
+  { value: "kang_wallet", label: "Kang Wallet", icon: Wallet },
+  { value: "paypal", label: "PayPal", icon: Globe },
+  { value: "card", label: "Card (Visa Direct / MC Send)", icon: CreditCard },
+  { value: "rtgs_wire", label: "RTGS / Wire", icon: Building2 },
+] as const;
+
+function SettlementAccountsCard({ providerId }: { providerId: string }) {
+  const qc = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editAccount, setEditAccount] = useState<any>(null);
+  const [method, setMethod] = useState<string>("bank_transfer");
+
+  const { data: accounts, isLoading } = useQuery({
+    queryKey: ["admin-bill-settlement-accounts", providerId],
+    queryFn: () => invoke("admin_list_settlement_accounts", { provider_id: providerId }),
+  });
+
+  const upsertMutation = useMutation({
+    mutationFn: (payload: any) => invoke("admin_upsert_settlement_account", payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-bill-settlement-accounts", providerId] }); setDialogOpen(false); setEditAccount(null); toast({ title: "Settlement account saved" }); },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => invoke("admin_delete_settlement_account", { id }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-bill-settlement-accounts", providerId] }); toast({ title: "Settlement account deleted" }); },
+  });
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const payload: any = {
+      id: editAccount?.id,
+      provider_id: providerId,
+      method,
+      label: fd.get("label") as string,
+      is_primary: fd.get("is_primary") === "on",
+      is_active: true,
+      currency: fd.get("currency") as string || "XAF",
+      split_percentage: Number(fd.get("split_percentage")) || 100,
+    };
+    // Method-specific fields
+    if (method === "bank_transfer") {
+      payload.bank_name = fd.get("bank_name") as string;
+      payload.bank_code = fd.get("bank_code") as string;
+      payload.branch_code = fd.get("branch_code") as string;
+      payload.account_number = fd.get("account_number") as string;
+      payload.account_name = fd.get("account_name") as string;
+      payload.swift_bic = fd.get("swift_bic") as string;
+    } else if (method === "mobile_money") {
+      payload.momo_provider = fd.get("momo_provider") as string;
+      payload.momo_phone = fd.get("momo_phone") as string;
+      payload.momo_name = fd.get("momo_name") as string;
+    } else if (method === "kang_wallet") {
+      payload.wallet_account_id = fd.get("wallet_account_id") as string;
+      payload.wallet_user_id = fd.get("wallet_user_id") as string;
+    } else if (method === "paypal") {
+      payload.paypal_email = fd.get("paypal_email") as string;
+      payload.paypal_merchant_id = fd.get("paypal_merchant_id") as string;
+    } else if (method === "card") {
+      payload.card_last4 = fd.get("card_last4") as string;
+      payload.card_token = fd.get("card_token") as string;
+      payload.card_network = fd.get("card_network") as string;
+    } else if (method === "rtgs_wire") {
+      payload.rtgs_account_number = fd.get("rtgs_account_number") as string;
+      payload.rtgs_bank_name = fd.get("rtgs_bank_name") as string;
+      payload.rtgs_swift_code = fd.get("rtgs_swift_code") as string;
+      payload.rtgs_routing_number = fd.get("rtgs_routing_number") as string;
+    }
+    upsertMutation.mutate(payload);
+  };
+
+  const openEdit = (acct: any) => {
+    setEditAccount(acct);
+    setMethod(acct.method);
+    setDialogOpen(true);
+  };
+
+  const methodLabel = (m: string) => SETTLEMENT_METHODS.find(sm => sm.value === m)?.label || m;
+
+  const renderMethodFields = () => {
+    const ea = editAccount;
+    switch (method) {
+      case "bank_transfer": return (<>
+        <div className="grid grid-cols-2 gap-2">
+          <div><Label>Bank Name</Label><Input name="bank_name" defaultValue={ea?.bank_name} required /></div>
+          <div><Label>Bank Code</Label><Input name="bank_code" defaultValue={ea?.bank_code} /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><Label>Branch Code</Label><Input name="branch_code" defaultValue={ea?.branch_code} /></div>
+          <div><Label>Account Number</Label><Input name="account_number" defaultValue={ea?.account_number} required /></div>
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><Label>Account Name</Label><Input name="account_name" defaultValue={ea?.account_name} /></div>
+          <div><Label>SWIFT/BIC</Label><Input name="swift_bic" defaultValue={ea?.swift_bic} /></div>
+        </div>
+      </>);
+      case "mobile_money": return (<>
+        <div><Label>Provider</Label>
+          <Select name="momo_provider" defaultValue={ea?.momo_provider || "mtn"}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="mtn">MTN MoMo</SelectItem>
+              <SelectItem value="orange">Orange Money</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div><Label>Phone Number</Label><Input name="momo_phone" defaultValue={ea?.momo_phone} required placeholder="+237..." /></div>
+        <div><Label>Account Name</Label><Input name="momo_name" defaultValue={ea?.momo_name} /></div>
+      </>);
+      case "kang_wallet": return (<>
+        <div><Label>Wallet Account ID</Label><Input name="wallet_account_id" defaultValue={ea?.wallet_account_id} required /></div>
+        <div><Label>Wallet User ID</Label><Input name="wallet_user_id" defaultValue={ea?.wallet_user_id} /></div>
+      </>);
+      case "paypal": return (<>
+        <div><Label>PayPal Email</Label><Input name="paypal_email" type="email" defaultValue={ea?.paypal_email} required /></div>
+        <div><Label>PayPal Merchant ID</Label><Input name="paypal_merchant_id" defaultValue={ea?.paypal_merchant_id} /></div>
+      </>);
+      case "card": return (<>
+        <div><Label>Card Network</Label>
+          <Select name="card_network" defaultValue={ea?.card_network || "visa"}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="visa">Visa Direct</SelectItem>
+              <SelectItem value="mastercard">MC Send</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div><Label>Card Last 4</Label><Input name="card_last4" defaultValue={ea?.card_last4} maxLength={4} /></div>
+        <div><Label>Card Token</Label><Input name="card_token" defaultValue={ea?.card_token} required /></div>
+      </>);
+      case "rtgs_wire": return (<>
+        <div><Label>Bank Name</Label><Input name="rtgs_bank_name" defaultValue={ea?.rtgs_bank_name} required /></div>
+        <div><Label>Account Number</Label><Input name="rtgs_account_number" defaultValue={ea?.rtgs_account_number} required /></div>
+        <div className="grid grid-cols-2 gap-2">
+          <div><Label>SWIFT Code</Label><Input name="rtgs_swift_code" defaultValue={ea?.rtgs_swift_code} /></div>
+          <div><Label>Routing Number</Label><Input name="rtgs_routing_number" defaultValue={ea?.rtgs_routing_number} /></div>
+        </div>
+      </>);
+      default: return null;
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-base flex items-center gap-2"><Wallet className="h-4 w-4" /> Settlement Accounts</CardTitle>
+        <Dialog open={dialogOpen} onOpenChange={(o) => { setDialogOpen(o); if (!o) { setEditAccount(null); setMethod("bank_transfer"); } }}>
+          <DialogTrigger asChild>
+            <Button size="sm" variant="outline" onClick={() => { setEditAccount(null); setMethod("bank_transfer"); }}><Plus className="h-4 w-4 mr-1" /> Add</Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>{editAccount ? "Edit Settlement Account" : "New Settlement Account"}</DialogTitle></DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div><Label>Label</Label><Input name="label" defaultValue={editAccount?.label} placeholder="e.g. Primary Bank Account" /></div>
+              <div><Label>Method</Label>
+                <Select value={method} onValueChange={setMethod}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {SETTLEMENT_METHODS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              {renderMethodFields()}
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>Currency</Label><Input name="currency" defaultValue={editAccount?.currency || "XAF"} /></div>
+                <div><Label>Split %</Label><Input name="split_percentage" type="number" min={0} max={100} step={0.01} defaultValue={editAccount?.split_percentage ?? 100} /></div>
+              </div>
+              <div className="flex items-center gap-2">
+                <input type="checkbox" name="is_primary" id="is_primary" defaultChecked={editAccount?.is_primary} className="h-4 w-4" />
+                <Label htmlFor="is_primary">Primary settlement account</Label>
+              </div>
+              <Button type="submit" disabled={upsertMutation.isPending} className="w-full">{upsertMutation.isPending ? "Saving..." : "Save"}</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? <Skeleton className="h-16 w-full" /> : (accounts || []).length === 0 ? (
+          <p className="text-center text-muted-foreground py-6 text-sm">No settlement accounts configured. Add one to enable provider payouts.</p>
+        ) : (
+          <div className="space-y-2">
+            {(accounts || []).map((acct: any) => {
+              const MethodIcon = SETTLEMENT_METHODS.find(m => m.value === acct.method)?.icon || Building2;
+              return (
+                <div key={acct.id} className="flex items-center justify-between p-3 rounded-lg border bg-muted/30">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-background border"><MethodIcon className="h-4 w-4 text-primary" /></div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-sm">{acct.label || methodLabel(acct.method)}</span>
+                        {acct.is_primary && <Badge variant="default" className="text-[10px] px-1.5 py-0"><Star className="h-3 w-3 mr-0.5" />Primary</Badge>}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        {acct.method === "bank_transfer" && `${acct.bank_name || ""} • ${acct.account_number || ""}`}
+                        {acct.method === "mobile_money" && `${(acct.momo_provider || "").toUpperCase()} • ${acct.momo_phone || ""}`}
+                        {acct.method === "kang_wallet" && `Wallet: ${acct.wallet_account_id || ""}`}
+                        {acct.method === "paypal" && `${acct.paypal_email || ""}`}
+                        {acct.method === "card" && `${(acct.card_network || "").toUpperCase()} •••• ${acct.card_last4 || ""}`}
+                        {acct.method === "rtgs_wire" && `${acct.rtgs_bank_name || ""} • ${acct.rtgs_account_number || ""}`}
+                        {acct.split_percentage < 100 ? ` · ${acct.split_percentage}%` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="icon" onClick={() => openEdit(acct)}><Pencil className="h-4 w-4" /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => { if (confirm("Delete this settlement account?")) deleteMutation.mutate(acct.id); }}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -449,6 +662,9 @@ function ProviderDetail({ provider, onBack }: { provider: any; onBack: () => voi
           </Table>
         </CardContent>
       </Card>
+
+      {/* Settlement Accounts */}
+      <SettlementAccountsCard providerId={provider.id} />
 
       {/* Products */}
       <Card>

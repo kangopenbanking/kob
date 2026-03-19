@@ -315,6 +315,58 @@ serve(async (req) => {
       return json(data);
     }
 
+    // ─── Settlement Accounts CRUD ───
+    if (action === 'admin_list_settlement_accounts') {
+      await requireAdmin();
+      const { provider_id } = body;
+      if (!provider_id) return errorResp('provider_id required', 400);
+      const { data, error } = await supabase
+        .from('bill_provider_settlement_accounts')
+        .select('*')
+        .eq('provider_id', provider_id)
+        .order('is_primary', { ascending: false })
+        .order('created_at');
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_upsert_settlement_account') {
+      await requireAdmin();
+      const { id, ...fields } = body;
+      delete fields.action;
+      fields.updated_at = new Date().toISOString();
+
+      // If setting as primary, unset other primaries for this provider
+      if (fields.is_primary && fields.provider_id) {
+        await supabase
+          .from('bill_provider_settlement_accounts')
+          .update({ is_primary: false, updated_at: new Date().toISOString() })
+          .eq('provider_id', fields.provider_id)
+          .eq('is_active', true);
+      }
+
+      let result;
+      if (id) {
+        const { data, error } = await supabase.from('bill_provider_settlement_accounts').update(fields).eq('id', id).select().single();
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase.from('bill_provider_settlement_accounts').insert(fields).select().single();
+        if (error) throw error;
+        result = data;
+      }
+      return json(result);
+    }
+
+    if (action === 'admin_delete_settlement_account') {
+      await requireAdmin();
+      const { id } = body;
+      if (!id) return errorResp('id required', 400);
+      const { error } = await supabase.from('bill_provider_settlement_accounts').delete().eq('id', id);
+      if (error) throw error;
+      return json({ success: true });
+    }
+
     if (action === 'admin_list_settlements') {
       await requireAdmin();
       const { status, provider_id, limit: lim, offset: off } = body;
