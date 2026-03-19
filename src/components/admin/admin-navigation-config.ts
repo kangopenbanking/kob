@@ -31,7 +31,7 @@ import {
   Store,
   Link2,
   CheckCircle2,
-  Receipt,
+  type LucideIcon,
   type LucideIcon,
 } from "lucide-react";
 
