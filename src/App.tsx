@@ -265,6 +265,7 @@ const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletO
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
 const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
 const InstitutionManagement = lazy(() => import("./pages/admin/InstitutionManagement"));
+const AdminBillManagement = lazy(() => import("./pages/admin/AdminBillManagement"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
