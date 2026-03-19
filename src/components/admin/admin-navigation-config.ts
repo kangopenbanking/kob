@@ -1,4 +1,5 @@
 import {
+  Receipt,
   Globe,
   Languages,
   Smartphone,
