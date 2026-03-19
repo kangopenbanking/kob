@@ -182,7 +182,7 @@ function ProvidersTab() {
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   const { data: categories } = useQuery({
     queryKey: ["admin-bill-categories"],
