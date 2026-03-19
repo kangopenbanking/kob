@@ -182,7 +182,7 @@ function ProvidersTab() {
   const [editOpen, setEditOpen] = useState(false);
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedProvider, setSelectedProvider] = useState<any>(null);
-  const [filterCategory, setFilterCategory] = useState<string>("");
+  const [filterCategory, setFilterCategory] = useState<string>("all");
 
   const { data: categories } = useQuery({
     queryKey: ["admin-bill-categories"],
@@ -191,7 +191,7 @@ function ProvidersTab() {
 
   const { data: providersResp, isLoading } = useQuery({
     queryKey: ["admin-bill-providers", filterCategory],
-    queryFn: () => invoke("admin_list_providers", { category_id: filterCategory || undefined, limit: 100 }),
+    queryFn: () => invoke("admin_list_providers", { category_id: filterCategory === "all" ? undefined : filterCategory, limit: 100 }),
   });
   const providers = providersResp?.data || [];
 
@@ -244,7 +244,7 @@ function ProvidersTab() {
           <Select value={filterCategory} onValueChange={setFilterCategory}>
             <SelectTrigger className="w-[180px]"><SelectValue placeholder="All categories" /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All categories</SelectItem>
+              <SelectItem value="all">All categories</SelectItem>
               {(categories || []).map((c: any) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -512,10 +512,10 @@ function ProviderDetail({ provider, onBack }: { provider: any; onBack: () => voi
 
 // ─── Payments Tab ───
 function PaymentsTab() {
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const { data: resp, isLoading } = useQuery({
     queryKey: ["admin-bill-payments", statusFilter],
-    queryFn: () => invoke("admin_list_payments", { status: statusFilter || undefined, limit: 50 }),
+    queryFn: () => invoke("admin_list_payments", { status: statusFilter === "all" ? undefined : statusFilter, limit: 50 }),
   });
   const payments = resp?.data || [];
 
@@ -526,7 +526,7 @@ function PaymentsTab() {
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-[150px]"><SelectValue placeholder="All statuses" /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All</SelectItem>
+            <SelectItem value="all">All</SelectItem>
             <SelectItem value="completed">Completed</SelectItem>
             <SelectItem value="failed">Failed</SelectItem>
             <SelectItem value="refunded">Refunded</SelectItem>
