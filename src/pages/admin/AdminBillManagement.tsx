@@ -266,19 +266,11 @@ function ProvidersTab() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Icon</Label><Input name="icon" defaultValue={editItem?.icon || "building"} /></div>
-                <div><Label>Settlement Type</Label>
-                  <Select name="settlement_type" defaultValue={editItem?.settlement_type || "bank"}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="bank">Bank</SelectItem>
-                      <SelectItem value="mobile_money">Mobile Money</SelectItem>
-                      <SelectItem value="kang_wallet">Kang Wallet</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div><Label>Contact Email</Label><Input name="contact_email" type="email" defaultValue={editItem?.contact_email} /></div>
               </div>
-              <div><Label>Settlement Destination</Label><Input name="settlement_destination" defaultValue={editItem?.settlement_destination} placeholder="Account number or phone" /></div>
+              <div><Label>Contact Phone</Label><Input name="contact_phone" defaultValue={editItem?.contact_phone} /></div>
               <div><Label>Description</Label><Textarea name="description" defaultValue={editItem?.description} rows={2} /></div>
+              <p className="text-xs text-muted-foreground">Settlement accounts are managed in the provider detail view after creation.</p>
               <Button type="submit" disabled={upsertMutation.isPending} className="w-full">
                 {upsertMutation.isPending ? "Saving..." : "Save"}
               </Button>
