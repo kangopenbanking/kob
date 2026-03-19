@@ -32,7 +32,6 @@ import {
   Link2,
   CheckCircle2,
   type LucideIcon,
-  type LucideIcon,
 } from "lucide-react";
 
 export interface AdminNavItem {
