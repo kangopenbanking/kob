@@ -297,7 +297,7 @@ function ProvidersTab() {
               <TableRow key={prov.id} className="cursor-pointer" onClick={() => setSelectedProvider(prov)}>
                 <TableCell className="font-medium">{prov.name}</TableCell>
                 <TableCell className="text-muted-foreground">{prov.bill_categories?.name || "—"}</TableCell>
-                <TableCell><Badge variant="outline">{prov.settlement_type}</Badge></TableCell>
+                <TableCell><Badge variant="outline">{prov.settlement_type || "—"}</Badge></TableCell>
                 <TableCell>
                   <Switch checked={prov.is_active} onCheckedChange={(v) => { toggleMutation.mutate({ id: prov.id, is_active: v }); }} onClick={(e) => e.stopPropagation()} />
                 </TableCell>
