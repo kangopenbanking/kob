@@ -123,6 +123,7 @@ export const adminNavigation: AdminNavSection[] = [
       { title: "Audit Logs", path: "/admin/audit-logs", icon: FileText },
       { title: "Credit Management", path: "/admin/credit-management", icon: DollarSign },
       { title: "Exchange Rates", path: "/admin/exchange-rates", icon: ArrowLeftRight },
+      { title: "Bill Management", path: "/admin/bill-management", icon: Receipt },
     ],
   },
   {
