@@ -2008,6 +2008,116 @@ export type Database = {
           },
         ]
       }
+      bill_provider_settlement_accounts: {
+        Row: {
+          account_name: string | null
+          account_number: string | null
+          bank_code: string | null
+          bank_name: string | null
+          branch_code: string | null
+          card_last4: string | null
+          card_network: string | null
+          card_token: string | null
+          created_at: string
+          currency: string
+          id: string
+          is_active: boolean
+          is_primary: boolean
+          label: string | null
+          metadata: Json | null
+          method: string
+          momo_name: string | null
+          momo_phone: string | null
+          momo_provider: string | null
+          paypal_email: string | null
+          paypal_merchant_id: string | null
+          provider_id: string
+          rtgs_account_number: string | null
+          rtgs_bank_name: string | null
+          rtgs_routing_number: string | null
+          rtgs_swift_code: string | null
+          split_percentage: number | null
+          swift_bic: string | null
+          updated_at: string
+          wallet_account_id: string | null
+          wallet_user_id: string | null
+        }
+        Insert: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          branch_code?: string | null
+          card_last4?: string | null
+          card_network?: string | null
+          card_token?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          label?: string | null
+          metadata?: Json | null
+          method: string
+          momo_name?: string | null
+          momo_phone?: string | null
+          momo_provider?: string | null
+          paypal_email?: string | null
+          paypal_merchant_id?: string | null
+          provider_id: string
+          rtgs_account_number?: string | null
+          rtgs_bank_name?: string | null
+          rtgs_routing_number?: string | null
+          rtgs_swift_code?: string | null
+          split_percentage?: number | null
+          swift_bic?: string | null
+          updated_at?: string
+          wallet_account_id?: string | null
+          wallet_user_id?: string | null
+        }
+        Update: {
+          account_name?: string | null
+          account_number?: string | null
+          bank_code?: string | null
+          bank_name?: string | null
+          branch_code?: string | null
+          card_last4?: string | null
+          card_network?: string | null
+          card_token?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          is_active?: boolean
+          is_primary?: boolean
+          label?: string | null
+          metadata?: Json | null
+          method?: string
+          momo_name?: string | null
+          momo_phone?: string | null
+          momo_provider?: string | null
+          paypal_email?: string | null
+          paypal_merchant_id?: string | null
+          provider_id?: string
+          rtgs_account_number?: string | null
+          rtgs_bank_name?: string | null
+          rtgs_routing_number?: string | null
+          rtgs_swift_code?: string | null
+          split_percentage?: number | null
+          swift_bic?: string | null
+          updated_at?: string
+          wallet_account_id?: string | null
+          wallet_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bill_provider_settlement_accounts_provider_id_fkey"
+            columns: ["provider_id"]
+            isOneToOne: false
+            referencedRelation: "bill_providers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bill_providers: {
         Row: {
           category_id: string
