@@ -440,6 +440,9 @@ function ProviderDetail({ provider, onBack }: { provider: any; onBack: () => voi
         </CardContent>
       </Card>
 
+      {/* Settlement Accounts */}
+      <SettlementAccountsCard providerId={provider.id} />
+
       {/* Products */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
