@@ -191,7 +191,7 @@ function ProvidersTab() {
 
   const { data: providersResp, isLoading } = useQuery({
     queryKey: ["admin-bill-providers", filterCategory],
-    queryFn: () => invoke("admin_list_providers", { category_id: filterCategory || undefined, limit: 100 }),
+    queryFn: () => invoke("admin_list_providers", { category_id: filterCategory === "all" ? undefined : filterCategory, limit: 100 }),
   });
   const providers = providersResp?.data || [];
 
