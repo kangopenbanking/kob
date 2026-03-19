@@ -226,8 +226,6 @@ function ProvidersTab() {
       icon: fd.get("icon") as string || "building",
       description: fd.get("description") as string,
       country: "CM",
-      settlement_type: fd.get("settlement_type") as string || "bank",
-      settlement_destination: fd.get("settlement_destination") as string,
       is_active: editItem ? editItem.is_active : true,
     });
   };
