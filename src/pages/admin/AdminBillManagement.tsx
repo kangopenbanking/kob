@@ -512,10 +512,10 @@ function ProviderDetail({ provider, onBack }: { provider: any; onBack: () => voi
 
 // ─── Payments Tab ───
 function PaymentsTab() {
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const { data: resp, isLoading } = useQuery({
     queryKey: ["admin-bill-payments", statusFilter],
-    queryFn: () => invoke("admin_list_payments", { status: statusFilter || undefined, limit: 50 }),
+    queryFn: () => invoke("admin_list_payments", { status: statusFilter === "all" ? undefined : statusFilter, limit: 50 }),
   });
   const payments = resp?.data || [];
 
