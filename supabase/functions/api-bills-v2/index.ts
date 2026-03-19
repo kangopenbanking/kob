@@ -24,6 +24,15 @@ serve(async (req) => {
       return user;
     };
 
+    // Helper: check admin role
+    const requireAdmin = async () => {
+      const user = await getUser();
+      if (!user) throw { status: 401, message: 'Unauthorized' };
+      const { data: isAdmin } = await supabase.rpc('has_role', { _user_id: user.id, _role: 'admin' });
+      if (!isAdmin) throw { status: 403, message: 'Forbidden: admin role required' };
+      return user;
+    };
+
     // ─── PUBLIC DIRECTORY (no auth required) ───
     if (action === 'get_categories') {
       const { data, error } = await supabase
@@ -103,7 +112,242 @@ serve(async (req) => {
       return json(data);
     }
 
-    // ─── AUTHENTICATED ACTIONS ───
+    // ─── ADMIN ACTIONS ───
+    if (action === 'admin_list_categories') {
+      await requireAdmin();
+      const { data, error } = await supabase.from('bill_categories').select('*').order('sort_order');
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_upsert_category') {
+      await requireAdmin();
+      const { id, name, slug, icon, color, description, is_active, sort_order } = body;
+      const payload: any = { name, slug, icon, color, description, is_active: is_active ?? true, sort_order: sort_order ?? 0, updated_at: new Date().toISOString() };
+      let result;
+      if (id) {
+        const { data, error } = await supabase.from('bill_categories').update(payload).eq('id', id).select().single();
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase.from('bill_categories').insert(payload).select().single();
+        if (error) throw error;
+        result = data;
+      }
+      return json(result);
+    }
+
+    if (action === 'admin_delete_category') {
+      await requireAdmin();
+      const { id } = body;
+      if (!id) return errorResp('id required', 400);
+      const { error } = await supabase.from('bill_categories').delete().eq('id', id);
+      if (error) throw error;
+      return json({ success: true });
+    }
+
+    if (action === 'admin_list_providers') {
+      await requireAdmin();
+      const { category_id, status, limit: lim, offset: off } = body;
+      let query = supabase.from('bill_providers').select('*, bill_categories(name, slug), bill_provider_locations(count)', { count: 'exact' });
+      if (category_id) query = query.eq('category_id', category_id);
+      if (status === 'active') query = query.eq('is_active', true);
+      if (status === 'inactive') query = query.eq('is_active', false);
+      const limit = Math.min(lim || 50, 100);
+      const offset = off || 0;
+      query = query.order('name').range(offset, offset + limit - 1);
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return json({ data, pagination: { total: count, limit, offset } });
+    }
+
+    if (action === 'admin_upsert_provider') {
+      await requireAdmin();
+      const { id, ...fields } = body;
+      delete fields.action;
+      fields.updated_at = new Date().toISOString();
+      let result;
+      if (id) {
+        const { data, error } = await supabase.from('bill_providers').update(fields).eq('id', id).select().single();
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase.from('bill_providers').insert(fields).select().single();
+        if (error) throw error;
+        result = data;
+      }
+      return json(result);
+    }
+
+    if (action === 'admin_toggle_provider') {
+      await requireAdmin();
+      const { id, is_active } = body;
+      if (!id) return errorResp('id required', 400);
+      const { data, error } = await supabase.from('bill_providers').update({ is_active, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_list_locations') {
+      await requireAdmin();
+      const { provider_id } = body;
+      if (!provider_id) return errorResp('provider_id required', 400);
+      const { data, error } = await supabase.from('bill_provider_locations').select('*').eq('provider_id', provider_id).order('sort_order');
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_upsert_location') {
+      await requireAdmin();
+      const { id, ...fields } = body;
+      delete fields.action;
+      fields.updated_at = new Date().toISOString();
+      let result;
+      if (id) {
+        const { data, error } = await supabase.from('bill_provider_locations').update(fields).eq('id', id).select().single();
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase.from('bill_provider_locations').insert(fields).select().single();
+        if (error) throw error;
+        result = data;
+      }
+      return json(result);
+    }
+
+    if (action === 'admin_delete_location') {
+      await requireAdmin();
+      const { id } = body;
+      if (!id) return errorResp('id required', 400);
+      const { error } = await supabase.from('bill_provider_locations').delete().eq('id', id);
+      if (error) throw error;
+      return json({ success: true });
+    }
+
+    if (action === 'admin_list_products') {
+      await requireAdmin();
+      const { provider_id } = body;
+      if (!provider_id) return errorResp('provider_id required', 400);
+      const { data, error } = await supabase.from('bill_products').select('*, bill_product_fields(*)').eq('provider_id', provider_id).order('sort_order');
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_upsert_product') {
+      await requireAdmin();
+      const { id, ...fields } = body;
+      delete fields.action;
+      fields.updated_at = new Date().toISOString();
+      let result;
+      if (id) {
+        const { data, error } = await supabase.from('bill_products').update(fields).eq('id', id).select().single();
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase.from('bill_products').insert(fields).select().single();
+        if (error) throw error;
+        result = data;
+      }
+      return json(result);
+    }
+
+    if (action === 'admin_toggle_product') {
+      await requireAdmin();
+      const { id, is_active } = body;
+      if (!id) return errorResp('id required', 400);
+      const { data, error } = await supabase.from('bill_products').update({ is_active, updated_at: new Date().toISOString() }).eq('id', id).select().single();
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_upsert_product_field') {
+      await requireAdmin();
+      const { id, ...fields } = body;
+      delete fields.action;
+      let result;
+      if (id) {
+        const { data, error } = await supabase.from('bill_product_fields').update(fields).eq('id', id).select().single();
+        if (error) throw error;
+        result = data;
+      } else {
+        const { data, error } = await supabase.from('bill_product_fields').insert(fields).select().single();
+        if (error) throw error;
+        result = data;
+      }
+      return json(result);
+    }
+
+    if (action === 'admin_delete_product_field') {
+      await requireAdmin();
+      const { id } = body;
+      if (!id) return errorResp('id required', 400);
+      const { error } = await supabase.from('bill_product_fields').delete().eq('id', id);
+      if (error) throw error;
+      return json({ success: true });
+    }
+
+    if (action === 'admin_list_payments') {
+      await requireAdmin();
+      const { status, provider_id, limit: lim, offset: off, from, to } = body;
+      let query = supabase.from('bill_payments')
+        .select('*, bill_providers(name, short_name), bill_products(name), bill_provider_locations(name, city)', { count: 'exact' });
+      if (status) query = query.eq('status', status);
+      if (provider_id) query = query.eq('provider_id', provider_id);
+      if (from) query = query.gte('paid_at', from);
+      if (to) query = query.lte('paid_at', to);
+      const limit = Math.min(lim || 50, 100);
+      const offset = off || 0;
+      query = query.order('paid_at', { ascending: false }).range(offset, offset + limit - 1);
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return json({ data, pagination: { total: count, limit, offset } });
+    }
+
+    if (action === 'admin_get_payment') {
+      await requireAdmin();
+      const { payment_id } = body;
+      if (!payment_id) return errorResp('payment_id required', 400);
+      const { data, error } = await supabase.from('bill_payments')
+        .select('*, bill_providers(name, short_name, icon), bill_products(name, description), bill_provider_locations(name, city, address)')
+        .eq('id', payment_id)
+        .single();
+      if (error) throw error;
+      return json(data);
+    }
+
+    if (action === 'admin_list_settlements') {
+      await requireAdmin();
+      const { status, provider_id, limit: lim, offset: off } = body;
+      let query = supabase.from('bill_settlements').select('*, bill_providers(name, short_name)', { count: 'exact' });
+      if (status) query = query.eq('status', status);
+      if (provider_id) query = query.eq('provider_id', provider_id);
+      const limit = Math.min(lim || 50, 100);
+      const offset = off || 0;
+      query = query.order('created_at', { ascending: false }).range(offset, offset + limit - 1);
+      const { data, error, count } = await query;
+      if (error) throw error;
+      return json({ data, pagination: { total: count, limit, offset } });
+    }
+
+    if (action === 'admin_bill_stats') {
+      await requireAdmin();
+      const [categories, providers, payments, intents] = await Promise.all([
+        supabase.from('bill_categories').select('id', { count: 'exact', head: true }),
+        supabase.from('bill_providers').select('id', { count: 'exact', head: true }),
+        supabase.from('bill_payments').select('id, total_amount', { count: 'exact' }),
+        supabase.from('bill_payment_intents').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      ]);
+      const totalVolume = (payments.data || []).reduce((sum: number, p: any) => sum + Number(p.total_amount || 0), 0);
+      return json({
+        categories: categories.count || 0,
+        providers: providers.count || 0,
+        total_payments: payments.count || 0,
+        pending_intents: intents.count || 0,
+        total_volume: totalVolume,
+      });
+    }
+
+    // ─── AUTHENTICATED CONSUMER ACTIONS ───
     const user = await getUser();
     if (!user) return errorResp('Unauthorized', 401);
 
@@ -157,7 +401,7 @@ serve(async (req) => {
         }
       }
 
-      const feeAmount = 0; // Free for now
+      const feeAmount = 0;
       const totalAmount = finalAmount + feeAmount;
 
       const { data: intent, error: intentErr } = await supabase
@@ -185,7 +429,6 @@ serve(async (req) => {
       const { intent_id } = body;
       if (!intent_id) return errorResp('intent_id required', 400);
 
-      // Get intent
       const { data: intent, error: intErr } = await supabase
         .from('bill_payment_intents')
         .select('*')
@@ -199,7 +442,6 @@ serve(async (req) => {
         return errorResp('Intent expired', 410);
       }
 
-      // Get user's primary account + balance
       const { data: accounts } = await supabase
         .from('accounts')
         .select('id, institution_id')
@@ -225,7 +467,6 @@ serve(async (req) => {
         });
       }
 
-      // Atomic debit
       if (balance) {
         const { data: debitResult } = await supabase.rpc('atomic_consumer_withdrawal_debit', {
           _balance_id: balance.id,
@@ -236,11 +477,9 @@ serve(async (req) => {
         }
       }
 
-      // Generate receipt + trace
       const receiptNumber = `RCP-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
       const traceId = `TRC-${crypto.randomUUID().slice(0, 12)}`;
 
-      // Create transaction record
       const { data: txn } = await supabase
         .from('transactions')
         .insert({
@@ -265,12 +504,10 @@ serve(async (req) => {
         .select('id')
         .single();
 
-      // Update intent status
       await supabase.from('bill_payment_intents')
         .update({ status: 'paid', updated_at: new Date().toISOString() })
         .eq('id', intent_id);
 
-      // Create bill payment record
       const { data: payment, error: payErr } = await supabase
         .from('bill_payments')
         .insert({
@@ -291,12 +528,8 @@ serve(async (req) => {
         })
         .select()
         .single();
-      if (payErr) {
-        console.error('Bill payment record error:', payErr);
-        throw payErr;
-      }
+      if (payErr) throw payErr;
 
-      // Notify
       await supabase.from('app_notifications').insert({
         user_id: user.id,
         type: 'success',
@@ -343,6 +576,9 @@ serve(async (req) => {
 
     return errorResp('Unknown action', 400);
   } catch (error: any) {
+    if (error.status && error.message) {
+      return errorResp(error.message, error.status);
+    }
     console.error('Bills v2 error:', error);
     const errorId = `ERR-${Date.now()}`;
     return new Response(JSON.stringify({ error: error.message, error_id: errorId }), {

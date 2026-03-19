@@ -265,6 +265,7 @@ const MerchantWalletOversight = lazy(() => import("./pages/admin/MerchantWalletO
 const RewardsManagement = lazy(() => import("./pages/admin/RewardsManagement"));
 const OnboardingManagement = lazy(() => import("./pages/admin/OnboardingManagement"));
 const InstitutionManagement = lazy(() => import("./pages/admin/InstitutionManagement"));
+const AdminBillManagement = lazy(() => import("./pages/admin/AdminBillManagement"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
@@ -708,6 +709,7 @@ function App() {
               <Route path="marketplace-moderation" element={<AdminMarketplaceModeration />} />
               <Route path="rewards-management" element={<RewardsManagement />} />
               <Route path="onboarding-management" element={<OnboardingManagement />} />
+              <Route path="bill-management" element={<AdminBillManagement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
