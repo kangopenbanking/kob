@@ -381,6 +381,296 @@ serve(async (req) => {
       return json({ data, pagination: { total: count, limit, offset } });
     }
 
+    // ─── Settlement Initiation: aggregate unsettled payments per provider ───
+    if (action === 'admin_initiate_settlement') {
+      const admin = await requireAdmin();
+      const { provider_id, from_date, to_date } = body;
+      if (!provider_id) return errorResp('provider_id required', 400);
+
+      // Find completed payments not yet settled for this provider
+      let payQuery = supabase
+        .from('bill_payments')
+        .select('id, total_amount, fee_amount, currency')
+        .eq('provider_id', provider_id)
+        .eq('status', 'completed');
+      if (from_date) payQuery = payQuery.gte('paid_at', from_date);
+      if (to_date) payQuery = payQuery.lte('paid_at', to_date);
+      const { data: unsettledPayments, error: upErr } = await payQuery;
+      if (upErr) throw upErr;
+      if (!unsettledPayments || unsettledPayments.length === 0) {
+        return errorResp('No unsettled payments found for this provider', 404);
+      }
+
+      // Check for existing pending settlement to avoid duplicates
+      const paymentIds = unsettledPayments.map((p: any) => p.id);
+      const { data: existingSettlement } = await supabase
+        .from('bill_settlements')
+        .select('id')
+        .eq('provider_id', provider_id)
+        .eq('status', 'pending')
+        .limit(1)
+        .maybeSingle();
+      if (existingSettlement) {
+        return errorResp('A pending settlement already exists for this provider. Process or cancel it first.', 409);
+      }
+
+      const totalAmount = unsettledPayments.reduce((s: number, p: any) => s + Number(p.total_amount), 0);
+      const feeAmount = unsettledPayments.reduce((s: number, p: any) => s + Number(p.fee_amount || 0), 0);
+      const netAmount = totalAmount - feeAmount;
+      const currency = unsettledPayments[0]?.currency || 'XAF';
+
+      // Load settlement accounts
+      const { data: settlementAccounts } = await supabase
+        .from('bill_provider_settlement_accounts')
+        .select('*')
+        .eq('provider_id', provider_id)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false });
+
+      const primaryMethod = settlementAccounts?.[0]?.method || 'bank_transfer';
+
+      const { data: settlement, error: sErr } = await supabase
+        .from('bill_settlements')
+        .insert({
+          provider_id,
+          total_amount: totalAmount,
+          fee_amount: feeAmount,
+          net_amount: netAmount,
+          currency,
+          payment_ids: paymentIds,
+          settlement_type: primaryMethod,
+          status: 'pending',
+          settlement_details: {
+            payment_count: unsettledPayments.length,
+            settlement_accounts: (settlementAccounts || []).map((a: any) => ({
+              id: a.id, method: a.method, label: a.label,
+              split_percentage: a.split_percentage, is_primary: a.is_primary,
+            })),
+            initiated_by: admin.id,
+            from_date: from_date || null,
+            to_date: to_date || null,
+          },
+        })
+        .select()
+        .single();
+      if (sErr) throw sErr;
+      return json(settlement);
+    }
+
+    // ─── Settlement Processing: execute bank transfers per settlement account ───
+    if (action === 'admin_process_settlement') {
+      const admin = await requireAdmin();
+      const { settlement_id } = body;
+      if (!settlement_id) return errorResp('settlement_id required', 400);
+
+      const { data: settlement, error: sErr } = await supabase
+        .from('bill_settlements')
+        .select('*')
+        .eq('id', settlement_id)
+        .single();
+      if (sErr || !settlement) return errorResp('Settlement not found', 404);
+      if (settlement.status !== 'pending') return errorResp(`Settlement is already ${settlement.status}`, 409);
+
+      // Load active settlement accounts for this provider
+      const { data: accounts } = await supabase
+        .from('bill_provider_settlement_accounts')
+        .select('*')
+        .eq('provider_id', settlement.provider_id)
+        .eq('is_active', true)
+        .order('is_primary', { ascending: false });
+
+      if (!accounts || accounts.length === 0) {
+        return errorResp('No active settlement accounts configured for this provider', 400);
+      }
+
+      // Mark as processing
+      await supabase.from('bill_settlements').update({
+        status: 'processing',
+        settlement_details: {
+          ...((settlement.settlement_details as any) || {}),
+          processing_started_at: new Date().toISOString(),
+          processed_by: admin.id,
+        },
+      }).eq('id', settlement_id);
+
+      const results: any[] = [];
+      let allSuccess = true;
+      const netAmount = Number(settlement.net_amount);
+
+      for (const acct of accounts) {
+        const splitPct = Number(acct.split_percentage || 100);
+        const splitAmount = Math.round((netAmount * splitPct / 100) * 100) / 100;
+        if (splitAmount <= 0) continue;
+
+        const txRef = `BILL-STL-${settlement_id.slice(0, 8)}-${acct.id.slice(0, 8)}-${Date.now()}`;
+        let transferResult: any = { method: acct.method, amount: splitAmount, status: 'pending', tx_ref: txRef };
+
+        try {
+          if (acct.method === 'bank_transfer') {
+            // Execute via KOB facilitated-bank-transfer
+            const { data: btResult, error: btErr } = await supabase.functions.invoke('facilitated-bank-transfer', {
+              body: {
+                account_bank: acct.bank_code,
+                account_number: acct.account_number,
+                amount: splitAmount,
+                currency: settlement.currency || 'XAF',
+                narration: `Bill settlement ${settlement_id.slice(0, 8)} - ${acct.label || acct.bank_name}`,
+                beneficiary_name: acct.account_name || acct.bank_name,
+                metadata: {
+                  settlement_id,
+                  settlement_account_id: acct.id,
+                  provider_id: settlement.provider_id,
+                  split_percentage: splitPct,
+                },
+              },
+              headers: { Authorization: req.headers.get('Authorization')! },
+            });
+            if (btErr) throw btErr;
+            transferResult = { ...transferResult, status: btResult?.status || 'processing', provider_ref: btResult?.transaction_ref, details: btResult };
+
+          } else if (acct.method === 'mobile_money') {
+            // Execute via KOB facilitated-mobile-money if available
+            const { data: mmResult, error: mmErr } = await supabase.functions.invoke('facilitated-mobile-money', {
+              body: {
+                phone_number: acct.momo_phone,
+                provider: acct.momo_provider || 'mtn',
+                amount: splitAmount,
+                currency: settlement.currency || 'XAF',
+                narration: `Bill settlement ${settlement_id.slice(0, 8)}`,
+                beneficiary_name: acct.momo_name,
+                metadata: { settlement_id, settlement_account_id: acct.id, provider_id: settlement.provider_id },
+              },
+              headers: { Authorization: req.headers.get('Authorization')! },
+            });
+            if (mmErr) throw mmErr;
+            transferResult = { ...transferResult, status: mmResult?.status || 'processing', provider_ref: mmResult?.transaction_ref, details: mmResult };
+
+          } else if (acct.method === 'kang_wallet') {
+            // Internal ledger transfer
+            const { data: walletResult, error: wErr } = await supabase.functions.invoke('api-transfers', {
+              body: {
+                action: 'internal_transfer',
+                destination_account_id: acct.wallet_account_id,
+                amount: splitAmount,
+                currency: settlement.currency || 'XAF',
+                reference: txRef,
+                narration: `Bill settlement payout`,
+                metadata: { settlement_id, settlement_account_id: acct.id },
+              },
+              headers: { Authorization: req.headers.get('Authorization')! },
+            });
+            if (wErr) throw wErr;
+            transferResult = { ...transferResult, status: 'completed', details: walletResult };
+
+          } else if (acct.method === 'paypal') {
+            // PayPal payout via gateway
+            const { data: ppResult, error: ppErr } = await supabase.functions.invoke('gateway-paypal-payout', {
+              body: {
+                email: acct.paypal_email,
+                amount: splitAmount,
+                currency: settlement.currency || 'USD',
+                note: `Bill settlement ${settlement_id.slice(0, 8)}`,
+                reference: txRef,
+                metadata: { settlement_id, settlement_account_id: acct.id },
+              },
+              headers: { Authorization: req.headers.get('Authorization')! },
+            });
+            if (ppErr) throw ppErr;
+            transferResult = { ...transferResult, status: ppResult?.status || 'processing', details: ppResult };
+
+          } else if (acct.method === 'card') {
+            // Visa Direct / MC Send via gateway
+            const { data: cardResult, error: cardErr } = await supabase.functions.invoke('gateway-card-payout', {
+              body: {
+                card_token: acct.card_token,
+                card_network: acct.card_network,
+                amount: splitAmount,
+                currency: settlement.currency || 'XAF',
+                reference: txRef,
+                metadata: { settlement_id, settlement_account_id: acct.id },
+              },
+              headers: { Authorization: req.headers.get('Authorization')! },
+            });
+            if (cardErr) throw cardErr;
+            transferResult = { ...transferResult, status: cardResult?.status || 'processing', details: cardResult };
+
+          } else if (acct.method === 'rtgs_wire') {
+            // RTGS/Wire via facilitated bank transfer with RTGS fields
+            const { data: rtgsResult, error: rtgsErr } = await supabase.functions.invoke('facilitated-bank-transfer', {
+              body: {
+                account_bank: acct.rtgs_swift_code || acct.rtgs_bank_name,
+                account_number: acct.rtgs_account_number,
+                amount: splitAmount,
+                currency: settlement.currency || 'XAF',
+                narration: `RTGS settlement ${settlement_id.slice(0, 8)}`,
+                beneficiary_name: acct.rtgs_bank_name,
+                metadata: {
+                  settlement_id,
+                  settlement_account_id: acct.id,
+                  routing_number: acct.rtgs_routing_number,
+                  transfer_type: 'rtgs_wire',
+                },
+              },
+              headers: { Authorization: req.headers.get('Authorization')! },
+            });
+            if (rtgsErr) throw rtgsErr;
+            transferResult = { ...transferResult, status: rtgsResult?.status || 'processing', details: rtgsResult };
+          }
+        } catch (transferError: any) {
+          console.error(`Settlement transfer failed for account ${acct.id}:`, transferError);
+          transferResult.status = 'failed';
+          transferResult.error = transferError.message || String(transferError);
+          allSuccess = false;
+        }
+
+        results.push(transferResult);
+      }
+
+      // Update settlement status
+      const finalStatus = allSuccess ? 'settled' : results.some((r: any) => r.status === 'failed') ? 'partial' : 'processing';
+      await supabase.from('bill_settlements').update({
+        status: finalStatus,
+        settled_at: finalStatus === 'settled' ? new Date().toISOString() : null,
+        settlement_details: {
+          ...((settlement.settlement_details as any) || {}),
+          processing_completed_at: new Date().toISOString(),
+          processed_by: admin.id,
+          transfer_results: results,
+        },
+      }).eq('id', settlement_id);
+
+      // Mark payments as settled
+      if (finalStatus === 'settled' && settlement.payment_ids?.length) {
+        await supabase.from('bill_payments')
+          .update({ status: 'settled' })
+          .in('id', settlement.payment_ids);
+      }
+
+      return json({
+        settlement_id,
+        status: finalStatus,
+        transfer_results: results,
+        net_amount: netAmount,
+        currency: settlement.currency,
+      });
+    }
+
+    // ─── Cancel a pending settlement ───
+    if (action === 'admin_cancel_settlement') {
+      await requireAdmin();
+      const { settlement_id } = body;
+      if (!settlement_id) return errorResp('settlement_id required', 400);
+      const { data, error } = await supabase
+        .from('bill_settlements')
+        .update({ status: 'cancelled', settlement_details: { cancelled_at: new Date().toISOString() } })
+        .eq('id', settlement_id)
+        .eq('status', 'pending')
+        .select()
+        .single();
+      if (error) return errorResp('Settlement not found or not pending', 404);
+      return json(data);
+    }
+
     if (action === 'admin_bill_stats') {
       await requireAdmin();
       const [categories, providers, payments, intents] = await Promise.all([

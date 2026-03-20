@@ -789,39 +789,140 @@ function PaymentsTab() {
 
 // ─── Settlements Tab ───
 function SettlementsTab() {
+  const qc = useQueryClient();
+  const [initiateOpen, setInitiateOpen] = useState(false);
+  const [selectedProvider, setSelectedProvider] = useState<string>("");
+  const [fromDate, setFromDate] = useState<string>("");
+  const [toDate, setToDate] = useState<string>("");
+
   const { data: resp, isLoading } = useQuery({
     queryKey: ["admin-bill-settlements"],
     queryFn: () => invoke("admin_list_settlements", { limit: 50 }),
   });
   const settlements = resp?.data || [];
 
+  const { data: providersResp } = useQuery({
+    queryKey: ["admin-bill-providers-all"],
+    queryFn: () => invoke("admin_list_providers", { limit: 200 }),
+  });
+  const allProviders = providersResp?.data || [];
+
+  const initiateMutation = useMutation({
+    mutationFn: (payload: any) => invoke("admin_initiate_settlement", payload),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-bill-settlements"] }); setInitiateOpen(false); toast({ title: "Settlement initiated" }); },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const processMutation = useMutation({
+    mutationFn: (settlement_id: string) => invoke("admin_process_settlement", { settlement_id }),
+    onSuccess: (data) => {
+      qc.invalidateQueries({ queryKey: ["admin-bill-settlements"] });
+      const failed = (data?.transfer_results || []).filter((r: any) => r.status === "failed").length;
+      toast({ title: data?.status === "settled" ? "Settlement completed" : `Settlement processed (${failed} failed)`, description: `Net: ${Number(data?.net_amount).toLocaleString()} ${data?.currency}` });
+    },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: (settlement_id: string) => invoke("admin_cancel_settlement", { settlement_id }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["admin-bill-settlements"] }); toast({ title: "Settlement cancelled" }); },
+    onError: (e: any) => toast({ title: "Error", description: e.message, variant: "destructive" }),
+  });
+
+  const statusVariant = (s: string) => {
+    if (s === "settled") return "default";
+    if (s === "processing") return "secondary";
+    if (s === "partial") return "outline";
+    if (s === "cancelled" || s === "failed") return "destructive";
+    return "secondary";
+  };
+
   return (
     <div className="space-y-4">
-      <h3 className="text-lg font-semibold">Bill Settlements</h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Bill Settlements</h3>
+        <Dialog open={initiateOpen} onOpenChange={setInitiateOpen}>
+          <DialogTrigger asChild>
+            <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Initiate Settlement</Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Initiate Provider Settlement</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Provider</Label>
+                <Select value={selectedProvider} onValueChange={setSelectedProvider}>
+                  <SelectTrigger><SelectValue placeholder="Select provider..." /></SelectTrigger>
+                  <SelectContent>
+                    {allProviders.map((p: any) => (
+                      <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div><Label>From Date (optional)</Label><Input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} /></div>
+                <div><Label>To Date (optional)</Label><Input type="date" value={toDate} onChange={e => setToDate(e.target.value)} /></div>
+              </div>
+              <p className="text-xs text-muted-foreground">This will aggregate all completed, unsettled payments for this provider and create a pending settlement record. You can then process it to execute bank/mobile money/wallet transfers.</p>
+              <Button
+                className="w-full"
+                disabled={!selectedProvider || initiateMutation.isPending}
+                onClick={() => initiateMutation.mutate({ provider_id: selectedProvider, from_date: fromDate || undefined, to_date: toDate || undefined })}
+              >
+                {initiateMutation.isPending ? "Initiating..." : "Initiate Settlement"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Provider</TableHead>
-              <TableHead>Amount (XAF)</TableHead>
+              <TableHead>Net Amount</TableHead>
+              <TableHead>Method</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>Period</TableHead>
+              <TableHead>Payments</TableHead>
               <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? Array.from({ length: 3 }).map((_, i) => (
-              <TableRow key={i}><TableCell colSpan={5}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
-            )) : settlements.length > 0 ? settlements.map((s: any) => (
-              <TableRow key={s.id}>
-                <TableCell>{s.bill_providers?.name || "—"}</TableCell>
-                <TableCell className="font-medium">{Number(s.total_amount).toLocaleString()}</TableCell>
-                <TableCell><Badge variant={s.status === "settled" ? "default" : "secondary"}>{s.status}</Badge></TableCell>
-                <TableCell className="text-muted-foreground">{s.period_start && s.period_end ? `${format(new Date(s.period_start), "MMM dd")} – ${format(new Date(s.period_end), "MMM dd")}` : "—"}</TableCell>
-                <TableCell className="text-muted-foreground">{s.created_at ? format(new Date(s.created_at), "MMM dd, yyyy") : "—"}</TableCell>
-              </TableRow>
-            )) : (
-              <TableRow><TableCell colSpan={5} className="text-center text-muted-foreground py-8">No settlements yet</TableCell></TableRow>
+              <TableRow key={i}><TableCell colSpan={7}><Skeleton className="h-8 w-full" /></TableCell></TableRow>
+            )) : settlements.length > 0 ? settlements.map((s: any) => {
+              const details = (s.settlement_details || {}) as any;
+              return (
+                <TableRow key={s.id}>
+                  <TableCell className="font-medium">{s.bill_providers?.name || "—"}</TableCell>
+                  <TableCell>{s.currency} {Number(s.net_amount).toLocaleString()}</TableCell>
+                  <TableCell><Badge variant="outline" className="text-xs">{s.settlement_type?.replace("_", " ")}</Badge></TableCell>
+                  <TableCell><Badge variant={statusVariant(s.status)}>{s.status}</Badge></TableCell>
+                  <TableCell className="text-muted-foreground">{s.payment_ids?.length || details.payment_count || 0}</TableCell>
+                  <TableCell className="text-muted-foreground">{s.created_at ? format(new Date(s.created_at), "MMM dd, yyyy HH:mm") : "—"}</TableCell>
+                  <TableCell className="text-right space-x-1">
+                    {s.status === "pending" && (
+                      <>
+                        <Button size="sm" variant="default" disabled={processMutation.isPending} onClick={() => { if (confirm(`Process settlement of ${s.currency} ${Number(s.net_amount).toLocaleString()} to ${s.bill_providers?.name}?`)) processMutation.mutate(s.id); }}>
+                          {processMutation.isPending ? "..." : "Process"}
+                        </Button>
+                        <Button size="sm" variant="ghost" disabled={cancelMutation.isPending} onClick={() => { if (confirm("Cancel this settlement?")) cancelMutation.mutate(s.id); }}>Cancel</Button>
+                      </>
+                    )}
+                    {s.status === "partial" && (
+                      <Button size="sm" variant="outline" onClick={() => toast({ title: "Transfer Details", description: JSON.stringify(details.transfer_results?.map((r: any) => `${r.method}: ${r.status}`)) })}>
+                        <Eye className="h-4 w-4 mr-1" /> Details
+                      </Button>
+                    )}
+                    {s.status === "settled" && s.settled_at && (
+                      <span className="text-xs text-muted-foreground">{format(new Date(s.settled_at), "MMM dd HH:mm")}</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              );
+            }) : (
+              <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">No settlements yet. Initiate one to pay providers.</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
