@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Crown, CheckCircle, ArrowRight, Lock, Loader2, Sparkles, Shield, Zap, Wallet, AlertTriangle, CreditCard, Smartphone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Crown, CheckCircle, ArrowRight, Lock, Loader2, Sparkles, Shield, Zap, Wallet, AlertTriangle, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
