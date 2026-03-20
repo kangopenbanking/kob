@@ -13,6 +13,7 @@ import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelecto
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { BankSelector } from "@/components/funding/BankSelector";
 import { API_CONFIG } from "@/config/api";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
@@ -23,6 +24,9 @@ const MerchantFundWallet = () => {
   const [method, setMethod] = useState(searchParams.get("method") || "mobile_money");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
+  const [selectedBankCode, setSelectedBankCode] = useState("");
+  const [selectedBankName, setSelectedBankName] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -57,9 +61,11 @@ const MerchantFundWallet = () => {
   const { fee: feeData, isLoading: feeLoading } = useFeeEstimate({ channel: method, amount: Number(amount), scope: "merchant", merchantId: merchant?.id });
 
   const handleFund = async () => {
-    if (!merchant?.id) { toast.error("Merchant not found"); return; }
-    if (!amount || Number(amount) <= 0) { toast.error("Enter a valid amount"); return; }
-    if (method === "mobile_money" && !phone) { toast.error("Phone number required for Mobile Money"); return; }
+    if (!merchant?.id) { toast.error("Merchant account not found. Please set up your merchant profile first."); return; }
+    if (!amount || Number(amount) <= 0) { toast.error("Please enter a valid funding amount"); return; }
+    if (method === "mobile_money" && !phone) { toast.error("Phone number is required for Mobile Money payments"); return; }
+    if (method === "bank_transfer" && !selectedBankCode) { toast.error("Please select a bank to transfer from"); return; }
+    if (method === "bank_transfer" && !bankAccountNumber) { toast.error("Please enter your bank account number"); return; }
 
     setLoading(true);
     setResult(null);
@@ -73,15 +79,18 @@ const MerchantFundWallet = () => {
           merchant_id: merchant.id,
           target_description: "Merchant wallet top-up",
           customer: { phone, email },
+          bank_code: method === "bank_transfer" ? selectedBankCode : undefined,
+          bank_name: method === "bank_transfer" ? selectedBankName : undefined,
+          account_number: method === "bank_transfer" ? bankAccountNumber : undefined,
           return_url: `${API_CONFIG.SITE_URL}/merchant`,
         },
       });
       if (error) throw error;
       setResult(data);
-      toast.success("Funding intent created");
+      toast.success("Funding request submitted — follow the instructions to complete payment");
       refetchWallets();
     } catch (err: any) {
-      toast.error(err.message || "Failed to create funding intent");
+      toast.error(err.message || "Failed to create funding intent. Please try again.");
     }
     setLoading(false);
   };
@@ -138,7 +147,7 @@ const MerchantFundWallet = () => {
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Payment Method</Label>
-              <PaymentMethodSelector value={method} onChange={setMethod} />
+              <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setBankAccountNumber(""); }} />
             </div>
 
             {method === "mobile_money" && (
@@ -147,6 +156,16 @@ const MerchantFundWallet = () => {
                 <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11" />
               </div>
             )}
+
+            {method === "bank_transfer" && (
+              <BankSelector
+                selectedBank={selectedBankCode}
+                onBankChange={(code, name) => { setSelectedBankCode(code); setSelectedBankName(name); }}
+                accountNumber={bankAccountNumber}
+                onAccountNumberChange={setBankAccountNumber}
+              />
+            )}
+
             {(method === "card" || method === "paypal") && (
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Email</Label>

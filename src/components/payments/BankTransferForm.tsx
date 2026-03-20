@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { CM_BANKS } from "@/constants/cameroon-banks";
 
 interface Bank {
   id: string;
@@ -28,36 +29,44 @@ export const BankTransferForm = () => {
   const [narration, setNarration] = useState("");
 
   useEffect(() => {
+    setSelectedBank("");
+    setVerifiedName("");
     fetchBanks();
   }, [currency]);
 
   const fetchBanks = async () => {
     try {
-      // Map currency to country code
       const countryMap: Record<string, string> = {
-        XAF: 'CM',
-        NGN: 'NG',
-        GHS: 'GH',
-        KES: 'KE',
-        UGX: 'UG',
-        TZS: 'TZ',
-        ZAR: 'ZA',
+        XAF: 'CM', NGN: 'NG', GHS: 'GH', KES: 'KE', UGX: 'UG', TZS: 'TZ', ZAR: 'ZA',
       };
 
+      const country = countryMap[currency] || 'CM';
       const { data, error } = await supabase.functions.invoke('flutterwave-list-banks', {
-        body: { country: countryMap[currency] || 'CM' },
+        body: { country },
       });
 
       if (error) throw error;
 
-      setBanks(data.banks || []);
+      const bankList = data.banks || [];
+      if (bankList.length > 0) {
+        setBanks(bankList);
+      } else if (country === 'CM') {
+        // Fallback to static Cameroon banks
+        setBanks(CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name })));
+      }
     } catch (error: any) {
       console.error('Error fetching banks:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch bank list",
-        variant: "destructive",
-      });
+      // Use fallback for Cameroon
+      const countryMap: Record<string, string> = { XAF: 'CM' };
+      if ((countryMap[currency] || 'CM') === 'CM') {
+        setBanks(CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name })));
+      } else {
+        toast({
+          title: "Bank List Unavailable",
+          description: "Could not load banks for this currency. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
