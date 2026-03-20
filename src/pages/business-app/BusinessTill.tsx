@@ -59,7 +59,8 @@ const BusinessTill: React.FC = () => {
   });
 
   const merchantId = merchant?.id;
-  const isEnterprise = merchant?.plan_tier === 'enterprise';
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === 'enterprise' || isAdmin;
   const till = usePOSTill(merchantId);
 
   // Show enterprise intro popup on first visit for non-enterprise users

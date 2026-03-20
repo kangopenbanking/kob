@@ -80,7 +80,8 @@ export default function MerchantBranding() {
     onError: () => toast.error("Failed to save branding"),
   });
 
-  const isEnterprise = merchant?.plan_tier === "enterprise";
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === "enterprise" || isAdmin;
 
   const updateField = (key: string, value: any) => {
     setBranding((prev) => ({ ...prev, [key]: value }));

@@ -105,7 +105,8 @@ export default function MerchantWhiteLabel() {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  const isEnterprise = merchant?.plan_tier === "enterprise";
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === "enterprise" || isAdmin;
 
   if (isLoading) {
     return (

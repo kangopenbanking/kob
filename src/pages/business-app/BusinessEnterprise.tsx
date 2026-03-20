@@ -66,7 +66,8 @@ export default function BusinessEnterprise() {
     },
   });
 
-  const isEnterprise = merchant?.plan_tier === 'enterprise';
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === 'enterprise' || isAdmin;
   const enterprisePlan = plans?.find((p: any) => p.tier === 'enterprise');
 
   const handleUpgradeClick = () => {

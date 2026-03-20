@@ -130,7 +130,7 @@ export default function MerchantSettlementAccounts() {
     const { data: m } = await supabase.from("gateway_merchants").select("id, plan_tier").eq("user_id", user.id).maybeSingle();
     if (m) {
       setMerchantId(m.id);
-      setIsEnterprise(m.plan_tier === 'enterprise');
+      setIsEnterprise(m.plan_tier === 'enterprise' || adminBypass);
       const { data } = await supabase
         .from("gateway_merchant_settlement_accounts")
         .select("*")
