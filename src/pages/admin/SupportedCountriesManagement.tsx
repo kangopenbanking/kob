@@ -106,11 +106,7 @@ export default function SupportedCountriesManagement() {
     <div className="space-y-6">
       <AdminPageHeader icon={Globe} title="Supported Countries" description="Manage supported countries, currencies, and regional settings" />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Globe className="h-6 w-6 text-primary" /> Supported Countries</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage phone number country codes available in Consumer and Banking apps</p>
-        </div>
+      <div className="flex items-center justify-end">
         <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" /> Add Country</Button>
       </div>
 

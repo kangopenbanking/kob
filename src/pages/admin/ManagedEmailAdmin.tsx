@@ -241,11 +241,7 @@ const ManagedEmailAdmin: React.FC = () => {
     <div className="space-y-6">
       <AdminPageHeader icon={MailCheck} title="Email Management" description="Manage all automated emails for institutions and customers" />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2"><Mail className="h-6 w-6" /> Email Management</h1>
-          <p className="text-muted-foreground">Manage all automated emails for institutions and customers</p>
-        </div>
+      <div className="flex items-center justify-end">
       </div>
 
       {/* Stats */}
