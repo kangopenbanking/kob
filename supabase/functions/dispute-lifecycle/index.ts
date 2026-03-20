@@ -133,14 +133,14 @@ serve(async (req) => {
             metadata: { dispute_id, status: updatedFields.status },
           });
 
-          // Send email
+          // Send email to merchant
           if (merchant.business_email) {
             await supabase.functions.invoke('managed-send-email', {
               body: {
                 email_key: 'dispute_status_update',
                 recipient_email: merchant.business_email,
                 variables: {
-                  merchant_name: merchant.business_name || 'Merchant',
+                  customer_name: merchant.business_name || 'Merchant',
                   dispute_ref: dispute.dispute_ref || dispute_id.slice(0, 8),
                   amount: Number(dispute.amount).toLocaleString(),
                   currency: dispute.currency,
@@ -164,6 +164,46 @@ serve(async (req) => {
           icon: 'dispute',
           metadata: { dispute_id, status: updatedFields.status },
         });
+
+        // Send email to consumer
+        const { data: consumerProfile } = await supabase.from('profiles').select('full_name, email').eq('id', dispute.user_id).single();
+        if (consumerProfile?.email) {
+          // Use final resolution template for terminal statuses
+          const isFinal = ['won', 'lost', 'closed', 'resolved', 'rejected'].includes(updatedFields.status);
+          await supabase.functions.invoke('managed-send-email', {
+            body: {
+              email_key: isFinal ? 'dispute_resolved_final' : 'dispute_status_update',
+              recipient_email: consumerProfile.email,
+              institution_id: dispute.institution_id || null,
+              variables: {
+                customer_name: consumerProfile.full_name || 'Customer',
+                dispute_ref: dispute.id.slice(0, 8).toUpperCase(),
+                amount: Number(dispute.amount).toLocaleString(),
+                currency: dispute.currency || 'XAF',
+                old_status: oldStatus,
+                new_status: statusLabel,
+                resolution_status: statusLabel,
+                note: activityNote,
+              },
+            },
+          });
+        }
+      }
+
+      // Notify admins when escalated
+      if (updatedFields.status === 'escalated') {
+        const { data: admins } = await supabase.from('user_roles').select('user_id').eq('role', 'admin');
+        if (admins?.length) {
+          const notifications = admins.map(a => ({
+            user_id: a.user_id,
+            type: 'warning',
+            title: 'Dispute Escalated',
+            message: `A ${source} dispute for ${dispute.currency || 'XAF'} ${Number(dispute.amount).toLocaleString()} has been escalated for admin review`,
+            icon: 'dispute',
+            metadata: { dispute_id, source },
+          }));
+          await supabase.from('app_notifications').insert(notifications);
+        }
       }
     }
 
