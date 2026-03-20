@@ -51,6 +51,7 @@ export const institutionNavigation = [
       { title: "Staff Authorizations", path: "/fi-portal/staff-authorizations", icon: UserCog, sectionKey: "staff-authorizations" },
       { title: "Withdrawal Policies", path: "/fi-portal/withdrawal-policies", icon: Shield, sectionKey: "withdrawal-policies" },
       { title: "Approval Queue", path: "/fi-portal/approvals", icon: ClipboardList, sectionKey: "approvals" },
+      { title: "Disputes", path: "/fi-portal/disputes", icon: ShieldAlert, sectionKey: "disputes" },
       { title: "Overdraft Management", path: "/fi-portal/overdraft", icon: TrendingUp, sectionKey: "overdraft" },
       { title: "Incidents", path: "/fi-portal/incidents", icon: ShieldAlert, sectionKey: "incidents" },
       { title: "Alerts", path: "/fi-portal/alerts", icon: Bell, sectionKey: "alerts" },
@@ -169,4 +170,5 @@ export const ALL_PORTAL_SECTIONS = [
   { key: 'gateway-subaccounts', label: 'Subaccounts' },
   { key: 'gateway-customers', label: 'Gateway Customers' },
   { key: 'connector', label: 'Bank Connector Kit' },
+  { key: 'disputes', label: 'Disputes' },
 ];
