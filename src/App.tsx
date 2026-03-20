@@ -68,6 +68,7 @@ const AUP = lazy(() => import("./pages/AUP"));
 const DataProtection = lazy(() => import("./pages/DataProtection"));
 const About = lazy(() => import("./pages/About"));
 const ProductManual = lazy(() => import("./pages/ProductManual"));
+const BankIntegrationGuide = lazy(() => import("./pages/BankIntegrationGuide"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Status = lazy(() => import("./pages/Status"));
