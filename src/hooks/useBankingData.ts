@@ -256,11 +256,11 @@ export function useApplyForLoan() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['loan-applications', institutionId] });
-      toast.success('Loan application submitted!');
+      toast.success(`Loan application for ${variables.requested_amount.toLocaleString()} XAF submitted. You'll be notified once reviewed.`);
     },
-    onError: (err: any) => toast.error(err.message || 'Application failed'),
+    onError: (err: any) => toast.error(err.message || 'Could not submit loan application. Please check your details and try again.'),
   });
 }
 
