@@ -217,7 +217,7 @@ export function usePOSTill(merchantId: string | undefined) {
           amount: total,
           merchant_name: merchantData?.business_name || 'Merchant',
         });
-        toast.success('QR code generated — customer can scan to pay');
+        toast.success('Scan & Pay QR code generated — ask your customer to scan it with their Kang app');
         return;
       }
 
