@@ -98,7 +98,7 @@ const BankQRPay: React.FC = () => {
     setScanResult({ account: manualCode.trim().toUpperCase() });
     setShowManualEntry(false);
     setManualCode('');
-    toast.success('Code verified!');
+    toast.success('Payment code verified — ready to proceed');
   };
 
   const handlePayNow = async () => {
