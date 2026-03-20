@@ -136,6 +136,7 @@ export default function DeveloperHome() {
         <CodeSnippetSection />
         <SecuritySection />
         <OpenBankingSection />
+        <ArchitectureSection />
         <SDKSection />
         <AdvancedFeaturesGate />
         <DocNavigation

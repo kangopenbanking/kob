@@ -6,6 +6,17 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "9.1.0",
+      date: "2026-03-20",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Competitive Comparison page (/developer/compare) — interactive 77-feature matrix comparing KOB vs Stripe vs Flutterwave vs CinetPay vs DusuPay across 10 categories" },
+        { type: "feature", description: "3-Layer Architecture section on Developer Home — animated visual showcasing Payment Gateway + Open Banking + Banking Infrastructure layers" },
+        { type: "feature", description: "Migration Guides page (/developer/migrate) — side-by-side code examples for switching from Stripe or Flutterwave to KOB in Node.js, Python, and PHP" },
+        { type: "improvement", description: "Developer Portal navigation updated with Compare and Migrate links" },
+      ]
+    },
+    {
       version: "9.0.0",
       date: "2026-03-20",
       type: "major",

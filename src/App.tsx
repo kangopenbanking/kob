@@ -819,6 +819,8 @@ function App() {
               <Route path="identity-guide" element={<IdentityGuide />} />
               <Route path="onboarding-guide" element={<OnboardingGuide />} />
               <Route path="roles-permissions" element={<RolesPermissions />} />
+              <Route path="compare" element={<CompetitiveComparison />} />
+              <Route path="migrate" element={<MigrationGuide />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
 
