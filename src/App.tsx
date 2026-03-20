@@ -1003,6 +1003,7 @@ function App() {
               <Route path="more/settings" element={<BankSettings />} />
               <Route path="more/alerts" element={<BankAlerts />} />
               <Route path="more/help" element={<BankHelp />} />
+              <Route path="more/disputes" element={<BankDisputes />} />
             </Route>
 
             {/* Customer App PWA Routes — unified (no institutionId) */}
