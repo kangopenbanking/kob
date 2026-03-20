@@ -406,6 +406,8 @@ const BankCreditScore = lazy(() => import("./pages/banking-app/BankCreditScore")
 const BankSettings = lazy(() => import("./pages/banking-app/BankSettings"));
 const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
 const BankHelp = lazy(() => import("./pages/banking-app/BankHelp"));
+const BankDisputes = lazy(() => import("./pages/banking-app/BankDisputes"));
+
 
 // Customer App PWA
 const CustomerSplash = lazy(() => import("./pages/customer-app/CustomerSplash"));
