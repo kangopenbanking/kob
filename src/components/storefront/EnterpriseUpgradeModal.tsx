@@ -1,18 +1,19 @@
-import React from 'react';
-import { Crown, CheckCircle, X, ArrowRight, Lock } from 'lucide-react';
+import React, { useState } from 'react';
+import { Crown, CheckCircle, ArrowRight, Lock, Loader2, Sparkles, Shield, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
 
 interface EnterpriseUpgradeModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   plan: any;
+  plans?: any[];
   currency: string;
   subscribing: boolean;
-  onConfirm: () => void;
+  onConfirm: (planId?: string) => void;
 }
 
 const COMPARISON = [
@@ -31,95 +32,173 @@ const COMPARISON = [
   { feature: 'SLA guarantee (99.9%)', starter: false, pro: false, enterprise: true },
 ];
 
-export function EnterpriseUpgradeModal({ open, onOpenChange, plan, currency, subscribing, onConfirm }: EnterpriseUpgradeModalProps) {
-  const isEnterprise = (plan?.tier === 'enterprise') || (plan?.name || '').toLowerCase().includes('enterprise');
+const TIER_META: Record<string, { icon: typeof Crown; color: string; bg: string }> = {
+  starter: { icon: Shield, color: 'hsl(var(--fi-blue))', bg: 'hsl(var(--fi-blue))' },
+  pro: { icon: Zap, color: 'hsl(var(--fi-green))', bg: 'hsl(var(--fi-green))' },
+  enterprise: { icon: Crown, color: 'hsl(var(--fi-purple))', bg: 'hsl(var(--fi-purple))' },
+};
+
+function getTierKey(plan: any): string {
+  const name = (plan?.name || '').toLowerCase();
+  if (name.includes('enterprise') || plan?.tier === 'enterprise') return 'enterprise';
+  if (name.includes('pro')) return 'pro';
+  return 'starter';
+}
+
+export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], currency, subscribing, onConfirm }: EnterpriseUpgradeModalProps) {
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
+
+  // Use provided plans array, or fall back to single plan
+  const allPlans = plans.length > 0 ? plans : (plan ? [plan] : []);
+
+  // Sort: lowest price first
+  const sortedPlans = [...allPlans].sort((a, b) => (a.price || 0) - (b.price || 0));
+
+  const handleSubscribe = (p: any) => {
+    setSubscribingPlanId(p.id);
+    onConfirm(p.id);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-        <DialogHeader className="text-center pb-2">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+        {/* Header */}
+        <DialogHeader className="text-center p-6 pb-4">
           <div className="w-14 h-14 rounded-2xl bg-[hsl(var(--fi-purple))]/10 flex items-center justify-center mx-auto mb-3">
-            <Crown className="w-7 h-7 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
+            <Sparkles className="w-7 h-7 text-[hsl(var(--fi-purple))]" strokeWidth={1.5} />
           </div>
-          <DialogTitle className="text-xl font-bold">
-            {isEnterprise ? 'Confirm Enterprise Subscription' : `Subscribe to ${plan?.name || 'Plan'}`}
-          </DialogTitle>
+          <DialogTitle className="text-xl font-bold">Choose Your Plan</DialogTitle>
           <DialogDescription className="text-sm">
-            {isEnterprise
-              ? 'Unlock all five Enterprise-exclusive features with this plan.'
-              : 'Review the feature comparison below before subscribing.'}
+            Select the plan that best fits your business needs
           </DialogDescription>
         </DialogHeader>
 
-        {/* Plan summary */}
-        <div className="flex items-center justify-between p-4 rounded-xl border bg-muted/30 my-2">
-          <div>
-            <p className="text-sm font-bold text-foreground">{plan?.name}</p>
-            <p className="text-xs text-muted-foreground">{plan?.duration_days} days</p>
-          </div>
-          <div className="text-right">
-            <p className="text-xl font-extrabold text-foreground">{plan?.price?.toLocaleString()} {currency}</p>
-          </div>
-        </div>
+        {/* Plan cards */}
+        <div className="px-6 pb-2">
+          <div className={`grid gap-4 ${sortedPlans.length >= 3 ? 'sm:grid-cols-3' : sortedPlans.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
+            {sortedPlans.map((p) => {
+              const tierKey = getTierKey(p);
+              const meta = TIER_META[tierKey] || TIER_META.starter;
+              const Icon = meta.icon;
+              const isSelected = selectedPlanId === p.id;
+              const isFree = (p.price || 0) === 0;
+              const isSubscribing = subscribing && subscribingPlanId === p.id;
 
-        {/* Feature comparison table */}
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="bg-muted/50 border-b">
-                <th className="text-left p-3 font-semibold text-foreground">Feature</th>
-                <th className="text-center p-3 font-semibold text-foreground w-20">Starter</th>
-                <th className="text-center p-3 font-semibold text-foreground w-20">Pro</th>
-                <th className="text-center p-3 font-semibold text-foreground w-24">
-                  <span className="flex items-center justify-center gap-1">
-                    <Crown className="w-3 h-3 text-[hsl(var(--fi-purple))]" /> Enterprise
-                  </span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {COMPARISON.map((row, i) => (
-                <tr key={i} className={`border-b last:border-0 ${!row.starter && !row.pro && row.enterprise ? 'bg-[hsl(var(--fi-purple))]/[0.03]' : ''}`}>
-                  <td className="p-3 text-foreground">{row.feature}</td>
-                  <td className="text-center p-3">
-                    {row.starter ? <CheckCircle className="w-4 h-4 text-emerald-500 mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
-                  </td>
-                  <td className="text-center p-3">
-                    {row.pro ? <CheckCircle className="w-4 h-4 text-emerald-500 mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
-                  </td>
-                  <td className="text-center p-3">
-                    {row.enterprise ? (
-                      <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] mx-auto" strokeWidth={1.5} />
-                    ) : (
-                      <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />
+              return (
+                <div
+                  key={p.id}
+                  onClick={() => setSelectedPlanId(p.id)}
+                  className={`relative rounded-2xl border-2 p-5 cursor-pointer transition-all duration-200 hover:shadow-md ${
+                    isSelected
+                      ? `border-[${meta.color}] shadow-md ring-1`
+                      : 'border-border/40 hover:border-border'
+                  }`}
+                  style={isSelected ? { borderColor: meta.color, boxShadow: `0 0 0 1px ${meta.color}20` } : {}}
+                >
+                  {/* Tier badge */}
+                  {tierKey === 'enterprise' && (
+                    <Badge className="absolute -top-2.5 right-4 text-[10px] font-bold" style={{ backgroundColor: meta.bg, color: 'white' }}>
+                      Most Popular
+                    </Badge>
+                  )}
+
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${meta.bg}15` }}>
+                      <Icon className="w-4.5 h-4.5" style={{ color: meta.color }} strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-foreground">{p.name}</p>
+                      <p className="text-[10px] text-muted-foreground">{p.duration_days} days</p>
+                    </div>
+                  </div>
+
+                  <div className="mb-4">
+                    <span className="text-2xl font-extrabold text-foreground">
+                      {isFree ? 'Free' : `${(p.price || 0).toLocaleString()}`}
+                    </span>
+                    {!isFree && <span className="text-xs text-muted-foreground ml-1">{currency}</span>}
+                  </div>
+
+                  {/* Feature count */}
+                  <div className="space-y-1.5 mb-4">
+                    {(Array.isArray(p.features_json) ? p.features_json.slice(0, 4) : []).map((f: string, j: number) => (
+                      <div key={j} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+                        <CheckCircle className="w-3.5 h-3.5 mt-0.5 flex-shrink-0" style={{ color: meta.color }} strokeWidth={1.5} />
+                        <span>{f}</span>
+                      </div>
+                    ))}
+                    {Array.isArray(p.features_json) && p.features_json.length > 4 && (
+                      <p className="text-[10px] text-muted-foreground pl-5.5">+{p.features_json.length - 4} more features</p>
                     )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+
+                  <Button
+                    className="w-full rounded-xl h-10 text-xs font-bold gap-2 transition-all"
+                    style={
+                      isSelected || tierKey === 'enterprise'
+                        ? { backgroundColor: meta.bg, color: 'white' }
+                        : {}
+                    }
+                    variant={isSelected || tierKey === 'enterprise' ? 'default' : 'outline'}
+                    disabled={subscribing}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSubscribe(p);
+                    }}
+                  >
+                    {isSubscribing ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="w-4 h-4 animate-spin" /> Subscribing...
+                      </span>
+                    ) : (
+                      <>
+                        {isFree ? 'Activate Free Plan' : 'Subscribe'} <ArrowRight className="w-3.5 h-3.5" />
+                      </>
+                    )}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {isEnterprise && (
-          <div className="p-3 rounded-xl border border-[hsl(var(--fi-purple))]/20 bg-[hsl(var(--fi-purple))]/5 text-xs text-[hsl(var(--fi-purple))]">
-            <strong>Enterprise exclusive:</strong> Custom branding, API access, multi-location inventory, dedicated account manager, and 99.9% SLA guarantee.
+        {/* Comparison table */}
+        <div className="px-6 pb-6 pt-2">
+          <p className="text-xs font-bold text-foreground mb-3">Full Feature Comparison</p>
+          <div className="rounded-xl border overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="bg-muted/50 border-b">
+                  <th className="text-left p-3 font-semibold text-foreground">Feature</th>
+                  <th className="text-center p-3 font-semibold text-foreground w-20">Starter</th>
+                  <th className="text-center p-3 font-semibold text-foreground w-20">Pro</th>
+                  <th className="text-center p-3 font-semibold text-foreground w-24">
+                    <span className="flex items-center justify-center gap-1">
+                      <Crown className="w-3 h-3 text-[hsl(var(--fi-purple))]" /> Enterprise
+                    </span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {COMPARISON.map((row, i) => (
+                  <tr key={i} className={`border-b last:border-0 ${!row.starter && !row.pro && row.enterprise ? 'bg-[hsl(var(--fi-purple))]/[0.03]' : ''}`}>
+                    <td className="p-3 text-foreground">{row.feature}</td>
+                    <td className="text-center p-3">
+                      {row.starter ? <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-green))] mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
+                    </td>
+                    <td className="text-center p-3">
+                      {row.pro ? <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-green))] mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
+                    </td>
+                    <td className="text-center p-3">
+                      {row.enterprise ? <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-
-        <DialogFooter className="flex-col sm:flex-row gap-2 pt-2">
-          <Button variant="outline" onClick={() => onOpenChange(false)} className="rounded-xl">Cancel</Button>
-          <Button
-            onClick={onConfirm}
-            disabled={subscribing}
-            className="bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white rounded-xl gap-2"
-          >
-            {subscribing ? (
-              <span className="flex items-center gap-2"><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Subscribing...</span>
-            ) : (
-              <>Confirm & Subscribe <ArrowRight className="w-4 h-4" /></>
-            )}
-          </Button>
-        </DialogFooter>
+        </div>
       </DialogContent>
     </Dialog>
   );
