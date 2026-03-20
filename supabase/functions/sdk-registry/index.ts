@@ -94,17 +94,40 @@ charge = kob.charges.create(
     php: {
       name: "kangopenbanking/sdk",
       version: "1.0.0",
-      language: "PHP",
+      language: "PHP 8.1+ / Laravel",
       install: "composer require kangopenbanking/sdk",
       repository: "https://github.com/kangopenbanking/KangOpenBanking-KOB",
       docs: "https://kangopenbanking.com/developer/guides/sdks",
-      status: "coming_soon",
       features: [
-        "PSR-7 / PSR-18 compatible",
-        "Laravel service provider included",
-        "Guzzle HTTP client",
-        "Webhook verification middleware",
+        "PSR-4 autoloaded, PHP 8.1+",
+        "Laravel service provider + KOB facade",
+        "Guzzle 7 HTTP client",
+        "Webhook HMAC-SHA256 verification middleware",
+        "Automatic OAuth2 token management",
+        "AISP + Gateway + Sandbox resources",
+        "PKCE authorization code flow support",
+        "KOBException with error_code/error_id",
       ],
+      quickstart: `use KangOpenBanking\\KangOpenBanking;
+
+$kob = new KangOpenBanking([
+    'client_id' => 'your_client_id',
+    'api_key' => 'sbx_your_sandbox_key',
+    'environment' => 'sandbox',
+]);
+
+// List accounts
+$accounts = $kob->accounts->list();
+
+// Create a charge
+$charge = $kob->charges->create([
+    'merchant_id' => 'mch_uuid',
+    'amount' => 5000,
+    'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '237677123456',
+    'tx_ref' => 'order_001',
+]);`,
     },
   };
 

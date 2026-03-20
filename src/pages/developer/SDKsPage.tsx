@@ -311,6 +311,22 @@ export default function SDKsPage() {
             </Card>
           </TabsContent>
 
+          <TabsContent value="php">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-base">PHP / Laravel</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(PHP_QUICKSTART)}>
+                  <Copy className="h-4 w-4 mr-1" /> Copy
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm leading-relaxed">
+                  <code>{PHP_QUICKSTART}</code>
+                </pre>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="curl">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between pb-2">
