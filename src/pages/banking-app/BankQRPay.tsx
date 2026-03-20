@@ -63,9 +63,9 @@ const BankQRPay: React.FC = () => {
       setScanResult({ account: data.account, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(null);
-      toast.success('QR Code scanned!');
+      toast.success('QR code scanned successfully — confirm your payment details');
     } else {
-      toast.error('Invalid QR code format');
+      toast.error('This QR code is not recognized. Please scan a valid Kang payment QR code.');
     }
   }, [navigate]);
 
