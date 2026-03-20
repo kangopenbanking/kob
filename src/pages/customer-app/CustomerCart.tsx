@@ -76,7 +76,7 @@ const CustomerCart: React.FC = () => {
       if (error) throw error;
       if (data?.error) {
         if (data.error === 'insufficient_balance') {
-          toast.error(`Insufficient balance. You need ${data.required?.toLocaleString()} XAF`);
+          toast.error(`Insufficient wallet balance. You need ${data.required?.toLocaleString()} XAF but have ${walletBalance.toLocaleString()} XAF`);
           setOrderFailed(true);
         } else {
           toast.error(data.message || data.error);
