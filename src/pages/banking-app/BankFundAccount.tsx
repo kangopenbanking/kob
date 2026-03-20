@@ -88,6 +88,8 @@ const BankFundAccount: React.FC = () => {
     if (!selectedAccountId) { toast.error('Please select an account to receive the funds'); return; }
     if (!amount || Number(amount) <= 0) { toast.error('Please enter an amount greater than 0 XAF'); return; }
     if (method === 'mobile_money' && !phone) { toast.error('Enter your Mobile Money phone number to continue'); return; }
+    if (method === 'bank_transfer' && !selectedBankCode) { toast.error('Please select a bank for your transfer'); return; }
+    if (method === 'bank_transfer' && !bankAccountNumber) { toast.error('Please enter your bank account number'); return; }
     setShowPin(true);
   };
 
