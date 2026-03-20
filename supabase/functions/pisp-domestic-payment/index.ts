@@ -1,12 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
 import { corsHeaders } from "../_shared/cors.ts";
+import { extractFapiHeaders, addFapiResponseHeaders, logFapiContext } from "../_shared/fapi-headers.ts";
+import { rejectJweContentType, generateResponseJws } from "../_shared/jws-signing.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const jweCheck = rejectJweContentType(req, corsHeaders);
+  if (jweCheck) return jweCheck;
+
+  const fapi = extractFapiHeaders(req);
+  logFapiContext(fapi, 'pisp-domestic-payment');
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
