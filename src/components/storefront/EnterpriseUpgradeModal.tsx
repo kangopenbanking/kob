@@ -140,7 +140,7 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
                   <Button
                     className="w-full rounded-xl h-10 text-xs font-bold gap-2 transition-all"
                     style={
-                      isSelected || tierKey === 'enterprise'
+                      isSelected || idx === sortedPlans.length - 1
                         ? { backgroundColor: meta.bg, color: 'white' }
                         : {}
                     }
