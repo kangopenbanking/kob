@@ -99,6 +99,7 @@ export default function MerchantStorefront() {
   const [newAttrLabel, setNewAttrLabel] = useState('');
   const [expandedStep, setExpandedStep] = useState<string | null>('profile');
   const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
+  const [walletBalance, setWalletBalance] = useState(0);
 
   const { data: supportedCountries = [] } = useSupportedCountries();
 
@@ -143,6 +144,10 @@ export default function MerchantStorefront() {
       setSubscription(sub);
       const { data: p } = await supabase.from('pos_subscription_plans').select('*').eq('is_active', true).order('price');
       setPlans(p || []);
+      // Fetch wallet balance
+      const { data: wallets } = await supabase.from('gateway_merchant_wallets').select('available_balance, currency').eq('merchant_id', merchant.id);
+      const wb = wallets?.find((w: any) => w.currency === (sp?.country === 'CM' ? 'XAF' : 'XAF'));
+      setWalletBalance(wb?.available_balance || 0);
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
   };
@@ -1283,6 +1288,11 @@ export default function MerchantStorefront() {
         plans={plans}
         currency={currency}
         subscribing={subscribing}
+        walletBalance={walletBalance}
+        onFundWallet={() => {
+          setUpgradeModalOpen(false);
+          window.location.href = '/merchant/wallet';
+        }}
         onConfirm={(planId?: string) => {
           const id = planId || selectedPlan?.id;
           if (id) {
