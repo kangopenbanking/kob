@@ -83,6 +83,7 @@ const Certificates = lazy(() => import("./pages/guides/Certificates"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
+const NotificationHistory = lazy(() => import("./pages/NotificationHistory"));
 const Communications = lazy(() => import("./pages/Communications"));
 const MobileMoney = lazy(() => import("./pages/MobileMoney"));
 const Payments = lazy(() => import("./pages/Payments"));
