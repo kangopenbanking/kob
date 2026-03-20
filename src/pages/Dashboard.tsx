@@ -161,13 +161,16 @@ const Dashboard = () => {
           <h2 className="text-base font-semibold text-foreground">Quick Services</h2>
         </div>
         <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-          {quickServices.map((svc) => (
-            <Card key={svc.label} className="cursor-pointer hover:shadow-md transition-all group border-border/60" onClick={() => navigate(svc.path)}>
+          {quickServices.map((svc: any) => (
+            <Card key={svc.label} className="cursor-pointer hover:shadow-md transition-all group border-border/60 relative" onClick={() => navigate(svc.path)}>
+              {svc.soon && (
+                <Badge variant="secondary" className="absolute -top-2 -right-2 text-[10px] px-1.5 py-0 z-10">Soon</Badge>
+              )}
               <CardContent className="p-4 flex flex-col items-center gap-2.5 text-center">
-                <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${svc.color} transition-transform group-hover:scale-110`}>
+                <div className={`h-11 w-11 rounded-xl flex items-center justify-center ${svc.color} transition-transform group-hover:scale-110 ${svc.soon ? 'opacity-50' : ''}`}>
                   <svc.icon className="h-5 w-5" />
                 </div>
-                <p className="text-xs font-semibold">{svc.label}</p>
+                <p className={`text-xs font-semibold ${svc.soon ? 'text-muted-foreground' : ''}`}>{svc.label}</p>
               </CardContent>
             </Card>
           ))}

@@ -1692,32 +1692,15 @@ export default function BankingAppManagement() {
                 {/* Virtual Cards Tab */}
                 <TabsContent value="cards">
                   <Card>
-                    <CardContent className="p-0">
-                      {loadingCards ? (
-                        <div className="flex justify-center p-8"><Loader2 className="h-5 w-5 animate-spin" /></div>
-                      ) : virtualCards.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center p-8">No virtual cards found</p>
-                      ) : (
-                        <Table>
-                          <TableHeader><TableRow>
-                            <TableHead>Card Name</TableHead><TableHead>Last 4</TableHead><TableHead>Brand</TableHead><TableHead className="text-right">Balance (USD)</TableHead><TableHead>Status</TableHead><TableHead>Created</TableHead>
-                          </TableRow></TableHeader>
-                          <TableBody>
-                            {virtualCards.map((card: any) => (
-                              <TableRow key={card.id}>
-                                <TableCell className="font-medium">{card.card_name}</TableCell>
-                                <TableCell className="font-mono">•••• {card.last4}</TableCell>
-                                <TableCell><Badge variant="outline" className="text-xs capitalize">{card.brand}</Badge></TableCell>
-                                <TableCell className="text-right font-medium">${Number(card.balance_usd || 0).toFixed(2)}</TableCell>
-                                <TableCell>
-                                  <Badge variant={card.status === 'active' ? 'default' : 'secondary'} className="text-xs capitalize">{card.status}</Badge>
-                                </TableCell>
-                                <TableCell className="text-sm">{card.created_at ? format(new Date(card.created_at), "MMM d, yyyy") : "—"}</TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      )}
+                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted">
+                        <CreditCard className="h-8 w-8 text-muted-foreground" />
+                      </div>
+                      <Badge variant="secondary" className="mb-3 text-xs font-semibold">Dormant</Badge>
+                      <h3 className="text-base font-semibold text-foreground mb-1">Virtual Cards — Coming Soon</h3>
+                      <p className="text-sm text-muted-foreground max-w-sm">
+                        The virtual cards integration is currently dormant and under development. This service will be activated in a future release.
+                      </p>
                     </CardContent>
                   </Card>
                 </TabsContent>

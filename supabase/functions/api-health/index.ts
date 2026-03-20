@@ -27,21 +27,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    async function checkCardyfieHealth(): Promise<boolean> {
-      try {
-        const baseUrl = Deno.env.get('CARDYFIE_BASE_URL');
-        const apiKey = Deno.env.get('CARDYFIE_API_KEY');
-        if (!baseUrl || !apiKey) return false;
-        const response = await fetch(`${baseUrl}/card/currencies`, {
-          method: 'GET',
-          headers: { 'Authorization': `Bearer ${apiKey}`, 'Accept': 'application/json' },
-          signal: AbortSignal.timeout(5000)
-        });
-        return response.ok;
-      } catch {
-        return false;
-      }
-    }
+    // Cardyfie health check removed — virtual_cards is dormant (coming soon)
 
     async function checkDatabaseHealth(): Promise<boolean> {
       try {

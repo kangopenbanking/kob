@@ -1,5 +1,5 @@
 import { DashboardWidget } from "../DashboardWidget";
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Send, CreditCard, PiggyBank, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -44,6 +44,7 @@ export function QuickActionsWidget({
       onClick: () => navigate("/virtual-cards"),
       bg: "bg-secondary",
       color: "text-secondary-foreground",
+      soon: true,
     },
     {
       icon: PiggyBank,
@@ -68,9 +69,12 @@ export function QuickActionsWidget({
           <button
             key={action.label}
             onClick={action.onClick}
-            className="flex flex-col items-center gap-2 rounded-2xl p-3 transition-all duration-200 hover:scale-105 active:scale-95"
+            className="relative flex flex-col items-center gap-2 rounded-2xl p-3 transition-all duration-200 hover:scale-105 active:scale-95"
           >
-            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${action.bg}`}>
+            {'soon' in action && action.soon && (
+              <Badge variant="secondary" className="absolute -top-1 -right-1 text-[9px] px-1 py-0 leading-tight">Soon</Badge>
+            )}
+            <div className={`flex h-11 w-11 items-center justify-center rounded-2xl ${action.bg} ${'soon' in action && action.soon ? 'opacity-50' : ''}`}>
               <action.icon className={`h-5 w-5 ${action.color}`} />
             </div>
             <span className="text-xs font-medium text-muted-foreground">{action.label}</span>
