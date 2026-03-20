@@ -170,4 +170,5 @@ export const ALL_PORTAL_SECTIONS = [
   { key: 'gateway-subaccounts', label: 'Subaccounts' },
   { key: 'gateway-customers', label: 'Gateway Customers' },
   { key: 'connector', label: 'Bank Connector Kit' },
+  { key: 'disputes', label: 'Disputes' },
 ];
