@@ -330,6 +330,7 @@ const ConnectorReconciliation = lazy(() => import("./pages/institution/connector
 const ConnectorHealth = lazy(() => import("./pages/institution/connector/ConnectorHealth"));
 const ConnectorAudit = lazy(() => import("./pages/institution/connector/ConnectorAudit"));
 const ConnectorTemplates = lazy(() => import("./pages/institution/connector/ConnectorTemplates"));
+const ConnectorGuide = lazy(() => import("./pages/institution/connector/ConnectorGuide"));
 
 // Merchant Portal
 const MerchantDashboard = lazy(() => import("./pages/merchant/MerchantDashboard"));
@@ -610,6 +611,7 @@ function App() {
               <Route path="connector/health" element={<ConnectorHealth />} />
               <Route path="connector/audit" element={<ConnectorAudit />} />
               <Route path="connector/templates" element={<ConnectorTemplates />} />
+              <Route path="connector/guide" element={<ConnectorGuide />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>

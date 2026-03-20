@@ -3,7 +3,7 @@ import {
   CreditCard, Building2, ArrowUpDown, DollarSign, TrendingUp, ShoppingCart,
   Store, Shield, UserCheck, Wallet, MapPin, Banknote, PiggyBank, BookOpen,
   Receipt, KeyRound, ScrollText, UserPlus, ShieldAlert, Bell, Mail,
-  Link2, RefreshCw, GitBranch, Contact, ClipboardList, UserCog,
+  Link2, RefreshCw, GitBranch, Contact, ClipboardList, UserCog, HelpCircle,
 } from "lucide-react";
 
 export const institutionNavigation = [
@@ -106,6 +106,7 @@ export const institutionNavigation = [
       { title: "Connector Health", path: "/fi-portal/connector/health", icon: Shield, sectionKey: "connector" },
       { title: "Audit Log", path: "/fi-portal/connector/audit", icon: ScrollText, sectionKey: "connector" },
       { title: "Templates & Guides", path: "/fi-portal/connector/templates", icon: BookOpen, sectionKey: "connector" },
+      { title: "How It Works", path: "/fi-portal/connector/guide", icon: HelpCircle, sectionKey: "connector" },
     ]
   },
   {
