@@ -1235,6 +1235,125 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_api_endpoints: {
+        Row: {
+          auth_config_encrypted: Json | null
+          auth_method: string
+          bank_id: string
+          base_url: string
+          created_at: string | null
+          environment: string
+          id: string
+          is_active: boolean | null
+          last_poll_at: string | null
+          last_poll_status: string | null
+          name: string
+          paths: Json | null
+          poll_interval_seconds: number
+          updated_at: string | null
+          watermark_value: string | null
+        }
+        Insert: {
+          auth_config_encrypted?: Json | null
+          auth_method?: string
+          bank_id: string
+          base_url: string
+          created_at?: string | null
+          environment?: string
+          id?: string
+          is_active?: boolean | null
+          last_poll_at?: string | null
+          last_poll_status?: string | null
+          name: string
+          paths?: Json | null
+          poll_interval_seconds?: number
+          updated_at?: string | null
+          watermark_value?: string | null
+        }
+        Update: {
+          auth_config_encrypted?: Json | null
+          auth_method?: string
+          bank_id?: string
+          base_url?: string
+          created_at?: string | null
+          environment?: string
+          id?: string
+          is_active?: boolean | null
+          last_poll_at?: string | null
+          last_poll_status?: string | null
+          name?: string
+          paths?: Json | null
+          poll_interval_seconds?: number
+          updated_at?: string | null
+          watermark_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_api_endpoints_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_api_pull_runs: {
+        Row: {
+          accounts_synced: number | null
+          balances_synced: number | null
+          bank_id: string
+          completed_at: string | null
+          created_at: string | null
+          endpoint_id: string
+          errors_json: Json | null
+          id: string
+          started_at: string | null
+          status: string
+          transactions_synced: number | null
+        }
+        Insert: {
+          accounts_synced?: number | null
+          balances_synced?: number | null
+          bank_id: string
+          completed_at?: string | null
+          created_at?: string | null
+          endpoint_id: string
+          errors_json?: Json | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          transactions_synced?: number | null
+        }
+        Update: {
+          accounts_synced?: number | null
+          balances_synced?: number | null
+          bank_id?: string
+          completed_at?: string | null
+          created_at?: string | null
+          endpoint_id?: string
+          errors_json?: Json | null
+          id?: string
+          started_at?: string | null
+          status?: string
+          transactions_synced?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_api_pull_runs_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_api_pull_runs_endpoint_id_fkey"
+            columns: ["endpoint_id"]
+            isOneToOne: false
+            referencedRelation: "bank_api_endpoints"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_batch_items: {
         Row: {
           amount: number

@@ -331,6 +331,7 @@ const ConnectorHealth = lazy(() => import("./pages/institution/connector/Connect
 const ConnectorAudit = lazy(() => import("./pages/institution/connector/ConnectorAudit"));
 const ConnectorTemplates = lazy(() => import("./pages/institution/connector/ConnectorTemplates"));
 const ConnectorGuide = lazy(() => import("./pages/institution/connector/ConnectorGuide"));
+const ConnectorOnboard = lazy(() => import("./pages/institution/connector/ConnectorOnboard"));
 
 // Merchant Portal
 const MerchantDashboard = lazy(() => import("./pages/merchant/MerchantDashboard"));
@@ -466,6 +467,8 @@ const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"))
 const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
 const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
 const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
+const BusinessWebhookLogs = lazy(() => import("./pages/business-app/BusinessWebhookLogs"));
+const BusinessDisputesPage = lazy(() => import("./pages/business-app/BusinessDisputes"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
@@ -612,6 +615,7 @@ function App() {
               <Route path="connector/audit" element={<ConnectorAudit />} />
               <Route path="connector/templates" element={<ConnectorTemplates />} />
               <Route path="connector/guide" element={<ConnectorGuide />} />
+              <Route path="connector/onboard" element={<ConnectorOnboard />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
@@ -1075,8 +1079,9 @@ function App() {
               <Route path="settings" element={<BusinessSettings />} />
               <Route path="compliance" element={<BusinessCompliance />} />
               <Route path="enterprise" element={<BusinessEnterprise />} />
+              <Route path="webhook-logs" element={<BusinessWebhookLogs />} />
+              <Route path="disputes" element={<BusinessDisputesPage />} />
               <Route path="kyb" element={<MerchantKYB />} />
-              <Route path="disputes" element={<MerchantDisputes />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
               <Route path="webhooks" element={<MerchantWebhooks />} />

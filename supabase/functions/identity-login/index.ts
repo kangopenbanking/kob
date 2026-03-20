@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 import { safeErrorResponse } from '../_shared/errors.ts';
+import { sendManagedEmail, getUserEmail, getUserName } from '../_shared/send-managed-email.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
@@ -133,8 +134,33 @@ Deno.serve(async (req) => {
 
       challengeId = challenge?.id || null;
 
-      // TODO: Send OTP via SMS/email based on factor type
-      console.log(`MFA challenge created for user ${userId}, factor ${factor.type}`);
+      // Deliver MFA code via SMS or email based on factor type
+      if (factor.type === 'sms' || factor.type === 'phone') {
+        // Get user phone from profiles
+        const { data: profile } = await adminClient.from('profiles').select('phone').eq('id', userId).single();
+        const phone = profile?.phone || phone; // fallback to login phone
+        if (phone) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/phone-auth-send-otp`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+              body: JSON.stringify({ phone, otp_code: code, channel: 'sms', context: 'mfa_login' })
+            });
+          } catch (e) { console.error('MFA SMS delivery error:', e); }
+        }
+      } else if (factor.type === 'email') {
+        const userEmail = await getUserEmail(adminClient, userId);
+        const userName = await getUserName(adminClient, userId);
+        if (userEmail) {
+          await sendManagedEmail(adminClient, {
+            email_key: 'mfa_login_code',
+            recipient_email: userEmail,
+            recipient_user_id: userId,
+            variables: { code, user_name: userName, expires_minutes: '5' }
+          });
+        }
+      }
+      console.log(`MFA challenge created for user ${userId}, factor ${factor.type}, code delivered`);
     }
 
     // Record session

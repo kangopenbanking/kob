@@ -107,6 +107,7 @@ export const institutionNavigation = [
       { title: "Audit Log", path: "/fi-portal/connector/audit", icon: ScrollText, sectionKey: "connector" },
       { title: "Templates & Guides", path: "/fi-portal/connector/templates", icon: BookOpen, sectionKey: "connector" },
       { title: "How It Works", path: "/fi-portal/connector/guide", icon: HelpCircle, sectionKey: "connector" },
+      { title: "Onboard New Integration", path: "/fi-portal/connector/onboard", icon: UserPlus, sectionKey: "connector" },
     ]
   },
   {

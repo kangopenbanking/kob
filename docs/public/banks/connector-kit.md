@@ -10,6 +10,7 @@ The KOB Bank Connector Kit enables financial institutions to connect to the KOB 
 | **Database Connector** | KOB → Bank DB | KOB polls the bank's read-only database replica on a schedule | Bank has a DB replica or CDC feed available |
 | **Message Queue (Real-Time)** | Bi-directional | Events pushed/received via webhook, Kafka, RabbitMQ, Supabase Realtime, or SSE | Bank has API capability and needs real-time sync |
 | **HTTPS Push** | Bank → KOB | Bank pushes data to KOB ingestion endpoints | Bank has outbound API capability |
+| **API Pull (connector_pull)** | KOB → Bank API | KOB polls the bank's REST API on schedule | Bank has REST API; KOB auto-syncs |
 
 ---
 
@@ -58,7 +59,49 @@ WHERE updated_at > :watermark
 
 ---
 
-## 3. Message Queue Connector (Real-Time)
+## 3. API Pull Connector (connector_pull)
+
+### Workflow
+1. Register a bank API endpoint (base URL, auth method, resource paths)
+2. KOB polls the bank's REST API on a configured schedule
+3. Responses are normalized and upserted into `bank_sourced_*` tables
+4. Supports OAuth2 client credentials, API key, Basic auth, and Bearer token
+
+### Authentication Methods
+| Method | Description |
+|---|---|
+| `api_key` | Custom header with API key (default `X-API-Key`) |
+| `oauth2_client_credentials` | Automatic token exchange via `token_url` |
+| `basic` | HTTP Basic Authentication |
+| `bearer_token` | Static Bearer token |
+| `mtls` | Mutual TLS (certificate-based) |
+
+### Configuration
+```json
+{
+  "base_url": "https://bank-api.example.com",
+  "auth_method": "oauth2_client_credentials",
+  "auth_config": {
+    "token_url": "https://bank-api.example.com/oauth/token",
+    "client_id": "kob-connector",
+    "client_secret": "...",
+    "scope": "accounts:read transactions:read"
+  },
+  "paths": {
+    "accounts": "/api/v1/accounts",
+    "transactions": "/api/v1/transactions",
+    "balances": "/api/v1/balances",
+    "health": "/api/v1/health"
+  }
+}
+```
+
+### Edge Function
+`bank-api-connector` — Actions: register_endpoint, list_endpoints, update_endpoint, test_endpoint, trigger_pull, poll_due, list_pull_runs
+
+---
+
+## 4. Message Queue Connector (Real-Time)
 
 ### Channel Types
 | Type | Protocol | Description | Direction |
@@ -214,3 +257,52 @@ interface BankCoreAdapter {
 - **Deduplication**: SHA-256 for files, `correlation_id` for messages, watermark for DB polling
 - **Broker Auth**: Kafka (API key/secret or Bearer token), RabbitMQ (Basic auth or Bearer token)
 - **Delivery Logging**: All broker deliveries tracked in `broker_delivery_log` with latency and success metrics
+
+---
+
+## Broker Limitations & High-Throughput Architecture
+
+### Current Implementation
+
+KOB's Kafka and RabbitMQ adapters use **HTTP proxy APIs** (Confluent REST Proxy v3 and RabbitMQ Management HTTP API respectively). This works well for:
+- Low-to-medium throughput (< 100 msg/sec)
+- Simple produce/consume patterns
+- Banks that already expose these HTTP interfaces
+
+### Known Limitations
+
+| Limitation | Detail |
+|---|---|
+| **No persistent TCP connections** | Edge Functions are stateless; each invocation creates a new HTTP request to the broker proxy |
+| **No consumer groups lifecycle** | Consumer group management (rebalancing, offset commits) is limited to what the REST Proxy exposes |
+| **No dead-letter queue handling** | DLQ routing must be configured on the broker side; KOB does not manage DLQ policies |
+| **No schema registry** | Messages are JSON only; Avro/Protobuf schema validation is not supported |
+| **Polling-based consumption** | Inbound messages require explicit `consume_broker` calls; no persistent subscription |
+| **Latency overhead** | HTTP proxy adds ~10-50ms per message compared to native TCP clients |
+
+### Recommended Architecture for High-Throughput (1000+ msg/sec)
+
+For banks requiring high-throughput, persistent broker connections, we recommend deploying a **KOB Bridge Agent** as a sidecar service:
+
+```
+┌─────────────┐     TCP      ┌──────────────────┐     HTTPS    ┌─────────────┐
+│ Bank's Core │ ◄──────────► │  KOB Bridge      │ ◄──────────► │  KOB API    │
+│ Kafka/AMQP  │   (native)   │  Agent (Docker)   │   (REST)    │  (Edge Fn)  │
+└─────────────┘              └──────────────────┘              └─────────────┘
+```
+
+The Bridge Agent:
+1. Maintains persistent TCP connections to Kafka/RabbitMQ
+2. Handles consumer group management, offset tracking, and DLQ routing
+3. Batches messages and forwards to KOB via standard REST API calls
+4. Can be deployed on-premise at the bank or in a cloud VPC
+5. Reference implementation available in `docs/bridge-agent/` (coming soon)
+
+### When to Use Each Approach
+
+| Scenario | Recommendation |
+|---|---|
+| < 100 msg/sec, simple patterns | HTTP Proxy (current, built-in) |
+| 100-1000 msg/sec, needs DLQ | Bridge Agent + HTTP Proxy |
+| > 1000 msg/sec, complex routing | Bridge Agent with native drivers |
+| Bank has no broker | Use File or API Pull connector instead |
