@@ -149,7 +149,7 @@ const MerchantFundWallet = () => {
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Payment Method</Label>
-              <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setBankAccountNumber(""); }} />
+              <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setSelectedBankSource(""); setBankAccountNumber(""); }} />
             </div>
 
             {method === "mobile_money" && (
