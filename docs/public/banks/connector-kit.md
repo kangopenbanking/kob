@@ -8,7 +8,7 @@ The KOB Bank Connector Kit enables financial institutions to connect to the KOB 
 |---|---|---|---|
 | **File (CSV/pain.001)** | Bi-directional | Upload CSV files, download payment instruction files | Bank has no API; legacy core banking |
 | **Database Connector** | KOB → Bank DB | KOB polls the bank's read-only database replica on a schedule | Bank has a DB replica or CDC feed available |
-| **Message Queue (Real-Time)** | Bi-directional | Events pushed/received via webhook, Supabase Realtime, or SSE | Bank has API capability and needs real-time sync |
+| **Message Queue (Real-Time)** | Bi-directional | Events pushed/received via webhook, Kafka, RabbitMQ, Supabase Realtime, or SSE | Bank has API capability and needs real-time sync |
 | **HTTPS Push** | Bank → KOB | Bank pushes data to KOB ingestion endpoints | Bank has outbound API capability |
 
 ---
@@ -61,11 +61,83 @@ WHERE updated_at > :watermark
 ## 3. Message Queue Connector (Real-Time)
 
 ### Channel Types
-| Type | Description | Direction |
-|---|---|---|
-| `realtime` | Supabase Realtime subscription on `bank_mq_messages` table | Inbound + Outbound |
-| `webhook` | HTTP POST with HMAC-SHA256 signatures | Outbound delivery |
-| `sse` | Server-Sent Events stream (future) | Outbound delivery |
+| Type | Protocol | Description | Direction |
+|---|---|---|---|
+| `realtime` | Supabase Realtime | Subscription on `bank_mq_messages` table | Inbound + Outbound |
+| `webhook` | HTTP POST | HMAC-SHA256 signed payloads | Outbound delivery |
+| `kafka` | Confluent REST Proxy v3 | Produce/consume via Kafka REST API | Inbound + Outbound |
+| `rabbitmq` | RabbitMQ Management HTTP API | Publish/consume via AMQP-over-HTTP | Inbound + Outbound |
+| `sse` | Server-Sent Events | Event stream (future) | Outbound delivery |
+
+### Kafka Integration
+
+KOB integrates with Kafka via the **Confluent REST Proxy v3 API**, which allows HTTP-based message production and consumption without requiring native Kafka client libraries.
+
+#### Configuration
+```json
+{
+  "broker_type": "kafka",
+  "broker_config": {
+    "rest_proxy_url": "https://your-kafka-proxy:8082",
+    "topic": "bank.transactions",
+    "consumer_group": "kob-consumer",
+    "api_key": "your-confluent-api-key",
+    "api_secret": "your-confluent-api-secret"
+  }
+}
+```
+
+#### Supported Operations
+| Action | Description |
+|---|---|
+| `register_channel` | Register a Kafka channel with REST Proxy URL and topic |
+| `test_broker` | Produce a test ping message to verify connectivity |
+| `publish_message` | Produce a message to the configured Kafka topic |
+| `consume_broker` | Poll and consume messages from the topic |
+
+#### Message Format (Kafka REST Proxy v3)
+```json
+{
+  "records": [{
+    "key": { "type": "STRING", "data": "message-uuid" },
+    "value": { "type": "JSON", "data": "{\"message_type\": \"transaction.created\", ...}" }
+  }]
+}
+```
+
+### RabbitMQ Integration
+
+KOB integrates with RabbitMQ via the **Management HTTP API**, enabling message publishing and consumption over AMQP exchanges and queues.
+
+#### Configuration
+```json
+{
+  "broker_type": "rabbitmq",
+  "broker_config": {
+    "management_url": "https://your-rabbit:15672",
+    "exchange": "kob.payments",
+    "routing_key": "kob.payment.instructions",
+    "queue": "kob.inbound.transactions",
+    "vhost": "/",
+    "username": "kob-service",
+    "password": "encrypted-password"
+  }
+}
+```
+
+#### Supported Operations
+| Action | Description |
+|---|---|
+| `register_channel` | Register a RabbitMQ channel with management URL, exchange, and routing key |
+| `test_broker` | Publish a test message to verify connectivity and routing |
+| `publish_message` | Publish a message to the configured exchange with routing key |
+| `consume_broker` | Consume messages from the configured queue |
+
+#### Message Properties
+- `delivery_mode: 2` — Persistent messages survive broker restarts
+- `content_type: application/json` — All payloads are JSON
+- `correlation_id` — Unique ID for deduplication and tracing
+- Custom headers: `x-kob-message-type`, `x-kob-bank-id`
 
 ### Inbound Messages (Bank → KOB)
 Banks POST events to `/bank-mq-connector` with `action: inbound_message`:
@@ -94,8 +166,29 @@ Banks POST events to `/bank-mq-connector` with `action: inbound_message`:
 | `balance.updated` | `bank_sourced_balances` | Insert |
 | `payment.status.*` | `bank_payments` | Update + event log |
 
+### Broker Actions (New)
+| Action | Description |
+|---|---|
+| `test_broker` | Test Kafka/RabbitMQ connectivity with a ping message |
+| `consume_broker` | Poll inbound messages from a broker channel |
+| `broker_delivery_log` | View delivery attempt history with latency/success metrics |
+
 ### Edge Function
-`bank-mq-connector` — Actions: register_channel, list_channels, update_channel, inbound_message, publish_message, list_messages, channel_stats, sandbox_seed_mq
+`bank-mq-connector` — Actions: register_channel, list_channels, update_channel, delete_channel, inbound_message, publish_message, list_messages, channel_stats, test_broker, consume_broker, broker_delivery_log, sandbox_seed_mq
+
+---
+
+## Interbank Dispatch Worker
+
+The `interbank-dispatch-worker` uses an outbox pattern to reliably deliver payment instructions to creditor banks. It now supports full broker delivery:
+
+| Delivery Mode | Implementation |
+|---|---|
+| `https_push` | Direct HTTP POST to bank endpoint |
+| `file` | Generates instruction file for bank download |
+| `message_queue` | **Kafka** or **RabbitMQ** delivery via broker adapters, with webhook fallback |
+
+The worker automatically looks up the appropriate MQ channel for the target bank and delivers via the configured broker. If no broker channel exists, it falls back to webhook delivery. All broker deliveries are logged in `broker_delivery_log` for audit and monitoring.
 
 ---
 
@@ -117,5 +210,7 @@ interface BankCoreAdapter {
 - **mTLS**: Required for production connectors (HTTPS Push + File)
 - **HMAC-SHA256**: Payload signing for webhook message integrity (MQ)
 - **Certificate Management**: Upload, rotate, and revoke certificates via API
-- **Encryption**: DB credentials stored encrypted in `connection_config_encrypted`
+- **Encryption**: DB credentials stored encrypted in `connection_config_encrypted`; broker credentials in `broker_config_encrypted`
 - **Deduplication**: SHA-256 for files, `correlation_id` for messages, watermark for DB polling
+- **Broker Auth**: Kafka (API key/secret or Bearer token), RabbitMQ (Basic auth or Bearer token)
+- **Delivery Logging**: All broker deliveries tracked in `broker_delivery_log` with latency and success metrics

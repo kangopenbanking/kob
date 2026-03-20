@@ -4,6 +4,261 @@ import { corsHeaders } from '../_shared/cors.ts';
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
+// ─── Broker Adapter Interfaces ───
+interface BrokerDeliveryResult {
+  delivered: boolean;
+  status_code?: number;
+  broker_type: string;
+  topic_or_queue?: string;
+  latency_ms?: number;
+  error?: string;
+  response_body?: string;
+}
+
+// ─── Kafka REST Proxy Adapter ───
+// Uses Confluent REST Proxy v3 API (HTTP-based produce/consume)
+async function kafkaProduce(channel: any, messagePayload: any): Promise<BrokerDeliveryResult> {
+  const config = channel.broker_config_encrypted || {};
+  const restProxyUrl = config.rest_proxy_url;
+  if (!restProxyUrl) throw new Error('Kafka REST Proxy URL not configured in broker_config_encrypted.rest_proxy_url');
+
+  const topic = channel.broker_topic || config.topic;
+  if (!topic) throw new Error('Kafka topic not configured');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/vnd.kafka.json.v2+json',
+    'Accept': 'application/vnd.kafka.v2+json',
+  };
+
+  // Basic auth or API key
+  if (config.api_key && config.api_secret) {
+    headers['Authorization'] = 'Basic ' + btoa(`${config.api_key}:${config.api_secret}`);
+  } else if (config.auth_token) {
+    headers['Authorization'] = `Bearer ${config.auth_token}`;
+  }
+
+  const kafkaPayload = {
+    records: [{
+      key: { type: 'STRING', data: messagePayload.message_id || crypto.randomUUID() },
+      value: { type: 'JSON', data: JSON.stringify(messagePayload) },
+    }],
+  };
+
+  const start = Date.now();
+  const response = await fetch(`${restProxyUrl}/topics/${topic}`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(kafkaPayload),
+  });
+
+  const latency = Date.now() - start;
+  const responseText = await response.text();
+
+  return {
+    delivered: response.ok,
+    status_code: response.status,
+    broker_type: 'kafka',
+    topic_or_queue: topic,
+    latency_ms: latency,
+    response_body: responseText.slice(0, 500),
+    error: response.ok ? undefined : `Kafka produce failed [${response.status}]: ${responseText.slice(0, 200)}`,
+  };
+}
+
+async function kafkaConsume(channel: any, maxMessages = 10): Promise<any[]> {
+  const config = channel.broker_config_encrypted || {};
+  const restProxyUrl = config.rest_proxy_url;
+  if (!restProxyUrl) throw new Error('Kafka REST Proxy URL not configured');
+
+  const topic = channel.broker_topic || config.topic;
+  const consumerGroup = channel.consumer_group || config.consumer_group || `kob-consumer-${channel.id}`;
+  const instanceId = `kob-instance-${channel.id}`;
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/vnd.kafka.v2+json',
+    'Accept': 'application/vnd.kafka.json.v2+json',
+  };
+  if (config.api_key && config.api_secret) {
+    headers['Authorization'] = 'Basic ' + btoa(`${config.api_key}:${config.api_secret}`);
+  } else if (config.auth_token) {
+    headers['Authorization'] = `Bearer ${config.auth_token}`;
+  }
+
+  // Step 1: Create consumer instance (idempotent — 409 means already exists)
+  const createResp = await fetch(`${restProxyUrl}/consumers/${consumerGroup}`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/vnd.kafka.v2+json' },
+    body: JSON.stringify({
+      name: instanceId,
+      format: 'json',
+      'auto.offset.reset': 'latest',
+      'auto.commit.enable': 'true',
+    }),
+  });
+  const createBody = await createResp.text();
+  if (!createResp.ok && createResp.status !== 409) {
+    throw new Error(`Failed to create Kafka consumer: ${createBody}`);
+  }
+
+  let baseUri: string;
+  if (createResp.ok) {
+    const parsed = JSON.parse(createBody);
+    baseUri = parsed.base_uri;
+  } else {
+    // Already exists — construct URI
+    baseUri = `${restProxyUrl}/consumers/${consumerGroup}/instances/${instanceId}`;
+  }
+
+  // Step 2: Subscribe to topic
+  await fetch(`${baseUri}/subscription`, {
+    method: 'POST',
+    headers: { ...headers, 'Content-Type': 'application/vnd.kafka.v2+json' },
+    body: JSON.stringify({ topics: [topic] }),
+  });
+
+  // Step 3: Consume records
+  const consumeResp = await fetch(`${baseUri}/records?max_bytes=300000`, {
+    method: 'GET',
+    headers: { 'Accept': 'application/vnd.kafka.json.v2+json', ...headers },
+  });
+
+  if (!consumeResp.ok) {
+    const errText = await consumeResp.text();
+    throw new Error(`Kafka consume failed: ${errText}`);
+  }
+
+  const records = await consumeResp.json();
+  return (records || []).slice(0, maxMessages).map((r: any) => ({
+    key: r.key,
+    value: typeof r.value === 'string' ? JSON.parse(r.value) : r.value,
+    topic: r.topic,
+    partition: r.partition,
+    offset: r.offset,
+  }));
+}
+
+// ─── RabbitMQ HTTP API Adapter ───
+// Uses RabbitMQ Management HTTP API for publishing and consuming
+async function rabbitmqPublish(channel: any, messagePayload: any): Promise<BrokerDeliveryResult> {
+  const config = channel.broker_config_encrypted || {};
+  const managementUrl = config.management_url;
+  if (!managementUrl) throw new Error('RabbitMQ management_url not configured in broker_config_encrypted');
+
+  const exchange = config.exchange || 'amq.direct';
+  const routingKey = channel.broker_queue || config.routing_key || 'kob.default';
+  const vhost = encodeURIComponent(config.vhost || '/');
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (config.username && config.password) {
+    headers['Authorization'] = 'Basic ' + btoa(`${config.username}:${config.password}`);
+  } else if (config.auth_token) {
+    headers['Authorization'] = `Bearer ${config.auth_token}`;
+  }
+
+  const rabbitPayload = {
+    properties: {
+      delivery_mode: 2, // persistent
+      content_type: 'application/json',
+      message_id: messagePayload.message_id || crypto.randomUUID(),
+      correlation_id: messagePayload.correlation_id,
+      timestamp: Math.floor(Date.now() / 1000),
+      headers: {
+        'x-kob-message-type': messagePayload.message_type || 'unknown',
+        'x-kob-bank-id': messagePayload.bank_id || '',
+      },
+    },
+    routing_key: routingKey,
+    payload: JSON.stringify(messagePayload),
+    payload_encoding: 'string',
+  };
+
+  const start = Date.now();
+  const response = await fetch(`${managementUrl}/api/exchanges/${vhost}/${encodeURIComponent(exchange)}/publish`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(rabbitPayload),
+  });
+
+  const latency = Date.now() - start;
+  const responseText = await response.text();
+
+  let routed = false;
+  try {
+    const parsed = JSON.parse(responseText);
+    routed = parsed.routed === true;
+  } catch { /* ignore */ }
+
+  return {
+    delivered: response.ok && routed,
+    status_code: response.status,
+    broker_type: 'rabbitmq',
+    topic_or_queue: `${exchange}/${routingKey}`,
+    latency_ms: latency,
+    response_body: responseText.slice(0, 500),
+    error: (!response.ok || !routed) ? `RabbitMQ publish failed [${response.status}]: routed=${routed}` : undefined,
+  };
+}
+
+async function rabbitmqConsume(channel: any, maxMessages = 10): Promise<any[]> {
+  const config = channel.broker_config_encrypted || {};
+  const managementUrl = config.management_url;
+  if (!managementUrl) throw new Error('RabbitMQ management_url not configured');
+
+  const queue = channel.broker_queue || config.queue;
+  if (!queue) throw new Error('RabbitMQ queue not configured');
+
+  const vhost = encodeURIComponent(config.vhost || '/');
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (config.username && config.password) {
+    headers['Authorization'] = 'Basic ' + btoa(`${config.username}:${config.password}`);
+  }
+
+  const response = await fetch(`${managementUrl}/api/queues/${vhost}/${encodeURIComponent(queue)}/get`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      count: maxMessages,
+      ackmode: 'ack_requeue_false',
+      encoding: 'auto',
+    }),
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`RabbitMQ consume failed: ${errText}`);
+  }
+
+  const messages = await response.json();
+  return (messages || []).map((m: any) => ({
+    payload: typeof m.payload === 'string' ? (() => { try { return JSON.parse(m.payload); } catch { return m.payload; } })() : m.payload,
+    exchange: m.exchange,
+    routing_key: m.routing_key,
+    message_count: m.message_count,
+    properties: m.properties,
+  }));
+}
+
+// ─── Unified Broker Produce/Consume ───
+async function brokerProduce(channel: any, messagePayload: any): Promise<BrokerDeliveryResult> {
+  switch (channel.broker_type) {
+    case 'kafka': return kafkaProduce(channel, messagePayload);
+    case 'rabbitmq': return rabbitmqPublish(channel, messagePayload);
+    default: throw new Error(`Unsupported broker_type: ${channel.broker_type}`);
+  }
+}
+
+async function brokerConsume(channel: any, maxMessages = 10): Promise<any[]> {
+  switch (channel.broker_type) {
+    case 'kafka': return kafkaConsume(channel, maxMessages);
+    case 'rabbitmq': return rabbitmqConsume(channel, maxMessages);
+    default: throw new Error(`Unsupported broker_type: ${channel.broker_type}`);
+  }
+}
+
+// ─── Main Handler ───
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -24,7 +279,6 @@ Deno.serve(async (req) => {
 
     if (authHeader) {
       const token = authHeader.replace('Bearer ', '');
-      // Check for service_role key
       if (token === supabaseServiceKey) {
         isServiceAuth = true;
         isAdmin = true;
@@ -38,7 +292,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Allow inbound_message without JWT (uses HMAC validation)
     const publicActions = ['inbound_message'];
     if (!publicActions.includes(action) && !user && !isServiceAuth) {
       return errorResponse('Unauthorized', 401);
@@ -46,30 +299,49 @@ Deno.serve(async (req) => {
 
     switch (action) {
 
-      // ─── Register a Message Queue Channel ───
+      // ─── Register a Channel (now supports kafka/rabbitmq) ───
       case 'register_channel': {
         if (!isAdmin) return errorResponse('Admin only', 403);
         const { bank_id, channel_name, channel_type, direction, topic_filter,
-                webhook_url, webhook_secret, connector_instance_id } = body;
+                webhook_url, webhook_secret, connector_instance_id,
+                broker_type, broker_config, broker_topic, broker_queue, consumer_group,
+                delivery_guarantee } = body;
 
         if (!bank_id || !channel_name) return errorResponse('Missing bank_id or channel_name', 400);
 
-        const validTypes = ['realtime', 'webhook', 'sse', 'websocket'];
-        if (channel_type && !validTypes.includes(channel_type)) {
+        const validTypes = ['realtime', 'webhook', 'sse', 'websocket', 'kafka', 'rabbitmq'];
+        const resolvedType = channel_type || (broker_type ? broker_type : 'realtime');
+        if (!validTypes.includes(resolvedType)) {
           return errorResponse(`Invalid channel_type. Must be one of: ${validTypes.join(', ')}`, 400);
+        }
+
+        // Validate broker-specific config
+        if (['kafka', 'rabbitmq'].includes(resolvedType)) {
+          if (!broker_config) return errorResponse(`broker_config is required for ${resolvedType} channels`, 400);
+          if (resolvedType === 'kafka' && !broker_config.rest_proxy_url) {
+            return errorResponse('broker_config.rest_proxy_url is required for Kafka channels', 400);
+          }
+          if (resolvedType === 'rabbitmq' && !broker_config.management_url) {
+            return errorResponse('broker_config.management_url is required for RabbitMQ channels', 400);
+          }
         }
 
         const insertData: any = {
           bank_id,
           channel_name,
-          channel_type: channel_type || 'realtime',
+          channel_type: resolvedType,
           direction: direction || 'inbound',
           topic_filter: topic_filter || '*',
           webhook_url,
           connector_instance_id,
+          broker_type: ['kafka', 'rabbitmq'].includes(resolvedType) ? resolvedType : null,
+          broker_config_encrypted: broker_config || {},
+          broker_topic: broker_topic || broker_config?.topic || null,
+          broker_queue: broker_queue || broker_config?.queue || broker_config?.routing_key || null,
+          consumer_group: consumer_group || null,
+          delivery_guarantee: delivery_guarantee || 'at_least_once',
         };
 
-        // Hash webhook secret if provided
         if (webhook_secret) {
           const encoder = new TextEncoder();
           const data = encoder.encode(webhook_secret);
@@ -87,10 +359,11 @@ Deno.serve(async (req) => {
       // ─── List Channels ───
       case 'list_channels': {
         if (!isAdmin) return errorResponse('Admin only', 403);
-        const { bank_id, channel_type, is_active } = body;
+        const { bank_id, channel_type, broker_type: bt, is_active } = body;
         let query = supabase.from('bank_mq_channels').select('*, banks(display_name)');
         if (bank_id) query = query.eq('bank_id', bank_id);
         if (channel_type) query = query.eq('channel_type', channel_type);
+        if (bt) query = query.eq('broker_type', bt);
         if (typeof is_active === 'boolean') query = query.eq('is_active', is_active);
         const { data, error } = await query.order('created_at', { ascending: false });
         if (error) return errorResponse(error.message, 400);
@@ -104,10 +377,16 @@ Deno.serve(async (req) => {
         if (!channel_id) return errorResponse('Missing channel_id', 400);
 
         const allowed = ['channel_name', 'channel_type', 'direction', 'topic_filter',
-                         'webhook_url', 'is_active'];
+                          'webhook_url', 'is_active', 'broker_type', 'broker_config_encrypted',
+                          'broker_topic', 'broker_queue', 'consumer_group', 'delivery_guarantee'];
         const safe: Record<string, any> = { updated_at: new Date().toISOString() };
         for (const k of allowed) {
           if (updates[k] !== undefined) safe[k] = updates[k];
+        }
+
+        // Allow broker_config as alias
+        if (updates.broker_config !== undefined) {
+          safe.broker_config_encrypted = updates.broker_config;
         }
 
         if (updates.webhook_secret) {
@@ -134,6 +413,116 @@ Deno.serve(async (req) => {
         return jsonResponse({ deleted: true });
       }
 
+      // ─── Test Broker Connection ───
+      case 'test_broker': {
+        if (!isAdmin) return errorResponse('Admin only', 403);
+        const { channel_id } = body;
+        if (!channel_id) return errorResponse('Missing channel_id', 400);
+
+        const { data: channel } = await supabase.from('bank_mq_channels')
+          .select('*').eq('id', channel_id).single();
+        if (!channel) return errorResponse('Channel not found', 404);
+        if (!channel.broker_type) return errorResponse('Channel is not a broker channel', 400);
+
+        try {
+          const testPayload = {
+            message_id: `test-${crypto.randomUUID().slice(0, 8)}`,
+            message_type: 'system.ping',
+            bank_id: channel.bank_id,
+            payload: { test: true, timestamp: new Date().toISOString() },
+            correlation_id: `test-ping-${Date.now()}`,
+          };
+
+          const result = await brokerProduce(channel, testPayload);
+
+          // Log delivery attempt
+          await supabase.from('broker_delivery_log').insert({
+            channel_id: channel.id,
+            broker_type: channel.broker_type,
+            broker_endpoint: channel.broker_type === 'kafka'
+              ? channel.broker_config_encrypted?.rest_proxy_url
+              : channel.broker_config_encrypted?.management_url,
+            topic_or_queue: result.topic_or_queue,
+            request_payload: testPayload,
+            response_status: result.status_code,
+            response_body: result.response_body,
+            latency_ms: result.latency_ms,
+            success: result.delivered,
+            error_message: result.error,
+          });
+
+          return jsonResponse({
+            success: result.delivered,
+            broker_type: channel.broker_type,
+            latency_ms: result.latency_ms,
+            details: result,
+          });
+        } catch (e: any) {
+          return jsonResponse({
+            success: false,
+            broker_type: channel.broker_type,
+            error: e.message,
+          });
+        }
+      }
+
+      // ─── Consume from Broker (poll inbound) ───
+      case 'consume_broker': {
+        if (!isAdmin) return errorResponse('Admin only', 403);
+        const { channel_id, max_messages = 10 } = body;
+        if (!channel_id) return errorResponse('Missing channel_id', 400);
+
+        const { data: channel } = await supabase.from('bank_mq_channels')
+          .select('*').eq('id', channel_id).eq('is_active', true).single();
+        if (!channel) return errorResponse('Channel not found or inactive', 404);
+        if (!channel.broker_type) return errorResponse('Channel is not a broker channel', 400);
+
+        try {
+          const records = await brokerConsume(channel, max_messages);
+
+          // Process each consumed message through the standard inbound pipeline
+          const results = [];
+          for (const record of records) {
+            const msgPayload = record.value || record.payload || record;
+            const msgType = msgPayload.message_type || 'unknown';
+
+            // Store as inbound message
+            const { data: msg } = await supabase.from('bank_mq_messages').insert({
+              channel_id: channel.id,
+              bank_id: channel.bank_id,
+              message_type: msgType,
+              direction: 'inbound',
+              payload: msgPayload.payload || msgPayload,
+              correlation_id: msgPayload.correlation_id || crypto.randomUUID(),
+              status: 'received',
+            }).select().single();
+
+            if (msg) {
+              const processResult = await processInboundMessage(supabase, channel, msg);
+              results.push({ message_id: msg.id, ...processResult });
+            }
+          }
+
+          // Update channel stats
+          await supabase.from('bank_mq_channels').update({
+            last_message_at: new Date().toISOString(),
+            message_count: (channel.message_count || 0) + records.length,
+            updated_at: new Date().toISOString(),
+          }).eq('id', channel.id);
+
+          return jsonResponse({
+            consumed: records.length,
+            processed: results,
+            broker_type: channel.broker_type,
+          });
+        } catch (e: any) {
+          await supabase.from('bank_mq_channels').update({
+            error_count: (channel.error_count || 0) + 1,
+          }).eq('id', channel.id);
+          return errorResponse(`Broker consume error: ${e.message}`, 500);
+        }
+      }
+
       // ─── Inbound Message (Bank → KOB via webhook) ───
       case 'inbound_message': {
         const { channel_name, bank_id, message_type, payload, correlation_id } = body;
@@ -141,7 +530,6 @@ Deno.serve(async (req) => {
           return errorResponse('Missing required fields: channel_name, bank_id, message_type, payload', 400);
         }
 
-        // Find channel
         const { data: channel } = await supabase.from('bank_mq_channels')
           .select('*').eq('bank_id', bank_id).eq('channel_name', channel_name)
           .eq('is_active', true).single();
@@ -151,7 +539,6 @@ Deno.serve(async (req) => {
         if (channel.webhook_secret_hash) {
           const signature = req.headers.get('X-KOB-Signature');
           if (!signature) return errorResponse('Missing X-KOB-Signature header', 401);
-          // In production, verify HMAC-SHA256(payload, secret) === signature
         }
 
         // Topic filter check
@@ -171,7 +558,6 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Store message
         const { data: msg, error: msgErr } = await supabase.from('bank_mq_messages').insert({
           channel_id: channel.id,
           bank_id,
@@ -184,10 +570,8 @@ Deno.serve(async (req) => {
 
         if (msgErr) return errorResponse(msgErr.message, 400);
 
-        // Process message based on type
         const processResult = await processInboundMessage(supabase, channel, msg);
 
-        // Update channel stats
         await supabase.from('bank_mq_channels').update({
           last_message_at: new Date().toISOString(),
           message_count: (channel.message_count || 0) + 1,
@@ -213,7 +597,6 @@ Deno.serve(async (req) => {
           .select('*').eq('id', channel_id).eq('is_active', true).single();
         if (!channel) return errorResponse('Channel not found or inactive', 404);
 
-        // Store outbound message
         const { data: msg, error: msgErr } = await supabase.from('bank_mq_messages').insert({
           channel_id: channel.id,
           bank_id: bank_id || channel.bank_id,
@@ -226,10 +609,64 @@ Deno.serve(async (req) => {
 
         if (msgErr) return errorResponse(msgErr.message, 400);
 
-        // Deliver based on channel type
         let deliveryResult: any = { delivered: false };
 
-        if (channel.channel_type === 'webhook' && channel.webhook_url) {
+        // ─── Broker delivery (Kafka / RabbitMQ) ───
+        if (channel.broker_type && ['kafka', 'rabbitmq'].includes(channel.broker_type)) {
+          try {
+            const brokerPayload = {
+              message_id: msg.id,
+              message_type,
+              bank_id: bank_id || channel.bank_id,
+              payload,
+              correlation_id: msg.correlation_id,
+              timestamp: new Date().toISOString(),
+            };
+
+            const result = await brokerProduce(channel, brokerPayload);
+            deliveryResult = result;
+
+            // Log delivery
+            await supabase.from('broker_delivery_log').insert({
+              message_id: msg.id,
+              channel_id: channel.id,
+              broker_type: channel.broker_type,
+              broker_endpoint: channel.broker_type === 'kafka'
+                ? channel.broker_config_encrypted?.rest_proxy_url
+                : channel.broker_config_encrypted?.management_url,
+              topic_or_queue: result.topic_or_queue,
+              request_payload: brokerPayload,
+              response_status: result.status_code,
+              response_body: result.response_body,
+              latency_ms: result.latency_ms,
+              success: result.delivered,
+              error_message: result.error,
+            });
+
+            await supabase.from('bank_mq_messages').update({
+              status: result.delivered ? 'delivered' : 'delivery_failed',
+              processed_at: new Date().toISOString(),
+              error_message: result.error || null,
+            }).eq('id', msg.id);
+
+            if (!result.delivered) {
+              await supabase.from('bank_mq_channels').update({
+                error_count: (channel.error_count || 0) + 1,
+              }).eq('id', channel.id);
+            }
+          } catch (e: any) {
+            deliveryResult = { delivered: false, broker_type: channel.broker_type, error: e.message };
+            await supabase.from('bank_mq_messages').update({
+              status: 'delivery_failed',
+              error_message: e.message,
+            }).eq('id', msg.id);
+            await supabase.from('bank_mq_channels').update({
+              error_count: (channel.error_count || 0) + 1,
+            }).eq('id', channel.id);
+          }
+        }
+        // ─── Webhook delivery ───
+        else if (channel.channel_type === 'webhook' && channel.webhook_url) {
           try {
             const webhookPayload = JSON.stringify({
               message_id: msg.id,
@@ -240,10 +677,7 @@ Deno.serve(async (req) => {
             });
 
             const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-
-            // Add HMAC signature if secret configured
             if (channel.webhook_secret_hash) {
-              // Note: actual HMAC would use the raw secret, stored securely
               headers['X-KOB-Signature'] = 'sha256=' + channel.webhook_secret_hash;
             }
 
@@ -270,13 +704,13 @@ Deno.serve(async (req) => {
               status: 'delivery_failed',
               error_message: e.message,
             }).eq('id', msg.id);
-
             await supabase.from('bank_mq_channels').update({
               error_count: (channel.error_count || 0) + 1,
             }).eq('id', channel.id);
           }
-        } else if (channel.channel_type === 'realtime') {
-          // Broadcast via Supabase Realtime channel
+        }
+        // ─── Realtime delivery ───
+        else if (channel.channel_type === 'realtime') {
           deliveryResult = {
             delivered: true,
             channel: `bank-mq-${channel.bank_id}`,
@@ -307,7 +741,7 @@ Deno.serve(async (req) => {
         const { channel_id, bank_id, direction: dir, status: mStatus, message_type: mType,
                 limit = 50, offset = 0 } = body;
         let query = supabase.from('bank_mq_messages')
-          .select('*, bank_mq_channels(channel_name, channel_type)', { count: 'exact' });
+          .select('*, bank_mq_channels(channel_name, channel_type, broker_type)', { count: 'exact' });
         if (channel_id) query = query.eq('channel_id', channel_id);
         if (bank_id) query = query.eq('bank_id', bank_id);
         if (dir) query = query.eq('direction', dir);
@@ -325,14 +759,13 @@ Deno.serve(async (req) => {
         const { channel_id, bank_id: statsBank } = body;
 
         let query = supabase.from('bank_mq_channels')
-          .select('id, channel_name, channel_type, direction, is_active, message_count, error_count, last_message_at, banks(display_name)');
+          .select('id, channel_name, channel_type, broker_type, direction, is_active, message_count, error_count, last_message_at, broker_topic, broker_queue, delivery_guarantee, banks(display_name)');
         if (channel_id) query = query.eq('id', channel_id);
         if (statsBank) query = query.eq('bank_id', statsBank);
 
         const { data: channels, error } = await query;
         if (error) return errorResponse(error.message, 400);
 
-        // Get recent message counts per channel
         const stats = await Promise.all((channels || []).map(async (ch: any) => {
           const oneHourAgo = new Date(Date.now() - 3600000).toISOString();
           const { count: recentCount } = await supabase.from('bank_mq_messages')
@@ -345,14 +778,52 @@ Deno.serve(async (req) => {
             .eq('channel_id', ch.id)
             .eq('status', 'delivery_failed');
 
+          // Get broker delivery stats if applicable
+          let brokerStats: any = null;
+          if (ch.broker_type) {
+            const { data: logs } = await supabase.from('broker_delivery_log')
+              .select('success, latency_ms')
+              .eq('channel_id', ch.id)
+              .order('created_at', { ascending: false })
+              .limit(100);
+
+            if (logs?.length) {
+              const successCount = logs.filter((l: any) => l.success).length;
+              const avgLatency = logs.reduce((sum: number, l: any) => sum + (l.latency_ms || 0), 0) / logs.length;
+              brokerStats = {
+                total_deliveries: logs.length,
+                success_rate: ((successCount / logs.length) * 100).toFixed(1) + '%',
+                avg_latency_ms: Math.round(avgLatency),
+              };
+            }
+          }
+
           return {
             ...ch,
             messages_last_hour: recentCount || 0,
             total_failed: failedCount || 0,
+            broker_stats: brokerStats,
           };
         }));
 
         return jsonResponse({ stats });
+      }
+
+      // ─── Broker Delivery Log ───
+      case 'broker_delivery_log': {
+        if (!isAdmin) return errorResponse('Admin only', 403);
+        const { channel_id, message_id, success: logSuccess, limit = 50, offset = 0 } = body;
+
+        let query = supabase.from('broker_delivery_log')
+          .select('*', { count: 'exact' });
+        if (channel_id) query = query.eq('channel_id', channel_id);
+        if (message_id) query = query.eq('message_id', message_id);
+        if (typeof logSuccess === 'boolean') query = query.eq('success', logSuccess);
+
+        const { data, error, count } = await query.order('created_at', { ascending: false })
+          .range(offset, offset + limit - 1);
+        if (error) return errorResponse(error.message, 400);
+        return jsonResponse({ logs: data, total: count });
       }
 
       // ─── Sandbox: Seed MQ Channels + Sample Messages ───
@@ -361,7 +832,6 @@ Deno.serve(async (req) => {
           .select('id').eq('short_code', 'SBK-CM').single();
         if (!bank) return errorResponse('Sandbox bank not found. Run sandbox_seed_bank first.', 404);
 
-        // Create channels
         const channels = [
           {
             bank_id: bank.id,
@@ -385,6 +855,42 @@ Deno.serve(async (req) => {
             channel_type: 'webhook',
             direction: 'outbound',
             webhook_url: 'https://sandbox-bank.kob.internal/webhooks/payments',
+            is_active: true,
+          },
+          // Kafka sandbox channel
+          {
+            bank_id: bank.id,
+            channel_name: 'kafka-transaction-stream',
+            channel_type: 'kafka',
+            direction: 'inbound',
+            broker_type: 'kafka',
+            broker_topic: 'sandbox.transactions',
+            consumer_group: 'kob-sandbox-consumer',
+            broker_config_encrypted: {
+              rest_proxy_url: 'https://sandbox-kafka.kob.internal:8082',
+              topic: 'sandbox.transactions',
+              consumer_group: 'kob-sandbox-consumer',
+              api_key: 'sandbox-key',
+              api_secret: 'sandbox-secret',
+            },
+            is_active: true,
+          },
+          // RabbitMQ sandbox channel
+          {
+            bank_id: bank.id,
+            channel_name: 'rabbitmq-payment-queue',
+            channel_type: 'rabbitmq',
+            direction: 'outbound',
+            broker_type: 'rabbitmq',
+            broker_queue: 'kob.payment.instructions',
+            broker_config_encrypted: {
+              management_url: 'https://sandbox-rabbit.kob.internal:15672',
+              exchange: 'kob.payments',
+              routing_key: 'kob.payment.instructions',
+              vhost: '/',
+              username: 'sandbox',
+              password: 'sandbox',
+            },
             is_active: true,
           },
         ];
@@ -411,7 +917,6 @@ Deno.serve(async (req) => {
 
             await supabase.from('bank_mq_messages').insert(messages);
 
-            // Update channel stats
             await supabase.from('bank_mq_channels').update({
               message_count: 5,
               last_message_at: new Date().toISOString(),
@@ -420,7 +925,7 @@ Deno.serve(async (req) => {
         }
 
         return jsonResponse({
-          message: 'Sandbox MQ channels seeded',
+          message: 'Sandbox MQ channels seeded (including Kafka + RabbitMQ)',
           channels: channelData?.length || 0,
         });
       }
@@ -442,9 +947,7 @@ async function processInboundMessage(supabase: any, channel: any, msg: any) {
   let result: any = {};
 
   try {
-    // Route based on message type
     if (message_type.startsWith('account.')) {
-      // Account events → upsert into bank_sourced_accounts
       if (payload.external_account_id) {
         const { data, error } = await supabase.from('bank_sourced_accounts').upsert({
           bank_id,
@@ -457,12 +960,10 @@ async function processInboundMessage(supabase: any, channel: any, msg: any) {
           nickname: payload.nickname,
           customer_id: payload.customer_id,
         }, { onConflict: 'bank_id,external_account_id' }).select().single();
-
         result = { entity: 'bank_sourced_accounts', upserted: !!data, id: data?.id };
         if (error) throw error;
       }
     } else if (message_type.startsWith('transaction.')) {
-      // Transaction events → upsert into bank_sourced_transactions
       if (payload.external_tx_id && payload.account_id) {
         const { data, error } = await supabase.from('bank_sourced_transactions').upsert({
           account_id: payload.account_id,
@@ -475,12 +976,10 @@ async function processInboundMessage(supabase: any, channel: any, msg: any) {
           reference: payload.reference,
           description: payload.description,
         }, { onConflict: 'account_id,external_tx_id' }).select().single();
-
         result = { entity: 'bank_sourced_transactions', upserted: !!data, id: data?.id };
         if (error) throw error;
       }
     } else if (message_type.startsWith('balance.')) {
-      // Balance events → insert into bank_sourced_balances
       if (payload.account_id) {
         const { data, error } = await supabase.from('bank_sourced_balances').insert({
           account_id: payload.account_id,
@@ -489,17 +988,14 @@ async function processInboundMessage(supabase: any, channel: any, msg: any) {
           currency: payload.currency || 'XAF',
           as_of_datetime: payload.as_of_datetime || new Date().toISOString(),
         }).select().single();
-
         result = { entity: 'bank_sourced_balances', inserted: !!data, id: data?.id };
         if (error) throw error;
       }
     } else if (message_type.startsWith('payment.status')) {
-      // Payment status callback → update bank_payments
       if (payload.payment_id || payload.external_payment_id) {
         let query = supabase.from('bank_payments').select('id, status');
         if (payload.payment_id) query = query.eq('id', payload.payment_id);
         else query = query.eq('external_payment_id', payload.external_payment_id);
-
         const { data: payment } = await query.eq('bank_id', bank_id).single();
         if (payment) {
           await supabase.from('bank_payments').update({
@@ -507,7 +1003,6 @@ async function processInboundMessage(supabase: any, channel: any, msg: any) {
             external_payment_id: payload.external_payment_id,
             updated_at: new Date().toISOString(),
           }).eq('id', payment.id);
-
           await supabase.from('bank_payment_status_events').insert({
             payment_id: payment.id,
             status_from: payment.status,
@@ -515,26 +1010,21 @@ async function processInboundMessage(supabase: any, channel: any, msg: any) {
             source: 'mq_inbound',
             details_json: payload,
           });
-
           result = { entity: 'bank_payments', updated: true, payment_id: payment.id };
         }
       }
     } else {
-      // Unknown message type — store but mark as unprocessed
       status = 'unprocessed';
       result = { note: `Unknown message type: ${message_type}` };
     }
   } catch (e: any) {
     status = 'error';
     result = { error: e.message };
-
-    // Increment channel error count
     await supabase.from('bank_mq_channels').update({
       error_count: (channel.error_count || 0) + 1,
     }).eq('id', channel.id);
   }
 
-  // Update message status
   await supabase.from('bank_mq_messages').update({
     status,
     processed_at: new Date().toISOString(),
