@@ -33,6 +33,10 @@ const InstitutionFundAccount = () => {
   const [email, setEmail] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedBankCode, setSelectedBankCode] = useState("");
+  const [selectedBankName, setSelectedBankName] = useState("");
+  const [selectedBankSource, setSelectedBankSource] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
