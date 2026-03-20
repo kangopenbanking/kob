@@ -62,8 +62,11 @@ export function useCreatePiggyBankPlan() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] }),
-    onError: (err: any) => toast.error(err.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
+      toast.success('Your PiggyBank savings plan is now active! 🐷 Keep saving consistently.');
+    },
+    onError: (err: any) => toast.error(err.message || 'Could not create your savings plan. Please try again.'),
   });
 }
 
