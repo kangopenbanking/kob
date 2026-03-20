@@ -103,8 +103,9 @@ export function useNjangiContribute() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      toast.success('Contribution recorded! Your credit score may be positively impacted. 📈');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message || 'Contribution failed. Please ensure you have sufficient funds.'),
   });
 }
 
