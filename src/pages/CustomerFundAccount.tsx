@@ -48,6 +48,8 @@ const CustomerFundAccount = () => {
   const handleFund = async () => {
     if (!selectedAccountId) { toast.error("Select an account to fund"); return; }
     if (!amount || Number(amount) <= 0) { toast.error("Enter a valid amount"); return; }
+    if (method === "bank_transfer" && !selectedBankCode) { toast.error("Please select a bank for transfer"); return; }
+    if (method === "bank_transfer" && !bankAccountNumber) { toast.error("Please enter your bank account number"); return; }
     if (method === "mobile_money" && !phone) { toast.error("Phone number required for Mobile Money"); return; }
 
     setLoading(true);
