@@ -28,6 +28,7 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
   // Register OneSignal for the current user (no institution scope on desktop dashboards)
   useOneSignal();
