@@ -71,12 +71,12 @@ const BankLoans: React.FC = () => {
       onSuccess: (data: any) => {
         const creditDelta = data?.data?.credit_score?.delta;
         const creditMsg = creditDelta ? ` Credit score ${creditDelta > 0 ? '+' : ''}${creditDelta}` : '';
-        toast.success(`Payment successful!${creditMsg}`);
+        toast.success(`Repayment of ${Number(repayAmount).toLocaleString()} XAF processed successfully.${creditMsg}`);
         setShowRepay(false);
         setRepayAmount('');
       },
       onError: (err: any) => {
-        toast.error(err.message || 'Payment failed');
+        toast.error(err.message || 'Repayment could not be processed. Please ensure you have sufficient funds.');
       },
     });
   };

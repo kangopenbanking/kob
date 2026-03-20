@@ -49,10 +49,10 @@ const BusinessCoupons: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['biz-coupons'] });
-      toast.success('Coupon created');
+      toast.success(`Coupon "${code.toUpperCase().trim()}" created and ready for customers to use`);
       setShowCreate(false); setCode(''); setValue(''); setMinOrder(''); setMaxUses('');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message || 'Could not create coupon. The code may already exist.'),
   });
 
   const toggleMutation = useMutation({
@@ -68,7 +68,7 @@ const BusinessCoupons: React.FC = () => {
       const { error } = await supabase.from('pos_coupons').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['biz-coupons'] }); toast.success('Coupon deleted'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['biz-coupons'] }); toast.success('Coupon removed. It can no longer be used by customers.'); },
   });
 
   const formatXAF = (n: number) =>

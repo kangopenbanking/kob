@@ -217,7 +217,7 @@ export function usePOSTill(merchantId: string | undefined) {
           amount: total,
           merchant_name: merchantData?.business_name || 'Merchant',
         });
-        toast.success('QR code generated — customer can scan to pay');
+        toast.success('Scan & Pay QR code generated — ask your customer to scan it with their Kang app');
         return;
       }
 
@@ -245,9 +245,9 @@ export function usePOSTill(merchantId: string | undefined) {
         customer_phone: customerPhone || undefined,
       });
 
-      toast.success('Payment successful!');
+      toast.success(`Payment of ${total.toLocaleString()} XAF received via ${paymentMethod === 'cash' ? 'cash' : 'Mobile Money'} ✅`);
     } catch (err: any) {
-      toast.error(err.message || 'Checkout failed');
+      toast.error(err.message || 'Checkout could not be completed. Please try again.');
     } finally {
       setIsCheckingOut(false);
     }
@@ -278,7 +278,7 @@ export function usePOSTill(merchantId: string | undefined) {
         customer_phone: customerPhone || undefined,
       });
       setWalletQR(null);
-      toast.success('Customer payment received!');
+      toast.success(`Customer payment of ${walletQR.amount.toLocaleString()} XAF received via Scan & Pay ✅`);
       return true;
     }
     return false;

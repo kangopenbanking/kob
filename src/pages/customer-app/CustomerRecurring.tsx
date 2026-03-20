@@ -65,15 +65,15 @@ const CustomerRecurring: React.FC = () => {
       .from('recurring_payments')
       .update({ is_active: newActive })
       .eq('id', payment.id);
-    if (error) { toast.error('Failed to update'); return; }
+    if (error) { toast.error('Could not update payment status. Please try again.'); return; }
     queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
-    toast.success(newActive ? `${payment.name} resumed` : `${payment.name} paused`);
+    toast.success(newActive ? `"${payment.name}" has been resumed and will process on the next scheduled date` : `"${payment.name}" has been paused. No future payments will be processed until resumed.`);
   };
 
   const handleCreate = async () => {
-    if (!newName.trim()) { toast.error('Enter payment name'); return; }
-    if (!newAmount || Number(newAmount) <= 0) { toast.error('Enter valid amount'); return; }
-    if (!newStartDate) { toast.error('Select start date'); return; }
+    if (!newName.trim()) { toast.error('Please enter a name for this recurring payment'); return; }
+    if (!newAmount || Number(newAmount) <= 0) { toast.error('Please enter a valid payment amount'); return; }
+    if (!newStartDate) { toast.error('Please select when the first payment should occur'); return; }
     setCreating(true);
     try {
       const nextDate = calculateNextDate(newStartDate, newFreq);
@@ -93,9 +93,9 @@ const CustomerRecurring: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
       setShowCreate(false);
       resetForm();
-      toast.success('Recurring payment created');
+      toast.success(`"${newName.trim()}" set up! First payment of ${Number(newAmount).toLocaleString()} XAF scheduled for ${newStartDate}.`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create');
+      toast.error(err.message || 'Could not create recurring payment. Please try again.');
     } finally {
       setCreating(false);
     }

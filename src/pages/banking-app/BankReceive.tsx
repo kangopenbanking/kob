@@ -32,7 +32,7 @@ const BankReceive: React.FC = () => {
   const handleCopy = () => {
     navigator.clipboard.writeText(accountId);
     setCopied(true);
-    toast.success('Account number copied!');
+    toast.success('Account number copied to clipboard — share it with the sender');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -61,7 +61,7 @@ const BankReceive: React.FC = () => {
             {copied ? <Check className="h-4 w-4" strokeWidth={1.5} /> : <Copy className="h-4 w-4" strokeWidth={1.5} />}
             {copied ? 'Copied' : 'Copy'}
           </Button>
-          <Button className="flex-1 gap-2" onClick={() => toast.info('Share feature coming soon')}>
+          <Button className="flex-1 gap-2" onClick={() => toast.info('Share via SMS, WhatsApp, and more is coming soon ✨')}>
             <Share2 className="h-4 w-4" strokeWidth={1.5} />
             Share
           </Button>

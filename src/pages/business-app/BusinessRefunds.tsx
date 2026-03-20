@@ -58,13 +58,13 @@ export default function BusinessRefunds() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any) => {
       queryClient.invalidateQueries({ queryKey: ["successful-charges"] });
       setRefundDialogOpen(false); setSelectedCharge(null);
       setRefundAmount(""); setRefundReason(""); setPinCode("");
-      toast.success("Refund initiated");
+      toast.success(`Refund of ${Number(refundAmount || selectedCharge?.amount).toLocaleString()} XAF initiated. Customer will be credited within 1–3 business days.`);
     },
-    onError: (error: any) => toast.error(error.message || "Refund failed"),
+    onError: (error: any) => toast.error(error.message || "Refund could not be processed. Please verify the charge and try again."),
   });
 
   const openRefundDialog = (charge: any) => {

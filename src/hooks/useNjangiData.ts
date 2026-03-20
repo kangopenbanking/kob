@@ -58,8 +58,11 @@ export function useCreateNjangiGroup() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] }),
-    onError: (err: any) => toast.error(err.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
+      toast.success('Njangi group created! Share the group ID to invite members.');
+    },
+    onError: (err: any) => toast.error(err.message || 'Could not create group. Please try again.'),
   });
 }
 
@@ -76,8 +79,11 @@ export function useJoinNjangiGroup() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] }),
-    onError: (err: any) => toast.error(err.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
+      toast.success('You have joined the Njangi group successfully! 🤝');
+    },
+    onError: (err: any) => toast.error(err.message || 'Could not join group. It may be full or no longer active.'),
   });
 }
 
@@ -97,8 +103,9 @@ export function useNjangiContribute() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      toast.success('Contribution recorded! Your credit score may be positively impacted. 📈');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message || 'Contribution failed. Please ensure you have sufficient funds.'),
   });
 }
 
@@ -118,7 +125,8 @@ export function useNjangiPayout() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      toast.success('Payout processed! Funds have been transferred to the recipient.');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message || 'Payout failed. Please ensure the group has sufficient collected funds.'),
   });
 }

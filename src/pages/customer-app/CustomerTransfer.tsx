@@ -172,10 +172,10 @@ const CustomerTransfer: React.FC = () => {
   };
 
   const handleContinue = () => {
-    if (!amount || amountNum <= 0) { toast.error('Enter a valid amount'); return; }
-    if (!recipient.trim()) { toast.error('Enter recipient details'); return; }
-    if (!validation.valid && (recipientType === 'rib' || recipientType === 'iban')) { toast.error('Invalid recipient identifier'); return; }
-    if (isOverBalance) { toast.error('Insufficient balance'); return; }
+    if (!amount || amountNum <= 0) { toast.error('Please enter an amount to send'); return; }
+    if (!recipient.trim()) { toast.error('Please enter the recipient\'s phone number, name, or account details'); return; }
+    if (!validation.valid && (recipientType === 'rib' || recipientType === 'iban')) { toast.error(`Please enter a valid ${recipientType === 'rib' ? 'RIB (23 digits)' : 'IBAN'} number`); return; }
+    if (isOverBalance) { toast.error(`Insufficient balance. You have ${availableBalance.toLocaleString()} ${currency} available`); return; }
     setStep('confirm');
   };
 
@@ -206,9 +206,9 @@ const CustomerTransfer: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
 
       setStep('success');
-      toast.success(`${currency} ${amountNum.toLocaleString()} sent successfully`);
+      toast.success(`${amountNum.toLocaleString()} ${currency} sent to ${selectedRecipientName || recipient}. Your new balance is updated.`);
     } catch (err: any) {
-      toast.error(err.message || 'Transfer failed. Please try again.');
+      toast.error(err.message || 'Transfer could not be completed. Please verify recipient details and try again.');
     } finally {
       setSending(false);
     }

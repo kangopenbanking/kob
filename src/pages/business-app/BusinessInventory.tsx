@@ -49,13 +49,13 @@ export default function BusinessInventory() {
   const handleAdjustInventory = async () => {
     if (!selectedItem || !adjustmentQty) return;
     const qtyDelta = parseInt(adjustmentQty);
-    if (isNaN(qtyDelta)) { toast.error('Invalid quantity'); return; }
+    if (isNaN(qtyDelta)) { toast.error('Please enter a valid number for the quantity adjustment'); return; }
     const { error } = await supabase.functions.invoke('pos-inventory', {
       method: 'POST',
       body: { merchant_id: merchantId, variant_id: selectedItem.variant_id, location_id: selectedItem.location_id, quantity_delta: qtyDelta, type: 'manual_adjust', reason: adjustmentReason || 'Manual adjustment' },
     });
-    if (error) { toast.error('Failed to adjust inventory'); }
-    else { toast.success('Inventory updated'); setSelectedItem(null); setAdjustmentQty(''); setAdjustmentReason(''); refetch(); }
+    if (error) { toast.error('Could not adjust inventory. Please try again.'); }
+    else { toast.success(`Stock ${qtyDelta > 0 ? 'increased' : 'decreased'} by ${Math.abs(qtyDelta)} units`); setSelectedItem(null); setAdjustmentQty(''); setAdjustmentReason(''); refetch(); }
   };
 
   const lowStockItems = inventory?.filter((item: any) => item.available_quantity < 10) || [];

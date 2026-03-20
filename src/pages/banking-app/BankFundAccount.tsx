@@ -80,9 +80,9 @@ const BankFundAccount: React.FC = () => {
   const selectedMethod = paymentMethods.find(m => m.value === method)!;
 
   const handleFund = () => {
-    if (!selectedAccountId) { toast.error('Select an account to fund'); return; }
-    if (!amount || Number(amount) <= 0) { toast.error('Enter a valid amount'); return; }
-    if (method === 'mobile_money' && !phone) { toast.error('Phone number required for Mobile Money'); return; }
+    if (!selectedAccountId) { toast.error('Please select an account to receive the funds'); return; }
+    if (!amount || Number(amount) <= 0) { toast.error('Please enter an amount greater than 0 XAF'); return; }
+    if (method === 'mobile_money' && !phone) { toast.error('Enter your Mobile Money phone number to continue'); return; }
     setShowPin(true);
   };
 
@@ -103,9 +103,9 @@ const BankFundAccount: React.FC = () => {
       });
       if (error) throw error;
       setResult(data);
-      toast.success('Funding intent created');
+      toast.success(`${Number(amount).toLocaleString()} XAF funding request initiated. Follow the payment instructions to complete.`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create funding intent');
+      toast.error(err.message || 'Could not initiate funding. Please try again later.');
     }
     setLoading(false);
   };

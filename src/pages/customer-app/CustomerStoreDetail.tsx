@@ -71,10 +71,10 @@ const CustomerStoreDetail: React.FC = () => {
         body: { action: 'add', merchant_id: merchantId, variant_id: variantId, quantity: 1 },
       });
       if (error) throw error;
-      toast.success('Added to cart');
+      toast.success('Item added to your cart 🛒');
       setCartCount(prev => prev + 1);
     } catch (err: any) {
-      toast.error('Failed to add to cart');
+      toast.error('Could not add item to cart. Please try again.');
     } finally {
       setAddingToCart(null);
     }

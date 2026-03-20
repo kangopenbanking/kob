@@ -50,7 +50,7 @@ const BankQRPay: React.FC = () => {
   /* ─── QR Scan Detection ─── */
   const handleScanDetected = useCallback((data: any) => {
     if (data.type === 'kob_store' && data.merchant_id) {
-      toast.success('Opening store...');
+      toast.success('Store found! Redirecting you to the store page...');
       navigate(`/app/stores/${data.merchant_id}`);
       return;
     }
@@ -58,14 +58,14 @@ const BankQRPay: React.FC = () => {
       setScanResult({ account: data.merchant_id, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
-      toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
+      toast.success(`Merchant "${data.merchant_name || 'Store'}" recognized — enter amount to pay`);
     } else if (data.type === 'kob_pay' && data.account) {
       setScanResult({ account: data.account, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(null);
-      toast.success('QR Code scanned!');
+      toast.success('QR code scanned successfully — confirm your payment details');
     } else {
-      toast.error('Invalid QR code format');
+      toast.error('This QR code is not recognized. Please scan a valid Kang payment QR code.');
     }
   }, [navigate]);
 
@@ -98,7 +98,7 @@ const BankQRPay: React.FC = () => {
     setScanResult({ account: manualCode.trim().toUpperCase() });
     setShowManualEntry(false);
     setManualCode('');
-    toast.success('Code verified!');
+    toast.success('Payment code verified — ready to proceed');
   };
 
   const handlePayNow = async () => {
@@ -113,11 +113,11 @@ const BankQRPay: React.FC = () => {
           headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
         });
         if (error) throw error;
-        if (data?.error) { toast.error(data.message || data.error); return; }
-        toast.success(`Payment of ${finalAmount?.toLocaleString()} XAF successful!`);
+        if (data?.error) { toast.error(data.message || 'Payment could not be processed. Please try again.'); return; }
+        toast.success(`Payment of ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name || 'merchant'} completed! ✅`);
         resetScan();
       } catch (err: any) {
-        toast.error(err.message || 'Payment failed');
+        toast.error(err.message || 'Payment could not be completed. Please check your balance and try again.');
       } finally {
         setProcessing(false);
       }
@@ -146,7 +146,7 @@ const BankQRPay: React.FC = () => {
       try { await navigator.share(shareData); } catch {}
     } else {
       await navigator.clipboard.writeText(shareData.text);
-      toast.success('Payment details copied to clipboard');
+      toast.success('Payment details copied — share with whoever needs to pay you');
     }
   };
 

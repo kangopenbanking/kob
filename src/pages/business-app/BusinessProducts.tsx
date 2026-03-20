@@ -41,8 +41,8 @@ export default function BusinessProducts() {
   const handleDelete = async (productId: string) => {
     if (!confirm('Are you sure you want to delete this product?')) return;
     const { error } = await supabase.from('pos_products').delete().eq('id', productId);
-    if (error) toast.error('Failed to delete product');
-    else { toast.success('Product deleted'); refetch(); }
+    if (error) toast.error('Could not delete product. It may be referenced in active orders.');
+    else { toast.success('Product removed from your catalog'); refetch(); }
   };
 
   const formatPrice = (n: number) => new Intl.NumberFormat('fr-CM').format(n);

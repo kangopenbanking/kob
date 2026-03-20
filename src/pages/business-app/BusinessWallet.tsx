@@ -90,9 +90,9 @@ const BusinessWallet: React.FC = () => {
   };
 
   const handleWithdrawSubmit = () => {
-    if (numAmount < 1000) { toast.error('Minimum withdrawal is 1,000 XAF'); return; }
-    if (numAmount > availableBalance) { toast.error('Insufficient balance'); return; }
-    if (!selectedAccountId) { toast.error('Select a withdrawal account'); return; }
+    if (numAmount < 1000) { toast.error('Minimum withdrawal amount is 1,000 XAF'); return; }
+    if (numAmount > availableBalance) { toast.error(`Insufficient balance. You have ${formatXAF(availableBalance)} available`); return; }
+    if (!selectedAccountId) { toast.error('Please select a withdrawal destination account'); return; }
     setPinDialog({ open: true, amount: numAmount, accountId: selectedAccountId });
   };
 
@@ -112,11 +112,13 @@ const BusinessWallet: React.FC = () => {
       if (data?.error) throw new Error(data.error);
 
       const isInstant = data?.transfer_type === 'instant';
-      toast.success(isInstant ? 'Funds transferred to your Kang wallet instantly!' : 'Withdrawal request submitted successfully');
+      toast.success(isInstant 
+        ? `${formatXAF(pinDialog.amount)} transferred to your Kang wallet instantly! ⚡` 
+        : `Withdrawal of ${formatXAF(pinDialog.amount)} submitted. You'll receive the funds within 1–3 business days.`);
       setShowWithdraw(false);
       refetchWallets();
     } catch (err: any) {
-      toast.error(err.message || 'Withdrawal failed');
+      toast.error(err.message || 'Withdrawal could not be processed. Please try again.');
     } finally {
       setWithdrawLoading(false);
     }

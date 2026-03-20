@@ -60,7 +60,7 @@ const CustomerCart: React.FC = () => {
       }
       fetchCart();
     } catch {
-      toast.error('Failed to update');
+      toast.error('Could not update cart. Please try again.');
     }
   };
 
@@ -76,7 +76,7 @@ const CustomerCart: React.FC = () => {
       if (error) throw error;
       if (data?.error) {
         if (data.error === 'insufficient_balance') {
-          toast.error(`Insufficient balance. You need ${data.required?.toLocaleString()} XAF`);
+          toast.error(`Insufficient wallet balance. You need ${data.required?.toLocaleString()} XAF but have ${walletBalance.toLocaleString()} XAF`);
           setOrderFailed(true);
         } else {
           toast.error(data.message || data.error);
@@ -86,7 +86,7 @@ const CustomerCart: React.FC = () => {
       }
       setOrderComplete(data);
     } catch (err: any) {
-      toast.error(err.message || 'Checkout failed');
+      toast.error(err.message || 'Checkout could not be completed. Please try again.');
       setOrderFailed(true);
     } finally {
       setCheckingOut(false);
