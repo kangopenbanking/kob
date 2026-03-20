@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Send, Download, Receipt, Building2, Users,
   Link2, Banknote, Gift, Settings, HelpCircle, Bell, QrCode, Wallet, Plus,
-  Lock, ChevronRight, Loader2, Package
+  Lock, ChevronRight, Loader2, Package, ShieldAlert
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCustomerTenant } from '@/components/customer-app/CustomerTenantProvider';
@@ -22,6 +22,7 @@ const allQuickActions = [
 
 const utilityItems = [
   { label: 'My Orders', icon: Package, path: 'orders', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
+  { label: 'Disputes', icon: ShieldAlert, path: 'disputes', color: 'bg-[hsl(0,60%,92%)]', iconColor: 'text-[hsl(0,50%,45%)]' },
   { label: 'Settings', icon: Settings, path: 'settings', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Alerts', icon: Bell, path: 'alerts', color: 'bg-muted', iconColor: 'text-foreground' },
   { label: 'Help', icon: HelpCircle, path: 'help', color: 'bg-muted', iconColor: 'text-foreground' },
