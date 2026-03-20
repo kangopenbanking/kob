@@ -19,7 +19,7 @@ import {
   Building2, FileText, CheckCircle, XCircle, Clock, Eye, Search,
   Users, Image as ImageIcon, ShieldCheck, AlertTriangle, Store,
   Landmark, Calendar, Hash, Globe, Briefcase, MoreHorizontal,
-  Download, RefreshCw,, ClipboardCheck} from "lucide-react";
+  Download, RefreshCw,  ClipboardCheck} from "lucide-react";
 import { format } from "date-fns";
 import {
   DropdownMenu,

@@ -6,7 +6,7 @@ import {
   Store, ShoppingBag, DollarSign, Search, ChevronRight, ToggleLeft, ToggleRight,
   TrendingUp, ExternalLink, Copy, Users, Package, Bus, Shield, AlertTriangle,
   Eye, Ban, CheckCircle2, Clock, Globe, MapPin, CreditCard, BarChart3,
-  RefreshCw, Download, Filter, MoreVertical, Loader2, Activity,, Briefcase} from "lucide-react";
+  RefreshCw, Download, Filter, MoreVertical, Loader2, Activity,  Briefcase} from "lucide-react";
 import { StatCard } from '@/components/ui/stat-card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
