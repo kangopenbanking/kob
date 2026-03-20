@@ -304,7 +304,7 @@ export function NotificationCenter() {
           <>
             <Separator />
             <div className="p-2">
-              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => navigate('/notification-history')}>
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => navigate(getHistoryPath())}>
                 View all notifications
               </Button>
             </div>
