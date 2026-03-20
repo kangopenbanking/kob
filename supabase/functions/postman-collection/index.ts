@@ -1111,6 +1111,83 @@ Deno.serve(async (req) => {
           }),
         ],
       },
+
+      // ── Bank Directory ──────────────────────────────────────────────
+      {
+        name: 'Bank Directory',
+        item: [
+          r('List Directory (Public)', 'GET', '/v1/directory/banks', {
+            desc: 'Public list of active banks integrated with KOB',
+          }),
+          r('Register Bank', 'POST', '/v1/banks/register', {
+            body: { legal_name: 'Afriland First Bank', short_code: 'AFB', swift_bic: 'AFRIACMCXXX', contact_email: 'api@afriland.com', integration_mode: 'connector_push' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Banks (Admin)', 'GET', '/v1/banks', { desc: 'Admin-only list of all banks' }),
+          r('Get Bank', 'GET', '/v1/banks/{{bank_id}}'),
+          r('Update Bank', 'PUT', '/v1/banks/{{bank_id}}', {
+            body: { display_name: 'Afriland First Bank Cameroon', support_phone: '+237222000000' },
+          }),
+          r('Approve Bank', 'POST', '/v1/banks/{{bank_id}}/approve', { desc: 'Admin approves bank registration' }),
+          r('Suspend Bank', 'POST', '/v1/banks/{{bank_id}}/suspend', { desc: 'Admin suspends bank' }),
+          r('Link PSU to Bank', 'POST', '/v1/banks/{{bank_id}}/link', {
+            body: { external_customer_id: 'CUST-001' },
+            desc: 'Link a user to a bank for AISP/PISP access',
+          }),
+        ],
+      },
+
+      // ── Bank Connectors ─────────────────────────────────────────────
+      {
+        name: 'Bank Connectors',
+        item: [
+          r('Register Connector', 'POST', '/v1/banks/{{bank_id}}/connectors', {
+            body: { name: 'Afriland REST Connector', environment: 'sandbox', base_url: 'https://api.afriland.cm/v1', connector_type: 'rest' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('List Connectors', 'GET', '/v1/banks/{{bank_id}}/connectors'),
+          r('Connector Health', 'GET', '/v1/banks/{{bank_id}}/connectors/{{connector_id}}/health'),
+          r('Upload mTLS Certificate', 'POST', '/v1/banks/{{bank_id}}/connectors/{{connector_id}}/certificates', {
+            body: { certificate_pem: '-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----' },
+          }),
+          r('Ingest Accounts (Push)', 'POST', '/v1/internal/connectors/{{bank_id}}/accounts', {
+            body: { accounts: [{ external_account_id: 'ACC-001', account_type: 'checking', currency: 'XAF' }], correlation_id: '{{$guid}}' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Bulk ingest accounts from bank connector (mTLS required)',
+          }),
+          r('Ingest Transactions (Push)', 'POST', '/v1/internal/connectors/{{bank_id}}/transactions', {
+            body: { transactions: [{ external_tx_id: 'TX-001', account_id: 'ACC-001', amount: 50000, currency: 'XAF', credit_debit: 'credit', booking_date: '2026-03-20' }], correlation_id: '{{$guid}}' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+            desc: 'Bulk ingest transactions from bank connector (mTLS required)',
+          }),
+          r('Payment Status Callback', 'POST', '/v1/internal/connectors/{{bank_id}}/payments/status', {
+            body: { payment_id: '{{payment_id}}', status: 'completed', details: {} },
+            desc: 'Bank connector pushes payment status update',
+          }),
+        ],
+      },
+
+      // ── Interbank Engine ────────────────────────────────────────────
+      {
+        name: 'Interbank Engine',
+        item: [
+          r('List Interbank Payments', 'GET', '/v1/interbank/payments', {
+            query: [{ key: 'status', value: 'submitted' }],
+          }),
+          r('Create Interbank Payment', 'POST', '/v1/interbank/payments', {
+            body: { debtor_participant_id: 'PARTICIPANT_UUID', creditor_participant_id: 'PARTICIPANT_UUID', debtor_account_ref: 'ACC-001', creditor_account_ref: 'ACC-002', amount: 500000, currency: 'XAF' },
+            headers: [{ key: 'Idempotency-Key', value: '{{$guid}}' }],
+          }),
+          r('Get Interbank Payment', 'GET', '/v1/interbank/payments/{{payment_id}}'),
+          r('Submit Interbank Payment', 'POST', '/v1/interbank/payments/{{payment_id}}/submit', {
+            desc: 'Generates pacs.008 and dispatches to creditor bank',
+          }),
+          r('List Participants', 'GET', '/v1/interbank/participants'),
+          r('List ISO Messages', 'GET', '/v1/interbank/messages', {
+            query: [{ key: 'payment_id', value: '{{payment_id}}' }],
+          }),
+        ],
+      },
     ],
   };
 
