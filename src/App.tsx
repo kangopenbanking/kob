@@ -912,6 +912,7 @@ function App() {
             <Route path="/data-protection" element={<Layout><DataProtection /></Layout>} />
             <Route path="/about" element={<Layout><About /></Layout>} />
             <Route path="/manual/:type" element={<Layout><ProductManual /></Layout>} />
+            <Route path="/bank-integration-guide" element={<Layout><BankIntegrationGuide /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/faq" element={<Layout><FAQ /></Layout>} />
             <Route path="/status" element={<Layout><Status /></Layout>} />
