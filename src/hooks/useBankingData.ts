@@ -311,9 +311,9 @@ export function useCreateVirtualCard() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
-      toast.success('Virtual card created!');
+      toast.success('Your new virtual card is ready to use for online payments 💳');
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to create card'),
+    onError: (err: any) => toast.error(err.message || 'Could not create virtual card. Please try again later.'),
   });
 }
 
