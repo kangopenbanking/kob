@@ -20065,6 +20065,7 @@ export type Database = {
         Returns: string
       }
       make_user_admin: { Args: { _user_id: string }; Returns: undefined }
+      notify_subscription_expiry_warning: { Args: never; Returns: undefined }
       pos_adjust_inventory: {
         Args: {
           _location_id: string
