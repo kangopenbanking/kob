@@ -128,10 +128,12 @@ const ApiStatusPage = () => {
                       ? "text-green-600 border-green-300"
                       : s.status === "degraded"
                       ? "text-yellow-600 border-yellow-300"
+                      : s.status === "dormant"
+                      ? "text-muted-foreground border-muted"
                       : "text-red-600 border-red-300"
                   }`}
                 >
-                  {s.status}
+                  {s.status === "dormant" ? "Coming Soon" : s.status}
                 </Badge>
               </div>
             </div>
