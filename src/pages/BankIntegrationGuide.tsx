@@ -333,11 +333,19 @@ const BankIntegrationGuide: React.FC = () => {
                 size="lg"
                 variant="secondary"
                 className="gap-2"
-                onClick={() => exportAsPdf('guide-content', 'KOB_Bank_Integration_Guide')}
-                disabled={isExporting}
+                onClick={() => exportToPdf({
+                  title: 'KOB Bank Integration Guide',
+                  documentCode: 'KOB-INT-GUIDE-v1',
+                  subtitle: 'Technical Reference for Bank Partners',
+                  sections: sections.map(s => ({
+                    heading: s.title,
+                    content: [...s.content, ...(s.subsections?.flatMap(sub => [sub.title + ':', ...sub.items]) || [])],
+                    table: s.table,
+                  })),
+                })}
               >
                 <Download className="h-4 w-4" />
-                {isExporting ? 'Generating PDF…' : 'Download PDF'}
+                Download PDF
               </Button>
             </div>
           </motion.div>
