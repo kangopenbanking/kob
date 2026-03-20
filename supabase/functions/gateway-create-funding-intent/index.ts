@@ -229,9 +229,9 @@ serve(async (req) => {
     } else if (resolvedProvider === 'bank') {
       const bankRef = `KOBFUND-${txRef.slice(-8).toUpperCase()}`;
       providerRef = bankRef;
-      const resolvedBankName = bank_name || 'Afriland First Bank';
-      const resolvedBankCode = bank_code || 'AFRILANDFB';
-      const isKobBank = bank_source === 'kob';
+      const resolvedBankName = bank_name || 'Bank Transfer';
+      const resolvedBankCode = bank_code || 'GENERIC';
+      const isKobBank = bank_source === 'kob' || bank_source === 'linked';
       nextAction = {
         type: 'bank_transfer_instructions',
         bank_name: resolvedBankName,

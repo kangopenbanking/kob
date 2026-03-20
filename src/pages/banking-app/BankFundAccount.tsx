@@ -8,6 +8,7 @@ import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { AmountInput } from '@/components/funding/AmountInput';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { FundingHistory } from '@/components/funding/FundingHistory';
+import { BankSelector } from '@/components/funding/BankSelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,6 +65,10 @@ const BankFundAccount: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedBankCode, setSelectedBankCode] = useState('');
+  const [selectedBankName, setSelectedBankName] = useState('');
+  const [selectedBankSource, setSelectedBankSource] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [accountOpen, setAccountOpen] = useState(false);
@@ -83,6 +88,8 @@ const BankFundAccount: React.FC = () => {
     if (!selectedAccountId) { toast.error('Please select an account to receive the funds'); return; }
     if (!amount || Number(amount) <= 0) { toast.error('Please enter an amount greater than 0 XAF'); return; }
     if (method === 'mobile_money' && !phone) { toast.error('Enter your Mobile Money phone number to continue'); return; }
+    if (method === 'bank_transfer' && !selectedBankCode) { toast.error('Please select a bank for your transfer'); return; }
+    if (method === 'bank_transfer' && !bankAccountNumber) { toast.error('Please enter your bank account number'); return; }
     setShowPin(true);
   };
 
@@ -98,6 +105,10 @@ const BankFundAccount: React.FC = () => {
           funding_scope: 'end_user',
           account_id: selectedAccountId,
           customer: { phone, email },
+          bank_code: method === 'bank_transfer' ? selectedBankCode : undefined,
+          bank_name: method === 'bank_transfer' ? selectedBankName : undefined,
+          bank_source: method === 'bank_transfer' ? selectedBankSource : undefined,
+          account_number: method === 'bank_transfer' ? bankAccountNumber : undefined,
           return_url: `${API_CONFIG.SITE_URL}/bank/${institutionId}/fund`,
         },
       });
@@ -306,6 +317,22 @@ const BankFundAccount: React.FC = () => {
                         className="h-13 rounded-2xl border-border/60 bg-card text-base font-bold placeholder:font-normal"
                       />
                     </div>
+                  </motion.div>
+                )}
+                {method === 'bank_transfer' && (
+                  <motion.div
+                    key="bank"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <BankSelector
+                      selectedBank={selectedBankCode}
+                      onBankChange={(code, name, source) => { setSelectedBankCode(code); setSelectedBankName(name); setSelectedBankSource(source); }}
+                      accountNumber={bankAccountNumber}
+                      onAccountNumberChange={setBankAccountNumber}
+                    />
                   </motion.div>
                 )}
               </AnimatePresence>

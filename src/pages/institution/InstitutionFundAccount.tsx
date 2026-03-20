@@ -14,6 +14,7 @@ import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelecto
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { BankSelector } from "@/components/funding/BankSelector";
 import { StatCard } from "@/components/ui/stat-card";
 import { API_CONFIG } from "@/config/api";
 
@@ -32,6 +33,10 @@ const InstitutionFundAccount = () => {
   const [email, setEmail] = useState("");
   const [selectedAccountId, setSelectedAccountId] = useState("");
   const [description, setDescription] = useState("");
+  const [selectedBankCode, setSelectedBankCode] = useState("");
+  const [selectedBankName, setSelectedBankName] = useState("");
+  const [selectedBankSource, setSelectedBankSource] = useState("");
+  const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -93,6 +98,8 @@ const InstitutionFundAccount = () => {
   const handleFund = async () => {
     if (!selectedAccountId) { toast.error("Select an account to fund"); return; }
     if (!amount || Number(amount) <= 0) { toast.error("Enter a valid amount"); return; }
+    if (method === "bank_transfer" && !selectedBankCode) { toast.error("Please select a bank for transfer"); return; }
+    if (method === "bank_transfer" && !bankAccountNumber) { toast.error("Please enter your bank account number"); return; }
     if (method === "mobile_money" && !phone) { toast.error("Phone number required for Mobile Money"); return; }
 
     setLoading(true);
@@ -107,6 +114,10 @@ const InstitutionFundAccount = () => {
           account_id: selectedAccountId,
           target_description: description || "Institution account funding",
           customer: { phone, email },
+          bank_code: method === "bank_transfer" ? selectedBankCode : undefined,
+          bank_name: method === "bank_transfer" ? selectedBankName : undefined,
+          bank_source: method === "bank_transfer" ? selectedBankSource : undefined,
+          account_number: method === "bank_transfer" ? bankAccountNumber : undefined,
           return_url: `${API_CONFIG.SITE_URL}/fi-portal/fund-account`,
         },
       });
@@ -194,6 +205,14 @@ const InstitutionFundAccount = () => {
                   <Label className="text-sm font-semibold">Phone Number</Label>
                   <Input placeholder="237677123456" value={phone} onChange={(e) => setPhone(e.target.value)} className="h-11" />
                 </div>
+              )}
+              {method === "bank_transfer" && (
+                <BankSelector
+                  selectedBank={selectedBankCode}
+                  onBankChange={(code, name, source) => { setSelectedBankCode(code); setSelectedBankName(name); setSelectedBankSource(source); }}
+                  accountNumber={bankAccountNumber}
+                  onAccountNumberChange={setBankAccountNumber}
+                />
               )}
               {(method === "card" || method === "paypal") && (
                 <div className="space-y-2">

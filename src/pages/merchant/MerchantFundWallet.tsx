@@ -26,6 +26,7 @@ const MerchantFundWallet = () => {
   const [email, setEmail] = useState("");
   const [selectedBankCode, setSelectedBankCode] = useState("");
   const [selectedBankName, setSelectedBankName] = useState("");
+  const [selectedBankSource, setSelectedBankSource] = useState("");
   const [bankAccountNumber, setBankAccountNumber] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
@@ -81,6 +82,7 @@ const MerchantFundWallet = () => {
           customer: { phone, email },
           bank_code: method === "bank_transfer" ? selectedBankCode : undefined,
           bank_name: method === "bank_transfer" ? selectedBankName : undefined,
+          bank_source: method === "bank_transfer" ? selectedBankSource : undefined,
           account_number: method === "bank_transfer" ? bankAccountNumber : undefined,
           return_url: `${API_CONFIG.SITE_URL}/merchant`,
         },
@@ -147,7 +149,7 @@ const MerchantFundWallet = () => {
 
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Payment Method</Label>
-              <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setBankAccountNumber(""); }} />
+              <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setSelectedBankSource(""); setBankAccountNumber(""); }} />
             </div>
 
             {method === "mobile_money" && (
@@ -160,7 +162,7 @@ const MerchantFundWallet = () => {
             {method === "bank_transfer" && (
               <BankSelector
                 selectedBank={selectedBankCode}
-                onBankChange={(code, name) => { setSelectedBankCode(code); setSelectedBankName(name); }}
+                onBankChange={(code, name, source) => { setSelectedBankCode(code); setSelectedBankName(name); setSelectedBankSource(source); }}
                 accountNumber={bankAccountNumber}
                 onAccountNumberChange={setBankAccountNumber}
               />

@@ -14,6 +14,7 @@ interface Bank {
   id: string;
   code: string;
   name: string;
+  source: 'linked' | 'kob' | 'flutterwave' | 'fallback';
 }
 
 export const BankTransferForm = () => {
@@ -39,10 +40,31 @@ export const BankTransferForm = () => {
       XAF: 'CM', NGN: 'NG', GHS: 'GH', KES: 'KE', UGX: 'UG', TZS: 'TZ', ZAR: 'ZA',
     };
     const country = countryMap[currency] || 'CM';
+    const linkedBanks: Bank[] = [];
     const kobBanks: Bank[] = [];
     const fwBanks: Bank[] = [];
 
-    // Priority 1: KOB Partner institutions
+    // Priority 1: User's linked bank accounts
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: linkedAccounts } = await supabase
+          .from("accounts")
+          .select("id, account_holder_name, swift_bic, rib_bank_code")
+          .eq("user_id", user.id)
+          .eq("is_active", true) as { data: any[] | null };
+        if (linkedAccounts?.length) {
+          linkedAccounts.forEach((acc: any) => {
+            const bankCode = acc.rib_bank_code || acc.swift_bic || acc.id;
+            linkedBanks.push({ id: bankCode, code: bankCode, name: `${acc.account_holder_name || 'Linked Account'}`, source: 'linked' });
+          });
+        }
+      }
+    } catch (err) {
+      console.warn('[BankTransfer] Linked accounts fetch failed:', err);
+    }
+
+    // Priority 2: KOB Partner institutions
     try {
       const query = supabase
         .from("institutions" as any)
@@ -52,23 +74,27 @@ export const BankTransferForm = () => {
       const { data: kobInst } = await query;
       if (kobInst?.length) {
         kobInst.forEach((inst: any) => {
-          kobBanks.push({ id: inst.swift_bic_code || inst.id, code: inst.swift_bic_code || inst.id, name: inst.institution_name });
+          const code = inst.swift_bic_code || inst.id;
+          if (!linkedBanks.some(b => b.code === code)) {
+            kobBanks.push({ id: code, code, name: inst.institution_name, source: 'kob' });
+          }
         });
       }
     } catch (err) {
       console.warn('[BankTransfer] KOB institutions fetch failed:', err);
     }
 
-    // Priority 2: Flutterwave banks
+    // Priority 3: Flutterwave banks
     try {
       const { data, error } = await supabase.functions.invoke('flutterwave-list-banks', {
         body: { country },
       });
       if (!error && data?.banks?.length) {
         data.banks.forEach((b: any) => {
-          const isDuplicate = kobBanks.some(kb => kb.name.toLowerCase().includes(b.name?.toLowerCase()?.slice(0, 10)));
+          const allLocal = [...linkedBanks, ...kobBanks];
+          const isDuplicate = allLocal.some(kb => kb.name.toLowerCase().includes(b.name?.toLowerCase()?.slice(0, 10)));
           if (!isDuplicate) {
-            fwBanks.push({ id: b.id || b.code, code: b.code, name: b.name });
+            fwBanks.push({ id: b.id || b.code, code: b.code, name: b.name, source: 'flutterwave' });
           }
         });
       }
@@ -76,12 +102,10 @@ export const BankTransferForm = () => {
       console.warn('[BankTransfer] Flutterwave fetch failed:', err);
     }
 
-    // Merge: KOB first, then Flutterwave
-    let merged = [...kobBanks, ...fwBanks];
+    let merged = [...linkedBanks, ...kobBanks, ...fwBanks];
 
-    // Fallback for Cameroon
     if (merged.length === 0 && country === 'CM') {
-      merged = CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name }));
+      merged = CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name, source: 'fallback' as const }));
     }
 
     if (merged.length === 0) {
@@ -224,8 +248,33 @@ export const BankTransferForm = () => {
                 <SelectValue placeholder="Select a bank" />
               </SelectTrigger>
               <SelectContent>
-                {banks.map((bank) => (
-                  <SelectItem key={bank.code} value={bank.code}>
+                {banks.some(b => b.source === 'linked') && (
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your Linked Accounts</div>
+                )}
+                {banks.filter(b => b.source === 'linked').map((bank) => (
+                  <SelectItem key={`linked-${bank.code}`} value={bank.code}>
+                    <span className="flex items-center gap-2">
+                      {bank.name}
+                      <span className="text-[10px] font-medium text-secondary bg-secondary/10 px-1.5 py-0.5 rounded-full">Linked</span>
+                    </span>
+                  </SelectItem>
+                ))}
+                {banks.some(b => b.source === 'kob') && (
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">KOB Partner Banks</div>
+                )}
+                {banks.filter(b => b.source === 'kob').map((bank) => (
+                  <SelectItem key={`kob-${bank.code}`} value={bank.code}>
+                    <span className="flex items-center gap-2">
+                      {bank.name}
+                      <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Partner</span>
+                    </span>
+                  </SelectItem>
+                ))}
+                {banks.some(b => b.source === 'flutterwave' || b.source === 'fallback') && (
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">All Banks</div>
+                )}
+                {banks.filter(b => b.source === 'flutterwave' || b.source === 'fallback').map((bank) => (
+                  <SelectItem key={`fw-${bank.code}`} value={bank.code}>
                     {bank.name}
                   </SelectItem>
                 ))}

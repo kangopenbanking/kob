@@ -15,7 +15,7 @@ interface Bank {
 
 interface BankSelectorProps {
   selectedBank: string;
-  onBankChange: (code: string, name: string) => void;
+  onBankChange: (code: string, name: string, source: string) => void;
   accountNumber: string;
   onAccountNumberChange: (value: string) => void;
   country?: string;
@@ -133,7 +133,7 @@ export const BankSelector = ({
         ) : (
           <Select value={selectedBank} onValueChange={(val) => {
             const bank = banks.find((b) => b.code === val);
-            onBankChange(val, bank?.name || "");
+            onBankChange(val, bank?.name || "", bank?.source || "fallback");
           }}>
             <SelectTrigger className="h-11">
               <SelectValue placeholder="Select a bank" />
