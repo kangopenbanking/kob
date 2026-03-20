@@ -7,7 +7,9 @@
 | **connector_push** | Bank → KOB | Bank pushes account/transaction data to KOB ingestion endpoints |
 | **connector_pull** | KOB → Bank | KOB calls bank connector REST endpoints |
 | **file_feed** | Bank → KOB | Bank uploads CSV/pain.001 files; KOB processes asynchronously |
-| **hybrid** | Both | Combination of push and pull for different data types |
+| **db_connector** | KOB → Bank DB | KOB polls bank's read-only database replica with watermark-based incremental sync |
+| **mq_realtime** | Bi-directional | Event-driven messaging via webhook, Supabase Realtime, or SSE channels |
+| **hybrid** | Both | Combination of any modes for different data types |
 
 ## Canonical Data Schemas
 
