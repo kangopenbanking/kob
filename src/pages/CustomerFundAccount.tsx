@@ -128,7 +128,7 @@ const CustomerFundAccount = () => {
             {/* Payment Method */}
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Payment Method</Label>
-              <PaymentMethodSelector value={method} onChange={setMethod} />
+              <PaymentMethodSelector value={method} onChange={(v) => { setMethod(v); setSelectedBankCode(""); setSelectedBankName(""); setSelectedBankSource(""); setBankAccountNumber(""); }} />
             </div>
 
             {/* Conditional Fields */}
