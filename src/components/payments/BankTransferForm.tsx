@@ -248,8 +248,33 @@ export const BankTransferForm = () => {
                 <SelectValue placeholder="Select a bank" />
               </SelectTrigger>
               <SelectContent>
-                {banks.map((bank) => (
-                  <SelectItem key={bank.code} value={bank.code}>
+                {banks.some(b => b.source === 'linked') && (
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Your Linked Accounts</div>
+                )}
+                {banks.filter(b => b.source === 'linked').map((bank) => (
+                  <SelectItem key={`linked-${bank.code}`} value={bank.code}>
+                    <span className="flex items-center gap-2">
+                      {bank.name}
+                      <span className="text-[10px] font-medium text-secondary bg-secondary/10 px-1.5 py-0.5 rounded-full">Linked</span>
+                    </span>
+                  </SelectItem>
+                ))}
+                {banks.some(b => b.source === 'kob') && (
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">KOB Partner Banks</div>
+                )}
+                {banks.filter(b => b.source === 'kob').map((bank) => (
+                  <SelectItem key={`kob-${bank.code}`} value={bank.code}>
+                    <span className="flex items-center gap-2">
+                      {bank.name}
+                      <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">Partner</span>
+                    </span>
+                  </SelectItem>
+                ))}
+                {banks.some(b => b.source === 'flutterwave' || b.source === 'fallback') && (
+                  <div className="px-2 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">All Banks</div>
+                )}
+                {banks.filter(b => b.source === 'flutterwave' || b.source === 'fallback').map((bank) => (
+                  <SelectItem key={`fw-${bank.code}`} value={bank.code}>
                     {bank.name}
                   </SelectItem>
                 ))}
