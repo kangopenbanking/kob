@@ -711,6 +711,8 @@ function App() {
               <Route path="rewards-management" element={<RewardsManagement />} />
               <Route path="onboarding-management" element={<OnboardingManagement />} />
               <Route path="bill-management" element={<AdminBillManagement />} />
+              {/* Phase 2+3: Interbank Engine */}
+              <Route path="interbank-payments" element={<AdminInterbankPayments />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
