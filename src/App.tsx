@@ -600,6 +600,16 @@ function App() {
               <Route path="gateway-customers" element={<GatewayCustomers />} />
               <Route path="gateway-merchants" element={<GatewayMerchants />} />
               <Route path="fund-account" element={<InstitutionFundAccount />} />
+              {/* Bank Connector Kit */}
+              <Route path="connector" element={<ConnectorOverview />} />
+              <Route path="connector/uploads" element={<ConnectorUploads />} />
+              <Route path="connector/mappings" element={<ConnectorMappings />} />
+              <Route path="connector/batches" element={<ConnectorBatches />} />
+              <Route path="connector/status" element={<ConnectorStatus />} />
+              <Route path="connector/reconciliation" element={<ConnectorReconciliation />} />
+              <Route path="connector/health" element={<ConnectorHealth />} />
+              <Route path="connector/audit" element={<ConnectorAudit />} />
+              <Route path="connector/templates" element={<ConnectorTemplates />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
