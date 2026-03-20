@@ -71,9 +71,9 @@ const CustomerRecurring: React.FC = () => {
   };
 
   const handleCreate = async () => {
-    if (!newName.trim()) { toast.error('Enter payment name'); return; }
-    if (!newAmount || Number(newAmount) <= 0) { toast.error('Enter valid amount'); return; }
-    if (!newStartDate) { toast.error('Select start date'); return; }
+    if (!newName.trim()) { toast.error('Please enter a name for this recurring payment'); return; }
+    if (!newAmount || Number(newAmount) <= 0) { toast.error('Please enter a valid payment amount'); return; }
+    if (!newStartDate) { toast.error('Please select when the first payment should occur'); return; }
     setCreating(true);
     try {
       const nextDate = calculateNextDate(newStartDate, newFreq);
