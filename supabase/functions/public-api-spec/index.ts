@@ -2213,6 +2213,9 @@ serve(async (req) => {
         { name: 'Payment Facilitation', description: 'White-label payment processing — facilitated charges, settlement calculation and processing' },
         { name: 'Merchant Onboarding', description: 'Merchant lifecycle — registration, KYB verification, API keys, settlement accounts, webhooks' },
         { name: 'Consumer Tools', description: 'Consumer financial tools — Piggy Bank (savings goals) and Njangi (group rotation savings)' },
+        { name: 'Bank Directory', description: 'Bank/ASPSP registration, lifecycle management, PSU linking, and public directory' },
+        { name: 'Bank Connectors', description: 'Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring, and payment status callbacks' },
+        { name: 'Interbank', description: 'Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)' },
       ],
       components: {
         securitySchemes: {
