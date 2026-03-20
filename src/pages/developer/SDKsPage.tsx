@@ -199,11 +199,6 @@ export default function SDKsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         {sdkCards.map((sdk) => (
           <Card key={sdk.key} className="relative overflow-hidden">
-            {sdk.status === "coming_soon" && (
-              <div className="absolute top-0 right-0 bg-muted text-muted-foreground text-[10px] px-3 py-1 rounded-bl font-medium">
-                Coming Soon
-              </div>
-            )}
             <CardHeader>
               <div className="flex items-center gap-3 mb-1">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
