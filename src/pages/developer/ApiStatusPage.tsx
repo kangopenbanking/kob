@@ -48,9 +48,14 @@ const ApiStatusPage = () => {
 
       const liveServices = fallbackServices.map((svc) => {
         const liveStatus = data.services?.[svc.key];
+        const mappedStatus = liveStatus === "operational" ? "operational"
+          : liveStatus === "degraded" ? "degraded"
+          : liveStatus === "dormant" ? "dormant"
+          : "down";
         return {
           ...svc,
-          status: (liveStatus === "operational" ? "operational" : liveStatus === "degraded" ? "degraded" : "down") as ServiceStatus["status"],
+          status: mappedStatus as ServiceStatus["status"],
+          uptime: mappedStatus === "dormant" ? "—" : svc.uptime,
         };
       });
 
