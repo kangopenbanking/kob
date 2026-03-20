@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -752,20 +753,7 @@ function BatchPaymentsTab() {
 export default function AdminBankDirectory() {
   return (
     <div className="space-y-8">
-      {/* Hero Banner */}
-      <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary-foreground/20 p-2.5">
-            <Building2 className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Bank Directory</h1>
-            <p className="text-primary-foreground/80 text-sm">
-              Manage bank registrations, connectors, file imports, batch payments & PSU links
-            </p>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader icon={Building2} title="Bank Directory" description="Manage bank registrations, connectors, file imports, batch payments & PSU links" />
 
       <Tabs defaultValue="banks" className="space-y-6">
         <TabsList className="bg-muted/50 p-1 rounded-xl flex-wrap h-auto gap-1">

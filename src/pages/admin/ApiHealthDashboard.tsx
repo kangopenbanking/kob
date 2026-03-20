@@ -3,10 +3,11 @@ import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, AlertCircle, XCircle, RefreshCw, TrendingUp, Activity } from "lucide-react";
+import { CheckCircle2, AlertCircle, XCircle, RefreshCw, TrendingUp, Activity, HeartPulse} from "lucide-react";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface HealthMetric {
   id: string;
@@ -181,7 +182,9 @@ export default function ApiHealthDashboard() {
 
   if (loading && metrics.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="space-y-6 flex items-center justify-center min-h-[400px]">
+      <AdminPageHeader icon={HeartPulse} title="API Health Dashboard" description="Monitor real-time API health metrics and historical uptime data" />
+
         <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -190,10 +193,6 @@ export default function ApiHealthDashboard() {
   return (
     <div className="space-y-6">
         {/* Page Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold tracking-tight">API Health Dashboard</h1>
-          <p className="text-muted-foreground">Monitor real-time API health metrics and historical uptime data</p>
-        </div>
 
         {/* Header with Current Status */}
         <div className="flex items-center justify-between">

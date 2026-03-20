@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Brain, RefreshCw, AlertTriangle, CheckCircle2, TrendingUp } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function AnomalyDetection() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -62,13 +63,9 @@ export default function AnomalyDetection() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={Brain} title="AI Anomaly Detection" description="AI-powered anomaly detection and transaction analysis" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">AI Anomaly Detection</h1>
-          <p className="text-muted-foreground">
-            Powered by Lovable AI to analyze API patterns and flag suspicious behavior
-          </p>
-        </div>
         <Button onClick={handleRunAnalysis} disabled={isAnalyzing} size="lg">
           <Brain className="mr-2 h-5 w-5" />
           {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Save, RefreshCw, Shield, Zap, Bell } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface SystemConfigData {
   maintenance_mode: boolean;
@@ -132,7 +133,9 @@ export default function SystemConfig() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={Settings} title="System Configuration" description="Manage platform settings, features, and environment configuration" />
+
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -140,10 +143,6 @@ export default function SystemConfig() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">System Configuration</h1>
-          <p className="text-muted-foreground">Manage platform settings and features</p>
-        </div>
 
       <Tabs defaultValue="general" className="space-y-6">
         <TabsList>

@@ -15,6 +15,7 @@ import { AlertTriangle, DollarSign, RefreshCw, TrendingUp, Activity, Download, S
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { format } from 'date-fns';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface Transaction {
   id: string;
@@ -153,11 +154,9 @@ export default function TransactionMonitoring() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Activity} title="Transaction Monitoring" description="Real-time transaction monitoring, filters, and bulk actions" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Transaction Monitoring</h1>
-          <p className="text-muted-foreground">Real-time transaction monitoring, filters, and bulk actions</p>
-        </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={exportCSV}><Download className="h-4 w-4 mr-2" />Export CSV</Button>
           <Button variant="outline" onClick={loadData}><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>

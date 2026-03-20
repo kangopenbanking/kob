@@ -4,10 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileJson, Copy, CheckCircle2 } from "lucide-react";
+import { Download, FileJson, Copy, CheckCircle2, FileCode} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import SwaggerUI from "swagger-ui-react";
 import "swagger-ui-react/swagger-ui.css";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const EDGE_FUNCTIONS = [
   // AISP
@@ -286,11 +287,9 @@ export default function ApiDocumentation() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={FileCode} title="API Documentation" description="OpenAPI specification and interactive API documentation" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">API Documentation Generator</h1>
-          <p className="text-muted-foreground">OpenAPI 3.1.0 specification for {EDGE_FUNCTIONS.length} endpoints across {categories.length} domains</p>
-        </div>
         <div className="flex gap-2">
           <Button onClick={copySpec} variant="outline">
             {copied ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}

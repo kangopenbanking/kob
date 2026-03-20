@@ -19,8 +19,7 @@ import {
   Building2, FileText, CheckCircle, XCircle, Clock, Eye, Search,
   Users, Image as ImageIcon, ShieldCheck, AlertTriangle, Store,
   Landmark, Calendar, Hash, Globe, Briefcase, MoreHorizontal,
-  Download, RefreshCw,
-} from "lucide-react";
+  Download, RefreshCw,  ClipboardCheck} from "lucide-react";
 import { format } from "date-fns";
 import {
   DropdownMenu,
@@ -30,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { motion, AnimatePresence } from "framer-motion";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const DOCS = [
   { key: "registration_certificate_url", label: "Registration Certificate", icon: FileText },
@@ -227,7 +227,9 @@ export default function BusinessKYCReview() {
     <Card className="border-border/40">
       <CardContent className="p-6 space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="flex items-center gap-4">
+          <div key={i} className="space-y-6 flex items-center gap-4">
+      <AdminPageHeader icon={ClipboardCheck} title="Business KYC Review" description="Review and verify business KYC documentation and submissions" />
+
             <Skeleton className="h-10 w-10 rounded-lg" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/3" />

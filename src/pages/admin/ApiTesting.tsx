@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Play, Copy, CheckCircle2 } from "lucide-react";
+import { Play, Copy, CheckCircle2, FlaskConical} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const API_ENDPOINTS = [
   // AISP
@@ -212,10 +213,8 @@ export default function ApiTesting() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">API Testing Dashboard</h1>
-        <p className="text-muted-foreground">Test {API_ENDPOINTS.length} backend endpoints with sample requests</p>
-      </div>
+      <AdminPageHeader icon={FlaskConical} title="API Testing Dashboard" description="Test API endpoints and validate responses in real-time" />
+
 
       <Tabs defaultValue={categories[0]} className="w-full">
         <TabsList className="flex flex-wrap gap-1">

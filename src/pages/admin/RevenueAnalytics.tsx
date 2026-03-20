@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, DollarSign, TrendingUp, Activity, Landmark } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function RevenueAnalytics() {
   const { data: transactionFees } = useQuery({
@@ -55,10 +56,8 @@ export default function RevenueAnalytics() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Platform Revenue Analytics</h1>
-        <p className="text-muted-foreground mt-2">KOB platform fee income, revenue by channel, and growth metrics</p>
-      </div>
+      <AdminPageHeader icon={DollarSign} title="Revenue Analytics" description="Platform revenue metrics, trends, and financial reporting" />
+
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium flex items-center gap-2"><DollarSign className="h-4 w-4" />Total Revenue</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{formatCurrency(totalRevenue)}</div></CardContent></Card>

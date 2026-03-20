@@ -10,8 +10,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Settings, AlertTriangle } from "lucide-react";
+import { Plus, Settings, AlertTriangle, Gauge} from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function RateLimitConfig() {
   const [open, setOpen] = useState(false);
@@ -92,11 +93,9 @@ export default function RateLimitConfig() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={Gauge} title="Rate Limit Configuration" description="Configure per-client rate limits and monitor usage patterns" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Rate Limit Configuration</h1>
-          <p className="text-muted-foreground">Configure per-client rate limits and monitor usage patterns</p>
-        </div>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button>

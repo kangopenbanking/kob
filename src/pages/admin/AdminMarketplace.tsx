@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function AdminMarketplace() {
   const [plans, setPlans] = useState<any[]>([]);
@@ -120,10 +121,8 @@ export default function AdminMarketplace() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Marketplace Management</h1>
-        <p className="text-muted-foreground">Manage subscription plans, merchant subscriptions, and store visibility</p>
-      </div>
+      <AdminPageHeader icon={Store} title="Marketplace Management" description="Manage subscription plans, merchant subscriptions, and store visibility" />
+
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

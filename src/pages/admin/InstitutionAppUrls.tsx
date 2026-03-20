@@ -5,8 +5,9 @@ import { SearchFilter } from '@/components/SearchFilter';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Copy, ExternalLink, Check, Link2 } from 'lucide-react';
+import { Copy, ExternalLink, Check, Link2, Link} from "lucide-react";
 import { toast } from 'sonner';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const BASE_URL = 'https://kangopenbanking.com';
 
@@ -49,6 +50,8 @@ const InstitutionAppUrls: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Link} title="Institution App URLs" description="Manage institution-specific application URLs and endpoints" />
+
       <div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">Institution App URLs</h1>
         <p className="text-sm text-muted-foreground mt-1">

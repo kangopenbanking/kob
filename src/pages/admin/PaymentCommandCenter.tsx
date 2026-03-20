@@ -17,6 +17,7 @@ import {
 import { format, subHours, startOfDay, endOfDay } from "date-fns";
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from "recharts";
 import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 /* ───────── helpers ───────── */
 const statusColor = (s: string) => {
@@ -633,11 +634,9 @@ export default function PaymentCommandCenter() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={CreditCard} title="Payment Command Center" description="Real-time payment processing oversight and operations" />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Payment Command Center</h1>
-          <p className="text-sm text-muted-foreground mt-1">Real-time monitoring, debugging, and reconciliation across all payment providers.</p>
-        </div>
         <div className="relative max-w-xs w-full">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input

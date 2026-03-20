@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Plus, RefreshCw, Trash2, TestTube } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface SandboxAccount {
   id: string;
@@ -136,7 +137,9 @@ export default function SandboxManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={TestTube} title="Sandbox Management" description="Manage test accounts and sandbox environments for API development" />
+
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -144,10 +147,6 @@ export default function SandboxManagement() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Sandbox Management</h1>
-          <p className="text-muted-foreground">Manage test accounts for API development</p>
-        </div>
 
       <Card>
         <CardHeader>

@@ -6,8 +6,7 @@ import {
   Store, ShoppingBag, DollarSign, Search, ChevronRight, ToggleLeft, ToggleRight,
   TrendingUp, ExternalLink, Copy, Users, Package, Bus, Shield, AlertTriangle,
   Eye, Ban, CheckCircle2, Clock, Globe, MapPin, CreditCard, BarChart3,
-  RefreshCw, Download, Filter, MoreVertical, Loader2, Activity,
-} from 'lucide-react';
+  RefreshCw, Download, Filter, MoreVertical, Loader2, Activity,  Briefcase} from "lucide-react";
 import { StatCard } from '@/components/ui/stat-card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -32,6 +31,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Area, AreaChart, Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, CartesianGrid } from 'recharts';
 import { motion } from 'framer-motion';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 /* ── Feature flag registry ── */
 const FEATURE_KEYS = [
@@ -296,6 +296,8 @@ const BusinessAppManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Briefcase} title="Business App Management" description="Monitor merchants, orders, features & compliance" />
+
       {/* Hero */}
       <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-background to-background border p-6 md:p-8">
         <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />

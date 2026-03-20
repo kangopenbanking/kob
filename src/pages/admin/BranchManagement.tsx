@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Building2, Plus, Edit, Trash2, MapPin, Phone, Mail, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function BranchManagement() {
   const navigate = useNavigate();
@@ -217,11 +218,9 @@ export default function BranchManagement() {
   return (
     <>
       <div className="space-y-6">
+      <AdminPageHeader icon={MapPin} title="Branch Management" description="Manage bank and financial institution branches" />
+
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Branch Management</h1>
-            <p className="text-muted-foreground">Manage bank and financial institution branches</p>
-          </div>
           <Button onClick={openCreateDialog}>
             <Plus className="mr-2 h-4 w-4" />
             Add Branch

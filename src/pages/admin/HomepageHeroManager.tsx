@@ -9,7 +9,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Trash2, GripVertical, Image as ImageIcon, Video, Eye, EyeOff, Upload, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Trash2, GripVertical, Image as ImageIcon, Video, Eye, EyeOff, Upload, ArrowUp, ArrowDown, LayoutDashboard} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface HeroSlide {
   id: string;
@@ -126,11 +127,9 @@ export default function HomepageHeroManager() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={LayoutDashboard} title="Homepage Hero Manager" description="Manage hero slides and homepage content" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Homepage Hero Manager</h1>
-          <p className="text-muted-foreground">Manage the hero slideshow on the main website homepage</p>
-        </div>
         <label>
           <input
             type="file"

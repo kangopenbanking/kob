@@ -15,6 +15,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { FileCode, Eye, Edit, Mail, Send } from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function EmailTemplates() {
   const queryClient = useQueryClient();
@@ -62,10 +63,8 @@ export default function EmailTemplates() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Email Template Management</h1>
-        <p className="text-muted-foreground mt-2">Manage transactional email templates for payment receipts, alerts, and notifications</p>
-      </div>
+      <AdminPageHeader icon={Mail} title="Email Template Management" description="Manage automated email templates and notification content" />
+
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total Templates</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{templates?.length || 0}</div></CardContent></Card>

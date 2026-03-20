@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus, Key, Copy, Eye, EyeOff, RefreshCw, Ban, CheckCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const ALL_SCOPES = [
   { value: 'openid', label: 'OpenID Connect', description: 'Identity verification' },
@@ -157,7 +158,9 @@ export default function ApiClientManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={Key} title="API Client Management" description="Manage OAuth 2.0 API clients and credentials" />
+
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -165,10 +168,6 @@ export default function ApiClientManagement() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">API Client Management</h1>
-          <p className="text-muted-foreground">Manage OAuth 2.0 API clients and credentials</p>
-        </div>
 
       <Card>
         <CardHeader>

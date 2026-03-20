@@ -14,7 +14,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Mail, Edit, Eye, Send, Search, BarChart3, Settings, FileText, Building2 } from 'lucide-react';
+import { Mail, Edit, Eye, Send, Search, BarChart3, Settings, FileText, Building2, MailCheck} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const CATEGORIES = [
   { key: 'transactional', label: 'Transactional', color: 'bg-blue-100 text-blue-800' },
@@ -238,6 +239,8 @@ const ManagedEmailAdmin: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={MailCheck} title="Email Management" description="Manage all automated emails for institutions and customers" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Mail className="h-6 w-6" /> Email Management</h1>

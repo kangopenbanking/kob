@@ -3,8 +3,9 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertCircle, Database, Shield, Clock, TrendingUp } from 'lucide-react';
+import { AlertCircle, Database, Shield, Clock, TrendingUp, Lock} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface RLSError {
   timestamp: string;
@@ -85,10 +86,8 @@ export default function RLSMonitoring() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">RLS & Security Monitoring</h1>
-          <p className="text-muted-foreground">Real-time monitoring of Row-Level Security policies and permission checks</p>
-        </div>
+      <AdminPageHeader icon={Lock} title="RLS & Security Monitoring" description="Monitor row-level security policies and permission checks" />
+
 
         <Alert>
           <AlertCircle className="h-4 w-4" />

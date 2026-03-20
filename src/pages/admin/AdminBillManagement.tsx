@@ -1,3 +1,4 @@
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -935,18 +936,7 @@ function SettlementsTab() {
 export default function AdminBillManagement() {
   return (
     <div className="space-y-6">
-      {/* Hero Banner */}
-      <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-background/95 to-transparent border p-6 md:p-8">
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 rounded-xl bg-primary/10">
-              <Receipt className="h-6 w-6 text-primary" />
-            </div>
-            <h1 className="text-2xl font-bold">Bill Management</h1>
-          </div>
-          <p className="text-muted-foreground max-w-xl">Manage bill categories, providers, products, payment fields, and oversee all bill payments and settlements.</p>
-        </div>
-      </div>
+      <AdminPageHeader icon={Receipt} title="Bill Management" description="Manage bill categories, providers, products, payment fields, and oversee all bill payments and settlements." />
 
       <BillStats />
 

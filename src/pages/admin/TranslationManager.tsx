@@ -45,6 +45,7 @@ import {
   ScanSearch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface TranslationString {
   id: string;
@@ -503,7 +504,9 @@ export default function TranslationManager() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-20">
+      <div className="space-y-6 flex items-center justify-center py-20">
+      <AdminPageHeader icon={Languages} title="Translation Manager" description="Manage multilingual content and translation workflows" />
+
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
