@@ -84,7 +84,8 @@ async function suiteSystemHealth(): Promise<TestSuite> {
   tests.push(await runTest(suite, 'system-health-check returns 200', async () => {
     const { status, data } = await invoke('system-health-check', 'POST', {});
     assert(status === 200, `Expected 200, got ${status}`);
-    assert(data.overall_status !== undefined, 'Missing overall_status');
+    assert(data.status !== undefined, 'Missing status field');
+    assert(data.status === 'healthy' || data.status === 'degraded', `Bad status: ${data.status}`);
   }));
 
   tests.push(await runTest(suite, 'public-api-spec returns OpenAPI spec', async () => {
