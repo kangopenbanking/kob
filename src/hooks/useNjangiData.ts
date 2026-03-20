@@ -58,8 +58,11 @@ export function useCreateNjangiGroup() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] }),
-    onError: (err: any) => toast.error(err.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
+      toast.success('Njangi group created! Share the group ID to invite members.');
+    },
+    onError: (err: any) => toast.error(err.message || 'Could not create group. Please try again.'),
   });
 }
 
