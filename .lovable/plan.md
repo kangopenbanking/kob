@@ -1,68 +1,63 @@
 
 
-# KOB v1 Full Inter-Banking Gap Audit
-**Scope:** Banks (API-less) · Merchants/Businesses · Developers · Consumer App · Banking PWA · Business App
+# KOB Competitive Comparison, 3-Layer Architecture & Migration Guides
 
----
+## Deliverables
 
-## 1. Executive Summary
+### 1. Competitive Comparison Page (`/developer/compare`)
+New page: `src/pages/developer/CompetitiveComparison.tsx`
 
-The KOB platform is **95%+ production-ready** as a full inter-banking ecosystem. All 12 original gaps have been addressed, and UK Open Banking v4.0.1 standards compliance has been implemented (15 gaps across 5 categories).
+- Interactive comparison matrix table: KOB vs Flutterwave vs Stripe vs CinetPay vs DusuPay
+- 10 feature categories with checkmark/cross indicators and hover tooltips
+- Categories: Collections, Payouts, Open Banking, Bank Connectors, Security, Compliance, SDKs, Multi-Currency, Banking Infrastructure, Developer Experience
+- Score summary cards at top (KOB: 77/77, Stripe: 33/77, Flutterwave: 31/77, etc.)
+- "Why KOB" callout section highlighting unique differentiators (3-layer architecture, XAF-native, COBAC compliance)
+- Animated scroll reveals using existing `ScrollReveal` component
 
----
+### 2. 3-Layer Architecture Section on Developer Home
+New component: `src/components/developer/landing/ArchitectureSection.tsx`
 
-## 2. Original Gap Matrix — ALL RESOLVED
+- Three animated cards stacked vertically or in a row:
+  - **Layer 1: Payment Gateway** — Collections, Payouts, Subscriptions, Split Payments
+  - **Layer 2: Open Banking** — AISP, PISP, CBPII, Consent Management
+  - **Layer 3: Banking Infrastructure** — Ledger, Loans, KYC, Multi-Tenant Banking
+- Each card has an icon, title, feature list, and a subtle entrance animation via framer-motion
+- A connecting visual (vertical line or flow arrows) linking the three layers
+- Added between `OpenBankingSection` and `SDKSection` in `DeveloperHome.tsx`
 
-| # | Gap | Status | Resolution |
-|---|-----|--------|------------|
-| 1 | DB Connector production sync | ✅ FIXED | HTTP-to-SQL bridge adapter in bank-db-connector |
-| 2 | MFA OTP delivery stub | ✅ FIXED | Wired via phone-auth-send-otp + managed-send-email |
-| 3 | Kafka/RabbitMQ HTTP-only | ✅ DOCUMENTED | Architectural limitation documented; bridge architecture recommended |
-| 4 | No connector_pull mode | ✅ FIXED | bank-api-connector edge function with OAuth2/API-key auth |
-| 5 | Interbank outbox cron | ✅ FIXED | pg_cron scheduled at 2-minute intervals |
-| 6 | No bank self-service onboarding | ✅ FIXED | ConnectorOnboard.tsx wizard in FI Portal |
-| 7 | SDKs documentation-only | ✅ FIXED | Node.js, Python, PHP SDKs fully implemented in packages/ |
-| 8 | Virtual cards degraded | ✅ DORMANT | Professionally marked "Coming Soon" with dormant status |
-| 9 | No webhook retry dashboard | ✅ FIXED | BusinessWebhookLogs.tsx in Business App |
-| 10 | No dispute response UI | ✅ FIXED | BusinessDisputes.tsx in Business App |
-| 11 | Business App invoice module | ✅ FIXED | Invoice module added |
-| 12 | No E2E contract test runner | ✅ FIXED | e2e-contract-tests edge function (50+ tests, 8 suites) |
+### 3. Migration Guides Page (`/developer/migrate`)
+New page: `src/pages/developer/MigrationGuide.tsx`
 
----
+- Two tabs: "Migrate from Stripe" and "Migrate from Flutterwave"
+- Each tab shows side-by-side code comparison (before/after) for:
+  - **Create a charge** (Stripe `paymentIntents.create` → KOB `gateway.charges.create`)
+  - **Process a payout** (Stripe `transfers.create` → KOB `gateway.payouts.create`)
+  - **Verify a webhook** (Stripe `webhooks.constructEvent` → KOB `webhooks.verify`)
+- Code examples in 3 SDK tabs per migration: Node.js, Python, PHP
+- Step-by-step migration checklist (numbered steps)
+- "Key Differences" callout cards (currency handling, XAF-native, mobile money channels)
 
-## 3. UK Open Banking v4.0.1 Compliance — IMPLEMENTED
+### 4. Route & Navigation Updates
 
-| # | Gap | Status | Implementation |
-|---|-----|--------|---------------|
-| 1-4 | FAPI Headers | ✅ DONE | fapi-headers.ts shared utility; all AISP/PISP endpoints updated |
-| 5 | JWS Message Signing | ✅ DONE | jws-signing.ts with detached JWS; PISP write endpoints signed |
-| 6 | JWE Rejection | ✅ DONE | 415 Unsupported Media Type for jose+jwe |
-| 7 | CBPII Funds Confirmation | ✅ DONE | cbpii-funds-confirmation edge function + cbpii_consents table |
-| 8 | International Payments | ✅ DONE | pisp-international-payment edge function |
-| 9 | File Payments | ✅ DONE | pisp-file-payment edge function (maps to batch infrastructure) |
-| 10 | Standing Order Consents | ✅ DONE | pisp-scheduled-payment edge function |
-| 11 | Scheduled Payments | ✅ DONE | pisp-scheduled-payment edge function |
-| 12 | Pagination Links | ✅ DONE | Links.Next/Prev/First/Last in aisp-transactions |
-| 13 | Nested Error Model | ✅ DONE | ob-errors.ts with UK OB Errors[] format |
-| 14 | Retry-After on 429 | ✅ DONE | Already in security.ts rateLimitResponse + ob-errors.ts |
-| 15 | CIBA | ⏳ FUTURE | Optional; deferred for Phase 2 |
+**App.tsx** — Add 2 new routes under public developer docs:
+```
+<Route path="compare" element={<CompetitiveComparison />} />
+<Route path="migrate" element={<MigrationGuide />} />
+```
 
----
+**DeveloperHome.tsx** — Insert `<ArchitectureSection />` between `OpenBankingSection` and `SDKSection`
 
-## 4. Remaining (Non-Blocking)
+**Changelog.tsx** — Add v9.1.0 entry documenting the comparison matrix, architecture section, and migration guides
 
-| Item | Priority | Notes |
-|------|----------|-------|
-| CIBA backchannel auth | LOW | Optional in UK OB; no TPP demand in CEMAC yet |
-| Real KYC provider creds for virtual cards | CONFIG | Infrastructure config, not code gap |
-| External CI pipeline triggers | CONFIG | DevOps setup, not platform limitation |
+## File Summary
 
----
+| File | Action |
+|---|---|
+| `src/pages/developer/CompetitiveComparison.tsx` | Create |
+| `src/pages/developer/MigrationGuide.tsx` | Create |
+| `src/components/developer/landing/ArchitectureSection.tsx` | Create |
+| `src/pages/developer/DeveloperHome.tsx` | Modify (add ArchitectureSection) |
+| `src/App.tsx` | Modify (add 2 routes + imports) |
+| `src/pages/developer/Changelog.tsx` | Modify (add v9.1.0) |
+| **Total** | 3 new, 3 modified |
 
-## 5. Platform Stats
-
-- **Edge Functions:** 320+
-- **Database Tables:** 150+
-- **SDK Packages:** 3 (Node.js, Python, PHP)
-- **API Version:** v9.0.0
-- **UK OB Compliance:** 14/15 gaps resolved (93%)
