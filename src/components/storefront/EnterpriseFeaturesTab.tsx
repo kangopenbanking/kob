@@ -371,7 +371,17 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
                         <p className="text-sm font-semibold text-foreground">{loc.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{loc.city || 'Douala'}, {loc.country || 'CM'}</p>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">{loc.currency_default || 'XAF'}</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px]">{loc.currency_default || 'XAF'}</Badge>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => deleteLocation(loc.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground">
                       <Globe className="w-3 h-3" /> {loc.timezone || 'Africa/Douala'}

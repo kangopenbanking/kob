@@ -633,7 +633,17 @@ export default function MerchantStorefront() {
                         {isPublished ? <div className="w-3 h-3 rounded-full bg-[hsl(var(--fi-green))] animate-pulse" /> : <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />}
                         <span className="text-sm font-bold text-foreground">{isPublished ? 'Published' : 'Draft'}</span>
                       </div>
-                      <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+                      <Switch checked={isPublished} onCheckedChange={handlePublishToggle} />
+                    </div>
+                    {showUnpublishConfirm && (
+                      <div className="p-3 rounded-xl border border-destructive/30 bg-destructive/5 space-y-2">
+                        <p className="text-xs font-medium text-destructive">Are you sure? Your store will be hidden from the marketplace.</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="destructive" className="text-xs rounded-lg" onClick={() => { confirmUnpublish(); }}>Yes, Unpublish</Button>
+                          <Button size="sm" variant="outline" className="text-xs rounded-lg" onClick={() => setShowUnpublishConfirm(false)}>Cancel</Button>
+                        </div>
+                      </div>
+                    )}
                     </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {isPublished ? 'Your store is visible on the marketplace.' : 'Toggle to publish your store and start receiving orders.'}
