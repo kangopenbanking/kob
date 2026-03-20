@@ -14442,6 +14442,7 @@ export type Database = {
           city: string | null
           country: string
           created_at: string
+          custom_attributes_json: Json | null
           custom_brand_json: Json | null
           description: string | null
           id: string
@@ -14454,6 +14455,7 @@ export type Database = {
           sla_tier: string | null
           status: string | null
           store_name: string
+          sub_category: string | null
           updated_at: string
         }
         Insert: {
@@ -14464,6 +14466,7 @@ export type Database = {
           city?: string | null
           country?: string
           created_at?: string
+          custom_attributes_json?: Json | null
           custom_brand_json?: Json | null
           description?: string | null
           id?: string
@@ -14476,6 +14479,7 @@ export type Database = {
           sla_tier?: string | null
           status?: string | null
           store_name: string
+          sub_category?: string | null
           updated_at?: string
         }
         Update: {
@@ -14486,6 +14490,7 @@ export type Database = {
           city?: string | null
           country?: string
           created_at?: string
+          custom_attributes_json?: Json | null
           custom_brand_json?: Json | null
           description?: string | null
           id?: string
@@ -14498,6 +14503,7 @@ export type Database = {
           sla_tier?: string | null
           status?: string | null
           store_name?: string
+          sub_category?: string | null
           updated_at?: string
         }
         Relationships: [
