@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 const BusinessWallet: React.FC = () => {
+  const navigate = useNavigate();
   const { merchantId } = useMerchantContext();
   const isMobile = useIsMobile();
   const { wallets, availableBalance, pendingBalance, settlements, isLoading, refetchWallets } = useBusinessData(merchantId);
