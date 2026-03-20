@@ -40,6 +40,7 @@ import hcDashboard from "@/assets/help-centre/hc-dashboard.webp";
 import hcNotifications from "@/assets/help-centre/hc-notifications.webp";
 import hcBuild from "@/assets/help-centre/hc-build.webp";
 import hcDevices from "@/assets/help-centre/hc-devices.webp";
+import hcBanner from "@/assets/help-centre/hc-banner.png";
 
 /* ── Smooth entrance ─────────────────────────────────── */
 const fadeUp = {
@@ -163,16 +164,23 @@ export default function HelpCentre() {
       </Helmet>
 
       {/* ── HERO ───────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-primary/10 pt-20 pb-28 lg:pt-28 lg:pb-36">
-        {/* decorative blobs */}
-        <div className="absolute -top-40 -right-40 h-[480px] w-[480px] rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-32 -left-32 h-[360px] w-[360px] rounded-full bg-primary/8 blur-3xl pointer-events-none" />
+      <section className="relative overflow-hidden pt-20 pb-28 lg:pt-28 lg:pb-36">
+        {/* Banner cover image */}
+        <div className="absolute inset-0">
+          <img
+            src={hcBanner}
+            alt="KOB Help Centre"
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/80 to-background/40" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent" />
+        </div>
 
         <div className="container mx-auto px-4 relative z-10">
           <motion.div
             initial="hidden"
             animate="visible"
-            className="mx-auto max-w-3xl text-center"
+            className="max-w-3xl"
           >
             <motion.p
               custom={0}
@@ -196,13 +204,13 @@ export default function HelpCentre() {
             <motion.p
               custom={2}
               variants={fadeUp}
-              className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto text-pretty"
+              className="mt-6 text-lg text-muted-foreground max-w-xl text-pretty"
             >
               Everything you need to understand Open Banking in Cameroon, manage
               your account and build with the KOB API.
             </motion.p>
 
-            <motion.div custom={3} variants={fadeUp} className="mt-8 mx-auto max-w-lg">
+            <motion.div custom={3} variants={fadeUp} className="mt-8 max-w-lg">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
