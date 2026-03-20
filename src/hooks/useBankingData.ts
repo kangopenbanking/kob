@@ -475,7 +475,7 @@ export function useLoanRepayment() {
       queryClient.invalidateQueries({ queryKey: ['credit-score', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
     },
-    onError: (err: any) => toast.error(err.message || 'Payment failed'),
+    onError: (err: any) => toast.error(err.message || 'Loan repayment could not be processed. Please try again.'),
   });
 }
 
