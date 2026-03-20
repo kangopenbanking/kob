@@ -1,202 +1,156 @@
 
 
-# KOB File-Based Bank Connector — Implementation Plan
+# KOB Bank Connector Kit — FI Portal Implementation Plan
 
 ## Current State
 
-**Already exists:**
-- `banks` table with lifecycle (draft→submitted→active→suspended) + `bank-directory` edge function with 20+ actions
-- `bank_sourced_accounts/balances/transactions/beneficiaries` tables with upsert-based ingestion
-- `bank_psu_links` table + PSU linking flow
-- `bank_payments` + `bank_payment_status_events` tables
-- `AdminBankDirectory.tsx` (5-tab admin UI)
-- `ReconciliationDashboard.tsx` (legacy bank_reconciliations)
-- `bank-import-transactions` edge function (CSV/MT940/CAMT053 parser)
-- `bank-sync` edge function (SFTP-style sync, simulated)
-- `bank_connections`, `bank_transaction_imports`, `bank_statements` tables (legacy)
-- AISP endpoints (`aisp-accounts`, etc.) — currently query user's `accounts` table only, NOT connector-backed
-- `iso-messaging` edge function for pain.001/pacs.008 generation
+**FI Portal (`/fi-portal`)** is the bank/institution dashboard with:
+- `InstitutionLayout.tsx` — sidebar + header with `NotificationCenter`
+- `navigation-config.ts` — 9 nav sections, 40+ routes
+- `useStaffPermissions` hook — section-based access via `staff_portal_permissions` table
+- `RoleGuard` with `allowedRoles: ['institution', 'staff']`
+- All routes nested under `/fi-portal/*` in `App.tsx`
 
-**Gaps this plan fills:**
-- No file upload registry with SHA256 dedupe and row-level traceability
-- No CSV schema mapping profiles (bank-specific field mapping)
-- No batch payment instruction file generator (CSV + pain.001)
-- No status file ingestion pipeline with reconciliation
-- AISP endpoints not backed by bank-sourced data
-- No file upload UI in AdminBankDirectory
-- No sandbox file generation
+**Backend already exists:**
+- `bank-file-connector` edge function with 18 actions (upload, mapping, ingestion, batch, status, sandbox)
+- 7 new tables: `bank_file_uploads`, `bank_file_rows`, `bank_data_mappings`, `ingestion_runs`, `bank_batch_jobs`, `bank_batch_items`, `bank_status_events`
+- `bank-files` storage bucket
+- RLS: currently admin + service_role only (needs bank-scoped policies for FI users)
+
+**Gap:** Zero FI-portal pages exist for the connector kit. All file connector UI is admin-only (`AdminBankDirectory.tsx`). Banks cannot self-serve.
 
 ---
 
-## Phase 1 — File Registry + Upload Infrastructure
+## Architecture Decisions
 
-### Database Migration (additive, ~7 new tables)
-
-```text
-bank_file_uploads
-  ├── id, bank_id (FK), environment (sandbox|prod)
-  ├── file_type (accounts|balances|transactions|beneficiaries|payment_instructions|payment_status)
-  ├── original_filename, storage_path, file_hash_sha256, file_size
-  ├── uploaded_by (sftp|portal|admin), uploader_user_id
-  ├── status (received|validating|processed|failed)
-  ├── received_at, processed_at
-  ├── correlation_id, error_id, error_summary
-  ├── RLS: admin + service_role
-
-bank_file_rows
-  ├── id, file_id (FK), row_number
-  ├── raw_json, normalized_json
-  ├── status (ok|invalid|duplicate|skipped)
-  ├── error_id, error_details
-  ├── RLS: service_role only
-
-bank_data_mappings
-  ├── id, bank_id (FK), file_type, version
-  ├── mapping_json (JSONB — field mapping rules)
-  ├── is_active, created_at
-  ├── RLS: admin CRUD
-
-ingestion_runs
-  ├── id, file_id (FK), bank_id (FK)
-  ├── started_at, finished_at
-  ├── totals_json (rows_total, rows_ok, rows_invalid, rows_duplicate)
-  ├── status, correlation_id
-  ├── RLS: admin read, service_role all
-
-bank_batch_jobs
-  ├── id, bank_id (FK), environment
-  ├── batch_type (outgoing_transfers|salary|merchant_payouts)
-  ├── status (draft|generated|delivered|executed|partially_failed|failed|reconciled)
-  ├── created_by, file_id (FK nullable)
-  ├── totals_json, correlation_id
-  ├── RLS: admin + service_role
-
-bank_batch_items
-  ├── id, batch_id (FK)
-  ├── beneficiary_name, beneficiary_account_number, beneficiary_bank_code
-  ├── amount, currency (default XAF), narration, reference
-  ├── internal_payment_id (nullable FK)
-  ├── status (pending|submitted|executed|failed)
-  ├── bank_response_code, bank_response_message
-  ├── RLS: admin + service_role
-
-bank_status_events
-  ├── id, batch_item_id (FK)
-  ├── status, bank_tx_id, raw_row_json
-  ├── created_at
-  ├── RLS: service_role
-```
-
-Also add `source_file_id` and `source_row_number` columns to existing `bank_sourced_accounts`, `bank_sourced_transactions`, `bank_sourced_balances`, `bank_sourced_beneficiaries` tables (additive ALTER).
-
-### Storage Bucket
-Create `bank-files` storage bucket for uploaded CSVs and generated instruction files.
+1. **Routes:** All new pages under `/fi-portal/connector/*` — fits existing nested layout pattern
+2. **Nav section:** New "Bank Connector Kit" section in `navigation-config.ts` with `sectionKey: 'connector'`
+3. **RBAC:** Leverage existing `staff_portal_permissions` + `useStaffPermissions` for section-level gating. Add `connector` to `ALL_PORTAL_SECTIONS`. Backend calls use institution's `bank_id` resolved from the logged-in user's institution.
+4. **Bank ID resolution:** Create a small hook `useBankConnector` that resolves the institution's linked `bank_id` from the `banks` table (via `institution_id` or `user_id`).
+5. **RLS:** Add bank-scoped RLS policies so institution owners can read/write their own bank's connector data.
+6. **Reusable components:** Create a shared `FIPageHeader` (adapting `AdminPageHeader` for FI context) and shared status badge/table skeleton components.
 
 ---
 
-## Phase 2 — File Ingestion Edge Function
+## Phase 1 — Infrastructure (DB + RBAC + Navigation)
 
-### New edge function: `bank-file-connector`
-Consolidated router with actions:
+### 1a. Database Migration
+- Add RLS policies to all 7 connector tables allowing institution owners to access rows matching their `bank_id`:
+  - `bank_file_uploads`, `bank_file_rows`, `bank_data_mappings`, `ingestion_runs`, `bank_batch_jobs`, `bank_batch_items`, `bank_status_events`
+  - Pattern: `USING (bank_id IN (SELECT id FROM banks WHERE institution_id IN (SELECT id FROM institutions WHERE user_id = auth.uid())))`
+- Add `connector` to any permission enums if needed
+- Add `connector` section key entries for the `ALL_PORTAL_SECTIONS` array
 
-**Upload & Registry:**
-- `upload_file` — registers file in `bank_file_uploads`, stores in `bank-files` bucket, computes SHA256, rejects duplicates
-- `list_files` — admin list with filters (bank_id, file_type, status)
-- `get_file` — file detail + row-level results
-- `download_file` — signed URL for stored file
+### 1b. Navigation Config
+- Add new section to `navigation-config.ts`:
+  ```
+  "Bank Connector Kit" section with items:
+  - Overview          /fi-portal/connector           (sectionKey: 'connector')
+  - Uploads & Imports /fi-portal/connector/uploads    (sectionKey: 'connector')
+  - Mapping Profiles  /fi-portal/connector/mappings   (sectionKey: 'connector')
+  - Batch Payments    /fi-portal/connector/batches    (sectionKey: 'connector')
+  - Status Files      /fi-portal/connector/status     (sectionKey: 'connector')
+  - Reconciliation    /fi-portal/connector/reconciliation (sectionKey: 'connector')
+  - Connector Health  /fi-portal/connector/health     (sectionKey: 'connector')
+  - Audit Log         /fi-portal/connector/audit      (sectionKey: 'connector')
+  - Templates & Guides /fi-portal/connector/templates (sectionKey: 'connector')
+  ```
 
-**Mapping Management:**
-- `create_mapping` — save mapping profile for bank+file_type
-- `list_mappings` — list active mappings per bank
-- `preview_mapping` — apply mapping to first 5 rows of a file, return preview (no DB write)
+### 1c. Routes in App.tsx
+- Add 9 new `<Route>` entries under the `/fi-portal` parent route
+- Create 9 new page components in `src/pages/institution/connector/`
 
-**Ingestion Pipeline:**
-- `run_ingestion` — for a given file_id:
-  1. Load mapping profile for (bank_id, file_type)
-  2. Parse CSV rows
-  3. Apply mapping transforms (trim, parseDecimal, parseDate, parsePhone)
-  4. Validate (required fields, XAF default, amount >= 0, date sanity)
-  5. Dedupe check against existing bank_sourced_* tables
-  6. Upsert valid rows, record invalid/duplicate rows in `bank_file_rows`
-  7. Write `ingestion_runs` summary
-  8. Update `bank_file_uploads` status
-- `get_ingestion_run` — retrieve run results
-- `download_errors` — generate CSV of error rows for a file
+### 1d. Shared Hook: `useBankConnector`
+- Resolves current user's `bank_id` from `banks` table via institution ownership
+- Returns `{ bankId, bankName, loading, error }`
+- Used by all connector pages to scope API calls
 
-**Batch Payment Generator:**
-- `create_batch` — create batch job + items
-- `generate_batch_file` — generate CSV or pain.001 XML instruction file, store in bucket
-- `list_batches` — admin list with filters
-- `get_batch` — batch detail + items
-- `download_batch_file` — signed URL
-
-**Status File Ingestion:**
-- `ingest_status_file` — parse bank's status CSV, match to batch_items by reference, update statuses, record events
-- `get_reconciliation_summary` — compare expected vs actual for a batch
-
-**Sandbox:**
-- `generate_sandbox_files` — produce sample CSV files (accounts, transactions, statuses) for sandbox bank
+### 1e. Shared Components
+- `src/components/institution/connector/ConnectorPageHeader.tsx` — solid primary banner (matches admin style)
+- `src/components/institution/connector/StatusBadge.tsx` — reusable status badges
+- `src/components/institution/connector/ConnectorEmptyState.tsx` — empty states with template download CTAs
 
 ---
 
-## Phase 3 — AISP Connector-Backed Resolution
+## Phase 2 — Pages (9 pages, all fully functional)
 
-### Extend `aisp-accounts` edge function
-After the existing user-scoped query, add a second resolution path:
-- Check `bank_psu_links` for user's linked banks (status = 'active')
-- If linked banks exist, also query `bank_sourced_accounts` for those bank_customer_ids
-- Merge results into response with `data_freshness: 'daily_import'` metadata
+Each page uses `ConnectorPageHeader`, skeleton loading, empty states, and calls `bank-file-connector` edge function.
 
-### Extend `aisp-balances`, `aisp-transactions`, `aisp-beneficiaries` similarly
-- `aisp-balances`: also query `bank_sourced_balances`
-- `aisp-transactions`: also query `bank_sourced_transactions` with date filters
-- `aisp-beneficiaries`: also query `bank_sourced_beneficiaries`
+### Page 1: Connector Overview (`/fi-portal/connector`)
+- Integration mode card, data freshness cards (last import per type)
+- Import health widget (7-day success/fail)
+- Quick action buttons (upload, view errors, generate batch, upload status)
+- Recent activity feed (from audit/ingestion_runs)
 
-Non-breaking: existing user-scoped data continues to work. Bank-sourced data is additive.
+### Page 2: Uploads & Imports (`/fi-portal/connector/uploads`)
+- Upload panel: file_type dropdown, environment selector, mapping profile selector, file picker
+- Imports table with filters (file_type, status, date range), pagination
+- Import detail dialog: metadata, row counts, error preview, download errors CSV, reprocess button
 
----
+### Page 3: Mapping Profiles (`/fi-portal/connector/mappings`)
+- Tabs by file_type (accounts/balances/transactions/beneficiaries)
+- Mapping list with version, status, actions (view, clone, activate, deactivate)
+- Mapping editor dialog: CSV header detection, canonical field mapping via dropdowns, transform builder, validation preview
+- Save as new version, activate button
 
-## Phase 4 — Admin UI Enhancements
+### Page 4: Templates & Guides (`/fi-portal/connector/templates`)
+- Download CSV templates per file_type (calls `generate_sandbox_files` action)
+- Required columns reference table
+- Common errors and fixes guide
+- Static content + download buttons
 
-### Extend `AdminBankDirectory.tsx`
-Add new tab: **File Imports**
-- File upload widget (select bank, file_type, environment, mapping profile → upload CSV)
-- File list table with status badges, row counts, error counts
-- Click-through to ingestion run detail (valid/invalid/duplicate breakdown)
-- Download error rows as CSV
-- "Re-run ingestion" button (safe, deduped)
-
-Add new tab: **Batch Payments**
-- Create batch form (bank, type, add items)
-- Generate file button (CSV / pain.001)
+### Page 5: Batch Payments (`/fi-portal/connector/batches`)
+- Batch list with filters (status, date range), pagination
+- Create batch dialog: manual item entry or CSV upload for payout list
+- Generate file button (CSV / pain.001 format selector)
 - Download generated file
-- Upload status file
-- Reconciliation summary (expected vs actual, mismatches highlighted)
+- Status progression display
 
-### Extend `ReconciliationDashboard.tsx`
-Add section for file-based reconciliation:
-- List of batch jobs with status
-- Mismatch details per batch
-- "Mark resolved" action
+### Page 6: Status Files (`/fi-portal/connector/status`)
+- Upload status file panel (select batch or auto-match)
+- Status imports table
+- Mismatch resolution interface: unmatched references, manual match, mark external, request re-upload
+
+### Page 7: Reconciliation (`/fi-portal/connector/reconciliation`)
+- Period selector (daily/weekly/monthly)
+- KPI cards: expected total, executed total, mismatches
+- Mismatch queue table with filters
+- Resolve mismatch dialog (requires reason)
+- Export reconciliation report CSV
+
+### Page 8: Connector Health (`/fi-portal/connector/health`)
+- SFTP status indicator
+- Last file received timestamp
+- Processing queue status
+- Alert cards for failures or missing imports
+
+### Page 9: Audit Log (`/fi-portal/connector/audit`)
+- Filterable table: time, actor, action_type, entity, entity_id, result, correlation_id
+- Pulls from `ingestion_runs` + `bank_file_uploads` activity
 
 ---
 
-## Phase 5 — Documentation & Changelog
+## Phase 3 — Notifications
 
-**New docs:**
-- `docs/file-connector/baseline/system-inventory.md`
-- `docs/file-connector/baseline/current-gaps.md`
-- `docs/file-connector/baseline/e2e-baseline-results.md`
-- `docs/file-connector/final/report.md`
-- `docs/public/banks/file-format.md` — CSV templates + field specs
-- `docs/public/banks/mapping-profiles.md` — mapping configuration guide
-- `docs/public/payments/batch-payments.md` — batch payment guide
-- `docs/public/admin/file-reconciliation.md`
+- Extend existing `notifyUser` / `notifyAdmins` calls in `bank-file-connector` to also notify the uploading bank user on:
+  - Import success/failure/partial
+  - Batch file generated
+  - Status file processed
+  - Reconciliation mismatch detected
+- Notification icon: `'bank_transfer'` or new `'connector'` icon
+- These appear in the existing `NotificationCenter` in the FI portal header
 
-**Update existing:**
-- OpenAPI spec (`public-api-spec`) — add file upload, batch payment, status ingestion endpoints
-- Postman collection — add File Connector folder
-- Changelog (`Changelog.tsx` + `changelog.json`) — v9.0.0: File-Based Bank Connector
+---
+
+## Phase 4 — Documentation
+
+New markdown files:
+- `docs/bank-dashboard-upgrade/baseline/ui-route-map.md`
+- `docs/bank-dashboard-upgrade/baseline/rbac-map.md`
+- `docs/public/banks/connector-kit-file-based.md`
+- `docs/public/banks/csv-templates.md`
+- `docs/public/banks/status-files-reconciliation.md`
+- `docs/bank-dashboard-upgrade/final/report.md`
 
 ---
 
@@ -204,13 +158,15 @@ Add section for file-based reconciliation:
 
 | Category | Files | Count |
 |---|---|---|
-| DB Migration | 1 migration (7 new tables + ALTER adds to 4 existing) | 1 |
-| Edge Functions | `bank-file-connector` (new) | 1 |
-| Edge Functions (modified) | `aisp-accounts`, `aisp-balances`, `aisp-transactions`, `aisp-beneficiaries` | 4 |
-| Storage | `bank-files` bucket creation (in migration) | — |
-| Admin UI (modified) | `AdminBankDirectory.tsx`, `ReconciliationDashboard.tsx` | 2 |
-| Docs (new) | 8 markdown files | 8 |
-| Docs (updated) | OpenAPI spec, Postman, Changelog | 3 |
+| DB Migration | RLS policies for bank-scoped access | 1 |
+| Navigation | `navigation-config.ts` (modified) | 1 |
+| Routes | `App.tsx` (modified, 9 new routes) | 1 |
+| Shared hook | `useBankConnector.ts` (new) | 1 |
+| Shared components | `ConnectorPageHeader`, `StatusBadge`, `ConnectorEmptyState` | 3 |
+| Page components | 9 new pages in `src/pages/institution/connector/` | 9 |
+| Edge function | `bank-file-connector` (minor: add bank-scoped auth) | 1 |
+| Docs | 6 markdown files | 6 |
+| **Total** | | **~23 files** |
 
-**Total: ~19 files. Zero existing tables removed. AISP endpoints extended additively. No breaking changes.**
+Zero existing pages modified (except `navigation-config.ts` and `App.tsx` with additive changes). Non-breaking.
 
