@@ -2,339 +2,445 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { Search, CheckCircle, Clock, XCircle, AlertTriangle, Eye, Shield, Scale} from "lucide-react";
-import { format } from "date-fns";
+import { Search, CheckCircle, Clock, XCircle, AlertTriangle, Eye, Shield, Scale, ArrowRight, User, MessageSquare, ChevronRight } from "lucide-react";
+import { format, formatDistanceToNow } from "date-fns";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { motion, AnimatePresence } from "framer-motion";
+
+const KANBAN_COLUMNS = [
+  { key: 'open', label: 'Open', color: 'bg-amber-500' },
+  { key: 'investigating', label: 'Investigating', color: 'bg-blue-500' },
+  { key: 'under_review', label: 'Under Review', color: 'bg-purple-500' },
+  { key: 'escalated', label: 'Escalated', color: 'bg-red-500' },
+  { key: 'won', label: 'Won', color: 'bg-green-500' },
+  { key: 'lost', label: 'Lost', color: 'bg-destructive' },
+  { key: 'closed', label: 'Closed', color: 'bg-muted-foreground' },
+];
+
+const PRIORITY_COLORS: Record<string, string> = {
+  high: 'destructive',
+  normal: 'secondary',
+  low: 'outline',
+};
 
 export default function DisputeManagement() {
   const queryClient = useQueryClient();
-  const [statusFilter, setStatusFilter] = useState("all");
+  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('kanban');
   const [searchTerm, setSearchTerm] = useState("");
-  const [resolution, setResolution] = useState("");
+  const [sourceFilter, setSourceFilter] = useState("all");
   const [selectedDispute, setSelectedDispute] = useState<any>(null);
   const [detailOpen, setDetailOpen] = useState(false);
-
-  // Legacy disputes
-  const { data: legacyDisputes, isLoading: legacyLoading } = useQuery({
-    queryKey: ["admin-disputes", statusFilter],
-    queryFn: async () => {
-      let query = supabase.from("disputes").select("*").order("created_at", { ascending: false });
-      if (statusFilter !== "all") query = query.eq("status", statusFilter);
-      const { data, error } = await query;
-      if (error) throw error;
-      return data;
-    },
-  });
+  const [noteText, setNoteText] = useState("");
+  const [resolution, setResolution] = useState("");
 
   // Gateway disputes
-  const { data: gatewayDisputes, isLoading: gatewayLoading } = useQuery({
-    queryKey: ["admin-gateway-disputes", statusFilter],
+  const { data: gatewayDisputes = [], isLoading: gwLoading } = useQuery({
+    queryKey: ["admin-gw-disputes"],
     queryFn: async () => {
-      let query = supabase.from("gateway_disputes").select("*, gateway_merchants(business_name, business_email)").order("created_at", { ascending: false });
-      if (statusFilter !== "all") query = query.eq("status", statusFilter);
-      const { data, error } = await query;
+      const { data } = await supabase.from("gateway_disputes").select("*, gateway_merchants(business_name, business_email, user_id)").order("created_at", { ascending: false });
+      return (data || []).map((d: any) => ({ ...d, _source: 'gateway' }));
+    },
+  });
+
+  // Legacy disputes
+  const { data: legacyDisputes = [], isLoading: legLoading } = useQuery({
+    queryKey: ["admin-leg-disputes"],
+    queryFn: async () => {
+      const { data } = await supabase.from("disputes").select("*").order("created_at", { ascending: false });
+      return (data || []).map((d: any) => ({ ...d, _source: 'legacy' }));
+    },
+  });
+
+  // Activities for selected dispute
+  const { data: activities = [] } = useQuery({
+    queryKey: ["dispute-activities", selectedDispute?.id],
+    queryFn: async () => {
+      if (!selectedDispute) return [];
+      const { data } = await supabase.from("dispute_activities" as any).select("*").eq("dispute_id", selectedDispute.id).order("created_at", { ascending: false });
+      return (data as any[]) || [];
+    },
+    enabled: !!selectedDispute,
+  });
+
+  // Admins for assignment
+  const { data: adminUsers = [] } = useQuery({
+    queryKey: ["admin-users-list"],
+    queryFn: async () => {
+      const { data: roles } = await supabase.from("user_roles").select("user_id").eq("role", "admin");
+      if (!roles?.length) return [];
+      const ids = roles.map(r => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("id, full_name, email").in("id", ids);
+      return profiles || [];
+    },
+  });
+
+  const lifecycleMutation = useMutation({
+    mutationFn: async (params: any) => {
+      const { error, data } = await supabase.functions.invoke("dispute-lifecycle", { body: params });
       if (error) throw error;
       return data;
     },
-  });
-
-  const resolveLegacy = useMutation({
-    mutationFn: async ({ id, status, resolution }: { id: string; status: string; resolution: string }) => {
-      const { error } = await supabase.from("disputes").update({ status, resolution, resolved_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-gw-disputes"] });
+      queryClient.invalidateQueries({ queryKey: ["admin-leg-disputes"] });
+      queryClient.invalidateQueries({ queryKey: ["dispute-activities"] });
       toast.success("Dispute updated");
-      setResolution("");
     },
-    onError: () => toast.error("Failed to update dispute"),
+    onError: (e: any) => toast.error(e.message || "Failed to update dispute"),
   });
 
-  const resolveGateway = useMutation({
-    mutationFn: async ({ id, status, notes }: { id: string; status: string; notes: string }) => {
-      const { error } = await supabase.from("gateway_disputes").update({ status, evidence_data: { admin_notes: notes, resolved_at: new Date().toISOString() }, updated_at: new Date().toISOString() }).eq("id", id);
-      if (error) throw error;
-      // Send notification email
-      const dispute = gatewayDisputes?.find(d => d.id === id);
-      if (dispute) {
-        const merchant = dispute.gateway_merchants as any;
-        supabase.functions.invoke("send-communication", {
-          body: {
-            template_key: "dispute_resolved",
-            recipient_email: merchant?.business_email,
-            variables: {
-              merchant_name: merchant?.business_name || "Merchant",
-              dispute_ref: (dispute as any).dispute_ref || id.slice(0, 8),
-              amount: dispute.amount, currency: dispute.currency,
-              outcome: status === "won" ? "Won (in your favor)" : "Lost",
-              resolution_notes: notes,
-            },
-          },
-        });
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["admin-gateway-disputes"] });
-      toast.success("Gateway dispute resolved");
-      setResolution("");
-    },
-    onError: () => toast.error("Failed to resolve dispute"),
+  const allDisputes = [...gatewayDisputes, ...legacyDisputes].filter(d => {
+    if (sourceFilter !== 'all' && d._source !== sourceFilter) return false;
+    if (searchTerm) {
+      const s = searchTerm.toLowerCase();
+      const name = d._source === 'gateway' ? (d.gateway_merchants as any)?.business_name || '' : '';
+      return (d.dispute_ref || d.id)?.toLowerCase().includes(s) || d.reason?.toLowerCase().includes(s) || name.toLowerCase().includes(s);
+    }
+    return true;
   });
+
+  const getByStatus = (status: string) => allDisputes.filter(d => {
+    if (status === 'open') return d.status === 'open';
+    if (status === 'closed') return ['closed', 'rejected'].includes(d.status);
+    if (status === 'won') return ['won', 'resolved'].includes(d.status);
+    return d.status === status;
+  });
+
+  const stats = {
+    total: allDisputes.length,
+    open: getByStatus('open').length,
+    investigating: getByStatus('investigating').length,
+    under_review: getByStatus('under_review').length,
+    escalated: getByStatus('escalated').length,
+    won: getByStatus('won').length,
+    lost: getByStatus('lost').length,
+  };
+
+  const handleStatusChange = (dispute: any, newStatus: string) => {
+    lifecycleMutation.mutate({
+      dispute_id: dispute.id,
+      dispute_source: dispute._source,
+      action: 'change_status',
+      new_status: newStatus,
+      note: resolution || undefined,
+    });
+    setResolution("");
+  };
+
+  const handleAddNote = () => {
+    if (!selectedDispute || !noteText.trim()) return;
+    lifecycleMutation.mutate({
+      dispute_id: selectedDispute.id,
+      dispute_source: selectedDispute._source,
+      action: 'add_note',
+      note: noteText,
+    });
+    setNoteText("");
+  };
+
+  const handleAssign = (dispute: any, assigneeId: string) => {
+    lifecycleMutation.mutate({
+      dispute_id: dispute.id,
+      dispute_source: dispute._source,
+      action: 'assign',
+      assignee_id: assigneeId,
+    });
+  };
+
+  const handleEscalate = (dispute: any) => {
+    lifecycleMutation.mutate({
+      dispute_id: dispute.id,
+      dispute_source: dispute._source,
+      action: 'escalate',
+      note: 'Escalated for senior review',
+    });
+  };
 
   const getStatusBadge = (status: string) => {
-    const variants: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; icon: any }> = {
-      open: { variant: "outline", icon: AlertTriangle },
-      investigating: { variant: "secondary", icon: Search },
-      under_review: { variant: "secondary", icon: Clock },
-      resolved: { variant: "default", icon: CheckCircle },
-      won: { variant: "default", icon: CheckCircle },
-      rejected: { variant: "destructive", icon: XCircle },
-      lost: { variant: "destructive", icon: XCircle },
-      closed: { variant: "secondary", icon: Shield },
+    const variants: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
+      open: 'outline', investigating: 'secondary', under_review: 'secondary',
+      escalated: 'destructive', won: 'default', resolved: 'default',
+      lost: 'destructive', closed: 'secondary', rejected: 'destructive',
     };
-    const config = variants[status] || variants.open;
-    const Icon = config.icon;
-    return <Badge variant={config.variant}><Icon className="h-3 w-3 mr-1" />{status.replace(/_/g, " ")}</Badge>;
+    return <Badge variant={variants[status] || 'outline'}>{status.replace(/_/g, ' ')}</Badge>;
   };
 
-  const gwStats = {
-    total: gatewayDisputes?.length || 0,
-    open: gatewayDisputes?.filter(d => d.status === "open").length || 0,
-    under_review: gatewayDisputes?.filter(d => d.status === "under_review").length || 0,
-    won: gatewayDisputes?.filter(d => d.status === "won").length || 0,
-    lost: gatewayDisputes?.filter(d => d.status === "lost").length || 0,
+  const DisputeCard = ({ dispute }: { dispute: any }) => {
+    const merchant = dispute._source === 'gateway' ? dispute.gateway_merchants as any : null;
+    const daysOpen = formatDistanceToNow(new Date(dispute.created_at), { addSuffix: false });
+    const ref = dispute.dispute_ref || dispute.id.slice(0, 8);
+
+    return (
+      <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+        className="p-3 bg-card border border-border/50 rounded-xl shadow-sm hover:shadow-md transition-shadow cursor-pointer space-y-2"
+        onClick={() => { setSelectedDispute(dispute); setDetailOpen(true); }}
+      >
+        <div className="flex items-start justify-between gap-2">
+          <span className="font-mono text-xs text-muted-foreground">{ref}</span>
+          <Badge variant={(PRIORITY_COLORS[dispute.priority || 'normal'] || 'outline') as any} className="text-[10px] px-1.5 py-0">
+            {dispute.priority || 'normal'}
+          </Badge>
+        </div>
+        <p className="text-sm font-semibold">{dispute.currency} {Number(dispute.amount).toLocaleString()}</p>
+        <p className="text-xs text-muted-foreground truncate">{dispute.reason || dispute.dispute_type || 'Chargeback'}</p>
+        {merchant && <p className="text-xs truncate"><User className="inline h-3 w-3 mr-1" />{merchant.business_name}</p>}
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+          <span>{daysOpen} ago</span>
+          <Badge variant="outline" className="text-[10px] px-1">{dispute._source}</Badge>
+        </div>
+      </motion.div>
+    );
   };
-
-  const legacyStats = {
-    total: legacyDisputes?.length || 0,
-    open: legacyDisputes?.filter(d => d.status === "open").length || 0,
-    investigating: legacyDisputes?.filter(d => d.status === "investigating").length || 0,
-    resolved: legacyDisputes?.filter(d => d.status === "resolved").length || 0,
-  };
-
-  const filteredLegacy = legacyDisputes?.filter(d =>
-    !searchTerm || d.reason?.toLowerCase().includes(searchTerm.toLowerCase()) || d.transaction_ref?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const filteredGateway = gatewayDisputes?.filter(d =>
-    !searchTerm || (d as any).dispute_ref?.toLowerCase().includes(searchTerm.toLowerCase()) || d.reason?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (d.gateway_merchants as any)?.business_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-6">
-      <AdminPageHeader icon={Scale} title="Dispute & Chargeback Management" description="Handle payment disputes, chargebacks, and resolution workflows" />
+      <AdminPageHeader icon={Scale} title="Dispute & Chargeback Management" description="Kanban board — drag disputes through resolution stages" />
 
-
-      {/* Combined Stats */}
-      <div className="grid gap-4 md:grid-cols-5">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Total Disputes</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{gwStats.total + legacyStats.total}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Open / Needs Action</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-amber-600">{gwStats.open + legacyStats.open}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Under Review</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-blue-600">{gwStats.under_review + legacyStats.investigating}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Won / Resolved</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-green-600">{gwStats.won + legacyStats.resolved}</div></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Lost</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold text-destructive">{gwStats.lost}</div></CardContent></Card>
+      {/* Stats Row */}
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-7">
+        {[
+          { label: 'Total', value: stats.total, color: '' },
+          { label: 'Open', value: stats.open, color: 'text-amber-600' },
+          { label: 'Investigating', value: stats.investigating, color: 'text-blue-600' },
+          { label: 'Under Review', value: stats.under_review, color: 'text-purple-600' },
+          { label: 'Escalated', value: stats.escalated, color: 'text-red-600' },
+          { label: 'Won', value: stats.won, color: 'text-green-600' },
+          { label: 'Lost', value: stats.lost, color: 'text-destructive' },
+        ].map(s => (
+          <Card key={s.label}>
+            <CardContent className="p-3 text-center">
+              <p className="text-xs text-muted-foreground">{s.label}</p>
+              <p className={`text-xl font-bold ${s.color}`}>{s.value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
       {/* Filters */}
-      <div className="flex gap-4">
-        <div className="flex-1 relative">
+      <div className="flex gap-3 flex-wrap">
+        <div className="flex-1 min-w-[200px] relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search by reference, reason, or merchant..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
+          <Input placeholder="Search disputes..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10" />
         </div>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]"><SelectValue /></SelectTrigger>
+        <Select value={sourceFilter} onValueChange={setSourceFilter}>
+          <SelectTrigger className="w-[150px]"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Statuses</SelectItem>
-            <SelectItem value="open">Open</SelectItem>
-            <SelectItem value="under_review">Under Review</SelectItem>
-            <SelectItem value="investigating">Investigating</SelectItem>
-            <SelectItem value="won">Won</SelectItem>
-            <SelectItem value="lost">Lost</SelectItem>
-            <SelectItem value="resolved">Resolved</SelectItem>
-            <SelectItem value="rejected">Rejected</SelectItem>
+            <SelectItem value="all">All Sources</SelectItem>
+            <SelectItem value="gateway">Gateway</SelectItem>
+            <SelectItem value="legacy">Platform</SelectItem>
           </SelectContent>
         </Select>
+        <div className="flex border rounded-lg overflow-hidden">
+          <Button variant={viewMode === 'kanban' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('kanban')}>Kanban</Button>
+          <Button variant={viewMode === 'table' ? 'default' : 'ghost'} size="sm" onClick={() => setViewMode('table')}>Table</Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="gateway" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="gateway">Gateway Disputes ({gwStats.total})</TabsTrigger>
-          <TabsTrigger value="legacy">Platform Disputes ({legacyStats.total})</TabsTrigger>
-        </TabsList>
+      {/* Kanban Board */}
+      {viewMode === 'kanban' ? (
+        <div className="overflow-x-auto pb-4">
+          <div className="flex gap-4 min-w-[1200px]">
+            {KANBAN_COLUMNS.map(col => {
+              const items = getByStatus(col.key);
+              return (
+                <div key={col.key} className="flex-1 min-w-[180px]">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className={`w-2.5 h-2.5 rounded-full ${col.color}`} />
+                    <h3 className="text-sm font-semibold">{col.label}</h3>
+                    <Badge variant="outline" className="text-xs ml-auto">{items.length}</Badge>
+                  </div>
+                  <div className="space-y-2 min-h-[200px] bg-muted/30 rounded-xl p-2">
+                    <AnimatePresence>
+                      {items.map(d => <DisputeCard key={d.id} dispute={d} />)}
+                    </AnimatePresence>
+                    {items.length === 0 && (
+                      <p className="text-xs text-muted-foreground text-center py-8">No disputes</p>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ) : (
+        /* Table View */
+        <Card>
+          <CardContent className="p-0">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left p-3 font-medium text-muted-foreground">Ref</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Source</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Amount</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Reason</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Status</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Priority</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Date</th>
+                  <th className="text-left p-3 font-medium text-muted-foreground">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {allDisputes.map(d => (
+                  <tr key={d.id} className="border-b hover:bg-muted/30 cursor-pointer" onClick={() => { setSelectedDispute(d); setDetailOpen(true); }}>
+                    <td className="p-3 font-mono text-xs">{d.dispute_ref || d.id.slice(0, 8)}</td>
+                    <td className="p-3"><Badge variant="outline" className="text-xs">{d._source}</Badge></td>
+                    <td className="p-3 font-semibold">{d.currency} {Number(d.amount).toLocaleString()}</td>
+                    <td className="p-3 max-w-[200px] truncate">{d.reason || d.dispute_type || '—'}</td>
+                    <td className="p-3">{getStatusBadge(d.status)}</td>
+                    <td className="p-3"><Badge variant={(PRIORITY_COLORS[d.priority || 'normal'] || 'outline') as any}>{d.priority || 'normal'}</Badge></td>
+                    <td className="p-3 text-xs text-muted-foreground">{format(new Date(d.created_at), "MMM d, yyyy")}</td>
+                    <td className="p-3"><Button size="sm" variant="ghost"><Eye className="h-3.5 w-3.5" /></Button></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            {allDisputes.length === 0 && <p className="text-center py-12 text-muted-foreground">No disputes found</p>}
+          </CardContent>
+        </Card>
+      )}
 
-        {/* Gateway Disputes */}
-        <TabsContent value="gateway">
-          <Card>
-            <CardHeader>
-              <CardTitle>Gateway Chargebacks</CardTitle>
-              <CardDescription>Disputes from payment gateway (Stripe, MoMo) merchants</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {gatewayLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> :
-              filteredGateway?.length === 0 ? <p className="text-center py-8 text-muted-foreground">No gateway disputes</p> : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Reference</TableHead>
-                      <TableHead>Merchant</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Evidence Due</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredGateway?.map(d => {
-                      const merchant = d.gateway_merchants as any;
-                      return (
-                        <TableRow key={d.id}>
-                          <TableCell className="font-mono text-xs">{format(new Date(d.created_at), "MMM dd, yyyy")}</TableCell>
-                          <TableCell className="font-mono text-xs">{(d as any).dispute_ref || d.id.slice(0, 8)}</TableCell>
-                          <TableCell className="font-medium">{merchant?.business_name || "—"}</TableCell>
-                          <TableCell className="font-semibold">{Number(d.amount).toLocaleString()} {d.currency}</TableCell>
-                          <TableCell className="max-w-[150px] truncate">{d.reason || "—"}</TableCell>
-                          <TableCell>{getStatusBadge(d.status)}</TableCell>
-                          <TableCell>{d.evidence_due_by ? format(new Date(d.evidence_due_by), "MMM d") : "—"}</TableCell>
-                          <TableCell>
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" onClick={() => { setSelectedDispute({ ...d, _type: "gateway" }); setDetailOpen(true); }}><Eye className="h-3.5 w-3.5" /></Button>
-                              {(d.status === "open" || d.status === "under_review") && (
-                                <Dialog>
-                                  <DialogTrigger asChild><Button size="sm" variant="outline">Resolve</Button></DialogTrigger>
-                                  <DialogContent>
-                                    <DialogHeader><DialogTitle>Resolve Gateway Dispute</DialogTitle></DialogHeader>
-                                    <div className="space-y-4">
-                                      <div className="rounded-lg bg-muted/50 p-3 text-sm">
-                                        <p><strong>Merchant:</strong> {merchant?.business_name}</p>
-                                        <p><strong>Amount:</strong> {Number(d.amount).toLocaleString()} {d.currency}</p>
-                                        <p><strong>Reason:</strong> {d.reason}</p>
-                                        {d.evidence_submitted && <p className="text-green-600">✓ Evidence submitted by merchant</p>}
-                                      </div>
-                                      <div><Label>Resolution Notes</Label><Textarea value={resolution} onChange={e => setResolution(e.target.value)} placeholder="Enter resolution details..." /></div>
-                                      <div className="flex gap-2">
-                                        <Button onClick={() => resolveGateway.mutate({ id: d.id, status: "won", notes: resolution })} className="flex-1">Merchant Wins</Button>
-                                        <Button variant="destructive" onClick={() => resolveGateway.mutate({ id: d.id, status: "lost", notes: resolution })} className="flex-1">Merchant Loses</Button>
-                                      </div>
-                                    </div>
-                                  </DialogContent>
-                                </Dialog>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* Legacy Disputes */}
-        <TabsContent value="legacy">
-          <Card>
-            <CardHeader>
-              <CardTitle>Platform Disputes</CardTitle>
-              <CardDescription>General payment disputes and refund requests</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {legacyLoading ? <p className="text-center py-8 text-muted-foreground">Loading...</p> :
-              filteredLegacy?.length === 0 ? <p className="text-center py-8 text-muted-foreground">No disputes found</p> : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Reason</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Reference</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredLegacy?.map(dispute => (
-                      <TableRow key={dispute.id}>
-                        <TableCell className="font-mono text-xs">{format(new Date(dispute.created_at), "MMM dd, yyyy")}</TableCell>
-                        <TableCell><Badge variant="outline">{dispute.dispute_type}</Badge></TableCell>
-                        <TableCell className="max-w-[200px] truncate">{dispute.reason}</TableCell>
-                        <TableCell className="font-semibold">{new Intl.NumberFormat("en-US", { style: "currency", currency: dispute.currency }).format(dispute.amount)}</TableCell>
-                        <TableCell>{getStatusBadge(dispute.status)}</TableCell>
-                        <TableCell className="font-mono text-xs">{dispute.transaction_ref || "N/A"}</TableCell>
-                        <TableCell>
-                          {dispute.status === "open" || dispute.status === "investigating" ? (
-                            <Dialog>
-                              <DialogTrigger asChild><Button size="sm" variant="outline">Resolve</Button></DialogTrigger>
-                              <DialogContent>
-                                <DialogHeader><DialogTitle>Resolve Dispute</DialogTitle></DialogHeader>
-                                <div className="space-y-4">
-                                  <div><Label>Resolution Notes</Label><Textarea value={resolution} onChange={e => setResolution(e.target.value)} placeholder="Enter resolution details..." /></div>
-                                  <div className="flex gap-2">
-                                    <Button onClick={() => resolveLegacy.mutate({ id: dispute.id, status: "resolved", resolution })} className="flex-1">Approve Refund</Button>
-                                    <Button variant="destructive" onClick={() => resolveLegacy.mutate({ id: dispute.id, status: "rejected", resolution })} className="flex-1">Reject</Button>
-                                  </div>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">{dispute.resolution || "—"}</span>
-                          )}
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-
-      {/* Detail Dialog */}
+      {/* Detail / Timeline Dialog */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
           {selectedDispute && (
             <>
-              <DialogHeader><DialogTitle>Dispute Details</DialogTitle></DialogHeader>
-              <div className="space-y-4 text-sm">
-                <div className="grid grid-cols-2 gap-3">
-                  <div><span className="text-muted-foreground">Reference</span><p className="font-mono font-medium">{selectedDispute.dispute_ref || selectedDispute.id.slice(0, 8)}</p></div>
-                  <div><span className="text-muted-foreground">Status</span><p>{getStatusBadge(selectedDispute.status)}</p></div>
-                  <div><span className="text-muted-foreground">Amount</span><p className="font-semibold">{Number(selectedDispute.amount).toLocaleString()} {selectedDispute.currency}</p></div>
-                  <div><span className="text-muted-foreground">Provider</span><p>{selectedDispute.provider || "Platform"}</p></div>
-                  <div><span className="text-muted-foreground">Reason</span><p>{selectedDispute.reason || "—"}</p></div>
-                  <div><span className="text-muted-foreground">Created</span><p>{format(new Date(selectedDispute.created_at), "MMM d, yyyy HH:mm")}</p></div>
-                  {selectedDispute.gateway_merchants && (
-                    <div className="col-span-2"><span className="text-muted-foreground">Merchant</span><p className="font-medium">{(selectedDispute.gateway_merchants as any)?.business_name}</p></div>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-3">
+                  <span>Dispute {selectedDispute.dispute_ref || selectedDispute.id.slice(0, 8)}</span>
+                  {getStatusBadge(selectedDispute.status)}
+                </DialogTitle>
+              </DialogHeader>
+
+              <Tabs defaultValue="details" className="flex-1 overflow-hidden flex flex-col">
+                <TabsList className="shrink-0">
+                  <TabsTrigger value="details">Details</TabsTrigger>
+                  <TabsTrigger value="timeline">Timeline ({activities.length})</TabsTrigger>
+                  <TabsTrigger value="actions">Actions</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="details" className="flex-1 overflow-auto">
+                  <div className="grid grid-cols-2 gap-4 text-sm p-1">
+                    <div><Label className="text-muted-foreground text-xs">Amount</Label><p className="font-semibold">{selectedDispute.currency} {Number(selectedDispute.amount).toLocaleString()}</p></div>
+                    <div><Label className="text-muted-foreground text-xs">Source</Label><p><Badge variant="outline">{selectedDispute._source}</Badge></p></div>
+                    <div><Label className="text-muted-foreground text-xs">Reason</Label><p>{selectedDispute.reason || selectedDispute.dispute_type || '—'}</p></div>
+                    <div><Label className="text-muted-foreground text-xs">Priority</Label><p><Badge variant={(PRIORITY_COLORS[selectedDispute.priority || 'normal'] || 'outline') as any}>{selectedDispute.priority || 'normal'}</Badge></p></div>
+                    {selectedDispute._source === 'gateway' && (
+                      <>
+                        <div><Label className="text-muted-foreground text-xs">Merchant</Label><p>{(selectedDispute.gateway_merchants as any)?.business_name || '—'}</p></div>
+                        <div><Label className="text-muted-foreground text-xs">Provider</Label><p>{selectedDispute.provider || '—'}</p></div>
+                        <div><Label className="text-muted-foreground text-xs">Evidence Submitted</Label><p>{selectedDispute.evidence_submitted ? '✅ Yes' : '❌ No'}</p></div>
+                        <div><Label className="text-muted-foreground text-xs">Evidence Due</Label><p>{selectedDispute.evidence_due_by ? format(new Date(selectedDispute.evidence_due_by), "MMM d, yyyy") : '—'}</p></div>
+                      </>
+                    )}
+                    <div><Label className="text-muted-foreground text-xs">Filed</Label><p>{format(new Date(selectedDispute.created_at), "MMM d, yyyy HH:mm")}</p></div>
+                    <div><Label className="text-muted-foreground text-xs">Category</Label><p>{selectedDispute.category || selectedDispute.dispute_type || 'chargeback'}</p></div>
+                  </div>
+                  {selectedDispute.evidence_data && (
+                    <div className="mt-4 p-1">
+                      <Label className="text-muted-foreground text-xs">Evidence Data</Label>
+                      <pre className="mt-1 p-3 rounded-lg bg-muted text-xs overflow-auto max-h-32">{JSON.stringify(selectedDispute.evidence_data, null, 2)}</pre>
+                    </div>
                   )}
-                </div>
-                {selectedDispute.evidence_data && (
-                  <div>
-                    <Label className="text-muted-foreground">Evidence / Notes</Label>
-                    <pre className="mt-1 p-3 rounded-lg bg-muted text-xs overflow-auto max-h-40">{JSON.stringify(selectedDispute.evidence_data, null, 2)}</pre>
+                </TabsContent>
+
+                <TabsContent value="timeline" className="flex-1 overflow-hidden">
+                  <ScrollArea className="h-[400px]">
+                    <div className="space-y-3 p-1">
+                      {activities.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-8 text-sm">No activity recorded yet</p>
+                      ) : activities.map((a: any) => (
+                        <div key={a.id} className="flex gap-3">
+                          <div className="flex flex-col items-center">
+                            <div className={`w-2.5 h-2.5 rounded-full mt-1.5 ${
+                              a.action === 'status_change' ? 'bg-blue-500' :
+                              a.action === 'escalated' ? 'bg-red-500' :
+                              a.action === 'note_added' ? 'bg-amber-500' :
+                              a.action === 'evidence_submitted' ? 'bg-green-500' :
+                              'bg-muted-foreground'
+                            }`} />
+                            <div className="w-px flex-1 bg-border" />
+                          </div>
+                          <div className="flex-1 pb-4">
+                            <div className="flex items-center gap-2 text-sm">
+                              <span className="font-medium capitalize">{a.action.replace(/_/g, ' ')}</span>
+                              {a.from_status && a.to_status && (
+                                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                  <Badge variant="outline" className="text-[10px]">{a.from_status}</Badge>
+                                  <ArrowRight className="h-3 w-3" />
+                                  <Badge variant="outline" className="text-[10px]">{a.to_status}</Badge>
+                                </span>
+                              )}
+                            </div>
+                            {a.note && <p className="text-xs text-muted-foreground mt-0.5">{a.note}</p>}
+                            <p className="text-[10px] text-muted-foreground mt-1">
+                              {a.actor_type} · {format(new Date(a.created_at), "MMM d, yyyy HH:mm")}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+
+                <TabsContent value="actions" className="flex-1 overflow-auto">
+                  <div className="space-y-4 p-1">
+                    {/* Move Status */}
+                    {!['won', 'lost', 'closed', 'resolved', 'rejected'].includes(selectedDispute.status) && (
+                      <div className="space-y-2">
+                        <Label>Move to Status</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {KANBAN_COLUMNS.filter(c => c.key !== selectedDispute.status && !['open'].includes(c.key)).map(col => (
+                            <Button key={col.key} size="sm" variant="outline" className="gap-1"
+                              onClick={() => handleStatusChange(selectedDispute, col.key)}>
+                              <div className={`w-2 h-2 rounded-full ${col.color}`} />
+                              {col.label}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Escalate */}
+                    {!['escalated', 'won', 'lost', 'closed'].includes(selectedDispute.status) && (
+                      <Button variant="destructive" size="sm" className="w-full" onClick={() => handleEscalate(selectedDispute)}>
+                        🔥 Escalate for Senior Review
+                      </Button>
+                    )}
+
+                    {/* Assign */}
+                    <div className="space-y-2">
+                      <Label>Assign To</Label>
+                      <Select onValueChange={v => handleAssign(selectedDispute, v)}>
+                        <SelectTrigger><SelectValue placeholder="Select admin..." /></SelectTrigger>
+                        <SelectContent>
+                          {adminUsers.map((a: any) => (
+                            <SelectItem key={a.id} value={a.id}>{a.full_name || a.email}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Add Note */}
+                    <div className="space-y-2">
+                      <Label>Internal Note</Label>
+                      <Textarea value={noteText} onChange={e => setNoteText(e.target.value)} placeholder="Add internal note..." rows={3} />
+                      <Button size="sm" onClick={handleAddNote} disabled={!noteText.trim()} className="gap-1">
+                        <MessageSquare className="h-3.5 w-3.5" /> Add Note
+                      </Button>
+                    </div>
                   </div>
-                )}
-                {selectedDispute.provider_raw && (
-                  <div>
-                    <Label className="text-muted-foreground">Provider Data</Label>
-                    <pre className="mt-1 p-3 rounded-lg bg-muted text-xs overflow-auto max-h-40">{JSON.stringify(selectedDispute.provider_raw, null, 2)}</pre>
-                  </div>
-                )}
-              </div>
+                </TabsContent>
+              </Tabs>
             </>
           )}
         </DialogContent>
