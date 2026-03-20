@@ -72,7 +72,16 @@ export default function PayoutManagement() {
   const reversePayout = useMutation({
     mutationFn: async (payoutId: string) => {
       const { data, error } = await supabase.functions.invoke("gateway-admin-reverse-withdrawal", { body: { payout_id: payoutId, reason: "Admin manual reversal" } });
-      if (error) throw error;
+      if (error) {
+        // Parse RFC 7807 error body from edge function
+        let detail = "Reversal failed";
+        try {
+          const body = typeof (error as any)?.context?.body === 'string' ? JSON.parse((error as any).context.body) : (error as any)?.context?.body;
+          if (body?.detail) detail = body.detail;
+          else if (body?.message) detail = body.message;
+        } catch {}
+        throw new Error(detail);
+      }
       if (data?.error || data?.type) throw new Error(data.detail || data.message || data.error || "Reversal failed");
       return data;
     },
