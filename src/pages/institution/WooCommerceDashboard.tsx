@@ -37,12 +37,12 @@ interface WooCommerceTransaction {
 }
 
 // Helper to safely fetch data avoiding deep type instantiation
-async function fetchMerchants(institutionId: string): Promise<WooCommerceMerchant[]> {
+async function fetchMerchants(userId: string): Promise<WooCommerceMerchant[]> {
   const client: any = supabase;
   const { data } = await client
     .from("woocommerce_merchants")
     .select("*")
-    .eq("institution_id", institutionId);
+    .eq("user_id", userId);
   
   return (data || []).map((m: any) => ({
     id: String(m.id || ''),
