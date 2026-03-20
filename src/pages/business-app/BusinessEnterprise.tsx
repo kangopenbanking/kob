@@ -272,6 +272,7 @@ export default function BusinessEnterprise() {
         open={upgradeModalOpen}
         onOpenChange={setUpgradeModalOpen}
         plan={selectedPlan}
+        plans={plans || []}
         currency={planCurrency}
         subscribing={subscribing}
         onConfirm={handleSubscribe}
