@@ -10,6 +10,7 @@ The KOB Bank Connector Kit enables financial institutions to connect to the KOB 
 | **Database Connector** | KOB → Bank DB | KOB polls the bank's read-only database replica on a schedule | Bank has a DB replica or CDC feed available |
 | **Message Queue (Real-Time)** | Bi-directional | Events pushed/received via webhook, Kafka, RabbitMQ, Supabase Realtime, or SSE | Bank has API capability and needs real-time sync |
 | **HTTPS Push** | Bank → KOB | Bank pushes data to KOB ingestion endpoints | Bank has outbound API capability |
+| **API Pull (connector_pull)** | KOB → Bank API | KOB polls the bank's REST API on schedule | Bank has REST API; KOB auto-syncs |
 
 ---
 
