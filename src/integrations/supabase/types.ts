@@ -5367,6 +5367,48 @@ export type Database = {
           },
         ]
       }
+      event_outbox: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          error_message: string | null
+          event_type: string
+          id: string
+          max_retries: number
+          next_retry_at: string | null
+          payload: Json
+          processed_at: string | null
+          retries: number
+          status: Database["public"]["Enums"]["outbox_status"]
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type: string
+          id?: string
+          max_retries?: number
+          next_retry_at?: string | null
+          payload?: Json
+          processed_at?: string | null
+          retries?: number
+          status?: Database["public"]["Enums"]["outbox_status"]
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          error_message?: string | null
+          event_type?: string
+          id?: string
+          max_retries?: number
+          next_retry_at?: string | null
+          payload?: Json
+          processed_at?: string | null
+          retries?: number
+          status?: Database["public"]["Enums"]["outbox_status"]
+        }
+        Relationships: []
+      }
       exchange_rates_cache: {
         Row: {
           base_currency: string
@@ -8413,6 +8455,359 @@ export type Database = {
             columns: ["merchant_id"]
             isOneToOne: false
             referencedRelation: "gateway_merchants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interbank_endpoints: {
+        Row: {
+          base_url: string | null
+          connector_instance_id: string | null
+          created_at: string
+          delivery_mode: Database["public"]["Enums"]["interbank_delivery_mode"]
+          env: Database["public"]["Enums"]["interbank_env"]
+          error_count: number
+          hmac_secret_hash: string | null
+          id: string
+          last_seen_at: string | null
+          participant_id: string
+          queue_name: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          base_url?: string | null
+          connector_instance_id?: string | null
+          created_at?: string
+          delivery_mode?: Database["public"]["Enums"]["interbank_delivery_mode"]
+          env?: Database["public"]["Enums"]["interbank_env"]
+          error_count?: number
+          hmac_secret_hash?: string | null
+          id?: string
+          last_seen_at?: string | null
+          participant_id: string
+          queue_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          base_url?: string | null
+          connector_instance_id?: string | null
+          created_at?: string
+          delivery_mode?: Database["public"]["Enums"]["interbank_delivery_mode"]
+          env?: Database["public"]["Enums"]["interbank_env"]
+          error_count?: number
+          hmac_secret_hash?: string | null
+          id?: string
+          last_seen_at?: string | null
+          participant_id?: string
+          queue_name?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interbank_endpoints_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "interbank_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interbank_messages: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          direction: Database["public"]["Enums"]["interbank_message_direction"]
+          error_code: string | null
+          error_message: string | null
+          id: string
+          message_id: string
+          message_type: Database["public"]["Enums"]["interbank_message_type"]
+          payload_format: Database["public"]["Enums"]["interbank_payload_format"]
+          payload_raw: string
+          payment_id: string | null
+          processed_at: string | null
+          received_at: string | null
+          signature_valid: boolean | null
+          status: Database["public"]["Enums"]["interbank_message_status"]
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          direction: Database["public"]["Enums"]["interbank_message_direction"]
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          message_id: string
+          message_type: Database["public"]["Enums"]["interbank_message_type"]
+          payload_format?: Database["public"]["Enums"]["interbank_payload_format"]
+          payload_raw: string
+          payment_id?: string | null
+          processed_at?: string | null
+          received_at?: string | null
+          signature_valid?: boolean | null
+          status?: Database["public"]["Enums"]["interbank_message_status"]
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          direction?: Database["public"]["Enums"]["interbank_message_direction"]
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          message_id?: string
+          message_type?: Database["public"]["Enums"]["interbank_message_type"]
+          payload_format?: Database["public"]["Enums"]["interbank_payload_format"]
+          payload_raw?: string
+          payment_id?: string | null
+          processed_at?: string | null
+          received_at?: string | null
+          signature_valid?: boolean | null
+          status?: Database["public"]["Enums"]["interbank_message_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interbank_messages_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "interbank_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interbank_participants: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          id: string
+          legal_name: string
+          metadata: Json | null
+          participant_code: string
+          settlement_mode: Database["public"]["Enums"]["interbank_settlement_mode"]
+          status: Database["public"]["Enums"]["interbank_participant_status"]
+          type: Database["public"]["Enums"]["interbank_participant_type"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          legal_name: string
+          metadata?: Json | null
+          participant_code: string
+          settlement_mode?: Database["public"]["Enums"]["interbank_settlement_mode"]
+          status?: Database["public"]["Enums"]["interbank_participant_status"]
+          type?: Database["public"]["Enums"]["interbank_participant_type"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          legal_name?: string
+          metadata?: Json | null
+          participant_code?: string
+          settlement_mode?: Database["public"]["Enums"]["interbank_settlement_mode"]
+          status?: Database["public"]["Enums"]["interbank_participant_status"]
+          type?: Database["public"]["Enums"]["interbank_participant_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      interbank_payments: {
+        Row: {
+          amount: number
+          correlation_id: string | null
+          created_at: string
+          creditor_account_ref: string
+          creditor_participant_id: string
+          currency: string
+          debtor_account_ref: string
+          debtor_participant_id: string
+          error_code: string | null
+          error_message: string | null
+          external_reference: string | null
+          id: string
+          idempotency_key: string | null
+          initiated_by: Database["public"]["Enums"]["interbank_initiated_by"]
+          ledger_hold_id: string | null
+          ledger_journal_id: string | null
+          purpose: string | null
+          remittance_info: string | null
+          requested_at: string | null
+          scheme: string
+          settled_at: string | null
+          status: Database["public"]["Enums"]["interbank_payment_status"]
+          submitted_at: string | null
+          trace_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          correlation_id?: string | null
+          created_at?: string
+          creditor_account_ref: string
+          creditor_participant_id: string
+          currency?: string
+          debtor_account_ref: string
+          debtor_participant_id: string
+          error_code?: string | null
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          idempotency_key?: string | null
+          initiated_by?: Database["public"]["Enums"]["interbank_initiated_by"]
+          ledger_hold_id?: string | null
+          ledger_journal_id?: string | null
+          purpose?: string | null
+          remittance_info?: string | null
+          requested_at?: string | null
+          scheme?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["interbank_payment_status"]
+          submitted_at?: string | null
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          correlation_id?: string | null
+          created_at?: string
+          creditor_account_ref?: string
+          creditor_participant_id?: string
+          currency?: string
+          debtor_account_ref?: string
+          debtor_participant_id?: string
+          error_code?: string | null
+          error_message?: string | null
+          external_reference?: string | null
+          id?: string
+          idempotency_key?: string | null
+          initiated_by?: Database["public"]["Enums"]["interbank_initiated_by"]
+          ledger_hold_id?: string | null
+          ledger_journal_id?: string | null
+          purpose?: string | null
+          remittance_info?: string | null
+          requested_at?: string | null
+          scheme?: string
+          settled_at?: string | null
+          status?: Database["public"]["Enums"]["interbank_payment_status"]
+          submitted_at?: string | null
+          trace_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interbank_payments_creditor_participant_id_fkey"
+            columns: ["creditor_participant_id"]
+            isOneToOne: false
+            referencedRelation: "interbank_participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "interbank_payments_debtor_participant_id_fkey"
+            columns: ["debtor_participant_id"]
+            isOneToOne: false
+            referencedRelation: "interbank_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interbank_reconciliation_items: {
+        Row: {
+          actual_total: number
+          created_at: string
+          details: Json | null
+          expected_total: number
+          id: string
+          mismatch_count: number
+          participant_id: string
+          period_end: string
+          period_start: string
+          status: Database["public"]["Enums"]["interbank_recon_status"]
+        }
+        Insert: {
+          actual_total?: number
+          created_at?: string
+          details?: Json | null
+          expected_total?: number
+          id?: string
+          mismatch_count?: number
+          participant_id: string
+          period_end: string
+          period_start: string
+          status?: Database["public"]["Enums"]["interbank_recon_status"]
+        }
+        Update: {
+          actual_total?: number
+          created_at?: string
+          details?: Json | null
+          expected_total?: number
+          id?: string
+          mismatch_count?: number
+          participant_id?: string
+          period_end?: string
+          period_start?: string
+          status?: Database["public"]["Enums"]["interbank_recon_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interbank_reconciliation_items_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "interbank_participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interbank_status_events: {
+        Row: {
+          correlation_id: string | null
+          created_at: string
+          details_json: Json | null
+          event_time: string
+          id: string
+          payment_id: string
+          source: Database["public"]["Enums"]["interbank_event_source"]
+          status_from:
+            | Database["public"]["Enums"]["interbank_payment_status"]
+            | null
+          status_to: Database["public"]["Enums"]["interbank_payment_status"]
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string
+          details_json?: Json | null
+          event_time?: string
+          id?: string
+          payment_id: string
+          source?: Database["public"]["Enums"]["interbank_event_source"]
+          status_from?:
+            | Database["public"]["Enums"]["interbank_payment_status"]
+            | null
+          status_to: Database["public"]["Enums"]["interbank_payment_status"]
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string
+          details_json?: Json | null
+          event_time?: string
+          id?: string
+          payment_id?: string
+          source?: Database["public"]["Enums"]["interbank_event_source"]
+          status_from?:
+            | Database["public"]["Enums"]["interbank_payment_status"]
+            | null
+          status_to?: Database["public"]["Enums"]["interbank_payment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interbank_status_events_payment_id_fkey"
+            columns: ["payment_id"]
+            isOneToOne: false
+            referencedRelation: "interbank_payments"
             referencedColumns: ["id"]
           },
         ]
@@ -18247,6 +18642,39 @@ export type Database = {
       integration_entity_type: "product" | "variant" | "order" | "customer"
       integration_status: "connected" | "disconnected" | "error"
       integration_type: "woocommerce"
+      interbank_delivery_mode: "message_queue" | "https_push" | "file"
+      interbank_env: "sandbox" | "prod"
+      interbank_event_source:
+        | "engine"
+        | "connector"
+        | "admin"
+        | "reconciliation"
+      interbank_initiated_by: "tpp" | "bank" | "merchant" | "admin" | "system"
+      interbank_message_direction: "outbound" | "inbound"
+      interbank_message_status: "stored" | "validated" | "processed" | "failed"
+      interbank_message_type:
+        | "pacs.008"
+        | "pacs.002"
+        | "camt.054"
+        | "camt.053"
+        | "pain.001"
+        | "custom"
+      interbank_participant_status: "draft" | "active" | "suspended"
+      interbank_participant_type: "bank" | "credit_union" | "switch_partner"
+      interbank_payload_format: "xml" | "json"
+      interbank_payment_status:
+        | "created"
+        | "validated"
+        | "submitted"
+        | "accepted"
+        | "rejected"
+        | "in_process"
+        | "settled"
+        | "failed"
+        | "reversed"
+        | "expired"
+      interbank_recon_status: "open" | "investigating" | "resolved"
+      interbank_settlement_mode: "prefunded" | "net_settlement" | "manual"
       inventory_movement_type:
         | "sale"
         | "refund"
@@ -18282,6 +18710,7 @@ export type Database = {
         | "assistant_manager"
         | "branch_manager"
         | "general_manager"
+      outbox_status: "pending" | "delivered" | "failed" | "dead_letter"
       overdraft_status:
         | "active"
         | "suspended"
@@ -18570,6 +18999,42 @@ export const Constants = {
       integration_entity_type: ["product", "variant", "order", "customer"],
       integration_status: ["connected", "disconnected", "error"],
       integration_type: ["woocommerce"],
+      interbank_delivery_mode: ["message_queue", "https_push", "file"],
+      interbank_env: ["sandbox", "prod"],
+      interbank_event_source: [
+        "engine",
+        "connector",
+        "admin",
+        "reconciliation",
+      ],
+      interbank_initiated_by: ["tpp", "bank", "merchant", "admin", "system"],
+      interbank_message_direction: ["outbound", "inbound"],
+      interbank_message_status: ["stored", "validated", "processed", "failed"],
+      interbank_message_type: [
+        "pacs.008",
+        "pacs.002",
+        "camt.054",
+        "camt.053",
+        "pain.001",
+        "custom",
+      ],
+      interbank_participant_status: ["draft", "active", "suspended"],
+      interbank_participant_type: ["bank", "credit_union", "switch_partner"],
+      interbank_payload_format: ["xml", "json"],
+      interbank_payment_status: [
+        "created",
+        "validated",
+        "submitted",
+        "accepted",
+        "rejected",
+        "in_process",
+        "settled",
+        "failed",
+        "reversed",
+        "expired",
+      ],
+      interbank_recon_status: ["open", "investigating", "resolved"],
+      interbank_settlement_mode: ["prefunded", "net_settlement", "manual"],
       inventory_movement_type: [
         "sale",
         "refund",
@@ -18609,6 +19074,7 @@ export const Constants = {
         "branch_manager",
         "general_manager",
       ],
+      outbox_status: ["pending", "delivered", "failed", "dead_letter"],
       overdraft_status: [
         "active",
         "suspended",
