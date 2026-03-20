@@ -1235,6 +1235,122 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_batch_items: {
+        Row: {
+          amount: number
+          bank_response_code: string | null
+          bank_response_message: string | null
+          batch_id: string
+          beneficiary_account_number: string
+          beneficiary_bank_code: string | null
+          beneficiary_name: string
+          created_at: string
+          currency: string
+          id: string
+          internal_payment_id: string | null
+          narration: string | null
+          reference: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          bank_response_code?: string | null
+          bank_response_message?: string | null
+          batch_id: string
+          beneficiary_account_number: string
+          beneficiary_bank_code?: string | null
+          beneficiary_name: string
+          created_at?: string
+          currency?: string
+          id?: string
+          internal_payment_id?: string | null
+          narration?: string | null
+          reference?: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          bank_response_code?: string | null
+          bank_response_message?: string | null
+          batch_id?: string
+          beneficiary_account_number?: string
+          beneficiary_bank_code?: string | null
+          beneficiary_name?: string
+          created_at?: string
+          currency?: string
+          id?: string
+          internal_payment_id?: string | null
+          narration?: string | null
+          reference?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_batch_items_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "bank_batch_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_batch_jobs: {
+        Row: {
+          bank_id: string
+          batch_type: string
+          correlation_id: string | null
+          created_at: string
+          created_by: string | null
+          environment: string
+          file_id: string | null
+          id: string
+          status: string
+          totals_json: Json
+          updated_at: string
+        }
+        Insert: {
+          bank_id: string
+          batch_type?: string
+          correlation_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          environment?: string
+          file_id?: string | null
+          id?: string
+          status?: string
+          totals_json?: Json
+          updated_at?: string
+        }
+        Update: {
+          bank_id?: string
+          batch_type?: string
+          correlation_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          environment?: string
+          file_id?: string | null
+          id?: string
+          status?: string
+          totals_json?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_batch_jobs_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_batch_jobs_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_branches: {
         Row: {
           address: string | null
@@ -1533,6 +1649,159 @@ export type Database = {
           },
         ]
       }
+      bank_data_mappings: {
+        Row: {
+          bank_id: string
+          created_at: string
+          file_type: string
+          id: string
+          is_active: boolean
+          mapping_json: Json
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          bank_id: string
+          created_at?: string
+          file_type: string
+          id?: string
+          is_active?: boolean
+          mapping_json?: Json
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          bank_id?: string
+          created_at?: string
+          file_type?: string
+          id?: string
+          is_active?: boolean
+          mapping_json?: Json
+          updated_at?: string
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_data_mappings_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_file_rows: {
+        Row: {
+          created_at: string
+          error_details: string | null
+          error_id: string | null
+          file_id: string
+          id: string
+          normalized_json: Json | null
+          raw_json: Json | null
+          row_number: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          error_details?: string | null
+          error_id?: string | null
+          file_id: string
+          id?: string
+          normalized_json?: Json | null
+          raw_json?: Json | null
+          row_number: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          error_details?: string | null
+          error_id?: string | null
+          file_id?: string
+          id?: string
+          normalized_json?: Json | null
+          raw_json?: Json | null
+          row_number?: number
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_file_rows_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_file_uploads: {
+        Row: {
+          bank_id: string
+          correlation_id: string | null
+          created_at: string
+          environment: string
+          error_id: string | null
+          error_summary: string | null
+          file_hash_sha256: string
+          file_size: number | null
+          file_type: string
+          id: string
+          original_filename: string
+          processed_at: string | null
+          received_at: string
+          status: string
+          storage_path: string | null
+          uploaded_by: string
+          uploader_user_id: string | null
+        }
+        Insert: {
+          bank_id: string
+          correlation_id?: string | null
+          created_at?: string
+          environment?: string
+          error_id?: string | null
+          error_summary?: string | null
+          file_hash_sha256: string
+          file_size?: number | null
+          file_type: string
+          id?: string
+          original_filename: string
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          storage_path?: string | null
+          uploaded_by?: string
+          uploader_user_id?: string | null
+        }
+        Update: {
+          bank_id?: string
+          correlation_id?: string | null
+          created_at?: string
+          environment?: string
+          error_id?: string | null
+          error_summary?: string | null
+          file_hash_sha256?: string
+          file_size?: number | null
+          file_type?: string
+          id?: string
+          original_filename?: string
+          processed_at?: string | null
+          received_at?: string
+          status?: string
+          storage_path?: string | null
+          uploaded_by?: string
+          uploader_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_file_uploads_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_payment_status_events: {
         Row: {
           details_json: Json | null
@@ -1771,6 +2040,8 @@ export type Database = {
           identification_scheme: string | null
           identification_value: string | null
           nickname: string | null
+          source_file_id: string | null
+          source_row_number: number | null
           status: string
           updated_at: string
         }
@@ -1785,6 +2056,8 @@ export type Database = {
           identification_scheme?: string | null
           identification_value?: string | null
           nickname?: string | null
+          source_file_id?: string | null
+          source_row_number?: number | null
           status?: string
           updated_at?: string
         }
@@ -1799,6 +2072,8 @@ export type Database = {
           identification_scheme?: string | null
           identification_value?: string | null
           nickname?: string | null
+          source_file_id?: string | null
+          source_row_number?: number | null
           status?: string
           updated_at?: string
         }
@@ -1817,6 +2092,13 @@ export type Database = {
             referencedRelation: "bank_customers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "bank_sourced_accounts_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
+            referencedColumns: ["id"]
+          },
         ]
       }
       bank_sourced_balances: {
@@ -1828,6 +2110,8 @@ export type Database = {
           created_at: string
           currency: string
           id: string
+          source_file_id: string | null
+          source_row_number: number | null
         }
         Insert: {
           account_id: string
@@ -1837,6 +2121,8 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          source_file_id?: string | null
+          source_row_number?: number | null
         }
         Update: {
           account_id?: string
@@ -1846,6 +2132,8 @@ export type Database = {
           created_at?: string
           currency?: string
           id?: string
+          source_file_id?: string | null
+          source_row_number?: number | null
         }
         Relationships: [
           {
@@ -1853,6 +2141,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "bank_sourced_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_sourced_balances_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
             referencedColumns: ["id"]
           },
         ]
@@ -1866,6 +2161,8 @@ export type Database = {
           id: string
           identification: string | null
           scheme_name: string | null
+          source_file_id: string | null
+          source_row_number: number | null
         }
         Insert: {
           account_id: string
@@ -1875,6 +2172,8 @@ export type Database = {
           id?: string
           identification?: string | null
           scheme_name?: string | null
+          source_file_id?: string | null
+          source_row_number?: number | null
         }
         Update: {
           account_id?: string
@@ -1884,6 +2183,8 @@ export type Database = {
           id?: string
           identification?: string | null
           scheme_name?: string | null
+          source_file_id?: string | null
+          source_row_number?: number | null
         }
         Relationships: [
           {
@@ -1891,6 +2192,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "bank_sourced_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_sourced_beneficiaries_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
             referencedColumns: ["id"]
           },
         ]
@@ -1907,6 +2215,8 @@ export type Database = {
           external_tx_id: string
           id: string
           reference: string | null
+          source_file_id: string | null
+          source_row_number: number | null
           value_date: string | null
         }
         Insert: {
@@ -1920,6 +2230,8 @@ export type Database = {
           external_tx_id: string
           id?: string
           reference?: string | null
+          source_file_id?: string | null
+          source_row_number?: number | null
           value_date?: string | null
         }
         Update: {
@@ -1933,6 +2245,8 @@ export type Database = {
           external_tx_id?: string
           id?: string
           reference?: string | null
+          source_file_id?: string | null
+          source_row_number?: number | null
           value_date?: string | null
         }
         Relationships: [
@@ -1941,6 +2255,13 @@ export type Database = {
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "bank_sourced_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_sourced_transactions_source_file_id_fkey"
+            columns: ["source_file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
             referencedColumns: ["id"]
           },
         ]
@@ -2009,6 +2330,41 @@ export type Database = {
             columns: ["bank_connection_id"]
             isOneToOne: false
             referencedRelation: "bank_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_status_events: {
+        Row: {
+          bank_tx_id: string | null
+          batch_item_id: string
+          created_at: string
+          id: string
+          raw_row_json: Json | null
+          status: string
+        }
+        Insert: {
+          bank_tx_id?: string | null
+          batch_item_id: string
+          created_at?: string
+          id?: string
+          raw_row_json?: Json | null
+          status: string
+        }
+        Update: {
+          bank_tx_id?: string | null
+          batch_item_id?: string
+          created_at?: string
+          id?: string
+          raw_row_json?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_status_events_batch_item_id_fkey"
+            columns: ["batch_item_id"]
+            isOneToOne: false
+            referencedRelation: "bank_batch_items"
             referencedColumns: ["id"]
           },
         ]
@@ -8472,6 +8828,57 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      ingestion_runs: {
+        Row: {
+          bank_id: string
+          correlation_id: string | null
+          created_at: string
+          file_id: string
+          finished_at: string | null
+          id: string
+          started_at: string
+          status: string
+          totals_json: Json
+        }
+        Insert: {
+          bank_id: string
+          correlation_id?: string | null
+          created_at?: string
+          file_id: string
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          totals_json?: Json
+        }
+        Update: {
+          bank_id?: string
+          correlation_id?: string | null
+          created_at?: string
+          file_id?: string
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          totals_json?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ingestion_runs_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ingestion_runs_file_id_fkey"
+            columns: ["file_id"]
+            isOneToOne: false
+            referencedRelation: "bank_file_uploads"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       institution_email_overrides: {
         Row: {
