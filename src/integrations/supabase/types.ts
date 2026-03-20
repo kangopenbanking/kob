@@ -1690,6 +1690,156 @@ export type Database = {
           },
         ]
       }
+      bank_db_connections: {
+        Row: {
+          bank_id: string
+          connection_config_encrypted: Json
+          connector_instance_id: string | null
+          created_at: string
+          db_type: string
+          environment: string
+          id: string
+          is_active: boolean
+          last_poll_at: string | null
+          last_poll_error: string | null
+          last_poll_status: string | null
+          name: string
+          poll_interval_seconds: number
+          poll_query_accounts: string | null
+          poll_query_balances: string | null
+          poll_query_beneficiaries: string | null
+          poll_query_transactions: string | null
+          updated_at: string
+          watermark_column: string | null
+          watermark_value: string | null
+        }
+        Insert: {
+          bank_id: string
+          connection_config_encrypted?: Json
+          connector_instance_id?: string | null
+          created_at?: string
+          db_type?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          last_poll_at?: string | null
+          last_poll_error?: string | null
+          last_poll_status?: string | null
+          name: string
+          poll_interval_seconds?: number
+          poll_query_accounts?: string | null
+          poll_query_balances?: string | null
+          poll_query_beneficiaries?: string | null
+          poll_query_transactions?: string | null
+          updated_at?: string
+          watermark_column?: string | null
+          watermark_value?: string | null
+        }
+        Update: {
+          bank_id?: string
+          connection_config_encrypted?: Json
+          connector_instance_id?: string | null
+          created_at?: string
+          db_type?: string
+          environment?: string
+          id?: string
+          is_active?: boolean
+          last_poll_at?: string | null
+          last_poll_error?: string | null
+          last_poll_status?: string | null
+          name?: string
+          poll_interval_seconds?: number
+          poll_query_accounts?: string | null
+          poll_query_balances?: string | null
+          poll_query_beneficiaries?: string | null
+          poll_query_transactions?: string | null
+          updated_at?: string
+          watermark_column?: string | null
+          watermark_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_db_connections_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_db_connections_connector_instance_id_fkey"
+            columns: ["connector_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_db_sync_runs: {
+        Row: {
+          accounts_synced: number | null
+          balances_synced: number | null
+          bank_id: string
+          beneficiaries_synced: number | null
+          completed_at: string | null
+          connection_id: string
+          correlation_id: string | null
+          errors_json: Json | null
+          id: string
+          started_at: string
+          status: string
+          transactions_synced: number | null
+          watermark_after: string | null
+          watermark_before: string | null
+        }
+        Insert: {
+          accounts_synced?: number | null
+          balances_synced?: number | null
+          bank_id: string
+          beneficiaries_synced?: number | null
+          completed_at?: string | null
+          connection_id: string
+          correlation_id?: string | null
+          errors_json?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          transactions_synced?: number | null
+          watermark_after?: string | null
+          watermark_before?: string | null
+        }
+        Update: {
+          accounts_synced?: number | null
+          balances_synced?: number | null
+          bank_id?: string
+          beneficiaries_synced?: number | null
+          completed_at?: string | null
+          connection_id?: string
+          correlation_id?: string | null
+          errors_json?: Json | null
+          id?: string
+          started_at?: string
+          status?: string
+          transactions_synced?: number | null
+          watermark_after?: string | null
+          watermark_before?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_db_sync_runs_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_db_sync_runs_connection_id_fkey"
+            columns: ["connection_id"]
+            isOneToOne: false
+            referencedRelation: "bank_db_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bank_file_rows: {
         Row: {
           created_at: string
@@ -1798,6 +1948,132 @@ export type Database = {
             columns: ["bank_id"]
             isOneToOne: false
             referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_mq_channels: {
+        Row: {
+          bank_id: string
+          channel_name: string
+          channel_type: string
+          connector_instance_id: string | null
+          created_at: string
+          direction: string
+          error_count: number | null
+          id: string
+          is_active: boolean
+          last_message_at: string | null
+          message_count: number | null
+          topic_filter: string | null
+          updated_at: string
+          webhook_secret_hash: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          bank_id: string
+          channel_name: string
+          channel_type?: string
+          connector_instance_id?: string | null
+          created_at?: string
+          direction?: string
+          error_count?: number | null
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          message_count?: number | null
+          topic_filter?: string | null
+          updated_at?: string
+          webhook_secret_hash?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          bank_id?: string
+          channel_name?: string
+          channel_type?: string
+          connector_instance_id?: string | null
+          created_at?: string
+          direction?: string
+          error_count?: number | null
+          id?: string
+          is_active?: boolean
+          last_message_at?: string | null
+          message_count?: number | null
+          topic_filter?: string | null
+          updated_at?: string
+          webhook_secret_hash?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_mq_channels_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_mq_channels_connector_instance_id_fkey"
+            columns: ["connector_instance_id"]
+            isOneToOne: false
+            referencedRelation: "bank_connector_instances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bank_mq_messages: {
+        Row: {
+          bank_id: string
+          channel_id: string
+          correlation_id: string | null
+          created_at: string
+          direction: string
+          error_message: string | null
+          id: string
+          message_type: string
+          payload: Json
+          processed_at: string | null
+          status: string
+        }
+        Insert: {
+          bank_id: string
+          channel_id: string
+          correlation_id?: string | null
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          message_type: string
+          payload: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Update: {
+          bank_id?: string
+          channel_id?: string
+          correlation_id?: string | null
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          message_type?: string
+          payload?: Json
+          processed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_mq_messages_bank_id_fkey"
+            columns: ["bank_id"]
+            isOneToOne: false
+            referencedRelation: "banks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bank_mq_messages_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "bank_mq_channels"
             referencedColumns: ["id"]
           },
         ]
