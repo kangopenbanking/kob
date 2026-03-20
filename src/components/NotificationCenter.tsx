@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Bell, Check, AlertTriangle, Info, CheckCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +28,17 @@ export function NotificationCenter() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const getHistoryPath = () => {
+    const path = location.pathname;
+    if (path.startsWith("/merchant")) return "/merchant/notification-history";
+    if (path.startsWith("/business")) return "/business/notification-history";
+    if (path.startsWith("/admin")) return "/notification-history";
+    if (path.startsWith("/institution")) return "/notification-history";
+    return "/notification-history";
+  };
 
   // Register OneSignal for the current user (no institution scope on desktop dashboards)
   useOneSignal();
@@ -292,7 +304,7 @@ export function NotificationCenter() {
           <>
             <Separator />
             <div className="p-2">
-              <Button variant="ghost" size="sm" className="w-full text-xs">
+              <Button variant="ghost" size="sm" className="w-full text-xs" onClick={() => navigate(getHistoryPath())}>
                 View all notifications
               </Button>
             </div>

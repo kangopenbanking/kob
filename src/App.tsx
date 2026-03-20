@@ -83,6 +83,7 @@ const Certificates = lazy(() => import("./pages/guides/Certificates"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const SecuritySettings = lazy(() => import("./pages/SecuritySettings"));
 const NotificationPreferences = lazy(() => import("./pages/NotificationPreferences"));
+const NotificationHistory = lazy(() => import("./pages/NotificationHistory"));
 const Communications = lazy(() => import("./pages/Communications"));
 const MobileMoney = lazy(() => import("./pages/MobileMoney"));
 const Payments = lazy(() => import("./pages/Payments"));
@@ -664,6 +665,7 @@ function App() {
               <Route path="white-label" element={<MerchantWhiteLabel />} />
               <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
               <Route path="pos-till" element={<MerchantPOSTill />} />
+              <Route path="notification-history" element={<NotificationHistory />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
@@ -875,6 +877,7 @@ function App() {
             </Route>
             <Route path="/security" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><SecuritySettings /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationPreferences /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
+            <Route path="/notification-history" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><NotificationHistory /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/mobile-money" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><MobileMoney /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/payments" element={<ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><DashboardLayout><Payments /></DashboardLayout></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute>} />
             <Route path="/personal-accounts" element={<Layout><ProtectedRoute><NonInstitutionRoute><PersonalAccountRoute><PersonalAccounts /></PersonalAccountRoute></NonInstitutionRoute></ProtectedRoute></Layout>} />
@@ -1067,6 +1070,7 @@ function App() {
               <Route path="storefront" element={<BusinessStorefront />} />
               <Route path="inventory" element={<BusinessInventory />} />
               <Route path="notifications" element={<NotificationPreferences />} />
+              <Route path="notification-history" element={<NotificationHistory />} />
               {/* Travel */}
               <Route path="travel" element={<BusinessTravel />} />
               <Route path="travel/services" element={<BusinessTravelServices />} />
