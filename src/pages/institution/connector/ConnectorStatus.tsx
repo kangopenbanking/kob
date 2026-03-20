@@ -5,7 +5,7 @@ import { ConnectorEmptyState } from "@/components/institution/connector/Connecto
 import { useBankConnector } from "@/hooks/useBankConnector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { ClipboardList, Upload, Loader2 } from "lucide-react";
 import { format } from "date-fns";
@@ -15,6 +15,7 @@ import { toast } from "sonner";
 
 export default function ConnectorStatus() {
   const { bankId, loading: bankLoading } = useBankConnector();
+  const queryClient = useQueryClient();
   const [selectedBatch, setSelectedBatch] = useState<string>("");
   const [statusFile, setStatusFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -59,41 +60,54 @@ export default function ConnectorStatus() {
     if (!statusFile || !bankId) return;
     setUploading(true);
     try {
-      // Parse CSV and update batch items
-      const text = await statusFile.text();
-      const lines = text.trim().split("\n");
-      if (lines.length < 2) throw new Error("Status file must have a header row and at least one data row");
+      const fileContent = await statusFile.text();
 
-      const header = lines[0].split(",").map((h) => h.trim().toLowerCase());
-      const refIdx = header.indexOf("reference");
-      const statusIdx = header.indexOf("status");
-      const codeIdx = header.indexOf("response_code");
-      const msgIdx = header.indexOf("response_message");
+      // Step 1: Upload status file to storage via edge function
+      const { data: uploadResult, error: uploadErr } = await supabase.functions.invoke("bank-file-connector", {
+        body: {
+          action: "upload_file",
+          bank_id: bankId,
+          file_type: "payment_status",
+          environment: "sandbox",
+          file_content: fileContent,
+          filename: statusFile.name,
+          uploaded_by: "portal",
+        },
+      });
 
-      if (refIdx === -1 || statusIdx === -1) throw new Error("Status file must have 'reference' and 'status' columns");
+      if (uploadErr) throw uploadErr;
+      if (uploadResult?.error) throw new Error(uploadResult.error);
 
-      let updated = 0;
-      for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split(",").map((c) => c.trim());
-        const ref = cols[refIdx];
-        const status = cols[statusIdx];
-        if (!ref || !status) continue;
+      const fileId = uploadResult?.file?.id;
+      if (!fileId) throw new Error("File registration failed");
 
-        const updateData: any = { status };
-        if (codeIdx !== -1) updateData.bank_response_code = cols[codeIdx] || null;
-        if (msgIdx !== -1) updateData.bank_response_message = cols[msgIdx] || null;
+      // Step 2: Trigger status file ingestion via edge function
+      const { data: ingestResult, error: ingestErr } = await supabase.functions.invoke("bank-file-connector", {
+        body: { action: "ingest_status_file", file_id: fileId },
+      });
 
-        const { error } = await supabase
-          .from("bank_batch_items")
-          .update(updateData)
-          .eq("reference", ref);
-        if (!error) updated++;
+      if (ingestErr) throw ingestErr;
+      if (ingestResult?.error) throw new Error(ingestResult.error);
+
+      const summary = ingestResult?.summary;
+      toast.success(
+        `Status file processed: ${summary?.matched ?? 0} matched, ${summary?.executed ?? 0} executed, ${summary?.failed ?? 0} failed, ${summary?.unmatched ?? 0} unmatched`
+      );
+
+      if (summary?.unmatched > 0 && ingestResult?.mismatches?.length > 0) {
+        toast.warning(`${summary.unmatched} unmatched references detected — check reconciliation`);
       }
 
-      toast.success(`Status file processed: ${updated} items updated`);
       setStatusFile(null);
+      queryClient.invalidateQueries({ queryKey: ["connector-status-events"] });
+      queryClient.invalidateQueries({ queryKey: ["connector-batches"] });
     } catch (err: any) {
-      toast.error(err.message || "Status upload failed");
+      const msg = err?.message || "Status upload failed";
+      if (msg.includes("Duplicate file")) {
+        toast.error("This status file has already been uploaded");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setUploading(false);
     }
@@ -149,7 +163,7 @@ export default function ConnectorStatus() {
               Process Status
             </Button>
           </div>
-          <p className="text-xs text-muted-foreground mt-2">Required columns: reference, status. Optional: response_code, response_message</p>
+          <p className="text-xs text-muted-foreground mt-2">Required columns: reference, status. Optional: executed_at, bank_tx_id, reason_code, reason_message</p>
         </CardContent>
       </Card>
 

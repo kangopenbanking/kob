@@ -5,9 +5,9 @@ import { ConnectorEmptyState } from "@/components/institution/connector/Connecto
 import { useBankConnector } from "@/hooks/useBankConnector";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Upload, FileText, Download, RefreshCw, Loader2, Eye } from "lucide-react";
+import { Upload, FileText, RefreshCw, Loader2, Eye, Play } from "lucide-react";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -18,12 +18,14 @@ const FILE_TYPES = ["accounts", "balances", "transactions", "beneficiaries"] as 
 
 export default function ConnectorUploads() {
   const { bankId, loading: bankLoading } = useBankConnector();
+  const queryClient = useQueryClient();
   const [fileType, setFileType] = useState<string>("accounts");
   const [environment, setEnvironment] = useState<string>("sandbox");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [filterType, setFilterType] = useState<string>("all");
   const [detailId, setDetailId] = useState<string | null>(null);
+  const [ingesting, setIngesting] = useState<string | null>(null);
 
   const { data: uploads, isLoading, refetch } = useQuery({
     queryKey: ["connector-uploads", bankId, filterType],
@@ -66,33 +68,71 @@ export default function ConnectorUploads() {
     if (!selectedFile || !bankId) return;
     setUploading(true);
     try {
-      const arrayBuffer = await selectedFile.arrayBuffer();
-      const hashBuffer = await crypto.subtle.digest("SHA-256", arrayBuffer);
-      const hashArray = Array.from(new Uint8Array(hashBuffer));
-      const hashHex = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
-
+      const fileContent = await selectedFile.text();
       const { data: { user } } = await supabase.auth.getUser();
 
-      const { error } = await supabase.from("bank_file_uploads").insert({
-        bank_id: bankId,
-        file_type: fileType,
-        environment,
-        original_filename: selectedFile.name,
-        file_hash_sha256: hashHex,
-        file_size: selectedFile.size,
-        uploaded_by: "portal",
-        uploader_user_id: user?.id ?? null,
-        status: "received",
+      const { data, error } = await supabase.functions.invoke("bank-file-connector", {
+        body: {
+          action: "upload_file",
+          bank_id: bankId,
+          file_type: fileType,
+          environment,
+          file_content: fileContent,
+          filename: selectedFile.name,
+          uploaded_by: "portal",
+          uploader_user_id: user?.id ?? null,
+        },
       });
 
       if (error) throw error;
-      toast.success("File uploaded successfully");
+
+      // Check for edge function error responses (non-2xx wrapped in data)
+      if (data?.error) {
+        throw new Error(data.error);
+      }
+
+      toast.success("File uploaded and registered successfully");
       setSelectedFile(null);
+
+      // Auto-trigger ingestion if file was registered
+      if (data?.file?.id) {
+        toast.info("Starting ingestion...");
+        await handleRunIngestion(data.file.id);
+      }
+
       refetch();
     } catch (err: any) {
-      toast.error(err.message || "Upload failed");
+      const msg = err?.message || "Upload failed";
+      if (msg.includes("Duplicate file")) {
+        toast.error("This file has already been uploaded (duplicate content detected)");
+      } else {
+        toast.error(msg);
+      }
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleRunIngestion = async (fileId: string) => {
+    setIngesting(fileId);
+    try {
+      const { data, error } = await supabase.functions.invoke("bank-file-connector", {
+        body: { action: "run_ingestion", file_id: fileId },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const totals = data?.totals;
+      toast.success(
+        `Ingestion complete: ${totals?.rows_ok ?? 0} OK, ${totals?.rows_invalid ?? 0} invalid, ${totals?.rows_duplicate ?? 0} duplicates`
+      );
+      refetch();
+      queryClient.invalidateQueries({ queryKey: ["connector-upload-detail"] });
+    } catch (err: any) {
+      toast.error(err?.message || "Ingestion failed");
+    } finally {
+      setIngesting(null);
     }
   };
 
@@ -152,7 +192,7 @@ export default function ConnectorUploads() {
             </div>
             <Button onClick={handleUpload} disabled={!selectedFile || uploading}>
               {uploading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Upload className="h-4 w-4 mr-2" />}
-              Upload
+              Upload & Ingest
             </Button>
           </div>
         </CardContent>
@@ -195,7 +235,18 @@ export default function ConnectorUploads() {
                       <td className="p-3 max-w-[200px] truncate">{u.original_filename}</td>
                       <td className="p-3"><StatusBadge status={u.status} /></td>
                       <td className="p-3"><StatusBadge status={u.environment} /></td>
-                      <td className="p-3 text-right">
+                      <td className="p-3 text-right flex items-center justify-end gap-1">
+                        {u.status === "received" && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRunIngestion(u.id)}
+                            disabled={ingesting === u.id}
+                            title="Run ingestion"
+                          >
+                            {ingesting === u.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                          </Button>
+                        )}
                         <Button variant="ghost" size="sm" onClick={() => setDetailId(u.id)}>
                           <Eye className="h-4 w-4" />
                         </Button>
@@ -232,7 +283,7 @@ export default function ConnectorUploads() {
                 <div><span className="text-muted-foreground">Size:</span> <span className="font-medium">{detail.file.file_size ? `${Math.round(detail.file.file_size / 1024)} KB` : "—"}</span></div>
                 <div className="col-span-2"><span className="text-muted-foreground">SHA256:</span> <span className="font-mono text-xs break-all">{detail.file.file_hash_sha256}</span></div>
                 {detail.file.error_summary && (
-                  <div className="col-span-2"><span className="text-muted-foreground">Error:</span> <span className="text-red-600">{detail.file.error_summary}</span></div>
+                  <div className="col-span-2"><span className="text-muted-foreground">Error:</span> <span className="text-destructive">{detail.file.error_summary}</span></div>
                 )}
               </div>
 
