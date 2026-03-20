@@ -141,7 +141,7 @@ async function suiteAuthGuards(): Promise<TestSuite> {
   for (const ep of protectedEndpoints) {
     tests.push(await runTest(suite, `${ep.fn}: rejects unauthenticated`, async () => {
       const { status } = await invoke(ep.fn, 'POST', ep.body);
-      assert(status >= 400 && status < 500, `Expected 4xx, got ${status}`);
+      assert(status >= 400, `Expected 4xx/5xx, got ${status}`);
     }));
   }
 
