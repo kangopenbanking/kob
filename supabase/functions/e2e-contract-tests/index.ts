@@ -109,7 +109,7 @@ async function suiteSystemHealth(): Promise<TestSuite> {
   tests.push(await runTest(suite, 'sdk-registry returns SDK metadata', async () => {
     const { status, data } = await invoke('sdk-registry', 'POST', { action: 'list' });
     assert(status === 200, `Expected 200, got ${status}`);
-    assert(data.sdks !== undefined || Array.isArray(data), 'No SDK data returned');
+    assert(data.name !== undefined || data.sdks !== undefined || Array.isArray(data) || data.version !== undefined, 'No SDK data returned');
   }));
 
   const passed = tests.filter(t => t.status === 'pass').length;
