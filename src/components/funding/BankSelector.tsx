@@ -58,7 +58,7 @@ export const BankSelector = ({
         .from("institutions")
         .select("id, institution_name, swift_bic_code")
         .eq("is_active", true)
-        .order("institution_name");
+        .order("institution_name") as { data: any[] | null };
       if (kobBanks?.length) {
         kobBanks.forEach((inst: any) => {
           const exists = bankList.some(
