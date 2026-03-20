@@ -103,9 +103,9 @@ const BankFundAccount: React.FC = () => {
       });
       if (error) throw error;
       setResult(data);
-      toast.success('Funding intent created');
+      toast.success(`${Number(amount).toLocaleString()} XAF funding request initiated. Follow the payment instructions to complete.`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create funding intent');
+      toast.error(err.message || 'Could not initiate funding. Please try again later.');
     }
     setLoading(false);
   };

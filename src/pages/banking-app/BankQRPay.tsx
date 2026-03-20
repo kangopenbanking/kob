@@ -146,7 +146,7 @@ const BankQRPay: React.FC = () => {
       try { await navigator.share(shareData); } catch {}
     } else {
       await navigator.clipboard.writeText(shareData.text);
-      toast.success('Payment details copied to clipboard');
+      toast.success('Payment details copied — share with whoever needs to pay you');
     }
   };
 
