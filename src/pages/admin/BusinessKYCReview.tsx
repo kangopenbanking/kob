@@ -362,9 +362,9 @@ export default function BusinessKYCReview() {
     <div className="space-y-6">
       <AdminPageHeader icon={ClipboardCheck} title="Business KYC Review" description="Review and verify business KYC documentation and submissions">
         <Button
-          variant="outline"
+          variant="ghost"
           size="sm"
-          className="h-8 text-xs gap-1.5 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
+          className="h-8 text-xs gap-1.5 text-primary-foreground hover:bg-primary-foreground/10"
           onClick={() => queryClient.invalidateQueries({ queryKey: ["business-kyc-submissions"] })}
           disabled={isRefetching}
         >
