@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, RefreshCw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceStatus {
   name: string;
   key: string;
-  status: "operational" | "degraded" | "down";
+  status: "operational" | "degraded" | "down" | "dormant";
   uptime: string;
 }
 
@@ -19,7 +19,7 @@ const fallbackServices: ServiceStatus[] = [
   { name: "Wallets API", key: "database", status: "operational", uptime: "99.99%" },
   { name: "Open Banking (AISP)", key: "aisp", status: "operational", uptime: "99.95%" },
   { name: "Open Banking (PISP)", key: "pisp", status: "operational", uptime: "99.95%" },
-  { name: "Virtual Cards", key: "virtual_cards", status: "operational", uptime: "99.98%" },
+  { name: "Virtual Cards", key: "virtual_cards", status: "dormant", uptime: "—" },
   { name: "Webhook Delivery", key: "webhooks", status: "operational", uptime: "99.94%" },
   { name: "Authentication & OAuth", key: "oauth", status: "operational", uptime: "99.99%" },
   { name: "Certificates (mTLS)", key: "certificates", status: "operational", uptime: "99.96%" },
@@ -29,6 +29,7 @@ const fallbackServices: ServiceStatus[] = [
 const StatusIcon = ({ status }: { status: string }) => {
   if (status === "operational") return <CheckCircle className="h-4 w-4 text-green-500" />;
   if (status === "degraded") return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+  if (status === "dormant") return <Clock className="h-4 w-4 text-muted-foreground" />;
   return <XCircle className="h-4 w-4 text-red-500" />;
 };
 
@@ -47,14 +48,22 @@ const ApiStatusPage = () => {
 
       const liveServices = fallbackServices.map((svc) => {
         const liveStatus = data.services?.[svc.key];
+        const mappedStatus = liveStatus === "operational" ? "operational"
+          : liveStatus === "degraded" ? "degraded"
+          : liveStatus === "dormant" ? "dormant"
+          : "down";
         return {
           ...svc,
-          status: (liveStatus === "operational" ? "operational" : liveStatus === "degraded" ? "degraded" : "down") as ServiceStatus["status"],
+          status: mappedStatus as ServiceStatus["status"],
+          uptime: mappedStatus === "dormant" ? "—" : svc.uptime,
         };
       });
 
       setServices(liveServices);
-      setOverallStatus(data.status === "operational" ? "operational" : "degraded");
+      // Exclude dormant services from overall status calculation
+      const activeServices = liveServices.filter(s => s.status !== "dormant");
+      const allActive = activeServices.every(s => s.status === "operational");
+      setOverallStatus(allActive ? "operational" : "degraded");
       setLastChecked(data.timestamp || new Date().toISOString());
       if (data.fapi_compliance) setFapiCompliance(data.fapi_compliance);
     } catch {
@@ -119,10 +128,12 @@ const ApiStatusPage = () => {
                       ? "text-green-600 border-green-300"
                       : s.status === "degraded"
                       ? "text-yellow-600 border-yellow-300"
+                      : s.status === "dormant"
+                      ? "text-muted-foreground border-muted"
                       : "text-red-600 border-red-300"
                   }`}
                 >
-                  {s.status}
+                  {s.status === "dormant" ? "Coming Soon" : s.status}
                 </Badge>
               </div>
             </div>
