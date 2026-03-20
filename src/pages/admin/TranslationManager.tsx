@@ -504,10 +504,11 @@ export default function TranslationManager() {
 
   if (loading) {
     return (
-      <div className="space-y-6 flex items-center justify-center py-20">
+      <div className="space-y-6">
       <AdminPageHeader icon={Languages} title="Translation Manager" description="Manage multilingual content and translation workflows" />
-
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader2 className="h-6 w-6 animate-spin text-primary"  />
+        </div>
       </div>
     );
   }

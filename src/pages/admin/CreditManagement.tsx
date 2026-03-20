@@ -196,10 +196,11 @@ export default function CreditManagement() {
 
   if (loadingClients) {
     return (
-      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <div className="space-y-6">
       <AdminPageHeader icon={TrendingUp} title="Credit API Management" description="Manage B2B credit score API clients and scoring rules" />
-
-        <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin"  />
+        </div>
       </div>
     );
   }

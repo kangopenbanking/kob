@@ -182,10 +182,11 @@ export default function ApiHealthDashboard() {
 
   if (loading && metrics.length === 0) {
     return (
-      <div className="space-y-6 flex items-center justify-center min-h-[400px]">
+      <div className="space-y-6">
       <AdminPageHeader icon={HeartPulse} title="API Health Dashboard" description="Monitor real-time API health metrics and historical uptime data" />
-
-        <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
+        <div className="flex items-center justify-center min-h-[300px]">
+          <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground"  />
+        </div>
       </div>
     );
   }

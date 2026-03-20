@@ -137,10 +137,11 @@ export default function SandboxManagement() {
 
   if (loading) {
     return (
-      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <div className="space-y-6">
       <AdminPageHeader icon={TestTube} title="Sandbox Management" description="Manage test accounts and sandbox environments for API development" />
-
-        <RefreshCw className="h-8 w-8 animate-spin" />
+        <div className="flex items-center justify-center min-h-[300px]">
+          <RefreshCw className="h-8 w-8 animate-spin"  />
+        </div>
       </div>
     );
   }
