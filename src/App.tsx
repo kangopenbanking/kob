@@ -467,6 +467,8 @@ const BusinessTravel = lazy(() => import("./pages/business-app/BusinessTravel"))
 const BusinessSettings = lazy(() => import("./pages/business-app/BusinessSettings"));
 const BusinessCompliance = lazy(() => import("./pages/business-app/BusinessCompliance"));
 const BusinessEnterprise = lazy(() => import("./pages/business-app/BusinessEnterprise"));
+const BusinessWebhookLogs = lazy(() => import("./pages/business-app/BusinessWebhookLogs"));
+const BusinessDisputesPage = lazy(() => import("./pages/business-app/BusinessDisputes"));
 
 // Integrations
 const NoCodeIndex = lazy(() => import("./pages/integrations/NoCodeIndex"));
