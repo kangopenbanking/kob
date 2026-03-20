@@ -992,8 +992,8 @@ export default function MerchantStorefront() {
                     <div className="flex flex-col items-center">
                       {merchantId ? (
                         <>
-                          <div className="p-8 rounded-3xl bg-white border border-border/30 shadow-lg">
-                            <QRCodeSVG value={qrPayload} size={220} level="M" fgColor="hsl(258, 80%, 58%)" bgColor="white" />
+                          <div id="kob-qr-code" className="p-8 rounded-3xl bg-white border border-border/30 shadow-lg">
+                            <QRCodeSVG value={qrPayloadUrl || qrPayload} size={220} level="M" fgColor="hsl(258, 80%, 58%)" bgColor="white" />
                           </div>
                           <div className="text-center mt-5 space-y-1">
                             <p className="text-base font-bold text-foreground">{storeName || 'Your Store'}</p>
