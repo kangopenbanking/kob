@@ -1,99 +1,69 @@
 
 
-# Enhanced Dispute System — FI Kanban + Banking App Customer-to-FI Channel + Email Alerts
+# Consumer & Business Dispute Portal — Gap Audit
 
-## Summary
+## Findings Summary
 
-Upgrade the FI Portal dispute page to a full Kanban board (matching Admin pattern), add dispute email templates to `managed-send-email`, enhance the Banking PWA to route disputes to the customer's linked institution, and wire notifications at every lifecycle stage.
+### Consumer App (`/app/disputes` — `CustomerDisputes.tsx`)
+| Feature | Status | Gap |
+|---|---|---|
+| Route registered in App.tsx | ✅ | — |
+| File a dispute form | ✅ | — |
+| Calls `gateway-file-dispute` edge function | ✅ | — |
+| List disputes with status badges | ✅ | — |
+| Detail dialog with timeline | ✅ | — |
+| **Navigation link to page** | ❌ | **No link exists anywhere in the consumer app UI** — route exists but is unreachable from any menu, bottom nav, settings, or "More" page |
+| Transaction selector (pick from recent txns) | ❌ | User must manually type a transaction ref — no dropdown of their recent transactions |
+| Institution selector | ❌ | No way to specify which institution the dispute is against (the `institution_id` field is never sent) |
+| Status filter/search | ❌ | No filtering — all disputes shown in a flat list |
 
-## Current Gaps
+### Business App (`/biz/disputes` — `BusinessDisputes.tsx`)
+| Feature | Status | Gap |
+|---|---|---|
+| Route registered in App.tsx | ✅ | — |
+| Evidence submission | ✅ | Fixed in prior iteration |
+| Reachable via Compliance page | ✅ | — |
+| **Activity timeline** | ❌ | No timeline — merchant desktop version has it but business PWA does not |
+| **Detail dialog** | ❌ | No detail view — only inline evidence submission |
+| **Status stats dashboard** | ❌ | No stats row like the merchant desktop version |
+| **Search/filter** | ❌ | No search or status filter |
+| **Add note capability** | ❌ | No note-adding via `dispute-lifecycle` |
+| **Priority/overdue indicators** | ❌ | No visual warning for overdue evidence deadlines |
 
-| Gap | Location |
+### Merchant Desktop (`/merchant/disputes` — `MerchantDisputes.tsx`)
+| Feature | Status |
 |---|---|
-| FI Portal uses flat table — no Kanban board | `InstitutionDisputes.tsx` |
-| No dispute email templates in `managed-send-email` | `managed-send-email/index.ts` |
-| Banking PWA `BankDisputes.tsx` doesn't pass `institution_id` from route params to the dispute filing body correctly for multi-tenant routing | `BankDisputes.tsx` |
-| `dispute-lifecycle` doesn't send emails on status changes — only in-app notifications | `dispute-lifecycle/index.ts` |
-| `gateway-file-dispute` calls `managed-send-email` but templates don't exist | `gateway-file-dispute/index.ts` |
-| FI Portal cannot assign disputes to internal staff | `InstitutionDisputes.tsx` |
-| No "Escalate to Admin" confirmation or reason prompt | `InstitutionDisputes.tsx` |
+| Full stats dashboard | ✅ |
+| Search + status filter | ✅ |
+| Evidence submission with types | ✅ |
+| Activity timeline | ✅ |
+| Add notes via dispute-lifecycle | ✅ |
+| Priority/overdue indicators | ✅ |
+| **Complete — no gaps** | ✅ |
 
-## Implementation
+## Implementation Plan
 
-### 1. Add 6 Dispute Email Templates to `managed-send-email`
+### 1. Add Navigation Link for Consumer Disputes
+Find the consumer app's account/settings/more page and add a "Disputes" menu item linking to `/app/disputes`.
 
-Add templates to the existing email template registry:
-- `dispute_filed_customer` — Confirmation to the customer who filed
-- `dispute_filed_merchant` — Alert to merchant/FI about new dispute
-- `dispute_filed_admin` — Alert to KOB admins
-- `dispute_status_update` — Generic status change notification (used at every transition)
-- `dispute_evidence_received` — Confirmation evidence was submitted
-- `dispute_resolved_final` — Final resolution to all parties
+### 2. Enhance Consumer Disputes Page
+- Add a **transaction selector** — fetch recent transactions and show as a dropdown so users don't have to manually type refs
+- Add **institution_id** to the dispute filing body — if user has linked accounts, show institution selector
+- Add a **status filter** chip bar (All / Open / In Progress / Resolved)
 
-### 2. Rebuild `InstitutionDisputes.tsx` with Kanban Board
+### 3. Enhance Business Disputes Page to Match Merchant Desktop
+- Add **stats row** (Total, Open, Investigating, Under Review, Won, Lost)
+- Add **search + status filter**
+- Add **detail dialog** with activity timeline (query `dispute_activities`)
+- Add **"Add Note"** capability via `dispute-lifecycle`
+- Add **priority badges** and **overdue evidence** visual warnings
+- Add **evidence type selector** matching the merchant desktop pattern
 
-Follow the exact Admin `DisputeManagement.tsx` pattern:
-- Kanban columns: Open → Investigating → Under Review → Escalated → Won / Lost / Closed
-- Animated dispute cards with `motion.div` and `AnimatePresence`
-- Each card: dispute ref, amount, customer name, priority badge, days open
-- Kanban / Table toggle button
-- Stats row with per-stage counts (7 columns matching admin)
-- Detail dialog with tabbed view: Details | Timeline | Actions
-- Actions tab: Move to Status buttons, Assign to staff, Escalate to Admin, Add Note
-- Staff assignment dropdown (fetch institution staff from `merchant_staff_roles` or `profiles`)
-- "Escalate to Admin" button with note/reason textarea
-
-### 3. Update `dispute-lifecycle` Edge Function — Add Email Dispatch
-
-On every status change, invoke `managed-send-email` with `dispute_status_update` template:
-- Notify the dispute owner (customer) via email on status transitions
-- Notify admins via email when disputes are escalated
-- Notify FI staff when customer files a dispute
-- Use the existing in-app notification code (already present) alongside email
-
-### 4. Enhance Banking PWA `BankDisputes.tsx` — Institution Routing
-
-- Ensure `institution_id` from route params is always passed to `gateway-file-dispute`
-- Add institution name display in the header (fetch from `institutions` table)
-- Add a status filter dropdown
-- Show which institution the dispute is filed against
-- The dispute flows: Customer → Banking App → FI Portal (Kanban) → Escalate to Admin
-
-### 5. Update `gateway-file-dispute` — Notify Institution
-
-After filing, send notifications to the institution's admin user:
-- Fetch institution `user_id` from `institutions` table using `institution_id`
-- Insert `app_notifications` for the institution admin
-- Invoke `managed-send-email` with `dispute_filed_merchant` template to institution email
-
-## Dispute Flow
-
-```text
-Customer (Banking PWA)
-  └── Files dispute via gateway-file-dispute
-      ├── Notification → Customer (in-app + email confirmation)
-      ├── Notification → FI Portal (in-app + email alert)
-      └── Notification → KOB Admin (in-app)
-
-FI Portal (Kanban Board)
-  ├── Investigate / Review / Add Notes
-  │   └── Notification → Customer (email + in-app on each status change)
-  ├── Escalate to Admin
-  │   └── Notification → Admin (in-app + email)
-  └── Resolve / Reject
-      └── Notification → Customer (final resolution email)
-
-Admin (Kanban Board) — handles escalated disputes
-  └── Final decision → Notification → Customer + FI (email + in-app)
-```
-
-## Files Summary
+## Files to Modify
 
 | File | Action |
 |---|---|
-| `supabase/functions/managed-send-email/index.ts` | Add 6 dispute email templates |
-| `src/pages/institution/InstitutionDisputes.tsx` | Rebuild with Kanban board matching admin pattern |
-| `supabase/functions/dispute-lifecycle/index.ts` | Add email dispatch via managed-send-email on status changes |
-| `supabase/functions/gateway-file-dispute/index.ts` | Add FI notification when customer files dispute |
-| `src/pages/banking-app/BankDisputes.tsx` | Enhance with status filters, institution context display |
+| Consumer app settings/account/more page (TBD — need to find the right file) | Add "Disputes" navigation link |
+| `src/pages/customer-app/CustomerDisputes.tsx` | Add transaction selector, institution picker, status filter |
+| `src/pages/business-app/BusinessDisputes.tsx` | Add stats, search, timeline, notes, priority indicators |
 
