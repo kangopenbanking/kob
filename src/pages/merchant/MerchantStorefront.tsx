@@ -149,10 +149,13 @@ export default function MerchantStorefront() {
     if (!merchantId) return;
     setSaving(true);
     try {
-      const payload = {
+      const effectiveSubCategory = showCustomSub ? customSubCategory : subCategory;
+      const payload: Record<string, any> = {
         merchant_id: merchantId, store_name: storeName, description, category,
         city, logo_url: logoUrl, banner_url: bannerUrl, is_published: isPublished,
         country, updated_at: new Date().toISOString(),
+        sub_category: effectiveSubCategory || null,
+        custom_attributes_json: customAttributes.length > 0 ? customAttributes : [],
       };
       if (profile) {
         await supabase.from('pos_store_profiles').update(payload).eq('id', profile.id);
