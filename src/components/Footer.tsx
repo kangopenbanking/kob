@@ -17,6 +17,7 @@ const footerSections = [
       { label: "Customer Guide", to: "/manual/customers", title: "User guide for customers" },
       { label: "Merchant Guide", to: "/manual/merchants", title: "Integration guide for merchants" },
       { label: "Developer Manual", to: "/manual/developers", title: "Technical manual for developers" },
+      { label: "Bank Integration Guide", to: "/bank-integration-guide", title: "Technical guide for bank API integration" },
     ],
   },
   {
