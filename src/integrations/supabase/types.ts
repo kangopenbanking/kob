@@ -1955,10 +1955,16 @@ export type Database = {
       bank_mq_channels: {
         Row: {
           bank_id: string
+          broker_config_encrypted: Json | null
+          broker_queue: string | null
+          broker_topic: string | null
+          broker_type: string | null
           channel_name: string
           channel_type: string
           connector_instance_id: string | null
+          consumer_group: string | null
           created_at: string
+          delivery_guarantee: string | null
           direction: string
           error_count: number | null
           id: string
@@ -1972,10 +1978,16 @@ export type Database = {
         }
         Insert: {
           bank_id: string
+          broker_config_encrypted?: Json | null
+          broker_queue?: string | null
+          broker_topic?: string | null
+          broker_type?: string | null
           channel_name: string
           channel_type?: string
           connector_instance_id?: string | null
+          consumer_group?: string | null
           created_at?: string
+          delivery_guarantee?: string | null
           direction?: string
           error_count?: number | null
           id?: string
@@ -1989,10 +2001,16 @@ export type Database = {
         }
         Update: {
           bank_id?: string
+          broker_config_encrypted?: Json | null
+          broker_queue?: string | null
+          broker_topic?: string | null
+          broker_type?: string | null
           channel_name?: string
           channel_type?: string
           connector_instance_id?: string | null
+          consumer_group?: string | null
           created_at?: string
+          delivery_guarantee?: string | null
           direction?: string
           error_count?: number | null
           id?: string
@@ -3556,6 +3574,69 @@ export type Database = {
             columns: ["institution_id"]
             isOneToOne: false
             referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      broker_delivery_log: {
+        Row: {
+          broker_endpoint: string
+          broker_type: string
+          channel_id: string | null
+          created_at: string | null
+          error_message: string | null
+          id: string
+          latency_ms: number | null
+          message_id: string | null
+          request_payload: Json | null
+          response_body: string | null
+          response_status: number | null
+          success: boolean | null
+          topic_or_queue: string | null
+        }
+        Insert: {
+          broker_endpoint: string
+          broker_type: string
+          channel_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          message_id?: string | null
+          request_payload?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean | null
+          topic_or_queue?: string | null
+        }
+        Update: {
+          broker_endpoint?: string
+          broker_type?: string
+          channel_id?: string | null
+          created_at?: string | null
+          error_message?: string | null
+          id?: string
+          latency_ms?: number | null
+          message_id?: string | null
+          request_payload?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          success?: boolean | null
+          topic_or_queue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "broker_delivery_log_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "bank_mq_channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "broker_delivery_log_message_id_fkey"
+            columns: ["message_id"]
+            isOneToOne: false
+            referencedRelation: "bank_mq_messages"
             referencedColumns: ["id"]
           },
         ]
