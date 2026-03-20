@@ -72,6 +72,7 @@ const BankIntegrationGuide = lazy(() => import("./pages/BankIntegrationGuide"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Status = lazy(() => import("./pages/Status"));
+const HelpCentre = lazy(() => import("./pages/HelpCentre"));
 
 // Guides
 const AISP = lazy(() => import("./pages/guides/AISP"));
@@ -915,6 +916,7 @@ function App() {
             <Route path="/bank-integration-guide" element={<Layout><BankIntegrationGuide /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+            <Route path="/help-centre" element={<Layout><HelpCentre /></Layout>} />
             <Route path="/status" element={<Layout><Status /></Layout>} />
             <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
             
