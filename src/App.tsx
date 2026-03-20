@@ -1079,8 +1079,9 @@ function App() {
               <Route path="settings" element={<BusinessSettings />} />
               <Route path="compliance" element={<BusinessCompliance />} />
               <Route path="enterprise" element={<BusinessEnterprise />} />
+              <Route path="webhook-logs" element={<BusinessWebhookLogs />} />
+              <Route path="disputes" element={<BusinessDisputesPage />} />
               <Route path="kyb" element={<MerchantKYB />} />
-              <Route path="disputes" element={<MerchantDisputes />} />
               <Route path="api-keys" element={<MerchantApiKeys />} />
               <Route path="api-key-management" element={<MerchantApiKeyManagement />} />
               <Route path="webhooks" element={<MerchantWebhooks />} />
