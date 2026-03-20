@@ -916,6 +916,7 @@ function App() {
             <Route path="/bank-integration-guide" element={<Layout><BankIntegrationGuide /></Layout>} />
             <Route path="/contact" element={<Layout><Contact /></Layout>} />
             <Route path="/faq" element={<Layout><FAQ /></Layout>} />
+            <Route path="/help-centre" element={<Layout><HelpCentre /></Layout>} />
             <Route path="/status" element={<Layout><Status /></Layout>} />
             <Route path="/integration-workflow" element={<Layout><IntegrationWorkflow /></Layout>} />
             
