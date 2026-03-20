@@ -377,12 +377,12 @@ export function useSendTransfer() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['bank-transactions', institutionId] });
-      toast.success('Transfer sent successfully!');
+      toast.success(`${variables.amount.toLocaleString()} ${variables.currency || 'XAF'} sent successfully. Your balance has been updated.`);
     },
-    onError: (err: any) => toast.error(err.message || 'Transfer failed'),
+    onError: (err: any) => toast.error(err.message || 'Transfer could not be completed. Please verify recipient details and try again.'),
   });
 }
 
