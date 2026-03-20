@@ -1288,6 +1288,11 @@ export default function MerchantStorefront() {
         plans={plans}
         currency={currency}
         subscribing={subscribing}
+        walletBalance={walletBalance}
+        onFundWallet={() => {
+          setUpgradeModalOpen(false);
+          window.location.href = '/merchant/wallet';
+        }}
         onConfirm={(planId?: string) => {
           const id = planId || selectedPlan?.id;
           if (id) {
