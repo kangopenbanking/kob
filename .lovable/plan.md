@@ -1,60 +1,79 @@
 
 
-# Global Payment Priority: Linked Accounts → KOB Partners → External Providers
+# Bank Connector Integration Enhancement — Full Implementation Plan
 
-## Problem Summary
+## Summary
 
-The payment system has inconsistent bank selection across 6 pages. The edge function defaults to "Afriland First Bank" when no bank is specified. Several pages don't offer bank selection for `bank_transfer` at all, and those that do don't pass `bank_source` to enable KOB partner instant-credit logic.
+The backend edge functions (`bank-directory`, `bank-db-connector`, `bank-api-connector`, `bank-file-connector`) are well-implemented with full CRUD, sync engines, and sandbox simulation. However, the **Admin UI** (`AdminBankDirectory.tsx`) only exposes 6 of the 7 tabs needed — it's missing dedicated UI for **DB Connector** and **API Connector** management, and lacks a downloadable **Integration Guide** document. The Register Bank dialog also omits `db_connector` and `mq_realtime` integration modes.
 
-## Gap Report
+## Gaps Found
 
-| Page | BankSelector? | Sends bank_code? | Sends bank_source? | Linked Accounts? |
-|---|---|---|---|---|
-| `MerchantFundWallet` | ✅ Yes | ✅ Yes | ❌ No | ✅ Yes (via BankSelector) |
-| `CustomerFundAccount` | ❌ No | ❌ No | ❌ No | ❌ No |
-| `InstitutionFundAccount` | ❌ No | ❌ No | ❌ No | ❌ No |
-| `BankFundAccount` (Banking PWA) | ❌ No | ❌ No | ❌ No | ❌ No |
-| `CustomerFundWallet` (Consumer PWA) | ✅ Custom | ❌ Partial | ❌ No | ❌ No (uses linked_accounts table) |
-| `BankTransferForm` (Payments/BankingOps) | ✅ Custom | ✅ Yes | ❌ No | ❌ No |
+| Gap | Severity | Location |
+|---|---|---|
+| Register Bank dialog missing `db_connector` and `mq_realtime` modes | MEDIUM | `AdminBankDirectory.tsx` line 165 |
+| No DB Connector management tab in admin UI | HIGH | Missing — backend (`bank-db-connector`) exists but no UI |
+| No API Connector (connector_pull) management tab in admin UI | HIGH | Missing — backend (`bank-api-connector`) exists but no UI |
+| No downloadable integration guide for bank partners | MEDIUM | No document generation exists |
+| Connectors tab is read-only — no "Register Connector" button | MEDIUM | `ConnectorsTab` component |
+| No integration type selection wizard when onboarding a bank | LOW | Bank registration is a flat form |
 
-## Fixes
+## Implementation
 
-### 1. Edge Function — Remove Afriland Default
-**File:** `supabase/functions/gateway-create-funding-intent/index.ts`
-- Line 232-233: Change fallback from `'Afriland First Bank'` to empty/generic. Use `bank_source` to determine `is_kob_partner`.
-- Accept `bank_source` from request body (already partially handled via line 234).
+### 1. Add DB Connector Tab to Admin Bank Directory
+New `DBConnectorTab` component within `AdminBankDirectory.tsx`:
+- List all DB connections from `bank-db-connector` → `list_connections`
+- Register new connection form: bank selector, name, db_type (PostgreSQL/MySQL/MSSQL/Oracle/MongoDB), host/port/database/username/SSL, poll interval, watermark column, poll queries
+- Test connection button → `test_connection`
+- Trigger manual sync → `trigger_sync`
+- View sync run history → `list_sync_runs`
+- Seed sandbox DB connector button → `sandbox_seed_db_connector`
+- Status badges + latency display
 
-### 2. Add BankSelector to 3 Missing Pages
+### 2. Add API Connector Tab (connector_pull)
+New `APIConnectorTab` component:
+- List API endpoints from `bank-api-connector` → `list_endpoints`
+- Register new endpoint form: bank, name, base URL, auth method (api_key/oauth2/basic/bearer/mtls), auth config fields, API paths (accounts/transactions/balances/health), poll interval
+- Test endpoint → `test_endpoint`
+- Trigger manual pull → `trigger_pull`
+- View pull run history → `list_pull_runs`
 
-**`CustomerFundAccount.tsx`** — Add BankSelector import + state + UI when `method === 'bank_transfer'`. Pass `bank_code`, `bank_name`, `bank_source` in the funding intent body.
+### 3. Update Register Bank Dialog
+- Add `db_connector` and `mq_realtime` to the integration mode dropdown
+- Add description text for each mode when selected
 
-**`InstitutionFundAccount.tsx`** — Same pattern: add BankSelector + state + pass bank params.
+### 4. Add Register Connector to Connectors Tab
+- Add a "Register Connector" button with dialog calling `bank-directory` → `register_connector`
+- Add "Upload Certificate" button calling `upload_certificate`
 
-**`BankFundAccount.tsx`** (Banking PWA) — Add a mobile-friendly bank selection step when `method === 'bank_transfer'`. Import BankSelector or inline a styled version matching the PWA design.
+### 5. Generate Downloadable Integration Guide (DOCX)
+Create a comprehensive bank integration guide document generated via script, saved to `/mnt/documents/`:
+- **Section 1**: Overview of KOB Bank Connector Framework
+- **Section 2**: connector_push — mTLS setup, certificate requirements, ingestion endpoints (accounts/transactions/balances/beneficiaries), HMAC signing, correlation IDs
+- **Section 3**: db_connector — DB proxy setup, watermark-based sync, poll queries, supported DBs
+- **Section 4**: connector_pull — REST API requirements, auth methods, path configuration
+- **Section 5**: file_feed — CSV templates, upload portal, ingestion pipeline, status reconciliation
+- **Section 6**: mq_realtime — Webhook/SSE/Kafka setup
+- **Section 7**: hybrid mode
+- **Section 8**: Sandbox testing guide
+- **Section 9**: Security (mTLS certificates, HMAC, scoped tokens)
 
-### 3. Pass `bank_source` from All Pages
-Update the `gateway-create-funding-intent` invocation in:
-- `MerchantFundWallet.tsx` — add `bank_source` from the selected bank's source
-- `CustomerFundWallet.tsx` — add `bank_source` from `selectedBank.source`
-- `BankTransferForm.tsx` — track bank source and pass it
+### 6. Add "Download Integration Guide" Button to Admin Bank Directory
+- Add a Download button in the header area that links to the generated guide
+- Also add it to the FI Portal connector pages
 
-### 4. Update BankSelector to Expose Source
-Modify `BankSelector`'s `onBankChange` callback to also return the bank's `source` property: `onBankChange: (code: string, name: string, source: string) => void`. This lets all consumers pass `bank_source` to the edge function.
-
-### 5. Update BankTransferForm with Linked Accounts
-Add linked account fetching (Priority 1) to `BankTransferForm.tsx`, matching the pattern already in `BankSelector.tsx`. Show source badges (Linked/Partner/External).
-
-## Files Summary
+## Files to Modify/Create
 
 | File | Action |
 |---|---|
-| `supabase/functions/gateway-create-funding-intent/index.ts` | Modify (remove Afriland default, use bank_source) |
-| `src/components/funding/BankSelector.tsx` | Modify (expose `source` in callback) |
-| `src/pages/CustomerFundAccount.tsx` | Modify (add BankSelector + bank params) |
-| `src/pages/institution/InstitutionFundAccount.tsx` | Modify (add BankSelector + bank params) |
-| `src/pages/banking-app/BankFundAccount.tsx` | Modify (add bank selection for bank_transfer) |
-| `src/pages/merchant/MerchantFundWallet.tsx` | Modify (pass bank_source) |
-| `src/pages/customer-app/CustomerFundWallet.tsx` | Modify (pass bank_source) |
-| `src/components/payments/BankTransferForm.tsx` | Modify (add linked accounts, pass bank_source, show badges) |
-| **Total** | 1 edge function + 7 components modified |
+| `src/pages/admin/AdminBankDirectory.tsx` | Add DBConnectorTab, APIConnectorTab, update Register Bank modes, add Register Connector, add Download Guide button |
+| DOCX generation script (via lov-exec) | Generate `KOB_Bank_Integration_Guide.docx` |
+| Edge functions | No changes needed — all backends already exist |
+
+## Tab Structure After Changes
+
+```text
+Banks | Connectors | DB Connectors | API Connectors | PSU Links | Payments | File Imports | Batch Payments
+```
+
+Total: 8 tabs (up from 6), plus downloadable DOCX guide.
 
