@@ -278,7 +278,7 @@ export function usePOSTill(merchantId: string | undefined) {
         customer_phone: customerPhone || undefined,
       });
       setWalletQR(null);
-      toast.success('Customer payment received!');
+      toast.success(`Customer payment of ${walletQR.amount.toLocaleString()} XAF received via Scan & Pay ✅`);
       return true;
     }
     return false;
