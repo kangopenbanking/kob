@@ -96,22 +96,8 @@ export default function WooCommerceDashboard() {
         return;
       }
 
-      // Get institution
-      const { data: institutionData } = await supabase
-        .from("institutions")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!institutionData) {
-        setLoading(false);
-        return;
-      }
-
-      const institutionId = institutionData.id;
-
-      // Load merchants using helper
-      const merchantsData = await fetchMerchants(institutionId);
+      // Load merchants using user_id (woocommerce_merchants uses user_id, not institution_id)
+      const merchantsData = await fetchMerchants(user.id);
       setMerchants(merchantsData);
 
       // Load transactions

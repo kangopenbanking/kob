@@ -91,6 +91,29 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Idempotency check: look for existing pending/processing tx with same order
+    const { data: existingTx } = await supabaseClient
+      .from('woocommerce_transactions')
+      .select('id, transaction_ref, status')
+      .eq('merchant_id', merchant.id)
+      .eq('woocommerce_order_id', woocommerce_order_id)
+      .in('status', ['pending', 'processing'])
+      .maybeSingle();
+
+    if (existingTx) {
+      console.log(`Idempotent hit: existing ${existingTx.status} transaction ${existingTx.transaction_ref} for order ${woocommerce_order_id}`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          transaction_ref: existingTx.transaction_ref,
+          status: existingTx.status,
+          message: 'Payment already initiated for this order',
+          idempotent: true
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Generate unique transaction reference
     const transactionRef = `wfk_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 

@@ -239,9 +239,9 @@ export default function WooCommerceMerchantRegister() {
                     View Installation Guide
                     <ArrowRight className="ml-2 h-5 w-5" />
                   </Button>
-                  <Button
+                   <Button
                     variant="outline"
-                    onClick={() => navigate("/admin/woocommerce-plugin")}
+                    onClick={() => navigate("/merchant/woo-sync")}
                     className="flex-1 border-2 border-fi-purple text-fi-purple hover:bg-fi-purple/5 rounded-xl py-6 transition-all duration-200 hover:scale-[1.02]"
                   >
                     Manage Integration

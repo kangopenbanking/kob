@@ -223,13 +223,14 @@ class WFK_Payment_Gateway extends WC_Payment_Gateway {
         }
 
         $payment_data = array(
+            'api_key' => $this->api_key,
             'amount' => floatval($order->get_total()),
             'currency' => $order->get_currency(),
             'woocommerce_order_id' => $order_id,
             'customer_email' => $order->get_billing_email(),
             'customer_name' => $order->get_billing_first_name() . ' ' . $order->get_billing_last_name(),
             'customer_phone' => $order->get_billing_phone(),
-            'payment_methods' => $this->payment_methods,
+            'payment_method' => $this->get_selected_payment_method($order),
             'return_url' => $this->get_return_url($order),
             'cancel_url' => $order->get_cancel_order_url(),
             'webhook_url' => WC()->api_request_url('wfk_webhook'),
