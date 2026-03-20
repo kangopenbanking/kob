@@ -90,9 +90,9 @@ const BusinessWallet: React.FC = () => {
   };
 
   const handleWithdrawSubmit = () => {
-    if (numAmount < 1000) { toast.error('Minimum withdrawal is 1,000 XAF'); return; }
-    if (numAmount > availableBalance) { toast.error('Insufficient balance'); return; }
-    if (!selectedAccountId) { toast.error('Select a withdrawal account'); return; }
+    if (numAmount < 1000) { toast.error('Minimum withdrawal amount is 1,000 XAF'); return; }
+    if (numAmount > availableBalance) { toast.error(`Insufficient balance. You have ${formatXAF(availableBalance)} available`); return; }
+    if (!selectedAccountId) { toast.error('Please select a withdrawal destination account'); return; }
     setPinDialog({ open: true, amount: numAmount, accountId: selectedAccountId });
   };
 
