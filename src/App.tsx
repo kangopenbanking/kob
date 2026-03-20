@@ -613,6 +613,7 @@ function App() {
               <Route path="connector/audit" element={<ConnectorAudit />} />
               <Route path="connector/templates" element={<ConnectorTemplates />} />
               <Route path="connector/guide" element={<ConnectorGuide />} />
+              <Route path="connector/onboard" element={<ConnectorOnboard />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
