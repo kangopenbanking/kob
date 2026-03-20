@@ -144,7 +144,7 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
                         ? { backgroundColor: meta.bg, color: 'white' }
                         : {}
                     }
-                    variant={isSelected || tierKey === 'enterprise' ? 'default' : 'outline'}
+                    variant={isSelected || idx === sortedPlans.length - 1 ? 'default' : 'outline'}
                     disabled={subscribing}
                     onClick={(e) => {
                       e.stopPropagation();
