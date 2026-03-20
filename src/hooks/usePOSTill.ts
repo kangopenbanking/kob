@@ -245,9 +245,9 @@ export function usePOSTill(merchantId: string | undefined) {
         customer_phone: customerPhone || undefined,
       });
 
-      toast.success('Payment successful!');
+      toast.success(`Payment of ${total.toLocaleString()} XAF received via ${paymentMethod === 'cash' ? 'cash' : 'Mobile Money'} ✅`);
     } catch (err: any) {
-      toast.error(err.message || 'Checkout failed');
+      toast.error(err.message || 'Checkout could not be completed. Please try again.');
     } finally {
       setIsCheckingOut(false);
     }
