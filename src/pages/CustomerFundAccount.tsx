@@ -138,6 +138,14 @@ const CustomerFundAccount = () => {
                 <Input placeholder="237677123456" value={phone} onChange={e => setPhone(e.target.value)} className="h-11" />
               </div>
             )}
+            {method === "bank_transfer" && (
+              <BankSelector
+                selectedBank={selectedBankCode}
+                onBankChange={(code, name, source) => { setSelectedBankCode(code); setSelectedBankName(name); setSelectedBankSource(source); }}
+                accountNumber={bankAccountNumber}
+                onAccountNumberChange={setBankAccountNumber}
+              />
+            )}
             {(method === "card" || method === "paypal") && (
               <div className="space-y-2">
                 <Label className="text-sm font-semibold">Email</Label>

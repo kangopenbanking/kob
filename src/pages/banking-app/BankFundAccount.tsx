@@ -319,6 +319,22 @@ const BankFundAccount: React.FC = () => {
                     </div>
                   </motion.div>
                 )}
+                {method === 'bank_transfer' && (
+                  <motion.div
+                    key="bank"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <BankSelector
+                      selectedBank={selectedBankCode}
+                      onBankChange={(code, name, source) => { setSelectedBankCode(code); setSelectedBankName(name); setSelectedBankSource(source); }}
+                      accountNumber={bankAccountNumber}
+                      onAccountNumberChange={setBankAccountNumber}
+                    />
+                  </motion.div>
+                )}
               </AnimatePresence>
 
               {/* Submit */}
