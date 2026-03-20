@@ -69,6 +69,32 @@ is_valid = KangOpenBanking.verify_webhook_signature(
     secret="your_secret",
 )`;
 
+const PHP_QUICKSTART = `use KangOpenBanking\\KangOpenBanking;
+
+$kob = new KangOpenBanking([
+    'client_id' => 'your_client_id',
+    'api_key' => 'sbx_your_sandbox_key',
+    'environment' => 'sandbox',
+]);
+
+// List accounts
+$accounts = $kob->accounts->list();
+
+// Create a Mobile Money charge
+$charge = $kob->charges->create([
+    'merchant_id' => 'mch_uuid',
+    'amount' => 5000,
+    'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '237677123456',
+    'tx_ref' => 'order_001',
+]);
+
+// Verify webhook
+$valid = KangOpenBanking::verifyWebhookSignature(
+    $rawBody, $signatureHeader, 'your_secret'
+);`;
+
 const CURL_QUICKSTART = `# 1. Get access token
 curl -X POST https://api.kangopenbanking.com/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
