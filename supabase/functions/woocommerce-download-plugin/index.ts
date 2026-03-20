@@ -297,6 +297,16 @@ class WFK_Payment_Gateway extends WC_Payment_Gateway {
             echo '<p class="wfk-payment-pending">' . esc_html__('Your payment is being processed. You will receive a confirmation once completed.', 'woo-for-kang') . '</p>';
         }
     }
+
+    private function get_selected_payment_method($order) {
+        $phone = $order->get_billing_phone();
+        $currency = $order->get_currency();
+        // Default logic: if phone present and XAF currency, use mobile_money; otherwise card
+        if (!empty($phone) && in_array($currency, array('XAF', 'XOF', 'GHS', 'KES', 'UGX', 'TZS', 'RWF'))) {
+            return 'mobile_money';
+        }
+        return 'card';
+    }
 }
 `;
 
