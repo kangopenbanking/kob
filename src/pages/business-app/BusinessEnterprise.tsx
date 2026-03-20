@@ -276,6 +276,11 @@ export default function BusinessEnterprise() {
         currency={planCurrency}
         subscribing={subscribing}
         onConfirm={handleSubscribe}
+        walletBalance={currentBalance}
+        onFundWallet={() => {
+          setUpgradeModalOpen(false);
+          navigate('/biz/wallet');
+        }}
       />
     </div>
   );
