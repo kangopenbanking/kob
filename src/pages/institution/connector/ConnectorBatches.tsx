@@ -3,11 +3,11 @@ import { ConnectorPageHeader } from "@/components/institution/connector/Connecto
 import { StatusBadge } from "@/components/institution/connector/StatusBadge";
 import { ConnectorEmptyState } from "@/components/institution/connector/ConnectorEmptyState";
 import { useBankConnector } from "@/hooks/useBankConnector";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Banknote, Plus, Download, Loader2, Trash2 } from "lucide-react";
+import { Banknote, Plus, Download, Loader2, Trash2, FileText } from "lucide-react";
 import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,8 @@ export default function ConnectorBatches() {
   const [showCreate, setShowCreate] = useState(false);
   const [batchType, setBatchType] = useState("outgoing_transfers");
   const [items, setItems] = useState<BatchItem[]>([{ beneficiary_name: "", beneficiary_account_number: "", beneficiary_bank_code: "", amount: "", narration: "" }]);
+  const [generating, setGenerating] = useState<string | null>(null);
+  const [downloadFormat, setDownloadFormat] = useState<string>("csv");
   const queryClient = useQueryClient();
 
   const { data: batches, isLoading } = useQuery({
@@ -51,34 +53,30 @@ export default function ConnectorBatches() {
       const validItems = items.filter((i) => i.beneficiary_name && i.amount && parseFloat(i.amount) > 0);
       if (validItems.length === 0) throw new Error("Add at least one valid payment item");
 
-      const totalAmount = validItems.reduce((sum, i) => sum + parseFloat(i.amount), 0);
+      const { data, error } = await supabase.functions.invoke("bank-file-connector", {
+        body: {
+          action: "create_batch",
+          bank_id: bankId,
+          environment: "sandbox",
+          batch_type: batchType,
+          created_by: user?.id,
+          items: validItems.map((i) => ({
+            beneficiary_name: i.beneficiary_name,
+            beneficiary_account_number: i.beneficiary_account_number,
+            beneficiary_bank_code: i.beneficiary_bank_code || null,
+            amount: parseFloat(i.amount),
+            currency: "XAF",
+            narration: i.narration || null,
+          })),
+        },
+      });
 
-      const { data: batch, error: batchErr } = await supabase.from("bank_batch_jobs").insert({
-        bank_id: bankId,
-        batch_type: batchType,
-        environment: "sandbox",
-        status: "draft",
-        created_by: user?.id,
-        totals_json: { items_count: validItems.length, total_amount: totalAmount, currency: "XAF" },
-      }).select().single();
-      if (batchErr) throw batchErr;
-
-      const batchItems = validItems.map((i) => ({
-        batch_id: batch.id,
-        beneficiary_name: i.beneficiary_name,
-        beneficiary_account_number: i.beneficiary_account_number,
-        beneficiary_bank_code: i.beneficiary_bank_code || null,
-        amount: parseFloat(i.amount),
-        currency: "XAF",
-        narration: i.narration || null,
-        status: "pending",
-      }));
-
-      const { error: itemsErr } = await supabase.from("bank_batch_items").insert(batchItems);
-      if (itemsErr) throw itemsErr;
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
     },
     onSuccess: () => {
-      toast.success("Batch created");
+      toast.success("Batch created via backend");
       setShowCreate(false);
       setItems([{ beneficiary_name: "", beneficiary_account_number: "", beneficiary_bank_code: "", amount: "", narration: "" }]);
       queryClient.invalidateQueries({ queryKey: ["connector-batches"] });
@@ -86,24 +84,36 @@ export default function ConnectorBatches() {
     onError: (err: any) => toast.error(err.message),
   });
 
-  const generateCSV = (batchId: string) => {
-    const batch = batches?.find((b) => b.id === batchId);
-    if (!batch) return;
-    // Fetch items and generate CSV
-    supabase.from("bank_batch_items").select("*").eq("batch_id", batchId).then(({ data: batchItems }) => {
-      if (!batchItems || batchItems.length === 0) { toast.error("No items in batch"); return; }
-      const header = "beneficiary_name,beneficiary_account_number,beneficiary_bank_code,amount,currency,narration,reference";
-      const rows = batchItems.map((i) => `${i.beneficiary_name},${i.beneficiary_account_number},${i.beneficiary_bank_code || ""},${i.amount},${i.currency},${i.narration || ""},${i.reference}`);
-      const csv = [header, ...rows].join("\n");
-      const blob = new Blob([csv], { type: "text/csv" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `batch_${batchId.slice(0, 8)}.csv`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success("Batch file downloaded");
-    });
+  const handleGenerateFile = async (batchId: string, fmt: string) => {
+    setGenerating(batchId);
+    try {
+      const { data, error } = await supabase.functions.invoke("bank-file-connector", {
+        body: { action: "generate_batch_file", batch_id: batchId, format: fmt },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      // The edge function returns the file content — trigger download
+      if (data?.content) {
+        const ext = fmt === "pain001" ? "xml" : "csv";
+        const mimeType = fmt === "pain001" ? "application/xml" : "text/csv";
+        const blob = new Blob([data.content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `batch_${batchId.slice(0, 8)}.${ext}`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      toast.success(`${fmt === "pain001" ? "ISO 20022 pain.001" : "CSV"} file generated & stored`);
+      queryClient.invalidateQueries({ queryKey: ["connector-batches"] });
+    } catch (err: any) {
+      toast.error(err?.message || "File generation failed");
+    } finally {
+      setGenerating(null);
+    }
   };
 
   const addItem = () => setItems([...items, { beneficiary_name: "", beneficiary_account_number: "", beneficiary_bank_code: "", amount: "", narration: "" }]);
@@ -164,12 +174,27 @@ export default function ConnectorBatches() {
                       <tr key={b.id} className="border-b border-border/50 hover:bg-muted/30">
                         <td className="p-3 whitespace-nowrap">{format(new Date(b.created_at), "MMM d, HH:mm")}</td>
                         <td className="p-3 capitalize">{b.batch_type.replace(/_/g, " ")}</td>
-                        <td className="p-3">{totals?.items_count ?? "—"}</td>
-                        <td className="p-3 font-medium">{totals?.total_amount?.toLocaleString() ?? "—"} {totals?.currency ?? "XAF"}</td>
+                        <td className="p-3">{totals?.items_count ?? totals?.count ?? "—"}</td>
+                        <td className="p-3 font-medium">{(totals?.total_amount ?? 0).toLocaleString()} {totals?.currency ?? "XAF"}</td>
                         <td className="p-3"><StatusBadge status={b.status} /></td>
-                        <td className="p-3 text-right">
-                          <Button variant="ghost" size="sm" onClick={() => generateCSV(b.id)}>
-                            <Download className="h-4 w-4" />
+                        <td className="p-3 text-right flex items-center justify-end gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleGenerateFile(b.id, "csv")}
+                            disabled={generating === b.id}
+                            title="Generate CSV"
+                          >
+                            {generating === b.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleGenerateFile(b.id, "pain001")}
+                            disabled={generating === b.id}
+                            title="Generate ISO 20022 pain.001"
+                          >
+                            <FileText className="h-4 w-4" />
                           </Button>
                         </td>
                       </tr>
@@ -219,7 +244,7 @@ export default function ConnectorBatches() {
                   <Input placeholder="Bank Code" value={item.beneficiary_bank_code} onChange={(e) => updateItem(idx, "beneficiary_bank_code", e.target.value)} className="col-span-1" />
                   <Input placeholder="Amount" type="number" value={item.amount} onChange={(e) => updateItem(idx, "amount", e.target.value)} className="col-span-1" />
                   <Input placeholder="Narration" value={item.narration} onChange={(e) => updateItem(idx, "narration", e.target.value)} className="col-span-1" />
-                  <Button variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={items.length === 1}><Trash2 className="h-4 w-4 text-red-500" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => removeItem(idx)} disabled={items.length === 1}><Trash2 className="h-4 w-4 text-destructive" /></Button>
                 </div>
               ))}
             </div>
