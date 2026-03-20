@@ -8171,6 +8171,10 @@ export type Database = {
           custom_domain: string | null
           daily_charge_limit: number | null
           daily_payout_limit: number | null
+          domain_cname_target: string | null
+          domain_ssl_status: string | null
+          domain_verification_status: string | null
+          domain_verified_at: string | null
           environment: string
           fee_bearer: string
           id: string
@@ -8201,6 +8205,10 @@ export type Database = {
           custom_domain?: string | null
           daily_charge_limit?: number | null
           daily_payout_limit?: number | null
+          domain_cname_target?: string | null
+          domain_ssl_status?: string | null
+          domain_verification_status?: string | null
+          domain_verified_at?: string | null
           environment?: string
           fee_bearer?: string
           id?: string
@@ -8231,6 +8239,10 @@ export type Database = {
           custom_domain?: string | null
           daily_charge_limit?: number | null
           daily_payout_limit?: number | null
+          domain_cname_target?: string | null
+          domain_ssl_status?: string | null
+          domain_verification_status?: string | null
+          domain_verified_at?: string | null
           environment?: string
           fee_bearer?: string
           id?: string
