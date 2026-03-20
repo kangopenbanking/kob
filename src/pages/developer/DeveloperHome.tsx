@@ -6,6 +6,7 @@ import { SecuritySection } from "@/components/developer/landing/SecuritySection"
 import { CodeSnippetSection } from "@/components/developer/landing/CodeSnippetSection";
 import { SDKSection } from "@/components/developer/landing/SDKSection";
 import { OpenBankingSection } from "@/components/developer/landing/OpenBankingSection";
+import { ArchitectureSection } from "@/components/developer/landing/ArchitectureSection";
 import { AdvancedFeaturesGate } from "@/components/developer/landing/AdvancedFeaturesGate";
 import { DocNavigation } from "@/components/developer/DocNavigation";
 
