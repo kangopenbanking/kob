@@ -844,7 +844,11 @@ export default function MerchantStorefront() {
                         </p>
                       </div>
                     </div>
-                    <Badge className="bg-[hsl(var(--fi-green))]/10 text-[hsl(var(--fi-green))] border-[hsl(var(--fi-green))]/20 px-4 py-2 text-xs font-bold">Active</Badge>
+                    {subscription.status === 'active' ? (
+                      <Badge className="bg-[hsl(var(--fi-green))]/10 text-[hsl(var(--fi-green))] border-[hsl(var(--fi-green))]/20 px-4 py-2 text-xs font-bold">Active</Badge>
+                    ) : (
+                      <Badge variant="destructive" className="px-4 py-2 text-xs font-bold">Expired</Badge>
+                    )}
                   </div>
 
                   {/* Expiry warning */}
