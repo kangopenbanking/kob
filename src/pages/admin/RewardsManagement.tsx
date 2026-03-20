@@ -19,6 +19,7 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 // ─── Referrals Tab ──────────────────────────────────────────────────
 function ReferralsTab() {
@@ -390,10 +391,8 @@ function RewardSettingsTab() {
 export default function RewardsManagement() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Rewards & Referral Management</h1>
-        <p className="text-muted-foreground">Manage customer rewards, referrals, and configuration</p>
-      </div>
+      <AdminPageHeader icon={Gift} title="Rewards & Referral Management" description="Manage rewards programs, referral campaigns, and point systems" />
+
 
       <Tabs defaultValue="referrals" className="space-y-4">
         <TabsList>

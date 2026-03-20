@@ -10,7 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Search, UserPlus, Shield, Ban, Trash2, RefreshCw, Eye, MoreVertical, ShieldOff, UserCheck } from 'lucide-react';
+import { Search, UserPlus, Shield, Ban, Trash2, RefreshCw, Eye, MoreVertical, ShieldOff, UserCheck, Users} from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
@@ -18,6 +18,7 @@ import { UserDetailsDialog } from '@/components/admin/UserDetailsDialog';
 import { CreateUserDialog } from '@/components/admin/CreateUserDialog';
 import { SearchFilter } from '@/components/SearchFilter';
 import { MerchantIntegrityAlert } from '@/components/admin/MerchantIntegrityAlert';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface UserProfile {
   id: string;
@@ -259,7 +260,9 @@ export default function UserManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={Users} title="User Management" description="Manage platform users, roles, and permissions" />
+
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -268,10 +271,6 @@ export default function UserManagement() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">Manage platform users, roles, and permissions</p>
-        </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <UserPlus className="mr-2 h-4 w-4" />
           Create User

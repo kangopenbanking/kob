@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from '@/components/ui/textarea';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Search, CheckCircle, XCircle, Clock, FileText, Users, Building2, Code, User } from 'lucide-react';
+import { Loader2, Search, CheckCircle, XCircle, Clock, FileText, Users, Building2, Code, User, UserPlus} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-muted text-muted-foreground',
@@ -105,10 +106,8 @@ export default function OnboardingManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold text-foreground">Onboarding Management</h1>
-        <p className="text-muted-foreground mt-1">Review and manage onboarding applications across all account types</p>
-      </div>
+      <AdminPageHeader icon={UserPlus} title="Onboarding Management" description="Track and manage user onboarding workflows" />
+
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

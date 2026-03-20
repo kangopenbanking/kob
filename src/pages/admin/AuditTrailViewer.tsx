@@ -8,8 +8,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Download, Filter, Search, Calendar } from "lucide-react";
+import { Download, Filter, Search, Calendar, Eye} from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type ActionType = "all" | "create" | "update" | "delete" | "login" | "logout" | "payment" | "consent";
 
@@ -129,13 +130,9 @@ export default function AuditTrailViewer() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={Eye} title="Audit Trail Viewer" description="Detailed audit event viewer with advanced filtering" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Audit Trail Viewer</h1>
-          <p className="text-muted-foreground">
-            Comprehensive audit logging with advanced filtering and export
-          </p>
-        </div>
         <div className="flex gap-2">
           <Button onClick={exportToCSV} variant="outline">
             <Download className="mr-2 h-4 w-4" />

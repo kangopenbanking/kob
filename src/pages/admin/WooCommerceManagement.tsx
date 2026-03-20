@@ -8,8 +8,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Store, Download, RefreshCw, Eye, EyeOff, Copy, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Store, Download, RefreshCw, Eye, EyeOff, Copy, CheckCircle, XCircle, Clock, ShoppingCart} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface Merchant {
   id: string;
@@ -227,7 +228,9 @@ export default function WooCommerceManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={ShoppingCart} title="WooCommerce Integration" description="Manage merchants and monitor WooCommerce transactions" />
+
         <RefreshCw className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
@@ -236,10 +239,6 @@ export default function WooCommerceManagement() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">WooCommerce Integration</h1>
-          <p className="text-muted-foreground">Manage merchants and monitor transactions</p>
-        </div>
         <Button onClick={loadData} variant="outline" size="sm">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Shield, AlertTriangle, Search, Activity, Eye } from "lucide-react";
+import { Shield, AlertTriangle, Search, Activity, Eye, ShieldAlert} from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function FraudDetection() {
   const queryClient = useQueryClient();
@@ -59,10 +60,8 @@ export default function FraudDetection() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Fraud Detection & AML</h1>
-        <p className="text-muted-foreground mt-2">Manage fraud rules, suspicious activity monitoring, and AML compliance</p>
-      </div>
+      <AdminPageHeader icon={ShieldAlert} title="Fraud Detection & AML" description="Monitor and investigate suspicious transactions and fraud patterns" />
+
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium">Active Rules</CardTitle></CardHeader><CardContent><div className="text-2xl font-bold">{fraudRules?.filter((r) => r.is_active).length || 0}</div></CardContent></Card>

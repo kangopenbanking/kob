@@ -10,8 +10,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Key, FileText, ExternalLink, CheckCircle, XCircle, Clock, Shield, Ban, Trash2 } from "lucide-react";
+import { Key, FileText, ExternalLink, CheckCircle, XCircle, Clock, Shield, Ban, Trash2, FileSearch} from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface TPPRegistration {
   id: string;
@@ -150,7 +151,9 @@ export default function TPPRegistrationReview() {
   const TPPCard = ({ tpp }: { tpp: TPPRegistration }) => (
     <Card>
       <CardHeader>
-        <div className="flex items-start justify-between">
+        <div className="space-y-6 flex items-start justify-between">
+      <AdminPageHeader icon={FileSearch} title="TPP Registration Review" description="Review third-party provider registration applications" />
+
           <div>
             <CardTitle className="text-lg">{tpp.client_name}</CardTitle>
             <CardDescription>

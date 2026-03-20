@@ -16,6 +16,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Shield, Users, Trash2, UserPlus, Search, Key, Settings, CheckCircle, AlertCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const SYSTEM_ROLES = ["admin", "personal", "institution", "merchant", "tpp", "staff", "moderator", "developer"] as const;
 type SystemRole = (typeof SYSTEM_ROLES)[number];
@@ -228,17 +229,13 @@ export default function AccessRoleManagement() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Shield} title="Access & Role Management" description="Manage user roles, permissions, and access control policies" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 shadow-sm">
             <Key className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Access & Role Management</h1>
-            <p className="text-xs text-muted-foreground">
-              {totalAssignments} total assignments across {new Set(userRoles?.map(r => r.user_id)).size} users
-            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">

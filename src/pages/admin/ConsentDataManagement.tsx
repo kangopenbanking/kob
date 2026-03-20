@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { logger } from '@/lib/logger';
 import { loggedQuery } from '@/lib/database-logger';
-import { Loader2, Trash2, Database, Calendar, BarChart3, AlertCircle } from "lucide-react";
+import { Loader2, Trash2, Database, Calendar, BarChart3, AlertCircle, FileCheck} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Table,
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { format, subDays, subYears } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface ConsentStats {
   total_events: number;
@@ -240,7 +241,9 @@ export default function ConsentDataManagement() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div className="space-y-6 flex items-center justify-center min-h-[400px]">
+      <AdminPageHeader icon={FileCheck} title="Consent Data Management" description="Manage open banking consent records and data access permissions" />
+
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -249,12 +252,6 @@ export default function ConsentDataManagement() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Consent Data Management</h1>
-          <p className="text-muted-foreground mt-2">
-            Monitor consent events and manage GDPR data retention compliance
-          </p>
-        </div>
         <Button
           onClick={handleManualCleanup}
           disabled={cleanupLoading || (stats?.events_older_than_2_years || 0) === 0}

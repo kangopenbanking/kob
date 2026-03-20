@@ -26,6 +26,7 @@ import { API_CONFIG } from "@/config/api";
 import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
 import type { WalkthroughConfig, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
 import { AdminStorefrontSlider } from "@/components/storefront/AdminStorefrontSlider";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 // ─── Types ───
 interface RewardsConfig {
@@ -1543,6 +1544,8 @@ export default function CustomerAppManagement() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Users} title="Customer App Management" description="Monitor customer accounts, features, and app activity" />
+
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Customer App Management</h1>
         <p className="text-muted-foreground">Manage customer-facing mobile applications per institution</p>

@@ -14,6 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Plus, Key, TrendingUp, DollarSign, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import * as bcrypt from 'bcryptjs';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function CreditManagement() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -195,7 +196,9 @@ export default function CreditManagement() {
 
   if (loadingClients) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={TrendingUp} title="Credit API Management" description="Manage B2B credit score API clients and scoring rules" />
+
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -204,10 +207,6 @@ export default function CreditManagement() {
   return (
     <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold">Credit API Management</h1>
-            <p className="text-muted-foreground">Manage B2B credit score API clients</p>
-          </div>
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogTrigger asChild>
             <Button>

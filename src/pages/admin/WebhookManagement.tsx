@@ -11,8 +11,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, RefreshCw, Check, X, AlertCircle } from "lucide-react";
+import { Plus, RefreshCw, Check, X, AlertCircle, Webhook} from "lucide-react";
 import { Label } from "@/components/ui/label";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function WebhookManagement() {
   const [open, setOpen] = useState(false);
@@ -121,11 +122,9 @@ export default function WebhookManagement() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={Webhook} title="Webhook Management" description="Configure and monitor institution webhooks and event subscriptions" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Webhook Management</h1>
-          <p className="text-muted-foreground">Configure and monitor institution webhooks</p>
-        </div>
         
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>

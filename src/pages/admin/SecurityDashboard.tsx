@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Shield, Key, AlertTriangle, RefreshCw, CheckCircle2, Lock, Users, FileWarning, Eye } from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function SecurityDashboard() {
   const [jwtSecrets, setJwtSecrets] = useState<any[]>([]);
@@ -136,7 +137,9 @@ export default function SecurityDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
+      <div className="space-y-6 flex items-center justify-center h-96">
+      <AdminPageHeader icon={Shield} title="Security Dashboard" description="Security overview, threat monitoring, and compliance status" />
+
         <RefreshCw className="h-8 w-8 animate-spin text-primary" />
       </div>
     );

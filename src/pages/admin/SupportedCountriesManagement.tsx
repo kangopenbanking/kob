@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Pencil, Trash2, Globe, Smartphone, Building2 } from "lucide-react";
 import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface CountryRow {
   id: string;
@@ -103,6 +104,8 @@ export default function SupportedCountriesManagement() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Globe} title="Supported Countries" description="Manage supported countries, currencies, and regional settings" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold flex items-center gap-2"><Globe className="h-6 w-6 text-primary" /> Supported Countries</h1>

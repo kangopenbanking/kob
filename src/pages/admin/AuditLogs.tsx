@@ -10,11 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Search, Download, Filter, Calendar as CalendarIcon, RefreshCw } from 'lucide-react';
+import { Search, Download, Filter, Calendar as CalendarIcon, RefreshCw, ScrollText} from "lucide-react";
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
 import { loggedQuery, loggedAdminCheck } from '@/lib/database-logger';
 import { format } from 'date-fns';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface AuditLog {
   id: string;
@@ -176,7 +177,9 @@ export default function AuditLogs() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={ScrollText} title="Audit Logs" description="Complete audit trail of system activities and changes" />
+
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -184,10 +187,6 @@ export default function AuditLogs() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Audit Logs</h1>
-          <p className="text-muted-foreground">Complete audit trail of system activities</p>
-        </div>
 
       <Card>
         <CardHeader>

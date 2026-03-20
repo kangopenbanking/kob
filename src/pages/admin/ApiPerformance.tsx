@@ -6,7 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
-import { TrendingUp, TrendingDown, Activity, AlertCircle, Clock, Zap } from "lucide-react";
+import { TrendingUp, TrendingDown, Activity, AlertCircle, Clock, Zap, BarChart3} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d"];
 
@@ -94,11 +95,9 @@ export default function ApiPerformance() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={BarChart3} title="API Performance Analytics" description="Monitor response times, error rates, and endpoint usage" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">API Performance Analytics</h1>
-          <p className="text-muted-foreground">Monitor response times, error rates, and endpoint usage</p>
-        </div>
         <Select value={timeRange} onValueChange={setTimeRange}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Select time range" />

@@ -27,10 +27,10 @@ import {
   AlertCircle,
   RefreshCw,
   Ban,
-  Settings
-} from "lucide-react";
+  Settings, BadgeCheck} from "lucide-react";
 import { format } from "date-fns";
 import { API_CONFIG } from "@/config/api";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface Institution {
   id: string;
@@ -423,7 +423,9 @@ export default function InstitutionVerification() {
     return (
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <div className="flex items-start justify-between">
+          <div className="space-y-6 flex items-start justify-between">
+      <AdminPageHeader icon={BadgeCheck} title="Institution Verification" description="Review and verify financial institution applications" />
+
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />

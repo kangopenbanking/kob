@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Zap, Activity, TrendingUp, TrendingDown, AlertTriangle } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const ENDPOINTS = [
   "/aisp-accounts",
@@ -86,12 +87,8 @@ export default function LoadTesting() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Load Testing Tool</h1>
-        <p className="text-muted-foreground">
-          Simulate high traffic and stress test your edge functions
-        </p>
-      </div>
+      <AdminPageHeader icon={Zap} title="Load Testing Tool" description="Stress-test API endpoints and measure performance under load" />
+
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Configuration */}

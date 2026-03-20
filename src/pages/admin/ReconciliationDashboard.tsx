@@ -6,8 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RefreshCw, CheckCircle, AlertTriangle, XCircle, FileText, CreditCard } from "lucide-react";
+import { RefreshCw, CheckCircle, AlertTriangle, XCircle, FileText, CreditCard, ArrowLeftRight} from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const invokeFileConnector = async (action: string, params: any = {}) => {
   const { data, error } = await supabase.functions.invoke("bank-file-connector", {
@@ -105,11 +106,9 @@ export default function ReconciliationDashboard() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={ArrowLeftRight} title="Reconciliation Dashboard" description="Bank reconciliation records and settlement matching" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Reconciliation Dashboard</h1>
-          <p className="text-muted-foreground mt-2">Cross-channel reconciliation for Mobile Money, Cards, Bank Transfers, and File-Based Batches</p>
-        </div>
         <Button variant="outline" onClick={() => refetch()}><RefreshCw className="h-4 w-4 mr-2" />Refresh</Button>
       </div>
 

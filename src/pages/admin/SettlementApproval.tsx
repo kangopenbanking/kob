@@ -6,8 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/use-toast";
-import { CheckCircle2, XCircle, Pause, Eye, Building2, Calendar, DollarSign } from "lucide-react";
+import { CheckCircle2, XCircle, Pause, Eye, Building2, Calendar, DollarSign, CheckCircle} from "lucide-react";
 import { TransactionDetailSheet } from "@/components/ui/transaction-detail-sheet";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function SettlementApproval() {
   const queryClient = useQueryClient();
@@ -85,10 +86,8 @@ export default function SettlementApproval() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Settlement Approval</h1>
-          <p className="text-muted-foreground">Review and approve pending institutional settlements</p>
-        </div>
+      <AdminPageHeader icon={CheckCircle} title="Settlement Approval" description="Review and approve pending institutional settlements" />
+
         <div className="grid gap-4">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-32" />)}
         </div>

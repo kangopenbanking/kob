@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { ArrowLeftRight, Plus, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const CURRENCIES = ["XAF", "XOF", "EUR", "USD", "GBP", "NGN"];
 
@@ -56,11 +57,9 @@ export default function ExchangeRateManagement() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={ArrowLeftRight} title="Exchange Rate Management" description="Configure and monitor currency exchange rates" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Exchange Rate Management</h1>
-          <p className="text-muted-foreground mt-2">Set and manage currency exchange rates for XAF/XOF/EUR/USD</p>
-        </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild><Button><Plus className="h-4 w-4 mr-2" />Add Rate</Button></DialogTrigger>
           <DialogContent>

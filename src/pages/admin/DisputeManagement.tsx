@@ -12,8 +12,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
-import { Search, CheckCircle, Clock, XCircle, AlertTriangle, Eye, Shield } from "lucide-react";
+import { Search, CheckCircle, Clock, XCircle, AlertTriangle, Eye, Shield, Scale} from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function DisputeManagement() {
   const queryClient = useQueryClient();
@@ -133,10 +134,8 @@ export default function DisputeManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Dispute & Chargeback Management</h1>
-        <p className="text-muted-foreground mt-2">Manage payment disputes, chargebacks, and evidence across all channels</p>
-      </div>
+      <AdminPageHeader icon={Scale} title="Dispute & Chargeback Management" description="Handle payment disputes, chargebacks, and resolution workflows" />
+
 
       {/* Combined Stats */}
       <div className="grid gap-4 md:grid-cols-5">

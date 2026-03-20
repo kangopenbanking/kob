@@ -9,9 +9,10 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, CheckCircle2, XCircle, AlertTriangle, Search, Store, Clock, Eye, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, AlertTriangle, Search, Store, Clock, Eye, ExternalLink, ShieldCheck} from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type StoreStatus = "pending" | "approved" | "rejected" | "suspended";
 
@@ -117,14 +118,12 @@ export default function AdminMarketplaceModeration() {
     all: stores.length,
   };
 
-  if (loading) return <div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  if (loading) return <div className="space-y-6 flex justify-center py-20">
+      <AdminPageHeader icon={ShieldCheck} title="Marketplace Moderation" description="Review and approve merchant storefronts for the consumer marketplace" />
+<Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Marketplace Moderation</h1>
-        <p className="text-muted-foreground">Review and approve merchant storefronts for the consumer marketplace</p>
-      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

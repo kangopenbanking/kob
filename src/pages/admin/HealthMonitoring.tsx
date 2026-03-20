@@ -24,6 +24,7 @@ import {
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface HealthCheck {
   name: string;
@@ -269,14 +270,10 @@ export default function HealthMonitoring() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Activity} title="Health Monitoring" description="Platform health metrics, uptime, and service status monitoring" />
+
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-4xl font-bold">Edge Functions Health Monitor</h1>
-            <p className="text-muted-foreground mt-2">
-              Real-time health status of all 83 edge functions
-            </p>
-          </div>
           <Button onClick={runHealthChecks} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Checking...' : 'Refresh'}

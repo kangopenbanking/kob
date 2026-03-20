@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "@/components/ui/use-toast";
-import { FileText, Mail, CheckCircle2, Download, XCircle } from "lucide-react";
+import { FileText, Mail, CheckCircle2, Download, XCircle, Receipt} from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function InvoiceManagement() {
   const queryClient = useQueryClient();
@@ -97,10 +98,8 @@ export default function InvoiceManagement() {
   if (isLoading) {
     return (
       <div className="p-6 space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Invoice Management</h1>
-          <p className="text-muted-foreground">Manage institutional invoices and billing</p>
-        </div>
+      <AdminPageHeader icon={Receipt} title="Invoice Management" description="Manage institutional invoices and billing cycles" />
+
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
         </div>

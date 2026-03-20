@@ -7,7 +7,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { AlertCircle, CheckCircle2, XCircle, Clock, RefreshCw } from "lucide-react";
+import { AlertCircle, CheckCircle2, XCircle, Clock, RefreshCw, Bell} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 type Severity = "info" | "warning" | "error" | "critical";
 type Status = "active" | "acknowledged" | "resolved";
@@ -146,11 +147,9 @@ export default function SystemAlerts() {
 
   return (
     <div className="container mx-auto p-6 space-y-6">
+      <AdminPageHeader icon={Bell} title="System Alerts" description="Monitor and manage system alerts in real-time" />
+
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">System Alerts Dashboard</h1>
-          <p className="text-muted-foreground">Monitor and manage system alerts in real-time</p>
-        </div>
         <Button onClick={() => refetch()} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh

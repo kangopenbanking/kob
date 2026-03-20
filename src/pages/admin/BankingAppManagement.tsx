@@ -24,6 +24,7 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import { detectProvider, type MediaSection } from "@/components/pwa/MediaBanner";
 import type { SectionStyle, SectionStyles, CardSize, WalkthroughConfig, HomeSectionKey, LayoutStyle, CardColors, CardColorOverride } from "@/components/pwa/TenantProvider";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 // ─── Types ───
 interface AppConfig {
@@ -1389,6 +1390,8 @@ export default function BankingAppManagement() {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Smartphone} title="Banking App Management" description="Manage PWA banking application features and configurations" />
+
       <div>
         <h1 className="text-2xl font-bold flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Banking App Management</h1>
         <p className="text-muted-foreground">Manage individual banking app instances, view per-institution user accounts, transactions, and settings</p>

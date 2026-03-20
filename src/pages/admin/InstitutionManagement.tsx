@@ -10,8 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Building2, CheckCircle, AlertCircle, Clock, Ban, Trash2, RotateCcw } from "lucide-react";
+import { Building2, CheckCircle, AlertCircle, Clock, Ban, Trash2, RotateCcw, Landmark} from "lucide-react";
 import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function InstitutionManagement() {
   const [search, setSearch] = useState("");
@@ -74,10 +75,8 @@ export default function InstitutionManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Institution Management</h1>
-        <p className="text-muted-foreground">Manage banks, credit unions, and financial institutions</p>
-      </div>
+      <AdminPageHeader icon={Landmark} title="Institution Management" description="Manage banks, credit unions, and financial institutions" />
+
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardContent className="pt-6 flex items-center gap-3">

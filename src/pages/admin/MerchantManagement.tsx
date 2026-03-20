@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Store, Eye, Shield, CheckCircle, XCircle, AlertCircle, Key, Landmark, Clock, Ban, Trash2, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 export default function MerchantManagement() {
   const [search, setSearch] = useState("");
@@ -157,10 +158,8 @@ export default function MerchantManagement() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Merchant Management</h1>
-        <p className="text-muted-foreground">Review, approve, and manage gateway merchant accounts</p>
-      </div>
+      <AdminPageHeader icon={Store} title="Merchant Management" description="Review, approve, and manage gateway merchant accounts" />
+
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card><CardContent className="pt-6 flex items-center gap-3">

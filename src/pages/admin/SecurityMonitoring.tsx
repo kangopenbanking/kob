@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, Shield, Ban, RefreshCw, Clock } from 'lucide-react';
+import { AlertCircle, Shield, Ban, RefreshCw, Clock, ShieldAlert} from "lucide-react";
 import { toast } from 'sonner';
 import { logger } from '@/lib/logger';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface SuspiciousActivity {
   id: string;
@@ -147,7 +148,9 @@ export default function SecurityMonitoring() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="space-y-6 flex items-center justify-center min-h-screen">
+      <AdminPageHeader icon={ShieldAlert} title="Security Monitoring" description="Monitor security events, threats, and access patterns" />
+
         <RefreshCw className="h-8 w-8 animate-spin" />
       </div>
     );
@@ -155,10 +158,6 @@ export default function SecurityMonitoring() {
 
   return (
     <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold">Security Monitoring</h1>
-          <p className="text-muted-foreground">Monitor security events and threats</p>
-        </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
