@@ -227,9 +227,7 @@ export default function BusinessKYCReview() {
     <Card className="border-border/40">
       <CardContent className="p-6 space-y-4">
         {[1, 2, 3].map(i => (
-          <div key={i} className="space-y-6 flex items-center gap-4">
-      <AdminPageHeader icon={ClipboardCheck} title="Business KYC Review" description="Review and verify business KYC documentation and submissions" />
-
+          <div key={i} className="flex items-center gap-4">
             <Skeleton className="h-10 w-10 rounded-lg" />
             <div className="flex-1 space-y-2">
               <Skeleton className="h-4 w-1/3" />
