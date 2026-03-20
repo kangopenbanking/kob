@@ -1,172 +1,222 @@
 
 
-# KOB Bank Connector Kit — FI Portal Implementation Plan
-
-## Current State
-
-**FI Portal (`/fi-portal`)** is the bank/institution dashboard with:
-- `InstitutionLayout.tsx` — sidebar + header with `NotificationCenter`
-- `navigation-config.ts` — 9 nav sections, 40+ routes
-- `useStaffPermissions` hook — section-based access via `staff_portal_permissions` table
-- `RoleGuard` with `allowedRoles: ['institution', 'staff']`
-- All routes nested under `/fi-portal/*` in `App.tsx`
-
-**Backend already exists:**
-- `bank-file-connector` edge function with 18 actions (upload, mapping, ingestion, batch, status, sandbox)
-- 7 new tables: `bank_file_uploads`, `bank_file_rows`, `bank_data_mappings`, `ingestion_runs`, `bank_batch_jobs`, `bank_batch_items`, `bank_status_events`
-- `bank-files` storage bucket
-- RLS: currently admin + service_role only (needs bank-scoped policies for FI users)
-
-**Gap:** Zero FI-portal pages exist for the connector kit. All file connector UI is admin-only (`AdminBankDirectory.tsx`). Banks cannot self-serve.
+# KOB v1 Full Inter-Banking Gap Audit
+**Scope:** Banks (API-less) · Merchants/Businesses · Developers · Consumer App · Banking PWA · Business App
 
 ---
 
-## Architecture Decisions
+## 1. Executive Summary
 
-1. **Routes:** All new pages under `/fi-portal/connector/*` — fits existing nested layout pattern
-2. **Nav section:** New "Bank Connector Kit" section in `navigation-config.ts` with `sectionKey: 'connector'`
-3. **RBAC:** Leverage existing `staff_portal_permissions` + `useStaffPermissions` for section-level gating. Add `connector` to `ALL_PORTAL_SECTIONS`. Backend calls use institution's `bank_id` resolved from the logged-in user's institution.
-4. **Bank ID resolution:** Create a small hook `useBankConnector` that resolves the institution's linked `bank_id` from the `banks` table (via `institution_id` or `user_id`).
-5. **RLS:** Add bank-scoped RLS policies so institution owners can read/write their own bank's connector data.
-6. **Reusable components:** Create a shared `FIPageHeader` (adapting `AdminPageHeader` for FI context) and shared status badge/table skeleton components.
+The KOB platform is **85-90% production-ready** as a full inter-banking ecosystem. There are **12 actionable gaps** across 4 severity levels that prevent it from being a complete, end-to-end interbank platform where all stakeholder types can fully operate.
 
 ---
 
-## Phase 1 — Infrastructure (DB + RBAC + Navigation)
+## 2. Gap Matrix
 
-### 1a. Database Migration
-- Add RLS policies to all 7 connector tables allowing institution owners to access rows matching their `bank_id`:
-  - `bank_file_uploads`, `bank_file_rows`, `bank_data_mappings`, `ingestion_runs`, `bank_batch_jobs`, `bank_batch_items`, `bank_status_events`
-  - Pattern: `USING (bank_id IN (SELECT id FROM banks WHERE institution_id IN (SELECT id FROM institutions WHERE user_id = auth.uid())))`
-- Add `connector` to any permission enums if needed
-- Add `connector` section key entries for the `ALL_PORTAL_SECTIONS` array
-
-### 1b. Navigation Config
-- Add new section to `navigation-config.ts`:
-  ```
-  "Bank Connector Kit" section with items:
-  - Overview          /fi-portal/connector           (sectionKey: 'connector')
-  - Uploads & Imports /fi-portal/connector/uploads    (sectionKey: 'connector')
-  - Mapping Profiles  /fi-portal/connector/mappings   (sectionKey: 'connector')
-  - Batch Payments    /fi-portal/connector/batches    (sectionKey: 'connector')
-  - Status Files      /fi-portal/connector/status     (sectionKey: 'connector')
-  - Reconciliation    /fi-portal/connector/reconciliation (sectionKey: 'connector')
-  - Connector Health  /fi-portal/connector/health     (sectionKey: 'connector')
-  - Audit Log         /fi-portal/connector/audit      (sectionKey: 'connector')
-  - Templates & Guides /fi-portal/connector/templates (sectionKey: 'connector')
-  ```
-
-### 1c. Routes in App.tsx
-- Add 9 new `<Route>` entries under the `/fi-portal` parent route
-- Create 9 new page components in `src/pages/institution/connector/`
-
-### 1d. Shared Hook: `useBankConnector`
-- Resolves current user's `bank_id` from `banks` table via institution ownership
-- Returns `{ bankId, bankName, loading, error }`
-- Used by all connector pages to scope API calls
-
-### 1e. Shared Components
-- `src/components/institution/connector/ConnectorPageHeader.tsx` — solid primary banner (matches admin style)
-- `src/components/institution/connector/StatusBadge.tsx` — reusable status badges
-- `src/components/institution/connector/ConnectorEmptyState.tsx` — empty states with template download CTAs
+| # | Gap | Severity | Stakeholder | Area |
+|---|-----|----------|-------------|------|
+| 1 | DB Connector has no production sync engine | **CRITICAL** | Banks | Bank Connector |
+| 2 | MFA OTP delivery is a `console.log` stub | **CRITICAL** | All | Security |
+| 3 | Kafka/RabbitMQ adapters use HTTP proxies only — no native drivers | **HIGH** | Banks | MQ Connector |
+| 4 | No `connector_pull` implementation (KOB → Bank REST API) | **HIGH** | Banks | Bank Connector |
+| 5 | Interbank outbox cron not scheduled | **HIGH** | Banks | Interbank |
+| 6 | No bank self-service onboarding flow in FI Portal | **HIGH** | Banks | FI Portal |
+| 7 | SDKs are documentation-only (no published packages) | **MEDIUM** | Developers | Developer Portal |
+| 8 | Virtual cards service degraded | **MEDIUM** | Consumers | Consumer App |
+| 9 | No webhook retry dashboard for merchants | **MEDIUM** | Merchants | Business App |
+| 10 | No merchant dispute response UI in Business App | **MEDIUM** | Merchants | Business App |
+| 11 | Business App missing invoice/billing module | **LOW** | Merchants | Business App |
+| 12 | No automated E2E contract test runner (CI) | **LOW** | Developers | DevOps |
 
 ---
 
-## Phase 2 — Pages (9 pages, all fully functional)
+## 3. Detailed Gap Analysis
 
-Each page uses `ConnectorPageHeader`, skeleton loading, empty states, and calls `bank-file-connector` edge function.
+### GAP 1: DB Connector — Production Sync Not Implemented (CRITICAL)
 
-### Page 1: Connector Overview (`/fi-portal/connector`)
-- Integration mode card, data freshness cards (last import per type)
-- Import health widget (7-day success/fail)
-- Quick action buttons (upload, view errors, generate batch, upload status)
-- Recent activity feed (from audit/ingestion_runs)
+**File:** `supabase/functions/bank-db-connector/index.ts` lines 335-342
 
-### Page 2: Uploads & Imports (`/fi-portal/connector/uploads`)
-- Upload panel: file_type dropdown, environment selector, mapping profile selector, file picker
-- Imports table with filters (file_type, status, date range), pagination
-- Import detail dialog: metadata, row counts, error preview, download errors CSV, reprocess button
+The `executeSync()` function returns `not_implemented` for production mode. Sandbox generates mock data, but real DB polling (PostgreSQL, MySQL, Oracle) has no driver. The `test_connection` action (line 144) is also simulated — it validates config shape but never opens a TCP socket.
 
-### Page 3: Mapping Profiles (`/fi-portal/connector/mappings`)
-- Tabs by file_type (accounts/balances/transactions/beneficiaries)
-- Mapping list with version, status, actions (view, clone, activate, deactivate)
-- Mapping editor dialog: CSV header detection, canonical field mapping via dropdowns, transform builder, validation preview
-- Save as new version, activate button
+**Impact:** Banks that want DB-to-DB integration cannot use this in production.
 
-### Page 4: Templates & Guides (`/fi-portal/connector/templates`)
-- Download CSV templates per file_type (calls `generate_sandbox_files` action)
-- Required columns reference table
-- Common errors and fixes guide
-- Static content + download buttons
-
-### Page 5: Batch Payments (`/fi-portal/connector/batches`)
-- Batch list with filters (status, date range), pagination
-- Create batch dialog: manual item entry or CSV upload for payout list
-- Generate file button (CSV / pain.001 format selector)
-- Download generated file
-- Status progression display
-
-### Page 6: Status Files (`/fi-portal/connector/status`)
-- Upload status file panel (select batch or auto-match)
-- Status imports table
-- Mismatch resolution interface: unmatched references, manual match, mark external, request re-upload
-
-### Page 7: Reconciliation (`/fi-portal/connector/reconciliation`)
-- Period selector (daily/weekly/monthly)
-- KPI cards: expected total, executed total, mismatches
-- Mismatch queue table with filters
-- Resolve mismatch dialog (requires reason)
-- Export reconciliation report CSV
-
-### Page 8: Connector Health (`/fi-portal/connector/health`)
-- SFTP status indicator
-- Last file received timestamp
-- Processing queue status
-- Alert cards for failures or missing imports
-
-### Page 9: Audit Log (`/fi-portal/connector/audit`)
-- Filterable table: time, actor, action_type, entity, entity_id, result, correlation_id
-- Pulls from `ingestion_runs` + `bank_file_uploads` activity
+**Fix:** Build a proxy-based DB adapter that routes queries through a secure relay service (since Deno Edge Functions cannot natively connect to external databases via TCP). This requires an intermediary microservice or a Deno-compatible HTTP-to-SQL bridge.
 
 ---
 
-## Phase 3 — Notifications
+### GAP 2: MFA OTP Delivery is a Console.log Stub (CRITICAL)
 
-- Extend existing `notifyUser` / `notifyAdmins` calls in `bank-file-connector` to also notify the uploading bank user on:
-  - Import success/failure/partial
-  - Batch file generated
-  - Status file processed
-  - Reconciliation mismatch detected
-- Notification icon: `'bank_transfer'` or new `'connector'` icon
-- These appear in the existing `NotificationCenter` in the FI portal header
+**Files:**
+- `supabase/functions/identity-mfa/index.ts` line 186: `// TODO: Actually send the code via SMS/email`
+- `supabase/functions/identity-login/index.ts` line 136: `// TODO: Send OTP via SMS/email`
 
----
+MFA challenge codes are generated and stored but never delivered to the user. They are only logged to console.
 
-## Phase 4 — Documentation
+**Impact:** MFA is non-functional for all users. Security-critical for banking.
 
-New markdown files:
-- `docs/bank-dashboard-upgrade/baseline/ui-route-map.md`
-- `docs/bank-dashboard-upgrade/baseline/rbac-map.md`
-- `docs/public/banks/connector-kit-file-based.md`
-- `docs/public/banks/csv-templates.md`
-- `docs/public/banks/status-files-reconciliation.md`
-- `docs/bank-dashboard-upgrade/final/report.md`
+**Fix:** Wire MFA delivery through the existing `phone-auth-send-otp` (for SMS/WhatsApp) and `managed-send-email` (for email) edge functions.
 
 ---
 
-## File Summary
+### GAP 3: Kafka/RabbitMQ — HTTP Proxy Only (HIGH)
 
-| Category | Files | Count |
-|---|---|---|
-| DB Migration | RLS policies for bank-scoped access | 1 |
-| Navigation | `navigation-config.ts` (modified) | 1 |
-| Routes | `App.tsx` (modified, 9 new routes) | 1 |
-| Shared hook | `useBankConnector.ts` (new) | 1 |
-| Shared components | `ConnectorPageHeader`, `StatusBadge`, `ConnectorEmptyState` | 3 |
-| Page components | 9 new pages in `src/pages/institution/connector/` | 9 |
-| Edge function | `bank-file-connector` (minor: add bank-scoped auth) | 1 |
-| Docs | 6 markdown files | 6 |
-| **Total** | | **~23 files** |
+The Kafka adapter uses Confluent REST Proxy and RabbitMQ uses Management HTTP API. These are fine for low-throughput scenarios but:
+- No consumer group management lifecycle
+- No persistent subscriptions (must poll)
+- No dead-letter queue handling
+- No schema registry integration
 
-Zero existing pages modified (except `navigation-config.ts` and `App.tsx` with additive changes). Non-breaking.
+**Impact:** Not suitable for high-throughput production interbank messaging (1000+ msg/sec).
+
+**Fix:** This is an architectural limitation of Edge Functions (no persistent TCP connections). Document this limitation and recommend banks deploy a sidecar agent for high-throughput scenarios, or build a KOB Bridge Service that maintains persistent broker connections.
+
+---
+
+### GAP 4: No `connector_pull` Mode (KOB → Bank REST API) (HIGH)
+
+The OpenAPI spec lists `connector_pull` as a valid `integration_mode`, but there is no edge function that calls external bank REST APIs. All data flow is bank-push (ingestion endpoints) or file-based.
+
+**Impact:** Banks that already have REST APIs cannot be auto-polled by KOB.
+
+**Fix:** Create a `bank-api-connector` edge function that:
+- Stores bank API endpoint configs (base URL, auth method, paths)
+- Implements OAuth2/API-key auth to external banks
+- Polls configured endpoints on schedule
+- Normalizes responses into `bank_sourced_*` tables
+
+---
+
+### GAP 5: Interbank Outbox Cron Not Scheduled (HIGH)
+
+`interbank-dispatch-worker` exists and works but is not scheduled. The audit report notes: "Configure interbank-outbox-cron for automated dispatch" as a TODO.
+
+**Impact:** Interbank payments sit in the outbox until manually triggered.
+
+**Fix:** Add cron schedule configuration in `supabase/config.toml` or document the external cron setup needed.
+
+---
+
+### GAP 6: No Bank Self-Service Onboarding in FI Portal (HIGH)
+
+The FI Portal has the Connector Kit for file operations, but there is no guided onboarding wizard for a bank to:
+1. Register in the bank directory
+2. Choose integration mode (file/DB/MQ/API)
+3. Upload mTLS certificate
+4. Configure connector settings
+5. Run sandbox validation
+
+Currently, bank registration requires admin action via `bank-directory` edge function.
+
+**Impact:** Banks cannot self-onboard; requires admin intervention for every new bank.
+
+**Fix:** Build a multi-step onboarding wizard in the FI Portal (`/fi-portal/connector/onboard`) that calls `bank-directory` actions with the institution's scoped context.
+
+---
+
+### GAP 7: SDKs Are Documentation-Only (MEDIUM)
+
+The SDKs page (`SDKsPage.tsx`) lists `npm install @kob/sdk`, `pip install kob-sdk`, etc., but no actual packages are published. These are aspirational references.
+
+**Impact:** Developers cannot install SDKs; must use raw HTTP/fetch.
+
+**Fix:** Either build and publish actual SDK packages, or clearly label them as "Coming Soon" and provide comprehensive cURL/fetch examples for all endpoints (already partially done via API Playground).
+
+---
+
+### GAP 8: Virtual Cards Service Degraded (MEDIUM)
+
+The `api-health` endpoint reports `virtual_cards` as degraded. The function uses placeholder KYC data (line 117: `id_front_image: 'placeholder-id.png'`).
+
+**Impact:** Virtual card issuance may fail for real users.
+
+**Fix:** Wire real KYC document URLs from `kyc_verifications` table into the virtual card creation payload.
+
+---
+
+### GAP 9 & 10: Business App Missing Webhook Retry + Dispute Response (MEDIUM)
+
+The Business App (`/biz/*`) has 25+ pages covering POS, products, analytics, staff, travel, etc. But:
+- No webhook delivery log viewer (merchants can't see failed deliveries)
+- No dispute evidence submission UI (exists as `gateway-submit-dispute-evidence` edge function but no Business App page)
+
+**Fix:** Add `/biz/webhook-logs` and `/biz/disputes` pages wiring to existing edge functions.
+
+---
+
+### GAP 11: No Invoice/Billing Module in Business App (LOW)
+
+Admin has `admin-invoice-actions` and `generate-invoice`, but Business App has no self-service invoice creation for merchants to bill their customers.
+
+**Fix:** Add `/biz/invoices` page using `generate-invoice` and `send-customer-invoice` edge functions.
+
+---
+
+### GAP 12: No Automated E2E Contract Test Runner (LOW)
+
+`payment-tests/index.test.ts` exists with 16+ scenarios, but there's no CI pipeline or scheduled execution.
+
+**Fix:** Document how to run `supabase--test_edge_functions` and add a `load-test-runner` schedule.
+
+---
+
+## 4. What's Working Well (No Gaps)
+
+| Area | Status | Notes |
+|------|--------|-------|
+| AISP (Account Info) | ✅ Complete | 7 endpoints, bank-sourced fallback |
+| PISP (Payments) | ✅ Complete | Idempotent, double-entry ledger |
+| Payment Gateway | ✅ Complete | 80+ functions, 4 providers |
+| OAuth2/FAPI | ✅ Complete | DCR, PAR, PKCE, mTLS |
+| File Connector (CSV/SFTP) | ✅ Complete | SHA-256 dedup, pain.001 |
+| Consumer App (/app) | ✅ Complete | 25+ routes, full wallet lifecycle |
+| Banking PWA (/bank/:id) | ✅ Complete | 20+ routes, multi-tenant |
+| Business App (/biz) | ✅ 90% | 25 pages, minor gaps above |
+| Developer Portal | ✅ 95% | Playground, sandbox, docs |
+| Admin Portal | ✅ Complete | 50+ modules |
+| Interbank Engine | ✅ 90% | ISO 20022, 10-state machine |
+| Webhook Governance | ✅ Complete | HMAC-SHA256, 7-retry backoff |
+| Audit Logging | ✅ Complete | 56+ functions write audit_logs |
+| Rate Limiting | ✅ Complete | Per-client velocity checks |
+| FX / Multi-Currency | ✅ Complete | Frankfurter API, XAF/EUR/USD |
+| Bulk Transfers | ✅ Complete | CSV-based batch processing |
+| Savings/Loans/Ledger | ✅ Complete | Full lifecycle, double-entry |
+
+---
+
+## 5. Recommended Build Priority
+
+```text
+Priority 1 (Critical — blocks production)
+├── GAP 2: Wire MFA OTP delivery via SMS/email
+├── GAP 1: DB Connector production adapter (HTTP-to-SQL bridge)
+└── GAP 5: Schedule interbank outbox cron
+
+Priority 2 (High — limits bank onboarding)
+├── GAP 6: Bank self-service onboarding wizard
+├── GAP 4: connector_pull mode (KOB → Bank REST API)
+└── GAP 3: Document Kafka/RabbitMQ limitations + bridge architecture
+
+Priority 3 (Medium — polish)
+├── GAP 9: Webhook retry dashboard for Business App
+├── GAP 10: Dispute response UI for Business App
+├── GAP 8: Virtual cards — wire real KYC docs
+└── GAP 7: SDK packages or "Coming Soon" labels
+
+Priority 4 (Low — nice to have)
+├── GAP 11: Business App invoice module
+└── GAP 12: CI test runner setup
+```
+
+---
+
+## 6. Estimated Scope
+
+Building all 12 gaps would involve:
+- **4 new edge functions** (bank-api-connector, mfa-deliver wiring, invoice-biz)
+- **3 new UI pages** (onboarding wizard, webhook logs, disputes)
+- **2 edge function updates** (identity-mfa, identity-login)
+- **1 config update** (cron scheduling)
+- **2 documentation updates** (SDK labels, broker limitations)
+
+Shall I proceed with building Priority 1 (the 3 critical gaps) first?
 
