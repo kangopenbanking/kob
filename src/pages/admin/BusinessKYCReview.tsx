@@ -360,28 +360,18 @@ export default function BusinessKYCReview() {
   // ─── Render ───
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 border border-primary/20">
-            <ShieldCheck className="h-5 w-5 text-primary" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold tracking-tight">Business KYB Compliance</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Review and manage business verification submissions</p>
-          </div>
-        </div>
+      <AdminPageHeader icon={ClipboardCheck} title="Business KYC Review" description="Review and verify business KYC documentation and submissions">
         <Button
           variant="outline"
           size="sm"
-          className="h-8 text-xs gap-1.5"
+          className="h-8 text-xs gap-1.5 text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10"
           onClick={() => queryClient.invalidateQueries({ queryKey: ["business-kyc-submissions"] })}
           disabled={isRefetching}
         >
           <RefreshCw className={`h-3 w-3 ${isRefetching ? "animate-spin" : ""}`} />
           Refresh
         </Button>
-      </div>
+      </AdminPageHeader>
 
       {/* Stats Cards */}
       <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
