@@ -214,7 +214,6 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
             </table>
           </div>
         </div>
-        </div>
       </DialogContent>
     </Dialog>
   );
