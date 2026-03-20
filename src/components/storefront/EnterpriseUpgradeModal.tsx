@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Crown, CheckCircle, ArrowRight, Lock, Loader2, Sparkles, Shield, Zap, Wallet, AlertTriangle, CreditCard, Smartphone } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Crown, CheckCircle, ArrowRight, Lock, Loader2, Sparkles, Shield, Zap, Wallet, AlertTriangle, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -49,6 +50,7 @@ export function EnterpriseUpgradeModal({
   open, onOpenChange, plan, plans = [], currency, subscribing, onConfirm,
   walletBalance = 0, onFundWallet,
 }: EnterpriseUpgradeModalProps) {
+  const navigate = useNavigate();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
@@ -229,25 +231,34 @@ export function EnterpriseUpgradeModal({
             <p className="text-[11px] font-semibold text-muted-foreground mb-2.5 uppercase tracking-wider">Fund your wallet via</p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {[
-                { icon: Smartphone, label: 'Mobile Money', desc: 'MTN / Orange' },
-                { icon: CreditCard, label: 'Bank Card', desc: 'Visa / MC' },
-                { icon: Wallet, label: 'Bank Transfer', desc: 'Direct deposit' },
-                { icon: ArrowRight, label: 'Go to Wallet', desc: 'All methods', primary: true },
-              ].map((method, i) => (
-                <button
-                  key={i}
-                  onClick={() => onFundWallet?.()}
-                  className={`rounded-xl border p-3 text-left transition-all hover:shadow-sm active:scale-[0.97] ${
-                    method.primary
-                      ? 'border-primary/30 bg-primary/5 hover:bg-primary/10'
-                      : 'border-border/50 bg-card hover:bg-muted/40'
-                  }`}
-                >
-                  <method.icon className={`w-4 h-4 mb-1.5 ${method.primary ? 'text-primary' : 'text-muted-foreground'}`} strokeWidth={1.8} />
-                  <p className={`text-[11px] font-bold ${method.primary ? 'text-primary' : 'text-foreground'}`}>{method.label}</p>
-                  <p className="text-[10px] text-muted-foreground">{method.desc}</p>
-                </button>
-              ))}
+                { icon: Smartphone, label: 'Mobile Money', desc: 'MTN / Orange', method: 'mobile_money' },
+                { icon: CreditCard, label: 'Bank Card', desc: 'Visa / MC', method: 'card' },
+                { icon: Building2, label: 'Bank Transfer', desc: 'Direct deposit', method: 'bank_transfer' },
+                { icon: Wallet, label: 'All Methods', desc: 'View all options', method: '', primary: true },
+              ].map((item, i) => {
+                const isBiz = window.location.pathname.startsWith('/biz');
+                const basePath = isBiz ? '/biz/fund-wallet' : '/merchant/fund-wallet';
+                const fundUrl = item.method ? `${basePath}?method=${item.method}&amount=${shortfall}` : basePath;
+
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      onOpenChange(false);
+                      navigate(fundUrl);
+                    }}
+                    className={`rounded-xl border p-3 text-left transition-all hover:shadow-sm active:scale-[0.97] ${
+                      item.primary
+                        ? 'border-primary/30 bg-primary/5 hover:bg-primary/10'
+                        : 'border-border/50 bg-card hover:bg-muted/40'
+                    }`}
+                  >
+                    <item.icon className={`w-4 h-4 mb-1.5 ${item.primary ? 'text-primary' : 'text-muted-foreground'}`} strokeWidth={1.8} />
+                    <p className={`text-[11px] font-bold ${item.primary ? 'text-primary' : 'text-foreground'}`}>{item.label}</p>
+                    <p className="text-[10px] text-muted-foreground">{item.desc}</p>
+                  </button>
+                );
+              })}
             </div>
 
             <div className="mt-3 flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">

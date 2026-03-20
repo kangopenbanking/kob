@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -18,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 
 const BusinessWallet: React.FC = () => {
+  const navigate = useNavigate();
   const { merchantId } = useMerchantContext();
   const isMobile = useIsMobile();
   const { wallets, availableBalance, pendingBalance, settlements, isLoading, refetchWallets } = useBusinessData(merchantId);
@@ -216,7 +218,14 @@ const BusinessWallet: React.FC = () => {
       </motion.div>
 
       {/* Actions */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
+        <Button
+          onClick={() => navigate('/biz/fund-wallet')}
+          className="h-14 rounded-2xl flex-col gap-1.5 bg-primary text-primary-foreground hover:bg-primary/90"
+        >
+          <Plus className="h-5 w-5" strokeWidth={2} />
+          <span className="text-xs font-semibold">Fund</span>
+        </Button>
         <Button
           onClick={openWithdrawSheet}
           disabled={availableBalance < 1000}
