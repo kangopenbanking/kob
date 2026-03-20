@@ -113,11 +113,11 @@ const BankQRPay: React.FC = () => {
           headers: { 'Idempotency-Key': `qr_pay_${Date.now()}_${crypto.randomUUID().slice(0, 8)}` },
         });
         if (error) throw error;
-        if (data?.error) { toast.error(data.message || data.error); return; }
-        toast.success(`Payment of ${finalAmount?.toLocaleString()} XAF successful!`);
+        if (data?.error) { toast.error(data.message || 'Payment could not be processed. Please try again.'); return; }
+        toast.success(`Payment of ${finalAmount?.toLocaleString()} XAF to ${merchantQR.merchant_name || 'merchant'} completed! ✅`);
         resetScan();
       } catch (err: any) {
-        toast.error(err.message || 'Payment failed');
+        toast.error(err.message || 'Payment could not be completed. Please check your balance and try again.');
       } finally {
         setProcessing(false);
       }
