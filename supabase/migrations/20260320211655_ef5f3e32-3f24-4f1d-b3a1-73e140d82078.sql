@@ -1,0 +1,2 @@
+ALTER TABLE public.product_manuals DROP CONSTRAINT product_manuals_manual_type_check;
+ALTER TABLE public.product_manuals ADD CONSTRAINT product_manuals_manual_type_check CHECK (manual_type = ANY (ARRAY['banks'::text, 'customers'::text, 'developers'::text, 'merchants'::text]));
