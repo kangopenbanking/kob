@@ -106,6 +106,7 @@ export const institutionNavigation = [
       { title: "Connector Health", path: "/fi-portal/connector/health", icon: Shield, sectionKey: "connector" },
       { title: "Audit Log", path: "/fi-portal/connector/audit", icon: ScrollText, sectionKey: "connector" },
       { title: "Templates & Guides", path: "/fi-portal/connector/templates", icon: BookOpen, sectionKey: "connector" },
+      { title: "How It Works", path: "/fi-portal/connector/guide", icon: HelpCircle, sectionKey: "connector" },
     ]
   },
   {
