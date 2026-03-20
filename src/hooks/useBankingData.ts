@@ -328,11 +328,11 @@ export function useTopUpCard() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
-      toast.success('Card topped up!');
+      toast.success(`${variables.amount.toLocaleString()} XAF added to your virtual card`);
     },
-    onError: (err: any) => toast.error(err.message || 'Top-up failed'),
+    onError: (err: any) => toast.error(err.message || 'Could not top up your card. Please try again.'),
   });
 }
 
