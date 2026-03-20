@@ -582,6 +582,7 @@ function App() {
               <Route path="webhooks" element={<InstitutionWebhooks />} />
               <Route path="credit-api" element={<InstitutionCreditApi />} />
               <Route path="compliance" element={<InstitutionCompliance />} />
+              <Route path="disputes" element={<InstitutionDisputes />} />
               <Route path="profile" element={<InstitutionProfile />} />
               <Route path="team" element={<InstitutionTeam />} />
               <Route path="settings" element={<InstitutionSettings />} />
