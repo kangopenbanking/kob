@@ -95,6 +95,20 @@ export const institutionNavigation = [
     ]
   },
   {
+    title: "Bank Connector Kit",
+    items: [
+      { title: "Connector Overview", path: "/fi-portal/connector", icon: Activity, sectionKey: "connector" },
+      { title: "Uploads & Imports", path: "/fi-portal/connector/uploads", icon: FileText, sectionKey: "connector" },
+      { title: "Mapping Profiles", path: "/fi-portal/connector/mappings", icon: GitBranch, sectionKey: "connector" },
+      { title: "Batch Payments", path: "/fi-portal/connector/batches", icon: Banknote, sectionKey: "connector" },
+      { title: "Status Files", path: "/fi-portal/connector/status", icon: ClipboardList, sectionKey: "connector" },
+      { title: "Reconciliation", path: "/fi-portal/connector/reconciliation", icon: ArrowUpDown, sectionKey: "connector" },
+      { title: "Connector Health", path: "/fi-portal/connector/health", icon: Shield, sectionKey: "connector" },
+      { title: "Audit Log", path: "/fi-portal/connector/audit", icon: ScrollText, sectionKey: "connector" },
+      { title: "Templates & Guides", path: "/fi-portal/connector/templates", icon: BookOpen, sectionKey: "connector" },
+    ]
+  },
+  {
     title: "Settings",
     items: [
       { title: "Institution Profile", path: "/fi-portal/profile", icon: Building2, sectionKey: "profile" },
