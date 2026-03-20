@@ -15648,6 +15648,509 @@ export type Database = {
         }
         Relationships: []
       }
+      remittance_corridors: {
+        Row: {
+          created_at: string | null
+          est_delivery_seconds: number | null
+          fees_model: Json | null
+          from_country: string
+          from_currency: string
+          id: string
+          is_active: boolean | null
+          max_amount: number
+          min_amount: number
+          partner_id: string
+          to_country: string
+          to_currency: string
+        }
+        Insert: {
+          created_at?: string | null
+          est_delivery_seconds?: number | null
+          fees_model?: Json | null
+          from_country: string
+          from_currency: string
+          id?: string
+          is_active?: boolean | null
+          max_amount?: number
+          min_amount?: number
+          partner_id: string
+          to_country?: string
+          to_currency?: string
+        }
+        Update: {
+          created_at?: string | null
+          est_delivery_seconds?: number | null
+          fees_model?: Json | null
+          from_country?: string
+          from_currency?: string
+          id?: string
+          is_active?: boolean | null
+          max_amount?: number
+          min_amount?: number
+          partner_id?: string
+          to_country?: string
+          to_currency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_corridors_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_events: {
+        Row: {
+          actor_id: string | null
+          actor_type: string | null
+          created_at: string | null
+          event_type: string
+          id: string
+          payload_raw: Json | null
+          provider_event_id: string | null
+          remittance_id: string
+          signature_valid: boolean | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string | null
+          event_type: string
+          id?: string
+          payload_raw?: Json | null
+          provider_event_id?: string | null
+          remittance_id: string
+          signature_valid?: boolean | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          payload_raw?: Json | null
+          provider_event_id?: string | null
+          remittance_id?: string
+          signature_valid?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_events_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "remittances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_ledger_links: {
+        Row: {
+          created_at: string | null
+          id: string
+          journal_entry_id: string
+          posting_type: string
+          remittance_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          journal_entry_id: string
+          posting_type: string
+          remittance_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          journal_entry_id?: string
+          posting_type?: string
+          remittance_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_ledger_links_journal_entry_id_fkey"
+            columns: ["journal_entry_id"]
+            isOneToOne: false
+            referencedRelation: "journal_entries"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittance_ledger_links_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "remittances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_partners: {
+        Row: {
+          api_base_url: string | null
+          auth_config_encrypted: Json | null
+          auth_method: string | null
+          created_at: string | null
+          display_name: string
+          id: string
+          name: string
+          public_key: string | null
+          status: string
+          supported_corridors: Json | null
+          updated_at: string | null
+          webhook_secret_hash: string | null
+        }
+        Insert: {
+          api_base_url?: string | null
+          auth_config_encrypted?: Json | null
+          auth_method?: string | null
+          created_at?: string | null
+          display_name: string
+          id?: string
+          name: string
+          public_key?: string | null
+          status?: string
+          supported_corridors?: Json | null
+          updated_at?: string | null
+          webhook_secret_hash?: string | null
+        }
+        Update: {
+          api_base_url?: string | null
+          auth_config_encrypted?: Json | null
+          auth_method?: string | null
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          name?: string
+          public_key?: string | null
+          status?: string
+          supported_corridors?: Json | null
+          updated_at?: string | null
+          webhook_secret_hash?: string | null
+        }
+        Relationships: []
+      }
+      remittance_quotes: {
+        Row: {
+          amount_in: number
+          amount_out: number
+          corridor_id: string | null
+          created_at: string | null
+          currency_in: string
+          currency_out: string
+          expires_at: string
+          fee_total: number
+          fx_rate: number
+          id: string
+          partner_id: string
+          quote_raw: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          amount_in: number
+          amount_out: number
+          corridor_id?: string | null
+          created_at?: string | null
+          currency_in: string
+          currency_out?: string
+          expires_at: string
+          fee_total?: number
+          fx_rate: number
+          id?: string
+          partner_id: string
+          quote_raw?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          amount_in?: number
+          amount_out?: number
+          corridor_id?: string | null
+          created_at?: string | null
+          currency_in?: string
+          currency_out?: string
+          expires_at?: string
+          fee_total?: number
+          fx_rate?: number
+          id?: string
+          partner_id?: string
+          quote_raw?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_quotes_corridor_id_fkey"
+            columns: ["corridor_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_corridors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittance_quotes_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_reconciliation_items: {
+        Row: {
+          actual_amount: number | null
+          created_at: string | null
+          expected_amount: number
+          id: string
+          mismatch_reason: string | null
+          partner_reference: string
+          remittance_id: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          settlement_id: string
+          status: string
+        }
+        Insert: {
+          actual_amount?: number | null
+          created_at?: string | null
+          expected_amount: number
+          id?: string
+          mismatch_reason?: string | null
+          partner_reference: string
+          remittance_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          settlement_id: string
+          status?: string
+        }
+        Update: {
+          actual_amount?: number | null
+          created_at?: string | null
+          expected_amount?: number
+          id?: string
+          mismatch_reason?: string | null
+          partner_reference?: string
+          remittance_id?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          settlement_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_reconciliation_items_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "remittances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittance_reconciliation_items_settlement_id_fkey"
+            columns: ["settlement_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_settlements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_settlements: {
+        Row: {
+          created_at: string | null
+          currency: string
+          fees: number
+          gross_in: number
+          id: string
+          net_settlement: number
+          partner_id: string
+          period_end: string
+          period_start: string
+          remittance_count: number | null
+          statement_raw: Json | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          currency?: string
+          fees?: number
+          gross_in?: number
+          id?: string
+          net_settlement?: number
+          partner_id: string
+          period_end: string
+          period_start: string
+          remittance_count?: number | null
+          statement_raw?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          currency?: string
+          fees?: number
+          gross_in?: number
+          id?: string
+          net_settlement?: number
+          partner_id?: string
+          period_end?: string
+          period_start?: string
+          remittance_count?: number | null
+          statement_raw?: Json | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_settlements_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittances: {
+        Row: {
+          amount_in: number
+          amount_out: number
+          compliance_status: string | null
+          correlation_id: string | null
+          corridor_id: string | null
+          created_at: string | null
+          credited_at: string | null
+          currency_in: string
+          currency_out: string
+          destination_ref: string | null
+          destination_type: string
+          direction: string
+          failed_at: string | null
+          failure_reason: string | null
+          fee_total: number
+          fx_rate: number
+          id: string
+          metadata: Json | null
+          narration: string | null
+          partner_id: string
+          partner_reference: string
+          purpose_code: string | null
+          quote_id: string | null
+          received_at: string | null
+          receiver_institution_id: string | null
+          receiver_name: string
+          receiver_phone: string | null
+          receiver_user_id: string | null
+          sender_country: string | null
+          sender_name: string | null
+          sender_phone: string | null
+          settled_at: string | null
+          status: string
+          trace_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          amount_in: number
+          amount_out: number
+          compliance_status?: string | null
+          correlation_id?: string | null
+          corridor_id?: string | null
+          created_at?: string | null
+          credited_at?: string | null
+          currency_in: string
+          currency_out?: string
+          destination_ref?: string | null
+          destination_type?: string
+          direction?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          fee_total?: number
+          fx_rate?: number
+          id?: string
+          metadata?: Json | null
+          narration?: string | null
+          partner_id: string
+          partner_reference: string
+          purpose_code?: string | null
+          quote_id?: string | null
+          received_at?: string | null
+          receiver_institution_id?: string | null
+          receiver_name: string
+          receiver_phone?: string | null
+          receiver_user_id?: string | null
+          sender_country?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          settled_at?: string | null
+          status?: string
+          trace_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          amount_in?: number
+          amount_out?: number
+          compliance_status?: string | null
+          correlation_id?: string | null
+          corridor_id?: string | null
+          created_at?: string | null
+          credited_at?: string | null
+          currency_in?: string
+          currency_out?: string
+          destination_ref?: string | null
+          destination_type?: string
+          direction?: string
+          failed_at?: string | null
+          failure_reason?: string | null
+          fee_total?: number
+          fx_rate?: number
+          id?: string
+          metadata?: Json | null
+          narration?: string | null
+          partner_id?: string
+          partner_reference?: string
+          purpose_code?: string | null
+          quote_id?: string | null
+          received_at?: string | null
+          receiver_institution_id?: string | null
+          receiver_name?: string
+          receiver_phone?: string | null
+          receiver_user_id?: string | null
+          sender_country?: string | null
+          sender_name?: string | null
+          sender_phone?: string | null
+          settled_at?: string | null
+          status?: string
+          trace_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittances_corridor_id_fkey"
+            columns: ["corridor_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_corridors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittances_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittances_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "remittances_receiver_institution_id_fkey"
+            columns: ["receiver_institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       role_permissions: {
         Row: {
           actions: Database["public"]["Enums"]["permission_action"][]
