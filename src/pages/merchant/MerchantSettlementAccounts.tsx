@@ -18,10 +18,7 @@ import { CM_BANKS } from "@/constants/cameroon-banks";
 
 const CAMEROON_BANKS = CM_BANKS.map(b => ({ code: b.code, name: b.name }));
 
-const MOMO_PROVIDERS = [
-  { id: "mtn_momo", name: "MTN Mobile Money", prefix: "+237 67/65" },
-  { id: "orange_money", name: "Orange Money", prefix: "+237 69/65" },
-];
+const MOMO_PROVIDERS = CM_MOMO_PROVIDERS.map(p => ({ id: p.id, name: p.name, prefix: p.prefix }));
 
 // Base accounts available to all merchants
 const BASE_ACCOUNT_TYPES = [
