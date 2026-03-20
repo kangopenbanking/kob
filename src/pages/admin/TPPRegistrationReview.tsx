@@ -152,6 +152,7 @@ export default function TPPRegistrationReview() {
     <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
+          <div>
             <CardTitle className="text-lg">{tpp.client_name}</CardTitle>
             <CardDescription>
               {tpp.environment} • {tpp.client_id.slice(0, 12)}...
