@@ -2532,6 +2532,7 @@ export type Database = {
           created_at: string
           display_name: string
           id: string
+          institution_id: string | null
           integration_mode: string
           legal_name: string
           metadata: Json | null
@@ -2548,6 +2549,7 @@ export type Database = {
           created_at?: string
           display_name: string
           id?: string
+          institution_id?: string | null
           integration_mode?: string
           legal_name: string
           metadata?: Json | null
@@ -2564,6 +2566,7 @@ export type Database = {
           created_at?: string
           display_name?: string
           id?: string
+          institution_id?: string | null
           integration_mode?: string
           legal_name?: string
           metadata?: Json | null
@@ -2573,7 +2576,15 @@ export type Database = {
           swift_bic?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "banks_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "institutions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       beneficiaries: {
         Row: {

@@ -30,16 +30,17 @@ export function useBankConnector() {
 
       if (!institutionId) return { bankId: null, bankName: null };
 
+      // Banks table uses display_name, and now has institution_id
       const { data: bank } = await supabase
         .from("banks")
-        .select("id, name")
+        .select("id, display_name")
         .eq("institution_id", institutionId)
         .eq("status", "active")
         .maybeSingle();
 
       return {
-        bankId: bank?.id ?? null,
-        bankName: bank?.name ?? null,
+        bankId: (bank as any)?.id ?? null,
+        bankName: (bank as any)?.display_name ?? null,
       };
     },
     staleTime: 5 * 60 * 1000,
