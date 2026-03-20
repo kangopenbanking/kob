@@ -1,79 +1,140 @@
 
 
-# Bank Connector Integration Enhancement — Full Implementation Plan
+# WooCommerce E2E Audit Report — KOB v1 API
 
-## Summary
+## Inventory of WooCommerce Assets
 
-The backend edge functions (`bank-directory`, `bank-db-connector`, `bank-api-connector`, `bank-file-connector`) are well-implemented with full CRUD, sync engines, and sandbox simulation. However, the **Admin UI** (`AdminBankDirectory.tsx`) only exposes 6 of the 7 tabs needed — it's missing dedicated UI for **DB Connector** and **API Connector** management, and lacks a downloadable **Integration Guide** document. The Register Bank dialog also omits `db_connector` and `mq_realtime` integration modes.
-
-## Gaps Found
-
-| Gap | Severity | Location |
+### Edge Functions (7)
+| Function | Status | Issues |
 |---|---|---|
-| Register Bank dialog missing `db_connector` and `mq_realtime` modes | MEDIUM | `AdminBankDirectory.tsx` line 165 |
-| No DB Connector management tab in admin UI | HIGH | Missing — backend (`bank-db-connector`) exists but no UI |
-| No API Connector (connector_pull) management tab in admin UI | HIGH | Missing — backend (`bank-api-connector`) exists but no UI |
-| No downloadable integration guide for bank partners | MEDIUM | No document generation exists |
-| Connectors tab is read-only — no "Register Connector" button | MEDIUM | `ConnectorsTab` component |
-| No integration type selection wizard when onboarding a bank | LOW | Bank registration is a flat form |
+| `woocommerce-register-merchant` | Implemented | Uses `SUPABASE_SERVICE_ROLE_KEY` correctly, sends welcome email via `send-communication` |
+| `woocommerce-process-payment` | Implemented | Routes to MoMo/Stripe/Bank Transfer correctly |
+| `woocommerce-payment-webhook` | Implemented | Uses `compute_woo_webhook_hmac` RPC, has deduplication |
+| `woocommerce-validate-install` | Implemented | Rate-limited, validates API key hash |
+| `woocommerce-transaction-sync` | Implemented | Supports JSON + CSV export, pagination, summary stats |
+| `woocommerce-download-plugin` | Implemented | In-memory ZIP with 9 PHP files, audit-logged |
+| `pos-woo-connector` | Implemented | Connect/import/push/disconnect with POS |
+| `pos-woo-webhook-ingestion` | Implemented | Product/order webhook handling with deduplication |
 
-## Implementation
+### UI Pages (8)
+| Page | Route | Status | Issues |
+|---|---|---|---|
+| WooForKang (landing) | `/woo-for-kang` | Complete | None |
+| WooCommerceGuide | `/integrations/woocommerce-docs` | Complete | None |
+| WooCommerceMerchantRegister | `/integrations/woocommerce-merchant-register` | Complete | **BUG**: "Manage Integration" button navigates to `/admin/woocommerce-plugin` but that route is nested under `/admin/` requiring admin role; merchants can't access it |
+| WooCommercePluginCode | `/integrations/woocommerce-plugin-code` | Complete | None |
+| WooCommerceManagement (Admin) | `/admin/woocommerce-plugin` | Complete | Admin-only, correct |
+| WooCommerceDashboard (FI) | `/institution/woocommerce` | Partially Complete | **BUG**: Queries `woocommerce_merchants` by `institution_id`, but the table has `user_id` not `institution_id` — always returns empty |
+| MerchantWooSync | `/merchant/woo-sync` | Complete | Shows sync runs correctly |
+| Merchant Storefront Integrations Tab | `/merchant/storefront` | Complete | WooCommerce connector in Integrations tab |
 
-### 1. Add DB Connector Tab to Admin Bank Directory
-New `DBConnectorTab` component within `AdminBankDirectory.tsx`:
-- List all DB connections from `bank-db-connector` → `list_connections`
-- Register new connection form: bank selector, name, db_type (PostgreSQL/MySQL/MSSQL/Oracle/MongoDB), host/port/database/username/SSL, poll interval, watermark column, poll queries
-- Test connection button → `test_connection`
-- Trigger manual sync → `trigger_sync`
-- View sync run history → `list_sync_runs`
-- Seed sandbox DB connector button → `sandbox_seed_db_connector`
-- Status badges + latency display
+### PHP Plugin (in-memory ZIP)
+| File | Status | Issues |
+|---|---|---|
+| `woo-for-kang.php` | Complete | Proper WC dependency check, hooks, activation/deactivation |
+| `class-wfk-payment-gateway.php` | Complete | process_payment, process_refund, thankyou_page |
+| `class-wfk-api-client.php` | Complete | **GAP**: Uses `X-API-Key` header but `woocommerce-process-payment` expects `api_key` in body, not header — mismatch |
+| `class-wfk-webhook-handler.php` | Complete | HMAC verification, idempotency, all status handlers |
+| `class-wfk-logger.php` | Complete | None |
+| `payment-instructions.php` | Complete | None |
+| `readme.txt` | Complete | None |
+| `uninstall.php` | Complete | None |
+| `LICENSE` | Complete | None |
 
-### 2. Add API Connector Tab (connector_pull)
-New `APIConnectorTab` component:
-- List API endpoints from `bank-api-connector` → `list_endpoints`
-- Register new endpoint form: bank, name, base URL, auth method (api_key/oauth2/basic/bearer/mtls), auth config fields, API paths (accounts/transactions/balances/health), poll interval
-- Test endpoint → `test_endpoint`
-- Trigger manual pull → `trigger_pull`
-- View pull run history → `list_pull_runs`
+### PHP SDK (`packages/sdk-php`)
+No WooCommerce-specific resource — not required (plugin uses direct API calls).
 
-### 3. Update Register Bank Dialog
-- Add `db_connector` and `mq_realtime` to the integration mode dropdown
-- Add description text for each mode when selected
+---
 
-### 4. Add Register Connector to Connectors Tab
-- Add a "Register Connector" button with dialog calling `bank-directory` → `register_connector`
-- Add "Upload Certificate" button calling `upload_certificate`
+## Critical Gaps Found
 
-### 5. Generate Downloadable Integration Guide (DOCX)
-Create a comprehensive bank integration guide document generated via script, saved to `/mnt/documents/`:
-- **Section 1**: Overview of KOB Bank Connector Framework
-- **Section 2**: connector_push — mTLS setup, certificate requirements, ingestion endpoints (accounts/transactions/balances/beneficiaries), HMAC signing, correlation IDs
-- **Section 3**: db_connector — DB proxy setup, watermark-based sync, poll queries, supported DBs
-- **Section 4**: connector_pull — REST API requirements, auth methods, path configuration
-- **Section 5**: file_feed — CSV templates, upload portal, ingestion pipeline, status reconciliation
-- **Section 6**: mq_realtime — Webhook/SSE/Kafka setup
-- **Section 7**: hybrid mode
-- **Section 8**: Sandbox testing guide
-- **Section 9**: Security (mTLS certificates, HMAC, scoped tokens)
+### GAP 1: API Key Authentication Mismatch (HIGH)
+**Location**: `class-wfk-api-client.php` vs `woocommerce-process-payment/index.ts`
+- The PHP plugin sends `X-API-Key` header in all requests
+- `woocommerce-process-payment` expects `api_key` in the **request body** (line 73: `if (!api_key ...`)
+- The plugin also sends `api_key` as a property in `$payment_data` which is built from `process_payment()` — but `api_key` is NOT added to `$payment_data` in the gateway. Only `amount`, `currency`, `woocommerce_order_id`, etc.
+- **Fix**: Either add `'api_key' => $this->api_key` to `$payment_data` in the gateway class, OR update `woocommerce-process-payment` to also read from `X-API-Key` header.
 
-### 6. Add "Download Integration Guide" Button to Admin Bank Directory
-- Add a Download button in the header area that links to the generated guide
-- Also add it to the FI Portal connector pages
+### GAP 2: WooCommerceDashboard institution_id query bug (HIGH)
+**Location**: `src/pages/institution/WooCommerceDashboard.tsx` line 45
+- Queries `.eq("institution_id", institutionId)` but `woocommerce_merchants` table uses `user_id`, not `institution_id`
+- This means FI portal WooCommerce dashboard always shows zero stores
+- **Fix**: Join through `user_id` or add an `institution_id` column
 
-## Files to Modify/Create
+### GAP 3: No WooCommerce Email Templates in managed-send-email (MEDIUM)
+**Location**: `supabase/functions/managed-send-email/index.ts`
+- Zero WooCommerce-specific email templates exist
+- `woocommerce-register-merchant` sends welcome email via `send-communication` (the legacy function), not `managed-send-email`
+- Missing templates: payment confirmation, payment failed, refund processed, merchant deactivated
+- **Fix**: Add 4 WooCommerce email templates to `managed-send-email` and update edge functions to use them
+
+### GAP 4: Missing Merchant-facing "Manage Integration" route (MEDIUM)
+**Location**: `WooCommerceMerchantRegister.tsx` line 244
+- After registration, "Manage Integration" button navigates to `/admin/woocommerce-plugin` — an admin-only route
+- Merchants without admin role get 403 or blank page
+- **Fix**: Redirect to `/merchant/woo-sync` instead
+
+### GAP 5: No Payment Status Notifications for WooCommerce (MEDIUM)
+- When `woocommerce-payment-webhook` processes a completed/failed payment, it updates the DB and calls WooCommerce API, but does NOT:
+  - Create an `app_notifications` entry for the merchant
+  - Send a managed email to the merchant about the transaction
+- **Fix**: Add notification + email dispatch in the webhook handler
+
+### GAP 6: Transaction Sync CSV Export Uses Auth Header Directly (LOW)
+**Location**: `WooCommerceManagement.tsx` line 172
+- Fetches `woocommerce-transaction-sync?format=csv` via raw `fetch()` with the Authorization header
+- This works but inconsistent with `supabase.functions.invoke()` pattern used elsewhere
+- Not a bug, but a consistency issue
+
+### GAP 7: `woocommerce-process-payment` No Idempotency Check (LOW)
+- The function creates a new transaction record on every call without checking for duplicate `woocommerce_order_id` + `payment_method` combination
+- Could result in double charges if the WP plugin retries
+- **Fix**: Check for existing pending/processing transaction with same `woocommerce_order_id` before creating a new one
+
+### GAP 8: `updateWooCommerceOrderStatus` Missing Auth (LOW)
+**Location**: `woocommerce-payment-webhook/index.ts` line 60
+- Calls WooCommerce REST API `PUT /orders/{id}` without authentication headers
+- WooCommerce REST API requires either OAuth1 or Basic auth with consumer keys
+- This call will fail silently (caught by `.catch()`)
+- **Fix**: Read merchant's consumer keys from `merchant_integrations` or `woocommerce_merchants` and add auth
+
+---
+
+## Implementation Plan
+
+### Step 1: Fix API Key Mismatch in Plugin + Edge Function
+- Update `woocommerce-process-payment` to also accept `api_key` from `X-API-Key` header as fallback
+- Update `woocommerce-download-plugin` — add `'api_key' => $this->api_key` to `$payment_data` in the payment gateway class
+
+### Step 2: Fix WooCommerceDashboard Query
+- Change `.eq("institution_id", institutionId)` to `.eq("user_id", user.id)` using the logged-in user's ID instead
+
+### Step 3: Fix "Manage Integration" Route
+- Change navigation from `/admin/woocommerce-plugin` to `/merchant/woo-sync`
+
+### Step 4: Add WooCommerce Email Templates
+- Add 4 templates to `managed-send-email`: `woo_merchant_welcome`, `woo_payment_completed`, `woo_payment_failed`, `woo_refund_processed`
+- Update `woocommerce-register-merchant` to use `managed-send-email` instead of `send-communication`
+
+### Step 5: Add Notifications to Webhook Handler
+- In `woocommerce-payment-webhook`, after recording transaction, insert into `app_notifications` for the merchant
+- Invoke `managed-send-email` for payment completed/failed events
+
+### Step 6: Add Idempotency to Process Payment
+- Before creating a transaction, check for existing record with same `woocommerce_order_id` in `pending`/`processing` status
+
+### Step 7: Fix WooCommerce Order Status Update Auth
+- In `woocommerce-payment-webhook`, fetch merchant's store credentials and add Basic auth to the WC API call
+
+## Files to Modify
 
 | File | Action |
 |---|---|
-| `src/pages/admin/AdminBankDirectory.tsx` | Add DBConnectorTab, APIConnectorTab, update Register Bank modes, add Register Connector, add Download Guide button |
-| DOCX generation script (via lov-exec) | Generate `KOB_Bank_Integration_Guide.docx` |
-| Edge functions | No changes needed — all backends already exist |
-
-## Tab Structure After Changes
-
-```text
-Banks | Connectors | DB Connectors | API Connectors | PSU Links | Payments | File Imports | Batch Payments
-```
-
-Total: 8 tabs (up from 6), plus downloadable DOCX guide.
+| `supabase/functions/woocommerce-process-payment/index.ts` | Add X-API-Key header support + idempotency check |
+| `supabase/functions/woocommerce-download-plugin/index.ts` | Fix plugin code: add api_key to payment data |
+| `supabase/functions/woocommerce-payment-webhook/index.ts` | Add notifications, email dispatch, fix WC API auth |
+| `supabase/functions/woocommerce-register-merchant/index.ts` | Switch to managed-send-email |
+| `supabase/functions/managed-send-email/index.ts` | Add 4 WooCommerce email templates |
+| `src/pages/institution/WooCommerceDashboard.tsx` | Fix institution_id → user_id query |
+| `src/pages/integrations/WooCommerceMerchantRegister.tsx` | Fix "Manage Integration" route |
 
