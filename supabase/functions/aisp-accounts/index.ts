@@ -1,11 +1,19 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { getRateLimitInfo, checkRateLimit, addRateLimitHeaders, rateLimitResponse } from '../_shared/security.ts';
 import { corsHeaders } from "../_shared/cors.ts";
+import { extractFapiHeaders, addFapiResponseHeaders, logFapiContext } from "../_shared/fapi-headers.ts";
+import { rejectJweContentType } from "../_shared/jws-signing.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const jweCheck = rejectJweContentType(req, corsHeaders);
+  if (jweCheck) return jweCheck;
+
+  const fapi = extractFapiHeaders(req);
+  logFapiContext(fapi, 'aisp-accounts');
 
   if (req.method !== 'GET') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
@@ -170,9 +178,12 @@ Deno.serve(async (req) => {
       }
     };
 
-    const responseHeaders = addRateLimitHeaders(
-      { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-      300, rateLimit.remaining, rateLimit.reset
+    const responseHeaders = addFapiResponseHeaders(
+      addRateLimitHeaders(
+        { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+        300, rateLimit.remaining, rateLimit.reset
+      ),
+      fapi
     );
 
     return new Response(JSON.stringify(response), { status: 200, headers: responseHeaders });

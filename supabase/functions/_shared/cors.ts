@@ -8,5 +8,5 @@
 export const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type, idempotency-key, x-consent-id, x-webhook-signature, x-api-key, x-cron-secret, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
+    'authorization, x-client-info, apikey, content-type, idempotency-key, x-consent-id, x-webhook-signature, x-api-key, x-cron-secret, x-fapi-interaction-id, x-fapi-auth-date, x-fapi-customer-ip-address, x-customer-user-agent, x-jws-signature, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };

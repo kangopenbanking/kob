@@ -4271,6 +4271,45 @@ export type Database = {
           },
         ]
       }
+      cbpii_consents: {
+        Row: {
+          client_id: string
+          consent_id: string
+          created_at: string
+          debtor_account: Json
+          expiration_date: string | null
+          id: string
+          revoked_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          client_id?: string
+          consent_id: string
+          created_at?: string
+          debtor_account: Json
+          expiration_date?: string | null
+          id?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          client_id?: string
+          consent_id?: string
+          created_at?: string
+          debtor_account?: Json
+          expiration_date?: string | null
+          id?: string
+          revoked_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       client_certificates: {
         Row: {
           certificate_pem: string
@@ -12917,8 +12956,10 @@ export type Database = {
           instructed_amount: Json
           merchant_category_code: string | null
           merchant_customer_identification: string | null
+          metadata: Json | null
           payment_context_code: string | null
           payment_id: string
+          payment_type: string | null
           reference: string | null
           remittance_information: string | null
           status: string
@@ -12937,8 +12978,10 @@ export type Database = {
           instructed_amount: Json
           merchant_category_code?: string | null
           merchant_customer_identification?: string | null
+          metadata?: Json | null
           payment_context_code?: string | null
           payment_id: string
+          payment_type?: string | null
           reference?: string | null
           remittance_information?: string | null
           status?: string
@@ -12957,8 +13000,10 @@ export type Database = {
           instructed_amount?: Json
           merchant_category_code?: string | null
           merchant_customer_identification?: string | null
+          metadata?: Json | null
           payment_context_code?: string | null
           payment_id?: string
+          payment_type?: string | null
           reference?: string | null
           remittance_information?: string | null
           status?: string
@@ -13358,6 +13403,7 @@ export type Database = {
           expires_at: string
           id: string
           instructed_amount: Json
+          metadata: Json | null
           payment_id: string | null
           payment_type: Database["public"]["Enums"]["payment_type"]
           reference: string | null
@@ -13381,6 +13427,7 @@ export type Database = {
           expires_at: string
           id?: string
           instructed_amount: Json
+          metadata?: Json | null
           payment_id?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           reference?: string | null
@@ -13404,6 +13451,7 @@ export type Database = {
           expires_at?: string
           id?: string
           instructed_amount?: Json
+          metadata?: Json | null
           payment_id?: string | null
           payment_type?: Database["public"]["Enums"]["payment_type"]
           reference?: string | null

@@ -1,12 +1,19 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-
 import { corsHeaders } from "../_shared/cors.ts";
+import { extractFapiHeaders, addFapiResponseHeaders, logFapiContext } from "../_shared/fapi-headers.ts";
+import { rejectJweContentType, generateResponseJws } from "../_shared/jws-signing.ts";
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
+
+  const jweCheck = rejectJweContentType(req, corsHeaders);
+  if (jweCheck) return jweCheck;
+
+  const fapi = extractFapiHeaders(req);
+  logFapiContext(fapi, 'pisp-domestic-payment');
 
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -151,9 +158,8 @@ serve(async (req) => {
       _metadata: { payment_id }
     });
 
-    // Return UK Open Banking v4.0 compliant response
-    return new Response(
-      JSON.stringify({
+    // Return UK Open Banking v4.0 compliant response with FAPI headers + JWS
+    const responseBody = JSON.stringify({
         Data: {
           DomesticPaymentId: payment.payment_id,
           ConsentId: payment.consent_id,
@@ -176,12 +182,15 @@ serve(async (req) => {
           Self: `/pisp/v4/domestic-payments/${payment.payment_id}`
         },
         Meta: {}
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 201
-      }
+    });
+
+    const jwsSig = await generateResponseJws(responseBody);
+    const responseHeaders = addFapiResponseHeaders(
+      { ...corsHeaders, 'Content-Type': 'application/json', 'x-jws-signature': jwsSig },
+      fapi
     );
+
+    return new Response(responseBody, { status: 201, headers: responseHeaders });
   } catch (error) {
     // Security Fix: Generic error response with secure logging
     const { logError, genericErrorResponse } = await import('../_shared/validation.ts');
