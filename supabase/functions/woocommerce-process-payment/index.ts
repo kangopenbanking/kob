@@ -45,7 +45,6 @@ Deno.serve(async (req) => {
     // Parse request
     const body: ProcessPaymentRequest = await req.json();
     const { 
-      api_key, 
       woocommerce_order_id, 
       payment_method, 
       amount, 
@@ -57,10 +56,13 @@ Deno.serve(async (req) => {
       metadata 
     } = body;
 
+    // Accept api_key from body OR X-API-Key header (PHP plugin sends header)
+    const api_key = body.api_key || req.headers.get('x-api-key') || '';
+
     // Validate required fields
     if (!api_key || !woocommerce_order_id || !payment_method || !amount || !currency) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required fields: api_key (body or X-API-Key header), woocommerce_order_id, payment_method, amount, currency' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
