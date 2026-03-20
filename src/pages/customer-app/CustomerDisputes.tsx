@@ -45,7 +45,7 @@ export default function CustomerDisputes() {
       if (!user?.id) return [];
       const { data } = await supabase
         .from("transactions")
-        .select("id, transaction_reference, amount, currency, transaction_information, booking_datetime, account_id")
+        .select("id, amount, currency, transaction_information, booking_datetime, account_id")
         .eq("account_id", user.id)
         .order("booking_datetime", { ascending: false })
         .limit(20);
