@@ -787,20 +787,7 @@ export default function AdminInterbankPayments() {
 
   return (
     <div className="space-y-8">
-      {/* Hero Banner */}
-      <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl bg-primary-foreground/20 p-2.5">
-            <ArrowLeftRight className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Interbank Payments Engine</h1>
-            <p className="text-primary-foreground/80 text-sm">
-              ISO 20022 interbank payment processing, connector management & settlement monitoring
-            </p>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader icon={ArrowLeftRight} title="Interbank Payments Engine" description="ISO 20022 interbank payment processing, connector management & settlement monitoring" />
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="bg-muted/50 p-1 rounded-xl flex-wrap h-auto gap-1">
