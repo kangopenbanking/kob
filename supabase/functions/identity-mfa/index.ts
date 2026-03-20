@@ -183,8 +183,8 @@ Deno.serve(async (req) => {
           .select('id')
           .single();
 
-        // TODO: Actually send the code via SMS/email
-        console.log(`MFA challenge code for user ${userId}: ${code}`);
+        // Deliver OTP via the appropriate channel based on factor type
+        await deliverMfaCode(adminClient, supabaseUrl, serviceKey, userId, factor, code);
 
         return new Response(JSON.stringify({
           challenge_id: challenge?.id,
