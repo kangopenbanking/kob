@@ -171,11 +171,11 @@ const CustomerCashOut: React.FC = () => {
   const getIcon = (type: string) => iconMap[type] || iconMap.bank_account;
 
   const handleConfirm = () => {
-    if (!amount || numAmount <= 0) { toast.error('Enter a valid amount'); return; }
-    if (fee > 0 && numAmount <= fee) { toast.error('Amount must be greater than the fee'); return; }
-    if (isOverBalance) { toast.error('Insufficient wallet balance'); return; }
-    if (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal is XAF ${cashoutLimits.min_amount.toLocaleString()}`); return; }
-    if (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount) { toast.error(`Maximum withdrawal is XAF ${cashoutLimits.max_amount.toLocaleString()}`); return; }
+    if (!amount || numAmount <= 0) { toast.error('Please enter an amount to withdraw'); return; }
+    if (fee > 0 && numAmount <= fee) { toast.error(`Amount must be greater than the ${fee.toLocaleString()} XAF processing fee`); return; }
+    if (isOverBalance) { toast.error(`Insufficient balance. You have ${walletBalance.toLocaleString()} XAF available`); return; }
+    if (cashoutLimits.min_amount > 0 && numAmount < cashoutLimits.min_amount) { toast.error(`Minimum withdrawal amount is ${cashoutLimits.min_amount.toLocaleString()} XAF`); return; }
+    if (cashoutLimits.max_amount > 0 && numAmount > cashoutLimits.max_amount) { toast.error(`Maximum withdrawal amount is ${cashoutLimits.max_amount.toLocaleString()} XAF per transaction`); return; }
     setStep('confirm');
   };
 

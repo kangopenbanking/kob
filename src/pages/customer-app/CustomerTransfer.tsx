@@ -206,9 +206,9 @@ const CustomerTransfer: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['spending-summary'] });
 
       setStep('success');
-      toast.success(`${currency} ${amountNum.toLocaleString()} sent successfully`);
+      toast.success(`${amountNum.toLocaleString()} ${currency} sent to ${selectedRecipientName || recipient}. Your new balance is updated.`);
     } catch (err: any) {
-      toast.error(err.message || 'Transfer failed. Please try again.');
+      toast.error(err.message || 'Transfer could not be completed. Please verify recipient details and try again.');
     } finally {
       setSending(false);
     }

@@ -86,7 +86,7 @@ const CustomerCart: React.FC = () => {
       }
       setOrderComplete(data);
     } catch (err: any) {
-      toast.error(err.message || 'Checkout failed');
+      toast.error(err.message || 'Checkout could not be completed. Please try again.');
       setOrderFailed(true);
     } finally {
       setCheckingOut(false);
