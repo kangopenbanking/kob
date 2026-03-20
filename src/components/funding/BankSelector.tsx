@@ -44,7 +44,7 @@ export const BankSelector = ({
     try {
       const { data, error } = await supabase.functions.invoke("flutterwave-list-banks", {
         body: { country },
-      });
+      }) as { data: any; error: any };
       if (!error && data?.banks?.length) {
         bankList = data.banks.map((b: any) => ({ code: b.code, name: b.name, source: "flutterwave" }));
       }
