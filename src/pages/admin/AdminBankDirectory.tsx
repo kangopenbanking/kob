@@ -19,7 +19,8 @@ import {
   Building2, Plug, Activity, Heart, Link2, Plus, CheckCircle, XCircle,
   RefreshCw, Search, Upload, FileText, CreditCard, Download, Loader2,
   Globe, Shield, TrendingUp, Users, Database, ArrowUpRight, Clock,
-  FolderOpen, AlertTriangle
+  FolderOpen, AlertTriangle, Server, Wifi, Play, History, TestTube2,
+  BookOpen
 } from "lucide-react";
 
 const invokeDirectory = async (action: string, params: any = {}) => {
