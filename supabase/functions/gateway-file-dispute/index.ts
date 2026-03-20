@@ -90,7 +90,43 @@ serve(async (req) => {
       metadata: { dispute_id: dispute.id },
     });
 
-    // Send email notifications
+    // Notify institution if institution_id is provided
+    if (institution_id) {
+      const { data: inst } = await supabase.from('institutions').select('user_id, institution_name, contact_email').eq('id', institution_id).single();
+      if (inst) {
+        // In-app notification to institution owner
+        await supabase.from('app_notifications').insert({
+          user_id: inst.user_id,
+          type: 'warning',
+          title: 'New Customer Dispute',
+          message: `${profile?.full_name || 'A customer'} filed a ${dispute_type.replace(/_/g, ' ')} dispute for ${currency || 'XAF'} ${Number(amount).toLocaleString()}`,
+          icon: 'dispute',
+          institution_id: institution_id,
+          metadata: { dispute_id: dispute.id, dispute_type },
+        });
+
+        // Email to institution
+        if (inst.contact_email) {
+          await supabase.functions.invoke('managed-send-email', {
+            body: {
+              email_key: 'dispute_filed_merchant',
+              recipient_email: inst.contact_email,
+              institution_id,
+              variables: {
+                merchant_name: inst.institution_name || 'Institution',
+                dispute_type: dispute_type.replace(/_/g, ' '),
+                amount: Number(amount).toLocaleString(),
+                currency: currency || 'XAF',
+                reason,
+                dispute_ref: dispute.id.slice(0, 8).toUpperCase(),
+              },
+            },
+          });
+        }
+      }
+    }
+
+    // Send email notifications to customer
     if (profile?.email) {
       await supabase.functions.invoke('managed-send-email', {
         body: {
@@ -109,13 +145,35 @@ serve(async (req) => {
       });
     }
 
+    // Email to admins
+    if (admins?.length) {
+      const { data: adminProfiles } = await supabase.from('profiles').select('email').in('id', admins.map(a => a.user_id));
+      for (const ap of adminProfiles || []) {
+        if (ap.email) {
+          await supabase.functions.invoke('managed-send-email', {
+            body: {
+              email_key: 'dispute_filed_admin',
+              recipient_email: ap.email,
+              variables: {
+                customer_name: profile?.full_name || 'A customer',
+                dispute_type: dispute_type.replace(/_/g, ' '),
+                amount: Number(amount).toLocaleString(),
+                currency: currency || 'XAF',
+                dispute_ref: dispute.id.slice(0, 8).toUpperCase(),
+              },
+            },
+          });
+        }
+      }
+    }
+
     // Audit log
     await supabase.from('audit_logs').insert({
       action_type: 'dispute.customer_filed',
       entity_type: 'dispute',
       entity_id: dispute.id,
       performed_by: user.id,
-      details: { dispute_type, amount, currency: currency || 'XAF', transaction_ref },
+      details: { dispute_type, amount, currency: currency || 'XAF', transaction_ref, institution_id },
     });
 
     return new Response(JSON.stringify({ success: true, dispute_id: dispute.id, dispute_ref: dispute.id.slice(0, 8).toUpperCase() }), {
