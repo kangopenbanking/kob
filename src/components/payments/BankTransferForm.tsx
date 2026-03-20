@@ -29,6 +29,8 @@ export const BankTransferForm = () => {
   const [narration, setNarration] = useState("");
 
   useEffect(() => {
+    setSelectedBank("");
+    setVerifiedName("");
     fetchBanks();
   }, [currency]);
 
