@@ -6,6 +6,21 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "8.1.0",
+      date: "2026-03-20",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "PHP / Laravel SDK v1.0.0 — full-featured SDK with Guzzle HTTP client, PSR-4 autoloading, Laravel service provider, facade, and webhook verification middleware" },
+        { type: "feature", description: "PHP SDK resource classes: Accounts, Balances, Transactions, Beneficiaries, Charges, Refunds, Payouts, Gateway, Sandbox, Webhooks" },
+        { type: "feature", description: "Laravel auto-discovery with KOBServiceProvider + KOB facade + publishable config (php artisan vendor:publish --tag=kob-config)" },
+        { type: "feature", description: "VerifyWebhookSignature middleware for Laravel routes — automatic HMAC-SHA256 webhook validation" },
+        { type: "feature", description: "KOBException class with structured error_code, error_id, and statusCode properties" },
+        { type: "improvement", description: "SDK Registry edge function updated — PHP SDK now returns status 'available' with full quickstart and feature list" },
+        { type: "improvement", description: "SDKs & Libraries page updated — PHP/Laravel card now shows v1.0.0 with install command and PHP quickstart tab" },
+        { type: "improvement", description: "All three SDKs (Node.js, Python, PHP) now have complete E2E validated source code with consistent API coverage" },
+      ]
+    },
+    {
       version: "8.0.0",
       date: "2026-03-20",
       type: "major",

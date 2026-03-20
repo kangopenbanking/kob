@@ -69,6 +69,32 @@ is_valid = KangOpenBanking.verify_webhook_signature(
     secret="your_secret",
 )`;
 
+const PHP_QUICKSTART = `use KangOpenBanking\\KangOpenBanking;
+
+$kob = new KangOpenBanking([
+    'client_id' => 'your_client_id',
+    'api_key' => 'sbx_your_sandbox_key',
+    'environment' => 'sandbox',
+]);
+
+// List accounts
+$accounts = $kob->accounts->list();
+
+// Create a Mobile Money charge
+$charge = $kob->charges->create([
+    'merchant_id' => 'mch_uuid',
+    'amount' => 5000,
+    'currency' => 'XAF',
+    'channel' => 'mobile_money',
+    'customer_phone' => '237677123456',
+    'tx_ref' => 'order_001',
+]);
+
+// Verify webhook
+$valid = KangOpenBanking::verifyWebhookSignature(
+    $rawBody, $signatureHeader, 'your_secret'
+);`;
+
 const CURL_QUICKSTART = `# 1. Get access token
 curl -X POST https://api.kangopenbanking.com/functions/v1/oauth-token \\
   -H "Content-Type: application/x-www-form-urlencoded" \\
@@ -120,15 +146,17 @@ const sdkCards = [
   {
     key: "php",
     title: "PHP / Laravel",
-    desc: "PSR-7 compatible with Laravel service provider and Guzzle client",
+    desc: "PSR-4 autoloaded with Laravel service provider, facade, Guzzle client, and webhook middleware",
     install: "composer require kangopenbanking/sdk",
-    badge: "Coming Soon",
-    status: "coming_soon" as const,
+    badge: "v1.0.0",
+    status: "available" as const,
     features: [
-      "PSR-7 / PSR-18 compatible",
-      "Laravel service provider",
-      "Guzzle HTTP client",
-      "Webhook verification middleware",
+      "PSR-4 autoloaded, PHP 8.1+",
+      "Laravel service provider + KOB facade",
+      "Guzzle 7 HTTP client",
+      "Webhook HMAC-SHA256 middleware",
+      "AISP + Gateway + Sandbox resources",
+      "OAuth2 + PKCE authorization flow",
     ],
   },
   {
@@ -171,11 +199,6 @@ export default function SDKsPage() {
       <div className="grid md:grid-cols-2 gap-6">
         {sdkCards.map((sdk) => (
           <Card key={sdk.key} className="relative overflow-hidden">
-            {sdk.status === "coming_soon" && (
-              <div className="absolute top-0 right-0 bg-muted text-muted-foreground text-[10px] px-3 py-1 rounded-bl font-medium">
-                Coming Soon
-              </div>
-            )}
             <CardHeader>
               <div className="flex items-center gap-3 mb-1">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -247,6 +270,7 @@ export default function SDKsPage() {
           <TabsList>
             <TabsTrigger value="node">Node.js / TypeScript</TabsTrigger>
             <TabsTrigger value="python">Python</TabsTrigger>
+            <TabsTrigger value="php">PHP / Laravel</TabsTrigger>
             <TabsTrigger value="curl">cURL</TabsTrigger>
           </TabsList>
 
@@ -277,6 +301,22 @@ export default function SDKsPage() {
               <CardContent>
                 <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm leading-relaxed">
                   <code>{PYTHON_QUICKSTART}</code>
+                </pre>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="php">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-base">PHP / Laravel</CardTitle>
+                <Button variant="ghost" size="sm" onClick={() => copyToClipboard(PHP_QUICKSTART)}>
+                  <Copy className="h-4 w-4 mr-1" /> Copy
+                </Button>
+              </CardHeader>
+              <CardContent>
+                <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm leading-relaxed">
+                  <code>{PHP_QUICKSTART}</code>
                 </pre>
               </CardContent>
             </Card>

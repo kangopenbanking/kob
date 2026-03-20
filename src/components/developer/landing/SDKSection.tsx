@@ -8,7 +8,7 @@ import { toast } from "sonner";
 const sdks = [
   { name: "Node.js / TypeScript", install: "npm install @kangopenbanking/sdk", badge: "v1.0.0", status: "available" },
   { name: "Python", install: "pip install kangopenbanking", badge: "v1.0.0", status: "available" },
-  { name: "PHP / Laravel", install: "composer require kangopenbanking/sdk", badge: "Coming Soon", status: "coming_soon" },
+  { name: "PHP / Laravel", install: "composer require kangopenbanking/sdk", badge: "v1.0.0", status: "available" },
   { name: "cURL / REST", install: "No SDK needed — use any HTTP client", badge: "Universal", status: "available" },
 ];
 
