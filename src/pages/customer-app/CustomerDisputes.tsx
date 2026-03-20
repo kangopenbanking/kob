@@ -105,7 +105,7 @@ export default function CustomerDisputes() {
     if (txn) {
       setForm(p => ({
         ...p,
-        transaction_ref: txn.transaction_reference || txn.id,
+        transaction_ref: txn.id,
         amount: String(Math.abs(txn.amount || 0)),
         reason: p.reason || txn.transaction_information || '',
       }));
