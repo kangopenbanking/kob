@@ -71,10 +71,10 @@ export function ShippingForm({ storeName, currency, merchantId }: ShippingFormPr
     if (!merchantId) return;
     setLoadingHistory(true);
     try {
-      const { data } = await supabase
-        .from('pos_order_status_history')
+      const { data } = await (supabase
+        .from('pos_order_status_history') as any)
         .select('order_id, new_status, metadata, created_at')
-        .eq('new_status', 'shipped' as any)
+        .eq('new_status', 'shipped')
         .order('created_at', { ascending: false })
         .limit(20);
 

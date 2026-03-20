@@ -146,6 +146,24 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
     finally { setLoadingLocations(false); }
   };
 
+  const deleteLocation = async (locationId: string) => {
+    if (!merchantId) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pos-manage-locations?entity=location`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ location_id: locationId, merchant_id: merchantId }),
+      });
+      toast.success('Location removed');
+      loadLocations();
+    } catch (err: any) { toast.error(err.message || 'Failed to delete location'); }
+  };
+
   const addLocation = async () => {
     if (!merchantId || !newLocName.trim()) return;
     setAddingLocation(true);
