@@ -234,8 +234,6 @@ export default function MerchantStorefront() {
     img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
   };
 
-  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
-
   const handlePublishToggle = (checked: boolean) => {
     if (!checked && isPublished) {
       setShowUnpublishConfirm(true);
