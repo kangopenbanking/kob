@@ -40,6 +40,7 @@ import hcDashboard from "@/assets/help-centre/hc-dashboard.webp";
 import hcNotifications from "@/assets/help-centre/hc-notifications.webp";
 import hcBuild from "@/assets/help-centre/hc-build.webp";
 import hcDevices from "@/assets/help-centre/hc-devices.webp";
+import hcBanner from "@/assets/help-centre/hc-banner.png";
 
 /* ── Smooth entrance ─────────────────────────────────── */
 const fadeUp = {
