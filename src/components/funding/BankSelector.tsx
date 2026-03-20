@@ -38,35 +38,46 @@ export const BankSelector = ({
 
   const loadBanks = async () => {
     setLoading(true);
-    let bankList: Bank[] = [];
+    const kobBankList: Bank[] = [];
+    const fwBankList: Bank[] = [];
 
-    // Try Flutterwave API first
+    // Priority 1: User's linked bank accounts
     try {
-      const { data, error } = await supabase.functions.invoke("flutterwave-list-banks", {
-        body: { country },
-      }) as { data: any; error: any };
-      if (!error && data?.banks?.length) {
-        bankList = data.banks.map((b: any) => ({ code: b.code, name: b.name, source: "flutterwave" }));
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: linkedAccounts } = await supabase
+          .from("accounts")
+          .select("id, account_holder_name, swift_bic, rib_bank_code, institution_id")
+          .eq("user_id", user.id)
+          .eq("is_active", true) as { data: any[] | null };
+
+        if (linkedAccounts?.length) {
+          linkedAccounts.forEach((acc: any) => {
+            const bankCode = acc.rib_bank_code || acc.swift_bic || acc.id;
+            const bankName = acc.account_holder_name ? `${acc.account_holder_name} (Linked)` : `Linked Account`;
+            if (!kobBankList.some(b => b.code === bankCode)) {
+              kobBankList.push({ code: bankCode, name: bankName, source: "linked" });
+            }
+          });
+        }
       }
     } catch (err) {
-      console.warn("[BankSelector] Flutterwave fetch failed, using fallback:", err);
+      console.warn("[BankSelector] Linked accounts fetch failed:", err);
     }
 
-    // Also try KOB institutions
+    // Priority 2: KOB Partner banks (local institutions)
     try {
       const query = supabase
         .from("institutions" as any)
         .select("id, institution_name, swift_bic_code")
         .eq("is_active", true)
         .order("institution_name");
-      const { data: kobBanks } = await query;
-      if (kobBanks?.length) {
-        kobBanks.forEach((inst: any) => {
-          const exists = bankList.some(
-            (b) => b.name.toLowerCase().includes(inst.institution_name?.toLowerCase()?.slice(0, 10))
-          );
+      const { data: kobInst } = await query;
+      if (kobInst?.length) {
+        kobInst.forEach((inst: any) => {
+          const exists = kobBankList.some(b => b.code === (inst.swift_bic_code || inst.id));
           if (!exists) {
-            bankList.push({ code: inst.swift_bic_code || inst.id, name: inst.institution_name, source: "kob" });
+            kobBankList.push({ code: inst.swift_bic_code || inst.id, name: inst.institution_name, source: "kob" });
           }
         });
       }
@@ -74,12 +85,32 @@ export const BankSelector = ({
       console.warn("[BankSelector] KOB institutions fetch failed:", err);
     }
 
-    // Fallback to static CM banks if nothing loaded (Cameroon only)
-    if (bankList.length === 0 && country === "CM") {
-      bankList = CM_BANKS.map((b) => ({ code: b.code, name: b.name, source: "fallback" }));
+    // Priority 3: Flutterwave banks (external network)
+    try {
+      const { data, error } = await supabase.functions.invoke("flutterwave-list-banks", {
+        body: { country },
+      }) as { data: any; error: any };
+      if (!error && data?.banks?.length) {
+        data.banks.forEach((b: any) => {
+          const isDuplicate = kobBankList.some(
+            (kb) => kb.name.toLowerCase().includes(b.name?.toLowerCase()?.slice(0, 10))
+          );
+          if (!isDuplicate) {
+            fwBankList.push({ code: b.code, name: b.name, source: "flutterwave" });
+          }
+        });
+      }
+    } catch (err) {
+      console.warn("[BankSelector] Flutterwave fetch failed:", err);
     }
 
-    setBanks(bankList);
+    // Merge: KOB first, then Flutterwave, then fallback
+    let merged = [...kobBankList, ...fwBankList];
+    if (merged.length === 0 && country === "CM") {
+      merged = CM_BANKS.map((b) => ({ code: b.code, name: b.name, source: "fallback" }));
+    }
+
+    setBanks(merged);
     setLoading(false);
   };
 
