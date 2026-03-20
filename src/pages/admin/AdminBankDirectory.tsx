@@ -19,7 +19,8 @@ import {
   Building2, Plug, Activity, Heart, Link2, Plus, CheckCircle, XCircle,
   RefreshCw, Search, Upload, FileText, CreditCard, Download, Loader2,
   Globe, Shield, TrendingUp, Users, Database, ArrowUpRight, Clock,
-  FolderOpen, AlertTriangle
+  FolderOpen, AlertTriangle, Server, Wifi, Play, History, TestTube2,
+  BookOpen
 } from "lucide-react";
 
 const invokeDirectory = async (action: string, params: any = {}) => {
@@ -32,6 +33,22 @@ const invokeDirectory = async (action: string, params: any = {}) => {
 
 const invokeFileConnector = async (action: string, params: any = {}) => {
   const { data, error } = await supabase.functions.invoke("bank-file-connector", {
+    body: { action, ...params },
+  });
+  if (error) throw error;
+  return data;
+};
+
+const invokeDbConnector = async (action: string, params: any = {}) => {
+  const { data, error } = await supabase.functions.invoke("bank-db-connector", {
+    body: { action, ...params },
+  });
+  if (error) throw error;
+  return data;
+};
+
+const invokeApiConnector = async (action: string, params: any = {}) => {
+  const { data, error } = await supabase.functions.invoke("bank-api-connector", {
     body: { action, ...params },
   });
   if (error) throw error;
@@ -161,8 +178,10 @@ function BanksTab() {
                 <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Integration Mode</Label>
                 <Select value={form.integration_mode} onValueChange={v => setForm(p => ({ ...p, integration_mode: v }))}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["connector_push", "connector_pull", "file_feed", "hybrid"].map(m => <SelectItem key={m} value={m}>{m.replace(/_/g, " ")}</SelectItem>)}
+                <SelectContent>
+                    {["connector_push", "connector_pull", "file_feed", "db_connector", "mq_realtime", "hybrid"].map(m => (
+                      <SelectItem key={m} value={m}>{m.replace(/_/g, " ")}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -229,8 +248,29 @@ function BanksTab() {
 
 // ─── Connectors Tab ───
 function ConnectorsTab() {
+  const qc = useQueryClient();
+  const [showRegister, setShowRegister] = useState(false);
+  const [showCert, setShowCert] = useState(false);
+  const [connForm, setConnForm] = useState({ bank_id: "", name: "", connector_type: "push", base_url: "", environment: "sandbox" });
+  const [certForm, setCertForm] = useState({ bank_id: "", instance_id: "", certificate_pem: "" });
+
+  const { data: banksData } = useQuery({ queryKey: ["banks-list"], queryFn: () => invokeDirectory("list_banks", { limit: 200 }) });
+  const banks = banksData?.banks || [];
+
   const { data, isLoading } = useQuery({ queryKey: ["bank-connectors"], queryFn: () => invokeDirectory("list_connectors") });
   const connectors = data?.connectors || [];
+
+  const registerMut = useMutation({
+    mutationFn: (p: any) => invokeDirectory("register_connector", p),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["bank-connectors"] }); setShowRegister(false); toast({ title: "Connector registered successfully" }); },
+    onError: (e: any) => toast({ title: "Registration failed", description: e.message, variant: "destructive" })
+  });
+
+  const certMut = useMutation({
+    mutationFn: (p: any) => invokeDirectory("upload_certificate", p),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["bank-connectors"] }); setShowCert(false); toast({ title: "Certificate uploaded successfully" }); },
+    onError: (e: any) => toast({ title: "Upload failed", description: e.message, variant: "destructive" })
+  });
 
   return (
     <div className="space-y-6">
@@ -238,6 +278,100 @@ function ConnectorsTab() {
         <StatCard icon={Plug} label="Total Connectors" value={connectors.length} color="bg-primary/10 text-primary" />
         <StatCard icon={CheckCircle} label="Active" value={connectors.filter((c: any) => c.status === "active").length} color="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" />
         <StatCard icon={Activity} label="Healthy" value={connectors.filter((c: any) => c.bank_connector_health?.[0]?.status === "healthy").length} color="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Dialog open={showRegister} onOpenChange={setShowRegister}>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1.5" />Register Connector</Button></DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Register Connector Instance</DialogTitle>
+              <DialogDescription>Create a new connector instance for a bank partner</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bank</Label>
+                <Select value={connForm.bank_id} onValueChange={v => setConnForm(p => ({ ...p, bank_id: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                  <SelectContent>{banks.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.display_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Name</Label>
+                  <Input value={connForm.name} onChange={e => setConnForm(p => ({ ...p, name: e.target.value }))} className="mt-1" placeholder="e.g. Production Push" />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Type</Label>
+                  <Select value={connForm.connector_type} onValueChange={v => setConnForm(p => ({ ...p, connector_type: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["push", "pull", "file", "db", "mq"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Base URL</Label>
+                  <Input value={connForm.base_url} onChange={e => setConnForm(p => ({ ...p, base_url: e.target.value }))} className="mt-1" placeholder="https://..." />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Environment</Label>
+                  <Select value={connForm.environment} onValueChange={v => setConnForm(p => ({ ...p, environment: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sandbox">Sandbox</SelectItem>
+                      <SelectItem value="prod">Production</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button onClick={() => registerMut.mutate(connForm)} disabled={registerMut.isPending || !connForm.bank_id || !connForm.name} className="w-full">
+                {registerMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                Register Connector
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog open={showCert} onOpenChange={setShowCert}>
+          <DialogTrigger asChild><Button size="sm" variant="outline"><Shield className="h-4 w-4 mr-1.5" />Upload Certificate</Button></DialogTrigger>
+          <DialogContent className="sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Upload mTLS Certificate</DialogTitle>
+              <DialogDescription>Upload an X.509 certificate for mutual TLS authentication</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bank</Label>
+                <Select value={certForm.bank_id} onValueChange={v => setCertForm(p => ({ ...p, bank_id: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                  <SelectContent>{banks.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.display_name}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Connector Instance</Label>
+                <Select value={certForm.instance_id} onValueChange={v => setCertForm(p => ({ ...p, instance_id: v }))}>
+                  <SelectTrigger className="mt-1"><SelectValue placeholder="Select connector" /></SelectTrigger>
+                  <SelectContent>
+                    {connectors.filter((c: any) => c.bank_id === certForm.bank_id).map((c: any) => (
+                      <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Certificate PEM</Label>
+                <Textarea rows={6} value={certForm.certificate_pem} onChange={e => setCertForm(p => ({ ...p, certificate_pem: e.target.value }))} className="mt-1 font-mono text-xs" placeholder={"-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"} />
+              </div>
+              <Button onClick={() => certMut.mutate(certForm)} disabled={certMut.isPending || !certForm.instance_id || !certForm.certificate_pem} className="w-full">
+                {certMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Shield className="h-4 w-4 mr-2" />}
+                Upload Certificate
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Card>
@@ -256,7 +390,7 @@ function ConnectorsTab() {
             <TableBody>
               {isLoading ? <TableSkeleton cols={6} /> :
                 connectors.length === 0 ? (
-                  <TableRow><TableCell colSpan={6}><EmptyState icon={Plug} title="No connectors" description="Connectors appear here when banks register integration instances." /></TableCell></TableRow>
+                  <TableRow><TableCell colSpan={6}><EmptyState icon={Plug} title="No connectors registered" description="Register a connector instance to start integrating with a bank partner." /></TableCell></TableRow>
                 ) :
                 connectors.map((c: any, i: number) => (
                   <motion.tr key={c.id} variants={rowVariants} initial="hidden" animate="visible" custom={i} className="border-b transition-colors hover:bg-muted/50">
@@ -287,6 +421,469 @@ function ConnectorsTab() {
           </Table>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+// ─── DB Connectors Tab ───
+function DBConnectorsTab() {
+  const qc = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    bank_id: "", name: "", db_type: "postgresql", host: "", port: "5432", database: "",
+    username: "", ssl_enabled: true, poll_interval_seconds: "300", watermark_column: "updated_at",
+    poll_query_accounts: "", poll_query_transactions: "", poll_query_balances: ""
+  });
+
+  const { data: banksData } = useQuery({ queryKey: ["banks-list"], queryFn: () => invokeDirectory("list_banks", { limit: 200 }) });
+  const banks = banksData?.banks || [];
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["db-connections"],
+    queryFn: () => invokeDbConnector("list_connections")
+  });
+  const connections = data?.connections || [];
+
+  const { data: runsData } = useQuery({
+    queryKey: ["db-sync-runs"],
+    queryFn: () => invokeDbConnector("list_sync_runs", { limit: 50 })
+  });
+  const runs = runsData?.runs || [];
+
+  const createMut = useMutation({
+    mutationFn: (p: any) => invokeDbConnector("register_connection", {
+      ...p, port: Number(p.port), poll_interval_seconds: Number(p.poll_interval_seconds),
+      connection_config_encrypted: { host: p.host, port: Number(p.port), database: p.database, username: p.username, ssl: p.ssl_enabled }
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["db-connections"] }); setShowCreate(false); toast({ title: "DB connection registered successfully" }); },
+    onError: (e: any) => toast({ title: "Registration failed", description: e.message, variant: "destructive" })
+  });
+
+  const testMut = useMutation({
+    mutationFn: (id: string) => invokeDbConnector("test_connection", { connection_id: id }),
+    onSuccess: (d) => toast({ title: d?.success ? "Connection test passed" : "Connection test failed", variant: d?.success ? "default" : "destructive" }),
+    onError: (e: any) => toast({ title: "Test failed", description: e.message, variant: "destructive" })
+  });
+
+  const syncMut = useMutation({
+    mutationFn: (id: string) => invokeDbConnector("trigger_sync", { connection_id: id }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["db-sync-runs"] }); toast({ title: "Sync triggered — check history for results" }); },
+    onError: (e: any) => toast({ title: "Sync failed", description: e.message, variant: "destructive" })
+  });
+
+  const seedMut = useMutation({
+    mutationFn: () => invokeDbConnector("sandbox_seed_db_connector"),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["db-connections"] }); toast({ title: "Sandbox DB connector seeded" }); }
+  });
+
+  const activeConns = connections.filter((c: any) => c.is_active).length;
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard icon={Database} label="Total Connections" value={connections.length} color="bg-primary/10 text-primary" />
+        <StatCard icon={CheckCircle} label="Active" value={activeConns} color="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" />
+        <StatCard icon={History} label="Sync Runs" value={runs.length} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1.5" />Register DB Connection</Button></DialogTrigger>
+          <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Register Database Connection</DialogTitle>
+              <DialogDescription>Configure a read-only database replica for watermark-based incremental sync</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bank</Label>
+                  <Select value={form.bank_id} onValueChange={v => setForm(p => ({ ...p, bank_id: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                    <SelectContent>{banks.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.display_name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Connection Name</Label>
+                  <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="mt-1" placeholder="e.g. Prod Read Replica" />
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">DB Type</Label>
+                  <Select value={form.db_type} onValueChange={v => setForm(p => ({ ...p, db_type: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["postgresql", "mysql", "mssql", "oracle", "mongodb"].map(t => <SelectItem key={t} value={t}>{t.toUpperCase()}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Host</Label>
+                  <Input value={form.host} onChange={e => setForm(p => ({ ...p, host: e.target.value }))} className="mt-1" placeholder="db.bank.cm" />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Port</Label>
+                  <Input value={form.port} onChange={e => setForm(p => ({ ...p, port: e.target.value }))} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Database</Label>
+                  <Input value={form.database} onChange={e => setForm(p => ({ ...p, database: e.target.value }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Username</Label>
+                  <Input value={form.username} onChange={e => setForm(p => ({ ...p, username: e.target.value }))} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Poll Interval (seconds)</Label>
+                  <Input value={form.poll_interval_seconds} onChange={e => setForm(p => ({ ...p, poll_interval_seconds: e.target.value }))} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Watermark Column</Label>
+                  <Input value={form.watermark_column} onChange={e => setForm(p => ({ ...p, watermark_column: e.target.value }))} className="mt-1" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Poll Query — Accounts (optional)</Label>
+                <Textarea rows={2} value={form.poll_query_accounts} onChange={e => setForm(p => ({ ...p, poll_query_accounts: e.target.value }))} className="mt-1 font-mono text-xs" placeholder="SELECT * FROM accounts WHERE updated_at > :watermark" />
+              </div>
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Poll Query — Transactions (optional)</Label>
+                <Textarea rows={2} value={form.poll_query_transactions} onChange={e => setForm(p => ({ ...p, poll_query_transactions: e.target.value }))} className="mt-1 font-mono text-xs" placeholder="SELECT * FROM transactions WHERE updated_at > :watermark" />
+              </div>
+              <Button onClick={() => createMut.mutate(form)} disabled={createMut.isPending || !form.bank_id || !form.name || !form.host} className="w-full">
+                {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                Register Connection
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <Button variant="outline" size="sm" onClick={() => seedMut.mutate()} disabled={seedMut.isPending}>
+          <TestTube2 className="h-4 w-4 mr-1.5" />Seed Sandbox
+        </Button>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Database Connections</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30">
+                <TableHead>Connection</TableHead>
+                <TableHead>DB Type</TableHead>
+                <TableHead>Poll Interval</TableHead>
+                <TableHead>Last Poll</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? <TableSkeleton cols={6} /> :
+                connections.length === 0 ? (
+                  <TableRow><TableCell colSpan={6}><EmptyState icon={Database} title="No DB connections" description="Register a database connection to enable watermark-based sync." /></TableCell></TableRow>
+                ) :
+                connections.map((c: any, i: number) => (
+                  <motion.tr key={c.id} variants={rowVariants} initial="hidden" animate="visible" custom={i} className="border-b transition-colors hover:bg-muted/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-orange-100 dark:bg-orange-900/30 p-2">
+                          <Server className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{c.name}</p>
+                          <p className="text-xs text-muted-foreground">{c.banks?.display_name || c.bank_id?.slice(0, 8)}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline" className="font-normal">{c.db_type?.toUpperCase()}</Badge></TableCell>
+                    <TableCell className="text-sm">{c.poll_interval_seconds}s</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{c.last_poll_at ? new Date(c.last_poll_at).toLocaleString() : "Never"}</TableCell>
+                    <TableCell>
+                      <Badge className={c.is_active ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}>
+                        {c.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => testMut.mutate(c.id)} disabled={testMut.isPending}>
+                          <TestTube2 className="h-3.5 w-3.5 mr-1" />Test
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => syncMut.mutate(c.id)} disabled={syncMut.isPending}>
+                          <Play className="h-3.5 w-3.5 mr-1" />Sync
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </motion.tr>
+                ))
+              }
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {runs.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><History className="h-4 w-4" />Sync Run History</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead>Run ID</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Accounts</TableHead>
+                  <TableHead>Transactions</TableHead>
+                  <TableHead>Balances</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead>Completed</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {runs.map((r: any, i: number) => (
+                  <motion.tr key={r.id} variants={rowVariants} initial="hidden" animate="visible" custom={i} className="border-b transition-colors hover:bg-muted/50">
+                    <TableCell><code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">{r.id?.slice(0, 10)}</code></TableCell>
+                    <TableCell><Badge className={`${statusColors[r.status] || ""} font-medium`}>{r.status}</Badge></TableCell>
+                    <TableCell className="font-semibold">{r.accounts_synced ?? 0}</TableCell>
+                    <TableCell className="font-semibold">{r.transactions_synced ?? 0}</TableCell>
+                    <TableCell className="font-semibold">{r.balances_synced ?? 0}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{new Date(r.started_at).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.completed_at ? new Date(r.completed_at).toLocaleString() : "—"}</TableCell>
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
+
+// ─── API Connectors Tab ───
+function APIConnectorsTab() {
+  const qc = useQueryClient();
+  const [showCreate, setShowCreate] = useState(false);
+  const [form, setForm] = useState({
+    bank_id: "", name: "", base_url: "", auth_method: "api_key", environment: "sandbox",
+    poll_interval_seconds: "300", path_accounts: "/accounts", path_transactions: "/transactions",
+    path_balances: "/balances", path_health: "/health"
+  });
+
+  const { data: banksData } = useQuery({ queryKey: ["banks-list"], queryFn: () => invokeDirectory("list_banks", { limit: 200 }) });
+  const banks = banksData?.banks || [];
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["api-endpoints"],
+    queryFn: () => invokeApiConnector("list_endpoints")
+  });
+  const endpoints = data?.endpoints || [];
+
+  const { data: runsData } = useQuery({
+    queryKey: ["api-pull-runs"],
+    queryFn: () => invokeApiConnector("list_pull_runs", { limit: 50 })
+  });
+  const runs = runsData?.runs || [];
+
+  const createMut = useMutation({
+    mutationFn: (p: any) => invokeApiConnector("register_endpoint", {
+      bank_id: p.bank_id, name: p.name, base_url: p.base_url, auth_method: p.auth_method,
+      environment: p.environment, poll_interval_seconds: Number(p.poll_interval_seconds),
+      paths: { accounts: p.path_accounts, transactions: p.path_transactions, balances: p.path_balances, health: p.path_health }
+    }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["api-endpoints"] }); setShowCreate(false); toast({ title: "API endpoint registered successfully" }); },
+    onError: (e: any) => toast({ title: "Registration failed", description: e.message, variant: "destructive" })
+  });
+
+  const testMut = useMutation({
+    mutationFn: (id: string) => invokeApiConnector("test_endpoint", { endpoint_id: id }),
+    onSuccess: (d) => toast({ title: d?.success ? "Endpoint test passed" : "Endpoint test failed", variant: d?.success ? "default" : "destructive" }),
+    onError: (e: any) => toast({ title: "Test failed", description: e.message, variant: "destructive" })
+  });
+
+  const pullMut = useMutation({
+    mutationFn: (id: string) => invokeApiConnector("trigger_pull", { endpoint_id: id }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["api-pull-runs"] }); toast({ title: "Pull triggered — check history for results" }); },
+    onError: (e: any) => toast({ title: "Pull failed", description: e.message, variant: "destructive" })
+  });
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <StatCard icon={Globe} label="Total Endpoints" value={endpoints.length} color="bg-primary/10 text-primary" />
+        <StatCard icon={CheckCircle} label="Active" value={endpoints.filter((e: any) => e.is_active).length} color="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" />
+        <StatCard icon={History} label="Pull Runs" value={runs.length} color="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" />
+      </div>
+
+      <div className="flex items-center gap-3">
+        <Dialog open={showCreate} onOpenChange={setShowCreate}>
+          <DialogTrigger asChild><Button size="sm"><Plus className="h-4 w-4 mr-1.5" />Register API Endpoint</Button></DialogTrigger>
+          <DialogContent className="sm:max-w-2xl max-h-[85vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Register API Endpoint</DialogTitle>
+              <DialogDescription>Configure a connector_pull REST API endpoint for data polling</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 pt-2">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Bank</Label>
+                  <Select value={form.bank_id} onValueChange={v => setForm(p => ({ ...p, bank_id: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="Select bank" /></SelectTrigger>
+                    <SelectContent>{banks.map((b: any) => <SelectItem key={b.id} value={b.id}>{b.display_name}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Endpoint Name</Label>
+                  <Input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} className="mt-1" placeholder="e.g. Production API" />
+                </div>
+              </div>
+              <div>
+                <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Base URL</Label>
+                <Input value={form.base_url} onChange={e => setForm(p => ({ ...p, base_url: e.target.value }))} className="mt-1" placeholder="https://api.bank.cm/v1" />
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Auth Method</Label>
+                  <Select value={form.auth_method} onValueChange={v => setForm(p => ({ ...p, auth_method: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {["api_key", "oauth2", "basic", "bearer", "mtls"].map(a => <SelectItem key={a} value={a}>{a.replace(/_/g, " ").toUpperCase()}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Environment</Label>
+                  <Select value={form.environment} onValueChange={v => setForm(p => ({ ...p, environment: v }))}>
+                    <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sandbox">Sandbox</SelectItem>
+                      <SelectItem value="prod">Production</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Poll Interval (s)</Label>
+                  <Input value={form.poll_interval_seconds} onChange={e => setForm(p => ({ ...p, poll_interval_seconds: e.target.value }))} className="mt-1" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                {(["path_accounts", "path_transactions", "path_balances", "path_health"] as const).map(f => (
+                  <div key={f}>
+                    <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{f.replace("path_", "")} Path</Label>
+                    <Input value={(form as any)[f]} onChange={e => setForm(p => ({ ...p, [f]: e.target.value }))} className="mt-1" />
+                  </div>
+                ))}
+              </div>
+              <Button onClick={() => createMut.mutate(form)} disabled={createMut.isPending || !form.bank_id || !form.name || !form.base_url} className="w-full">
+                {createMut.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Plus className="h-4 w-4 mr-2" />}
+                Register Endpoint
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">API Endpoints</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/30">
+                <TableHead>Endpoint</TableHead>
+                <TableHead>Auth</TableHead>
+                <TableHead>Poll Interval</TableHead>
+                <TableHead>Last Poll</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? <TableSkeleton cols={6} /> :
+                endpoints.length === 0 ? (
+                  <TableRow><TableCell colSpan={6}><EmptyState icon={Globe} title="No API endpoints" description="Register a REST API endpoint to enable connector_pull data sync." /></TableCell></TableRow>
+                ) :
+                endpoints.map((e: any, i: number) => (
+                  <motion.tr key={e.id} variants={rowVariants} initial="hidden" animate="visible" custom={i} className="border-b transition-colors hover:bg-muted/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="rounded-lg bg-sky-100 dark:bg-sky-900/30 p-2">
+                          <Wifi className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{e.name}</p>
+                          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{e.base_url}</p>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell><Badge variant="outline" className="font-normal">{e.auth_method?.toUpperCase()}</Badge></TableCell>
+                    <TableCell className="text-sm">{e.poll_interval_seconds}s</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{e.last_poll_at ? new Date(e.last_poll_at).toLocaleString() : "Never"}</TableCell>
+                    <TableCell>
+                      <Badge className={e.is_active ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : "bg-muted text-muted-foreground"}>
+                        {e.is_active ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1.5">
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => testMut.mutate(e.id)} disabled={testMut.isPending}>
+                          <TestTube2 className="h-3.5 w-3.5 mr-1" />Test
+                        </Button>
+                        <Button size="sm" variant="outline" className="h-8" onClick={() => pullMut.mutate(e.id)} disabled={pullMut.isPending}>
+                          <Play className="h-3.5 w-3.5 mr-1" />Pull
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </motion.tr>
+                ))
+              }
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+
+      {runs.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2"><History className="h-4 w-4" />Pull Run History</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/30">
+                  <TableHead>Run ID</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Accounts</TableHead>
+                  <TableHead>Transactions</TableHead>
+                  <TableHead>Balances</TableHead>
+                  <TableHead>Started</TableHead>
+                  <TableHead>Completed</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {runs.map((r: any, i: number) => (
+                  <motion.tr key={r.id} variants={rowVariants} initial="hidden" animate="visible" custom={i} className="border-b transition-colors hover:bg-muted/50">
+                    <TableCell><code className="rounded bg-muted px-1.5 py-0.5 text-xs font-mono">{r.id?.slice(0, 10)}</code></TableCell>
+                    <TableCell><Badge className={`${statusColors[r.status] || ""} font-medium`}>{r.status}</Badge></TableCell>
+                    <TableCell className="font-semibold">{r.accounts_synced ?? 0}</TableCell>
+                    <TableCell className="font-semibold">{r.transactions_synced ?? 0}</TableCell>
+                    <TableCell className="font-semibold">{r.balances_synced ?? 0}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{new Date(r.started_at).toLocaleString()}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{r.completed_at ? new Date(r.completed_at).toLocaleString() : "—"}</TableCell>
+                  </motion.tr>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
@@ -751,9 +1348,18 @@ function BatchPaymentsTab() {
 
 // ─── Main Page ───
 export default function AdminBankDirectory() {
+  const guideUrl = "/docs/KOB_Bank_Integration_Guide.pdf";
+
   return (
     <div className="space-y-8">
-      <AdminPageHeader icon={Building2} title="Bank Directory" description="Manage bank registrations, connectors, file imports, batch payments & PSU links" />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <AdminPageHeader icon={Building2} title="Bank Directory" description="Manage bank registrations, connectors, DB sync, API polling, file imports, batch payments & PSU links" />
+        <Button variant="outline" size="sm" asChild>
+          <a href="https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/bank-files/KOB_Bank_Integration_Guide.pdf" target="_blank" rel="noopener noreferrer">
+            <BookOpen className="h-4 w-4 mr-1.5" />Integration Guide
+          </a>
+        </Button>
+      </div>
 
       <Tabs defaultValue="banks" className="space-y-6">
         <TabsList className="bg-muted/50 p-1 rounded-xl flex-wrap h-auto gap-1">
@@ -762,6 +1368,12 @@ export default function AdminBankDirectory() {
           </TabsTrigger>
           <TabsTrigger value="connectors" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Plug className="h-4 w-4" />Connectors
+          </TabsTrigger>
+          <TabsTrigger value="db-connectors" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Database className="h-4 w-4" />DB Connectors
+          </TabsTrigger>
+          <TabsTrigger value="api-connectors" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Globe className="h-4 w-4" />API Connectors
           </TabsTrigger>
           <TabsTrigger value="psu-links" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Link2 className="h-4 w-4" />PSU Links
@@ -779,6 +1391,8 @@ export default function AdminBankDirectory() {
 
         <TabsContent value="banks"><BanksTab /></TabsContent>
         <TabsContent value="connectors"><ConnectorsTab /></TabsContent>
+        <TabsContent value="db-connectors"><DBConnectorsTab /></TabsContent>
+        <TabsContent value="api-connectors"><APIConnectorsTab /></TabsContent>
         <TabsContent value="psu-links"><PSULinksTab /></TabsContent>
         <TabsContent value="payments"><BankPaymentsTab /></TabsContent>
         <TabsContent value="file-imports"><FileImportsTab /></TabsContent>
