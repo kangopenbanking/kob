@@ -137,10 +137,11 @@ export default function SecurityDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6 flex items-center justify-center h-96">
-      <AdminPageHeader icon={Shield} title="Security Dashboard" description="Security overview, threat monitoring, and compliance status" />
-
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <AdminPageHeader icon={Shield} title="Security Dashboard" description="Security overview, threat monitoring, and compliance status" />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
@@ -150,13 +151,12 @@ export default function SecurityDashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Security Dashboard</h1>
-        <Button onClick={loadSecurityData} variant="outline">
+      <AdminPageHeader icon={Shield} title="Security Dashboard" description="Security overview, threat monitoring, and compliance status">
+        <Button onClick={loadSecurityData} variant="outline" className="text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
-      </div>
+      </AdminPageHeader>
 
       {/* Key Metrics */}
       <div className="grid md:grid-cols-4 gap-4">

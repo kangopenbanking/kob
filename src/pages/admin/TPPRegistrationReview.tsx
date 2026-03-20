@@ -151,9 +151,7 @@ export default function TPPRegistrationReview() {
   const TPPCard = ({ tpp }: { tpp: TPPRegistration }) => (
     <Card>
       <CardHeader>
-        <div className="space-y-6 flex items-start justify-between">
-      <AdminPageHeader icon={FileSearch} title="TPP Registration Review" description="Review third-party provider registration applications" />
-
+        <div className="flex items-start justify-between">
           <div>
             <CardTitle className="text-lg">{tpp.client_name}</CardTitle>
             <CardDescription>
@@ -238,15 +236,7 @@ export default function TPPRegistrationReview() {
 
   return (
     <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <Key className="h-8 w-8 text-primary" />
-          <div>
-            <h1 className="text-3xl font-bold">TPP Registration Review</h1>
-            <p className="text-muted-foreground">
-              Review and approve Third Party Provider registrations
-            </p>
-          </div>
-        </div>
+      <AdminPageHeader icon={FileSearch} title="TPP Registration Review" description="Review third-party provider registration applications" />
 
         <Tabs defaultValue="pending" className="space-y-4">
           <TabsList>

@@ -97,10 +97,7 @@ export default function SettlementApproval() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Settlement Approval</h1>
-        <p className="text-muted-foreground">Review and approve pending institutional settlements</p>
-      </div>
+      <AdminPageHeader icon={CheckCircle} title="Settlement Approval" description="Review and approve pending institutional settlements" />
 
       <div className="grid gap-4">
         {settlements?.length === 0 && (

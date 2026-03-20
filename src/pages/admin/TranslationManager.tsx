@@ -504,10 +504,11 @@ export default function TranslationManager() {
 
   if (loading) {
     return (
-      <div className="space-y-6 flex items-center justify-center py-20">
+      <div className="space-y-6">
       <AdminPageHeader icon={Languages} title="Translation Manager" description="Manage multilingual content and translation workflows" />
-
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader2 className="h-6 w-6 animate-spin text-primary"  />
+        </div>
       </div>
     );
   }
@@ -515,17 +516,7 @@ export default function TranslationManager() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
-            <Globe className="h-6 w-6 text-primary" />
-            Translation Manager
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage all application strings and their translations
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end gap-2">
           <Button
             variant="outline"
             onClick={handleScanAllStrings}
@@ -629,7 +620,6 @@ export default function TranslationManager() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
 
       {/* Stats */}

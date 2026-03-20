@@ -423,9 +423,7 @@ export default function InstitutionVerification() {
     return (
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <div className="space-y-6 flex items-start justify-between">
-      <AdminPageHeader icon={BadgeCheck} title="Institution Verification" description="Review and verify financial institution applications" />
-
+          <div className="flex items-start justify-between">
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
@@ -624,21 +622,12 @@ export default function InstitutionVerification() {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Building2 className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-3xl font-bold">Institution Verification Dashboard</h1>
-              <p className="text-muted-foreground">
-                Manage end-to-end institution verification and onboarding
-              </p>
-            </div>
-          </div>
-          <Button variant="outline" onClick={() => refetch()}>
+        <AdminPageHeader icon={BadgeCheck} title="Institution Verification" description="Review and verify financial institution applications">
+          <Button variant="outline" onClick={() => refetch()} className="text-primary-foreground border-primary-foreground/30 hover:bg-primary-foreground/10">
             <RefreshCw className="h-4 w-4 mr-2" />
             Refresh
           </Button>
-        </div>
+        </AdminPageHeader>
 
         {isLoading ? (
           <div className="text-center py-12">

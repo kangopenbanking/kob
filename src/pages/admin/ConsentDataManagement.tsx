@@ -241,10 +241,11 @@ export default function ConsentDataManagement() {
 
   if (loading) {
     return (
-      <div className="space-y-6 flex items-center justify-center min-h-[400px]">
+      <div className="space-y-6">
       <AdminPageHeader icon={FileCheck} title="Consent Data Management" description="Manage open banking consent records and data access permissions" />
-
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex items-center justify-center min-h-[300px]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary"  />
+        </div>
       </div>
     );
   }

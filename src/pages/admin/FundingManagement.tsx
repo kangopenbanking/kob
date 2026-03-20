@@ -156,11 +156,7 @@ const FundingManagement = () => {
     <div className="space-y-6">
       <AdminPageHeader icon={Wallet} title="Funding Management" description="Monitor and manage funding intents across all consumer types" />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Funding Management</h1>
-          <p className="text-muted-foreground">Monitor and manage funding intents across all consumer types</p>
-        </div>
+      <div className="flex items-center justify-end">
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={exportCSV}><Download className="h-4 w-4 mr-1" />Export</Button>
           <Button variant="outline" size="sm" onClick={handleReconcile} disabled={reconciling}>
