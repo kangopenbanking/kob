@@ -9,6 +9,12 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const jweCheck = rejectJweContentType(req, corsHeaders);
+  if (jweCheck) return jweCheck;
+
+  const fapi = extractFapiHeaders(req);
+  logFapiContext(fapi, 'aisp-transactions');
+
   if (req.method !== 'GET') {
     return new Response(JSON.stringify({ error: 'Method not allowed' }), {
       status: 405,
