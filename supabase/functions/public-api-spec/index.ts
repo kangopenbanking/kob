@@ -94,6 +94,37 @@ const schemas = {
       created_at: { type: 'string', format: 'date-time' },
     },
   },
+  Bank: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      legal_name: { type: 'string', example: 'Afriland First Bank' },
+      display_name: { type: 'string' },
+      short_code: { type: 'string', example: 'AFB' },
+      country: { type: 'string', default: 'CM' },
+      swift_bic: { type: 'string', example: 'AFRIACMCXXX' },
+      bank_code: { type: 'string' },
+      status: { type: 'string', enum: ['draft', 'submitted', 'active', 'suspended'] },
+      integration_mode: { type: 'string', enum: ['connector_push', 'connector_pull', 'file_feed', 'hybrid'] },
+      contact_email: { type: 'string' },
+      support_phone: { type: 'string' },
+    },
+  },
+  InterbankPayment: {
+    type: 'object',
+    properties: {
+      id: { type: 'string', format: 'uuid' },
+      external_reference: { type: 'string' },
+      debtor_participant_id: { type: 'string', format: 'uuid' },
+      creditor_participant_id: { type: 'string', format: 'uuid' },
+      amount: { type: 'number', example: 500000 },
+      currency: { type: 'string', default: 'XAF' },
+      status: { type: 'string', enum: ['created', 'validated', 'submitted', 'accepted', 'rejected', 'in_process', 'settled', 'failed', 'reversed', 'expired'] },
+      correlation_id: { type: 'string' },
+      requested_at: { type: 'string', format: 'date-time' },
+      settled_at: { type: 'string', format: 'date-time' },
+    },
+  },
   Certificate: {
     type: 'object',
     properties: {
