@@ -18,12 +18,21 @@ import { API_CONFIG } from "@/config/api";
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
 
 const MerchantFundWallet = () => {
-  const [amount, setAmount] = useState("");
-  const [method, setMethod] = useState("mobile_money");
+  const [searchParams] = useSearchParams();
+  const [amount, setAmount] = useState(searchParams.get("amount") || "");
+  const [method, setMethod] = useState(searchParams.get("method") || "mobile_money");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
+
+  // Sync from query params on mount
+  useEffect(() => {
+    const m = searchParams.get("method");
+    const a = searchParams.get("amount");
+    if (m) setMethod(m);
+    if (a) setAmount(a);
+  }, [searchParams]);
 
   const { data: merchant } = useQuery({
     queryKey: ["my-merchant"],
