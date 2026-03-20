@@ -137,10 +137,11 @@ export default function SecurityDashboard() {
 
   if (loading) {
     return (
-      <div className="space-y-6 flex items-center justify-center h-96">
-      <AdminPageHeader icon={Shield} title="Security Dashboard" description="Security overview, threat monitoring, and compliance status" />
-
-        <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+      <div className="space-y-6">
+        <AdminPageHeader icon={Shield} title="Security Dashboard" description="Security overview, threat monitoring, and compliance status" />
+        <div className="flex items-center justify-center h-96">
+          <RefreshCw className="h-8 w-8 animate-spin text-primary" />
+        </div>
       </div>
     );
   }
