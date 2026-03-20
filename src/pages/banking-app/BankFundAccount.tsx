@@ -105,6 +105,10 @@ const BankFundAccount: React.FC = () => {
           funding_scope: 'end_user',
           account_id: selectedAccountId,
           customer: { phone, email },
+          bank_code: method === 'bank_transfer' ? selectedBankCode : undefined,
+          bank_name: method === 'bank_transfer' ? selectedBankName : undefined,
+          bank_source: method === 'bank_transfer' ? selectedBankSource : undefined,
+          account_number: method === 'bank_transfer' ? bankAccountNumber : undefined,
           return_url: `${API_CONFIG.SITE_URL}/bank/${institutionId}/fund`,
         },
       });
