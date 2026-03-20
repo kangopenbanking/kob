@@ -62,7 +62,7 @@ export default function PayoutManagement() {
     mutationFn: async (payoutId: string) => {
       const { data, error } = await supabase.functions.invoke("gateway-retry-payout", { body: { payout_id: payoutId } });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error) throw new Error(data.detail || data.message || data.error);
       return data;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-gateway-payouts"] }); toast.success("Payout retry initiated"); setDrawerOpen(false); },
@@ -71,12 +71,17 @@ export default function PayoutManagement() {
 
   const reversePayout = useMutation({
     mutationFn: async (payoutId: string) => {
-      const { data, error } = await supabase.functions.invoke("gateway-admin-reverse-withdrawal", { body: { payout_id: payoutId } });
+      const { data, error } = await supabase.functions.invoke("gateway-admin-reverse-withdrawal", { body: { payout_id: payoutId, reason: "Admin manual reversal" } });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error || data?.type) throw new Error(data.detail || data.message || data.error || "Reversal failed");
       return data;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-gateway-payouts"] }); toast.success("Payout reversed — balance restored"); setDrawerOpen(false); },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["admin-gateway-payouts"] });
+      const restored = data?.total_restored ? ` (${new Intl.NumberFormat('en-US').format(data.total_restored)} ${data?.currency || 'XAF'} restored)` : '';
+      toast.success(`Payout reversed — balance restored${restored}`);
+      setDrawerOpen(false);
+    },
     onError: (e: any) => toast.error(e.message || "Reversal failed"),
   });
 
@@ -84,7 +89,7 @@ export default function PayoutManagement() {
     mutationFn: async (payoutId: string) => {
       const { data, error } = await supabase.functions.invoke("gateway-cancel-payout", { body: { payout_id: payoutId } });
       if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (data?.error || data?.type) throw new Error(data.detail || data.message || data.error || "Cancel failed");
       return data;
     },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["admin-gateway-payouts"] }); toast.success("Payout cancelled"); setDrawerOpen(false); },
@@ -107,6 +112,7 @@ export default function PayoutManagement() {
     pending: payouts?.filter((p: any) => p.status === "pending" || p.status === "processing").length || 0,
     completed: payouts?.filter((p: any) => p.status === "completed").length || 0,
     failed: payouts?.filter((p: any) => p.status === "failed").length || 0,
+    reversed: payouts?.filter((p: any) => p.status === "reversed").length || 0,
     totalAmount: payouts?.reduce((sum: number, p: any) => sum + (p.amount || 0), 0) || 0,
   };
 
@@ -138,6 +144,7 @@ export default function PayoutManagement() {
       completed: { cls: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800", icon: CheckCircle, label: "Completed" },
       failed: { cls: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-400 dark:border-red-800", icon: XCircle, label: "Failed" },
       cancelled: { cls: "bg-gray-50 text-gray-600 border-gray-200 dark:bg-gray-900/40 dark:text-gray-400 dark:border-gray-700", icon: Ban, label: "Cancelled" },
+      reversed: { cls: "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-800", icon: RotateCcw, label: "Reversed" },
     };
     const cfg = map[status] || map.pending;
     const Icon = cfg.icon;
@@ -170,6 +177,7 @@ export default function PayoutManagement() {
     { label: "In-Flight", value: stats.pending, icon: Activity, color: "bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400" },
     { label: "Completed", value: stats.completed, icon: CheckCircle, color: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400" },
     { label: "Failed", value: stats.failed, icon: XCircle, color: "bg-red-100 text-red-700 dark:bg-red-950/40 dark:text-red-400" },
+    { label: "Reversed", value: stats.reversed, icon: RotateCcw, color: "bg-purple-100 text-purple-700 dark:bg-purple-950/40 dark:text-purple-400" },
     { label: "Total Volume", value: formatCurrency(stats.totalAmount), icon: TrendingUp, color: "bg-primary/10 text-primary", isCurrency: true },
   ];
 
@@ -198,7 +206,7 @@ export default function PayoutManagement() {
       </motion.div>
 
       {/* Stats Grid */}
-      <div className="grid gap-3 grid-cols-2 md:grid-cols-5">
+      <div className="grid gap-3 grid-cols-2 md:grid-cols-6">
         {statCards.map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -257,6 +265,8 @@ export default function PayoutManagement() {
                       <SelectItem value="processing">Processing</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
                       <SelectItem value="failed">Failed</SelectItem>
+                      <SelectItem value="cancelled">Cancelled</SelectItem>
+                      <SelectItem value="reversed">Reversed</SelectItem>
                     </SelectContent>
                   </Select>
                   <Button variant="outline" size="sm" onClick={handleExport} className="h-9 text-xs rounded-lg gap-1.5">
@@ -316,6 +326,7 @@ export default function PayoutManagement() {
                           {filteredPayouts.map((payout: any, index: number) => {
                             const isConsumer = !payout.merchant_id;
                             const isHighValue = payout.amount >= (isConsumer ? 1000000 : 5000000);
+                            const isTerminal = ["completed", "cancelled", "reversed"].includes(payout.status);
                             return (
                               <motion.tr
                                 key={payout.id}
@@ -366,7 +377,7 @@ export default function PayoutManagement() {
                                         <Ban className="h-3 w-3" />Cancel
                                       </Button>
                                     )}
-                                    {(payout.status === "processing" || payout.status === "pending") && (
+                                    {!isTerminal && payout.status !== "failed" && (
                                       <Button size="sm" variant="destructive" onClick={() => reversePayout.mutate(payout.id)} disabled={reversePayout.isPending} className="h-7 px-2 text-[10px] rounded-lg gap-1">
                                         <RotateCcw className="h-3 w-3" />Reverse
                                       </Button>

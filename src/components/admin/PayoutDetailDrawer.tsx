@@ -1,4 +1,4 @@
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -26,6 +26,7 @@ export function PayoutDetailDrawer({
 
   const isConsumer = !payout.merchant_id;
   const isHighValue = payout.amount >= (isConsumer ? 1000000 : 5000000);
+  const isTerminal = ["completed", "cancelled", "reversed"].includes(payout.status);
 
   const formatCurrency = (amount: number, currency: string = "XAF") =>
     new Intl.NumberFormat("en-US", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
@@ -41,6 +42,7 @@ export function PayoutDetailDrawer({
     completed: { cls: "bg-emerald-50 text-emerald-700 border-emerald-200", icon: CheckCircle, label: "Completed" },
     failed: { cls: "bg-red-50 text-red-700 border-red-200", icon: XCircle, label: "Failed" },
     cancelled: { cls: "bg-gray-50 text-gray-600 border-gray-200", icon: Ban, label: "Cancelled" },
+    reversed: { cls: "bg-purple-50 text-purple-700 border-purple-200", icon: RotateCcw, label: "Reversed" },
   };
 
   const cfg = statusConfig[payout.status] || statusConfig.pending;
@@ -65,7 +67,7 @@ export function PayoutDetailDrawer({
     { label: "Channel", value: payout.channel || "—" },
     { label: "Provider", value: payout.provider || "—" },
     { label: "Beneficiary", value: payout.beneficiary_name || "—" },
-    { label: "Destination", value: payout.destination_account || "—" },
+    { label: "Destination", value: payout.beneficiary_account || payout.destination_account || "—" },
     { label: "Reference", value: payout.tx_ref ? (
       <button onClick={() => copyToClipboard(payout.tx_ref)} className="flex items-center gap-1.5 font-mono text-[11px] hover:text-primary transition-colors group">
         {payout.tx_ref} <Copy className="h-3 w-3 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -75,6 +77,7 @@ export function PayoutDetailDrawer({
     ...(payout.gateway_merchants?.business_name ? [{ label: "Merchant", value: payout.gateway_merchants.business_name }] : []),
     { label: "Created", value: format(new Date(payout.created_at), "PPpp") },
     ...(payout.completed_at ? [{ label: "Completed", value: format(new Date(payout.completed_at), "PPpp") }] : []),
+    ...(payout.failure_reason ? [{ label: "Failure Reason", value: <span className="text-red-600 text-[11px] font-medium">{payout.failure_reason}</span> }] : []),
     ...(payout.error_message ? [{ label: "Error", value: <span className="text-red-600 text-[11px] font-medium">{payout.error_message}</span> }] : []),
   ];
 
@@ -90,6 +93,9 @@ export function PayoutDetailDrawer({
               </span>
             )}
           </SheetTitle>
+          <SheetDescription className="text-xs">
+            Review payout details and take administrative actions
+          </SheetDescription>
         </SheetHeader>
 
         <Separator />
@@ -108,7 +114,7 @@ export function PayoutDetailDrawer({
         <div className="p-6 space-y-2">
           {payout.status === "failed" && (
             <Button onClick={() => onRetry(payout.id)} disabled={retryPending} variant="outline" className="w-full rounded-xl h-10 gap-2">
-              <RefreshCw className="h-4 w-4" />Retry Payout
+              <RefreshCw className={`h-4 w-4 ${retryPending ? "animate-spin" : ""}`} />Retry Payout
             </Button>
           )}
           {payout.status === "pending" && (
@@ -116,10 +122,20 @@ export function PayoutDetailDrawer({
               <Ban className="h-4 w-4" />Cancel Payout
             </Button>
           )}
-          {(payout.status === "processing" || payout.status === "pending") && (
+          {!isTerminal && payout.status !== "failed" && (
             <Button onClick={() => onReverse(payout.id)} disabled={reversePending} variant="destructive" className="w-full rounded-xl h-10 gap-2">
-              <RotateCcw className="h-4 w-4" />Reverse & Restore Balance
+              <RotateCcw className={`h-4 w-4 ${reversePending ? "animate-spin" : ""}`} />Reverse & Restore Balance
             </Button>
+          )}
+          {payout.status === "completed" && (
+            <Button onClick={() => onReverse(payout.id)} disabled={reversePending} variant="destructive" className="w-full rounded-xl h-10 gap-2">
+              <RotateCcw className={`h-4 w-4 ${reversePending ? "animate-spin" : ""}`} />Reverse Completed Payout
+            </Button>
+          )}
+          {isTerminal && payout.status !== "completed" && (
+            <p className="text-center text-xs text-muted-foreground py-2">
+              This payout is in a terminal state ({payout.status}) and no further actions are available.
+            </p>
           )}
         </div>
       </SheetContent>
