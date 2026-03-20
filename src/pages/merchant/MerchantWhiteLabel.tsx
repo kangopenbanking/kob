@@ -11,7 +11,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Globe, FileText, CreditCard, Mail, Shield, ExternalLink, Save,
-  CheckCircle2, Loader2, AlertCircle, Copy,
+  CheckCircle2, Loader2, AlertCircle, Copy, Trash2, RefreshCw,
+  Clock, XCircle, Wifi,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -30,11 +31,19 @@ const defaultWhiteLabel = {
   custom_support_url: "",
 };
 
+const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.ElementType; description: string }> = {
+  none: { label: "Not Configured", color: "text-muted-foreground", icon: Globe, description: "No custom domain has been set up yet." },
+  pending: { label: "Pending Verification", color: "text-amber-600", icon: Clock, description: "DNS records not yet detected. This can take up to 72 hours to propagate." },
+  verified: { label: "Verified", color: "text-green-600", icon: CheckCircle2, description: "Domain ownership confirmed. SSL certificate is being provisioned." },
+  active: { label: "Active", color: "text-green-600", icon: Wifi, description: "Your custom domain is live and serving your checkout pages." },
+  failed: { label: "Verification Failed", color: "text-destructive", icon: XCircle, description: "DNS records are incorrect or not pointing to the right target." },
+};
+
 export default function MerchantWhiteLabel() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [config, setConfig] = useState(defaultWhiteLabel);
-  const [verifying, setVerifying] = useState(false);
+  const [domainInput, setDomainInput] = useState("");
 
   const { data: merchant, isLoading } = useQuery({
     queryKey: ["merchant-white-label"],
@@ -43,11 +52,14 @@ export default function MerchantWhiteLabel() {
       if (!user) throw new Error("Not authenticated");
       const { data } = await (supabase as any)
         .from("gateway_merchants")
-        .select("id, business_name, white_label_config, plan_tier, custom_domain")
+        .select("id, business_name, white_label_config, plan_tier, custom_domain, domain_verification_status, domain_verified_at, domain_ssl_status, domain_cname_target")
         .eq("user_id", user.id)
         .maybeSingle();
       if (data?.white_label_config) {
-        setConfig({ ...defaultWhiteLabel, ...data.white_label_config, custom_domain: data.custom_domain || "" });
+        setConfig({ ...defaultWhiteLabel, ...data.white_label_config });
+      }
+      if (data?.custom_domain) {
+        setDomainInput(data.custom_domain);
       }
       return data;
     },
@@ -56,12 +68,10 @@ export default function MerchantWhiteLabel() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!merchant?.id) throw new Error("No merchant");
-      const { custom_domain, ...wlConfig } = config;
       const { error } = await (supabase as any)
         .from("gateway_merchants")
         .update({
-          white_label_config: wlConfig,
-          custom_domain: custom_domain || null,
+          white_label_config: config,
           updated_at: new Date().toISOString(),
         })
         .eq("id", merchant.id);
@@ -69,38 +79,49 @@ export default function MerchantWhiteLabel() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["merchant-white-label"] });
-      toast.success("White-label settings saved");
+      toast.success("White-label settings saved successfully");
     },
-    onError: () => toast.error("Failed to save settings"),
+    onError: () => toast.error("Failed to save white-label settings. Please try again."),
   });
 
-  const handleVerifyDns = async () => {
-    if (!config.custom_domain.trim()) {
-      toast.error("Enter a domain first");
-      return;
-    }
-    setVerifying(true);
-    try {
-      // Attempt a DNS lookup via fetch to the domain
-      // In production this would call an edge function; for now we simulate verification
-      await new Promise(r => setTimeout(r, 2000));
-
-      // Check if domain has a valid format
-      const domainRegex = /^[a-zA-Z0-9][a-zA-Z0-9-_.]+\.[a-zA-Z]{2,}$/;
-      if (!domainRegex.test(config.custom_domain.trim())) {
-        toast.error("Invalid domain format. Use format: pay.yourdomain.com");
-        return;
+  const verifyMutation = useMutation({
+    mutationFn: async () => {
+      if (!merchant?.id) throw new Error("No merchant");
+      const { data, error } = await supabase.functions.invoke("verify-custom-domain", {
+        body: { action: "verify", merchant_id: merchant.id, domain: domainInput.trim() },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["merchant-white-label"] });
+      if (data?.verified) {
+        toast.success("Domain verified! SSL certificate is being provisioned.");
+      } else {
+        toast.warning(data?.message || "CNAME record not found. Please check your DNS settings and try again.");
       }
+    },
+    onError: (err: any) => {
+      toast.error(err?.message || "DNS verification failed. Please check your domain settings.");
+    },
+  });
 
-      // Mark as verified (in production, this would check actual DNS CNAME)
-      setConfig(prev => ({ ...prev, custom_domain_verified: true }));
-      toast.success("Domain format validated. Save to apply. Full DNS verification runs on save.");
-    } catch {
-      toast.error("DNS verification failed. Ensure CNAME is set correctly.");
-    } finally {
-      setVerifying(false);
-    }
-  };
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      if (!merchant?.id) throw new Error("No merchant");
+      const { data, error } = await supabase.functions.invoke("verify-custom-domain", {
+        body: { action: "remove", merchant_id: merchant.id },
+      });
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => {
+      setDomainInput("");
+      queryClient.invalidateQueries({ queryKey: ["merchant-white-label"] });
+      toast.success("Custom domain removed successfully");
+    },
+    onError: () => toast.error("Failed to remove domain. Please try again."),
+  });
 
   const updateField = (key: string, value: any) => {
     setConfig((prev) => ({ ...prev, [key]: value }));
@@ -108,6 +129,12 @@ export default function MerchantWhiteLabel() {
 
   const { isAdmin } = useIsAdmin();
   const isEnterprise = merchant?.plan_tier === "enterprise" || isAdmin;
+
+  const domainStatus = merchant?.domain_verification_status || "none";
+  const statusInfo = STATUS_CONFIG[domainStatus] || STATUS_CONFIG.none;
+  const StatusIcon = statusInfo.icon;
+  const cnameTarget = merchant?.domain_cname_target || "checkout.kangopenbanking.com";
+  const hasDomain = !!merchant?.custom_domain;
 
   if (isLoading) {
     return (
@@ -163,72 +190,180 @@ export default function MerchantWhiteLabel() {
           {/* Custom Domain */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Globe className="h-5 w-5" /> Custom Domain
-              </CardTitle>
-              <CardDescription>
-                Use your own domain for payment pages and checkout
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Globe className="h-5 w-5" /> Custom Domain
+                  </CardTitle>
+                  <CardDescription>
+                    Use your own domain for payment pages and checkout
+                  </CardDescription>
+                </div>
+                {hasDomain && (
+                  <Badge
+                    variant="outline"
+                    className={`${statusInfo.color} border-current/20 gap-1.5`}
+                  >
+                    <StatusIcon className="h-3 w-3" />
+                    {statusInfo.label}
+                  </Badge>
+                )}
+              </div>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-5">
+              {/* Domain Input */}
               <div className="space-y-2">
                 <Label>Payment Domain</Label>
                 <div className="flex gap-3">
                   <Input
-                    value={config.custom_domain}
-                    onChange={(e) => {
-                      updateField("custom_domain", e.target.value);
-                      if (config.custom_domain_verified) updateField("custom_domain_verified", false);
-                    }}
+                    value={domainInput}
+                    onChange={(e) => setDomainInput(e.target.value)}
                     placeholder="pay.yourdomain.com"
                     className="flex-1"
                   />
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleVerifyDns}
-                    disabled={verifying || !config.custom_domain.trim()}
+                    onClick={() => verifyMutation.mutate()}
+                    disabled={verifyMutation.isPending || !domainInput.trim()}
                   >
-                    {verifying ? (
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    {verifyMutation.isPending ? (
+                      <Loader2 className="h-4 w-4 mr-1.5 animate-spin" />
                     ) : (
-                      <Shield className="h-4 w-4 mr-1" />
+                      <Shield className="h-4 w-4 mr-1.5" />
                     )}
-                    {verifying ? "Verifying..." : "Verify DNS"}
+                    {verifyMutation.isPending ? "Verifying…" : "Verify DNS"}
                   </Button>
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Use a subdomain like <code className="text-xs bg-muted px-1 rounded">pay.yourdomain.com</code> or <code className="text-xs bg-muted px-1 rounded">checkout.yourdomain.com</code>
+                </p>
               </div>
 
               {/* DNS Instructions */}
-              <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-2">
-                <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <AlertCircle className="w-3.5 h-3.5" /> DNS Configuration Required
+              <div className="rounded-xl border border-border bg-muted/30 p-5 space-y-4">
+                <p className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                  <AlertCircle className="w-4 h-4 text-primary" /> DNS Configuration Required
                 </p>
-                <p className="text-xs text-muted-foreground">
-                  Add a <strong>CNAME</strong> record in your DNS provider:
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Add the following <strong>CNAME</strong> record at your domain registrar (e.g., GoDaddy, Namecheap, Cloudflare):
                 </p>
-                <div className="flex items-center gap-2 bg-background rounded-lg border border-border px-3 py-2">
-                  <code className="text-xs font-mono flex-1">
-                    {config.custom_domain || "pay.yourdomain.com"} → checkout.kangopenbanking.com
-                  </code>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => {
-                      navigator.clipboard.writeText("checkout.kangopenbanking.com");
-                      toast.success("CNAME target copied");
-                    }}
-                  >
-                    <Copy className="w-3 h-3" />
-                  </Button>
+
+                <div className="overflow-x-auto rounded-lg border border-border">
+                  <table className="w-full text-xs">
+                    <thead className="bg-muted/60">
+                      <tr>
+                        <th className="px-4 py-2 text-left font-bold text-foreground">Type</th>
+                        <th className="px-4 py-2 text-left font-bold text-foreground">Name</th>
+                        <th className="px-4 py-2 text-left font-bold text-foreground">Value</th>
+                        <th className="px-4 py-2 text-left font-bold text-foreground">TTL</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="px-4 py-2.5 border-t border-border font-mono">CNAME</td>
+                        <td className="px-4 py-2.5 border-t border-border font-mono">
+                          {domainInput ? domainInput.split('.')[0] : 'pay'}
+                        </td>
+                        <td className="px-4 py-2.5 border-t border-border">
+                          <div className="flex items-center gap-2">
+                            <code className="font-mono text-primary">{cnameTarget}</code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 shrink-0"
+                              onClick={() => {
+                                navigator.clipboard.writeText(cnameTarget);
+                                toast.success("CNAME target copied to clipboard");
+                              }}
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </td>
+                        <td className="px-4 py-2.5 border-t border-border font-mono">Auto / 3600</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="text-xs text-muted-foreground space-y-1.5">
+                  <p>• DNS propagation can take <strong>up to 72 hours</strong>, but usually completes within 30 minutes.</p>
+                  <p>• If using <strong>Cloudflare</strong>, set the proxy status to <strong>"DNS Only"</strong> (grey cloud icon).</p>
+                  <p>• Remove any existing A or CNAME records for the same subdomain first.</p>
+                  <p>• Use <a href="https://dnschecker.org" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">DNSChecker.org</a> to verify your records are visible globally.</p>
                 </div>
               </div>
 
-              {config.custom_domain_verified && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-green-500/10 text-green-700">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <span className="text-sm font-medium">Domain verified and active</span>
+              {/* Domain Status Panel */}
+              {hasDomain && (
+                <div className={`rounded-xl border p-4 space-y-3 ${
+                  domainStatus === 'verified' || domainStatus === 'active'
+                    ? 'border-green-500/20 bg-green-500/5'
+                    : domainStatus === 'pending'
+                    ? 'border-amber-500/20 bg-amber-500/5'
+                    : domainStatus === 'failed'
+                    ? 'border-destructive/20 bg-destructive/5'
+                    : 'border-border bg-muted/20'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <StatusIcon className={`h-4 w-4 ${statusInfo.color}`} />
+                      <span className={`text-sm font-semibold ${statusInfo.color}`}>
+                        {statusInfo.label}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {(domainStatus === 'pending' || domainStatus === 'failed') && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => verifyMutation.mutate()}
+                          disabled={verifyMutation.isPending}
+                          className="gap-1.5 text-xs"
+                        >
+                          <RefreshCw className={`h-3 w-3 ${verifyMutation.isPending ? 'animate-spin' : ''}`} />
+                          Retry
+                        </Button>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          if (confirm("Remove this custom domain? Your checkout will revert to the default Kang domain.")) {
+                            removeMutation.mutate();
+                          }
+                        }}
+                        disabled={removeMutation.isPending}
+                        className="gap-1.5 text-xs text-destructive hover:text-destructive"
+                      >
+                        {removeMutation.isPending ? <Loader2 className="h-3 w-3 animate-spin" /> : <Trash2 className="h-3 w-3" />}
+                        Remove
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">{statusInfo.description}</p>
+                  <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                    <span>Domain: <code className="bg-muted px-1 rounded font-mono">{merchant?.custom_domain}</code></span>
+                    {merchant?.domain_verified_at && (
+                      <span>Verified: {new Date(merchant.domain_verified_at).toLocaleDateString()}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* SSL Status */}
+              {(domainStatus === 'verified' || domainStatus === 'active') && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-green-500/5 border border-green-500/10">
+                  <Shield className="h-4 w-4 text-green-600" />
+                  <div>
+                    <p className="text-sm font-medium text-green-700">SSL Certificate</p>
+                    <p className="text-xs text-muted-foreground">
+                      {merchant?.domain_ssl_status === 'active'
+                        ? 'SSL certificate is active. Your checkout is served over HTTPS.'
+                        : 'SSL certificate is being provisioned automatically. This may take a few minutes.'}
+                    </p>
+                  </div>
                 </div>
               )}
             </CardContent>
