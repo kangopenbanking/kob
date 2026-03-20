@@ -403,12 +403,12 @@ export function useMobileMoneyCharge() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['bank-transactions', institutionId] });
-      toast.success('Mobile Money transfer initiated!');
+      toast.success(`${variables.amount.toLocaleString()} XAF sent to ${variables.phone_number} via ${variables.provider === 'mtn' ? 'MTN MoMo' : variables.provider === 'orange' ? 'Orange Money' : 'Mobile Money'}`);
     },
-    onError: (err: any) => toast.error(err.message || 'Transfer failed'),
+    onError: (err: any) => toast.error(err.message || 'Mobile Money transfer failed. Please check the number and try again.'),
   });
 }
 
