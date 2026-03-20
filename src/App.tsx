@@ -331,6 +331,7 @@ const ConnectorHealth = lazy(() => import("./pages/institution/connector/Connect
 const ConnectorAudit = lazy(() => import("./pages/institution/connector/ConnectorAudit"));
 const ConnectorTemplates = lazy(() => import("./pages/institution/connector/ConnectorTemplates"));
 const ConnectorGuide = lazy(() => import("./pages/institution/connector/ConnectorGuide"));
+const ConnectorOnboard = lazy(() => import("./pages/institution/connector/ConnectorOnboard"));
 
 // Merchant Portal
 const MerchantDashboard = lazy(() => import("./pages/merchant/MerchantDashboard"));
