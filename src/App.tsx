@@ -320,6 +320,17 @@ const GatewayMerchants = lazy(() => import("./pages/institution/GatewayMerchants
 const GatewayCustomers = lazy(() => import("./pages/institution/GatewayCustomers"));
 const InstitutionFundAccount = lazy(() => import("./pages/institution/InstitutionFundAccount"));
 
+// Institution Connector Kit
+const ConnectorOverview = lazy(() => import("./pages/institution/connector/ConnectorOverview"));
+const ConnectorUploads = lazy(() => import("./pages/institution/connector/ConnectorUploads"));
+const ConnectorMappings = lazy(() => import("./pages/institution/connector/ConnectorMappings"));
+const ConnectorBatches = lazy(() => import("./pages/institution/connector/ConnectorBatches"));
+const ConnectorStatus = lazy(() => import("./pages/institution/connector/ConnectorStatus"));
+const ConnectorReconciliation = lazy(() => import("./pages/institution/connector/ConnectorReconciliation"));
+const ConnectorHealth = lazy(() => import("./pages/institution/connector/ConnectorHealth"));
+const ConnectorAudit = lazy(() => import("./pages/institution/connector/ConnectorAudit"));
+const ConnectorTemplates = lazy(() => import("./pages/institution/connector/ConnectorTemplates"));
+
 // Merchant Portal
 const MerchantDashboard = lazy(() => import("./pages/merchant/MerchantDashboard"));
 const MerchantTransactions = lazy(() => import("./pages/merchant/MerchantTransactions"));
@@ -589,6 +600,16 @@ function App() {
               <Route path="gateway-customers" element={<GatewayCustomers />} />
               <Route path="gateway-merchants" element={<GatewayMerchants />} />
               <Route path="fund-account" element={<InstitutionFundAccount />} />
+              {/* Bank Connector Kit */}
+              <Route path="connector" element={<ConnectorOverview />} />
+              <Route path="connector/uploads" element={<ConnectorUploads />} />
+              <Route path="connector/mappings" element={<ConnectorMappings />} />
+              <Route path="connector/batches" element={<ConnectorBatches />} />
+              <Route path="connector/status" element={<ConnectorStatus />} />
+              <Route path="connector/reconciliation" element={<ConnectorReconciliation />} />
+              <Route path="connector/health" element={<ConnectorHealth />} />
+              <Route path="connector/audit" element={<ConnectorAudit />} />
+              <Route path="connector/templates" element={<ConnectorTemplates />} />
             </Route>
             {/* Merchant Portal Routes */}
             <Route path="/merchant" element={<ProtectedRoute><RoleGuard allowedRoles={['merchant']} redirectTo="/dashboard"><MerchantLayout /></RoleGuard></ProtectedRoute>}>
