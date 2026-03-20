@@ -14,6 +14,7 @@ import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelecto
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { BankSelector } from "@/components/funding/BankSelector";
 import { StatCard } from "@/components/ui/stat-card";
 import { API_CONFIG } from "@/config/api";
 
