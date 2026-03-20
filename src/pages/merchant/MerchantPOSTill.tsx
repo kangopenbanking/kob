@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useNavigate } from 'react-router-dom';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
