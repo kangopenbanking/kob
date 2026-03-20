@@ -14,7 +14,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { CM_BANKS } from "@/constants/cameroon-banks";
+import { CM_BANKS, CM_MOMO_PROVIDERS } from "@/constants/cameroon-banks";
 
 const CAMEROON_BANKS = CM_BANKS.map(b => ({ code: b.code, name: b.name }));
 
