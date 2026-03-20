@@ -131,6 +131,11 @@ export default function MerchantStorefront() {
         setBannerUrl(sp.banner_url || '');
         setIsPublished(sp.is_published || false);
         setCountry(sp.country || 'CM');
+        setSubCategory((sp as any).sub_category || '');
+        const savedAttrs = (sp as any).custom_attributes_json;
+        if (Array.isArray(savedAttrs) && savedAttrs.length > 0) {
+          setCustomAttributes(savedAttrs);
+        }
       }
       const { data: sub } = await supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(*)').eq('merchant_id', merchant.id).eq('status', 'active').maybeSingle();
       setSubscription(sub);
