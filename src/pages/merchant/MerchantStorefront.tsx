@@ -1251,7 +1251,7 @@ export default function MerchantStorefront() {
 
         {/* ══ PRODUCTS ══ */}
         <TabsContent value="products">
-          <ProductsTab merchantId={merchantId} currency={currency} />
+          <ProductsTab merchantId={merchantId} currency={currency} standardAttributes={POS_PRODUCT_ATTRIBUTES} customAttributes={customAttributes} />
         </TabsContent>
 
         {/* ══ INTEGRATIONS ══ */}
