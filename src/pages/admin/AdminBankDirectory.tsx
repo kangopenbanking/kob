@@ -178,8 +178,10 @@ function BanksTab() {
                 <Label className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Integration Mode</Label>
                 <Select value={form.integration_mode} onValueChange={v => setForm(p => ({ ...p, integration_mode: v }))}>
                   <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {["connector_push", "connector_pull", "file_feed", "hybrid"].map(m => <SelectItem key={m} value={m}>{m.replace(/_/g, " ")}</SelectItem>)}
+                <SelectContent>
+                    {["connector_push", "connector_pull", "file_feed", "db_connector", "mq_realtime", "hybrid"].map(m => (
+                      <SelectItem key={m} value={m}>{m.replace(/_/g, " ")}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
