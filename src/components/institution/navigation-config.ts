@@ -3,7 +3,7 @@ import {
   CreditCard, Building2, ArrowUpDown, DollarSign, TrendingUp, ShoppingCart,
   Store, Shield, UserCheck, Wallet, MapPin, Banknote, PiggyBank, BookOpen,
   Receipt, KeyRound, ScrollText, UserPlus, ShieldAlert, Bell, Mail,
-  Link2, RefreshCw, GitBranch, Contact, ClipboardList, UserCog,
+  Link2, RefreshCw, GitBranch, Contact, ClipboardList, UserCog, HelpCircle,
 } from "lucide-react";
 
 export const institutionNavigation = [
