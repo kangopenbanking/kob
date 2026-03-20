@@ -14,24 +14,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { CM_BANKS } from "@/constants/cameroon-banks";
 
-const CAMEROON_BANKS = [
-  { code: "10005", name: "Afriland First Bank" },
-  { code: "10029", name: "Atlantic Bank Cameroon" },
-  { code: "10009", name: "Banque Internationale du Cameroun (BICEC)" },
-  { code: "10004", name: "CBC (Commercial Bank of Cameroon)" },
-  { code: "10033", name: "CCA Bank" },
-  { code: "10013", name: "Citibank Cameroon" },
-  { code: "10007", name: "Ecobank Cameroon" },
-  { code: "10023", name: "NFC Bank" },
-  { code: "10003", name: "SCB (Société Commerciale de Banque)" },
-  { code: "10002", name: "Société Générale Cameroun" },
-  { code: "10008", name: "Standard Chartered Cameroon" },
-  { code: "10011", name: "UBA Cameroon" },
-  { code: "10015", name: "UBC (Union Bank of Cameroon)" },
-  { code: "10035", name: "BC-PME SA" },
-  { code: "10037", name: "BGFI Bank Cameroon" },
-];
+const CAMEROON_BANKS = CM_BANKS.map(b => ({ code: b.code, name: b.name }));
 
 const MOMO_PROVIDERS = [
   { id: "mtn_momo", name: "MTN Mobile Money", prefix: "+237 67/65" },
