@@ -58,7 +58,7 @@ const BankQRPay: React.FC = () => {
       setScanResult({ account: data.merchant_id, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
       setMerchantQR(data);
-      toast.success(`Merchant: ${data.merchant_name || 'Store'}`);
+      toast.success(`Merchant "${data.merchant_name || 'Store'}" recognized — enter amount to pay`);
     } else if (data.type === 'kob_pay' && data.account) {
       setScanResult({ account: data.account, amount: data.amount });
       setPayAmount(data.amount ? String(data.amount) : '');
