@@ -1,230 +1,208 @@
 
 
-# KOB Phase 2 + Phase 3: Interbank Engine + Bank Connector Kit
+# KOB Bank Connector Layer — Full Implementation Plan
 
-## Current State Summary
+## Current State Assessment
 
-**Existing infrastructure that will be leveraged (not modified):**
-- `iso-messaging` edge function: already generates pacs.008, pacs.002, parses camt.053, pain.001
-- `iso20022_messages` table with full schema (message_id, direction, status, raw_xml, parsed_data)
-- `iso20022_payment_instructions`, `iso20022_credit_transfers`, `iso20022_account_statements` tables
-- Double-entry ledger: `ledger_accounts`, `journal_entries`, `journal_lines` tables + `journal-post` edge function
-- mTLS utilities in `_shared/mtls.ts` (cert extraction, thumbprint validation)
-- `client_certificates` table for cert storage
-- Gateway settlement, reconciliation, and payout infrastructure (250+ edge functions)
+**Already exists (will be leveraged, not modified):**
+- `interbank_participants` + `interbank_endpoints` tables (from Phase 2/3 migration) — participant/connector registration with mTLS
+- `interbank-engine` edge function with connector management actions (register_connector, upload_connector_cert, connector_health, rotate_connector_keys)
+- `interbank-connector-inbound` edge function with mTLS enforcement for pacs.002/camt.054 ingestion
+- `bank_connections` + `bank_reconciliations` tables (legacy Phase 14 schema for SFTP/H2H/REST connections)
+- `bank-sync`, `bank-import-transactions`, `bank-reconcile` edge functions (legacy bank sync)
+- `directory-banks-cm` edge function (static Cameroon bank directory with 15 banks)
+- `client_certificates` table + mTLS utilities in `_shared/mtls.ts`
+- `AdminInterbankPayments.tsx` page with 6 tabs (Payments, Participants, Messages, Connectors, Outbox, Reconciliation)
+- Existing AISP endpoints (`aisp-accounts`, `aisp-balances`, `aisp-transactions`, etc.) — currently user-scoped, not connector-backed
 
-**Gaps to fill:**
-- No `interbank_participants`, `interbank_payments`, `interbank_messages`, `interbank_status_events` tables
-- No payment state machine with transition enforcement
-- No outbox/dispatch pattern for reliable message delivery
-- No bank connector registration or runtime protocol
-- No admin UI for interbank payments or connector health
-- No sandbox interbank simulator
-- Existing ISO messaging is stateless (generate/parse only, no workflow linkage)
+**Gaps this plan fills:**
+- No first-class `banks` table with lifecycle (draft→submitted→active→suspended)
+- No bank-sourced data tables (`bank_customers`, `bank_accounts`, `bank_balances`, `bank_transactions`, `bank_beneficiaries`)
+- No bulk ingestion endpoints for PUSH model
+- No PSU↔bank linking/mapping
+- AISP returns only user's own accounts, not connector-backed bank data
+- No PISP routing to bank connector rail
+- No Bank Directory admin UI or sandbox bank simulator
+- No developer-facing bank onboarding docs
 
 ---
 
 ## Implementation Plan
 
 ### Phase 0 — Baseline Audit + Documentation
-**Files created:**
-- `docs/interbank/baseline/system-inventory.md` — inventory of existing ISO, ledger, payment, webhook, and admin modules
-- `docs/interbank/baseline/gaps.md` — gap analysis against Phase 2/3 requirements
-- `docs/interbank/baseline/e2e-baseline-results.md` — smoke test results for existing ISO endpoints
 
-**Actions:**
-- Invoke existing `iso-messaging` actions (pacs008-generate, pacs002-generate, camt053-parse) to verify they work
-- Query `iso20022_messages` and `journal_entries` tables to confirm data persistence
-- Document results in markdown files
+**3 markdown files created:**
+- `docs/bank-connectors/baseline/system-inventory.md` — inventory of existing bank-related tables, edge functions, AISP/PISP endpoints, admin UI
+- `docs/bank-connectors/baseline/current-gaps.md` — gap analysis against all 8 phases
+- `docs/bank-connectors/baseline/e2e-results.md` — smoke test documentation of existing bank directory, AISP, and interbank engine endpoints
 
 ---
 
-### Phase 2 — Interbank Engine
+### Phase 1 — Bank Directory + Onboarding
 
-#### Step 2.1: Data Model + State Machine
-
-**Database migration** — create 6 new tables (additive only):
+**Database migration** — 5 new tables:
 
 ```text
-interbank_participants
-  ├── id, type (bank|credit_union|switch_partner)
-  ├── participant_code (unique), legal_name, display_name
-  ├── status (draft|active|suspended)
-  ├── settlement_mode (prefunded|net_settlement|manual)
-  └── RLS: admin-only CRUD
+banks
+  ├── id, legal_name, display_name, short_code (unique)
+  ├── country (default 'CM'), swift_bic, bank_code
+  ├── status (draft|submitted|active|suspended)
+  ├── integration_mode (connector_push|connector_pull|file_feed|hybrid)
+  ├── contact_email, support_phone
+  ├── RLS: admin full CRUD, authenticated read active
 
-interbank_endpoints
-  ├── id, participant_id (FK)
-  ├── env (sandbox|prod), delivery_mode (message_queue|https_push|file)
-  ├── base_url, queue_name, status, last_seen_at
-  └── RLS: admin-only
+bank_branches
+  ├── id, bank_id (FK), name, city, address
+  ├── postiq_code, is_active
 
-interbank_payments
-  ├── id, external_reference, idempotency_key
-  ├── initiated_by, debtor/creditor_participant_id (FKs)
-  ├── debtor/creditor_account_ref, amount, currency (default XAF)
-  ├── status (10-state enum: created→validated→submitted→accepted→
-  │          rejected→in_process→settled→failed→reversed→expired)
-  ├── correlation_id, trace_id, error_code/message
-  ├── requested_at, submitted_at, settled_at
-  └── RLS: admin + service_role
+bank_connector_instances
+  ├── id, bank_id (FK), name, environment (sandbox|prod)
+  ├── base_url, connector_type (rest|iso20022|file)
+  ├── status (pending|active|disabled), last_seen_at
 
-interbank_messages
-  ├── id, payment_id (FK), direction, message_type
-  ├── message_id (unique for dedupe), correlation_id
-  ├── payload_format (xml|json), payload_raw
-  ├── signature_valid, status, error_code
-  └── RLS: admin-only
+bank_connector_certificates
+  ├── id, bank_id, instance_id (FK)
+  ├── certificate_pem, thumbprint, valid_from, valid_until, revoked_at
 
-interbank_status_events
-  ├── id, payment_id (FK)
-  ├── status_from, status_to, source
-  ├── event_time, details_json, correlation_id
-  └── RLS: admin-only
-
-interbank_reconciliation_items
-  ├── id, participant_id (FK)
-  ├── period_start/end, expected/actual_total
-  ├── mismatch_count, status
-  └── RLS: admin-only
-
-event_outbox
-  ├── id, event_type, payload (jsonb)
-  ├── status (pending|delivered|failed|dead_letter)
-  ├── retries, max_retries, next_retry_at
-  ├── correlation_id, created_at, processed_at
-  └── RLS: service_role only
+bank_connector_health
+  ├── instance_id (FK), status, latency_ms
+  ├── last_check_at, details_json
 ```
 
-**Edge function: `interbank-engine`** (consolidated router pattern)
-- Actions: `create_payment`, `get_payment`, `list_payments`, `submit_payment`, `reverse_payment`, `transition_status`, `list_messages`, `get_message`
-- State machine with transition map enforced in code:
-  ```text
-  created → validated → submitted → accepted → settled
-                                  → rejected
-                                  → in_process → settled
-                                               → failed
-  any terminal → reversed (admin only)
-  ```
-- Every transition records an `interbank_status_events` row
-- Concurrency safety via `SELECT ... FOR UPDATE` on payment row during transitions
-
-#### Step 2.2: ISO 20022 Canonical Mapping
-
-**Extend `interbank-engine`** with actions:
-- `generate_pacs008` — maps `interbank_payments` row → pacs.008 XML, stores in `interbank_messages`
-- `process_pacs002` — parses inbound pacs.002, dedupes by message_id, updates payment status
-- `process_camt054` — parses inbound camt.054 credit notification, triggers settlement transition
-
-Links to existing `iso-messaging` function for XML generation/parsing but adds workflow orchestration.
-
-#### Step 2.3: Ledger Postings + Holds
-
-**Extend `interbank-engine`** with ledger integration:
-- On `submit`: create hold via `journal-post` (debit debtor available → credit suspense/hold account)
-- On `accepted`/`settled`: finalize posting (debit suspense → credit interbank clearing → credit creditor)
-- On `rejected`/`failed`: reverse hold posting (credit debtor available, debit suspense)
-- All postings keyed by `(payment_id, posting_type)` for idempotency via existing `idempotency_keys` table
-- Create standard ledger accounts: `INTERBANK_CLEARING`, `INTERBANK_SUSPENSE`, `INTERBANK_SETTLEMENT` via seed data
-
-#### Step 2.4: Dispatch Layer (Outbox Pattern)
-
-**New edge function: `interbank-dispatch-worker`**
-- Polls `event_outbox` for pending events
-- Routes based on `interbank_endpoints.delivery_mode`:
-  - `https_push`: POST pacs.008 to connector URL
-  - `file`: write to storage bucket, mark as `awaiting_bank_processing`
-  - `message_queue`: placeholder for future queue integration
-- Exponential backoff (max 7 retries), moves to `dead_letter` after exhaustion
-- Callable by cron or admin manual trigger
-
-**New edge function: `interbank-outbox-cron`**
-- Runs every 1 minute, invokes `interbank-dispatch-worker`
-- Registered in `config.toml`
+**New edge function: `bank-directory`** (consolidated router)
+- Actions: `register_bank`, `list_banks`, `get_bank`, `update_bank`, `submit_bank`, `approve_bank`, `suspend_bank`, `list_directory` (public active banks), `register_connector`, `upload_certificate`, `rotate_secret`, `list_connectors`, `connector_health`
+- Links to existing `directory-banks-cm` data for seeding Cameroon banks
+- Admin-only for management; public read for directory listing
 
 ---
 
-### Phase 3 — Bank Connector Kit
+### Phase 2 — Bank Connector Contract + Data Ingestion
 
-#### Step 3.1: Connector Registration + mTLS
+**Database migration** — 5 bank-sourced data tables:
 
-**Extend `interbank-engine`** with connector management actions:
-- `register_connector` — creates connector instance for a participant
-- `upload_connector_cert` — stores client certificate via existing `client_certificates` table + mTLS utils
-- `connector_health` — returns last_seen, latency, error_rate
-- `rotate_connector_keys` — rotates HMAC signing key
+```text
+bank_customers (PSU mapping)
+  ├── id, bank_id (FK), external_customer_id
+  ├── user_id (nullable FK to auth — linked later)
+  ├── name, email, phone, status
 
-**New edge function: `interbank-connector-inbound`**
-- Endpoints for bank → KOB communication:
-  - Action `pacs002_inbound`: receive pacs.002 status report
-  - Action `camt054_inbound`: receive camt.054 credit notification
-- mTLS enforcement using existing `_shared/mtls.ts` (extractClientCertificate + validateClientCertificate)
-- Message deduplication by `message_id`
-- Stores raw payload in `interbank_messages`, updates `interbank_payments` status
+bank_accounts
+  ├── id, bank_id (FK), customer_id (FK)
+  ├── external_account_id (unique per bank), account_type
+  ├── identification_scheme, identification_value
+  ├── currency (default XAF), status, nickname
 
-#### Step 3.2: Reference Connector Kit
+bank_balances
+  ├── id, account_id (FK), balance_type
+  ├── amount, currency, as_of_datetime
 
-**Create `docs/public/banks/connector-kit/`** with:
-- `overview.md` — architecture, integration modes, security requirements
-- `quickstart.md` — step-by-step bank onboarding guide
-- `adapter-interface.md` — BankCoreAdapter interface specification:
-  ```text
-  validateAccount(accountRef) → boolean
-  postDebit(accountRef, amount, currency) → result
-  postCredit(accountRef, amount, currency) → result
-  getStatus(externalPaymentId) → status
-  ```
-- `message-samples/` — example pacs.008, pacs.002, camt.054 XML files
+bank_transactions
+  ├── id, account_id (FK), external_tx_id (unique per bank)
+  ├── booking_date, value_date, amount, currency
+  ├── credit_debit, reference, description
 
-No deployable Node service (outside Lovable's React/Edge Function scope), but complete protocol documentation + message samples for bank IT teams.
+bank_beneficiaries
+  ├── id, account_id (FK), beneficiary_name
+  ├── scheme_name, identification, bank_id_code
+```
 
-#### Step 3.3: Admin UI — Interbank Operations
-
-**New page: `src/pages/admin/AdminInterbankPayments.tsx`**
-- Tabs: Payments | Participants | Messages | Connectors | Outbox | Reconciliation
-- **Payments tab**: searchable/filterable table, status badges, click-through to detail
-- **Payment detail**: status timeline (from `interbank_status_events`), raw ISO message viewer (collapsible XML), correlation_id/trace_id display, retry dispatch button
-- **Participants tab**: CRUD for interbank participants with status management
-- **Connectors tab**: connector health dashboard (last_seen, latency, error_rate), cert status
-- **Outbox tab**: pending/failed/dead_letter events, replay action
-- **Reconciliation tab**: reconciliation items with status management
-
-**Route**: `/admin/interbank-payments`
-**Navigation**: Add to `admin-navigation-config.ts` under new "Interbank" section
-
-#### Step 3.4: File Fallback Mode
-
-**Extend `interbank-engine`**:
-- `generate_instruction_file` — generates pain.001 or CSV instruction file for banks without real-time capability
-- `import_status_file` — ingests bank-uploaded CSV/pacs.002 status file, reconciles and updates payment statuses
-- Admin UI: file upload widget in Payments tab for status file ingestion
+**Extend `bank-directory` edge function** with ingestion actions:
+- `ingest_accounts`, `ingest_balances`, `ingest_transactions`, `ingest_beneficiaries`
+- Schema validation, deduplication by `(bank_id, external_*_id)`, correlation_id logging
+- mTLS or service_role auth required
 
 ---
 
-### Phase 4 — Sandbox Interbank Simulator
+### Phase 3 — Connector-Backed AISP
 
-**Extend `interbank-engine`** with sandbox actions:
-- `sandbox_seed_participants` — creates "Sandbox Bank A" (SBK-A) and "Sandbox Bank B" (SBK-B) with prefunded settlement
-- `sandbox_simulate_payment` — full lifecycle: create → submit → auto-accept (2s) → auto-settle (5s)
-- Auto-generates pacs.002 ACCP and camt.054 responses using existing `iso-messaging`
+**Extend existing AISP edge functions** (`aisp-accounts`, `aisp-balances`, `aisp-transactions`, `aisp-beneficiaries`):
+- Add resolution logic: when consent has a linked bank_id, query `bank_accounts`/`bank_transactions` tables instead of user's `accounts` table
+- If bank not connected → return `{ error: 'bank_not_connected' }` with guidance
+
+**PSU linking flow** — new actions in `bank-directory`:
+- `link_psu_start` — initiates bank↔user linking (stores pending link)
+- `link_psu_confirm` — confirms via OTP/PIN, creates `bank_customers.user_id` mapping
+
+**New table:**
+```text
+bank_psu_links
+  ├── id, user_id, bank_id, bank_customer_id (FK)
+  ├── status (pending|active|revoked), linked_at
+```
+
+---
+
+### Phase 4 — PISP Bank Connector Rail
+
+**Extend `pisp-domestic-payment`** edge function:
+- Add routing: if debtor/creditor bank is an active connected bank → route via `bank_connector` rail
+- Create `bank_payments` record and dispatch via connector
+
+**New tables:**
+```text
+bank_payments
+  ├── id, bank_id, external_payment_id
+  ├── amount, currency, debtor/creditor refs
+  ├── status (pending|accepted|completed|failed|reversed)
+  ├── idempotency_key
+
+bank_payment_status_events
+  ├── id, payment_id (FK), status_from, status_to
+  ├── source, event_time, details_json
+```
+
+**Extend `bank-directory`** with:
+- `payment_status_callback` — bank pushes status updates (for PUSH model)
+
+**For PULL model:** KOB calls `{connector_base_url}/payments` using stored `bank_connector_instances.base_url`
+
+---
+
+### Phase 5 — Identity/Scoping Hardening
+
+- Verify existing OIDC discovery (`oidc-config`), JWKS (`jwks-endpoint`), and OAuth token endpoints work correctly
+- Add `bank_admin` scope validation in `bank-directory` — bank admins can manage only their own bank's connectors
+- Ensure mTLS enforcement on all connector ingestion endpoints
+- Document scope model in `docs/public/security/oauth-scopes.md`
+
+---
+
+### Phase 6 — Admin UI + Observability
+
+**New page: `src/pages/admin/AdminBankDirectory.tsx`**
+- Tabs: Banks | Connectors | Ingestion Logs | Health | PSU Links
+- **Banks tab**: CRUD table with status badges, approve/suspend actions
+- **Connectors tab**: instance list, cert status, health indicators
+- **Ingestion Logs tab**: recent ingestion events with error filtering and replay
+- **Health tab**: connector health dashboard (latency, error rate, last_seen)
+- **PSU Links tab**: user↔bank mappings
+
+**Route**: `/admin/bank-directory`
+**Navigation**: Add under "Interbank Engine" section in `admin-navigation-config.ts`
+
+---
+
+### Phase 7 — Sandbox Bank Simulator
+
+**Extend `bank-directory`** with sandbox actions:
+- `sandbox_seed_bank` — creates "Sandbox Bank CM" with 2 branches, sample customers, accounts, transactions
+- `sandbox_simulate_ingestion` — generates realistic XAF account/transaction data
+- `sandbox_simulate_payment` — full PISP cycle: initiate → accepted → completed
 
 **Developer docs:**
-- `docs/public/interbank/overview.md` — interbank engine overview
-- `docs/public/interbank/lifecycle.md` — payment status lifecycle with ASCII diagram
-- `docs/public/interbank/iso20022.md` — message format reference
-- `docs/public/interbank/errors.md` — INTERBANK_* and ISO_* error codes
+- `docs/public/banks/overview.md` — bank connector layer overview
+- `docs/public/banks/quickstart.md` — connect to a bank via KOB
+- `docs/public/banks/connector-contract.md` — push/pull integration contract
+- `docs/public/banks/connector-auth.md` — mTLS + token scoping
 
 ---
 
-### Documentation Updates
+### Phase 8 — Documentation + Final Report
 
-**OpenAPI (`public-api-spec`)**: Add interbank engine endpoints, connector inbound endpoints, schemas for all 6 new tables
-
-**Postman (`postman-collection`)**: Add "Interbank Engine" and "Bank Connectors" folders with example requests
-
-**Error codes (`docs/public/errors.md`)**: Add INTERBANK_* (001-010) and ISO_* (001-005) categories
-
-**Final report**: `docs/interbank/final/report.md`
+- Update `docs/public/errors.md` with `BANK_*` error codes (001-010)
+- Update OpenAPI spec (`public-api-spec`) with all new endpoints
+- Update Postman collection (`postman-collection`) with Bank Directory, Connector, Ingestion folders
+- Create `docs/bank-connectors/final/report.md` — implemented features, test results, known limitations
 
 ---
 
@@ -232,13 +210,13 @@ No deployable Node service (outside Lovable's React/Edge Function scope), but co
 
 | Category | Files | Count |
 |---|---|---|
-| DB Migration | 1 large migration (7 tables + indexes + RLS) | 1 |
-| Edge Functions | `interbank-engine`, `interbank-connector-inbound`, `interbank-dispatch-worker`, `interbank-outbox-cron` | 4 |
-| Admin UI | `AdminInterbankPayments.tsx` | 1 |
+| DB Migrations | 1 large migration (banks, branches, connectors, certs, health, bank-sourced data, PSU links, bank payments) | 1 |
+| Edge Functions | `bank-directory` (new, consolidated router) | 1 |
+| Edge Functions (modified) | `aisp-accounts`, `aisp-balances`, `aisp-transactions`, `aisp-beneficiaries`, `pisp-domestic-payment` | 5 |
+| Admin UI | `AdminBankDirectory.tsx` (new) | 1 |
 | Routing/Nav | `App.tsx`, `admin-navigation-config.ts` | 2 |
-| Docs (public) | 4 interbank docs + 3 connector-kit docs | 7 |
-| Docs (internal) | 3 baseline docs + final report | 4 |
+| Docs | 3 baseline + 4 public + 1 final report | 8 |
 | Updated | `public-api-spec`, `postman-collection`, `errors.md` | 3 |
 
-**Total estimated changes**: ~22 files, 0 existing endpoints modified, 0 existing tables altered.
+**Total: ~21 files. Zero existing tables altered. Existing endpoints extended with additive routing only.**
 
