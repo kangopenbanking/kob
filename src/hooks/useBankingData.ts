@@ -448,8 +448,8 @@ export function useExportStatement() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => toast.success('Statement generated!'),
-    onError: (err: any) => toast.error(err.message || 'Export failed'),
+    onSuccess: () => toast.success('Your bank statement is ready for download 📄'),
+    onError: (err: any) => toast.error(err.message || 'Could not generate your statement. Please try again.'),
   });
 }
 
