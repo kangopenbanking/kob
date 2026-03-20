@@ -80,15 +80,16 @@ export default function BusinessEnterprise() {
     }
   };
 
-  const handleSubscribe = async () => {
-    if (!merchant?.id || !selectedPlan) return;
+  const handleSubscribe = async (planId?: string) => {
+    if (!merchant?.id) return;
+    const targetPlan = planId ? plans?.find((p: any) => p.id === planId) : selectedPlan;
+    if (!targetPlan) return;
     setSubscribing(true);
     try {
       const { data, error } = await supabase.functions.invoke('pos-store-subscription', {
-        body: { merchant_id: merchant.id, plan_id: selectedPlan.id },
+        body: { merchant_id: merchant.id, plan_id: targetPlan.id },
       });
 
-      // Parse response body from either data or error context
       let responseBody = data;
       if (error) {
         try {
@@ -103,12 +104,9 @@ export default function BusinessEnterprise() {
 
       if (responseBody?.error === 'insufficient_balance') {
         toast.error('Insufficient wallet balance', {
-          description: `You need ${responseBody.required_amount?.toLocaleString()} ${responseBody.currency} but only have ${responseBody.available_balance?.toLocaleString()} ${responseBody.currency}. Add funds to your wallet first.`,
+          description: `You need ${responseBody.required_amount?.toLocaleString()} ${responseBody.currency} but only have ${responseBody.available_balance?.toLocaleString()} ${responseBody.currency}. Add funds first.`,
           duration: 6000,
-          action: {
-            label: 'Fund Wallet',
-            onClick: () => navigate('/biz/wallet'),
-          },
+          action: { label: 'Fund Wallet', onClick: () => navigate('/biz/wallet') },
         });
         setUpgradeModalOpen(false);
         return;
@@ -130,13 +128,13 @@ export default function BusinessEnterprise() {
         throw new Error(responseBody.message || responseBody.error);
       }
 
-      toast.success('Enterprise subscription activated! 🎉', {
-        description: 'All enterprise features are now unlocked.',
+      toast.success(`${targetPlan.name} subscription activated! 🎉`, {
+        description: `All ${targetPlan.name} features are now unlocked.`,
       });
       setUpgradeModalOpen(false);
       window.location.reload();
     } catch (err: any) {
-      console.error('Enterprise subscription error:', err);
+      console.error('Subscription error:', err);
       toast.error(err.message || 'Subscription failed. Please try again.');
     } finally {
       setSubscribing(false);
@@ -274,6 +272,7 @@ export default function BusinessEnterprise() {
         open={upgradeModalOpen}
         onOpenChange={setUpgradeModalOpen}
         plan={selectedPlan}
+        plans={plans || []}
         currency={planCurrency}
         subscribing={subscribing}
         onConfirm={handleSubscribe}
