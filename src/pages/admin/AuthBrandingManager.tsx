@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { Loader2, Upload, Image, Type, Save } from 'lucide-react';
+import { Loader2, Upload, Image, Type, Save, Palette} from "lucide-react";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface ConfigRow {
   id: string;
@@ -106,7 +107,9 @@ const AuthBrandingManager = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center p-12">
+      <div className="space-y-6 flex items-center justify-center p-12">
+      <AdminPageHeader icon={Palette} title="Auth Page Branding" description="Manage the login and signup page appearance" />
+
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );

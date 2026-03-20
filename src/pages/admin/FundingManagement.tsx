@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { RefreshCw, Search, Eye, XCircle, Download, Wallet, TrendingUp, Clock, AlertTriangle, CheckCircle2, Building2, Store, Globe } from "lucide-react";
 import { format } from "date-fns";
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 interface FundingIntent {
   id: string;
@@ -153,6 +154,8 @@ const FundingManagement = () => {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Wallet} title="Funding Management" description="Monitor and manage funding intents across all consumer types" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Funding Management</h1>

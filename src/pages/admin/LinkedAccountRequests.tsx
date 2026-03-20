@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { CheckCircle2, XCircle, Clock, Loader2, MessageSquare } from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Loader2, MessageSquare, Link2} from "lucide-react";
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const LinkedAccountRequests: React.FC = () => {
   const queryClient = useQueryClient();
@@ -92,6 +93,8 @@ const LinkedAccountRequests: React.FC = () => {
 
   return (
     <div className="space-y-6 p-6">
+      <AdminPageHeader icon={Link2} title="Linked Account Requests" description="Review and approve customer account re-linking requests" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground">Linked Account Requests</h1>

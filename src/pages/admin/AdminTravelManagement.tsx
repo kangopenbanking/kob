@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 
 const categoryIcons: Record<string, React.ElementType> = { bus: Bus, tours: Compass, airlines: Plane, trains: Train };
 const categoryColors: Record<string, string> = {
@@ -96,6 +97,8 @@ const AdminTravelManagement: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <AdminPageHeader icon={Plane} title="Travel Management" description="Oversee all transport & tourism services across the platform" />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Travel Management</h1>
