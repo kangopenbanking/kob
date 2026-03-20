@@ -49,10 +49,10 @@ const BusinessCoupons: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['biz-coupons'] });
-      toast.success('Coupon created');
+      toast.success(`Coupon "${code.toUpperCase().trim()}" created and ready for customers to use`);
       setShowCreate(false); setCode(''); setValue(''); setMinOrder(''); setMaxUses('');
     },
-    onError: (e: any) => toast.error(e.message),
+    onError: (e: any) => toast.error(e.message || 'Could not create coupon. The code may already exist.'),
   });
 
   const toggleMutation = useMutation({
