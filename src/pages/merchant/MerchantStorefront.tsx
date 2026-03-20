@@ -644,7 +644,6 @@ export default function MerchantStorefront() {
                         </div>
                       </div>
                     )}
-                    </div>
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {isPublished ? 'Your store is visible on the marketplace.' : 'Toggle to publish your store and start receiving orders.'}
                     </p>
