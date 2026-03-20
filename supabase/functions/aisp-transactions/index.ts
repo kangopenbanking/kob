@@ -1,5 +1,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from "../_shared/cors.ts";
+import { extractFapiHeaders, addFapiResponseHeaders, logFapiContext } from "../_shared/fapi-headers.ts";
+import { rejectJweContentType } from "../_shared/jws-signing.ts";
+import { buildPaginationLinks } from "../_shared/ob-errors.ts";
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
