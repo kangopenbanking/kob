@@ -2,14 +2,14 @@ import { useState, useEffect } from "react";
 import { SEO } from "@/components/SEO";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle, AlertTriangle, XCircle, RefreshCw } from "lucide-react";
+import { CheckCircle, AlertTriangle, XCircle, RefreshCw, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ServiceStatus {
   name: string;
   key: string;
-  status: "operational" | "degraded" | "down";
+  status: "operational" | "degraded" | "down" | "dormant";
   uptime: string;
 }
 
@@ -19,7 +19,7 @@ const fallbackServices: ServiceStatus[] = [
   { name: "Wallets API", key: "database", status: "operational", uptime: "99.99%" },
   { name: "Open Banking (AISP)", key: "aisp", status: "operational", uptime: "99.95%" },
   { name: "Open Banking (PISP)", key: "pisp", status: "operational", uptime: "99.95%" },
-  { name: "Virtual Cards", key: "virtual_cards", status: "operational", uptime: "99.98%" },
+  { name: "Virtual Cards", key: "virtual_cards", status: "dormant", uptime: "—" },
   { name: "Webhook Delivery", key: "webhooks", status: "operational", uptime: "99.94%" },
   { name: "Authentication & OAuth", key: "oauth", status: "operational", uptime: "99.99%" },
   { name: "Certificates (mTLS)", key: "certificates", status: "operational", uptime: "99.96%" },
@@ -29,6 +29,7 @@ const fallbackServices: ServiceStatus[] = [
 const StatusIcon = ({ status }: { status: string }) => {
   if (status === "operational") return <CheckCircle className="h-4 w-4 text-green-500" />;
   if (status === "degraded") return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+  if (status === "dormant") return <Clock className="h-4 w-4 text-muted-foreground" />;
   return <XCircle className="h-4 w-4 text-red-500" />;
 };
 
