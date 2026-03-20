@@ -122,38 +122,18 @@ Deno.serve(async (req) => {
 
     console.log(`Merchant registered successfully: ${merchant.id}`);
 
-    // Send welcome email (asynchronous, don't wait)
-    supabaseClient.functions.invoke('send-communication', {
+    // Send welcome email via managed-send-email (asynchronous, don't wait)
+    supabaseClient.functions.invoke('managed-send-email', {
       body: {
+        email_key: 'woo_merchant_welcome',
         recipient_email: admin_email,
-        subject: 'Welcome to Woo for Kang - API Credentials',
-        body: `
-Hello ${store_name} team,
-
-Welcome to Woo for Kang! Your WooCommerce store has been successfully registered with Kang Open Banking.
-
-Here are your API credentials (keep them secure):
-
-API Key: ${apiKey}
-Client Secret: ${clientSecret}
-Webhook Secret: ${webhookSecret}
-
-Webhook URL (auto-configured): ${webhookUrl}
-
-Next Steps:
-1. Copy your API credentials above
-2. In WordPress admin, go to WooCommerce → Settings → Payments
-3. Enable "Kang Open Banking" and paste your credentials
-4. Configure which payment methods you want to accept
-5. Test with a small transaction
-
-Need help? Contact us at support@kangopenbanking.com
-
-Best regards,
-Kang Open Banking Team
-        `,
-        communication_type: 'email',
-        recipient_type: 'merchant'
+        variables: {
+          store_name,
+          api_key: apiKey,
+          client_secret: clientSecret,
+          webhook_secret: webhookSecret,
+          webhook_url: webhookUrl,
+        }
       }
     }).catch(err => console.error('Failed to send welcome email:', err));
 
