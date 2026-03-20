@@ -93,9 +93,9 @@ const CustomerRecurring: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
       setShowCreate(false);
       resetForm();
-      toast.success('Recurring payment created');
+      toast.success(`"${newName.trim()}" set up! First payment of ${Number(newAmount).toLocaleString()} XAF scheduled for ${newStartDate}.`);
     } catch (err: any) {
-      toast.error(err.message || 'Failed to create');
+      toast.error(err.message || 'Could not create recurring payment. Please try again.');
     } finally {
       setCreating(false);
     }

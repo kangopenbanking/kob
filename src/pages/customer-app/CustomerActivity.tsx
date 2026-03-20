@@ -72,11 +72,11 @@ const CustomerActivity: React.FC = () => {
     if (!deleteTarget) return;
     deleteMutation.mutate(deleteTarget.id, {
       onSuccess: () => {
-        toast.success('Transaction record deleted');
+        toast.success('Transaction record removed from your history');
         setDeleteTarget(null);
       },
       onError: () => {
-        toast.error('Failed to delete transaction');
+        toast.error('Could not remove transaction. Please try again.');
         setDeleteTarget(null);
       },
     });
