@@ -98,6 +98,7 @@ export default function MerchantStorefront() {
   const [customAttributes, setCustomAttributes] = useState<{ key: string; label: string }[]>([]);
   const [newAttrLabel, setNewAttrLabel] = useState('');
   const [expandedStep, setExpandedStep] = useState<string | null>('profile');
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
 
   const { data: supportedCountries = [] } = useSupportedCountries();
 
