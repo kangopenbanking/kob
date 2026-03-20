@@ -619,7 +619,6 @@ export default function TranslationManager() {
               </div>
             </DialogContent>
           </Dialog>
-        </div>
       </div>
 
       {/* Stats */}
