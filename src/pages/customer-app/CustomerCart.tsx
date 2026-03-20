@@ -60,7 +60,7 @@ const CustomerCart: React.FC = () => {
       }
       fetchCart();
     } catch {
-      toast.error('Failed to update');
+      toast.error('Could not update cart. Please try again.');
     }
   };
 
