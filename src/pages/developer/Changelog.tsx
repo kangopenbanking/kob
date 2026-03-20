@@ -6,6 +6,26 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "9.0.0",
+      date: "2026-03-20",
+      type: "major",
+      changes: [
+        { type: "feature", description: "UK Open Banking v4.0.1 FAPI header compliance — x-fapi-interaction-id echo/generate on all AISP/PISP responses, x-fapi-auth-date, x-fapi-customer-ip-address, x-customer-user-agent parsing and audit logging" },
+        { type: "feature", description: "Detached JWS message signing (x-jws-signature) — PS256-compatible signatures on all PISP write endpoint responses with structural validation on inbound requests" },
+        { type: "feature", description: "JWE content type rejection — returns 415 Unsupported Media Type for application/jose+jwe requests per UK OB specification" },
+        { type: "feature", description: "CBPII Confirmation of Funds endpoint — consent creation, retrieval, revocation, and funds availability check (cbpii-funds-confirmation edge function + cbpii_consents table)" },
+        { type: "feature", description: "International Payment Consents & Payments — create/get consent, create/get payment with currency_of_transfer, creditor_agent, exchange_rate_information, and charge_bearer fields" },
+        { type: "feature", description: "Domestic Scheduled Payment Consents & Payments — consent creation with RequestedExecutionDateTime, payment submission with automatic consent consumption" },
+        { type: "feature", description: "Domestic Standing Order Consents — consent creation with Frequency, FirstPaymentDateTime, RecurringPaymentAmount, and FinalPaymentDateTime" },
+        { type: "feature", description: "File Payment Consents & Payments — UK OB file-payment format with FileType, FileHash, NumberOfTransactions, ControlSum; maps to KOB batch payment infrastructure" },
+        { type: "improvement", description: "UK OB nested error model (Errors[] array) — new ob-errors.ts shared module with ErrorCode, Message, Path, Url fields; maintains backward compatibility" },
+        { type: "improvement", description: "Hypermedia pagination (Links.Next/Prev/First/Last) added to AISP transactions endpoint per UK OB specification" },
+        { type: "improvement", description: "Retry-After header now included on all 429 rate-limit responses across the platform" },
+        { type: "improvement", description: "CORS headers updated to accept FAPI and JWS headers (x-fapi-interaction-id, x-fapi-auth-date, x-fapi-customer-ip-address, x-customer-user-agent, x-jws-signature)" },
+        { type: "improvement", description: "pisp_consents and payments tables extended with payment_type (domestic/international/domestic_scheduled/domestic_standing_order/file) and metadata JSONB columns" },
+      ]
+    },
+    {
       version: "8.1.0",
       date: "2026-03-20",
       type: "minor",
