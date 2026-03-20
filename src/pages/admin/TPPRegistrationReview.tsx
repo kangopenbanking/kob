@@ -151,10 +151,7 @@ export default function TPPRegistrationReview() {
   const TPPCard = ({ tpp }: { tpp: TPPRegistration }) => (
     <Card>
       <CardHeader>
-        <div className="space-y-6 flex items-start justify-between">
-      <AdminPageHeader icon={FileSearch} title="TPP Registration Review" description="Review third-party provider registration applications" />
-
-          <div>
+        <div className="flex items-start justify-between">
             <CardTitle className="text-lg">{tpp.client_name}</CardTitle>
             <CardDescription>
               {tpp.environment} • {tpp.client_id.slice(0, 12)}...
