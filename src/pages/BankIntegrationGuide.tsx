@@ -300,7 +300,7 @@ const sectionVariant = {
 
 const BankIntegrationGuide: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string | null>(null);
-  const { exportAsPdf, isExporting } = useRegulatoryPdfExport();
+  const { exportToPdf } = useRegulatoryPdfExport();
 
   const scrollTo = (id: string) => {
     setActiveSection(id);
