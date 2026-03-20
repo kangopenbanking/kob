@@ -305,7 +305,7 @@ const MerchantPOSTill: React.FC = () => {
                       disabled={isCheckingOut}
                     >
                       <Wallet className="h-5 w-5" strokeWidth={1.5} />
-                      <span className="text-[11px] font-bold">Wallet QR</span>
+                      <span className="text-[11px] font-bold">Scan & Pay</span>
                     </Button>
                     <Button
                       className="flex-col gap-1.5 h-auto py-3.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white shadow-sm"
