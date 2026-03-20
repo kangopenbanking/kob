@@ -79,6 +79,8 @@ Deno.serve(async (req) => {
       { key: 'dispute_id', value: 'DISPUTE_UUID', type: 'string' },
       { key: 'settlement_id', value: 'SETTLEMENT_UUID', type: 'string' },
       { key: 'beneficiary_id', value: 'BENEFICIARY_UUID', type: 'string' },
+      { key: 'bank_id', value: 'BANK_UUID', type: 'string' },
+      { key: 'connector_id', value: 'CONNECTOR_UUID', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
