@@ -60,7 +60,10 @@ const ApiStatusPage = () => {
       });
 
       setServices(liveServices);
-      setOverallStatus(data.status === "operational" ? "operational" : "degraded");
+      // Exclude dormant services from overall status calculation
+      const activeServices = liveServices.filter(s => s.status !== "dormant");
+      const allActive = activeServices.every(s => s.status === "operational");
+      setOverallStatus(allActive ? "operational" : "degraded");
       setLastChecked(data.timestamp || new Date().toISOString());
       if (data.fapi_compliance) setFapiCompliance(data.fapi_compliance);
     } catch {
