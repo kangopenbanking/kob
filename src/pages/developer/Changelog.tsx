@@ -6,6 +6,39 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "8.0.0",
+      date: "2026-03-20",
+      type: "major",
+      changes: [
+        { type: "feature", description: "Bank Connector Layer — full bank onboarding lifecycle: register → submit → approve → active with admin/public directory" },
+        { type: "feature", description: "Bank-sourced data tables: bank_customers, bank_sourced_accounts, bank_sourced_balances, bank_sourced_transactions, bank_sourced_beneficiaries" },
+        { type: "feature", description: "Push-model data ingestion endpoints (mTLS-protected): bulk ingest accounts, balances, transactions, beneficiaries" },
+        { type: "feature", description: "PSU linking flow: bank_psu_links table with link_psu_start and link_psu_confirm actions" },
+        { type: "feature", description: "Bank payment connector rail: bank_payments and bank_payment_status_events tables with status callbacks" },
+        { type: "feature", description: "Sandbox bank simulator: sandbox_seed_bank creates 'Sandbox Bank CM' with sample data for dev testing" },
+        { type: "feature", description: "Admin Bank Directory page (/admin/bank-directory) with 5 tabs: Banks, Connectors, Health, PSU Links, Payments" },
+        { type: "feature", description: "bank-directory edge function — consolidated router with 20+ actions for bank lifecycle, connector management, data ingestion, and sandbox simulation" },
+        { type: "improvement", description: "OpenAPI spec v4.0.0 — added Bank Directory, Bank Connectors, and Interbank Engine endpoint groups with Bank and InterbankPayment schemas" },
+        { type: "improvement", description: "Postman collection — added Bank Directory, Bank Connectors, and Interbank Engine folders with example requests" },
+      ]
+    },
+    {
+      version: "7.0.0",
+      date: "2026-03-20",
+      type: "major",
+      changes: [
+        { type: "feature", description: "Interbank Engine — 10-state payment machine (created→validated→submitted→accepted→settled) with concurrency-safe transitions" },
+        { type: "feature", description: "7 new tables: interbank_participants, interbank_endpoints, interbank_payments, interbank_messages, interbank_status_events, interbank_reconciliation_items, event_outbox" },
+        { type: "feature", description: "ISO 20022 canonical mapping — pacs.008 generation and pacs.002/camt.054 inbound processing with workflow orchestration" },
+        { type: "feature", description: "Dispatch layer with outbox pattern — reliable message delivery with exponential backoff (max 7 retries)" },
+        { type: "feature", description: "interbank-engine edge function — create, submit, reverse payments with ledger hold/release integration" },
+        { type: "feature", description: "interbank-connector-inbound edge function — mTLS-enforced ingestion for pacs.002 and camt.054 messages" },
+        { type: "feature", description: "interbank-dispatch-worker edge function — polls event_outbox and delivers messages via https_push, file, or message_queue" },
+        { type: "feature", description: "Admin Interbank Payments page (/admin/interbank-payments) with 6 tabs: Payments, Participants, Messages, Connectors, Outbox, Reconciliation" },
+        { type: "improvement", description: "Comprehensive interbank documentation in /docs/interbank/ covering lifecycle, ISO 20022, error codes, and connector kit" },
+      ]
+    },
+    {
       version: "6.2.0",
       date: "2026-03-15",
       type: "minor",

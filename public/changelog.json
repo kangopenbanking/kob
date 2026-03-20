@@ -1,23 +1,56 @@
 [
   {
+    "version": "8.0.0",
+    "date": "2026-03-20",
+    "type": "major",
+    "breaking_changes": false,
+    "summary": "Bank Connector Layer \u2014 full bank onboarding, data ingestion, PSU linking, connector payments, sandbox simulator, and admin UI",
+    "highlights": [
+      "Bank Directory with lifecycle: register \u2192 submit \u2192 approve \u2192 active/suspended",
+      "Bank-sourced data tables: accounts, balances, transactions, beneficiaries",
+      "Push-model bulk ingestion endpoints with mTLS protection",
+      "PSU linking flow for AISP/PISP bank data access",
+      "Bank payment connector rail with status callbacks",
+      "Sandbox Bank CM simulator for developer testing",
+      "Admin Bank Directory page with 5 management tabs",
+      "OpenAPI v4.0.0 with Bank Directory, Connectors, Interbank endpoint groups",
+      "Postman collection updated with 3 new folders"
+    ]
+  },
+  {
+    "version": "7.0.0",
+    "date": "2026-03-20",
+    "type": "major",
+    "breaking_changes": false,
+    "summary": "Interbank Engine \u2014 ISO 20022 payment processing with 10-state machine, outbox dispatch, and admin dashboard",
+    "highlights": [
+      "10-state interbank payment machine with concurrency-safe transitions",
+      "7 new tables: participants, endpoints, payments, messages, status_events, reconciliation, event_outbox",
+      "ISO 20022 pacs.008 generation and pacs.002/camt.054 inbound processing",
+      "Outbox pattern dispatch with exponential backoff (max 7 retries)",
+      "mTLS-enforced connector inbound endpoint",
+      "Admin Interbank Payments page with 6 tabs"
+    ]
+  },
+  {
     "version": "4.0.0",
     "date": "2026-03-14",
     "type": "major",
     "breaking_changes": false,
-    "summary": "Identity Modernization — unified registration, login, MFA, onboarding lifecycle, developer orgs, entity-scoped RBAC memberships",
+    "summary": "Identity Modernization \u2014 unified registration, login, MFA, onboarding lifecycle, developer orgs, entity-scoped RBAC memberships",
     "highlights": [
       "Unified /v1/identity/register endpoint supporting personal, merchant, institution, and developer account types",
-      "Unified /v1/identity/login with phone_otp, email_password, and pin methods — wraps existing auth",
-      "MFA system — TOTP, SMS OTP, email OTP with step-up challenges for sensitive operations",
-      "Session management — device tracking, rotating tokens, session revocation",
-      "Onboarding lifecycle — unified onboarding_applications table with draft→submitted→approved flow",
-      "Developer organizations (developer_orgs) with sandbox_active→prod_approved lifecycle",
-      "Identity memberships — entity-scoped RBAC (owner, manager, viewer per institution/merchant/developer_org)",
-      "Admin Onboarding Queue — unified review interface for all account types",
+      "Unified /v1/identity/login with phone_otp, email_password, and pin methods \u2014 wraps existing auth",
+      "MFA system \u2014 TOTP, SMS OTP, email OTP with step-up challenges for sensitive operations",
+      "Session management \u2014 device tracking, rotating tokens, session revocation",
+      "Onboarding lifecycle \u2014 unified onboarding_applications table with draft\u2192submitted\u2192approved flow",
+      "Developer organizations (developer_orgs) with sandbox_active\u2192prod_approved lifecycle",
+      "Identity memberships \u2014 entity-scoped RBAC (owner, manager, viewer per institution/merchant/developer_org)",
+      "Admin Onboarding Queue \u2014 unified review interface for all account types",
       "Developer portal: Getting Started by Type, Identity Guide, Onboarding Guide, Roles & Permissions docs",
       "6 new database tables: developer_orgs, mfa_factors, mfa_challenges, onboarding_applications, user_sessions, identity_memberships",
       "5 new edge functions: identity-register, identity-login, identity-mfa, identity-session, identity-onboarding",
-      "Zero breaking changes — all existing auth, OAuth, and registration endpoints untouched"
+      "Zero breaking changes \u2014 all existing auth, OAuth, and registration endpoints untouched"
     ]
   },
   {
@@ -27,8 +60,8 @@
     "breaking_changes": false,
     "summary": "Admin Rewards & Referral Management, 5 new banking fee types, dynamic reward configuration",
     "highlights": [
-      "Admin Rewards Management — full referral tracking, reward history, manual credit, and void capabilities",
-      "Dynamic reward settings — referral bonus, cashback rate, and minimum transfer configurable via system_config",
+      "Admin Rewards Management \u2014 full referral tracking, reward history, manual credit, and void capabilities",
+      "Dynamic reward settings \u2014 referral bonus, cashback rate, and minimum transfer configurable via system_config",
       "Edge function rewards-process-cashback reads config dynamically instead of hardcoded values",
       "Customer app reward display syncs with admin-configured values in real time",
       "5 new fee types: overdraft_fee, loan_processing_fee, atm_withdrawal, standing_order, dormancy_fee",
@@ -43,13 +76,13 @@
     "breaking_changes": false,
     "summary": "Overdraft Eligibility Engine, Credit Report Purchase, and Fee Management enhancements",
     "highlights": [
-      "Overdraft Eligibility Engine — 7-factor scoring (salary, savings, balance, tenure, activity, repayment, credit score) with explainable risk bands (A-F)",
+      "Overdraft Eligibility Engine \u2014 7-factor scoring (salary, savings, balance, tenure, activity, repayment, credit score) with explainable risk bands (A-F)",
       "Full overdraft lifecycle: recalculate, request, approve, suspend, revoke, reinstate with email notifications and audit logging",
-      "Auto-approval for high-score profiles (≥75), approval workflow integration for manual review",
+      "Auto-approval for high-score profiles (\u226575), approval workflow integration for manual review",
       "FI Portal Overdraft Management dashboard with summary stats, profile table, and action dialogs",
       "Banking App overdraft eligibility check integrated into Bank Credit Score page",
-      "Credit Report Purchase — wallet-based payment with balance validation and 30-day access",
-      "Fee Management — Services category added for Credit Report Purchase fee structures",
+      "Credit Report Purchase \u2014 wallet-based payment with balance validation and 30-day access",
+      "Fee Management \u2014 Services category added for Credit Report Purchase fee structures",
       "OpenAPI spec updated with 7 Overdraft endpoints under /accounts/{accountId}/overdraft/*",
       "New tables: account_overdraft_profiles, overdraft_score_factors"
     ]
@@ -61,9 +94,9 @@
     "breaking_changes": false,
     "summary": "POS Consumer Marketplace, QR Payments, Wallet payment method",
     "highlights": [
-      "POS Consumer Marketplace — merchants publish storefronts via subscription; consumers browse, cart, and buy with wallet balance",
-      "QR Code Payments — merchant QR generation (static/dynamic) and consumer scan-to-pay",
-      "Wallet payment method added to pos-pay-order — atomic consumer debit + merchant credit",
+      "POS Consumer Marketplace \u2014 merchants publish storefronts via subscription; consumers browse, cart, and buy with wallet balance",
+      "QR Code Payments \u2014 merchant QR generation (static/dynamic) and consumer scan-to-pay",
+      "Wallet payment method added to pos-pay-order \u2014 atomic consumer debit + merchant credit",
       "New edge functions: pos-store-browse, pos-consumer-cart, pos-consumer-checkout, pos-qr-payment, pos-store-subscription",
       "New tables: pos_store_profiles, pos_subscription_plans, pos_store_subscriptions, pos_consumer_carts, pos_consumer_cart_items"
     ]
@@ -85,7 +118,7 @@
     "date": "2026-03-01",
     "type": "minor",
     "breaking_changes": false,
-    "summary": "Cameroon Banking Identifiers — RIB, IBAN, BIC/SWIFT validation and bank directory",
+    "summary": "Cameroon Banking Identifiers \u2014 RIB, IBAN, BIC/SWIFT validation and bank directory",
     "highlights": [
       "Full RIB (23-digit) and IBAN (27-char) validation with MOD-97 checksum",
       "validate-rib, validate-account-identifier, directory-banks-cm edge functions",
@@ -100,7 +133,7 @@
     "breaking_changes": false,
     "summary": "Funding Intents API with full lifecycle tracking and multi-provider support",
     "highlights": [
-      "Funding Intents API — canonical domain for account funding (created → pending → succeeded/failed/cancelled/expired)",
+      "Funding Intents API \u2014 canonical domain for account funding (created \u2192 pending \u2192 succeeded/failed/cancelled/expired)",
       "PayPal inbound funding with auto-capture on approval",
       "Bank transfer funding instructions with unique reference generation",
       "Funding reconciliation job with 24h expiry",
@@ -114,7 +147,7 @@
     "breaking_changes": false,
     "summary": "Multi-Tenancy Apps Showcase and PWA ecosystem presentation",
     "highlights": [
-      "Apps Showcase page at /apps — Banking, Merchant, Customer app demos",
+      "Apps Showcase page at /apps \u2014 Banking, Merchant, Customer app demos",
       "Multi-tenancy branding demo with institutional theming",
       "Technical Architecture section with TenantProvider context flow"
     ]
@@ -124,7 +157,7 @@
     "date": "2026-02-26",
     "type": "minor",
     "breaking_changes": false,
-    "summary": "Cameroon Regulatory Filing Pack — 10 BEAC/COBAC submission documents",
+    "summary": "Cameroon Regulatory Filing Pack \u2014 10 BEAC/COBAC submission documents",
     "highlights": [
       "10 submission-ready documents for PSP license application",
       "Corporate Structure, Internal Control, AML/CFT, Data Protection policies",
@@ -151,8 +184,8 @@
     "summary": "30+ institutional pages, regulatory compliance, fraud engine, and multi-country expansion",
     "highlights": [
       "30+ new institutional pages: Regulatory, Compliance, Architecture, Expansion, Investor, API Reference",
-      "Cameroon Regulatory Compliance — BEAC/COBAC framework, PSP licensing",
-      "Fraud Engine — 5-layer defence model",
+      "Cameroon Regulatory Compliance \u2014 BEAC/COBAC framework, PSP licensing",
+      "Fraud Engine \u2014 5-layer defence model",
       "Double-Entry Ledger and Reconciliation Framework documentation",
       "6 Multi-Country Expansion pages",
       "7 API Reference pages and Sandbox Simulation Tools"
@@ -163,7 +196,7 @@
     "date": "2026-02-26",
     "type": "minor",
     "breaking_changes": false,
-    "summary": "OpenAPI spec accuracy fixes — grant types, idempotency, consent headers, webhook event types",
+    "summary": "OpenAPI spec accuracy fixes \u2014 grant types, idempotency, consent headers, webhook event types",
     "highlights": [
       "grant_type enum includes client_credentials",
       "Idempotency-Key header marked required",
@@ -177,7 +210,7 @@
     "date": "2026-02-26",
     "type": "minor",
     "breaking_changes": false,
-    "summary": "Critical payment gateway fixes — Stripe currency guard, webhook verification, wallet credits",
+    "summary": "Critical payment gateway fixes \u2014 Stripe currency guard, webhook verification, wallet credits",
     "highlights": [
       "Stripe zero-decimal currency guard for USD/EUR vs XAF/XOF",
       "Stripe webhook signature verification enforced",
@@ -190,7 +223,7 @@
     "date": "2026-02-26",
     "type": "minor",
     "breaking_changes": false,
-    "summary": "Woo for Kang v1.0.0 — production-ready WooCommerce plugin with ZIP download",
+    "summary": "Woo for Kang v1.0.0 \u2014 production-ready WooCommerce plugin with ZIP download",
     "highlights": [
       "Complete WordPress plugin ZIP download (9 files)",
       "In-memory ZIP generation edge function",
@@ -202,7 +235,7 @@
     "date": "2026-02-26",
     "type": "minor",
     "breaking_changes": false,
-    "summary": "39 new OpenAPI endpoint paths — Payment Links, Subscriptions, Split Payments, Merchant Onboarding",
+    "summary": "39 new OpenAPI endpoint paths \u2014 Payment Links, Subscriptions, Split Payments, Merchant Onboarding",
     "highlights": [
       "39 missing endpoint paths added to OpenAPI spec",
       "Merchant Onboarding API fully documented (13 endpoints)",
@@ -292,7 +325,7 @@
     "date": "2024-11-01",
     "type": "major",
     "breaking_changes": false,
-    "summary": "Initial public release — AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
+    "summary": "Initial public release \u2014 AISP, PISP, Mobile Money, Credit Scoring, OAuth 2.0",
     "highlights": [
       "Account Information Service (AISP)",
       "Payment Initiation Service (PISP)",
