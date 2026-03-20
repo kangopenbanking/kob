@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useNavigate } from 'react-router-dom';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
@@ -59,7 +60,8 @@ const BusinessTill: React.FC = () => {
   });
 
   const merchantId = merchant?.id;
-  const isEnterprise = merchant?.plan_tier === 'enterprise';
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === 'enterprise' || isAdmin;
   const till = usePOSTill(merchantId);
 
   // Show enterprise intro popup on first visit for non-enterprise users

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useNavigate } from 'react-router-dom';
 import { usePOSTill } from '@/hooks/usePOSTill';
 import { POSReceipt } from '@/components/pos/POSReceipt';
@@ -44,7 +45,8 @@ const MerchantPOSTill: React.FC = () => {
   });
 
   const merchantId = merchant?.id;
-  const isEnterprise = merchant?.plan_tier === 'enterprise';
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === 'enterprise' || isAdmin;
 
   const {
     products, productsLoading, cart, addItem, removeItem, updateQuantity,

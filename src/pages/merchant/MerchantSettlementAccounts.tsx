@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -111,6 +112,7 @@ function getAccountLabel(type: string) {
 
 export default function MerchantSettlementAccounts() {
   const navigate = useNavigate();
+  const { isAdmin } = useIsAdmin();
   const [accounts, setAccounts] = useState<any[]>([]);
   const [merchantId, setMerchantId] = useState<string | null>(null);
   const [isEnterprise, setIsEnterprise] = useState(false);
@@ -122,7 +124,7 @@ export default function MerchantSettlementAccounts() {
 
   const MAX_BASE_ACCOUNTS = 2;
 
-  useEffect(() => { loadData(); }, []);
+  useEffect(() => { loadData(); }, [isAdmin]);
 
   const loadData = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -130,7 +132,7 @@ export default function MerchantSettlementAccounts() {
     const { data: m } = await supabase.from("gateway_merchants").select("id, plan_tier").eq("user_id", user.id).maybeSingle();
     if (m) {
       setMerchantId(m.id);
-      setIsEnterprise(m.plan_tier === 'enterprise');
+      setIsEnterprise(m.plan_tier === 'enterprise' || isAdmin);
       const { data } = await supabase
         .from("gateway_merchant_settlement_accounts")
         .select("*")

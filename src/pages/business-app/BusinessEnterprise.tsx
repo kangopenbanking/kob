@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 import { useNavigate } from 'react-router-dom';
 import { useMerchantContext } from '@/hooks/useMerchantContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -66,7 +67,8 @@ export default function BusinessEnterprise() {
     },
   });
 
-  const isEnterprise = merchant?.plan_tier === 'enterprise';
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === 'enterprise' || isAdmin;
   const enterprisePlan = plans?.find((p: any) => p.tier === 'enterprise');
 
   const handleUpgradeClick = () => {

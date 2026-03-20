@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -105,7 +106,8 @@ export default function MerchantWhiteLabel() {
     setConfig((prev) => ({ ...prev, [key]: value }));
   };
 
-  const isEnterprise = merchant?.plan_tier === "enterprise";
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === "enterprise" || isAdmin;
 
   if (isLoading) {
     return (

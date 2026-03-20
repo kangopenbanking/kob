@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -80,7 +81,8 @@ export default function MerchantBranding() {
     onError: () => toast.error("Failed to save branding"),
   });
 
-  const isEnterprise = merchant?.plan_tier === "enterprise";
+  const { isAdmin } = useIsAdmin();
+  const isEnterprise = merchant?.plan_tier === "enterprise" || isAdmin;
 
   const updateField = (key: string, value: any) => {
     setBranding((prev) => ({ ...prev, [key]: value }));

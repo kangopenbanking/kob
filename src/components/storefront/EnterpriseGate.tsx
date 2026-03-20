@@ -1,6 +1,7 @@
 import React from 'react';
 import { Lock, Crown, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useIsAdmin } from '@/hooks/useIsAdmin';
 
 interface EnterpriseGateProps {
   isEnterprise: boolean;
@@ -9,7 +10,9 @@ interface EnterpriseGateProps {
 }
 
 export function EnterpriseGate({ isEnterprise, children, onUpgrade }: EnterpriseGateProps) {
-  if (isEnterprise) return <>{children}</>;
+  const { isAdmin } = useIsAdmin();
+
+  if (isEnterprise || isAdmin) return <>{children}</>;
 
   return (
     <div className="relative">
