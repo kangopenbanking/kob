@@ -65,6 +65,10 @@ const BankFundAccount: React.FC = () => {
   const [amount, setAmount] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
+  const [selectedBankCode, setSelectedBankCode] = useState('');
+  const [selectedBankName, setSelectedBankName] = useState('');
+  const [selectedBankSource, setSelectedBankSource] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [accountOpen, setAccountOpen] = useState(false);
