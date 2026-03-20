@@ -39,6 +39,22 @@ const invokeFileConnector = async (action: string, params: any = {}) => {
   return data;
 };
 
+const invokeDbConnector = async (action: string, params: any = {}) => {
+  const { data, error } = await supabase.functions.invoke("bank-db-connector", {
+    body: { action, ...params },
+  });
+  if (error) throw error;
+  return data;
+};
+
+const invokeApiConnector = async (action: string, params: any = {}) => {
+  const { data, error } = await supabase.functions.invoke("bank-api-connector", {
+    body: { action, ...params },
+  });
+  if (error) throw error;
+  return data;
+};
+
 const statusColors: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
   submitted: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
