@@ -1348,9 +1348,18 @@ function BatchPaymentsTab() {
 
 // ─── Main Page ───
 export default function AdminBankDirectory() {
+  const guideUrl = "/docs/KOB_Bank_Integration_Guide.pdf";
+
   return (
     <div className="space-y-8">
-      <AdminPageHeader icon={Building2} title="Bank Directory" description="Manage bank registrations, connectors, file imports, batch payments & PSU links" />
+      <div className="flex items-center justify-between flex-wrap gap-4">
+        <AdminPageHeader icon={Building2} title="Bank Directory" description="Manage bank registrations, connectors, DB sync, API polling, file imports, batch payments & PSU links" />
+        <Button variant="outline" size="sm" asChild>
+          <a href="https://wdzkzeahdtxlynetndqw.supabase.co/storage/v1/object/public/bank-files/KOB_Bank_Integration_Guide.pdf" target="_blank" rel="noopener noreferrer">
+            <BookOpen className="h-4 w-4 mr-1.5" />Integration Guide
+          </a>
+        </Button>
+      </div>
 
       <Tabs defaultValue="banks" className="space-y-6">
         <TabsList className="bg-muted/50 p-1 rounded-xl flex-wrap h-auto gap-1">
@@ -1359,6 +1368,12 @@ export default function AdminBankDirectory() {
           </TabsTrigger>
           <TabsTrigger value="connectors" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Plug className="h-4 w-4" />Connectors
+          </TabsTrigger>
+          <TabsTrigger value="db-connectors" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Database className="h-4 w-4" />DB Connectors
+          </TabsTrigger>
+          <TabsTrigger value="api-connectors" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
+            <Globe className="h-4 w-4" />API Connectors
           </TabsTrigger>
           <TabsTrigger value="psu-links" className="rounded-lg gap-1.5 data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Link2 className="h-4 w-4" />PSU Links
@@ -1376,6 +1391,8 @@ export default function AdminBankDirectory() {
 
         <TabsContent value="banks"><BanksTab /></TabsContent>
         <TabsContent value="connectors"><ConnectorsTab /></TabsContent>
+        <TabsContent value="db-connectors"><DBConnectorsTab /></TabsContent>
+        <TabsContent value="api-connectors"><APIConnectorsTab /></TabsContent>
         <TabsContent value="psu-links"><PSULinksTab /></TabsContent>
         <TabsContent value="payments"><BankPaymentsTab /></TabsContent>
         <TabsContent value="file-imports"><FileImportsTab /></TabsContent>
