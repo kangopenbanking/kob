@@ -138,7 +138,8 @@ export default function MerchantStorefront() {
           setCustomAttributes(savedAttrs);
         }
       }
-      const { data: sub } = await supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(*)').eq('merchant_id', merchant.id).eq('status', 'active').maybeSingle();
+      // Fetch most recent subscription (active or expired) to show renewal prompts
+      const { data: sub } = await supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(*)').eq('merchant_id', merchant.id).in('status', ['active', 'expired']).order('created_at', { ascending: false }).limit(1).maybeSingle();
       setSubscription(sub);
       const { data: p } = await supabase.from('pos_subscription_plans').select('*').eq('is_active', true).order('price');
       setPlans(p || []);
