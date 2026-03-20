@@ -135,6 +135,12 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Interbank Engine",
+    items: [
+      { title: "Interbank Payments", path: "/admin/interbank-payments", icon: ArrowLeftRight },
+    ],
+  },
+  {
     title: "Transport & Tourism",
     items: [
       { title: "Travel Management", path: "/admin/travel-management", icon: Activity },
