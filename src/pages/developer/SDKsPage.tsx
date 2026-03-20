@@ -275,6 +275,7 @@ export default function SDKsPage() {
           <TabsList>
             <TabsTrigger value="node">Node.js / TypeScript</TabsTrigger>
             <TabsTrigger value="python">Python</TabsTrigger>
+            <TabsTrigger value="php">PHP / Laravel</TabsTrigger>
             <TabsTrigger value="curl">cURL</TabsTrigger>
           </TabsList>
 
