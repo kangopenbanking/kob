@@ -101,7 +101,7 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
                   style={isSelected ? { borderColor: meta.color, boxShadow: `0 0 0 1px ${meta.color}20` } : {}}
                 >
                   {/* Tier badge */}
-                  {tierKey === 'enterprise' && (
+                  {idx === sortedPlans.length - 1 && sortedPlans.length > 1 && (
                     <Badge className="absolute -top-2.5 right-4 text-[10px] font-bold" style={{ backgroundColor: meta.bg, color: 'white' }}>
                       Most Popular
                     </Badge>
