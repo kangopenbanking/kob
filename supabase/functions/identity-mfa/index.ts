@@ -1,6 +1,55 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { corsHeaders } from '../_shared/cors.ts';
 import { safeErrorResponse } from '../_shared/errors.ts';
+import { sendManagedEmail, getUserEmail, getUserName } from '../_shared/send-managed-email.ts';
+
+/**
+ * Deliver MFA OTP code via SMS or email based on factor type.
+ * Non-fatal: logs errors but never throws.
+ */
+async function deliverMfaCode(
+  adminClient: any, supabaseUrl: string, serviceKey: string,
+  userId: string, factor: any, code: string
+) {
+  try {
+    if (factor.type === 'sms' || factor.type === 'phone') {
+      // Use phone snapshot from factor, or lookup from profile
+      let phone = factor.phone_snapshot;
+      if (!phone) {
+        const { data: profile } = await adminClient.from('profiles').select('phone').eq('id', userId).single();
+        phone = profile?.phone;
+      }
+      if (phone) {
+        await fetch(`${supabaseUrl}/functions/v1/phone-auth-send-otp`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${serviceKey}` },
+          body: JSON.stringify({ phone, otp_code: code, channel: 'sms', context: 'mfa_challenge' })
+        });
+      } else {
+        console.warn(`MFA: No phone number available for user ${userId}`);
+      }
+    } else if (factor.type === 'email') {
+      let email = factor.email_snapshot;
+      if (!email) {
+        email = await getUserEmail(adminClient, userId);
+      }
+      const userName = await getUserName(adminClient, userId);
+      if (email) {
+        await sendManagedEmail(adminClient, {
+          email_key: 'mfa_challenge_code',
+          recipient_email: email,
+          recipient_user_id: userId,
+          variables: { code, user_name: userName, expires_minutes: '5' }
+        });
+      } else {
+        console.warn(`MFA: No email available for user ${userId}`);
+      }
+    }
+    // TOTP factors don't need delivery — user has the authenticator app
+  } catch (err) {
+    console.error(`MFA delivery error for user ${userId}, factor ${factor.type}:`, err);
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
