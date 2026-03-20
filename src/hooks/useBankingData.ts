@@ -183,11 +183,11 @@ export function useCreateSavingsGoal() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
-      toast.success('Savings goal created!');
+      toast.success(`Your savings goal "${variables.account_name}" is now active. Keep saving! 🎯`);
     },
-    onError: (err: any) => toast.error(err.message || 'Failed to create savings goal'),
+    onError: (err: any) => toast.error(err.message || 'Could not create your savings goal. Please try again.'),
   });
 }
 
