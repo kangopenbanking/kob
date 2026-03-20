@@ -189,9 +189,12 @@ Deno.serve(async (req) => {
       });
     }
 
+    const selfUrl = `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/transactions?limit=${limit}&offset=${offset}`;
+    const paginationLinks = buildPaginationLinks(selfUrl, offset, limit, totalCount);
+
     const response = {
       Data: { Transaction: transactions },
-      Links: { Self: `https://api.kangopenbanking.com/v1/aisp-accounts/${accountId}/transactions?limit=${limit}&offset=${offset}` },
+      Links: paginationLinks,
       Meta: {
         TotalPages: Math.ceil(totalCount / limit),
         TotalCount: totalCount,
@@ -200,9 +203,14 @@ Deno.serve(async (req) => {
       }
     };
 
+    const responseHeaders = addFapiResponseHeaders(
+      { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+      fapi
+    );
+
     return new Response(JSON.stringify(response), {
       status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' }
+      headers: responseHeaders
     });
 
   } catch (error) {

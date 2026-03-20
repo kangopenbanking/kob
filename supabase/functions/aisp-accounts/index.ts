@@ -178,9 +178,12 @@ Deno.serve(async (req) => {
       }
     };
 
-    const responseHeaders = addRateLimitHeaders(
-      { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-      300, rateLimit.remaining, rateLimit.reset
+    const responseHeaders = addFapiResponseHeaders(
+      addRateLimitHeaders(
+        { ...corsHeaders, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+        300, rateLimit.remaining, rateLimit.reset
+      ),
+      fapi
     );
 
     return new Response(JSON.stringify(response), { status: 200, headers: responseHeaders });
