@@ -197,11 +197,55 @@ export default function MerchantStorefront() {
     currency, store_name: storeName,
   }) : '';
 
+  const qrPayloadUrl = merchantId
+    ? `https://kob.lovable.app/pay?d=${encodeURIComponent(btoa(qrPayload))}`
+    : '';
+
   const copyQr = () => {
     navigator.clipboard.writeText(qrPayload);
     setQrCopied(true);
     toast.success('QR data copied');
     setTimeout(() => setQrCopied(false), 2000);
+  };
+
+  const downloadQr = () => {
+    const svgEl = document.querySelector('#kob-qr-code svg') as SVGElement | null;
+    if (!svgEl) { toast.error('QR code not found'); return; }
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const canvas = document.createElement('canvas');
+    canvas.width = 440; canvas.height = 440;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const img = new window.Image();
+    img.onload = () => {
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 440, 440);
+      ctx.drawImage(img, 0, 0, 440, 440);
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${storeName || 'kob'}-qr.png`; a.click();
+        URL.revokeObjectURL(url);
+        toast.success('QR code downloaded');
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
+
+  const handlePublishToggle = (checked: boolean) => {
+    if (!checked && isPublished) {
+      setShowUnpublishConfirm(true);
+    } else {
+      setIsPublished(checked);
+    }
+  };
+
+  const confirmUnpublish = () => {
+    setIsPublished(false);
+    setShowUnpublishConfirm(false);
   };
 
   if (loading) {
