@@ -2063,6 +2063,90 @@ paths['/v1/reconciliation/mismatches/{mismatchId}/resolve'] = {
   post: { tags: ['Payment Gateway'], summary: 'Resolve mismatch', operationId: 'reconciliationResolve', security: [{ bearerAuth: [] }], parameters: [{ name: 'mismatchId', in: 'path', required: true, schema: { type: 'string' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['resolution'], properties: { resolution: { type: 'string', enum: ['adjust_ledger', 'adjust_provider', 'ignore'] }, notes: { type: 'string' } } } } } }, responses: { '200': { description: 'Mismatch resolved' }, ...errorResponses } },
 };
 
+// ── Bank Directory ────────────────────────────────────────────────────
+paths['/v1/directory/banks'] = {
+  get: { tags: ['Bank Directory'], summary: 'List active banks', description: 'Public directory of active banks integrated with KOB.', operationId: 'directoryBanksList', responses: { '200': { description: 'List of active banks', content: { 'application/json': { schema: { type: 'object', properties: { banks: { type: 'array', items: { '$ref': '#/components/schemas/Bank' } } } } } } }, ...errorResponses } },
+};
+
+paths['/v1/banks/register'] = {
+  post: { tags: ['Bank Directory'], summary: 'Register a bank', description: 'Register a new bank/ASPSP in the directory.', operationId: 'bankRegister', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['legal_name', 'short_code'], properties: { legal_name: { type: 'string', example: 'Afriland First Bank' }, display_name: { type: 'string' }, short_code: { type: 'string', example: 'AFB' }, swift_bic: { type: 'string' }, bank_code: { type: 'string' }, contact_email: { type: 'string' }, support_phone: { type: 'string' }, integration_mode: { type: 'string', enum: ['connector_push', 'connector_pull', 'file_feed', 'hybrid'] } } } } } }, responses: { '201': { description: 'Bank registered' }, ...errorResponses } },
+};
+
+paths['/v1/banks'] = {
+  get: { tags: ['Bank Directory'], summary: 'List all banks (admin)', description: 'Admin-only list of all banks including draft/suspended.', operationId: 'banksList', security: [{ bearerAuth: [] }], parameters: [...paginationParams], responses: { '200': { description: 'Banks list' }, ...errorResponses } },
+};
+
+paths['/v1/banks/{bankId}'] = {
+  get: { tags: ['Bank Directory'], summary: 'Get bank details', operationId: 'banksGet', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Bank details' }, ...errorResponses } },
+  put: { tags: ['Bank Directory'], summary: 'Update bank', operationId: 'banksUpdate', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { display_name: { type: 'string' }, contact_email: { type: 'string' }, support_phone: { type: 'string' }, integration_mode: { type: 'string' } } } } } }, responses: { '200': { description: 'Bank updated' }, ...errorResponses } },
+};
+
+paths['/v1/banks/{bankId}/approve'] = {
+  post: { tags: ['Bank Directory'], summary: 'Approve bank (admin)', operationId: 'bankApprove', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Bank approved and set to active' }, ...errorResponses } },
+};
+
+paths['/v1/banks/{bankId}/suspend'] = {
+  post: { tags: ['Bank Directory'], summary: 'Suspend bank (admin)', operationId: 'bankSuspend', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Bank suspended' }, ...errorResponses } },
+};
+
+paths['/v1/banks/{bankId}/connectors'] = {
+  get: { tags: ['Bank Connectors'], summary: 'List connectors', operationId: 'connectorsList', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Connector instances list' }, ...errorResponses } },
+  post: { tags: ['Bank Connectors'], summary: 'Register connector', operationId: 'connectorRegister', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['name', 'environment'], properties: { name: { type: 'string' }, environment: { type: 'string', enum: ['sandbox', 'prod'] }, base_url: { type: 'string' }, connector_type: { type: 'string', enum: ['rest', 'iso20022', 'file'] } } } } } }, responses: { '201': { description: 'Connector registered' }, ...errorResponses } },
+};
+
+paths['/v1/banks/{bankId}/connectors/{connectorId}/health'] = {
+  get: { tags: ['Bank Connectors'], summary: 'Connector health', operationId: 'connectorHealth', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }, { name: 'connectorId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Connector health status' }, ...errorResponses } },
+};
+
+paths['/v1/banks/{bankId}/connectors/{connectorId}/certificates'] = {
+  post: { tags: ['Bank Connectors'], summary: 'Upload mTLS certificate', operationId: 'connectorCertUpload', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }, { name: 'connectorId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['certificate_pem'], properties: { certificate_pem: { type: 'string' } } } } } }, responses: { '201': { description: 'Certificate uploaded' }, ...errorResponses } },
+};
+
+// ── Bank Data Ingestion (Internal / Connector) ────────────────────────
+paths['/v1/internal/connectors/{bankId}/accounts'] = {
+  post: { tags: ['Bank Connectors'], summary: 'Bulk ingest accounts', description: 'Bank connector pushes account data (mTLS required).', operationId: 'connectorIngestAccounts', security: [{ mtls: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['accounts'], properties: { accounts: { type: 'array', items: { type: 'object', properties: { external_account_id: { type: 'string' }, account_type: { type: 'string' }, currency: { type: 'string', default: 'XAF' }, nickname: { type: 'string' } } } }, correlation_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Ingestion result with counts' }, ...errorResponses } },
+};
+
+paths['/v1/internal/connectors/{bankId}/transactions'] = {
+  post: { tags: ['Bank Connectors'], summary: 'Bulk ingest transactions', description: 'Bank connector pushes transaction data (mTLS required).', operationId: 'connectorIngestTransactions', security: [{ mtls: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }, idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['transactions'], properties: { transactions: { type: 'array', items: { type: 'object', properties: { external_tx_id: { type: 'string' }, account_id: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string' }, credit_debit: { type: 'string', enum: ['credit', 'debit'] }, booking_date: { type: 'string', format: 'date' }, reference: { type: 'string' } } } }, correlation_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Ingestion result' }, ...errorResponses } },
+};
+
+// ── Interbank Engine ──────────────────────────────────────────────────
+paths['/v1/interbank/payments'] = {
+  get: { tags: ['Interbank'], summary: 'List interbank payments', operationId: 'interbankPaymentsList', security: [{ bearerAuth: [] }], parameters: [{ name: 'status', in: 'query', schema: { type: 'string', enum: ['created', 'validated', 'submitted', 'accepted', 'rejected', 'in_process', 'settled', 'failed', 'reversed', 'expired'] } }, ...paginationParams], responses: { '200': { description: 'Interbank payments list' }, ...errorResponses } },
+  post: { tags: ['Interbank'], summary: 'Create interbank payment', operationId: 'interbankPaymentCreate', security: [{ bearerAuth: [] }], parameters: [idempotencyHeader], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['debtor_participant_id', 'creditor_participant_id', 'amount'], properties: { debtor_participant_id: { type: 'string', format: 'uuid' }, creditor_participant_id: { type: 'string', format: 'uuid' }, debtor_account_ref: { type: 'string' }, creditor_account_ref: { type: 'string' }, amount: { type: 'number' }, currency: { type: 'string', default: 'XAF' }, external_reference: { type: 'string' } } } } } }, responses: { '201': { description: 'Payment created' }, ...errorResponses } },
+};
+
+paths['/v1/interbank/payments/{paymentId}'] = {
+  get: { tags: ['Interbank'], summary: 'Get interbank payment', operationId: 'interbankPaymentGet', security: [{ bearerAuth: [] }], parameters: [{ name: 'paymentId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Payment details with status events' }, ...errorResponses } },
+};
+
+paths['/v1/interbank/payments/{paymentId}/submit'] = {
+  post: { tags: ['Interbank'], summary: 'Submit interbank payment', description: 'Generates pacs.008 and dispatches to creditor bank.', operationId: 'interbankPaymentSubmit', security: [{ bearerAuth: [] }], parameters: [{ name: 'paymentId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], responses: { '200': { description: 'Payment submitted with pacs.008 generated' }, ...errorResponses } },
+};
+
+paths['/v1/interbank/participants'] = {
+  get: { tags: ['Interbank'], summary: 'List participants', operationId: 'interbankParticipantsList', security: [{ bearerAuth: [] }], responses: { '200': { description: 'Interbank participants list' }, ...errorResponses } },
+};
+
+paths['/v1/interbank/messages'] = {
+  get: { tags: ['Interbank'], summary: 'List ISO 20022 messages', operationId: 'interbankMessagesList', security: [{ bearerAuth: [] }], parameters: [{ name: 'payment_id', in: 'query', schema: { type: 'string' } }, ...paginationParams], responses: { '200': { description: 'ISO messages list' }, ...errorResponses } },
+};
+
+// ── Bank PSU Linking ──────────────────────────────────────────────────
+paths['/v1/banks/{bankId}/link'] = {
+  post: { tags: ['Bank Directory'], summary: 'Link PSU to bank', description: 'Start linking a user to a bank for AISP/PISP access.', operationId: 'bankLinkPsu', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['external_customer_id'], properties: { external_customer_id: { type: 'string' } } } } } }, responses: { '200': { description: 'Link initiated' }, ...errorResponses } },
+};
+
+// ── Bank Payments (Connector Rail) ────────────────────────────────────
+paths['/v1/banks/{bankId}/payments'] = {
+  get: { tags: ['Bank Connectors'], summary: 'List bank payments', operationId: 'bankPaymentsList', security: [{ bearerAuth: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }, ...paginationParams], responses: { '200': { description: 'Bank payments list' }, ...errorResponses } },
+};
+
+paths['/v1/internal/connectors/{bankId}/payments/status'] = {
+  post: { tags: ['Bank Connectors'], summary: 'Payment status callback', description: 'Bank connector pushes payment status update.', operationId: 'connectorPaymentStatus', security: [{ mtls: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['payment_id', 'status'], properties: { payment_id: { type: 'string' }, status: { type: 'string', enum: ['accepted', 'completed', 'failed', 'reversed'] }, details: { type: 'object' } } } } } }, responses: { '200': { description: 'Status updated' }, ...errorResponses } },
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
