@@ -50,6 +50,7 @@ export function EnterpriseUpgradeModal({
   open, onOpenChange, plan, plans = [], currency, subscribing, onConfirm,
   walletBalance = 0, onFundWallet,
 }: EnterpriseUpgradeModalProps) {
+  const navigate = useNavigate();
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [showComparison, setShowComparison] = useState(false);
