@@ -162,7 +162,7 @@ const MerchantFundWallet = () => {
             {method === "bank_transfer" && (
               <BankSelector
                 selectedBank={selectedBankCode}
-                onBankChange={(code, name) => { setSelectedBankCode(code); setSelectedBankName(name); }}
+                onBankChange={(code, name, source) => { setSelectedBankCode(code); setSelectedBankName(name); setSelectedBankSource(source); }}
                 accountNumber={bankAccountNumber}
                 onAccountNumberChange={setBankAccountNumber}
               />

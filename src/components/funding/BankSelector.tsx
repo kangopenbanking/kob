@@ -133,7 +133,7 @@ export const BankSelector = ({
         ) : (
           <Select value={selectedBank} onValueChange={(val) => {
             const bank = banks.find((b) => b.code === val);
-            onBankChange(val, bank?.name || "");
+            onBankChange(val, bank?.name || "", bank?.source || "fallback");
           }}>
             <SelectTrigger className="h-11">
               <SelectValue placeholder="Select a bank" />
