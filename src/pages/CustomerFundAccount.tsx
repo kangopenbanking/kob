@@ -14,6 +14,7 @@ import { PaymentMethodSelector } from "@/components/funding/PaymentMethodSelecto
 import { AmountInput } from "@/components/funding/AmountInput";
 import { FundingResult } from "@/components/funding/FundingResult";
 import { FundingHistory } from "@/components/funding/FundingHistory";
+import { BankSelector } from "@/components/funding/BankSelector";
 import { API_CONFIG } from "@/config/api";
 
 const fmt = (n: number) => new Intl.NumberFormat("fr-CM", { style: "currency", currency: "XAF", minimumFractionDigits: 0 }).format(n);
