@@ -52,13 +52,6 @@ const InstitutionAppUrls: React.FC = () => {
     <div className="space-y-6">
       <AdminPageHeader icon={Link} title="Institution App URLs" description="Manage institution-specific application URLs and endpoints" />
 
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">Institution App URLs</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Unique PWA links for each financial institution's mobile banking app.
-        </p>
-      </div>
-
       <SearchFilter
         searchTerm={search}
         onSearchChange={setSearch}

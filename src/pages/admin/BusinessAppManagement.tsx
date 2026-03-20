@@ -298,22 +298,6 @@ const BusinessAppManagement: React.FC = () => {
     <div className="space-y-6">
       <AdminPageHeader icon={Briefcase} title="Business App Management" description="Monitor merchants, orders, features & compliance" />
 
-      {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/5 via-background to-background border p-6 md:p-8">
-        <div className="absolute top-0 right-0 w-72 h-72 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="relative">
-          <div className="flex items-center gap-3 mb-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-              <Store className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Business App Management</h1>
-              <p className="text-sm text-muted-foreground">Monitor merchants, orders, features & compliance across the platform</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
       {/* KPI Cards */}
       <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-6">
         <StatCard title="Total Merchants" value={merchants?.length ?? 0} icon={<Store className="h-5 w-5" />} />

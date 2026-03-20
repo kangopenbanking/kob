@@ -1546,11 +1546,6 @@ export default function CustomerAppManagement() {
     <div className="space-y-6">
       <AdminPageHeader icon={Users} title="Customer App Management" description="Monitor customer accounts, features, and app activity" />
 
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Customer App Management</h1>
-        <p className="text-muted-foreground">Manage customer-facing mobile applications per institution</p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Institution List */}
         <Card className="lg:col-span-1">

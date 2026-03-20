@@ -112,10 +112,7 @@ export default function InvoiceManagement() {
 
   return (
     <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Invoice Management</h1>
-        <p className="text-muted-foreground">Manage institutional invoices and billing</p>
-      </div>
+      <AdminPageHeader icon={Receipt} title="Invoice Management" description="Manage institutional invoices and billing cycles" />
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-3">

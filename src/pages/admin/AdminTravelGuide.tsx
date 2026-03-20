@@ -200,10 +200,6 @@ const AdminTravelGuide: React.FC = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate('/admin/travel-management')}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold">Travel Services Training Guide</h1>
-          <p className="text-muted-foreground">Admin reference for managing the Transport & Tourism platform</p>
-        </div>
       </div>
 
       <div className="relative">

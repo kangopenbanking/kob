@@ -201,22 +201,6 @@ export default function PayoutManagement() {
     <div className="space-y-6">
       <AdminPageHeader icon={Banknote} title="Payout Management" description="Process and monitor merchant and institutional payouts" />
 
-      {/* Hero Header */}
-      <motion.div {...fadeUp} className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-primary-foreground/10 p-6 md:p-8">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0zNiAxOGMzLjMxNCAwIDYgMi42ODYgNiA2cy0yLjY4NiA2LTYgNi02LTIuNjg2LTYtNiAyLjY4Ni02IDYtNiIgc3Ryb2tlPSJyZ2JhKDI1NSwyNTUsMjU1LDAuMDgpIiBzdHJva2Utd2lkdGg9IjIiLz48L2c+PC9zdmc+')] opacity-40" />
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
-              <Banknote className="h-5 w-5 text-primary-foreground" strokeWidth={1.5} />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-primary-foreground tracking-tight">Payout Management</h1>
-              <p className="text-sm text-primary-foreground/70">Monitor, manage and audit all consumer & merchant withdrawals</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
       {/* Stats Grid */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-6">
         {statCards.map((stat, i) => {

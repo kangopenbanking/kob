@@ -95,17 +95,13 @@ const LinkedAccountRequests: React.FC = () => {
     <div className="space-y-6 p-6">
       <AdminPageHeader icon={Link2} title="Linked Account Requests" description="Review and approve customer account re-linking requests" />
 
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Linked Account Requests</h1>
-          <p className="text-sm text-muted-foreground">Review and approve customer account re-linking requests</p>
-        </div>
-        {pendingCount > 0 && (
+      {pendingCount > 0 && (
+        <div className="flex justify-end">
           <Badge className="bg-[hsl(40,90%,92%)] text-[hsl(40,80%,35%)] border-0 text-sm">
             <Clock className="h-3.5 w-3.5 mr-1" /> {pendingCount} pending
           </Badge>
-        )}
-      </div>
+        </div>
+      )}
 
       {isLoading ? (
         <div className="flex justify-center py-16">

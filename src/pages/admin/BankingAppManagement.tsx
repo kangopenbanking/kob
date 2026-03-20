@@ -1392,11 +1392,6 @@ export default function BankingAppManagement() {
     <div className="space-y-6">
       <AdminPageHeader icon={Smartphone} title="Banking App Management" description="Manage PWA banking application features and configurations" />
 
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2"><Smartphone className="h-6 w-6 text-primary" /> Banking App Management</h1>
-        <p className="text-muted-foreground">Manage individual banking app instances, view per-institution user accounts, transactions, and settings</p>
-      </div>
-
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Institution List */}
         <Card className="lg:col-span-1">

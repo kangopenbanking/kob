@@ -177,11 +177,6 @@ const MerchantWalletOversight: React.FC = () => {
     <div className="space-y-6">
       <AdminPageHeader icon={Wallet} title="Merchant Wallet Oversight" description="Manage merchant balances and payout requests" />
 
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Merchant Wallet Oversight</h1>
-        <p className="text-muted-foreground">Manage merchant balances and payout requests</p>
-      </div>
-
       {/* Pending Payout Requests */}
       <Card>
         <CardHeader>
