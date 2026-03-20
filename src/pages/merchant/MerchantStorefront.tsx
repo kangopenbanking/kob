@@ -1009,7 +1009,7 @@ export default function MerchantStorefront() {
                             <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold" onClick={() => window.print()}>
                               <Printer className="w-3.5 h-3.5" /> Print
                             </Button>
-                            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold">
+                            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold" onClick={downloadQr}>
                               <Download className="w-3.5 h-3.5" /> Save
                             </Button>
                           </div>
