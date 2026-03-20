@@ -68,7 +68,7 @@ const BusinessCoupons: React.FC = () => {
       const { error } = await supabase.from('pos_coupons').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['biz-coupons'] }); toast.success('Coupon deleted'); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['biz-coupons'] }); toast.success('Coupon removed. It can no longer be used by customers.'); },
   });
 
   const formatXAF = (n: number) =>

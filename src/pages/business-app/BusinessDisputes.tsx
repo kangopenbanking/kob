@@ -42,12 +42,12 @@ export default function BusinessDisputes() {
         body: { dispute_id: selectedDispute.id, merchant_id: merchantId, evidence_text: evidence },
       });
       if (error) throw error;
-      toast({ title: "Evidence submitted", description: "Your dispute response has been recorded." });
+      toast({ title: "Evidence submitted successfully", description: "Your dispute response has been recorded and will be reviewed within 5 business days." });
       setEvidence("");
       setSelectedDispute(null);
       refetch();
     } catch (err: any) {
-      toast({ title: "Failed to submit", description: err.message, variant: "destructive" });
+      toast({ title: "Could not submit evidence", description: err.message || "Please try again or contact support.", variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
