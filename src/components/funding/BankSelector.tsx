@@ -54,11 +54,12 @@ export const BankSelector = ({
 
     // Also try KOB institutions
     try {
-      const { data: kobBanks } = await supabase
-        .from("institutions")
+      const query = supabase
+        .from("institutions" as any)
         .select("id, institution_name, swift_bic_code")
         .eq("is_active", true)
-        .order("institution_name") as { data: any[] | null };
+        .order("institution_name");
+      const { data: kobBanks } = await query;
       if (kobBanks?.length) {
         kobBanks.forEach((inst: any) => {
           const exists = bankList.some(
