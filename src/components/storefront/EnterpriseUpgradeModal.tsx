@@ -17,32 +17,37 @@ interface EnterpriseUpgradeModalProps {
 }
 
 const COMPARISON = [
-  { feature: 'Store listing on marketplace', starter: true, pro: true, enterprise: true },
-  { feature: 'QR code payments', starter: true, pro: true, enterprise: true },
-  { feature: 'Up to 50 products', starter: true, pro: false, enterprise: false },
-  { feature: 'Unlimited products', starter: false, pro: true, enterprise: true },
-  { feature: 'Sales analytics', starter: false, pro: true, enterprise: true },
-  { feature: 'Multi-cashier support', starter: false, pro: true, enterprise: true },
-  { feature: 'WooCommerce sync', starter: false, pro: true, enterprise: true },
-  { feature: 'Priority support', starter: false, pro: true, enterprise: true },
-  { feature: 'Custom branding', starter: false, pro: false, enterprise: true },
-  { feature: 'API access', starter: false, pro: false, enterprise: true },
-  { feature: 'Multi-location inventory', starter: false, pro: false, enterprise: true },
-  { feature: 'Dedicated account manager', starter: false, pro: false, enterprise: true },
-  { feature: 'SLA guarantee (99.9%)', starter: false, pro: false, enterprise: true },
+  { feature: 'Store listing on marketplace', tiers: [true, true, true] },
+  { feature: 'QR code payments', tiers: [true, true, true] },
+  { feature: 'Up to 50 products', tiers: [true, false, false] },
+  { feature: 'Unlimited products', tiers: [false, true, true] },
+  { feature: 'Sales analytics', tiers: [false, true, true] },
+  { feature: 'Multi-cashier support', tiers: [false, true, true] },
+  { feature: 'WooCommerce sync', tiers: [false, true, true] },
+  { feature: 'Priority support', tiers: [false, true, true] },
+  { feature: 'Custom branding', tiers: [false, false, true] },
+  { feature: 'API access', tiers: [false, false, true] },
+  { feature: 'Multi-location inventory', tiers: [false, false, true] },
+  { feature: 'Dedicated account manager', tiers: [false, false, true] },
+  { feature: 'SLA guarantee (99.9%)', tiers: [false, false, true] },
 ];
 
-const TIER_META: Record<string, { icon: typeof Crown; color: string; bg: string }> = {
-  starter: { icon: Shield, color: 'hsl(var(--fi-blue))', bg: 'hsl(var(--fi-blue))' },
-  pro: { icon: Zap, color: 'hsl(var(--fi-green))', bg: 'hsl(var(--fi-green))' },
-  enterprise: { icon: Crown, color: 'hsl(var(--fi-purple))', bg: 'hsl(var(--fi-purple))' },
-};
+const TIER_COLORS = [
+  { icon: Shield, color: 'hsl(var(--fi-blue))', bg: 'hsl(var(--fi-blue))' },
+  { icon: Zap, color: 'hsl(var(--fi-green))', bg: 'hsl(var(--fi-green))' },
+  { icon: Crown, color: 'hsl(var(--fi-purple))', bg: 'hsl(var(--fi-purple))' },
+];
 
-function getTierKey(plan: any): string {
+function getTierIndex(plan: any, total: number): number {
   const name = (plan?.name || '').toLowerCase();
-  if (name.includes('enterprise') || plan?.tier === 'enterprise') return 'enterprise';
-  if (name.includes('pro')) return 'pro';
-  return 'starter';
+  if (name.includes('enterprise') || plan?.tier === 'enterprise') return 2;
+  if (name.includes('pro') || name.includes('plus')) return 1;
+  return 0;
+}
+
+function getTierMeta(plan: any, idx: number) {
+  const tierIdx = Math.min(idx, TIER_COLORS.length - 1);
+  return TIER_COLORS[tierIdx];
 }
 
 export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], currency, subscribing, onConfirm }: EnterpriseUpgradeModalProps) {
