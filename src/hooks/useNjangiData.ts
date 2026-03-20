@@ -79,8 +79,11 @@ export function useJoinNjangiGroup() {
       if (data?.error) throw new Error(data.error);
       return data;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] }),
-    onError: (err: any) => toast.error(err.message),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
+      toast.success('You have joined the Njangi group successfully! 🤝');
+    },
+    onError: (err: any) => toast.error(err.message || 'Could not join group. It may be full or no longer active.'),
   });
 }
 
