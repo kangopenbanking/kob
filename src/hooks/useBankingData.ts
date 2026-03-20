@@ -347,11 +347,14 @@ export function useUpdateCardStatus() {
       if (error) throw error;
       return data;
     },
-    onSuccess: (data: any) => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['virtual-cards', institutionId] });
-      toast.success(data?.message || 'Card status updated!');
+      const statusMsg = variables.status === 'frozen' ? 'Card frozen — no transactions will be processed' 
+        : variables.status === 'active' ? 'Card reactivated and ready to use'
+        : `Card status changed to ${variables.status}`;
+      toast.success(statusMsg);
     },
-    onError: (err: any) => toast.error(err.message || 'Status update failed'),
+    onError: (err: any) => toast.error(err.message || 'Could not update card status. Please try again.'),
   });
 }
 
