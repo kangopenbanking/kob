@@ -157,12 +157,12 @@ export function useSavingsWithdraw() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
-      toast.success('Withdrawal successful!');
+      toast.success(`${variables.amount.toLocaleString()} XAF withdrawn from savings. Funds available in your account.`);
     },
-    onError: (err: any) => toast.error(err.message || 'Withdrawal failed'),
+    onError: (err: any) => toast.error(err.message || 'Could not process withdrawal. Please try again.'),
   });
 }
 
