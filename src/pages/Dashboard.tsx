@@ -71,7 +71,7 @@ const Dashboard = () => {
     { label: "Mobile Money", icon: Smartphone, path: "/mobile-money", color: "bg-amber-500/10 text-amber-600 dark:text-amber-400" },
     { label: "Payments", icon: Wallet, path: "/payments", color: "bg-sky-500/10 text-sky-600 dark:text-sky-400" },
     { label: "Savings", icon: PiggyBank, path: "/savings", color: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
-    { label: "Virtual Cards", icon: CreditCard, path: "/virtual-cards", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400" },
+    { label: "Virtual Cards", icon: CreditCard, path: "/virtual-cards", color: "bg-violet-500/10 text-violet-600 dark:text-violet-400", soon: true },
     { label: "Credit Score", icon: TrendingUp, path: "/credit-score", color: "bg-rose-500/10 text-rose-600 dark:text-rose-400" },
     { label: "Banking Ops", icon: Landmark, path: "/banking-ops", color: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400" },
   ];
