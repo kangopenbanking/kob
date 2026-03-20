@@ -665,6 +665,7 @@ function App() {
               <Route path="white-label" element={<MerchantWhiteLabel />} />
               <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
               <Route path="pos-till" element={<MerchantPOSTill />} />
+              <Route path="notification-history" element={<NotificationHistory />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
