@@ -845,6 +845,52 @@ export default function MerchantStorefront() {
                     </div>
                     <Badge className="bg-[hsl(var(--fi-green))]/10 text-[hsl(var(--fi-green))] border-[hsl(var(--fi-green))]/20 px-4 py-2 text-xs font-bold">Active</Badge>
                   </div>
+
+                  {/* Expiry warning */}
+                  {(() => {
+                    const expiresAt = new Date(subscription.expires_at);
+                    const now = new Date();
+                    const daysLeft = Math.ceil((expiresAt.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                    if (daysLeft <= 7 && daysLeft > 0) {
+                      return (
+                        <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-[hsl(var(--fi-amber))]/8 border border-[hsl(var(--fi-amber))]/25">
+                          <AlertCircle className="w-5 h-5 text-[hsl(var(--fi-amber))] mt-0.5 flex-shrink-0" strokeWidth={1.5} />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-foreground">Subscription expires in {daysLeft} day{daysLeft !== 1 ? 's' : ''}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Renew now to keep your store visible on the marketplace.</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            className="rounded-lg text-xs font-bold bg-[hsl(var(--fi-purple))] hover:bg-[hsl(var(--fi-purple))]/90 text-white gap-1.5"
+                            onClick={() => { setSelectedPlan(subscription.pos_subscription_plans); setUpgradeModalOpen(true); }}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" /> Renew
+                          </Button>
+                        </div>
+                      );
+                    }
+                    if (daysLeft <= 0) {
+                      return (
+                        <div className="mt-4 flex items-start gap-3 p-4 rounded-xl bg-destructive/8 border border-destructive/25">
+                          <AlertCircle className="w-5 h-5 text-destructive mt-0.5 flex-shrink-0" strokeWidth={1.5} />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-destructive">Subscription has expired</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Your store is no longer visible on the marketplace. Renew to restore visibility.</p>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="rounded-lg text-xs font-bold gap-1.5"
+                            onClick={() => { setSelectedPlan(subscription.pos_subscription_plans); setUpgradeModalOpen(true); }}
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" /> Renew Now
+                          </Button>
+                        </div>
+                      );
+                    }
+                    return null;
+                  })()}
+
                   <div className="grid sm:grid-cols-2 gap-4 mt-6">
                     <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Started</p>
@@ -854,6 +900,17 @@ export default function MerchantStorefront() {
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Expires</p>
                       <p className="text-sm font-bold text-foreground mt-1">{new Date(subscription.expires_at).toLocaleDateString()}</p>
                     </div>
+                  </div>
+
+                  {/* Renewal button for active plans */}
+                  <div className="mt-4 flex gap-3">
+                    <Button
+                      variant="outline"
+                      className="flex-1 rounded-xl h-10 text-xs font-semibold gap-2"
+                      onClick={() => { setSelectedPlan(subscription.pos_subscription_plans); setUpgradeModalOpen(true); }}
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Renew / Change Plan
+                    </Button>
                   </div>
                 </div>
               </Card>
