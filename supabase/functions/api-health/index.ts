@@ -68,16 +68,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    const [flutterwaveOk, cardyfieOk, dbOk, oauthOk, aispOk, pispOk] = await Promise.all([
+    const [flutterwaveOk, dbOk, oauthOk, aispOk, pispOk] = await Promise.all([
       checkFlutterwaveHealth(),
-      checkCardyfieHealth(),
       checkDatabaseHealth(),
       checkOAuthHealth(),
       checkAispHealth(),
       checkPispHealth()
     ]);
 
-    const allServicesOk = flutterwaveOk && cardyfieOk && dbOk && oauthOk && aispOk && pispOk;
+    const allServicesOk = flutterwaveOk && dbOk && oauthOk && aispOk && pispOk;
 
     const health = {
       status: allServicesOk ? 'operational' : 'degraded',
