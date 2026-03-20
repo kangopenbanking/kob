@@ -14,6 +14,7 @@ interface Bank {
   id: string;
   code: string;
   name: string;
+  source: 'linked' | 'kob' | 'flutterwave' | 'fallback';
 }
 
 export const BankTransferForm = () => {
