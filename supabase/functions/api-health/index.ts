@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
         mobile_money: flutterwaveOk ? 'operational' : 'degraded',
         banking: flutterwaveOk ? 'operational' : 'degraded',
         credit_scoring: dbOk ? 'operational' : 'degraded',
-        virtual_cards: cardyfieOk ? 'operational' : 'degraded',
+        virtual_cards: 'dormant',
         webhooks: dbOk ? 'operational' : 'degraded',
         database: dbOk ? 'operational' : 'degraded'
       },
