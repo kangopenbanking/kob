@@ -39,7 +39,7 @@ export default function BusinessDisputes() {
     setSubmitting(true);
     try {
       const { error } = await supabase.functions.invoke("gateway-submit-dispute-evidence", {
-        body: { dispute_id: selectedDispute.id, merchant_id: merchantId, evidence_text: evidence },
+        body: { dispute_id: selectedDispute.id, evidence: { uncategorized_text: evidence } },
       });
       if (error) throw error;
       toast({ title: "Evidence submitted successfully", description: "Your dispute response has been recorded and will be reviewed within 5 business days." });

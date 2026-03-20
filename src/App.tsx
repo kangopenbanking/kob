@@ -293,6 +293,7 @@ const InstitutionPayments = lazy(() => import("./pages/institution/InstitutionPa
 const InstitutionWebhooks = lazy(() => import("./pages/institution/InstitutionWebhooks"));
 const InstitutionCreditApi = lazy(() => import("./pages/institution/InstitutionCreditApi"));
 const InstitutionCompliance = lazy(() => import("./pages/institution/InstitutionCompliance"));
+const InstitutionDisputes = lazy(() => import("./pages/institution/InstitutionDisputes"));
 const InstitutionProfile = lazy(() => import("./pages/institution/InstitutionProfile"));
 const InstitutionTeam = lazy(() => import("./pages/institution/InstitutionTeam"));
 const InstitutionSettings = lazy(() => import("./pages/institution/InstitutionSettings"));
@@ -406,6 +407,8 @@ const BankCreditScore = lazy(() => import("./pages/banking-app/BankCreditScore")
 const BankSettings = lazy(() => import("./pages/banking-app/BankSettings"));
 const BankAlerts = lazy(() => import("./pages/banking-app/BankAlerts"));
 const BankHelp = lazy(() => import("./pages/banking-app/BankHelp"));
+const BankDisputes = lazy(() => import("./pages/banking-app/BankDisputes"));
+
 
 // Customer App PWA
 const CustomerSplash = lazy(() => import("./pages/customer-app/CustomerSplash"));
@@ -446,6 +449,7 @@ const CustomerTravelHistory = lazy(() => import("./pages/customer-app/CustomerTr
 const CustomerStores = lazy(() => import("./pages/customer-app/CustomerStores"));
 const CustomerStoreDetail = lazy(() => import("./pages/customer-app/CustomerStoreDetail"));
 const CustomerCart = lazy(() => import("./pages/customer-app/CustomerCart"));
+const CustomerDisputes = lazy(() => import("./pages/customer-app/CustomerDisputes"));
 
 // Business App PWA
 const BusinessSplash = lazy(() => import("./pages/business-app/BusinessSplash"));
@@ -578,6 +582,7 @@ function App() {
               <Route path="webhooks" element={<InstitutionWebhooks />} />
               <Route path="credit-api" element={<InstitutionCreditApi />} />
               <Route path="compliance" element={<InstitutionCompliance />} />
+              <Route path="disputes" element={<InstitutionDisputes />} />
               <Route path="profile" element={<InstitutionProfile />} />
               <Route path="team" element={<InstitutionTeam />} />
               <Route path="settings" element={<InstitutionSettings />} />
@@ -999,6 +1004,7 @@ function App() {
               <Route path="more/settings" element={<BankSettings />} />
               <Route path="more/alerts" element={<BankAlerts />} />
               <Route path="more/help" element={<BankHelp />} />
+              <Route path="more/disputes" element={<BankDisputes />} />
             </Route>
 
             {/* Customer App PWA Routes — unified (no institutionId) */}
@@ -1045,6 +1051,7 @@ function App() {
               <Route path="stores/:merchantId" element={<CustomerStoreDetail />} />
               <Route path="cart" element={<CustomerCart />} />
               <Route path="orders" element={<CustomerOrderTracking />} />
+              <Route path="disputes" element={<CustomerDisputes />} />
             </Route>
 
             {/* Business App PWA Routes */}

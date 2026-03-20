@@ -6561,6 +6561,48 @@ export type Database = {
           },
         ]
       }
+      dispute_activities: {
+        Row: {
+          action: string
+          actor_id: string | null
+          actor_type: string | null
+          created_at: string | null
+          dispute_id: string
+          dispute_source: string
+          from_status: string | null
+          id: string
+          metadata: Json | null
+          note: string | null
+          to_status: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string | null
+          dispute_id: string
+          dispute_source?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json | null
+          note?: string | null
+          to_status?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          actor_type?: string | null
+          created_at?: string | null
+          dispute_id?: string
+          dispute_source?: string
+          from_status?: string | null
+          id?: string
+          metadata?: Json | null
+          note?: string | null
+          to_status?: string | null
+        }
+        Relationships: []
+      }
       disputes: {
         Row: {
           amount: number
@@ -7844,14 +7886,20 @@ export type Database = {
       gateway_disputes: {
         Row: {
           amount: number
+          assignee_id: string | null
+          category: string | null
           charge_id: string
           created_at: string
           currency: string
+          customer_email: string | null
+          customer_name: string | null
+          dispute_ref: string | null
           evidence_data: Json | null
           evidence_due_by: string | null
           evidence_submitted: boolean | null
           id: string
           merchant_id: string
+          priority: string | null
           provider: string
           provider_raw: Json | null
           provider_ref: string | null
@@ -7861,14 +7909,20 @@ export type Database = {
         }
         Insert: {
           amount: number
+          assignee_id?: string | null
+          category?: string | null
           charge_id: string
           created_at?: string
           currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          dispute_ref?: string | null
           evidence_data?: Json | null
           evidence_due_by?: string | null
           evidence_submitted?: boolean | null
           id?: string
           merchant_id: string
+          priority?: string | null
           provider: string
           provider_raw?: Json | null
           provider_ref?: string | null
@@ -7878,14 +7932,20 @@ export type Database = {
         }
         Update: {
           amount?: number
+          assignee_id?: string | null
+          category?: string | null
           charge_id?: string
           created_at?: string
           currency?: string
+          customer_email?: string | null
+          customer_name?: string | null
+          dispute_ref?: string | null
           evidence_data?: Json | null
           evidence_due_by?: string | null
           evidence_submitted?: boolean | null
           id?: string
           merchant_id?: string
+          priority?: string | null
           provider?: string
           provider_raw?: Json | null
           provider_ref?: string | null
