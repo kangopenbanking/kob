@@ -293,6 +293,7 @@ const InstitutionPayments = lazy(() => import("./pages/institution/InstitutionPa
 const InstitutionWebhooks = lazy(() => import("./pages/institution/InstitutionWebhooks"));
 const InstitutionCreditApi = lazy(() => import("./pages/institution/InstitutionCreditApi"));
 const InstitutionCompliance = lazy(() => import("./pages/institution/InstitutionCompliance"));
+const InstitutionDisputes = lazy(() => import("./pages/institution/InstitutionDisputes"));
 const InstitutionProfile = lazy(() => import("./pages/institution/InstitutionProfile"));
 const InstitutionTeam = lazy(() => import("./pages/institution/InstitutionTeam"));
 const InstitutionSettings = lazy(() => import("./pages/institution/InstitutionSettings"));
