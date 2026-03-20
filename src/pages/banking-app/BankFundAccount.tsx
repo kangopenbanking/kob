@@ -8,6 +8,7 @@ import { useFeeEstimate } from '@/hooks/useFeeEstimate';
 import { AmountInput } from '@/components/funding/AmountInput';
 import { FundingResult } from '@/components/funding/FundingResult';
 import { FundingHistory } from '@/components/funding/FundingHistory';
+import { BankSelector } from '@/components/funding/BankSelector';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
