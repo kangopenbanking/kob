@@ -1070,6 +1070,7 @@ function App() {
               <Route path="storefront" element={<BusinessStorefront />} />
               <Route path="inventory" element={<BusinessInventory />} />
               <Route path="notifications" element={<NotificationPreferences />} />
+              <Route path="notification-history" element={<NotificationHistory />} />
               {/* Travel */}
               <Route path="travel" element={<BusinessTravel />} />
               <Route path="travel/services" element={<BusinessTravelServices />} />
