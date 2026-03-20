@@ -78,7 +78,7 @@ export function UserProfileMenu({ variant = "dashboard" }: UserProfileMenuProps)
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    toast.success("Signed out successfully");
+    toast.success("You've been signed out. See you next time! 👋");
     navigate("/");
   };
 
