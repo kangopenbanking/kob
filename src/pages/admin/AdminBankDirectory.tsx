@@ -753,18 +753,16 @@ export default function AdminBankDirectory() {
   return (
     <div className="space-y-8">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-2xl bg-primary p-8 text-primary-foreground">
-        <div className="relative z-10">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="rounded-xl bg-primary-foreground/20 p-2.5">
-              <Building2 className="h-6 w-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold tracking-tight">Bank Directory</h1>
-              <p className="text-primary-foreground/80 text-sm">
-                Manage bank registrations, connectors, file imports, batch payments & PSU links
-              </p>
-            </div>
+      <div className="rounded-2xl bg-primary p-8 text-primary-foreground">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-primary-foreground/20 p-2.5">
+            <Building2 className="h-6 w-6" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Bank Directory</h1>
+            <p className="text-primary-foreground/80 text-sm">
+              Manage bank registrations, connectors, file imports, batch payments & PSU links
+            </p>
           </div>
         </div>
       </div>
