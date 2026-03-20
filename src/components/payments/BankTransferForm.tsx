@@ -35,39 +35,64 @@ export const BankTransferForm = () => {
   }, [currency]);
 
   const fetchBanks = async () => {
-    try {
-      const countryMap: Record<string, string> = {
-        XAF: 'CM', NGN: 'NG', GHS: 'GH', KES: 'KE', UGX: 'UG', TZS: 'TZ', ZAR: 'ZA',
-      };
+    const countryMap: Record<string, string> = {
+      XAF: 'CM', NGN: 'NG', GHS: 'GH', KES: 'KE', UGX: 'UG', TZS: 'TZ', ZAR: 'ZA',
+    };
+    const country = countryMap[currency] || 'CM';
+    const kobBanks: Bank[] = [];
+    const fwBanks: Bank[] = [];
 
-      const country = countryMap[currency] || 'CM';
+    // Priority 1: KOB Partner institutions
+    try {
+      const query = supabase
+        .from("institutions" as any)
+        .select("id, institution_name, swift_bic_code")
+        .eq("is_active", true)
+        .order("institution_name");
+      const { data: kobInst } = await query;
+      if (kobInst?.length) {
+        kobInst.forEach((inst: any) => {
+          kobBanks.push({ id: inst.swift_bic_code || inst.id, code: inst.swift_bic_code || inst.id, name: inst.institution_name });
+        });
+      }
+    } catch (err) {
+      console.warn('[BankTransfer] KOB institutions fetch failed:', err);
+    }
+
+    // Priority 2: Flutterwave banks
+    try {
       const { data, error } = await supabase.functions.invoke('flutterwave-list-banks', {
         body: { country },
       });
-
-      if (error) throw error;
-
-      const bankList = data.banks || [];
-      if (bankList.length > 0) {
-        setBanks(bankList);
-      } else if (country === 'CM') {
-        // Fallback to static Cameroon banks
-        setBanks(CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name })));
-      }
-    } catch (error: any) {
-      console.error('Error fetching banks:', error);
-      // Use fallback for Cameroon
-      const countryMap: Record<string, string> = { XAF: 'CM' };
-      if ((countryMap[currency] || 'CM') === 'CM') {
-        setBanks(CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name })));
-      } else {
-        toast({
-          title: "Bank List Unavailable",
-          description: "Could not load banks for this currency. Please try again.",
-          variant: "destructive",
+      if (!error && data?.banks?.length) {
+        data.banks.forEach((b: any) => {
+          const isDuplicate = kobBanks.some(kb => kb.name.toLowerCase().includes(b.name?.toLowerCase()?.slice(0, 10)));
+          if (!isDuplicate) {
+            fwBanks.push({ id: b.id || b.code, code: b.code, name: b.name });
+          }
         });
       }
+    } catch (err) {
+      console.warn('[BankTransfer] Flutterwave fetch failed:', err);
     }
+
+    // Merge: KOB first, then Flutterwave
+    let merged = [...kobBanks, ...fwBanks];
+
+    // Fallback for Cameroon
+    if (merged.length === 0 && country === 'CM') {
+      merged = CM_BANKS.map(b => ({ id: b.code, code: b.code, name: b.name }));
+    }
+
+    if (merged.length === 0) {
+      toast({
+        title: "Bank List Unavailable",
+        description: "Could not load banks for this currency. Please try again.",
+        variant: "destructive",
+      });
+    }
+
+    setBanks(merged);
   };
 
   const verifyAccount = async () => {
