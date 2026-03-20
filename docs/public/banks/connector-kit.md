@@ -59,7 +59,49 @@ WHERE updated_at > :watermark
 
 ---
 
-## 3. Message Queue Connector (Real-Time)
+## 3. API Pull Connector (connector_pull)
+
+### Workflow
+1. Register a bank API endpoint (base URL, auth method, resource paths)
+2. KOB polls the bank's REST API on a configured schedule
+3. Responses are normalized and upserted into `bank_sourced_*` tables
+4. Supports OAuth2 client credentials, API key, Basic auth, and Bearer token
+
+### Authentication Methods
+| Method | Description |
+|---|---|
+| `api_key` | Custom header with API key (default `X-API-Key`) |
+| `oauth2_client_credentials` | Automatic token exchange via `token_url` |
+| `basic` | HTTP Basic Authentication |
+| `bearer_token` | Static Bearer token |
+| `mtls` | Mutual TLS (certificate-based) |
+
+### Configuration
+```json
+{
+  "base_url": "https://bank-api.example.com",
+  "auth_method": "oauth2_client_credentials",
+  "auth_config": {
+    "token_url": "https://bank-api.example.com/oauth/token",
+    "client_id": "kob-connector",
+    "client_secret": "...",
+    "scope": "accounts:read transactions:read"
+  },
+  "paths": {
+    "accounts": "/api/v1/accounts",
+    "transactions": "/api/v1/transactions",
+    "balances": "/api/v1/balances",
+    "health": "/api/v1/health"
+  }
+}
+```
+
+### Edge Function
+`bank-api-connector` — Actions: register_endpoint, list_endpoints, update_endpoint, test_endpoint, trigger_pull, poll_due, list_pull_runs
+
+---
+
+## 4. Message Queue Connector (Real-Time)
 
 ### Channel Types
 | Type | Protocol | Description | Direction |
