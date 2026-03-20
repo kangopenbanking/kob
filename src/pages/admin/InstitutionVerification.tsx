@@ -423,9 +423,7 @@ export default function InstitutionVerification() {
     return (
       <Card className="hover:shadow-lg transition-shadow">
         <CardHeader>
-          <div className="space-y-6 flex items-start justify-between">
-      <AdminPageHeader icon={BadgeCheck} title="Institution Verification" description="Review and verify financial institution applications" />
-
+          <div className="flex items-start justify-between">
             <div className="space-y-1">
               <CardTitle className="flex items-center gap-2">
                 <Building2 className="h-5 w-5" />
