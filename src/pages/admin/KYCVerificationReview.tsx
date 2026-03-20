@@ -295,17 +295,7 @@ export default function KYCVerificationReview() {
 
   return (
     <div className="space-y-6">
-      {/* ── Header ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-md">
-            <Shield className="h-6 w-6" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">KYC Verification</h1>
-            <p className="text-sm text-muted-foreground">Review and approve customer identity submissions</p>
-          </div>
-        </div>
+      <AdminPageHeader icon={Shield} title="KYC Verification" description="Review and approve customer identity submissions" />
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

@@ -315,25 +315,12 @@ const PaymentFacilitation = () => {
 
   return (
     <div className="space-y-6">
-      {/* Hero Banner */}
-      <div className="relative rounded-3xl overflow-hidden">
-        <img src={pfBanner} alt="Payment Facilitation" className="w-full h-44 sm:h-52 object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/95 via-background/70 to-transparent" />
-        <div className="absolute inset-0 flex items-center justify-between px-6 sm:px-8">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">Payment Facilitation</h1>
-            <p className="text-sm text-muted-foreground mt-1 max-w-md">
-              Manage KOB payment facilitation, settlements, and merchant integrations
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <DateRangePicker value={dateRange} onChange={setDateRange} />
-            <Button variant="outline" size="sm" className="bg-background/80 backdrop-blur-sm" onClick={() => { refetchMM(); refetchBT(); }}>
-              <RefreshCw className="h-4 w-4 mr-1.5" />Refresh
-            </Button>
-          </div>
-        </div>
-      </div>
+      <AdminPageHeader icon={CreditCard} title="Payment Facilitation" description="Manage KOB payment facilitation, settlements, and merchant integrations">
+        <DateRangePicker value={dateRange} onChange={setDateRange} />
+        <Button variant="outline" size="sm" className="bg-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/30 border-0" onClick={() => { refetchMM(); refetchBT(); }}>
+          <RefreshCw className="h-4 w-4 mr-1.5" />Refresh
+        </Button>
+      </AdminPageHeader>
 
       {/* Stats Dashboard */}
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-5">
