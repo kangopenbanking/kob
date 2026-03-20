@@ -137,12 +137,12 @@ export function useSavingsDeposit() {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (_data: any, variables: any) => {
       queryClient.invalidateQueries({ queryKey: ['savings-accounts', institutionId] });
       queryClient.invalidateQueries({ queryKey: ['bank-accounts', institutionId] });
-      toast.success('Deposit successful!');
+      toast.success(`${variables.amount.toLocaleString()} XAF deposited to your savings account`);
     },
-    onError: (err: any) => toast.error(err.message || 'Deposit failed'),
+    onError: (err: any) => toast.error(err.message || 'Could not complete your deposit. Please try again.'),
   });
 }
 
