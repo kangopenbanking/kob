@@ -3,14 +3,10 @@ import { corsHeaders } from "../_shared/cors.ts";
 import { sendManagedEmail, getUserName } from "../_shared/send-managed-email.ts";
 
 /**
- * Cron-triggered function to check for expiring/expired merchant subscriptions
- * and send notifications + emails.
- * 
- * Checks:
- * 1. Subscriptions expiring in 7 days → warning notification + email
- * 2. Subscriptions expiring in 3 days → urgent notification + email  
- * 3. Subscriptions expiring in 1 day → critical notification + email
- * 4. Subscriptions that just expired (within last 24h) → expired notification + email
+ * Cron-triggered function to send EMAIL notifications for expiring subscriptions.
+ * In-app notifications are already handled by the DB function notify_subscription_expiry_warning().
+ * This function adds email alerts at 7d, 3d, 1d, and expired milestones.
+ * Runs daily at 8 AM.
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
