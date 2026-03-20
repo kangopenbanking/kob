@@ -32,7 +32,7 @@ const BankReceive: React.FC = () => {
   const handleCopy = () => {
     navigator.clipboard.writeText(accountId);
     setCopied(true);
-    toast.success('Account number copied!');
+    toast.success('Account number copied to clipboard — share it with the sender');
     setTimeout(() => setCopied(false), 2000);
   };
 
