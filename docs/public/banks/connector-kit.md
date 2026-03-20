@@ -257,3 +257,52 @@ interface BankCoreAdapter {
 - **Deduplication**: SHA-256 for files, `correlation_id` for messages, watermark for DB polling
 - **Broker Auth**: Kafka (API key/secret or Bearer token), RabbitMQ (Basic auth or Bearer token)
 - **Delivery Logging**: All broker deliveries tracked in `broker_delivery_log` with latency and success metrics
+
+---
+
+## Broker Limitations & High-Throughput Architecture
+
+### Current Implementation
+
+KOB's Kafka and RabbitMQ adapters use **HTTP proxy APIs** (Confluent REST Proxy v3 and RabbitMQ Management HTTP API respectively). This works well for:
+- Low-to-medium throughput (< 100 msg/sec)
+- Simple produce/consume patterns
+- Banks that already expose these HTTP interfaces
+
+### Known Limitations
+
+| Limitation | Detail |
+|---|---|
+| **No persistent TCP connections** | Edge Functions are stateless; each invocation creates a new HTTP request to the broker proxy |
+| **No consumer groups lifecycle** | Consumer group management (rebalancing, offset commits) is limited to what the REST Proxy exposes |
+| **No dead-letter queue handling** | DLQ routing must be configured on the broker side; KOB does not manage DLQ policies |
+| **No schema registry** | Messages are JSON only; Avro/Protobuf schema validation is not supported |
+| **Polling-based consumption** | Inbound messages require explicit `consume_broker` calls; no persistent subscription |
+| **Latency overhead** | HTTP proxy adds ~10-50ms per message compared to native TCP clients |
+
+### Recommended Architecture for High-Throughput (1000+ msg/sec)
+
+For banks requiring high-throughput, persistent broker connections, we recommend deploying a **KOB Bridge Agent** as a sidecar service:
+
+```
+┌─────────────┐     TCP      ┌──────────────────┐     HTTPS    ┌─────────────┐
+│ Bank's Core │ ◄──────────► │  KOB Bridge      │ ◄──────────► │  KOB API    │
+│ Kafka/AMQP  │   (native)   │  Agent (Docker)   │   (REST)    │  (Edge Fn)  │
+└─────────────┘              └──────────────────┘              └─────────────┘
+```
+
+The Bridge Agent:
+1. Maintains persistent TCP connections to Kafka/RabbitMQ
+2. Handles consumer group management, offset tracking, and DLQ routing
+3. Batches messages and forwards to KOB via standard REST API calls
+4. Can be deployed on-premise at the bank or in a cloud VPC
+5. Reference implementation available in `docs/bridge-agent/` (coming soon)
+
+### When to Use Each Approach
+
+| Scenario | Recommendation |
+|---|---|
+| < 100 msg/sec, simple patterns | HTTP Proxy (current, built-in) |
+| 100-1000 msg/sec, needs DLQ | Bridge Agent + HTTP Proxy |
+| > 1000 msg/sec, complex routing | Bridge Agent with native drivers |
+| Bank has no broker | Use File or API Pull connector instead |
