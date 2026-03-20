@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Package, Search, Loader2, Tag, Plus, RefreshCw, Pencil, Trash2, X,
-  Image as ImageIcon, Upload, GripVertical, Save, ChevronDown, ChevronUp,
+  Image as ImageIcon, Upload, Save, ChevronDown, ChevronUp, Layers, SlidersHorizontal,
+  DollarSign, BarChart3, Hash,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -19,10 +22,13 @@ import {
 } from '@/components/ui/alert-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import type { POSAttribute } from '@/lib/storefront-data';
 
 interface ProductsTabProps {
   merchantId: string | null;
   currency: string;
+  standardAttributes?: POSAttribute[];
+  customAttributes?: { key: string; label: string }[];
 }
 
 interface ProductImage {
@@ -41,26 +47,25 @@ interface VariantForm {
   barcode: string;
   cost_price: string;
   compare_at_price: string;
+  attributes: Record<string, string>;
 }
 
 const emptyVariant = (): VariantForm => ({
-  name: 'Default', price: '', sku: '', barcode: '', cost_price: '', compare_at_price: '',
+  name: 'Default', price: '', sku: '', barcode: '', cost_price: '', compare_at_price: '', attributes: {},
 });
 
-export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
+export function ProductsTab({ merchantId, currency, standardAttributes = [], customAttributes = [] }: ProductsTabProps) {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [total, setTotal] = useState(0);
 
-  // Form state
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // Product form fields
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [taxClass, setTaxClass] = useState('');
@@ -68,6 +73,13 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
   const [images, setImages] = useState<ProductImage[]>([]);
   const [uploading, setUploading] = useState(false);
   const [expandedCards, setExpandedCards] = useState<Set<string>>(new Set());
+  const [formTab, setFormTab] = useState('details');
+
+  // Merge standard + custom attributes for the form
+  const allAttributes: { key: string; label: string; type: string; options?: string[]; placeholder?: string }[] = [
+    ...standardAttributes.filter(a => !['sku', 'barcode', 'cost_price', 'selling_price', 'tax_class'].includes(a.key)),
+    ...customAttributes.map(a => ({ ...a, type: 'text' as const, placeholder: '' })),
+  ];
 
   const loadProducts = useCallback(async () => {
     if (!merchantId) return;
@@ -80,9 +92,7 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
         .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(50);
-
       if (search) query = query.ilike('name', `%${search}%`);
-
       const { data, count, error } = await query;
       if (error) throw error;
       setProducts(data || []);
@@ -101,12 +111,10 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
     setVariants([emptyVariant()]);
     setImages([]);
     setEditingProduct(null);
+    setFormTab('details');
   };
 
-  const openCreate = () => {
-    resetForm();
-    setDialogOpen(true);
-  };
+  const openCreate = () => { resetForm(); setDialogOpen(true); };
 
   const openEdit = (product: any) => {
     setEditingProduct(product);
@@ -121,22 +129,24 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
       barcode: v.barcode || '',
       cost_price: v.cost_price ? String(v.cost_price) : '',
       compare_at_price: v.compare_at_price ? String(v.compare_at_price) : '',
+      attributes: (v.attributes_json && typeof v.attributes_json === 'object' && !Array.isArray(v.attributes_json))
+        ? v.attributes_json as Record<string, string>
+        : {},
     }));
     setVariants(pvs.length > 0 ? pvs : [emptyVariant()]);
     const pimgs = (product.pos_product_images || [])
       .sort((a: any, b: any) => a.sort_order - b.sort_order)
       .map((img: any) => ({ id: img.id, url: img.url, sort_order: img.sort_order }));
     setImages(pimgs);
+    setFormTab('details');
     setDialogOpen(true);
   };
 
-  // Image upload handler
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || !merchantId) return;
     const remaining = 4 - images.length;
     if (remaining <= 0) { toast.error('Maximum 4 images per product'); return; }
-
     const toAdd = Array.from(files).slice(0, remaining);
     for (const file of toAdd) {
       if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} exceeds 5MB limit`); continue; }
@@ -163,14 +173,12 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
     return data.publicUrl;
   };
 
-  // Save product (create or update)
   const handleSave = async () => {
     if (!merchantId || !name.trim()) { toast.error('Product name is required'); return; }
     if (variants.length === 0 || !variants[0].price) { toast.error('At least one variant with a price is required'); return; }
 
     setSaving(true);
     try {
-      // Upload any pending images first
       setUploading(true);
       const finalImages: ProductImage[] = [];
       for (let i = 0; i < images.length; i++) {
@@ -185,25 +193,19 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
       setUploading(false);
 
       if (editingProduct) {
-        // UPDATE product
         await (supabase.from('pos_products') as any).update({
-          name: name.trim(),
-          description: description.trim() || null,
-          tax_class: taxClass || null,
-          updated_at: new Date().toISOString(),
+          name: name.trim(), description: description.trim() || null,
+          tax_class: taxClass || null, updated_at: new Date().toISOString(),
         }).eq('id', editingProduct.id);
 
-        // Upsert variants
         for (const v of variants) {
           const variantPayload = {
-            product_id: editingProduct.id,
-            merchant_id: merchantId,
-            name: v.name || 'Default',
-            price: Number(v.price) || 0,
-            sku: v.sku || null,
-            barcode: v.barcode || null,
+            product_id: editingProduct.id, merchant_id: merchantId,
+            name: v.name || 'Default', price: Number(v.price) || 0,
+            sku: v.sku || null, barcode: v.barcode || null,
             cost_price: v.cost_price ? Number(v.cost_price) : null,
             compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : null,
+            attributes_json: Object.keys(v.attributes).length > 0 ? v.attributes : null,
             updated_at: new Date().toISOString(),
           };
           if (v.id) {
@@ -213,59 +215,37 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
           }
         }
 
-        // Sync images: delete removed, insert new
         const existingImgIds = finalImages.filter(i => i.id).map(i => i.id);
         const oldIds = (editingProduct.pos_product_images || []).map((i: any) => i.id);
         const toDelete = oldIds.filter((id: string) => !existingImgIds.includes(id));
-        if (toDelete.length > 0) {
-          await (supabase.from('pos_product_images') as any).delete().in('id', toDelete);
-        }
+        if (toDelete.length > 0) await (supabase.from('pos_product_images') as any).delete().in('id', toDelete);
         for (const img of finalImages) {
           if (img.id) {
             await (supabase.from('pos_product_images') as any).update({ sort_order: img.sort_order }).eq('id', img.id);
           } else {
-            await (supabase.from('pos_product_images') as any).insert({
-              product_id: editingProduct.id, url: img.url, sort_order: img.sort_order,
-            });
+            await (supabase.from('pos_product_images') as any).insert({ product_id: editingProduct.id, url: img.url, sort_order: img.sort_order });
           }
         }
-
         toast.success('Product updated');
       } else {
-        // CREATE product
         const { data: newProduct, error: prodErr } = await (supabase.from('pos_products') as any)
-          .insert({
-            merchant_id: merchantId,
-            name: name.trim(),
-            description: description.trim() || null,
-            tax_class: taxClass || null,
-            currency,
-            source: 'manual',
-            status: 'active',
-          }).select().single();
+          .insert({ merchant_id: merchantId, name: name.trim(), description: description.trim() || null, tax_class: taxClass || null, currency, source: 'manual', status: 'active' })
+          .select().single();
         if (prodErr) throw prodErr;
 
-        // Create variants
         for (const v of variants) {
           await (supabase.from('pos_product_variants') as any).insert({
-            product_id: newProduct.id,
-            merchant_id: merchantId,
-            name: v.name || 'Default',
-            price: Number(v.price) || 0,
-            sku: v.sku || null,
-            barcode: v.barcode || null,
+            product_id: newProduct.id, merchant_id: merchantId, name: v.name || 'Default',
+            price: Number(v.price) || 0, sku: v.sku || null, barcode: v.barcode || null,
             cost_price: v.cost_price ? Number(v.cost_price) : null,
             compare_at_price: v.compare_at_price ? Number(v.compare_at_price) : null,
+            attributes_json: Object.keys(v.attributes).length > 0 ? v.attributes : null,
           });
         }
 
-        // Create images
         for (const img of finalImages) {
-          await (supabase.from('pos_product_images') as any).insert({
-            product_id: newProduct.id, url: img.url, sort_order: img.sort_order,
-          });
+          await (supabase.from('pos_product_images') as any).insert({ product_id: newProduct.id, url: img.url, sort_order: img.sort_order });
         }
-
         toast.success('Product created');
       }
 
@@ -280,14 +260,11 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
     }
   };
 
-  // Delete product (soft — set status to 'deleted')
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      await (supabase.from('pos_products') as any)
-        .update({ status: 'deleted', updated_at: new Date().toISOString() })
-        .eq('id', deleteTarget.id);
+      await (supabase.from('pos_products') as any).update({ status: 'deleted', updated_at: new Date().toISOString() }).eq('id', deleteTarget.id);
       toast.success('Product deleted');
       setDeleteTarget(null);
       loadProducts();
@@ -298,9 +275,11 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
     }
   };
 
-  // Variant helpers
   const updateVariant = (idx: number, field: keyof VariantForm, value: string) => {
     setVariants(prev => prev.map((v, i) => i === idx ? { ...v, [field]: value } : v));
+  };
+  const updateVariantAttr = (idx: number, attrKey: string, value: string) => {
+    setVariants(prev => prev.map((v, i) => i === idx ? { ...v, attributes: { ...v.attributes, [attrKey]: value } } : v));
   };
   const addVariant = () => {
     if (variants.length >= 10) return;
@@ -312,11 +291,7 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
   };
 
   const toggleExpand = (id: string) => {
-    setExpandedCards(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setExpandedCards(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   };
 
   if (!merchantId) {
@@ -340,6 +315,14 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
     const imgs = product.pos_product_images || [];
     if (imgs.length === 0) return null;
     return imgs.sort((a: any, b: any) => a.sort_order - b.sort_order)[0]?.url;
+  };
+
+  const getAttrSummary = (product: any) => {
+    const pvs = product.pos_product_variants || [];
+    if (pvs.length === 0) return [];
+    const firstAttrs = pvs[0]?.attributes_json;
+    if (!firstAttrs || typeof firstAttrs !== 'object' || Array.isArray(firstAttrs)) return [];
+    return Object.entries(firstAttrs as Record<string, string>).filter(([, v]) => v).slice(0, 3);
   };
 
   return (
@@ -369,14 +352,12 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
         </div>
       </div>
 
-      {/* Loading */}
       {loading && (
         <div className="flex justify-center py-12">
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && products.length === 0 && (
         <Card className="border border-border/40 shadow-sm">
           <CardContent className="py-12 text-center">
@@ -403,10 +384,10 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
             const variantCount = pvariants.length;
             const imgUrl = getFirstImage(product);
             const isExpanded = expandedCards.has(product.id);
+            const attrPreview = getAttrSummary(product);
 
             return (
               <Card key={product.id} className="border border-border/40 shadow-sm hover:shadow-md transition-shadow overflow-hidden group">
-                {/* Image */}
                 {imgUrl && (
                   <div className="h-36 bg-muted overflow-hidden">
                     <img src={imgUrl} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -439,11 +420,10 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
 
                   <div className="flex items-center gap-2 mt-2">
                     <span className="text-sm font-bold text-foreground">{formatPrice(price)} {currency}</span>
-                    {variantCount > 1 && (
-                      <Badge variant="secondary" className="text-[10px] h-5">{variantCount} variants</Badge>
-                    )}
+                    {variantCount > 1 && <Badge variant="secondary" className="text-[10px] h-5">{variantCount} variants</Badge>}
                   </div>
-                  <div className="flex items-center gap-2 mt-1.5">
+
+                  <div className="flex items-center gap-2 mt-1.5 flex-wrap">
                     <Badge variant="outline" className="text-[10px] h-5 capitalize">{product.source}</Badge>
                     {product.tax_class && (
                       <Badge variant="outline" className="text-[10px] h-5">
@@ -457,7 +437,17 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
                     )}
                   </div>
 
-                  {/* Expandable variants */}
+                  {/* Attribute preview chips */}
+                  {attrPreview.length > 0 && (
+                    <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                      {attrPreview.map(([key, val]) => (
+                        <Badge key={key} className="text-[9px] h-4 bg-primary/8 text-primary border-primary/20 font-normal">
+                          {key}: {val}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
                   {pvariants.length > 1 && (
                     <>
                       <button onClick={() => toggleExpand(product.id)} className="mt-2 flex items-center gap-1 text-[11px] text-muted-foreground hover:text-foreground transition-colors">
@@ -485,124 +475,240 @@ export function ProductsTab({ merchantId, currency }: ProductsTabProps) {
 
       {/* ═══ CREATE / EDIT DIALOG ═══ */}
       <Dialog open={dialogOpen} onOpenChange={(open) => { if (!open) { setDialogOpen(false); resetForm(); } else setDialogOpen(true); }}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0">
+          <DialogHeader className="px-6 pt-6 pb-0">
             <DialogTitle className="text-lg font-bold flex items-center gap-2">
               <Package className="w-5 h-5 text-primary" />
               {editingProduct ? 'Edit Product' : 'Add New Product'}
             </DialogTitle>
             <DialogDescription className="text-xs">
-              {editingProduct ? 'Update your product details, variants, and images.' : 'Fill in the details to list a new product.'}
+              {editingProduct ? 'Update product details, variants, images, and attributes.' : 'Fill in the details to list a new product in your catalog.'}
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-5">
-            {/* Basic Info */}
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Product Name *</Label>
-                <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. African Print T-Shirt" className="h-10 rounded-xl" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Description</Label>
-                <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Short product description..." className="rounded-xl resize-none" rows={2} />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Tax Class</Label>
-                <Select value={taxClass} onValueChange={setTaxClass}>
-                  <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Select tax class" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">Standard</SelectItem>
-                    <SelectItem value="reduced">Reduced</SelectItem>
-                    <SelectItem value="zero">Zero Rate</SelectItem>
-                    <SelectItem value="exempt">Exempt</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          {/* Tabbed form */}
+          <Tabs value={formTab} onValueChange={setFormTab} className="w-full">
+            <div className="px-6 pt-3">
+              <TabsList className="grid w-full grid-cols-4 h-9">
+                <TabsTrigger value="details" className="text-xs gap-1.5">
+                  <Package className="w-3.5 h-3.5" /> Details
+                </TabsTrigger>
+                <TabsTrigger value="media" className="text-xs gap-1.5">
+                  <ImageIcon className="w-3.5 h-3.5" /> Media
+                </TabsTrigger>
+                <TabsTrigger value="variants" className="text-xs gap-1.5">
+                  <Layers className="w-3.5 h-3.5" /> Variants
+                </TabsTrigger>
+                <TabsTrigger value="attributes" className="text-xs gap-1.5 relative">
+                  <SlidersHorizontal className="w-3.5 h-3.5" /> Attributes
+                  {allAttributes.length > 0 && (
+                    <span className="ml-1 text-[9px] bg-primary/10 text-primary px-1.5 rounded-full font-bold">{allAttributes.length}</span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
             </div>
 
-            {/* Images */}
-            <div className="space-y-2">
-              <Label className="text-xs font-semibold flex items-center gap-1.5">
-                <ImageIcon className="w-3.5 h-3.5" /> Product Images
-                <span className="text-muted-foreground font-normal">({images.length}/4)</span>
-              </Label>
-              <div className="grid grid-cols-4 gap-3">
-                {images.map((img, idx) => (
-                  <div key={idx} className="relative aspect-square rounded-xl border border-border/60 overflow-hidden bg-muted group/img">
-                    <img src={img.preview || img.url} alt={`Product ${idx + 1}`} className="w-full h-full object-cover" />
-                    <button onClick={() => removeImage(idx)} className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
-                      <X className="w-3.5 h-3.5 text-white" />
-                    </button>
-                    <div className="absolute bottom-1 left-1 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
-                      {idx + 1}
-                    </div>
+            <div className="px-6 py-4">
+              {/* Details Tab */}
+              <TabsContent value="details" className="mt-0 space-y-4">
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label className="text-xs font-semibold">Product Name *</Label>
+                    <Input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. African Print T-Shirt" className="h-10 rounded-xl" />
                   </div>
-                ))}
-                {images.length < 4 && (
-                  <label className="aspect-square rounded-xl border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-colors">
-                    <Upload className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-[10px] text-muted-foreground font-medium">Add</span>
-                    <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
-                  </label>
-                )}
-              </div>
-              <p className="text-[10px] text-muted-foreground">Max 5MB per image. First image is the main thumbnail.</p>
-            </div>
+                  <div className="space-y-1.5 sm:col-span-2">
+                    <Label className="text-xs font-semibold">Description</Label>
+                    <Textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Short product description..." className="rounded-xl resize-none" rows={3} />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Tax Class</Label>
+                    <Select value={taxClass} onValueChange={setTaxClass}>
+                      <SelectTrigger className="h-10 rounded-xl"><SelectValue placeholder="Select tax class" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="standard">Standard</SelectItem>
+                        <SelectItem value="reduced">Reduced</SelectItem>
+                        <SelectItem value="zero">Zero Rate</SelectItem>
+                        <SelectItem value="exempt">Exempt</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold">Currency</Label>
+                    <Input value={currency} disabled className="h-10 rounded-xl bg-muted" />
+                  </div>
+                </div>
+              </TabsContent>
 
-            {/* Variants */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-xs font-semibold">Variants *</Label>
-                <Button variant="outline" size="sm" onClick={addVariant} disabled={variants.length >= 10} className="h-7 text-[11px] gap-1 rounded-lg">
-                  <Plus className="w-3 h-3" /> Add Variant
-                </Button>
-              </div>
-              <div className="space-y-3">
-                {variants.map((v, idx) => (
-                  <div key={idx} className="rounded-xl border border-border/60 p-3 space-y-2.5 relative">
-                    {variants.length > 1 && (
-                      <button onClick={() => removeVariant(idx)} className="absolute top-2 right-2 w-6 h-6 rounded-full hover:bg-destructive/10 flex items-center justify-center">
-                        <X className="w-3.5 h-3.5 text-destructive" />
-                      </button>
+              {/* Media Tab */}
+              <TabsContent value="media" className="mt-0 space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-xs font-semibold flex items-center gap-1.5">
+                    Product Images
+                    <span className="text-muted-foreground font-normal">({images.length}/4)</span>
+                  </Label>
+                  <div className="grid grid-cols-4 gap-3">
+                    {images.map((img, idx) => (
+                      <div key={idx} className="relative aspect-square rounded-xl border border-border/60 overflow-hidden bg-muted group/img">
+                        <img src={img.preview || img.url} alt={`Product ${idx + 1}`} className="w-full h-full object-cover" />
+                        <button onClick={() => removeImage(idx)} className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity">
+                          <X className="w-3.5 h-3.5 text-white" />
+                        </button>
+                        <div className="absolute bottom-1 left-1 bg-black/50 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                          {idx === 0 ? 'Main' : idx + 1}
+                        </div>
+                      </div>
+                    ))}
+                    {images.length < 4 && (
+                      <label className="aspect-square rounded-xl border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-1.5 cursor-pointer hover:border-primary/40 hover:bg-primary/5 transition-colors">
+                        <Upload className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-[10px] text-muted-foreground font-medium">Add Image</span>
+                        <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+                      </label>
                     )}
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">Variant Name</Label>
-                        <Input value={v.name} onChange={e => updateVariant(idx, 'name', e.target.value)} placeholder="Default" className="h-8 text-xs rounded-lg" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">Price ({currency}) *</Label>
-                        <Input type="number" value={v.price} onChange={e => updateVariant(idx, 'price', e.target.value)} placeholder="0" className="h-8 text-xs rounded-lg" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">SKU</Label>
-                        <Input value={v.sku} onChange={e => updateVariant(idx, 'sku', e.target.value)} placeholder="SKU-001" className="h-8 text-xs rounded-lg" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">Barcode</Label>
-                        <Input value={v.barcode} onChange={e => updateVariant(idx, 'barcode', e.target.value)} placeholder="Optional" className="h-8 text-xs rounded-lg" />
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <div className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">Cost Price</Label>
-                        <Input type="number" value={v.cost_price} onChange={e => updateVariant(idx, 'cost_price', e.target.value)} placeholder="Optional" className="h-8 text-xs rounded-lg" />
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[10px] text-muted-foreground">Compare-at Price</Label>
-                        <Input type="number" value={v.compare_at_price} onChange={e => updateVariant(idx, 'compare_at_price', e.target.value)} placeholder="Optional" className="h-8 text-xs rounded-lg" />
-                      </div>
-                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                  <p className="text-[10px] text-muted-foreground">Max 5MB per image. First image is the main thumbnail.</p>
+                </div>
+              </TabsContent>
 
-          <DialogFooter className="flex-col sm:flex-row gap-2 pt-3">
+              {/* Variants Tab */}
+              <TabsContent value="variants" className="mt-0 space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-xs font-semibold">Pricing & Variants *</Label>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">Use variants for sizes, colors, or bundles</p>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={addVariant} disabled={variants.length >= 10} className="h-7 text-[11px] gap-1 rounded-lg">
+                    <Plus className="w-3 h-3" /> Add Variant
+                  </Button>
+                </div>
+                <div className="space-y-3">
+                  {variants.map((v, idx) => (
+                    <div key={idx} className="rounded-xl border border-border/60 p-4 space-y-3 relative bg-card">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                          <Hash className="w-3 h-3" /> Variant {idx + 1}
+                        </span>
+                        {variants.length > 1 && (
+                          <button onClick={() => removeVariant(idx)} className="w-6 h-6 rounded-full hover:bg-destructive/10 flex items-center justify-center">
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground">Name</Label>
+                          <Input value={v.name} onChange={e => updateVariant(idx, 'name', e.target.value)} placeholder="Default" className="h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" /> Price ({currency}) *
+                          </Label>
+                          <Input type="number" value={v.price} onChange={e => updateVariant(idx, 'price', e.target.value)} placeholder="0" className="h-9 text-xs rounded-lg" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground">SKU</Label>
+                          <Input value={v.sku} onChange={e => updateVariant(idx, 'sku', e.target.value)} placeholder="SKU-001" className="h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground">Barcode</Label>
+                          <Input value={v.barcode} onChange={e => updateVariant(idx, 'barcode', e.target.value)} placeholder="Optional" className="h-9 text-xs rounded-lg" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <BarChart3 className="w-3 h-3" /> Cost Price
+                          </Label>
+                          <Input type="number" value={v.cost_price} onChange={e => updateVariant(idx, 'cost_price', e.target.value)} placeholder="Optional" className="h-9 text-xs rounded-lg" />
+                        </div>
+                        <div className="space-y-1">
+                          <Label className="text-[10px] text-muted-foreground">Compare-at Price</Label>
+                          <Input type="number" value={v.compare_at_price} onChange={e => updateVariant(idx, 'compare_at_price', e.target.value)} placeholder="Optional" className="h-9 text-xs rounded-lg" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </TabsContent>
+
+              {/* Attributes Tab */}
+              <TabsContent value="attributes" className="mt-0 space-y-4">
+                {allAttributes.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-12 h-12 rounded-2xl bg-muted flex items-center justify-center mx-auto mb-3">
+                      <SlidersHorizontal className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                    <p className="text-sm font-medium text-foreground">No attributes configured</p>
+                    <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">
+                      Go to the <strong>Attributes</strong> tab to set up standard and custom product attributes first.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <Label className="text-xs font-semibold">Product Attributes</Label>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">
+                          Set attribute values per variant. These are defined in the Attributes tab.
+                        </p>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px] h-5">{allAttributes.length} attributes</Badge>
+                    </div>
+
+                    {variants.map((v, vIdx) => (
+                      <div key={vIdx} className="space-y-3">
+                        {variants.length > 1 && (
+                          <div className="flex items-center gap-2">
+                            <Separator className="flex-1" />
+                            <span className="text-[10px] text-muted-foreground font-semibold bg-background px-2">
+                              {v.name || `Variant ${vIdx + 1}`}
+                            </span>
+                            <Separator className="flex-1" />
+                          </div>
+                        )}
+                        <div className="grid sm:grid-cols-2 gap-3">
+                          {allAttributes.map((attr) => (
+                            <div key={attr.key} className="space-y-1">
+                              <Label className="text-[10px] text-muted-foreground">{attr.label}</Label>
+                              {attr.type === 'select' && attr.options ? (
+                                <Select
+                                  value={v.attributes[attr.key] || ''}
+                                  onValueChange={(val) => updateVariantAttr(vIdx, attr.key, val)}
+                                >
+                                  <SelectTrigger className="h-9 text-xs rounded-lg">
+                                    <SelectValue placeholder={`Select ${attr.label.toLowerCase()}`} />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {attr.options.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input
+                                  type={attr.type === 'number' ? 'number' : 'text'}
+                                  value={v.attributes[attr.key] || ''}
+                                  onChange={e => updateVariantAttr(vIdx, attr.key, e.target.value)}
+                                  placeholder={attr.placeholder || `Enter ${attr.label.toLowerCase()}`}
+                                  className="h-9 text-xs rounded-lg"
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </>
+                )}
+              </TabsContent>
+            </div>
+          </Tabs>
+
+          <Separator />
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 px-6 pb-6 pt-3">
             <Button variant="outline" onClick={() => { setDialogOpen(false); resetForm(); }} className="rounded-xl">Cancel</Button>
             <Button onClick={handleSave} disabled={saving || uploading} className="rounded-xl gap-2 bg-[hsl(var(--fi-green))] hover:bg-[hsl(var(--fi-green))]/90 text-white">
               {saving ? (
