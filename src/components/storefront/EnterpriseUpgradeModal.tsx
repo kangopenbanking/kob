@@ -82,9 +82,8 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
         {/* Plan cards */}
         <div className="px-6 pb-2">
           <div className={`grid gap-4 ${sortedPlans.length >= 3 ? 'sm:grid-cols-3' : sortedPlans.length === 2 ? 'sm:grid-cols-2' : 'sm:grid-cols-1'}`}>
-            {sortedPlans.map((p) => {
-              const tierKey = getTierKey(p);
-              const meta = TIER_META[tierKey] || TIER_META.starter;
+            {sortedPlans.map((p, idx) => {
+              const meta = getTierMeta(p, idx);
               const Icon = meta.icon;
               const isSelected = selectedPlanId === p.id;
               const isFree = (p.price || 0) === 0;
