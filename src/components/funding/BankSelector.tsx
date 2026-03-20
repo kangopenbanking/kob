@@ -15,7 +15,7 @@ interface Bank {
 
 interface BankSelectorProps {
   selectedBank: string;
-  onBankChange: (code: string, name: string) => void;
+  onBankChange: (code: string, name: string, source: string) => void;
   accountNumber: string;
   onAccountNumberChange: (value: string) => void;
   country?: string;
