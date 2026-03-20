@@ -98,6 +98,7 @@ export default function MerchantStorefront() {
   const [customAttributes, setCustomAttributes] = useState<{ key: string; label: string }[]>([]);
   const [newAttrLabel, setNewAttrLabel] = useState('');
   const [expandedStep, setExpandedStep] = useState<string | null>('profile');
+  const [showUnpublishConfirm, setShowUnpublishConfirm] = useState(false);
 
   const { data: supportedCountries = [] } = useSupportedCountries();
 
@@ -131,6 +132,11 @@ export default function MerchantStorefront() {
         setBannerUrl(sp.banner_url || '');
         setIsPublished(sp.is_published || false);
         setCountry(sp.country || 'CM');
+        setSubCategory((sp as any).sub_category || '');
+        const savedAttrs = (sp as any).custom_attributes_json;
+        if (Array.isArray(savedAttrs) && savedAttrs.length > 0) {
+          setCustomAttributes(savedAttrs);
+        }
       }
       const { data: sub } = await supabase.from('pos_store_subscriptions').select('*, pos_subscription_plans(*)').eq('merchant_id', merchant.id).eq('status', 'active').maybeSingle();
       setSubscription(sub);
@@ -144,15 +150,18 @@ export default function MerchantStorefront() {
     if (!merchantId) return;
     setSaving(true);
     try {
-      const payload = {
+      const effectiveSubCategory = showCustomSub ? customSubCategory : subCategory;
+      const payload: Record<string, any> = {
         merchant_id: merchantId, store_name: storeName, description, category,
         city, logo_url: logoUrl, banner_url: bannerUrl, is_published: isPublished,
         country, updated_at: new Date().toISOString(),
+        sub_category: effectiveSubCategory || null,
+        custom_attributes_json: customAttributes.length > 0 ? customAttributes : [],
       };
       if (profile) {
-        await supabase.from('pos_store_profiles').update(payload).eq('id', profile.id);
+        await (supabase.from('pos_store_profiles') as any).update(payload).eq('id', profile.id);
       } else {
-        const { data } = await supabase.from('pos_store_profiles').insert(payload).select().single();
+        const { data } = await (supabase.from('pos_store_profiles') as any).insert(payload).select().single();
         setProfile(data);
       }
       toast.success('Storefront saved successfully');
@@ -189,11 +198,53 @@ export default function MerchantStorefront() {
     currency, store_name: storeName,
   }) : '';
 
+  const qrPayloadUrl = merchantId
+    ? `https://kob.lovable.app/pay?d=${encodeURIComponent(btoa(qrPayload))}`
+    : '';
+
   const copyQr = () => {
     navigator.clipboard.writeText(qrPayload);
     setQrCopied(true);
     toast.success('QR data copied');
     setTimeout(() => setQrCopied(false), 2000);
+  };
+
+  const downloadQr = () => {
+    const svgEl = document.querySelector('#kob-qr-code svg') as SVGElement | null;
+    if (!svgEl) { toast.error('QR code not found'); return; }
+    const svgData = new XMLSerializer().serializeToString(svgEl);
+    const canvas = document.createElement('canvas');
+    canvas.width = 440; canvas.height = 440;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const img = new window.Image();
+    img.onload = () => {
+      ctx.fillStyle = 'white';
+      ctx.fillRect(0, 0, 440, 440);
+      ctx.drawImage(img, 0, 0, 440, 440);
+      canvas.toBlob(blob => {
+        if (!blob) return;
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = `${storeName || 'kob'}-qr.png`; a.click();
+        URL.revokeObjectURL(url);
+        toast.success('QR code downloaded');
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+  };
+
+  const handlePublishToggle = (checked: boolean) => {
+    if (!checked && isPublished) {
+      setShowUnpublishConfirm(true);
+    } else {
+      setIsPublished(checked);
+    }
+  };
+
+  const confirmUnpublish = () => {
+    setIsPublished(false);
+    setShowUnpublishConfirm(false);
   };
 
   if (loading) {
@@ -582,8 +633,17 @@ export default function MerchantStorefront() {
                         {isPublished ? <div className="w-3 h-3 rounded-full bg-[hsl(var(--fi-green))] animate-pulse" /> : <div className="w-3 h-3 rounded-full bg-muted-foreground/30" />}
                         <span className="text-sm font-bold text-foreground">{isPublished ? 'Published' : 'Draft'}</span>
                       </div>
-                      <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+                      <Switch checked={isPublished} onCheckedChange={handlePublishToggle} />
                     </div>
+                    {showUnpublishConfirm && (
+                      <div className="p-3 rounded-xl border border-destructive/30 bg-destructive/5 space-y-2">
+                        <p className="text-xs font-medium text-destructive">Are you sure? Your store will be hidden from the marketplace.</p>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="destructive" className="text-xs rounded-lg" onClick={() => { confirmUnpublish(); }}>Yes, Unpublish</Button>
+                          <Button size="sm" variant="outline" className="text-xs rounded-lg" onClick={() => setShowUnpublishConfirm(false)}>Cancel</Button>
+                        </div>
+                      </div>
+                    )}
                     <p className="text-xs text-muted-foreground leading-relaxed">
                       {isPublished ? 'Your store is visible on the marketplace.' : 'Toggle to publish your store and start receiving orders.'}
                     </p>
@@ -940,8 +1000,8 @@ export default function MerchantStorefront() {
                     <div className="flex flex-col items-center">
                       {merchantId ? (
                         <>
-                          <div className="p-8 rounded-3xl bg-white border border-border/30 shadow-lg">
-                            <QRCodeSVG value={qrPayload} size={220} level="M" fgColor="hsl(258, 80%, 58%)" bgColor="white" />
+                          <div id="kob-qr-code" className="p-8 rounded-3xl bg-white border border-border/30 shadow-lg">
+                            <QRCodeSVG value={qrPayloadUrl || qrPayload} size={220} level="M" fgColor="hsl(258, 80%, 58%)" bgColor="white" />
                           </div>
                           <div className="text-center mt-5 space-y-1">
                             <p className="text-base font-bold text-foreground">{storeName || 'Your Store'}</p>
@@ -957,7 +1017,7 @@ export default function MerchantStorefront() {
                             <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold" onClick={() => window.print()}>
                               <Printer className="w-3.5 h-3.5" /> Print
                             </Button>
-                            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold">
+                            <Button variant="outline" className="flex-1 gap-2 rounded-xl h-10 text-xs font-semibold" onClick={downloadQr}>
                               <Download className="w-3.5 h-3.5" /> Save
                             </Button>
                           </div>

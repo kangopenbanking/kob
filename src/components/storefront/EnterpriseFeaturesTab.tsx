@@ -146,6 +146,24 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
     finally { setLoadingLocations(false); }
   };
 
+  const deleteLocation = async (locationId: string) => {
+    if (!merchantId) return;
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/pos-manage-locations?entity=location`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${session?.access_token}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ location_id: locationId, merchant_id: merchantId }),
+      });
+      toast.success('Location removed');
+      loadLocations();
+    } catch (err: any) { toast.error(err.message || 'Failed to delete location'); }
+  };
+
   const addLocation = async () => {
     if (!merchantId || !newLocName.trim()) return;
     setAddingLocation(true);
@@ -371,7 +389,17 @@ export function EnterpriseFeaturesTab({ isEnterprise, merchantId, profile, onUpg
                         <p className="text-sm font-semibold text-foreground">{loc.name}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">{loc.city || 'Douala'}, {loc.country || 'CM'}</p>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">{loc.currency_default || 'XAF'}</Badge>
+                      <div className="flex items-center gap-1.5">
+                        <Badge variant="outline" className="text-[10px]">{loc.currency_default || 'XAF'}</Badge>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => deleteLocation(loc.id)}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 mt-3 text-[10px] text-muted-foreground">
                       <Globe className="w-3 h-3" /> {loc.timezone || 'Africa/Douala'}
