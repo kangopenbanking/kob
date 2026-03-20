@@ -158,9 +158,8 @@ serve(async (req) => {
       _metadata: { payment_id }
     });
 
-    // Return UK Open Banking v4.0 compliant response
-    return new Response(
-      JSON.stringify({
+    // Return UK Open Banking v4.0 compliant response with FAPI headers + JWS
+    const responseBody = JSON.stringify({
         Data: {
           DomesticPaymentId: payment.payment_id,
           ConsentId: payment.consent_id,
@@ -183,12 +182,15 @@ serve(async (req) => {
           Self: `/pisp/v4/domestic-payments/${payment.payment_id}`
         },
         Meta: {}
-      }),
-      { 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 201
-      }
+    });
+
+    const jwsSig = await generateResponseJws(responseBody);
+    const responseHeaders = addFapiResponseHeaders(
+      { ...corsHeaders, 'Content-Type': 'application/json', 'x-jws-signature': jwsSig },
+      fapi
     );
+
+    return new Response(responseBody, { status: 201, headers: responseHeaders });
   } catch (error) {
     // Security Fix: Generic error response with secure logging
     const { logError, genericErrorResponse } = await import('../_shared/validation.ts');
