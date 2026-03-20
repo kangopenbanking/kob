@@ -29,6 +29,16 @@ export function NotificationCenter() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const getHistoryPath = () => {
+    const path = location.pathname;
+    if (path.startsWith("/merchant")) return "/merchant/notification-history";
+    if (path.startsWith("/business")) return "/business/notification-history";
+    if (path.startsWith("/admin")) return "/notification-history";
+    if (path.startsWith("/institution")) return "/notification-history";
+    return "/notification-history";
+  };
 
   // Register OneSignal for the current user (no institution scope on desktop dashboards)
   useOneSignal();
