@@ -274,6 +274,8 @@ const GettingStartedByType = lazy(() => import("./pages/developer/GettingStarted
 const IdentityGuide = lazy(() => import("./pages/developer/IdentityGuide"));
 const OnboardingGuide = lazy(() => import("./pages/developer/OnboardingGuide"));
 const RolesPermissions = lazy(() => import("./pages/developer/RolesPermissions"));
+const CompetitiveComparison = lazy(() => import("./pages/developer/CompetitiveComparison"));
+const MigrationGuide = lazy(() => import("./pages/developer/MigrationGuide"));
 
 // Institution (FI Portal)
 const FIPortal = lazy(() => import("./pages/FIPortal"));
