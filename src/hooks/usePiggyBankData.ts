@@ -86,7 +86,8 @@ export function usePiggyBankPay() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['piggybank-plans', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      toast.success('Installment paid! You\'re one step closer to your savings goal. 🎉');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message || 'Payment could not be processed. Please ensure you have sufficient funds.'),
   });
 }

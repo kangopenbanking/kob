@@ -125,7 +125,8 @@ export function useNjangiPayout() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['njangi-groups', institutionId] });
       qc.invalidateQueries({ queryKey: ['credit-score'] });
+      toast.success('Payout processed! Funds have been transferred to the recipient.');
     },
-    onError: (err: any) => toast.error(err.message),
+    onError: (err: any) => toast.error(err.message || 'Payout failed. Please ensure the group has sufficient collected funds.'),
   });
 }
