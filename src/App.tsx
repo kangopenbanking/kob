@@ -72,6 +72,7 @@ const BankIntegrationGuide = lazy(() => import("./pages/BankIntegrationGuide"));
 const Contact = lazy(() => import("./pages/Contact"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Status = lazy(() => import("./pages/Status"));
+const HelpCentre = lazy(() => import("./pages/HelpCentre"));
 
 // Guides
 const AISP = lazy(() => import("./pages/guides/AISP"));
