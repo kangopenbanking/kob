@@ -65,9 +65,9 @@ const CustomerRecurring: React.FC = () => {
       .from('recurring_payments')
       .update({ is_active: newActive })
       .eq('id', payment.id);
-    if (error) { toast.error('Failed to update'); return; }
+    if (error) { toast.error('Could not update payment status. Please try again.'); return; }
     queryClient.invalidateQueries({ queryKey: ['customer-recurring-payments'] });
-    toast.success(newActive ? `${payment.name} resumed` : `${payment.name} paused`);
+    toast.success(newActive ? `"${payment.name}" has been resumed and will process on the next scheduled date` : `"${payment.name}" has been paused. No future payments will be processed until resumed.`);
   };
 
   const handleCreate = async () => {
