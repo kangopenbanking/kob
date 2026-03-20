@@ -159,9 +159,9 @@ export default function MerchantStorefront() {
         custom_attributes_json: customAttributes.length > 0 ? customAttributes : [],
       };
       if (profile) {
-        await supabase.from('pos_store_profiles').update(payload).eq('id', profile.id);
+        await (supabase.from('pos_store_profiles') as any).update(payload).eq('id', profile.id);
       } else {
-        const { data } = await supabase.from('pos_store_profiles').insert(payload).select().single();
+        const { data } = await (supabase.from('pos_store_profiles') as any).insert(payload).select().single();
         setProfile(data);
       }
       toast.success('Storefront saved successfully');
