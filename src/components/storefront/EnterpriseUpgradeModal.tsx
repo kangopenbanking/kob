@@ -167,7 +167,7 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
           </div>
         </div>
 
-        {/* Comparison table */}
+        {/* Comparison table — dynamic columns from actual plans */}
         <div className="px-6 pb-6 pt-2">
           <p className="text-xs font-bold text-foreground mb-3">Full Feature Comparison</p>
           <div className="rounded-xl border overflow-hidden">
@@ -175,33 +175,45 @@ export function EnterpriseUpgradeModal({ open, onOpenChange, plan, plans = [], c
               <thead>
                 <tr className="bg-muted/50 border-b">
                   <th className="text-left p-3 font-semibold text-foreground">Feature</th>
-                  <th className="text-center p-3 font-semibold text-foreground w-20">Starter</th>
-                  <th className="text-center p-3 font-semibold text-foreground w-20">Pro</th>
-                  <th className="text-center p-3 font-semibold text-foreground w-24">
-                    <span className="flex items-center justify-center gap-1">
-                      <Crown className="w-3 h-3 text-[hsl(var(--fi-purple))]" /> Enterprise
-                    </span>
-                  </th>
+                  {sortedPlans.map((p, idx) => {
+                    const isLast = idx === sortedPlans.length - 1 && sortedPlans.length > 1;
+                    return (
+                      <th key={p.id} className="text-center p-3 font-semibold text-foreground w-24">
+                        <span className="flex items-center justify-center gap-1">
+                          {isLast && <Crown className="w-3 h-3 text-[hsl(var(--fi-purple))]" />}
+                          {p.name}
+                        </span>
+                      </th>
+                    );
+                  })}
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON.map((row, i) => (
-                  <tr key={i} className={`border-b last:border-0 ${!row.starter && !row.pro && row.enterprise ? 'bg-[hsl(var(--fi-purple))]/[0.03]' : ''}`}>
-                    <td className="p-3 text-foreground">{row.feature}</td>
-                    <td className="text-center p-3">
-                      {row.starter ? <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-green))] mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
-                    </td>
-                    <td className="text-center p-3">
-                      {row.pro ? <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-green))] mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
-                    </td>
-                    <td className="text-center p-3">
-                      {row.enterprise ? <CheckCircle className="w-4 h-4 text-[hsl(var(--fi-purple))] mx-auto" strokeWidth={1.5} /> : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />}
-                    </td>
-                  </tr>
-                ))}
+                {COMPARISON.map((row, i) => {
+                  const isExclusive = row.tiers.filter(Boolean).length === 1 && row.tiers[row.tiers.length - 1];
+                  return (
+                    <tr key={i} className={`border-b last:border-0 ${isExclusive ? 'bg-[hsl(var(--fi-purple))]/[0.03]' : ''}`}>
+                      <td className="p-3 text-foreground">{row.feature}</td>
+                      {sortedPlans.map((p, idx) => {
+                        const tierIdx = Math.min(idx, row.tiers.length - 1);
+                        const included = row.tiers[tierIdx];
+                        const isEnterpriseTier = idx === sortedPlans.length - 1 && sortedPlans.length > 1;
+                        return (
+                          <td key={p.id} className="text-center p-3">
+                            {included
+                              ? <CheckCircle className={`w-4 h-4 mx-auto ${isEnterpriseTier ? 'text-[hsl(var(--fi-purple))]' : 'text-[hsl(var(--fi-green))]'}`} strokeWidth={1.5} />
+                              : <Lock className="w-3.5 h-3.5 text-muted-foreground/30 mx-auto" strokeWidth={1.5} />
+                            }
+                          </td>
+                        );
+                      })}
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       </DialogContent>
     </Dialog>
