@@ -19,49 +19,28 @@ interface WebhookPayload {
   timestamp: string;
 }
 
-async function verifyWebhookSignature(
-  payload: string,
-  signature: string,
-  secret: string
-): Promise<boolean> {
-  try {
-    const encoder = new TextEncoder();
-    const key = await crypto.subtle.importKey(
-      'raw',
-      encoder.encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify']
-    );
-
-    const signatureBuffer = Uint8Array.from(
-      signature.match(/.{1,2}/g)?.map(byte => parseInt(byte, 16)) || []
-    );
-
-    return await crypto.subtle.verify(
-      'HMAC',
-      key,
-      signatureBuffer,
-      encoder.encode(payload)
-    );
-  } catch (error) {
-    console.error('Signature verification error:', error);
-    return false;
-  }
-}
-
 async function updateWooCommerceOrderStatus(
   storeUrl: string,
   orderId: string,
   status: 'processing' | 'completed' | 'failed' | 'refunded',
-  note: string
+  note: string,
+  wcConsumerKey?: string,
+  wcConsumerSecret?: string,
 ): Promise<void> {
   try {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    // Add Basic auth if WooCommerce REST API credentials are available
+    if (wcConsumerKey && wcConsumerSecret) {
+      const credentials = btoa(`${wcConsumerKey}:${wcConsumerSecret}`);
+      headers['Authorization'] = `Basic ${credentials}`;
+    }
+
     const response = await fetch(`${storeUrl}/wp-json/wc/v3/orders/${orderId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         status,
         customer_note: note
@@ -205,13 +184,87 @@ Deno.serve(async (req) => {
         wcNote = `Payment status: ${payload.status}. Transaction ref: ${payload.transaction_ref}`;
     }
 
+    // Fetch WooCommerce REST API credentials from merchant_integrations if available
+    let wcConsumerKey: string | undefined;
+    let wcConsumerSecret: string | undefined;
+    const { data: integration } = await supabaseClient
+      .from('merchant_integrations')
+      .select('config')
+      .eq('merchant_id', merchant.id)
+      .eq('integration_type', 'woocommerce')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (integration?.config) {
+      const config = integration.config as Record<string, any>;
+      wcConsumerKey = config.consumer_key;
+      wcConsumerSecret = config.consumer_secret;
+    }
+
     // Update WooCommerce order (asynchronous, don't block response)
     updateWooCommerceOrderStatus(
       merchant.store_url,
       payload.woocommerce_order_id,
       wcStatus,
-      wcNote
+      wcNote,
+      wcConsumerKey,
+      wcConsumerSecret,
     ).catch(err => console.error('Failed to update WooCommerce order:', err));
+
+    // Create app_notification for merchant
+    const notifType = payload.status === 'completed' ? 'success' : payload.status === 'failed' ? 'warning' : 'info';
+    const notifTitle = payload.status === 'completed'
+      ? 'WooCommerce Payment Received'
+      : payload.status === 'failed'
+      ? 'WooCommerce Payment Failed'
+      : 'WooCommerce Payment Refunded';
+    const formattedAmount = new Intl.NumberFormat('en-CM', { style: 'currency', currency: payload.currency || 'XAF' }).format(payload.amount);
+    const notifMessage = payload.status === 'completed'
+      ? `${formattedAmount} payment received for order #${payload.woocommerce_order_id} via ${payload.payment_method}.`
+      : payload.status === 'failed'
+      ? `Payment of ${formattedAmount} failed for order #${payload.woocommerce_order_id}. ${payload.error_message || ''}`
+      : `${formattedAmount} refunded for order #${payload.woocommerce_order_id}.`;
+
+    await supabaseClient.from('app_notifications').insert({
+      user_id: merchant.user_id,
+      type: notifType,
+      title: notifTitle,
+      message: notifMessage,
+      icon: 'shopping_cart',
+      metadata: {
+        woocommerce_order_id: payload.woocommerce_order_id,
+        transaction_ref: payload.transaction_ref,
+        amount: payload.amount,
+        currency: payload.currency,
+        payment_method: payload.payment_method,
+        status: payload.status,
+      }
+    });
+
+    // Send managed email to merchant for payment events
+    const emailKeyMap: Record<string, string> = {
+      completed: 'woo_payment_completed',
+      failed: 'woo_payment_failed',
+      refunded: 'woo_refund_processed',
+    };
+    const emailKey = emailKeyMap[payload.status];
+    if (emailKey) {
+      supabaseClient.functions.invoke('managed-send-email', {
+        body: {
+          email_key: emailKey,
+          recipient_email: merchant.admin_email,
+          variables: {
+            store_name: merchant.store_name,
+            order_id: payload.woocommerce_order_id,
+            amount: formattedAmount,
+            currency: payload.currency,
+            payment_method: payload.payment_method,
+            transaction_ref: payload.transaction_ref,
+            error_message: payload.error_message || 'N/A',
+          },
+        },
+      }).catch(err => console.error('Failed to send WooCommerce email:', err));
+    }
 
     // Update last sync time
     await supabaseClient

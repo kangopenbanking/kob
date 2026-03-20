@@ -37,12 +37,12 @@ interface WooCommerceTransaction {
 }
 
 // Helper to safely fetch data avoiding deep type instantiation
-async function fetchMerchants(institutionId: string): Promise<WooCommerceMerchant[]> {
+async function fetchMerchants(userId: string): Promise<WooCommerceMerchant[]> {
   const client: any = supabase;
   const { data } = await client
     .from("woocommerce_merchants")
     .select("*")
-    .eq("institution_id", institutionId);
+    .eq("user_id", userId);
   
   return (data || []).map((m: any) => ({
     id: String(m.id || ''),
@@ -96,22 +96,8 @@ export default function WooCommerceDashboard() {
         return;
       }
 
-      // Get institution
-      const { data: institutionData } = await supabase
-        .from("institutions")
-        .select("id")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (!institutionData) {
-        setLoading(false);
-        return;
-      }
-
-      const institutionId = institutionData.id;
-
-      // Load merchants using helper
-      const merchantsData = await fetchMerchants(institutionId);
+      // Load merchants using user_id (woocommerce_merchants uses user_id, not institution_id)
+      const merchantsData = await fetchMerchants(user.id);
       setMerchants(merchantsData);
 
       // Load transactions

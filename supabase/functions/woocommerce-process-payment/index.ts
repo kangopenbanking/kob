@@ -45,7 +45,6 @@ Deno.serve(async (req) => {
     // Parse request
     const body: ProcessPaymentRequest = await req.json();
     const { 
-      api_key, 
       woocommerce_order_id, 
       payment_method, 
       amount, 
@@ -57,10 +56,13 @@ Deno.serve(async (req) => {
       metadata 
     } = body;
 
+    // Accept api_key from body OR X-API-Key header (PHP plugin sends header)
+    const api_key = body.api_key || req.headers.get('x-api-key') || '';
+
     // Validate required fields
     if (!api_key || !woocommerce_order_id || !payment_method || !amount || !currency) {
       return new Response(
-        JSON.stringify({ error: 'Missing required fields' }),
+        JSON.stringify({ error: 'Missing required fields: api_key (body or X-API-Key header), woocommerce_order_id, payment_method, amount, currency' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -86,6 +88,29 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: 'Invalid or inactive merchant' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Idempotency check: look for existing pending/processing tx with same order
+    const { data: existingTx } = await supabaseClient
+      .from('woocommerce_transactions')
+      .select('id, transaction_ref, status')
+      .eq('merchant_id', merchant.id)
+      .eq('woocommerce_order_id', woocommerce_order_id)
+      .in('status', ['pending', 'processing'])
+      .maybeSingle();
+
+    if (existingTx) {
+      console.log(`Idempotent hit: existing ${existingTx.status} transaction ${existingTx.transaction_ref} for order ${woocommerce_order_id}`);
+      return new Response(
+        JSON.stringify({
+          success: true,
+          transaction_ref: existingTx.transaction_ref,
+          status: existingTx.status,
+          message: 'Payment already initiated for this order',
+          idempotent: true
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
