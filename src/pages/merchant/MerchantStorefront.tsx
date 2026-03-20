@@ -1280,11 +1280,13 @@ export default function MerchantStorefront() {
         open={upgradeModalOpen}
         onOpenChange={setUpgradeModalOpen}
         plan={selectedPlan}
+        plans={plans}
         currency={currency}
         subscribing={subscribing}
-        onConfirm={() => {
-          if (selectedPlan) {
-            handleSubscribe(selectedPlan.id);
+        onConfirm={(planId?: string) => {
+          const id = planId || selectedPlan?.id;
+          if (id) {
+            handleSubscribe(id);
             setUpgradeModalOpen(false);
           }
         }}
