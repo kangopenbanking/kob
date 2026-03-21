@@ -266,28 +266,41 @@ function SendForm() {
   }, [supportedCountries]);
 
   const destCountries = useMemo(() => {
-    const base = [
+    const cMap: Record<string, { currency: string; country: string; flag: string }> = {
+      Cameroon: { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
+      Nigeria: { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
+      Ghana: { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
+      Kenya: { currency: "KES", country: "Kenya", flag: "🇰🇪" },
+      Gabon: { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
+      Congo: { currency: "XAF", country: "Congo", flag: "🇨🇬" },
+      Chad: { currency: "XAF", country: "Chad", flag: "🇹🇩" },
+      USA: { currency: "USD", country: "USA", flag: "🇺🇸" },
+      Canada: { currency: "CAD", country: "Canada", flag: "🇨🇦" },
+      France: { currency: "EUR", country: "France", flag: "🇫🇷" },
+      UK: { currency: "GBP", country: "UK", flag: "🇬🇧" },
+      Germany: { currency: "EUR", country: "Germany", flag: "🇩🇪" },
+      China: { currency: "CNY", country: "China", flag: "🇨🇳" },
+      India: { currency: "INR", country: "India", flag: "🇮🇳" },
+      Turkey: { currency: "TRY", country: "Turkey", flag: "🇹🇷" },
+      Rwanda: { currency: "RWF", country: "Rwanda", flag: "🇷🇼" },
+      "South Africa": { currency: "ZAR", country: "South Africa", flag: "🇿🇦" },
+      Mali: { currency: "XOF", country: "Mali", flag: "🇲🇱" },
+      "Burkina Faso": { currency: "XOF", country: "Burkina Faso", flag: "🇧🇫" },
+      UAE: { currency: "AED", country: "UAE", flag: "🇦🇪" },
+    };
+    if (supportedCountries && supportedCountries.length > 0) {
+      const seen = new Set<string>();
+      return supportedCountries
+        .filter((c) => c.enabled_consumer_app)
+        .map((c) => cMap[c.country] || { currency: "XAF", country: c.country, flag: c.flag })
+        .filter((d) => { const k = `${d.currency}-${d.country}`; if (seen.has(k)) return false; seen.add(k); return true; });
+    }
+    return [
       { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
       { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
       { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
       { currency: "KES", country: "Kenya", flag: "🇰🇪" },
     ];
-    if (supportedCountries && supportedCountries.length > 0) {
-      const cMap: Record<string, { currency: string; country: string; flag: string }> = {
-        Cameroon: { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
-        Nigeria: { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
-        Ghana: { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
-        Kenya: { currency: "KES", country: "Kenya", flag: "🇰🇪" },
-        Gabon: { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
-        Congo: { currency: "XAF", country: "Congo", flag: "🇨🇬" },
-        Chad: { currency: "XAF", country: "Chad", flag: "🇹🇩" },
-      };
-      const seen = new Set<string>();
-      return supportedCountries.filter((c) => c.enabled_consumer_app)
-        .map((c) => cMap[c.country] || { currency: "XAF", country: c.country, flag: c.flag })
-        .filter((d) => { const k = `${d.currency}-${d.country}`; if (seen.has(k)) return false; seen.add(k); return true; });
-    }
-    return base;
   }, [supportedCountries]);
 
   useEffect(() => {
