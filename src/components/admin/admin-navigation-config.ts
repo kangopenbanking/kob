@@ -33,6 +33,7 @@ import {
   Link2,
   CheckCircle2,
   Landmark,
+  MessageCircle,
   type LucideIcon,
 } from "lucide-react";
 
