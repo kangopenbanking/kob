@@ -15648,9 +15648,108 @@ export type Database = {
         }
         Relationships: []
       }
+      remittance_compliance_checks: {
+        Row: {
+          check_type: string
+          checked_by: string | null
+          created_at: string | null
+          id: string
+          notes: string | null
+          remittance_id: string
+          resolved_at: string | null
+          risk_score: number | null
+          screening_result: Json | null
+          status: string
+        }
+        Insert: {
+          check_type?: string
+          checked_by?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          remittance_id: string
+          resolved_at?: string | null
+          risk_score?: number | null
+          screening_result?: Json | null
+          status?: string
+        }
+        Update: {
+          check_type?: string
+          checked_by?: string | null
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          remittance_id?: string
+          resolved_at?: string | null
+          risk_score?: number | null
+          screening_result?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_compliance_checks_remittance_id_fkey"
+            columns: ["remittance_id"]
+            isOneToOne: false
+            referencedRelation: "remittances"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      remittance_corridor_limits: {
+        Row: {
+          corridor_id: string | null
+          created_at: string | null
+          daily_max_amount: number | null
+          id: string
+          is_active: boolean | null
+          kyc_tier_required: string | null
+          limit_type: string
+          monthly_max_amount: number | null
+          per_transaction_max: number | null
+          per_transaction_min: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          corridor_id?: string | null
+          created_at?: string | null
+          daily_max_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          kyc_tier_required?: string | null
+          limit_type?: string
+          monthly_max_amount?: number | null
+          per_transaction_max?: number | null
+          per_transaction_min?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          corridor_id?: string | null
+          created_at?: string | null
+          daily_max_amount?: number | null
+          id?: string
+          is_active?: boolean | null
+          kyc_tier_required?: string | null
+          limit_type?: string
+          monthly_max_amount?: number | null
+          per_transaction_max?: number | null
+          per_transaction_min?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_corridor_limits_corridor_id_fkey"
+            columns: ["corridor_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_corridors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       remittance_corridors: {
         Row: {
           created_at: string | null
+          delivery_methods: Json | null
+          direction: string | null
           est_delivery_seconds: number | null
           fee_tiers: Json | null
           fees_model: Json | null
@@ -15661,6 +15760,8 @@ export type Database = {
           max_amount: number
           min_amount: number
           partner_id: string
+          required_receiver_fields: Json | null
+          required_sender_fields: Json | null
           requires_kyc_level: string | null
           settlement_delay_hours: number | null
           to_country: string
@@ -15668,6 +15769,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          delivery_methods?: Json | null
+          direction?: string | null
           est_delivery_seconds?: number | null
           fee_tiers?: Json | null
           fees_model?: Json | null
@@ -15678,6 +15781,8 @@ export type Database = {
           max_amount?: number
           min_amount?: number
           partner_id: string
+          required_receiver_fields?: Json | null
+          required_sender_fields?: Json | null
           requires_kyc_level?: string | null
           settlement_delay_hours?: number | null
           to_country?: string
@@ -15685,6 +15790,8 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          delivery_methods?: Json | null
+          direction?: string | null
           est_delivery_seconds?: number | null
           fee_tiers?: Json | null
           fees_model?: Json | null
@@ -15695,6 +15802,8 @@ export type Database = {
           max_amount?: number
           min_amount?: number
           partner_id?: string
+          required_receiver_fields?: Json | null
+          required_sender_fields?: Json | null
           requires_kyc_level?: string | null
           settlement_delay_hours?: number | null
           to_country?: string
@@ -16088,6 +16197,50 @@ export type Database = {
           },
         ]
       }
+      remittance_usage_tracking: {
+        Row: {
+          corridor_id: string | null
+          currency: string | null
+          id: string
+          period_start: string
+          period_type: string
+          total_amount: number | null
+          transaction_count: number | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          corridor_id?: string | null
+          currency?: string | null
+          id?: string
+          period_start: string
+          period_type: string
+          total_amount?: number | null
+          transaction_count?: number | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          corridor_id?: string | null
+          currency?: string | null
+          id?: string
+          period_start?: string
+          period_type?: string
+          total_amount?: number | null
+          transaction_count?: number | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "remittance_usage_tracking_corridor_id_fkey"
+            columns: ["corridor_id"]
+            isOneToOne: false
+            referencedRelation: "remittance_corridors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       remittances: {
         Row: {
           amount_in: number
@@ -16095,6 +16248,9 @@ export type Database = {
           bank_batch_item_id: string | null
           bank_confirm_status: string | null
           bank_confirmed_at: string | null
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          compliance_cleared_at: string | null
           compliance_status: string | null
           correlation_id: string | null
           corridor_id: string | null
@@ -16102,6 +16258,7 @@ export type Database = {
           credited_at: string | null
           currency_in: string
           currency_out: string
+          delivery_method: string | null
           destination_ref: string | null
           destination_type: string
           direction: string
@@ -16117,11 +16274,20 @@ export type Database = {
           purpose_code: string | null
           quote_id: string | null
           received_at: string | null
+          receiver_account_number: string | null
+          receiver_bank_code: string | null
+          receiver_bank_name: string | null
+          receiver_country: string | null
+          receiver_email: string | null
           receiver_institution_id: string | null
+          receiver_mobile_wallet: string | null
           receiver_name: string
           receiver_phone: string | null
           receiver_user_id: string | null
           sender_country: string | null
+          sender_email: string | null
+          sender_id_number: string | null
+          sender_id_type: string | null
           sender_name: string | null
           sender_phone: string | null
           settled_at: string | null
@@ -16135,6 +16301,9 @@ export type Database = {
           bank_batch_item_id?: string | null
           bank_confirm_status?: string | null
           bank_confirmed_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          compliance_cleared_at?: string | null
           compliance_status?: string | null
           correlation_id?: string | null
           corridor_id?: string | null
@@ -16142,6 +16311,7 @@ export type Database = {
           credited_at?: string | null
           currency_in: string
           currency_out?: string
+          delivery_method?: string | null
           destination_ref?: string | null
           destination_type?: string
           direction?: string
@@ -16157,11 +16327,20 @@ export type Database = {
           purpose_code?: string | null
           quote_id?: string | null
           received_at?: string | null
+          receiver_account_number?: string | null
+          receiver_bank_code?: string | null
+          receiver_bank_name?: string | null
+          receiver_country?: string | null
+          receiver_email?: string | null
           receiver_institution_id?: string | null
+          receiver_mobile_wallet?: string | null
           receiver_name: string
           receiver_phone?: string | null
           receiver_user_id?: string | null
           sender_country?: string | null
+          sender_email?: string | null
+          sender_id_number?: string | null
+          sender_id_type?: string | null
           sender_name?: string | null
           sender_phone?: string | null
           settled_at?: string | null
@@ -16175,6 +16354,9 @@ export type Database = {
           bank_batch_item_id?: string | null
           bank_confirm_status?: string | null
           bank_confirmed_at?: string | null
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          compliance_cleared_at?: string | null
           compliance_status?: string | null
           correlation_id?: string | null
           corridor_id?: string | null
@@ -16182,6 +16364,7 @@ export type Database = {
           credited_at?: string | null
           currency_in?: string
           currency_out?: string
+          delivery_method?: string | null
           destination_ref?: string | null
           destination_type?: string
           direction?: string
@@ -16197,11 +16380,20 @@ export type Database = {
           purpose_code?: string | null
           quote_id?: string | null
           received_at?: string | null
+          receiver_account_number?: string | null
+          receiver_bank_code?: string | null
+          receiver_bank_name?: string | null
+          receiver_country?: string | null
+          receiver_email?: string | null
           receiver_institution_id?: string | null
+          receiver_mobile_wallet?: string | null
           receiver_name?: string
           receiver_phone?: string | null
           receiver_user_id?: string | null
           sender_country?: string | null
+          sender_email?: string | null
+          sender_id_number?: string | null
+          sender_id_type?: string | null
           sender_name?: string | null
           sender_phone?: string | null
           settled_at?: string | null
