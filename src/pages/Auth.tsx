@@ -154,10 +154,19 @@ export default function Auth() {
   const { config: authConfig } = useAuthPageConfig();
   const { data: supportedCountries = [] } = useSupportedCountries();
 
-  // Use supportedCountries with fallback to static COUNTRY_CODES
-  const countryList = supportedCountries.length > 0
-    ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
-    : COUNTRY_CODES;
+  // Use supportedCountries with fallback to static COUNTRY_CODES — deduplicate by country name
+  const countryList = (() => {
+    const raw = supportedCountries.length > 0
+      ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
+      : [...COUNTRY_CODES];
+    const seen = new Set<string>();
+    return raw.filter(c => {
+      const k = `${c.country}-${c.code}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  })();
 
   // ── Top-level state ──
   const [authMode, setAuthMode] = useState<AuthMode>('select');
@@ -729,7 +738,7 @@ export default function Auth() {
                             <div className="flex gap-2">
                               <Select value={loginCountry} onValueChange={setLoginCountry}>
                                 <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                                <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                                <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                               </Select>
                               <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                             </div>
@@ -795,7 +804,7 @@ export default function Auth() {
                         <div className="flex gap-2">
                           <Select value={loginCountry} onValueChange={setLoginCountry}>
                             <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                            <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                            <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                           </Select>
                           <Input type="tel" placeholder="6 XX XX XX XX" value={loginPhone} onChange={e => setLoginPhone(e.target.value.replace(/\D/g, ''))} className="h-11" />
                         </div>
@@ -1105,7 +1114,7 @@ export default function Auth() {
                             <div className="flex gap-2">
                               <Select value={selectedCountry} onValueChange={setSelectedCountry}>
                                 <SelectTrigger className="w-[130px] h-11"><SelectValue /></SelectTrigger>
-                                <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
+                                <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}><span className="inline-flex items-center gap-1.5"><span>{cc.flag}</span> <span>{cc.code}</span></span></SelectItem>)}</SelectContent>
                               </Select>
                               <Input type="tel" placeholder="6 XX XX XX XX" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/\D/g, ''))} className="h-11" />
                             </div>
@@ -1184,7 +1193,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-blue-50 border border-blue-200 p-3 space-y-1.5">
@@ -1228,7 +1237,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="space-y-2">
@@ -1272,7 +1281,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-amber-50 border border-amber-200 p-3 space-y-1.5">
@@ -1297,7 +1306,7 @@ export default function Auth() {
                             <Label>Country</Label>
                             <Select value={detailCountry} onValueChange={setDetailCountry}>
                               <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                              <SelectContent>{countryList.map(cc => <SelectItem key={cc.country} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
+                              <SelectContent>{countryList.map(cc => <SelectItem key={`${cc.country}-${cc.code}`} value={cc.country}>{cc.flag} {cc.country}</SelectItem>)}</SelectContent>
                             </Select>
                           </div>
                           <div className="rounded-xl bg-violet-50 border border-violet-200 p-3 space-y-1.5">
