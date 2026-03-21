@@ -457,6 +457,7 @@ const CustomerStoreDetail = lazy(() => import("./pages/customer-app/CustomerStor
 const CustomerCart = lazy(() => import("./pages/customer-app/CustomerCart"));
 const CustomerDisputes = lazy(() => import("./pages/customer-app/CustomerDisputes"));
 const CustomerSendMoney = lazy(() => import("./pages/customer-app/CustomerSendMoney"));
+const CustomerRemittances = lazy(() => import("./pages/customer-app/CustomerRemittances"));
 
 // Business App PWA
 const BusinessSplash = lazy(() => import("./pages/business-app/BusinessSplash"));
