@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ListChecks, PenLine, MessageCircle, Paperclip } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { DepartmentPicker, type Department } from '@/components/support/DepartmentPicker';
 import { ChatThread } from '@/components/support/ChatThread';
 import { ChatInput } from '@/components/support/ChatInput';
 import { ConversationList } from '@/components/support/ConversationList';
+import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,6 +18,13 @@ import {
 } from '@/hooks/useSupportChat';
 
 type Step = 'list' | 'departments' | 'subject' | 'chat';
+
+const supportFlowSteps: FlowStep[] = [
+  { icon: ListChecks, title: 'Choose a department', description: 'Pick the team that best fits your issue for faster routing.', color: 'hsl(210,80%,93%)', iconColor: 'hsl(210,60%,45%)' },
+  { icon: PenLine, title: 'Describe your issue', description: 'Write a brief summary so our agents can prepare.', color: 'hsl(150,70%,90%)', iconColor: 'hsl(150,50%,35%)' },
+  { icon: MessageCircle, title: 'Chat with an agent', description: 'Get live help from the KOB support team.', color: 'hsl(35,90%,90%)', iconColor: 'hsl(35,70%,40%)' },
+  { icon: Paperclip, title: 'Attach files if needed', description: 'Upload images or documents to help explain your issue. NOTE: KOB responds within 15 min – 24 hrs.', color: 'hsl(280,70%,92%)', iconColor: 'hsl(280,50%,45%)' },
+];
 
 const CustomerSupport: React.FC = () => {
   const navigate = useNavigate();
@@ -65,19 +73,10 @@ const CustomerSupport: React.FC = () => {
 
       {step === 'list' && (
         <div className="flex flex-1 flex-col p-4 gap-4 overflow-y-auto">
-          {/* How it works guide */}
-          <div className="rounded-xl border border-border bg-muted/50 p-4 space-y-2">
-            <h3 className="text-sm font-semibold text-foreground">How it works</h3>
-            <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-              <li>Choose a department that best fits your issue</li>
-              <li>Describe your issue briefly</li>
-              <li>Chat live with a support agent</li>
-              <li>Upload images or files if needed</li>
-            </ol>
-            <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border">
-              <strong>NOTE:</strong> The KOB team will respond within <strong>15 minutes</strong> and up to <strong>24 hours</strong> depending on your issue.
-            </p>
-          </div>
+          <HowItWorksFlow
+            defaultOpen
+            steps={supportFlowSteps}
+          />
           <Button onClick={() => setStep('departments')} className="rounded-xl">
             Start New Conversation
           </Button>
