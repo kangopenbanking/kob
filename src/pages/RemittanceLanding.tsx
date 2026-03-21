@@ -333,7 +333,7 @@ function SendForm() {
 
   const isDetailsValid = useCallback(() => {
     if (!recipientName.trim()) return false;
-    if (deliveryMethod === "wallet" && !/^\d{8,9}$/.test(recipientPhone.replace(/\s/g, ""))) return false;
+    if (deliveryMethod === "wallet" && !/^\d{6,12}$/.test(recipientPhone.replace(/\s/g, ""))) return false;
     if (deliveryMethod === "bank" && (!bankCode || !accountNumber.trim())) return false;
     if (deliveryMethod === "bills" && (!billPurpose || !billReference.trim())) return false;
     return true;
