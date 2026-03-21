@@ -57,6 +57,8 @@ const EmbedStatusWidget = lazy(() => import("./pages/EmbedStatusWidget"));
 const CustomerFundAccount = lazy(() => import("./pages/CustomerFundAccount"));
 const BusinessKYBSubmission = lazy(() => import("./pages/BusinessKYBSubmission"));
 const RemittanceLanding = lazy(() => import("./pages/RemittanceLanding"));
+const PayByBankAuthorize = lazy(() => import("./pages/PayByBankAuthorize"));
+const PayByBankApproval = lazy(() => import("./pages/customer-app/PayByBankApproval"));
 
 // Legal / Info
 const Privacy = lazy(() => import("./pages/Privacy"));
@@ -1071,6 +1073,7 @@ function App() {
               <Route path="disputes" element={<CustomerDisputes />} />
               <Route path="send-money" element={<CustomerSendMoney />} />
               <Route path="remittances" element={<CustomerRemittances />} />
+              <Route path="authorize-payment/:intentId" element={<PayByBankApproval />} />
             </Route>
 
             {/* Business App PWA Routes */}
@@ -1144,6 +1147,7 @@ function App() {
               <Route path="*" element={<NestedNotFound portalName="Business App" homePath="/biz/home" />} />
             </Route>
 
+            <Route path="/pay/authorize" element={<PayByBankAuthorize />} />
             <Route path="/pay/:slug" element={<PaymentCheckout />} />
             <Route path="*" element={<Layout><NotFound /></Layout>} />
             </Routes>

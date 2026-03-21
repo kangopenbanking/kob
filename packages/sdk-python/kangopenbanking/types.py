@@ -110,3 +110,35 @@ class FeeEstimate:
     net_amount: float
     fee_percentage: str
     fixed_fee: float
+
+
+# --- Pay by Bank ---
+PayByBankStatus = Literal[
+    "awaiting_auth", "authorized", "submitted", "processing",
+    "completed", "failed", "expired", "rejected"
+]
+
+
+@dataclass
+class PayByBankIntent:
+    id: str
+    merchant_id: str
+    consent_id: str
+    amount: float
+    currency: str
+    redirect_uri: str
+    state: str
+    status: str
+    merchant_name: Optional[str] = None
+    merchant_logo_url: Optional[str] = None
+    debtor_account: Optional[str] = None
+    creditor_account: Optional[str] = None
+    creditor_name: Optional[str] = None
+    description: Optional[str] = None
+    expires_at: str = ""
+    authorization_url: Optional[str] = None
+    customer_email: Optional[str] = None
+    customer_user_id: Optional[str] = None
+    failure_reason: Optional[str] = None
+    created_at: str = ""
+    updated_at: str = ""

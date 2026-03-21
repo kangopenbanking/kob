@@ -6,6 +6,21 @@ import { CheckCircle, AlertTriangle, Zap, Bug, Plus } from "lucide-react";
 export default function Changelog() {
   const releases = [
     {
+      version: "10.1.0",
+      date: "2026-03-21",
+      type: "minor",
+      changes: [
+        { type: "feature", description: "Pay by Bank — Redirect-based payment authorization with Strong Customer Authentication (SCA) for merchant checkout flows" },
+        { type: "feature", description: "Hosted Authorization Page (/pay/authorize) — Secure web-based payment approval with inline login, merchant branding, amount display, and automatic redirect" },
+        { type: "feature", description: "Consumer App Payment Approval (/app/authorize-payment/:id) — In-app authorization screen for Pay by Bank deep links with PIN verification" },
+        { type: "feature", description: "pay-by-bank Edge Function — Full API with create_intent, get_intent, authorize, reject, callback, and list_intents actions" },
+        { type: "feature", description: "pay_by_bank_intents table — Payment intent lifecycle tracking with auto-expiry (15min), PISP consent integration, and merchant redirect state management" },
+        { type: "feature", description: "4 new webhook events: pay_by_bank.authorized, pay_by_bank.submitted, pay_by_bank.completed, pay_by_bank.failed" },
+        { type: "improvement", description: "Node.js SDK updated with PayByBankIntent, CreatePayByBankIntentRequest, and PayByBankIntentResponse types" },
+        { type: "improvement", description: "Python SDK updated with PayByBankIntent dataclass and PayByBankStatus literal type" },
+      ]
+    },
+    {
       version: "10.0.0",
       date: "2026-03-21",
       type: "major",
