@@ -59,6 +59,7 @@ const BusinessKYBSubmission = lazy(() => import("./pages/BusinessKYBSubmission")
 const RemittanceLanding = lazy(() => import("./pages/RemittanceLanding"));
 const PayByBankAuthorize = lazy(() => import("./pages/PayByBankAuthorize"));
 const PayByBankApproval = lazy(() => import("./pages/customer-app/PayByBankApproval"));
+const CustomerSupport = lazy(() => import("./pages/customer-app/CustomerSupport"));
 
 // Legal / Info
 const Privacy = lazy(() => import("./pages/Privacy"));
