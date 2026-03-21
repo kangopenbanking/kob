@@ -57,6 +57,8 @@ const EmbedStatusWidget = lazy(() => import("./pages/EmbedStatusWidget"));
 const CustomerFundAccount = lazy(() => import("./pages/CustomerFundAccount"));
 const BusinessKYBSubmission = lazy(() => import("./pages/BusinessKYBSubmission"));
 const RemittanceLanding = lazy(() => import("./pages/RemittanceLanding"));
+const PayByBankAuthorize = lazy(() => import("./pages/PayByBankAuthorize"));
+const PayByBankApproval = lazy(() => import("./pages/customer-app/PayByBankApproval"));
 
 // Legal / Info
 const Privacy = lazy(() => import("./pages/Privacy"));
