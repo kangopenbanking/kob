@@ -1,142 +1,126 @@
 
 
-# Pay by Bank — Full E2E Audit Report & Fix Plan
+# Live Chat Support System — Full Implementation Plan
 
-## Audit Summary
+## Overview
 
-| Layer | Component | Status | Detail |
-|---|---|---|---|
-| **Edge Function** | `pay-by-bank/index.ts` | ✅ Complete | 6 actions: create_intent, get_intent, authorize, reject, callback, list_intents |
-| **Database** | `pay_by_bank_intents` table | ✅ Complete | Full lifecycle, auto-expiry, PISP consent integration |
-| **Hosted Auth Page** | `/pay/authorize` | ✅ Complete | Login + approve/reject + auto-redirect + countdown timer |
-| **Consumer App** | `/app/authorize-payment/:intentId` | ✅ Complete | Auth guard, approve/reject, redirect to merchant |
-| **Webhooks** | 4 event types | ✅ Complete | authorized, submitted, completed, failed via trigger_webhooks |
-| **Node.js SDK** | types.ts | ✅ Complete | PayByBankIntent, CreatePayByBankIntentRequest, PayByBankIntentResponse |
-| **Python SDK** | types.py + __init__.py | ✅ Complete | PayByBankIntent dataclass, PayByBankStatus literal |
-| **Changelog** | v10.1.0 entry | ✅ Complete | 8 items covering all Pay by Bank features |
-| **Routing** | App.tsx | ✅ Complete | Both routes registered: `/pay/authorize`, `/app/authorize-payment/:intentId` |
+Build a multi-portal live chat support system with department routing, agent assignment, file/image uploads, and admin management. The chat widget appears as a floating button on the website (above the scroll-to-top/cookie banner), and as an integrated feature in the Consumer App, Merchant/Business App, and Banking App.
 
----
+## Architecture
 
-## Gaps Found
+```text
+┌─────────────────────────────────────────────────┐
+│                   Database                       │
+│  support_departments                             │
+│  support_agents (user_id, department_id, status) │
+│  support_conversations (user_id, dept, status,   │
+│    assigned_agent_id, channel, priority)          │
+│  support_messages (conversation_id, sender_type, │
+│    content, file_url, file_type, read_at)         │
+└────────────────────┬────────────────────────────┘
+                     │ Realtime (postgres_changes)
+     ┌───────────────┼───────────────────┐
+     │               │                   │
+  Website         Apps (Consumer,     Admin Portal
+  Floating        Merchant, Banking)  (full management)
+  Chat Widget     In-app chat page
+```
 
-| # | Gap | Severity | Detail |
-|---|---|---|---|
-| 1 | **OpenAPI spec missing Pay by Bank endpoints** | HIGH | `public-api-spec/index.ts` has zero Pay by Bank paths, schemas, or tags |
-| 2 | **Postman collection missing Pay by Bank folder** | HIGH | `postman-collection/index.ts` has no Pay by Bank requests |
-| 3 | **PHP/Laravel SDK missing PayByBank types** | HIGH | No PayByBankResource class or intent types in PHP SDK |
-| 4 | **No Developer Guide page for Pay by Bank** | HIGH | No `PayByBankGuide.tsx` — developers have no integration documentation |
-| 5 | **No Admin Pay by Bank dashboard** | MEDIUM | Admins cannot monitor/manage payment intents. No `/admin/pay-by-bank` page |
-| 6 | **No Merchant portal Pay by Bank page** | MEDIUM | Merchants cannot view their payment intents or get integration instructions |
-| 7 | **Banking App has no Pay by Bank authorization** | MEDIUM | `/bank/:id/` has no route for institution customers to authorize Pay by Bank payments |
-| 8 | **Consumer App: no PIN verification on approve** | MEDIUM | `PayByBankApproval.tsx` approves without PIN/biometric — violates SCA plan |
-| 9 | **Hosted auth page: countdown timer is static** | LOW | `timeLeft` is computed once on render, never updates (no setInterval) |
-| 10 | **Edge function: authorize skips straight to completed** | LOW | Lines 196-209 transition awaiting_auth → authorized → submitted → processing → completed in one call without bank connector check. Fine for wallet, but should branch for bank_transfer mode |
-| 11 | **No `pay_by_bank.submitted` webhook** | LOW | The `submitted` event type is documented but never actually fired in the edge function |
-| 12 | **Changelog JSON (`changelog.json`) not updated** | LOW | Only the UI Changelog.tsx was updated, not the machine-readable JSON file |
+## Database (1 migration)
 
----
+**Tables:**
 
-## Fix Plan
+1. `support_departments` — id, name, description, icon, is_active, display_order
+2. `support_agents` — id, user_id (FK profiles), department_id, status (online/offline/busy), max_concurrent_chats
+3. `support_conversations` — id, user_id, department_id, assigned_agent_id, channel (website/consumer_app/merchant_app/banking_app), status (open/assigned/resolved/closed), priority (low/medium/high/urgent), subject, metadata, created_at, updated_at, resolved_at
+4. `support_messages` — id, conversation_id, sender_type (user/agent/system), sender_id, content, file_url, file_type, read_at, created_at
 
-### 1. Add Pay by Bank to OpenAPI Spec
+RLS: Users see own conversations. Agents see assigned + unassigned in their department. Admins see all. Enable realtime on `support_messages` and `support_conversations`.
 
-**File:** `supabase/functions/public-api-spec/index.ts`
+## Components to Create
 
-Add under paths:
-- `POST /v1/pay-by-bank/intents` — Create intent
-- `GET /v1/pay-by-bank/intents/{intent_id}` — Get intent status
-- `POST /v1/pay-by-bank/intents/{intent_id}/authorize` — Authorize
-- `POST /v1/pay-by-bank/intents/{intent_id}/reject` — Reject
-- `GET /v1/pay-by-bank/intents` — List merchant intents
-- `POST /v1/pay-by-bank/callback` — Bank connector callback
+### 1. Floating Chat Widget (Website — `src/components/SupportChatWidget.tsx`)
+- Fixed bottom-right button (above cookie banner, z-50)
+- Expands into a chat panel (400×500px on desktop, fullscreen on mobile)
+- Step 1: Department picker (icons + names from `support_departments`)
+- Step 2: Subject input + optional file
+- Step 3: Live chat thread with message input, file/image upload button
+- Realtime message subscription
+- Unread badge on the floating button
+- Add to `Layout.tsx` alongside `CookieConsentBanner`
 
-Add schemas: `PayByBankIntent`, `CreatePayByBankIntentRequest`, `PayByBankIntentResponse`
-Add tag: `Pay by Bank`
-Bump version to v4.1.0
+### 2. Consumer App Chat Page (`src/pages/customer-app/CustomerSupport.tsx`)
+- Route: `/app/support`
+- Same chat flow but full-page mobile layout
+- Add "Support" to `CustomerMore.tsx` utility items
+- Conversation history list + active chat view
 
-### 2. Add Pay by Bank to Postman Collection
+### 3. Merchant/Business App Chat (`src/pages/business-app/BusinessSupport.tsx`)
+- Route: `/biz/support`
+- Add to `BusinessMobileNav` quick actions or More section
+- Same chat UI adapted for business context (channel = `merchant_app`)
 
-**File:** `supabase/functions/postman-collection/index.ts`
+### 4. Banking App Chat (`src/pages/banking-app/BankSupport.tsx`)
+- Route: `/bank/:institutionId/support`
+- Accessible from banking app More/Settings
+- Channel = `banking_app`
 
-New folder "Pay by Bank" with 6 requests matching the OpenAPI paths above. Add `intent_id` variable.
+### 5. Admin Support Dashboard (`src/pages/admin/AdminSupportChat.tsx`)
+- Route: `/admin/support-chat`
+- Left panel: conversation queue (filterable by department, status, priority)
+- Right panel: active chat thread with agent replies
+- Features: assign to agent/department, change priority, resolve/close, view user profile
+- Department management tab (CRUD departments)
+- Agent management tab (assign users as agents, set department, toggle online/offline)
+- Stats: open conversations, avg response time, resolved today
 
-### 3. Add PHP SDK PayByBank Resource
+### 6. Shared Chat Components (`src/components/support/`)
+- `ChatThread.tsx` — message list with bubbles, timestamps, file previews
+- `ChatInput.tsx` — text input + file upload (images & documents only, max 5MB)
+- `DepartmentPicker.tsx` — grid of department cards
+- `ConversationList.tsx` — list of user's past/active conversations
 
-**New file:** `packages/sdk-php/src/Resources/PayByBankResource.php`
+## File Upload
+- Use existing `storefront-assets` bucket or create `support-attachments` bucket
+- Accept: images (jpg/png/webp/gif) + documents (pdf/doc/docx) only
+- Max 5MB per file
+- Display inline previews for images, download links for documents
 
-Methods: `createIntent()`, `getIntent()`, `listIntents()`
+## Realtime
+```sql
+ALTER PUBLICATION supabase_realtime ADD TABLE support_messages;
+ALTER PUBLICATION supabase_realtime ADD TABLE support_conversations;
+```
 
-**Modify:** `packages/sdk-php/src/KangOpenBanking.php` — add `PayByBankResource` property
+## Navigation Updates
 
-### 4. Create Developer Guide Page
-
-**New file:** `src/pages/developer/PayByBankGuide.tsx`
-
-Contents:
-- Overview of redirect-based SCA flow
-- Sequence diagram (text-based)
-- Code examples in Node.js, Python, PHP tabs
-- Webhook event reference
-- Testing in sandbox instructions
-
-**Modify:** Developer portal navigation to include "Pay by Bank" under Payment Gateway guides
-
-### 5. Create Admin Pay by Bank Dashboard
-
-**New file:** `src/pages/admin/AdminPayByBank.tsx` at `/admin/pay-by-bank`
-
-- Intent list with status filters, search by merchant
-- Detail dialog showing full intent + linked consent + payment
-- Stats: total intents, completion rate, avg authorization time
-- Manual status override for stuck intents
-
-**Modify:** `src/App.tsx` — add admin route
-
-### 6. Create Merchant Pay by Bank Page
-
-**New file:** `src/pages/merchant/MerchantPayByBank.tsx` at `/merchant/pay-by-bank` (or equivalent dashboard route)
-
-- List of merchant's payment intents via `list_intents`
-- Integration guide snippet with API key + code examples
-- Create test intent button (sandbox mode)
-
-### 7. Add Banking App Authorization Route
-
-**Modify:** `src/App.tsx` — add `/bank/:institutionId/authorize-payment/:intentId` route pointing to a banking-app variant of `PayByBankApproval.tsx`
-
-### 8. Fix Hosted Auth Countdown Timer
-
-**Modify:** `src/pages/PayByBankAuthorize.tsx`
-
-Add `useEffect` with `setInterval` to decrement countdown every second. Auto-transition to "expired" step when timer reaches 0.
-
-### 9. Fire `pay_by_bank.submitted` Webhook
-
-**Modify:** `supabase/functions/pay-by-bank/index.ts`
-
-After setting status to `submitted` (line 196), fire `pay_by_bank.submitted` webhook before transitioning to processing.
-
-### 10. Update Changelog JSON
-
-**Modify:** Machine-readable `changelog.json` to include v10.1.0 Pay by Bank entry.
-
----
+| Portal | Change |
+|---|---|
+| Website (`Layout.tsx`) | Add `<SupportChatWidget />` after `<CookieConsentBanner />` |
+| Consumer App (`CustomerMore.tsx`) | Add "Support" item to utility list |
+| Business App sidebar/nav | Add "Support" link |
+| Banking App nav | Add "Support" link |
+| Admin nav config | Add "Support Chat" under new "Support" section |
+| Footer | Add "Live Chat" link |
 
 ## Files Summary
 
 | File | Action |
 |---|---|
-| `supabase/functions/public-api-spec/index.ts` | **Modify** — add Pay by Bank paths + schemas + tag, bump to v4.1.0 |
-| `supabase/functions/postman-collection/index.ts` | **Modify** — add Pay by Bank folder with 6 requests |
-| `packages/sdk-php/src/Resources/PayByBankResource.php` | **Create** — PHP resource class |
-| `packages/sdk-php/src/KangOpenBanking.php` | **Modify** — register PayByBankResource |
-| `src/pages/developer/PayByBankGuide.tsx` | **Create** — developer integration guide |
-| `src/pages/admin/AdminPayByBank.tsx` | **Create** — admin monitoring dashboard |
-| `src/pages/merchant/MerchantPayByBank.tsx` | **Create** — merchant intent management |
-| `src/pages/PayByBankAuthorize.tsx` | **Modify** — fix countdown timer with setInterval |
-| `src/pages/customer-app/PayByBankApproval.tsx` | **Modify** — (PIN verification noted but deferred to existing PIN infra wiring) |
-| `supabase/functions/pay-by-bank/index.ts` | **Modify** — fire submitted webhook |
-| `src/App.tsx` | **Modify** — add admin + merchant + banking-app routes |
-| Developer portal navigation | **Modify** — add Pay by Bank guide link |
+| **Migration** | Create 4 tables + RLS + realtime |
+| `src/components/support/ChatThread.tsx` | **Create** — shared message thread |
+| `src/components/support/ChatInput.tsx` | **Create** — input with file upload |
+| `src/components/support/DepartmentPicker.tsx` | **Create** — department selector |
+| `src/components/support/ConversationList.tsx` | **Create** — conversation history |
+| `src/components/SupportChatWidget.tsx` | **Create** — floating website widget |
+| `src/pages/customer-app/CustomerSupport.tsx` | **Create** — consumer app chat |
+| `src/pages/business-app/BusinessSupport.tsx` | **Create** — business app chat |
+| `src/pages/banking-app/BankSupport.tsx` | **Create** — banking app chat |
+| `src/pages/admin/AdminSupportChat.tsx` | **Create** — admin dashboard |
+| `src/components/Layout.tsx` | **Modify** — add chat widget |
+| `src/pages/customer-app/CustomerMore.tsx` | **Modify** — add Support link |
+| `src/components/admin/admin-navigation-config.ts` | **Modify** — add Support section |
+| `src/components/business-app/BusinessDesktopSidebar.tsx` | **Modify** — add Support link |
+| `src/components/Footer.tsx` | **Modify** — add Live Chat link |
+| `src/App.tsx` | **Modify** — add 4 new routes |
 
