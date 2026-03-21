@@ -715,10 +715,61 @@ function SendForm() {
           </motion.div>
         ) : stage === "details" ? (
           <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
-            {/* Recipient name — always shown */}
-            <div className="space-y-1">
+            {/* Recipient name with autocomplete — always shown */}
+            <div className="space-y-1 relative" ref={nameRef}>
               <Label className="text-xs font-semibold">Recipient name</Label>
-              <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)} placeholder="Full name" className="h-11 rounded-xl" />
+              <div className="relative">
+                <Input
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="Start typing a name..."
+                  className="h-11 rounded-xl"
+                  autoComplete="off"
+                />
+                {nameSearching && (
+                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                )}
+              </div>
+              <AnimatePresence>
+                {showNameSuggestions && nameSuggestions.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="absolute left-0 right-0 top-full mt-1 bg-background rounded-xl shadow-xl border border-border z-50 overflow-hidden"
+                  >
+                    {nameSuggestions.map((s) => (
+                      <button
+                        key={s.id}
+                        onClick={() => {
+                          setRecipientName(s.full_name);
+                          if (s.phone && deliveryMethod === "wallet") {
+                            // Try to extract country code and number
+                            const phoneStr = s.phone.replace(/\s/g, "");
+                            const matchedCountry = phoneCountries.find((c) => phoneStr.startsWith(c.code));
+                            if (matchedCountry) {
+                              setSelectedCountryCode(matchedCountry.code);
+                              setRecipientPhone(phoneStr.slice(matchedCountry.code.length));
+                            } else {
+                              setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, ""));
+                            }
+                          }
+                          setShowNameSuggestions(false);
+                        }}
+                        className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/60 transition-colors text-sm text-left"
+                      >
+                        <div>
+                          <span className="font-medium text-foreground">{s.full_name}</span>
+                          {s.phone && (
+                            <span className="text-muted-foreground text-xs ml-2">{s.phone}</span>
+                          )}
+                        </div>
+                        <CheckCircle2 className="h-3.5 w-3.5 text-primary opacity-50" />
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Wallet fields */}
@@ -726,7 +777,42 @@ function SendForm() {
               <div className="space-y-1">
                 <Label className="text-xs font-semibold">Phone number</Label>
                 <div className="flex items-center border-2 rounded-xl overflow-hidden border-border focus-within:border-primary/50 transition-colors">
-                  <span className="px-3 text-sm font-semibold text-muted-foreground bg-muted/50 h-11 flex items-center">+237</span>
+                  {/* Country code selector */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      className="flex items-center gap-1 px-3 h-11 bg-muted/50 hover:bg-muted transition-colors text-sm font-semibold min-w-[90px]"
+                    >
+                      <span className="text-base">{phoneCountries.find((c) => c.code === selectedCountryCode)?.flag || "🌍"}</span>
+                      <span className="text-xs">{selectedCountryCode}</span>
+                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                    </button>
+                    <AnimatePresence>
+                      {showCountryDropdown && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                          transition={{ duration: 0.15 }}
+                          className="absolute left-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] max-h-[240px] overflow-y-auto"
+                        >
+                          {phoneCountries.map((c) => (
+                            <button
+                              key={`${c.code}-${c.country}`}
+                              onClick={() => { setSelectedCountryCode(c.code); setShowCountryDropdown(false); }}
+                              className={`flex items-center gap-2.5 w-full px-4 py-2.5 hover:bg-muted/60 transition-colors text-sm ${
+                                c.code === selectedCountryCode ? "bg-primary/5 text-primary" : ""
+                              }`}
+                            >
+                              <span className="text-base">{c.flag}</span>
+                              <span className="font-medium">{c.country}</span>
+                              <span className="text-muted-foreground text-xs ml-auto">{c.code}</span>
+                            </button>
+                          ))}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
                   <Input
                     type="tel"
                     value={recipientPhone}
