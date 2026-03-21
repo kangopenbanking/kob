@@ -231,7 +231,6 @@ function SendForm() {
   const [selectedDestIdx, setSelectedDestIdx] = useState(0);
   const [deliveryMethod, setDeliveryMethod] = useState<"wallet" | "bank" | "bills">("wallet");
 
-  // Recipient fields
   const [recipientName, setRecipientName] = useState("");
   const [recipientPhone, setRecipientPhone] = useState("");
   const [selectedCountryCode, setSelectedCountryCode] = useState("+237");
@@ -241,18 +240,16 @@ function SendForm() {
   const [billPurpose, setBillPurpose] = useState("");
   const [billReference, setBillReference] = useState("");
 
-  // Name autocomplete
   const [nameSuggestions, setNameSuggestions] = useState<{ id: string; full_name: string; phone: string }[]>([]);
   const [showNameSuggestions, setShowNameSuggestions] = useState(false);
   const [nameSearching, setNameSearching] = useState(false);
   const nameRef = useRef<HTMLDivElement>(null);
+  const countryRef = useRef<HTMLDivElement>(null);
 
-  // Quote & processing state
   const [quote, setQuote] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [txRef, setTxRef] = useState("");
 
-  // Phone countries from admin
   const phoneCountries = useMemo(() => {
     if (!supportedCountries || supportedCountries.length === 0) {
       return [
@@ -260,117 +257,79 @@ function SendForm() {
         { code: "+234", country: "Nigeria", flag: "🇳🇬" },
         { code: "+233", country: "Ghana", flag: "🇬🇭" },
         { code: "+254", country: "Kenya", flag: "🇰🇪" },
+        { code: "+1", country: "USA", flag: "🇺🇸" },
+        { code: "+33", country: "France", flag: "🇫🇷" },
+        { code: "+44", country: "UK", flag: "🇬🇧" },
       ];
     }
-    return supportedCountries.map((c) => ({
-      code: c.dial_code || c.code,
-      country: c.country,
-      flag: c.flag,
-    }));
+    return supportedCountries.map((c) => ({ code: c.dial_code || c.code, country: c.country, flag: c.flag }));
   }, [supportedCountries]);
 
-  // Destination countries for "Recipient gets" selector
   const destCountries = useMemo(() => {
     const base = [
-      { currency: "XAF", country: "Cameroon", flag: "🇨🇲", rate: 1 },
-      { currency: "NGN", country: "Nigeria", flag: "🇳🇬", rate: 0 },
-      { currency: "GHS", country: "Ghana", flag: "🇬🇭", rate: 0 },
-      { currency: "KES", country: "Kenya", flag: "🇰🇪", rate: 0 },
+      { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
+      { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
+      { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
+      { currency: "KES", country: "Kenya", flag: "🇰🇪" },
     ];
-    // If admin countries available, build from them
     if (supportedCountries && supportedCountries.length > 0) {
-      const currencyMap: Record<string, { currency: string; country: string; flag: string }> = {
-        "CM": { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
-        "NG": { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
-        "GH": { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
-        "KE": { currency: "KES", country: "Kenya", flag: "🇰🇪" },
-        "GA": { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
-        "CG": { currency: "XAF", country: "Congo", flag: "🇨🇬" },
-        "TD": { currency: "XAF", country: "Chad", flag: "🇹🇩" },
-        "CF": { currency: "XAF", country: "Central African Republic", flag: "🇨🇫" },
-        "GQ": { currency: "XAF", country: "Equatorial Guinea", flag: "🇬🇶" },
+      const cMap: Record<string, { currency: string; country: string; flag: string }> = {
+        Cameroon: { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
+        Nigeria: { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
+        Ghana: { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
+        Kenya: { currency: "KES", country: "Kenya", flag: "🇰🇪" },
+        Gabon: { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
+        Congo: { currency: "XAF", country: "Congo", flag: "🇨🇬" },
+        Chad: { currency: "XAF", country: "Chad", flag: "🇹🇩" },
       };
-      const dynamicDest = supportedCountries
-        .filter((c) => c.enabled_consumer_app)
-        .map((c) => {
-          const mapped = Object.entries(currencyMap).find(([, v]) => v.country === c.country);
-          return mapped ? { ...mapped[1], rate: 0 } : { currency: "XAF", country: c.country, flag: c.flag, rate: 0 };
-        });
-      // Dedupe by currency+country
       const seen = new Set<string>();
-      return dynamicDest.filter((d) => {
-        const key = `${d.currency}-${d.country}`;
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      });
+      return supportedCountries.filter((c) => c.enabled_consumer_app)
+        .map((c) => cMap[c.country] || { currency: "XAF", country: c.country, flag: c.flag })
+        .filter((d) => { const k = `${d.currency}-${d.country}`; if (seen.has(k)) return false; seen.add(k); return true; });
     }
     return base;
   }, [supportedCountries]);
 
-  // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (nameRef.current && !nameRef.current.contains(e.target as Node)) {
-        setShowNameSuggestions(false);
-      }
+      if (nameRef.current && !nameRef.current.contains(e.target as Node)) setShowNameSuggestions(false);
+      if (countryRef.current && !countryRef.current.contains(e.target as Node)) setShowCountryDropdown(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Name autocomplete search
   useEffect(() => {
     const trimmed = recipientName.trim();
-    if (trimmed.length < 2) {
-      setNameSuggestions([]);
-      setShowNameSuggestions(false);
-      return;
-    }
+    if (trimmed.length < 2) { setNameSuggestions([]); setShowNameSuggestions(false); return; }
     const timer = setTimeout(async () => {
       setNameSearching(true);
       try {
-        const { data } = await supabase
-          .from("profiles")
-          .select("id, full_name, phone_number")
-          .ilike("full_name", `%${trimmed}%`)
-          .limit(5);
-        if (data && data.length > 0) {
-          setNameSuggestions(data.filter((p) => p.full_name).map((p) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_number || "" })));
-          setShowNameSuggestions(true);
-        } else {
-          setNameSuggestions([]);
-          setShowNameSuggestions(false);
-        }
-      } catch {
-        setNameSuggestions([]);
-      } finally {
-        setNameSearching(false);
-      }
-    }, 300);
+        const { data } = await supabase.from("profiles").select("id, full_name, phone_number")
+          .ilike("full_name", `%${trimmed}%`).not("full_name", "is", null).limit(6);
+        const results = (data || []).filter((p) => p.full_name).map((p) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_number || "" }));
+        setNameSuggestions(results);
+        setShowNameSuggestions(results.length > 0);
+      } catch { setNameSuggestions([]); setShowNameSuggestions(false); }
+      finally { setNameSearching(false); }
+    }, 250);
     return () => clearTimeout(timer);
   }, [recipientName]);
 
   const selectedCurrency = currencies[selectedIdx] || currencies[0];
+  const destCurrLabel = destCountries[selectedDestIdx]?.currency || "XAF";
+  const destFlag = destCountries[selectedDestIdx]?.flag || "🇨🇲";
   const numericAmount = parseFloat(amount) || 0;
   const feePercent = (selectedCurrency.fee_pct || 0.5) / 100;
   const fee = Math.round(numericAmount * feePercent * 100) / 100;
-  const convertedAmount = useMemo(
-    () => Math.round((numericAmount - fee) * selectedCurrency.rate),
-    [numericAmount, fee, selectedCurrency.rate]
-  );
+  const convertedAmount = useMemo(() => Math.round((numericAmount - fee) * selectedCurrency.rate), [numericAmount, fee, selectedCurrency.rate]);
 
   const deliveryOptions = [
-    { key: "wallet" as const, label: "KOB Wallet", icon: "📱" },
-    { key: "bank" as const, label: "Bank Account", icon: "🏦" },
-    { key: "bills" as const, label: "Bills & Fees", icon: "🧾" },
+    { key: "wallet" as const, label: "KOB Wallet", icon: Smartphone },
+    { key: "bank" as const, label: "Bank Account", icon: Landmark },
+    { key: "bills" as const, label: "Bills & Fees", icon: Receipt },
   ];
-
-  const deliveryMethodMap: Record<string, string> = {
-    wallet: "mobile_wallet",
-    bank: "bank_transfer",
-    bills: "bill_payment",
-  };
+  const deliveryMethodMap: Record<string, string> = { wallet: "mobile_wallet", bank: "bank_transfer", bills: "bill_payment" };
 
   const isDetailsValid = useCallback(() => {
     if (!recipientName.trim()) return false;
@@ -380,464 +339,326 @@ function SendForm() {
     return true;
   }, [recipientName, recipientPhone, deliveryMethod, bankCode, accountNumber, billPurpose, billReference]);
 
-  const handleGetQuote = async () => {
-    // Check auth
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      const params = new URLSearchParams({
-        amount: amount,
-        currency: selectedCurrency.code,
-        dest: deliveryMethod,
-      });
-      navigate(`/app/send-money?${params.toString()}`);
-      return;
+  const selectSuggestion = (s: { id: string; full_name: string; phone: string }) => {
+    setRecipientName(s.full_name);
+    if (s.phone && deliveryMethod === "wallet") {
+      const phoneStr = s.phone.replace(/\s/g, "");
+      const matched = phoneCountries.find((c) => phoneStr.startsWith(c.code));
+      if (matched) { setSelectedCountryCode(matched.code); setRecipientPhone(phoneStr.slice(matched.code.length)); }
+      else { setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, "")); }
     }
+    setShowNameSuggestions(false);
+  };
 
+  const handleGetQuote = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) { navigate(`/app/send-money?amount=${amount}&currency=${selectedCurrency.code}&dest=${deliveryMethod}`); return; }
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
-        body: {
-          action: "get_quote",
-          amount: numericAmount,
-           source_currency: selectedCurrency.code,
-          destination_currency: destCountries[selectedDestIdx]?.currency || "XAF",
-          delivery_method: deliveryMethodMap[deliveryMethod],
-          destination_country: destCountries[selectedDestIdx]?.country || "CM",
-        },
+        body: { action: "get_quote", amount: numericAmount, source_currency: selectedCurrency.code, destination_currency: destCurrLabel, delivery_method: deliveryMethodMap[deliveryMethod], destination_country: destCountries[selectedDestIdx]?.country || "CM" },
       });
-
-      if (error) throw new Error(error.message || "Failed to get quote");
+      if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-
-      setQuote(data?.quote || {
-        fee: fee,
-        rate: selectedCurrency.rate,
-        receive_amount: convertedAmount,
-        delivery_estimate: "Instant",
-      });
+      setQuote(data?.quote || { fee, rate: selectedCurrency.rate, receive_amount: convertedAmount, delivery_estimate: "Instant" });
       setStage("quote_review");
-    } catch (err: any) {
-      // Fallback to local calculation
-      setQuote({
-        fee: fee,
-        rate: selectedCurrency.rate,
-        receive_amount: convertedAmount,
-        delivery_estimate: "< 30 seconds",
-        source: "estimate",
-      });
+    } catch {
+      setQuote({ fee, rate: selectedCurrency.rate, receive_amount: convertedAmount, delivery_estimate: "< 30 seconds", source: "estimate" });
       setStage("quote_review");
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleConfirmSend = async () => {
     const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/app/send-money");
-      return;
-    }
-
+    if (!session) { navigate("/app/send-money"); return; }
     setStage("processing");
     try {
-      const recipientDetails: any = { name: recipientName };
-      if (deliveryMethod === "wallet") {
-        recipientDetails.phone = `${selectedCountryCode}${recipientPhone.replace(/\s/g, "")}`;
-      } else if (deliveryMethod === "bank") {
-        recipientDetails.bank_code = bankCode;
-        recipientDetails.account_number = accountNumber;
-      } else {
-        recipientDetails.purpose = billPurpose;
-        recipientDetails.reference = billReference;
-      }
-
+      const rd: any = { name: recipientName };
+      if (deliveryMethod === "wallet") rd.phone = `${selectedCountryCode}${recipientPhone.replace(/\s/g, "")}`;
+      else if (deliveryMethod === "bank") { rd.bank_code = bankCode; rd.account_number = accountNumber; }
+      else { rd.purpose = billPurpose; rd.reference = billReference; }
       const { data, error } = await supabase.functions.invoke("remittance-outbound", {
-        body: {
-          action: "send",
-          amount: numericAmount,
-          source_currency: selectedCurrency.code,
-          destination_currency: destCountries[selectedDestIdx]?.currency || "XAF",
-          delivery_method: deliveryMethodMap[deliveryMethod],
-          destination_country: destCountries[selectedDestIdx]?.country || "CM",
-          recipient: recipientDetails,
-        },
+        body: { action: "send", amount: numericAmount, source_currency: selectedCurrency.code, destination_currency: destCurrLabel, delivery_method: deliveryMethodMap[deliveryMethod], destination_country: destCountries[selectedDestIdx]?.country || "CM", recipient: rd },
       });
-
-      if (error) throw new Error(error.message || "Transfer failed");
+      if (error) throw new Error(error.message);
       if (data?.error) throw new Error(data.error);
-
       setTxRef(data?.reference || data?.id || "TX-" + Date.now().toString(36).toUpperCase());
       setStage("success");
-    } catch (err: any) {
-      toast.error(err.message || "Transfer failed. Please try again.");
-      setStage("quote_review");
-    }
+    } catch (err: any) { toast.error(err.message || "Transfer failed"); setStage("quote_review"); }
   };
 
   const handleReset = () => {
-    setStage("calculate");
-    setRecipientName("");
-    setRecipientPhone("");
-    setSelectedCountryCode("+237");
-    setBankCode("");
-    setAccountNumber("");
-    setBillPurpose("");
-    setBillReference("");
-    setQuote(null);
-    setTxRef("");
-    setNameSuggestions([]);
-    setShowNameSuggestions(false);
+    setStage("calculate"); setRecipientName(""); setRecipientPhone(""); setSelectedCountryCode("+237");
+    setBankCode(""); setAccountNumber(""); setBillPurpose(""); setBillReference("");
+    setQuote(null); setTxRef(""); setNameSuggestions([]); setShowNameSuggestions(false);
   };
 
-  /* ─── Success State ─── */
+  const stageIdx = stage === "calculate" ? 0 : stage === "details" ? 1 : stage === "quote_review" ? 2 : 3;
+  const Steps = () => (
+    <div className="flex gap-1.5 mb-6">
+      {["Amount", "Details", "Review", "Done"].map((_, i) => (
+        <motion.div key={i} className={`h-1 rounded-full flex-1 transition-colors duration-500 ${i <= stageIdx ? "bg-primary" : "bg-border/60"}`}
+          animate={{ scaleY: i === stageIdx ? 1.5 : 1 }} transition={{ type: "spring", stiffness: 300 }} />
+      ))}
+    </div>
+  );
+
+  /* Dropdown helper */
+  const DropList = ({ items, selected, onPick, show, onClose, align = "right" }: {
+    items: { flag: string; code: string; label: string }[]; selected: number; onPick: (i: number) => void; show: boolean; onClose: () => void; align?: string;
+  }) => (
+    <AnimatePresence>
+      {show && (
+        <motion.div initial={{ opacity: 0, y: -6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.96 }}
+          transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          className={`absolute ${align === "left" ? "left-0" : "right-0"} top-[calc(100%+6px)] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 z-50 min-w-[240px] max-h-[280px] overflow-y-auto p-1.5`}>
+          {items.map((item, i) => (
+            <button key={item.code + item.label} onClick={() => { onPick(i); onClose(); }}
+              className={`flex items-center gap-3 w-full px-3.5 py-2.5 rounded-xl text-sm transition-all ${i === selected ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60 text-foreground"}`}>
+              <span className="text-lg">{item.flag}</span>
+              <span className="font-medium">{item.code}</span>
+              <span className="text-muted-foreground text-xs ml-auto truncate max-w-[100px]">{item.label}</span>
+              {i === selected && <CheckCircle2 className="h-3.5 w-3.5 text-primary ml-1 shrink-0" />}
+            </button>
+          ))}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  /* ─── Success ─── */
   if (stage === "success") {
     return (
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-background rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md border border-border/40 text-center"
-      >
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}>
-          <div className="h-20 w-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-4">
+      <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-background rounded-3xl shadow-2xl p-7 lg:p-9 w-full max-w-md border border-border/30 text-center">
+        <Steps />
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.15 }}>
+          <div className="h-20 w-20 mx-auto rounded-full bg-primary/10 flex items-center justify-center mb-5">
             <CheckCircle className="h-10 w-10 text-primary" />
           </div>
         </motion.div>
-        <h3 className="text-2xl font-bold text-foreground mb-2">Transfer Initiated!</h3>
-        <p className="text-muted-foreground text-sm mb-4">
-          Your transfer of <span className="font-bold text-foreground">{numericAmount.toLocaleString()} {selectedCurrency.code}</span> is being processed.
+        <h3 className="text-2xl font-bold text-foreground mb-2">Transfer Initiated! 🎉</h3>
+        <p className="text-muted-foreground text-sm mb-5">
+          <span className="font-bold text-foreground">{numericAmount.toLocaleString()} {selectedCurrency.code}</span> is on its way.
         </p>
-        <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left space-y-2">
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Reference</span>
-            <span className="font-mono font-semibold text-foreground text-xs">{txRef}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Recipient</span>
-            <span className="font-semibold text-foreground">{recipientName}</span>
-          </div>
-          <div className="flex justify-between text-sm">
-            <span className="text-muted-foreground">Receives</span>
-            <span className="font-semibold text-primary">{convertedAmount.toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
-          </div>
-        </div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-muted/40 rounded-2xl p-5 mb-6 text-left space-y-3">
+          {[
+            { l: "Reference", v: txRef, mono: true },
+            { l: "Recipient", v: recipientName },
+            { l: "Receives", v: `${convertedAmount.toLocaleString()} ${destCurrLabel}`, hl: true },
+          ].map((r) => (
+            <div key={r.l} className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{r.l}</span>
+              <span className={`font-semibold ${r.hl ? "text-primary" : "text-foreground"} ${r.mono ? "font-mono text-xs" : ""}`}>{r.v}</span>
+            </div>
+          ))}
+        </motion.div>
         <div className="flex gap-3">
-          <Button variant="outline" onClick={handleReset} className="flex-1 rounded-xl h-12">
-            Send Another
-          </Button>
-          <Link to="/app/send-money" className="flex-1">
-            <Button className="w-full rounded-xl h-12">
-              View Transfers
-            </Button>
-          </Link>
+          <Button variant="outline" onClick={handleReset} className="flex-1 rounded-2xl h-12 font-semibold">Send Another</Button>
+          <Link to="/app/send-money" className="flex-1"><Button className="w-full rounded-2xl h-12 font-semibold">View Transfers</Button></Link>
         </div>
       </motion.div>
     );
   }
 
-  /* ─── Processing State ─── */
+  /* ─── Processing ─── */
   if (stage === "processing") {
     return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="bg-background rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md border border-border/40 text-center"
-      >
-        <Loader2 className="h-12 w-12 text-primary mx-auto animate-spin mb-4" />
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+        className="bg-background rounded-3xl shadow-2xl p-7 lg:p-9 w-full max-w-md border border-border/30 text-center">
+        <Steps />
+        <Loader2 className="h-14 w-14 text-primary mx-auto animate-spin mb-5" />
         <h3 className="text-xl font-bold text-foreground mb-2">Processing Transfer</h3>
-        <p className="text-muted-foreground text-sm">Please wait while we process your transfer…</p>
+        <p className="text-muted-foreground text-sm">Securely routing your funds…</p>
       </motion.div>
     );
   }
 
-  /* ─── Quote Review State ─── */
+  /* ─── Quote Review ─── */
   if (stage === "quote_review" && quote) {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-background rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md border border-border/40"
-      >
-        <button onClick={() => setStage("details")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Edit details
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+        className="bg-background rounded-3xl shadow-2xl p-7 lg:p-9 w-full max-w-md border border-border/30">
+        <Steps />
+        <button onClick={() => setStage("details")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors group">
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Edit details
         </button>
-
-        <h3 className="text-lg font-bold text-foreground mb-4">Review your transfer</h3>
-
-        <div className="space-y-3 mb-6">
-          <div className="bg-muted/30 rounded-xl p-4 space-y-2.5">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">You send</span>
-              <span className="font-bold text-foreground">{numericAmount.toLocaleString()} {selectedCurrency.code}</span>
+        <h3 className="text-lg font-bold text-foreground mb-5">Review your transfer</h3>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+          className="bg-gradient-to-br from-muted/40 to-muted/20 rounded-2xl p-5 space-y-3 mb-4">
+          {[
+            { l: "You send", v: `${numericAmount.toLocaleString()} ${selectedCurrency.code}`, bold: true },
+            { l: `Fee (${selectedCurrency.fee_pct}%)`, v: `${(quote.fee || fee).toFixed(2)} ${selectedCurrency.code}` },
+            { l: "Exchange rate", v: `1 ${selectedCurrency.code} = ${(quote.rate || selectedCurrency.rate).toLocaleString()} ${destCurrLabel}` },
+          ].map((r) => (
+            <div key={r.l} className="flex justify-between text-sm">
+              <span className="text-muted-foreground">{r.l}</span>
+              <span className={`${r.bold ? "font-bold" : "font-semibold"} text-foreground`}>{r.v}</span>
             </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Fee</span>
-              <span className="font-semibold text-foreground">{(quote.fee || fee).toFixed(2)} {selectedCurrency.code}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Rate</span>
-              <span className="font-semibold text-foreground">1 {selectedCurrency.code} = {(quote.rate || selectedCurrency.rate).toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
-            </div>
-            <div className="border-t border-border/50 pt-2.5 flex justify-between text-sm">
-              <span className="text-muted-foreground">Recipient gets</span>
-              <span className="font-bold text-primary text-lg">{(quote.receive_amount || convertedAmount).toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
-            </div>
+          ))}
+          <div className="border-t border-border/50 pt-3 flex justify-between items-center">
+            <span className="text-sm text-muted-foreground">Recipient gets</span>
+            <motion.span initial={{ scale: 0.95 }} animate={{ scale: 1 }} className="font-bold text-primary text-xl">
+              {(quote.receive_amount || convertedAmount).toLocaleString()} {destCurrLabel}
+            </motion.span>
           </div>
-
-          <div className="bg-muted/30 rounded-xl p-4 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">To</span>
-              <span className="font-semibold text-foreground">{recipientName}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Via</span>
-              <span className="font-semibold text-foreground">{deliveryOptions.find(d => d.key === deliveryMethod)?.label}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-muted-foreground">Delivery</span>
-              <span className="font-semibold text-primary flex items-center gap-1"><Zap className="h-3 w-3" />{quote.delivery_estimate || "Instant"}</span>
-            </div>
-          </div>
-
-          {quote.source === "estimate" && (
-            <p className="text-xs text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg p-2 text-center">
-              ℹ️ This is an estimated quote. Final amounts may vary slightly.
-            </p>
-          )}
-        </div>
-
-        <Button onClick={handleConfirmSend} className="w-full h-14 rounded-xl text-lg font-bold shadow-lg gap-2" size="lg">
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+          className="bg-muted/30 rounded-2xl p-4 space-y-2.5 mb-5">
+          <div className="flex justify-between text-sm"><span className="text-muted-foreground">To</span><span className="font-semibold text-foreground">{recipientName}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Via</span><span className="font-semibold text-foreground">{deliveryOptions.find(d => d.key === deliveryMethod)?.label}</span></div>
+          <div className="flex justify-between text-sm"><span className="text-muted-foreground">Delivery</span><span className="font-semibold text-primary flex items-center gap-1"><Zap className="h-3 w-3" />{quote.delivery_estimate || "Instant"}</span></div>
+        </motion.div>
+        {quote.source === "estimate" && (
+          <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+            className="text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 rounded-xl p-3 text-center mb-4">
+            ℹ️ Estimated quote — final amounts may vary slightly.
+          </motion.p>
+        )}
+        <Button onClick={handleConfirmSend} className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all gap-2" size="lg">
           <Send className="h-5 w-5" /> Confirm & Send
         </Button>
       </motion.div>
     );
   }
 
+  /* ─── Main Form ─── */
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      animate={{ opacity: 1, y: 0 }}
+    <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-background rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md border border-border/40"
-    >
-      {/* Back button for details stage */}
+      className="bg-background rounded-3xl shadow-2xl p-7 lg:p-9 w-full max-w-md border border-border/30">
+      <Steps />
+
       {stage === "details" && (
-        <button onClick={() => setStage("calculate")} className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors">
-          <ArrowLeft className="h-4 w-4" /> Back
-        </button>
+        <motion.button initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} onClick={() => setStage("calculate")}
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors group">
+          <ArrowLeft className="h-4 w-4 group-hover:-translate-x-0.5 transition-transform" /> Back
+        </motion.button>
       )}
 
       {/* You send */}
-      <div className="space-y-1.5 mb-4">
-        <label className="text-sm font-semibold text-foreground">You send</label>
-        <div className="flex items-center border-2 rounded-xl overflow-hidden border-border focus-within:border-primary/50 transition-colors">
-          <Input
-            type="number"
-            value={amount}
+      <div className="space-y-2 mb-5">
+        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">You send</label>
+        <div className="flex items-center border-2 rounded-2xl overflow-hidden border-border/60 focus-within:border-primary/60 transition-colors bg-background">
+          <Input type="number" value={amount}
             onChange={(e) => { setAmount(e.target.value); if (stage === "details") setStage("calculate"); }}
-            className="border-0 text-2xl font-bold h-16 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
-            placeholder="0"
-            disabled={stage === "details"}
-          />
+            className="border-0 text-2xl font-bold h-16 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent pl-5"
+            placeholder="0" disabled={stage === "details"} />
           <div className="relative">
-            <button
-              onClick={() => stage === "calculate" && setShowDropdown(!showDropdown)}
-              className="flex items-center gap-2 px-4 h-16 bg-muted/50 hover:bg-muted transition-colors font-semibold text-sm min-w-[130px] justify-center"
-            >
+            <button onClick={() => stage === "calculate" && setShowDropdown(!showDropdown)}
+              className="flex items-center gap-2 px-4 h-16 bg-muted/40 hover:bg-muted/60 transition-all font-semibold text-sm min-w-[130px] justify-center">
               <span className="text-xl">{selectedCurrency.flag}</span>
-              {selectedCurrency.code}
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+              <span>{selectedCurrency.code}</span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showDropdown ? "rotate-180" : ""}`} />
             </button>
-            <AnimatePresence>
-              {showDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] overflow-hidden"
-                >
-                  {currencies.map((c, i) => (
-                    <button
-                      key={c.code}
-                      onClick={() => { setSelectedIdx(i); setShowDropdown(false); }}
-                      className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/60 transition-colors text-sm"
-                    >
-                      <span className="text-lg">{c.flag}</span>
-                      <span className="font-medium">{c.code}</span>
-                      <span className="text-muted-foreground text-xs ml-auto">{c.name}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <DropList items={currencies.map((c) => ({ flag: c.flag, code: c.code, label: c.name }))}
+              selected={selectedIdx} onPick={setSelectedIdx} show={showDropdown} onClose={() => setShowDropdown(false)} />
           </div>
         </div>
       </div>
 
       {/* Fee breakdown */}
-      <div className="space-y-2 py-3 border-y border-border/50 mb-4 text-sm">
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground flex items-center gap-1.5">
-            <Banknote className="h-3.5 w-3.5" /> Fee ({selectedCurrency.fee_pct}%)
-          </span>
-          <span className="font-semibold text-foreground">
-            {fee.toFixed(2)} {selectedCurrency.code}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground flex items-center gap-1.5">
-            <Repeat className="h-3.5 w-3.5" /> Rate
-          </span>
-          <span className="font-semibold text-foreground">
-            1 {selectedCurrency.code} = {selectedCurrency.rate.toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}
-          </span>
-        </div>
-        <div className="flex items-center justify-between">
-          <span className="text-muted-foreground flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" /> Delivery
-          </span>
-          <span className="font-semibold text-primary">Instant</span>
-        </div>
-      </div>
+      <motion.div layout className="space-y-2 py-3.5 border-y border-border/40 mb-5 text-sm">
+        {[
+          { icon: Banknote, label: `Fee (${selectedCurrency.fee_pct}%)`, value: `${fee.toFixed(2)} ${selectedCurrency.code}` },
+          { icon: Repeat, label: "Rate", value: `1 ${selectedCurrency.code} = ${selectedCurrency.rate.toLocaleString()} ${destCurrLabel}` },
+          { icon: Clock, label: "Delivery", value: "Instant", hl: true },
+        ].map((r) => (
+          <div key={r.label} className="flex items-center justify-between">
+            <span className="text-muted-foreground flex items-center gap-1.5"><r.icon className="h-3.5 w-3.5" /> {r.label}</span>
+            <motion.span key={r.value} initial={{ opacity: 0.5 }} animate={{ opacity: 1 }}
+              className={`font-semibold ${r.hl ? "text-primary" : "text-foreground"}`}>{r.value}</motion.span>
+          </div>
+        ))}
+      </motion.div>
 
       {/* Recipient gets */}
-      <div className="space-y-1.5 mb-4">
-        <label className="text-sm font-semibold text-foreground">Recipient gets</label>
-        <div className="flex items-center border-2 rounded-xl overflow-hidden border-border bg-muted/20">
-          <div className="flex-1 px-4 py-4">
-            <motion.span
-              key={convertedAmount}
-              initial={{ opacity: 0.5, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-2xl font-bold text-foreground"
-            >
-              {convertedAmount.toLocaleString()}
-            </motion.span>
+      <div className="space-y-2 mb-5">
+        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recipient gets</label>
+        <div className="flex items-center border-2 rounded-2xl overflow-hidden border-border/60 bg-muted/10">
+          <div className="flex-1 pl-5 py-4">
+            <motion.span key={convertedAmount} initial={{ opacity: 0.5, y: 2 }} animate={{ opacity: 1, y: 0 }}
+              className="text-2xl font-bold text-foreground">{convertedAmount.toLocaleString()}</motion.span>
           </div>
           <div className="relative">
-            <button
-              onClick={() => stage === "calculate" && setShowDestDropdown(!showDestDropdown)}
-              className="flex items-center gap-2 px-4 h-16 bg-muted/50 hover:bg-muted transition-colors font-semibold text-sm min-w-[130px] justify-center"
-            >
-              <span className="text-xl">{destCountries[selectedDestIdx]?.flag || "🇨🇲"}</span>
-              {destCountries[selectedDestIdx]?.currency || "XAF"}
-              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+            <button onClick={() => stage === "calculate" && setShowDestDropdown(!showDestDropdown)}
+              className="flex items-center gap-2 px-4 h-16 bg-muted/40 hover:bg-muted/60 transition-all font-semibold text-sm min-w-[130px] justify-center">
+              <span className="text-xl">{destFlag}</span>
+              <span>{destCurrLabel}</span>
+              <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${showDestDropdown ? "rotate-180" : ""}`} />
             </button>
-            <AnimatePresence>
-              {showDestDropdown && (
-                <motion.div
-                  initial={{ opacity: 0, y: -4, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                  transition={{ duration: 0.15 }}
-                  className="absolute right-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] max-h-[240px] overflow-y-auto"
-                >
-                  {destCountries.map((dc, i) => (
-                    <button
-                      key={dc.currency + dc.country}
-                      onClick={() => { setSelectedDestIdx(i); setShowDestDropdown(false); }}
-                      className={`flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/60 transition-colors text-sm ${
-                        i === selectedDestIdx ? "bg-primary/5 text-primary" : ""
-                      }`}
-                    >
-                      <span className="text-lg">{dc.flag}</span>
-                      <span className="font-medium">{dc.currency}</span>
-                      <span className="text-muted-foreground text-xs ml-auto">{dc.country}</span>
-                    </button>
-                  ))}
-                </motion.div>
-              )}
-            </AnimatePresence>
+            <DropList items={destCountries.map((dc) => ({ flag: dc.flag, code: dc.currency, label: dc.country }))}
+              selected={selectedDestIdx} onPick={setSelectedDestIdx} show={showDestDropdown} onClose={() => setShowDestDropdown(false)} />
           </div>
         </div>
       </div>
 
       {/* Delivery method */}
-      <div className="space-y-1.5 mb-4">
-        <label className="text-sm font-semibold text-foreground">Deliver to</label>
+      <div className="space-y-2 mb-5">
+        <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Deliver to</label>
         <div className="grid grid-cols-3 gap-2">
-          {deliveryOptions.map((opt) => (
-            <button
-              key={opt.key}
-              onClick={() => { setDeliveryMethod(opt.key); if (stage === "details") setStage("calculate"); }}
-              className={`flex flex-col items-center gap-1 rounded-xl p-2.5 text-xs font-medium border-2 transition-all ${
-                deliveryMethod === opt.key
-                  ? "border-primary bg-primary/5 text-primary"
-                  : "border-border text-muted-foreground hover:border-primary/30"
-              }`}
-            >
-              <span className="text-lg">{opt.icon}</span>
-              {opt.label}
-            </button>
-          ))}
+          {deliveryOptions.map((opt) => {
+            const Icon = opt.icon;
+            const active = deliveryMethod === opt.key;
+            return (
+              <motion.button key={opt.key} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
+                onClick={() => { setDeliveryMethod(opt.key); if (stage === "details") setStage("calculate"); }}
+                className={`flex flex-col items-center gap-1.5 rounded-2xl p-3 text-xs font-semibold border-2 transition-all duration-200 ${
+                  active ? "border-primary bg-primary/8 text-primary shadow-sm shadow-primary/10" : "border-border/50 text-muted-foreground hover:border-primary/30 hover:bg-muted/30"
+                }`}>
+                <Icon className={`h-5 w-5 ${active ? "text-primary" : ""}`} />
+                {opt.label}
+              </motion.button>
+            );
+          })}
         </div>
       </div>
 
       <AnimatePresence mode="wait">
         {stage === "calculate" ? (
-          <motion.div key="calculate" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <Button
-              onClick={() => { if (numericAmount <= 0) { toast.error("Enter an amount to send"); return; } setStage("details"); }}
-              className="w-full h-14 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all gap-2"
-              size="lg"
-            >
-              <Send className="h-5 w-5" />
-              Continue
+          <motion.div key="calc" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -8 }}>
+            <Button onClick={() => { if (numericAmount <= 0) { toast.error("💰 Enter an amount to send"); return; } setStage("details"); }}
+              className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all gap-2" size="lg">
+              <Send className="h-5 w-5" /> Continue
             </Button>
           </motion.div>
         ) : stage === "details" ? (
-          <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
-            {/* Recipient name with autocomplete — always shown */}
-            <div className="space-y-1 relative" ref={nameRef}>
-              <Label className="text-xs font-semibold">Recipient name</Label>
+          <motion.div key="details" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }} className="space-y-4">
+
+            {/* Name with autocomplete */}
+            <div className="space-y-1.5 relative" ref={nameRef}>
+              <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Recipient name</Label>
               <div className="relative">
-                <Input
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                  placeholder="Start typing a name..."
-                  className="h-11 rounded-xl"
-                  autoComplete="off"
-                />
-                {nameSearching && (
-                  <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+                <Input value={recipientName} onChange={(e) => setRecipientName(e.target.value)}
+                  placeholder="Start typing a name…" className="h-12 rounded-2xl pr-10 text-sm" autoComplete="off" />
+                {nameSearching && <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />}
+                {!nameSearching && recipientName.length >= 2 && nameSuggestions.length === 0 && (
+                  <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground bg-muted/60 px-1.5 py-0.5 rounded-md">New</span>
                 )}
               </div>
               <AnimatePresence>
                 {showNameSuggestions && nameSuggestions.length > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -4 }}
-                    className="absolute left-0 right-0 top-full mt-1 bg-background rounded-xl shadow-xl border border-border z-50 overflow-hidden"
-                  >
+                  <motion.div initial={{ opacity: 0, y: -6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                    transition={{ duration: 0.18 }}
+                    className="absolute left-0 right-0 top-full mt-1.5 bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 z-50 overflow-hidden p-1.5">
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 pt-1 pb-2">Matching contacts</p>
                     {nameSuggestions.map((s) => (
-                      <button
-                        key={s.id}
-                        onClick={() => {
-                          setRecipientName(s.full_name);
-                          if (s.phone && deliveryMethod === "wallet") {
-                            // Try to extract country code and number
-                            const phoneStr = s.phone.replace(/\s/g, "");
-                            const matchedCountry = phoneCountries.find((c) => phoneStr.startsWith(c.code));
-                            if (matchedCountry) {
-                              setSelectedCountryCode(matchedCountry.code);
-                              setRecipientPhone(phoneStr.slice(matchedCountry.code.length));
-                            } else {
-                              setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, ""));
-                            }
-                          }
-                          setShowNameSuggestions(false);
-                        }}
-                        className="flex items-center justify-between w-full px-4 py-2.5 hover:bg-muted/60 transition-colors text-sm text-left"
-                      >
-                        <div>
-                          <span className="font-medium text-foreground">{s.full_name}</span>
-                          {s.phone && (
-                            <span className="text-muted-foreground text-xs ml-2">{s.phone}</span>
-                          )}
+                      <motion.button key={s.id} whileHover={{ backgroundColor: "hsl(var(--muted) / 0.6)" }}
+                        onClick={() => selectSuggestion(s)}
+                        className="flex items-center justify-between w-full px-3.5 py-3 rounded-xl text-sm text-left transition-colors">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xs">
+                            {s.full_name.slice(0, 2).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="font-semibold text-foreground">{s.full_name}</p>
+                            {s.phone && <p className="text-muted-foreground text-xs">{s.phone}</p>}
+                          </div>
                         </div>
-                        <CheckCircle2 className="h-3.5 w-3.5 text-primary opacity-50" />
-                      </button>
+                        <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
+                      </motion.button>
                     ))}
                   </motion.div>
                 )}
@@ -846,37 +667,28 @@ function SendForm() {
 
             {/* Wallet fields */}
             {deliveryMethod === "wallet" && (
-              <div className="space-y-1">
-                <Label className="text-xs font-semibold">Phone number</Label>
-                <div className="flex items-center border-2 rounded-xl overflow-hidden border-border focus-within:border-primary/50 transition-colors">
-                  {/* Country code selector */}
-                  <div className="relative">
-                    <button
-                      onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-                      className="flex items-center gap-1 px-3 h-11 bg-muted/50 hover:bg-muted transition-colors text-sm font-semibold min-w-[90px]"
-                    >
-                      <span className="text-base">{phoneCountries.find((c) => c.code === selectedCountryCode)?.flag || "🌍"}</span>
-                      <span className="text-xs">{selectedCountryCode}</span>
-                      <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-1.5">
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Phone number</Label>
+                <div className="flex items-center border-2 rounded-2xl overflow-hidden border-border/60 focus-within:border-primary/60 transition-colors">
+                  <div className="relative" ref={countryRef}>
+                    <button onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+                      className="flex items-center gap-1.5 px-3 h-12 bg-muted/40 hover:bg-muted/60 transition-all text-sm font-semibold min-w-[100px]">
+                      <span className="text-lg">{phoneCountries.find((c) => c.code === selectedCountryCode)?.flag || "🌍"}</span>
+                      <span className="text-xs font-bold">{selectedCountryCode}</span>
+                      <ChevronDown className={`h-3 w-3 text-muted-foreground transition-transform duration-200 ${showCountryDropdown ? "rotate-180" : ""}`} />
                     </button>
                     <AnimatePresence>
                       {showCountryDropdown && (
-                        <motion.div
-                          initial={{ opacity: 0, y: -4, scale: 0.97 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: -4, scale: 0.97 }}
-                          transition={{ duration: 0.15 }}
-                          className="absolute left-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] max-h-[240px] overflow-y-auto"
-                        >
+                        <motion.div initial={{ opacity: 0, y: -6, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -6, scale: 0.96 }}
+                          transition={{ duration: 0.18 }}
+                          className="absolute left-0 top-[calc(100%+6px)] bg-background/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-border/50 z-50 min-w-[240px] max-h-[260px] overflow-y-auto p-1.5">
                           {phoneCountries.map((c) => (
-                            <button
-                              key={`${c.code}-${c.country}`}
+                            <button key={`${c.code}-${c.country}`}
                               onClick={() => { setSelectedCountryCode(c.code); setShowCountryDropdown(false); }}
-                              className={`flex items-center gap-2.5 w-full px-4 py-2.5 hover:bg-muted/60 transition-colors text-sm ${
-                                c.code === selectedCountryCode ? "bg-primary/5 text-primary" : ""
-                              }`}
-                            >
-                              <span className="text-base">{c.flag}</span>
+                              className={`flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-sm transition-all ${
+                                c.code === selectedCountryCode ? "bg-primary/10 text-primary font-semibold" : "hover:bg-muted/60"
+                              }`}>
+                              <span className="text-lg">{c.flag}</span>
                               <span className="font-medium">{c.country}</span>
                               <span className="text-muted-foreground text-xs ml-auto">{c.code}</span>
                             </button>
@@ -885,69 +697,48 @@ function SendForm() {
                       )}
                     </AnimatePresence>
                   </div>
-                  <Input
-                    type="tel"
-                    value={recipientPhone}
-                    onChange={(e) => setRecipientPhone(e.target.value)}
-                    className="border-0 h-11 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
-                    placeholder="6XX XXX XXX"
-                  />
+                  <Input type="tel" value={recipientPhone} onChange={(e) => setRecipientPhone(e.target.value)}
+                    className="border-0 h-12 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent text-sm" placeholder="6XX XXX XXX" />
                 </div>
-              </div>
+              </motion.div>
             )}
 
             {/* Bank fields */}
             {deliveryMethod === "bank" && (
-              <>
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Select bank</Label>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Select bank</Label>
                   <Select value={bankCode} onValueChange={setBankCode}>
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Choose a bank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {banks.map((b) => (
-                        <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>
-                      ))}
-                    </SelectContent>
+                    <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Choose a bank" /></SelectTrigger>
+                    <SelectContent>{banks.map((b) => <SelectItem key={b.code} value={b.code}>{b.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Account number / RIB</Label>
-                  <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Account number" className="h-11 rounded-xl" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Account number / RIB</Label>
+                  <Input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} placeholder="Account number" className="h-12 rounded-2xl" />
                 </div>
-              </>
+              </motion.div>
             )}
 
             {/* Bills fields */}
             {deliveryMethod === "bills" && (
-              <>
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Purpose</Label>
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="space-y-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Purpose</Label>
                   <Select value={billPurpose} onValueChange={setBillPurpose}>
-                    <SelectTrigger className="h-11 rounded-xl">
-                      <SelectValue placeholder="Select purpose" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {billPurposes.map((p) => (
-                        <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
-                      ))}
-                    </SelectContent>
+                    <SelectTrigger className="h-12 rounded-2xl"><SelectValue placeholder="Select purpose" /></SelectTrigger>
+                    <SelectContent>{billPurposes.map((p) => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="space-y-1">
-                  <Label className="text-xs font-semibold">Invoice / Reference number</Label>
-                  <Input value={billReference} onChange={(e) => setBillReference(e.target.value)} placeholder="e.g. INV-2024-001" className="h-11 rounded-xl" />
+                <div className="space-y-1.5">
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Invoice / Reference</Label>
+                  <Input value={billReference} onChange={(e) => setBillReference(e.target.value)} placeholder="e.g. INV-2024-001" className="h-12 rounded-2xl" />
                 </div>
-              </>
+              </motion.div>
             )}
 
-            <Button
-              onClick={handleGetQuote}
-              disabled={!isDetailsValid() || loading}
-              className="w-full h-14 rounded-xl text-lg font-bold shadow-lg hover:shadow-xl transition-all gap-2 mt-2"
-              size="lg"
-            >
+            <Button onClick={handleGetQuote} disabled={!isDetailsValid() || loading}
+              className="w-full h-14 rounded-2xl text-lg font-bold shadow-lg hover:shadow-xl hover:scale-[1.01] active:scale-[0.99] transition-all gap-2 mt-1" size="lg">
               {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               {loading ? "Getting quote…" : "Get Quote & Send"}
             </Button>
@@ -955,7 +746,7 @@ function SendForm() {
         ) : null}
       </AnimatePresence>
 
-      <p className="text-xs text-center text-muted-foreground mt-3">
+      <p className="text-xs text-center text-muted-foreground mt-4">
         For better experience, <Link to="/app" className="text-primary font-medium hover:underline">download the Kang app</Link>
       </p>
     </motion.div>
