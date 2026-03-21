@@ -689,7 +689,7 @@ function SendForm() {
             <Repeat className="h-3.5 w-3.5" /> Rate
           </span>
           <span className="font-semibold text-foreground">
-            1 {selectedCurrency.code} = {selectedCurrency.rate.toLocaleString()} XAF
+            1 {selectedCurrency.code} = {selectedCurrency.rate.toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}
           </span>
         </div>
         <div className="flex items-center justify-between">
