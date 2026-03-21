@@ -269,6 +269,45 @@ function SendForm() {
     }));
   }, [supportedCountries]);
 
+  // Destination countries for "Recipient gets" selector
+  const destCountries = useMemo(() => {
+    const base = [
+      { currency: "XAF", country: "Cameroon", flag: "🇨🇲", rate: 1 },
+      { currency: "NGN", country: "Nigeria", flag: "🇳🇬", rate: 0 },
+      { currency: "GHS", country: "Ghana", flag: "🇬🇭", rate: 0 },
+      { currency: "KES", country: "Kenya", flag: "🇰🇪", rate: 0 },
+    ];
+    // If admin countries available, build from them
+    if (supportedCountries && supportedCountries.length > 0) {
+      const currencyMap: Record<string, { currency: string; country: string; flag: string }> = {
+        "CM": { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
+        "NG": { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
+        "GH": { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
+        "KE": { currency: "KES", country: "Kenya", flag: "🇰🇪" },
+        "GA": { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
+        "CG": { currency: "XAF", country: "Congo", flag: "🇨🇬" },
+        "TD": { currency: "XAF", country: "Chad", flag: "🇹🇩" },
+        "CF": { currency: "XAF", country: "Central African Republic", flag: "🇨🇫" },
+        "GQ": { currency: "XAF", country: "Equatorial Guinea", flag: "🇬🇶" },
+      };
+      const dynamicDest = supportedCountries
+        .filter((c) => c.enabled_consumer_app)
+        .map((c) => {
+          const mapped = Object.entries(currencyMap).find(([, v]) => v.country === c.country);
+          return mapped ? { ...mapped[1], rate: 0 } : { currency: "XAF", country: c.country, flag: c.flag, rate: 0 };
+        });
+      // Dedupe by currency+country
+      const seen = new Set<string>();
+      return dynamicDest.filter((d) => {
+        const key = `${d.currency}-${d.country}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    return base;
+  }, [supportedCountries]);
+
   // Close dropdowns on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
