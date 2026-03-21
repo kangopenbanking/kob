@@ -90,6 +90,7 @@ const footerSections = [
     links: [
       { label: "Terms of Service", to: "/terms", title: "Terms of service agreement" },
       { label: "Privacy Policy", to: "/privacy", title: "Privacy and data handling policy" },
+      { label: "Cookie Policy", to: "/cookies", title: "Cookie usage and consent policy" },
       { label: "Acceptable Use", to: "/aup", title: "Acceptable use policy" },
       { label: "Security", to: "/security-policy", title: "Security policy and certifications" },
       { label: "SLA", to: "/sla", title: "Service level agreement and uptime guarantees" },
