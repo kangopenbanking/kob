@@ -138,7 +138,9 @@ export const adminNavigation: AdminNavSection[] = [
     title: "Remittance (RaaS)",
     items: [
       { title: "Remittance Overview", path: "/admin/remittance-overview", icon: Globe },
-      { title: "Remittance Settlements", path: "/admin/remittance-settlements", icon: ArrowLeftRight },
+      { title: "Partners & Corridors", path: "/admin/remittance-partners", icon: Building2 },
+      { title: "Bank Confirmations", path: "/admin/remittance-bank-confirmations", icon: CheckCircle2 },
+      { title: "Settlements & Recon", path: "/admin/remittance-settlements", icon: ArrowLeftRight },
     ],
   },
   {
