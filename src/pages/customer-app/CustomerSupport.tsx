@@ -50,8 +50,8 @@ const CustomerSupport: React.FC = () => {
   const title = step === 'chat' ? 'Support Chat' : step === 'departments' ? 'Choose Department' : step === 'subject' ? 'Describe Issue' : 'Support';
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3 shrink-0">
         <button onClick={() => {
           if (step === 'chat') { setActiveConvId(undefined); setStep('list'); }
           else if (step === 'subject') setStep('departments');
@@ -64,7 +64,7 @@ const CustomerSupport: React.FC = () => {
       </div>
 
       {step === 'list' && (
-        <div className="flex flex-1 flex-col p-4 gap-4">
+        <div className="flex flex-1 flex-col p-4 gap-4 overflow-y-auto">
           <Button onClick={() => setStep('departments')} className="rounded-xl">
             Start New Conversation
           </Button>
@@ -77,7 +77,9 @@ const CustomerSupport: React.FC = () => {
       )}
 
       {step === 'departments' && (
-        <DepartmentPicker departments={departments} loading={deptsLoading} onSelect={(d) => { setSelectedDept(d); setStep('subject'); }} />
+        <div className="flex-1 overflow-y-auto">
+          <DepartmentPicker departments={departments} loading={deptsLoading} onSelect={(d) => { setSelectedDept(d); setStep('subject'); }} />
+        </div>
       )}
 
       {step === 'subject' && (
@@ -89,10 +91,12 @@ const CustomerSupport: React.FC = () => {
       )}
 
       {step === 'chat' && (
-        <>
-          <ChatThread messages={messages} currentUserId={userId} className="flex-1" />
-          <ChatInput onSend={handleSend} />
-        </>
+        <div className="flex flex-1 flex-col min-h-0">
+          <ChatThread messages={messages} currentUserId={userId} className="flex-1 min-h-0 overflow-y-auto" />
+          <div className="shrink-0">
+            <ChatInput onSend={handleSend} />
+          </div>
+        </div>
       )}
     </div>
   );

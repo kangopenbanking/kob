@@ -48,8 +48,8 @@ const BusinessSupport: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 border-b border-border px-4 py-3">
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 5rem)' }}>
+      <div className="flex items-center gap-3 border-b border-border px-4 py-3 shrink-0">
         <button onClick={() => {
           if (step === 'chat') { setActiveConvId(undefined); setStep('list'); }
           else if (step === 'subject') setStep('departments');
@@ -64,12 +64,16 @@ const BusinessSupport: React.FC = () => {
       </div>
 
       {step === 'list' && (
-        <div className="flex flex-1 flex-col p-4 gap-4">
+        <div className="flex flex-1 flex-col p-4 gap-4 overflow-y-auto">
           <Button onClick={() => setStep('departments')} className="rounded-xl">Start New Conversation</Button>
           <ConversationList conversations={conversations} loading={convsLoading} onSelect={(id) => { setActiveConvId(id); setStep('chat'); }} />
         </div>
       )}
-      {step === 'departments' && <DepartmentPicker departments={departments} loading={deptsLoading} onSelect={(d) => { setSelectedDept(d); setStep('subject'); }} />}
+      {step === 'departments' && (
+        <div className="flex-1 overflow-y-auto">
+          <DepartmentPicker departments={departments} loading={deptsLoading} onSelect={(d) => { setSelectedDept(d); setStep('subject'); }} />
+        </div>
+      )}
       {step === 'subject' && (
         <div className="flex flex-col gap-4 p-4">
           <p className="text-sm font-medium">What can we help you with?</p>
@@ -78,10 +82,12 @@ const BusinessSupport: React.FC = () => {
         </div>
       )}
       {step === 'chat' && (
-        <>
-          <ChatThread messages={messages} currentUserId={userId} className="flex-1" />
-          <ChatInput onSend={handleSend} />
-        </>
+        <div className="flex flex-1 flex-col min-h-0">
+          <ChatThread messages={messages} currentUserId={userId} className="flex-1 min-h-0 overflow-y-auto" />
+          <div className="shrink-0">
+            <ChatInput onSend={handleSend} />
+          </div>
+        </div>
       )}
     </div>
   );

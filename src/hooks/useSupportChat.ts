@@ -223,3 +223,72 @@ export function useSendMessage() {
     }
   }, []);
 }
+
+/**
+ * Send email to assigned agent when a chat is assigned to them.
+ */
+export function useAssignConversation() {
+  return useCallback(async (conversationId: string, agentUserId: string) => {
+    try {
+      const [{ data: conv }, { data: agentProfile }] = await Promise.all([
+        supabase.from('support_conversations').select('subject, channel').eq('id', conversationId).single() as any,
+        supabase.from('profiles').select('email, full_name').eq('id', agentUserId).single() as any,
+      ]);
+
+      if (agentProfile?.email) {
+        await supabase.functions.invoke('managed-send-email', {
+          body: {
+            email_key: 'support_chat_assigned',
+            recipient_email: agentProfile.email,
+            variables: {
+              agent_name: agentProfile.full_name || 'Agent',
+              subject: conv?.subject || 'Support Chat',
+              channel: conv?.channel || 'website',
+            },
+          },
+        });
+      }
+    } catch (e) {
+      console.warn('Agent assignment email failed:', e);
+    }
+  }, []);
+}
+
+/**
+ * Send email when a conversation is resolved/closed.
+ */
+export function useResolveNotification() {
+  return useCallback(async (conversationId: string, status: 'resolved' | 'closed') => {
+    try {
+      const { data: conv } = await supabase
+        .from('support_conversations')
+        .select('user_id, subject')
+        .eq('id', conversationId)
+        .single() as any;
+
+      if (conv?.user_id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('email, full_name')
+          .eq('id', conv.user_id)
+          .single() as any;
+
+        if (profile?.email) {
+          await supabase.functions.invoke('managed-send-email', {
+            body: {
+              email_key: 'support_chat_resolved',
+              recipient_email: profile.email,
+              variables: {
+                user_name: profile.full_name || 'Customer',
+                subject: conv.subject || 'Support Chat',
+                status,
+              },
+            },
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('Resolve notification email failed:', e);
+    }
+  }, []);
+}
