@@ -40,10 +40,10 @@ type Tab = "send" | "history";
 
 const cardVariants = {
   hidden: { opacity: 0, y: 16, scale: 0.98 },
-  visible: (i: number) => ({ opacity: 1, y: 0, scale: 1, transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] } }),
+  visible: (i: number) => ({ opacity: 1, y: 0, scale: 1, transition: { delay: i * 0.06, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const } }),
 };
 
-const stepTransition = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -30 }, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] } };
+const stepTransition = { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -30 }, transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const } };
 
 export default function CustomerSendMoney() {
   const navigate = useNavigate();
