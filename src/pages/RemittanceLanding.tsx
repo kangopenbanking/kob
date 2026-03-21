@@ -517,7 +517,7 @@ function SendForm() {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Receives</span>
-            <span className="font-semibold text-primary">{convertedAmount.toLocaleString()} XAF</span>
+            <span className="font-semibold text-primary">{convertedAmount.toLocaleString()} {destCountries[selectedDestIdx]?.currency || "XAF"}</span>
           </div>
         </div>
         <div className="flex gap-3">
