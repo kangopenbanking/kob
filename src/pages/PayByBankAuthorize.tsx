@@ -115,7 +115,20 @@ export default function PayByBankAuthorize() {
     }, 3000);
   };
 
-  const timeLeft = intent ? Math.max(0, Math.floor((new Date(intent.expires_at).getTime() - Date.now()) / 1000)) : 0;
+  const [timeLeft, setTimeLeft] = useState(0);
+
+  useEffect(() => {
+    if (!intent?.expires_at) return;
+    const calc = () => Math.max(0, Math.floor((new Date(intent.expires_at).getTime() - Date.now()) / 1000));
+    setTimeLeft(calc());
+    const interval = setInterval(() => {
+      const t = calc();
+      setTimeLeft(t);
+      if (t <= 0) { setStep("expired"); clearInterval(interval); }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [intent?.expires_at]);
+
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
 

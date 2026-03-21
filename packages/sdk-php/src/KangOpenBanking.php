@@ -78,6 +78,7 @@ class KangOpenBanking
         $this->gateway = new GatewayResource($this);
         $this->sandbox = new SandboxResource($this);
         $this->webhooks = new WebhooksResource($this);
+        $this->payByBank = new PayByBankResource($this);
     }
 
     /**
