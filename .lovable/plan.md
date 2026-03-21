@@ -1,116 +1,75 @@
 
 
-# Remittance System — Full E2E Audit Report & Fix Plan
+# Hero Send Form — Full Payment Integration by Destination Type + E2E Audit
 
-## Audit Summary
+## Summary
 
-### Components Audited
+Transform the hero section's static calculator into a fully functional multi-destination send form that adapts its fields based on the selected delivery method (KOB Wallet, Bank Account, Bills & Fees). Desktop users can complete the entire flow — from amount entry through quote to confirmation — without leaving the `/remittance` page. Also fix identified gaps across the page.
 
-| Layer | Component | Status |
-|---|---|---|
-| **Adapter Layer** | `_shared/remittance-adapters.ts` | ✅ Complete — 4 providers (Thunes, TerraPay, Onafriq, Generic), HMAC-SHA256 verification, canonical event model, ledger codes |
-| **Webhook Ingestion** | `remittance-webhook-ingest` | ✅ Complete — rate limiting, signature verify, dedupe via webhook_inbox, state machine transitions, triggers routing engine |
-| **Routing Engine** | `remittance-routing-engine` | ✅ Complete — 3 destinations (wallet, bank, merchant/bill), double-entry ledger, auto-create ledger accounts, fee calculation |
-| **Bank Confirmation** | `remittance-bank-confirm` | ✅ Complete — confirm/reject/batch/list_pending, settlement ledger posting |
-| **Settlement Engine** | `remittance-settlement` | ✅ Complete — import_statement, reconciliation matching (5 mismatch types), resolve, close, partner_health |
-| **Recon Cron** | `remittance-recon-cron` | ✅ Complete — stale flagging (48h), cross-reference matching, run reports, admin notifications |
-| **Public API** | `remittance-engine` | ✅ Complete — list_partners, list_corridors, create_quote, get_quote, list_inbound, get_inbound, validate_destination, admin CRUD |
-| **Outbound Engine** | `remittance-outbound` | ✅ Complete — get_corridors, get_quote, send, cancel, track, list_outbound, compliance checks, usage tracking |
-| **DB Triggers** | `validate_remittance_status_transition`, `resolve_remittance_receiver`, `notify_remittance_status_change` | ✅ Complete |
-| **Admin: Overview** | `/admin/remittance-overview` | ✅ Complete — KPIs, monitoring feed, detail dialog with events + ledger |
-| **Admin: Partners** | `/admin/remittance-partners` | ✅ Complete — partner + corridor CRUD |
-| **Admin: Bank Confirms** | `/admin/remittance-bank-confirmations` | ✅ Complete — pending queue, confirm/reject, recon runs |
-| **Admin: Settlements** | `/admin/remittance-settlements` | ✅ Complete — statement list, recon items, resolve mismatch |
-| **Admin: Outbound** | `/admin/remittance-outbound` | ✅ Complete — outbound monitoring, compliance queue with approve/reject |
-| **Consumer: Send Money** | `/app/send-money` | ✅ Complete — 5-step flow, corridor picker, quote, confirm, history + tracking dialog |
+## Current State
 
----
+The `SendForm` in `RemittanceLanding.tsx` is a **demo calculator only**: it shows exchange rates and a "Send money now" button that links to `/app/send-money`. The delivery method buttons (wallet/bank/bills) change local state but produce no form changes or actual API calls.
 
-## Gaps Found
+## Implementation Plan
 
-| # | Gap | Severity | Detail |
-|---|---|---|---|
-| 1 | **No consumer inbound remittance tracking page** | HIGH | `remittance-engine` has `list_inbound` and `get_inbound` actions for users to track money received from diaspora, but no UI page exists. The DB trigger `notify_remittance_status_change` sends in-app notifications, but there's nowhere for the user to see their inbound remittance history or details. |
-| 2 | **No banking app remittance pages** | HIGH | No remittance-related pages exist under `/bank/:institutionId/`. Banking app users (institution customers) cannot view inbound remittances or send money abroad. |
-| 3 | **Outbound: compliance approval is direct DB update (bypasses edge function)** | MEDIUM | `RemittanceOutbound.tsx` lines 87-105 update `remittance_compliance_checks` and `remittances` directly from client-side. This violates the Edge Function Mediation Standard — should go through an edge function for audit trail and notification dispatch. |
-| 4 | **Outbound: `listOutbound` queries by `sender_email` not `user_id`** | MEDIUM | `remittance-outbound` line 405 filters by `sender_email = user.email`. If user changes email, their transfer history is lost. Should use a sender_user_id field or the profile lookup. |
-| 5 | **Outbound: no email notifications on send/status change** | MEDIUM | Outbound flow only creates `app_notifications`. No email dispatch via `managed-send-email` for outbound transfer creation or status updates. |
-| 6 | **Outbound: usage tracking upsert doesn't increment** | MEDIUM | `remittance-outbound` lines 295-304 upsert `remittance_usage_tracking` with `total_amount: amount` and `transaction_count: 1`. On conflict, Supabase upsert replaces values instead of incrementing. Daily limits will never actually accumulate. |
-| 7 | **Settlement: `import_statement` missing-in-provider query uses string interpolation** | LOW | Line 135 builds a `NOT IN` clause via string interpolation which could break with special characters in partner references. Should use `.not('partner_reference', 'in', ...)` with proper array handling. |
-| 8 | **Admin Partners: no session token forwarded to `remittance-engine`** | LOW | `RemittancePartners.tsx` line 54 gets session but doesn't pass the token in the invoke headers, so the function uses the anon key which won't resolve the admin user. |
-| 9 | **No FI Portal remittance pages** | MEDIUM | Financial institutions cannot view remittances routed to their customers or access settlement data for their institution. |
-| 10 | **Outbound: cancel updates to `failed` status** | LOW | Cancel sets status to `failed`, but the DB trigger `validate_remittance_status_transition` only allows `created → pending|failed` and `pending → received|failed`. Cancel from `created` or `pending` works, but the cancelled status is conflated with genuine failures. |
+### 1. Rebuild SendForm with Destination-Specific Fields
 
----
+Transform `SendForm` into a multi-step inline component with 3 states: **calculate → details → confirm/success**.
 
-## Fix Plan
+**When "KOB Wallet" is selected:**
+- Show: Recipient phone (`+237` prefix), Recipient name
+- API: `remittance-outbound` → `get_quote` then `send` with `delivery_method: "mobile_wallet"`
 
-### 1. Create Consumer Inbound Remittance Page
+**When "Bank Account" is selected:**
+- Show: Bank selector dropdown (reuse the priority logic from `BankSelector.tsx` — KOB Partner banks first, then Flutterwave banks, then CM fallback), Account number / RIB input, Recipient name
+- API: `remittance-outbound` → `get_quote` then `send` with `delivery_method: "bank_transfer"`
 
-**New file: `src/pages/customer-app/CustomerRemittances.tsx`** at `/app/remittances`
+**When "Bills & Fees" is selected:**
+- Show: Purpose selector (School Fees, Utilities, Medical, Other), Bill reference/invoice number, Recipient name
+- API: `remittance-outbound` → `get_quote` then `send` with `delivery_method: "bill_payment"` and purpose metadata
 
-- Header with volume summary (total received, pending, credited)
-- List of inbound remittances fetched via `remittance-engine` action `list_inbound`
-- Status badges and sender info
-- Detail dialog with event timeline via `get_inbound`
-- Navigation link added to CustomerMore.tsx
-- Route registered in App.tsx
+### 2. Add Inline Quote + Confirm Steps
 
-### 2. Create Banking App Remittance Pages
+After user fills details and clicks "Get Quote":
+- Call `remittance-outbound` with `action: "get_quote"`
+- Display quote breakdown inline (fee, rate, receiver gets, delivery estimate)
+- "Confirm & Send" button calls `action: "send"`
+- On success: show inline success state with reference number and "Send Another" reset button
+- On error: show toast with error message
+- Auth check: if user not logged in, redirect to `/app/send-money` with pre-filled params via URL query string
 
-**New file: `src/pages/banking-app/BankRemittances.tsx`** at `/bank/:institutionId/remittances`
+### 3. Form State Machine
 
-- Inbound remittance list scoped to institution via `remittance-engine` with institution filter
-- Send money link (reuse outbound flow or redirect to `/app/send-money`)
-- Route registered in App.tsx
-
-### 3. Fix Outbound Compliance — Move to Edge Function
-
-Add `compliance_decision` action to `remittance-outbound`:
-- Accepts `check_id`, `decision`, `note`
-- Updates compliance check + remittance status
-- Logs audit event
-- Sends email notification to sender
-- Update `RemittanceOutbound.tsx` to call edge function instead of direct DB writes
-
-### 4. Fix `listOutbound` — Query by User ID
-
-Add `sender_user_id` to the remittance insert in `sendRemittance()` (line 219 area). Update `listOutbound` to filter by `sender_user_id = user.id` instead of `sender_email`.
-
-This requires a migration to add `sender_user_id` column if not present (check schema).
-
-### 5. Add Outbound Email Notifications
-
-In `sendRemittance()`, invoke `managed-send-email` with a `remittance_outbound_created` template. In the compliance decision handler, send `remittance_outbound_approved` or `remittance_outbound_rejected`.
-
-### 6. Fix Usage Tracking Upsert
-
-Replace the upsert with a proper increment pattern:
-```sql
--- On conflict, ADD to existing values
-total_amount = remittance_usage_tracking.total_amount + amount,
-transaction_count = remittance_usage_tracking.transaction_count + 1
+```text
+CALCULATE → (click "Get Quote") → QUOTE_REVIEW → (click "Send") → PROCESSING → SUCCESS
+    ↑                                    |                                         |
+    └────────────── (Edit) ──────────────┘              (Send Another) ────────────┘
 ```
-This needs to be done in the edge function with a raw RPC or a proper SQL upsert.
 
-### 7. Fix Admin Partners Auth Token
+### 4. E2E Gaps Identified & Fixes
 
-Pass session token in the `invoke` headers so the edge function can resolve the admin user for RBAC checks.
+| # | Gap | Fix |
+|---|---|---|
+| 1 | Hero send button is just a Link to `/app/send-money` — no actual form submission | Replace with functional inline flow |
+| 2 | Delivery method buttons are cosmetic — no field changes | Add conditional form fields per destination |
+| 3 | No auth check before sending | Check session; if not logged in, redirect to `/app/send-money` with query params |
+| 4 | Bank selector not integrated — just a phone field regardless of destination | Add bank dropdown for "Bank Account" mode |
+| 5 | "API Documentation" button in RaaS section links to `/developer` — correct, no fix needed | — |
+| 6 | Corridor cards in "Never Pay Hidden Fee" section use hardcoded data, not admin rates | Wire to `useAdminRates` hook already in use |
+| 7 | No loading/disabled state on send button during API calls | Add loading spinner and disabled state |
 
-### 8. Add Consumer Remittances Nav Link
-
-Add "Remittances" item to CustomerMore.tsx alongside the existing "Send Money Abroad" link.
-
-## Files Summary
+### 5. Files to Modify
 
 | File | Action |
 |---|---|
-| `src/pages/customer-app/CustomerRemittances.tsx` | **Create** — inbound remittance tracking page |
-| `src/pages/banking-app/BankRemittances.tsx` | **Create** — banking app remittance view |
-| `src/pages/customer-app/CustomerMore.tsx` | **Modify** — add Remittances nav link |
-| `src/App.tsx` | **Modify** — add 2 new routes |
-| `supabase/functions/remittance-outbound/index.ts` | **Modify** — fix listOutbound query, fix usage upsert, add compliance_decision action, add email notifications, store sender_user_id |
-| `src/pages/admin/RemittanceOutbound.tsx` | **Modify** — call edge function for compliance instead of direct DB |
-| `src/pages/admin/RemittancePartners.tsx` | **Modify** — pass auth token in invoke headers |
-| **Migration** | Add `sender_user_id` column to `remittances` if missing |
+| `src/pages/RemittanceLanding.tsx` | Rebuild `SendForm` component with multi-step flow, destination-specific fields, `remittance-outbound` API integration, auth check, inline quote/confirm/success states |
+
+No new edge functions or migrations needed — all APIs (`remittance-outbound` actions: `get_corridors`, `get_quote`, `send`) already exist and are production-ready.
+
+### Technical Notes
+
+- The form fetches corridors on mount via `remittance-outbound` `get_corridors` to validate available routes
+- Bank list for "Bank Account" mode: fetch from `flutterwave-list-banks` + `institutions` table (same pattern as `BankSelector.tsx`)
+- For unauthenticated users: the "Send money now" button redirects to sign-in → `/app/send-money` with `?amount=X&currency=EUR&dest=wallet` pre-fill
+- All form inputs validated client-side before API call (amount > 0, phone format, bank selection required)
 
