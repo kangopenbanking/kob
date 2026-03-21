@@ -2273,6 +2273,7 @@ paths['/v1/pay-by-bank/callback'] = {
   },
 };
 
+serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
