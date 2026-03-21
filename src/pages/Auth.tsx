@@ -154,10 +154,19 @@ export default function Auth() {
   const { config: authConfig } = useAuthPageConfig();
   const { data: supportedCountries = [] } = useSupportedCountries();
 
-  // Use supportedCountries with fallback to static COUNTRY_CODES
-  const countryList = supportedCountries.length > 0
-    ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
-    : COUNTRY_CODES;
+  // Use supportedCountries with fallback to static COUNTRY_CODES — deduplicate by country name
+  const countryList = (() => {
+    const raw = supportedCountries.length > 0
+      ? supportedCountries.map(sc => ({ country: sc.country, code: sc.dial_code, flag: sc.flag }))
+      : [...COUNTRY_CODES];
+    const seen = new Set<string>();
+    return raw.filter(c => {
+      const k = `${c.country}-${c.code}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  })();
 
   // ── Top-level state ──
   const [authMode, setAuthMode] = useState<AuthMode>('select');
