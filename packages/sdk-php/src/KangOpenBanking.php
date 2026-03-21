@@ -16,6 +16,7 @@ use KangOpenBanking\Resources\PayoutsResource;
 use KangOpenBanking\Resources\GatewayResource;
 use KangOpenBanking\Resources\SandboxResource;
 use KangOpenBanking\Resources\WebhooksResource;
+use KangOpenBanking\Resources\PayByBankResource;
 use KangOpenBanking\Exceptions\KOBException;
 
 class KangOpenBanking
