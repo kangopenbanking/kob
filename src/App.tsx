@@ -1087,6 +1087,7 @@ function App() {
               <Route path="send-money" element={<CustomerSendMoney />} />
               <Route path="remittances" element={<CustomerRemittances />} />
               <Route path="authorize-payment/:intentId" element={<PayByBankApproval />} />
+              <Route path="support" element={<CustomerSupport />} />
             </Route>
 
             {/* Business App PWA Routes */}
