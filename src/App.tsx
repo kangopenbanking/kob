@@ -280,6 +280,7 @@ const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners")
 const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
 const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
 const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
+const AdminSupportChat = lazy(() => import("./pages/admin/AdminSupportChat"));
 
 // Developer Portal — Identity & Onboarding Guides + Pay by Bank
 const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
