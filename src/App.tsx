@@ -279,8 +279,10 @@ const RemittanceSettlement = lazy(() => import("./pages/admin/RemittanceSettleme
 const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners"));
 const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
 const RemittanceOutbound = lazy(() => import("./pages/admin/RemittanceOutbound"));
+const AdminPayByBank = lazy(() => import("./pages/admin/AdminPayByBank"));
 
-// Developer Portal — Identity & Onboarding Guides
+// Developer Portal — Identity & Onboarding Guides + Pay by Bank
+const PayByBankGuide = lazy(() => import("./pages/developer/PayByBankGuide"));
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
 const IdentityGuide = lazy(() => import("./pages/developer/IdentityGuide"));
 const OnboardingGuide = lazy(() => import("./pages/developer/OnboardingGuide"));
@@ -391,6 +393,7 @@ const MerchantBulkOperations = lazy(() => import("./pages/merchant/MerchantBulkO
 const MerchantWhiteLabel = lazy(() => import("./pages/merchant/MerchantWhiteLabel"));
 const MerchantAdvancedAnalytics = lazy(() => import("./pages/merchant/MerchantAdvancedAnalytics"));
 const MerchantPOSTill = lazy(() => import("./pages/merchant/MerchantPOSTill"));
+const MerchantPayByBank = lazy(() => import("./pages/merchant/MerchantPayByBank"));
 
 // Banking App PWA
 const BankSplash = lazy(() => import("./pages/banking-app/BankSplash"));
@@ -684,6 +687,7 @@ function App() {
               <Route path="advanced-analytics" element={<MerchantAdvancedAnalytics />} />
               <Route path="pos-till" element={<MerchantPOSTill />} />
               <Route path="notification-history" element={<NotificationHistory />} />
+              <Route path="pay-by-bank" element={<MerchantPayByBank />} />
               <Route path="*" element={<NestedNotFound portalName="Merchant Portal" homePath="/merchant" />} />
             </Route>
             <Route path="/merchant-register" element={<ProtectedRoute><NonInstitutionRoute><MerchantRegister /></NonInstitutionRoute></ProtectedRoute>} />
@@ -770,6 +774,7 @@ function App() {
               <Route path="remittance-bank-confirmations" element={<RemittanceBankConfirmations />} />
               <Route path="remittance-settlements" element={<RemittanceSettlement />} />
               <Route path="remittance-outbound" element={<RemittanceOutbound />} />
+              <Route path="pay-by-bank" element={<AdminPayByBank />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
@@ -847,6 +852,7 @@ function App() {
               <Route path="roles-permissions" element={<RolesPermissions />} />
               <Route path="compare" element={<CompetitiveComparison />} />
               <Route path="migrate" element={<MigrationGuide />} />
+              <Route path="pay-by-bank" element={<PayByBankGuide />} />
               <Route path="*" element={<NestedNotFound portalName="Developer Portal" homePath="/developer" />} />
             </Route>
 

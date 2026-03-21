@@ -2178,6 +2178,101 @@ paths['/v1/internal/connectors/{bankId}/payments/status'] = {
   post: { tags: ['Bank Connectors'], summary: 'Payment status callback', description: 'Bank connector pushes payment status update.', operationId: 'connectorPaymentStatus', security: [{ mtls: [] }], parameters: [{ name: 'bankId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }], requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['payment_id', 'status'], properties: { payment_id: { type: 'string' }, status: { type: 'string', enum: ['accepted', 'completed', 'failed', 'reversed'] }, details: { type: 'object' } } } } } }, responses: { '200': { description: 'Status updated' }, ...errorResponses } },
 };
 
+// ═══════════════════════════════════════════════════════════════════════════
+// PAY BY BANK — Redirect-Based SCA
+// ═══════════════════════════════════════════════════════════════════════════
+schemas['PayByBankIntent'] = {
+  type: 'object',
+  properties: {
+    id: { type: 'string', format: 'uuid' },
+    merchant_id: { type: 'string', format: 'uuid' },
+    consent_id: { type: 'string' },
+    amount: { type: 'number', example: 50000 },
+    currency: { type: 'string', example: 'XAF' },
+    redirect_uri: { type: 'string', format: 'uri' },
+    state: { type: 'string' },
+    status: { type: 'string', enum: ['awaiting_auth', 'authorized', 'submitted', 'processing', 'completed', 'failed', 'expired', 'rejected'] },
+    merchant_name: { type: 'string' },
+    merchant_logo_url: { type: 'string', format: 'uri', nullable: true },
+    description: { type: 'string', nullable: true },
+    authorization_url: { type: 'string', format: 'uri' },
+    expires_at: { type: 'string', format: 'date-time' },
+    created_at: { type: 'string', format: 'date-time' },
+    updated_at: { type: 'string', format: 'date-time' },
+  },
+};
+
+schemas['CreatePayByBankIntentRequest'] = {
+  type: 'object',
+  required: ['merchant_id', 'amount', 'redirect_uri', 'state'],
+  properties: {
+    merchant_id: { type: 'string', format: 'uuid' },
+    amount: { type: 'number', example: 50000 },
+    currency: { type: 'string', default: 'XAF' },
+    redirect_uri: { type: 'string', format: 'uri' },
+    state: { type: 'string', description: 'Opaque state for CSRF protection' },
+    description: { type: 'string' },
+    creditor_account: { type: 'string' },
+    creditor_name: { type: 'string' },
+    customer_email: { type: 'string', format: 'email' },
+  },
+};
+
+paths['/v1/pay-by-bank/intents'] = {
+  post: {
+    tags: ['Pay by Bank'], summary: 'Create payment intent', operationId: 'payByBankCreateIntent',
+    security: [{ bearerAuth: [] }],
+    requestBody: { required: true, content: { 'application/json': { schema: { $ref: '#/components/schemas/CreatePayByBankIntentRequest' } } } },
+    responses: {
+      '201': { description: 'Intent created', content: { 'application/json': { schema: { type: 'object', properties: { intent_id: { type: 'string' }, consent_id: { type: 'string' }, authorization_url: { type: 'string' }, expires_at: { type: 'string' }, status: { type: 'string' } } } } } },
+      ...errorResponses,
+    },
+  },
+  get: {
+    tags: ['Pay by Bank'], summary: 'List merchant payment intents', operationId: 'payByBankListIntents',
+    security: [{ bearerAuth: [] }],
+    parameters: [{ name: 'status', in: 'query', schema: { type: 'string' } }, ...paginationParams],
+    responses: { '200': { description: 'Intent list', content: { 'application/json': { schema: { type: 'object', properties: { intents: { type: 'array', items: { $ref: '#/components/schemas/PayByBankIntent' } } } } } } }, ...errorResponses },
+  },
+};
+
+paths['/v1/pay-by-bank/intents/{intentId}'] = {
+  get: {
+    tags: ['Pay by Bank'], summary: 'Get payment intent status', operationId: 'payByBankGetIntent',
+    security: [{ bearerAuth: [] }],
+    parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+    responses: { '200': { description: 'Intent details', content: { 'application/json': { schema: { $ref: '#/components/schemas/PayByBankIntent' } } } }, ...errorResponses },
+  },
+};
+
+paths['/v1/pay-by-bank/intents/{intentId}/authorize'] = {
+  post: {
+    tags: ['Pay by Bank'], summary: 'Authorize payment (user SCA)', operationId: 'payByBankAuthorize',
+    security: [{ bearerAuth: [] }],
+    parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+    requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', properties: { debtor_account: { type: 'string' } } } } } },
+    responses: { '200': { description: 'Payment authorized', content: { 'application/json': { schema: { type: 'object', properties: { redirect_url: { type: 'string' }, status: { type: 'string' } } } } } }, ...errorResponses },
+  },
+};
+
+paths['/v1/pay-by-bank/intents/{intentId}/reject'] = {
+  post: {
+    tags: ['Pay by Bank'], summary: 'Reject payment intent', operationId: 'payByBankReject',
+    security: [{ bearerAuth: [] }],
+    parameters: [{ name: 'intentId', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } }],
+    responses: { '200': { description: 'Payment rejected', content: { 'application/json': { schema: { type: 'object', properties: { redirect_url: { type: 'string' }, status: { type: 'string' } } } } } }, ...errorResponses },
+  },
+};
+
+paths['/v1/pay-by-bank/callback'] = {
+  post: {
+    tags: ['Pay by Bank'], summary: 'Bank connector callback', description: 'Internal callback from bank connector confirming payment execution.', operationId: 'payByBankCallback',
+    security: [{ mtls: [] }],
+    requestBody: { required: true, content: { 'application/json': { schema: { type: 'object', required: ['intent_id', 'status'], properties: { intent_id: { type: 'string' }, status: { type: 'string', enum: ['completed', 'failed'] }, failure_reason: { type: 'string' } } } } } },
+    responses: { '200': { description: 'Callback processed' }, ...errorResponses },
+  },
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -2188,7 +2283,7 @@ serve(async (req) => {
       openapi: '3.1.0',
       info: {
         title: 'Kang Open Banking API',
-        version: '4.0.0',
+        version: '4.1.0',
         summary: 'Unified Open Banking API for Cameroon',
         description: 'COBAC & BEAC compliant Open Banking API providing Account Information (AISP), Payment Initiation (PISP), Credit Scoring, Loans, Savings, Mobile Money, Double-Entry Ledger, Virtual Cards, Custodial Wallets, Escrow, Compliance Screening, SLA Monitoring, POS Commerce, Bank Directory, Bank Connector Kit, Interbank Engine (ISO 20022), and comprehensive financial services for the Central African region. All monetary examples use XAF (Central African CFA Franc).',
         'x-changelog-url': 'https://kangopenbanking.com/changelog.json',
@@ -2247,6 +2342,7 @@ serve(async (req) => {
         { name: 'Bank Directory', description: 'Bank/ASPSP registration, lifecycle management, PSU linking, and public directory' },
         { name: 'Bank Connectors', description: 'Bank connector registration, mTLS certificates, data ingestion (accounts, transactions), health monitoring, and payment status callbacks' },
         { name: 'Interbank', description: 'Interbank payment engine — ISO 20022 pacs.008/pacs.002 messaging, participant management, and payment lifecycle (10-state machine)' },
+        { name: 'Pay by Bank', description: 'Redirect-based Pay by Bank with Strong Customer Authentication (SCA) — payment intents, hosted authorization, webhook events (authorized, submitted, completed, failed)' },
       ],
       components: {
         securitySchemes: {

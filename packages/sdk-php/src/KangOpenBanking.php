@@ -16,6 +16,7 @@ use KangOpenBanking\Resources\PayoutsResource;
 use KangOpenBanking\Resources\GatewayResource;
 use KangOpenBanking\Resources\SandboxResource;
 use KangOpenBanking\Resources\WebhooksResource;
+use KangOpenBanking\Resources\PayByBankResource;
 use KangOpenBanking\Exceptions\KOBException;
 
 class KangOpenBanking
@@ -42,6 +43,7 @@ class KangOpenBanking
     public readonly GatewayResource $gateway;
     public readonly SandboxResource $sandbox;
     public readonly WebhooksResource $webhooks;
+    public readonly PayByBankResource $payByBank;
 
     /**
      * @param array{
@@ -76,6 +78,7 @@ class KangOpenBanking
         $this->gateway = new GatewayResource($this);
         $this->sandbox = new SandboxResource($this);
         $this->webhooks = new WebhooksResource($this);
+        $this->payByBank = new PayByBankResource($this);
     }
 
     /**

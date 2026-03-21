@@ -54,6 +54,16 @@
       "migrations_added": [],
       "tests_added": ["pos-inventory-sync/index.test.ts"],
       "breaking_changes": "NONE"
+    },
+    {
+      "version": "10.1.0",
+      "date": "2026-03-21",
+      "title": "Pay by Bank — Redirect-Based SCA",
+      "endpoints_added": ["pay-by-bank"],
+      "migrations_added": ["pay_by_bank_intents"],
+      "tests_added": [],
+      "breaking_changes": "NONE",
+      "details": "Added redirect-based Pay by Bank with Strong Customer Authentication. New pay_by_bank_intents table, hosted authorization page, consumer app approval screen, 4 webhook event types (authorized, submitted, completed, failed), PHP/Node/Python SDK support."
     }
   ]
 }

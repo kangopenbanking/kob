@@ -81,6 +81,7 @@ Deno.serve(async (req) => {
       { key: 'beneficiary_id', value: 'BENEFICIARY_UUID', type: 'string' },
       { key: 'bank_id', value: 'BANK_UUID', type: 'string' },
       { key: 'connector_id', value: 'CONNECTOR_UUID', type: 'string' },
+      { key: 'intent_id', value: 'INTENT_UUID', type: 'string' },
     ],
     item: [
       // ── Monitoring ─────────────────────────────────────────────────
@@ -1187,6 +1188,35 @@ Deno.serve(async (req) => {
           r('List Participants', 'GET', '/v1/interbank/participants'),
           r('List ISO Messages', 'GET', '/v1/interbank/messages', {
             query: [{ key: 'payment_id', value: '{{payment_id}}' }],
+          }),
+        ],
+      },
+
+      // ── Pay by Bank ─────────────────────────────────────────────────
+      {
+        name: 'Pay by Bank',
+        item: [
+          r('Create Payment Intent', 'POST', '/v1/pay-by-bank/intents', {
+            body: { merchant_id: '{{merchant_id}}', amount: 50000, currency: 'XAF', redirect_uri: 'https://yoursite.com/callback', state: 'order_123', description: 'Order #123' },
+            desc: 'Create a redirect-based Pay by Bank payment intent with SCA',
+          }),
+          r('Get Payment Intent', 'POST', '/v1/pay-by-bank/intents/{{intent_id}}', {
+            desc: 'Get the current status of a payment intent',
+          }),
+          r('List Payment Intents', 'GET', '/v1/pay-by-bank/intents', {
+            query: [{ key: 'status', value: 'completed' }],
+            desc: 'List all payment intents for the authenticated merchant',
+          }),
+          r('Authorize Intent', 'POST', '/v1/pay-by-bank/intents/{{intent_id}}/authorize', {
+            body: { debtor_account: 'CM21 10003 00100 0123456789 023' },
+            desc: 'User authorizes the payment (SCA)',
+          }),
+          r('Reject Intent', 'POST', '/v1/pay-by-bank/intents/{{intent_id}}/reject', {
+            desc: 'User rejects the payment',
+          }),
+          r('Bank Connector Callback', 'POST', '/v1/pay-by-bank/callback', {
+            body: { intent_id: '{{intent_id}}', status: 'completed' },
+            desc: 'Internal callback from bank connector confirming payment execution',
           }),
         ],
       },

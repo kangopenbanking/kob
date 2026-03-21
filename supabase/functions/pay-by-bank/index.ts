@@ -194,6 +194,16 @@ Deno.serve(async (req) => {
 
       // Move to submitted → processing
       await supabase.from('pay_by_bank_intents').update({ status: 'submitted' }).eq('id', intent_id);
+
+      // Fire submitted webhook
+      await supabase.rpc('trigger_webhooks', {
+        _event_type: 'pay_by_bank.submitted',
+        _event_data: JSON.stringify({
+          intent_id, payment_id: paymentId, amount: intent.amount, currency: intent.currency,
+          merchant_id: intent.merchant_id, status: 'submitted',
+        }),
+      });
+
       await supabase.from('pay_by_bank_intents').update({ status: 'processing' }).eq('id', intent_id);
 
       // Fire webhook
