@@ -57,7 +57,7 @@ const AdminSupportChat: React.FC = () => {
   const [agentSearchResults, setAgentSearchResults] = useState<any[]>([]);
   const [agentForm, setAgentForm] = useState({ user_id: '', department_id: '', max_concurrent_chats: 5 });
 
-  const { messages, loading: msgsLoading } = useSupportMessages(activeConvId);
+  const { messages, loading: msgsLoading } = useSupportMessages(activeConvId, user?.id);
   const sendMessage = useSendMessage();
   const assignConversationEmail = useAssignConversation();
   const resolveNotification = useResolveNotification();

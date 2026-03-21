@@ -28,7 +28,7 @@ export const SupportChatWidget: React.FC = () => {
 
   const { departments, loading: deptsLoading } = useSupportDepartments();
   const { conversations, loading: convsLoading, refresh: refreshConvs } = useSupportConversations(userId);
-  const { messages, loading: msgsLoading } = useSupportMessages(activeConvId);
+  const { messages, loading: msgsLoading } = useSupportMessages(activeConvId, userId);
   const createConversation = useCreateConversation();
   const sendMessage = useSendMessage();
 
