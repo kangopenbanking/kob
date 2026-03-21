@@ -1,69 +1,116 @@
 
 
-# Consumer & Business Dispute Portal — Gap Audit
+# Remittance System — Full E2E Audit Report & Fix Plan
 
-## Findings Summary
+## Audit Summary
 
-### Consumer App (`/app/disputes` — `CustomerDisputes.tsx`)
-| Feature | Status | Gap |
+### Components Audited
+
+| Layer | Component | Status |
 |---|---|---|
-| Route registered in App.tsx | ✅ | — |
-| File a dispute form | ✅ | — |
-| Calls `gateway-file-dispute` edge function | ✅ | — |
-| List disputes with status badges | ✅ | — |
-| Detail dialog with timeline | ✅ | — |
-| **Navigation link to page** | ❌ | **No link exists anywhere in the consumer app UI** — route exists but is unreachable from any menu, bottom nav, settings, or "More" page |
-| Transaction selector (pick from recent txns) | ❌ | User must manually type a transaction ref — no dropdown of their recent transactions |
-| Institution selector | ❌ | No way to specify which institution the dispute is against (the `institution_id` field is never sent) |
-| Status filter/search | ❌ | No filtering — all disputes shown in a flat list |
+| **Adapter Layer** | `_shared/remittance-adapters.ts` | ✅ Complete — 4 providers (Thunes, TerraPay, Onafriq, Generic), HMAC-SHA256 verification, canonical event model, ledger codes |
+| **Webhook Ingestion** | `remittance-webhook-ingest` | ✅ Complete — rate limiting, signature verify, dedupe via webhook_inbox, state machine transitions, triggers routing engine |
+| **Routing Engine** | `remittance-routing-engine` | ✅ Complete — 3 destinations (wallet, bank, merchant/bill), double-entry ledger, auto-create ledger accounts, fee calculation |
+| **Bank Confirmation** | `remittance-bank-confirm` | ✅ Complete — confirm/reject/batch/list_pending, settlement ledger posting |
+| **Settlement Engine** | `remittance-settlement` | ✅ Complete — import_statement, reconciliation matching (5 mismatch types), resolve, close, partner_health |
+| **Recon Cron** | `remittance-recon-cron` | ✅ Complete — stale flagging (48h), cross-reference matching, run reports, admin notifications |
+| **Public API** | `remittance-engine` | ✅ Complete — list_partners, list_corridors, create_quote, get_quote, list_inbound, get_inbound, validate_destination, admin CRUD |
+| **Outbound Engine** | `remittance-outbound` | ✅ Complete — get_corridors, get_quote, send, cancel, track, list_outbound, compliance checks, usage tracking |
+| **DB Triggers** | `validate_remittance_status_transition`, `resolve_remittance_receiver`, `notify_remittance_status_change` | ✅ Complete |
+| **Admin: Overview** | `/admin/remittance-overview` | ✅ Complete — KPIs, monitoring feed, detail dialog with events + ledger |
+| **Admin: Partners** | `/admin/remittance-partners` | ✅ Complete — partner + corridor CRUD |
+| **Admin: Bank Confirms** | `/admin/remittance-bank-confirmations` | ✅ Complete — pending queue, confirm/reject, recon runs |
+| **Admin: Settlements** | `/admin/remittance-settlements` | ✅ Complete — statement list, recon items, resolve mismatch |
+| **Admin: Outbound** | `/admin/remittance-outbound` | ✅ Complete — outbound monitoring, compliance queue with approve/reject |
+| **Consumer: Send Money** | `/app/send-money` | ✅ Complete — 5-step flow, corridor picker, quote, confirm, history + tracking dialog |
 
-### Business App (`/biz/disputes` — `BusinessDisputes.tsx`)
-| Feature | Status | Gap |
-|---|---|---|
-| Route registered in App.tsx | ✅ | — |
-| Evidence submission | ✅ | Fixed in prior iteration |
-| Reachable via Compliance page | ✅ | — |
-| **Activity timeline** | ❌ | No timeline — merchant desktop version has it but business PWA does not |
-| **Detail dialog** | ❌ | No detail view — only inline evidence submission |
-| **Status stats dashboard** | ❌ | No stats row like the merchant desktop version |
-| **Search/filter** | ❌ | No search or status filter |
-| **Add note capability** | ❌ | No note-adding via `dispute-lifecycle` |
-| **Priority/overdue indicators** | ❌ | No visual warning for overdue evidence deadlines |
+---
 
-### Merchant Desktop (`/merchant/disputes` — `MerchantDisputes.tsx`)
-| Feature | Status |
-|---|---|
-| Full stats dashboard | ✅ |
-| Search + status filter | ✅ |
-| Evidence submission with types | ✅ |
-| Activity timeline | ✅ |
-| Add notes via dispute-lifecycle | ✅ |
-| Priority/overdue indicators | ✅ |
-| **Complete — no gaps** | ✅ |
+## Gaps Found
 
-## Implementation Plan
+| # | Gap | Severity | Detail |
+|---|---|---|---|
+| 1 | **No consumer inbound remittance tracking page** | HIGH | `remittance-engine` has `list_inbound` and `get_inbound` actions for users to track money received from diaspora, but no UI page exists. The DB trigger `notify_remittance_status_change` sends in-app notifications, but there's nowhere for the user to see their inbound remittance history or details. |
+| 2 | **No banking app remittance pages** | HIGH | No remittance-related pages exist under `/bank/:institutionId/`. Banking app users (institution customers) cannot view inbound remittances or send money abroad. |
+| 3 | **Outbound: compliance approval is direct DB update (bypasses edge function)** | MEDIUM | `RemittanceOutbound.tsx` lines 87-105 update `remittance_compliance_checks` and `remittances` directly from client-side. This violates the Edge Function Mediation Standard — should go through an edge function for audit trail and notification dispatch. |
+| 4 | **Outbound: `listOutbound` queries by `sender_email` not `user_id`** | MEDIUM | `remittance-outbound` line 405 filters by `sender_email = user.email`. If user changes email, their transfer history is lost. Should use a sender_user_id field or the profile lookup. |
+| 5 | **Outbound: no email notifications on send/status change** | MEDIUM | Outbound flow only creates `app_notifications`. No email dispatch via `managed-send-email` for outbound transfer creation or status updates. |
+| 6 | **Outbound: usage tracking upsert doesn't increment** | MEDIUM | `remittance-outbound` lines 295-304 upsert `remittance_usage_tracking` with `total_amount: amount` and `transaction_count: 1`. On conflict, Supabase upsert replaces values instead of incrementing. Daily limits will never actually accumulate. |
+| 7 | **Settlement: `import_statement` missing-in-provider query uses string interpolation** | LOW | Line 135 builds a `NOT IN` clause via string interpolation which could break with special characters in partner references. Should use `.not('partner_reference', 'in', ...)` with proper array handling. |
+| 8 | **Admin Partners: no session token forwarded to `remittance-engine`** | LOW | `RemittancePartners.tsx` line 54 gets session but doesn't pass the token in the invoke headers, so the function uses the anon key which won't resolve the admin user. |
+| 9 | **No FI Portal remittance pages** | MEDIUM | Financial institutions cannot view remittances routed to their customers or access settlement data for their institution. |
+| 10 | **Outbound: cancel updates to `failed` status** | LOW | Cancel sets status to `failed`, but the DB trigger `validate_remittance_status_transition` only allows `created → pending|failed` and `pending → received|failed`. Cancel from `created` or `pending` works, but the cancelled status is conflated with genuine failures. |
 
-### 1. Add Navigation Link for Consumer Disputes
-Find the consumer app's account/settings/more page and add a "Disputes" menu item linking to `/app/disputes`.
+---
 
-### 2. Enhance Consumer Disputes Page
-- Add a **transaction selector** — fetch recent transactions and show as a dropdown so users don't have to manually type refs
-- Add **institution_id** to the dispute filing body — if user has linked accounts, show institution selector
-- Add a **status filter** chip bar (All / Open / In Progress / Resolved)
+## Fix Plan
 
-### 3. Enhance Business Disputes Page to Match Merchant Desktop
-- Add **stats row** (Total, Open, Investigating, Under Review, Won, Lost)
-- Add **search + status filter**
-- Add **detail dialog** with activity timeline (query `dispute_activities`)
-- Add **"Add Note"** capability via `dispute-lifecycle`
-- Add **priority badges** and **overdue evidence** visual warnings
-- Add **evidence type selector** matching the merchant desktop pattern
+### 1. Create Consumer Inbound Remittance Page
 
-## Files to Modify
+**New file: `src/pages/customer-app/CustomerRemittances.tsx`** at `/app/remittances`
+
+- Header with volume summary (total received, pending, credited)
+- List of inbound remittances fetched via `remittance-engine` action `list_inbound`
+- Status badges and sender info
+- Detail dialog with event timeline via `get_inbound`
+- Navigation link added to CustomerMore.tsx
+- Route registered in App.tsx
+
+### 2. Create Banking App Remittance Pages
+
+**New file: `src/pages/banking-app/BankRemittances.tsx`** at `/bank/:institutionId/remittances`
+
+- Inbound remittance list scoped to institution via `remittance-engine` with institution filter
+- Send money link (reuse outbound flow or redirect to `/app/send-money`)
+- Route registered in App.tsx
+
+### 3. Fix Outbound Compliance — Move to Edge Function
+
+Add `compliance_decision` action to `remittance-outbound`:
+- Accepts `check_id`, `decision`, `note`
+- Updates compliance check + remittance status
+- Logs audit event
+- Sends email notification to sender
+- Update `RemittanceOutbound.tsx` to call edge function instead of direct DB writes
+
+### 4. Fix `listOutbound` — Query by User ID
+
+Add `sender_user_id` to the remittance insert in `sendRemittance()` (line 219 area). Update `listOutbound` to filter by `sender_user_id = user.id` instead of `sender_email`.
+
+This requires a migration to add `sender_user_id` column if not present (check schema).
+
+### 5. Add Outbound Email Notifications
+
+In `sendRemittance()`, invoke `managed-send-email` with a `remittance_outbound_created` template. In the compliance decision handler, send `remittance_outbound_approved` or `remittance_outbound_rejected`.
+
+### 6. Fix Usage Tracking Upsert
+
+Replace the upsert with a proper increment pattern:
+```sql
+-- On conflict, ADD to existing values
+total_amount = remittance_usage_tracking.total_amount + amount,
+transaction_count = remittance_usage_tracking.transaction_count + 1
+```
+This needs to be done in the edge function with a raw RPC or a proper SQL upsert.
+
+### 7. Fix Admin Partners Auth Token
+
+Pass session token in the `invoke` headers so the edge function can resolve the admin user for RBAC checks.
+
+### 8. Add Consumer Remittances Nav Link
+
+Add "Remittances" item to CustomerMore.tsx alongside the existing "Send Money Abroad" link.
+
+## Files Summary
 
 | File | Action |
 |---|---|
-| Consumer app settings/account/more page (TBD — need to find the right file) | Add "Disputes" navigation link |
-| `src/pages/customer-app/CustomerDisputes.tsx` | Add transaction selector, institution picker, status filter |
-| `src/pages/business-app/BusinessDisputes.tsx` | Add stats, search, timeline, notes, priority indicators |
+| `src/pages/customer-app/CustomerRemittances.tsx` | **Create** — inbound remittance tracking page |
+| `src/pages/banking-app/BankRemittances.tsx` | **Create** — banking app remittance view |
+| `src/pages/customer-app/CustomerMore.tsx` | **Modify** — add Remittances nav link |
+| `src/App.tsx` | **Modify** — add 2 new routes |
+| `supabase/functions/remittance-outbound/index.ts` | **Modify** — fix listOutbound query, fix usage upsert, add compliance_decision action, add email notifications, store sender_user_id |
+| `src/pages/admin/RemittanceOutbound.tsx` | **Modify** — call edge function for compliance instead of direct DB |
+| `src/pages/admin/RemittancePartners.tsx` | **Modify** — pass auth token in invoke headers |
+| **Migration** | Add `sender_user_id` column to `remittances` if missing |
 
