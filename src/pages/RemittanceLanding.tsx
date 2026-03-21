@@ -437,12 +437,15 @@ function SendForm() {
     setStage("calculate");
     setRecipientName("");
     setRecipientPhone("");
+    setSelectedCountryCode("+237");
     setBankCode("");
     setAccountNumber("");
     setBillPurpose("");
     setBillReference("");
     setQuote(null);
     setTxRef("");
+    setNameSuggestions([]);
+    setShowNameSuggestions(false);
   };
 
   /* ─── Success State ─── */
