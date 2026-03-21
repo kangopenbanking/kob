@@ -227,6 +227,8 @@ function SendForm() {
   const [amount, setAmount] = useState("1000");
   const [selectedIdx, setSelectedIdx] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showDestDropdown, setShowDestDropdown] = useState(false);
+  const [selectedDestIdx, setSelectedDestIdx] = useState(0);
   const [deliveryMethod, setDeliveryMethod] = useState<"wallet" | "bank" | "bills">("wallet");
 
   // Recipient fields
