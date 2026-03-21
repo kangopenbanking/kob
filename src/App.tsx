@@ -759,6 +759,8 @@ function App() {
               <Route path="bank-directory" element={<AdminBankDirectory />} />
               {/* Phase 1: Remittance-as-a-Service */}
               <Route path="remittance-overview" element={<RemittanceOverview />} />
+              <Route path="remittance-partners" element={<RemittancePartners />} />
+              <Route path="remittance-bank-confirmations" element={<RemittanceBankConfirmations />} />
               <Route path="remittance-settlements" element={<RemittanceSettlement />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
