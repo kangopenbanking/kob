@@ -68,7 +68,7 @@ const Admin = () => {
         supabase.from('business_kyc' as any).select('id', { count: 'exact' }).eq('status', 'pending'),
         supabase.from('support_conversations').select('id', { count: 'exact' }).in('status', ['open', 'assigned']),
         supabase.from('app_notifications').select('id, title, message, type, icon, created_at, metadata').eq('is_read', false).order('created_at', { ascending: false }).limit(8) as any,
-        supabase.from('system_alerts').select('id, title, message, severity, created_at').eq('is_resolved', false).order('created_at', { ascending: false }).limit(5) as any,
+        supabase.from('system_alerts' as any).select('id, title, message, severity, created_at').eq('is_resolved', false).order('created_at', { ascending: false }).limit(5) as any,
         supabase.from('pay_by_bank_intents').select('id', { count: 'exact' }).eq('status', 'awaiting_auth') as any,
         supabase.from('gateway_disputes').select('id', { count: 'exact' }).eq('status', 'open') as any,
         supabase.from('gateway_payouts').select('id', { count: 'exact' }).eq('status', 'pending') as any,
