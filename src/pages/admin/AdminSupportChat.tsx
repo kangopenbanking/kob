@@ -107,6 +107,11 @@ const AdminSupportChat: React.FC = () => {
     }).eq('id', convId);
     toast({ title: `Conversation ${status}` });
     fetchConversations();
+
+    // Send resolution/closure email to user
+    if (status === 'resolved' || status === 'closed') {
+      resolveNotification(convId, status as 'resolved' | 'closed');
+    }
   };
 
   const updatePriority = async (convId: string, priority: string) => {
@@ -122,6 +127,14 @@ const AdminSupportChat: React.FC = () => {
     }).eq('id', convId);
     toast({ title: agentId ? 'Agent assigned' : 'Agent unassigned' });
     fetchConversations();
+
+    // Send assignment email to agent
+    if (agentId) {
+      const agent = agents.find((a: any) => a.id === agentId);
+      if (agent?.user_id) {
+        assignConversationEmail(convId, agent.user_id);
+      }
+    }
   };
 
   // ---- Department CRUD ----
