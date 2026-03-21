@@ -118,6 +118,48 @@ export function useCreateConversation() {
       content: 'Welcome! An agent will be with you shortly.',
     });
 
+    // Send email notification to admins about new conversation
+    try {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, email')
+        .eq('id', userId)
+        .single() as any;
+
+      // Get admin emails for email notifications
+      const { data: adminRoles } = await supabase
+        .from('user_roles')
+        .select('user_id')
+        .eq('role', 'admin') as any;
+
+      if (adminRoles?.length) {
+        for (const admin of adminRoles) {
+          const { data: adminProfile } = await supabase
+            .from('profiles')
+            .select('email, full_name')
+            .eq('id', admin.user_id)
+            .single() as any;
+
+          if (adminProfile?.email) {
+            await supabase.functions.invoke('managed-send-email', {
+              body: {
+                email_key: 'support_new_conversation',
+                recipient_email: adminProfile.email,
+                variables: {
+                  user_name: adminProfile.full_name || 'Admin',
+                  subject: subject || 'General inquiry',
+                  customer_name: profile?.full_name || 'A customer',
+                  channel,
+                },
+              },
+            });
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Admin email notification for new conversation failed:', e);
+    }
+
     return conv.id as string;
   }, []);
 }
@@ -165,7 +207,7 @@ export function useSendMessage() {
             await supabase.functions.invoke('managed-send-email', {
               body: {
                 email_key: 'support_agent_reply',
-                to_email: profile.email,
+                recipient_email: profile.email,
                 variables: {
                   user_name: profile.full_name || 'Customer',
                   subject: conv.subject || 'Support Chat',
