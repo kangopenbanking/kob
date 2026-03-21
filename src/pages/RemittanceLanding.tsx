@@ -153,22 +153,26 @@ function useAdminRates() {
 function SendForm() {
   const currencies = useAdminRates();
   const [amount, setAmount] = useState("1000");
-  const [selectedCurrency, setSelectedCurrency] = useState(currencies[0]);
+  const [selectedIdx, setSelectedIdx] = useState(0);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [recipientPhone, setRecipientPhone] = useState("");
+  const [deliveryMethod, setDeliveryMethod] = useState<"wallet" | "bank" | "bills">("wallet");
 
-  // Sync selectedCurrency when currencies load from admin
-  useEffect(() => {
-    const match = currencies.find((c) => c.code === selectedCurrency.code);
-    if (match && match.rate !== selectedCurrency.rate) setSelectedCurrency(match);
-  }, [currencies]);
+  const selectedCurrency = currencies[selectedIdx] || currencies[0];
 
   const numericAmount = parseFloat(amount) || 0;
   const feePercent = (selectedCurrency.fee_pct || 0.5) / 100;
-  const fee = numericAmount * feePercent;
+  const fee = Math.round(numericAmount * feePercent * 100) / 100;
   const convertedAmount = useMemo(
     () => Math.round((numericAmount - fee) * selectedCurrency.rate),
     [numericAmount, fee, selectedCurrency.rate]
   );
+
+  const deliveryOptions = [
+    { key: "wallet" as const, label: "KOB Wallet", icon: "📱" },
+    { key: "bank" as const, label: "Bank Account", icon: "🏦" },
+    { key: "bills" as const, label: "Bills & Fees", icon: "🧾" },
+  ];
 
   return (
     <motion.div
@@ -178,7 +182,7 @@ function SendForm() {
       className="bg-background rounded-2xl shadow-2xl p-6 lg:p-8 w-full max-w-md border border-border/40"
     >
       {/* You send */}
-      <div className="space-y-1.5 mb-5">
+      <div className="space-y-1.5 mb-4">
         <label className="text-sm font-semibold text-foreground">You send</label>
         <div className="flex items-center border-2 rounded-xl overflow-hidden border-border focus-within:border-primary/50 transition-colors">
           <Input
@@ -206,10 +210,10 @@ function SendForm() {
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 top-[calc(100%+4px)] bg-background rounded-xl shadow-xl border border-border z-50 min-w-[220px] overflow-hidden"
                 >
-                  {currencies.map((c) => (
+                  {currencies.map((c, i) => (
                     <button
                       key={c.code}
-                      onClick={() => { setSelectedCurrency(c); setShowDropdown(false); }}
+                      onClick={() => { setSelectedIdx(i); setShowDropdown(false); }}
                       className="flex items-center gap-3 w-full px-4 py-3 hover:bg-muted/60 transition-colors text-sm"
                     >
                       <span className="text-lg">{c.flag}</span>
@@ -225,10 +229,10 @@ function SendForm() {
       </div>
 
       {/* Fee breakdown */}
-      <div className="space-y-2.5 py-4 border-y border-border/50 mb-5 text-sm">
+      <div className="space-y-2 py-3 border-y border-border/50 mb-4 text-sm">
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground flex items-center gap-1.5">
-            <Banknote className="h-3.5 w-3.5" /> Our fee ({selectedCurrency.fee_pct}%)
+            <Banknote className="h-3.5 w-3.5" /> Fee ({selectedCurrency.fee_pct}%)
           </span>
           <span className="font-semibold text-foreground">
             {fee.toFixed(2)} {selectedCurrency.code}
@@ -236,7 +240,7 @@ function SendForm() {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-muted-foreground flex items-center gap-1.5">
-            <Repeat className="h-3.5 w-3.5" /> Exchange rate
+            <Repeat className="h-3.5 w-3.5" /> Rate
           </span>
           <span className="font-semibold text-foreground">
             1 {selectedCurrency.code} = {selectedCurrency.rate.toLocaleString()} XAF
@@ -250,8 +254,8 @@ function SendForm() {
         </div>
       </div>
 
-      {/* They receive */}
-      <div className="space-y-1.5 mb-6">
+      {/* Recipient gets */}
+      <div className="space-y-1.5 mb-4">
         <label className="text-sm font-semibold text-foreground">Recipient gets</label>
         <div className="flex items-center border-2 rounded-xl overflow-hidden border-border bg-muted/20">
           <div className="flex-1 px-4 py-4">
@@ -268,6 +272,42 @@ function SendForm() {
             <span className="text-xl">🇨🇲</span>
             XAF
           </div>
+        </div>
+      </div>
+
+      {/* Delivery method */}
+      <div className="space-y-1.5 mb-4">
+        <label className="text-sm font-semibold text-foreground">Deliver to</label>
+        <div className="grid grid-cols-3 gap-2">
+          {deliveryOptions.map((opt) => (
+            <button
+              key={opt.key}
+              onClick={() => setDeliveryMethod(opt.key)}
+              className={`flex flex-col items-center gap-1 rounded-xl p-2.5 text-xs font-medium border-2 transition-all ${
+                deliveryMethod === opt.key
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border text-muted-foreground hover:border-primary/30"
+              }`}
+            >
+              <span className="text-lg">{opt.icon}</span>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Recipient phone */}
+      <div className="space-y-1.5 mb-5">
+        <label className="text-sm font-semibold text-foreground">Recipient phone</label>
+        <div className="flex items-center border-2 rounded-xl overflow-hidden border-border focus-within:border-primary/50 transition-colors">
+          <span className="px-3 text-sm font-semibold text-muted-foreground bg-muted/50 h-12 flex items-center">+237</span>
+          <Input
+            type="tel"
+            value={recipientPhone}
+            onChange={(e) => setRecipientPhone(e.target.value)}
+            className="border-0 h-12 focus-visible:ring-0 focus-visible:ring-offset-0 bg-transparent"
+            placeholder="6XX XXX XXX"
+          />
         </div>
       </div>
 
@@ -449,47 +489,6 @@ export default function RemittanceLanding() {
                 </Card>
               </motion.div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════ SECURITY ══════════ */}
-      <section className="py-20 lg:py-28 bg-background">
-        <div className="container mx-auto px-4">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <h2 className="text-4xl lg:text-5xl font-black text-foreground leading-tight mb-6">
-                Disappoint thieves
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-                Every month, millions of personal and business customers trust us to move over billions of their money. We keep it safe with dedicated fraud and security teams, 2-factor authentication, and trusted financial institutions.
-              </p>
-              <Link to="/security">
-                <Button variant="outline" className="rounded-full px-6 h-12 font-semibold border-primary text-primary hover:bg-primary/5">
-                  How we keep your money safe <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="grid grid-cols-3 gap-4">
-              {[
-                { icon: Shield, title: "Dedicated threat and fraud teams", desc: "Our dedicated fraud and security teams work to keep your money safe" },
-                { icon: Lock, title: "2-factor authentication", desc: "We use 2-factor authentication to protect your account" },
-                { icon: Building2, title: "Trusted institutions", desc: "We trust your money with established financial institutions" },
-              ].map((item, i) => (
-                <motion.div key={item.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                  <Card className="h-full border-0 shadow-md hover:shadow-lg transition-shadow text-center">
-                    <CardContent className="p-5 flex flex-col items-center gap-3">
-                      <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <item.icon className="h-6 w-6 text-primary" />
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.desc}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </motion.div>
           </div>
         </div>
       </section>
