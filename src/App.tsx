@@ -764,6 +764,7 @@ function App() {
               <Route path="remittance-partners" element={<RemittancePartners />} />
               <Route path="remittance-bank-confirmations" element={<RemittanceBankConfirmations />} />
               <Route path="remittance-settlements" element={<RemittanceSettlement />} />
+              <Route path="remittance-outbound" element={<RemittanceOutbound />} />
               <Route path="*" element={<NestedNotFound portalName="Admin Portal" homePath="/admin" />} />
             </Route>
             {/* Legacy redirects for old orphaned routes */}
