@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { corsHeaders } from "../_shared/cors.ts";
+import { sendManagedEmail, getUserName, getUserEmail } from "../_shared/send-managed-email.ts";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -40,6 +41,8 @@ serve(async (req) => {
         return await trackRemittance(supabase, user, body);
       case "list_outbound":
         return await listOutbound(supabase, user, body);
+      case "compliance_decision":
+        return await complianceDecision(supabase, user, body);
       default:
         return json({ error: `Unknown action: ${action}` }, 400);
     }
@@ -77,7 +80,6 @@ async function getQuote(supabase: any, user: any, body: any) {
   const { corridor_id, amount, currency_in = "XAF" } = body;
   if (!corridor_id || !amount) return json({ error: "corridor_id and amount required" }, 400);
 
-  // Get corridor details
   const { data: corridor, error: cErr } = await supabase
     .from("remittance_corridors")
     .select("*, remittance_partners(name), remittance_corridor_limits(*)")
@@ -86,7 +88,6 @@ async function getQuote(supabase: any, user: any, body: any) {
 
   if (cErr || !corridor) return json({ error: "Corridor not found" }, 404);
 
-  // Check limits
   const limits = corridor.remittance_corridor_limits?.[0];
   if (limits) {
     if (amount < (limits.per_transaction_min || 0)) {
@@ -96,7 +97,6 @@ async function getQuote(supabase: any, user: any, body: any) {
       return json({ error: `Maximum amount is ${limits.per_transaction_max} ${currency_in}` }, 400);
     }
 
-    // Check daily usage
     const today = new Date().toISOString().split("T")[0];
     const { data: dailyUsage } = await supabase
       .from("remittance_usage_tracking")
@@ -112,14 +112,12 @@ async function getQuote(supabase: any, user: any, body: any) {
     }
   }
 
-  // Calculate FX and fees
   const fxRate = corridor.fees_model?.fx_rate || 1;
   const feePercent = corridor.fees_model?.fee_percent || 2.5;
   const fixedFee = corridor.fees_model?.fixed_fee || 0;
   const feeTotal = Math.round(amount * feePercent / 100) + fixedFee;
   const amountOut = Math.round((amount - feeTotal) * fxRate * 100) / 100;
 
-  // Create quote record
   const { data: quote, error: qErr } = await supabase
     .from("remittance_quotes")
     .insert({
@@ -168,7 +166,6 @@ async function sendRemittance(supabase: any, user: any, body: any) {
     return json({ error: "corridor_id, amount, and receiver_name required" }, 400);
   }
 
-  // Get corridor
   const { data: corridor } = await supabase
     .from("remittance_corridors")
     .select("*, remittance_partners(name, id), remittance_corridor_limits(*)")
@@ -177,7 +174,6 @@ async function sendRemittance(supabase: any, user: any, body: any) {
 
   if (!corridor) return json({ error: "Corridor not found" }, 404);
 
-  // Verify quote if provided
   let quoteData: any = null;
   if (quote_id) {
     const { data: q } = await supabase
@@ -196,14 +192,12 @@ async function sendRemittance(supabase: any, user: any, body: any) {
   const feeTotal = quoteData?.fee_total || (Math.round(amount * feePercent / 100) + fixedFee);
   const amountOut = quoteData?.amount_out || Math.round((amount - feeTotal) * fxRate * 100) / 100;
 
-  // Compliance check — basic limits
   const limits = corridor.remittance_corridor_limits?.[0];
   if (limits) {
     if (amount < (limits.per_transaction_min || 0)) return json({ error: "Below minimum" }, 400);
     if (amount > (limits.per_transaction_max || Infinity)) return json({ error: "Above maximum" }, 400);
   }
 
-  // Get sender profile
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, email, phone")
@@ -213,7 +207,6 @@ async function sendRemittance(supabase: any, user: any, body: any) {
   const partnerRef = `KOB-OUT-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
   const correlationId = crypto.randomUUID();
 
-  // Create remittance record
   const { data: remittance, error: rErr } = await supabase
     .from("remittances")
     .insert({
@@ -226,6 +219,7 @@ async function sendRemittance(supabase: any, user: any, body: any) {
       sender_country: "CM",
       sender_phone: profile?.phone || null,
       sender_email: profile?.email || user.email,
+      sender_user_id: user.id,
       receiver_name,
       receiver_phone: receiver_phone || null,
       receiver_email: receiver_email || null,
@@ -287,23 +281,21 @@ async function sendRemittance(supabase: any, user: any, body: any) {
     signature_valid: true,
   });
 
-  // Update usage tracking
+  // Usage tracking via atomic RPC
   const today = new Date().toISOString().split("T")[0];
   const monthStart = today.slice(0, 8) + "01";
-
-  for (const [periodType, periodStart] of [["daily", today], ["monthly", monthStart]]) {
-    await supabase.from("remittance_usage_tracking").upsert({
-      user_id: user.id,
-      corridor_id,
-      period_type: periodType,
-      period_start: periodStart,
-      total_amount: amount,
-      transaction_count: 1,
-      currency: currency_in,
-    }, { onConflict: "user_id,corridor_id,period_type,period_start" });
+  for (const [periodType, periodStart] of [["daily", today], ["monthly", monthStart]] as const) {
+    await supabase.rpc("increment_remittance_usage", {
+      _user_id: user.id,
+      _corridor_id: corridor_id,
+      _period_type: periodType,
+      _period_start: periodStart,
+      _amount: amount,
+      _currency: currency_in,
+    });
   }
 
-  // Notify user
+  // In-app notification
   await supabase.from("app_notifications").insert({
     user_id: user.id,
     type: "info",
@@ -312,6 +304,27 @@ async function sendRemittance(supabase: any, user: any, body: any) {
     icon: "send",
     metadata: { remittance_id: remittance.id, partner_ref: partnerRef },
   });
+
+  // Email notification
+  const senderEmail = profile?.email || user.email;
+  if (senderEmail) {
+    await sendManagedEmail(supabase, {
+      email_key: "remittance_outbound_created",
+      recipient_email: senderEmail,
+      variables: {
+        customer_name: profile?.full_name || "Customer",
+        amount_in: new Intl.NumberFormat("fr-CM").format(amount),
+        currency_in,
+        amount_out: new Intl.NumberFormat("fr-CM").format(amountOut),
+        currency_out: corridor.to_currency || "XAF",
+        receiver_name,
+        receiver_country: receiver_country || corridor.to_country,
+        partner_reference: partnerRef,
+        delivery_method: (delivery_method || "bank_transfer").replace(/_/g, " "),
+        fee_total: new Intl.NumberFormat("fr-CM").format(feeTotal),
+      },
+    });
+  }
 
   return json({
     remittance_id: remittance.id,
@@ -402,13 +415,121 @@ async function listOutbound(supabase: any, user: any, body: any) {
     .from("remittances")
     .select("*, remittance_partners(name)")
     .eq("direction", "outbound")
-    .eq("sender_email", user.email)
+    .eq("sender_user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(limit);
 
   if (status) query = query.eq("status", status);
 
   const { data, error } = await query;
-  if (error) return json({ error: error.message }, 500);
+  if (error) {
+    // Fallback to email-based query for backward compatibility
+    let fallbackQuery = supabase
+      .from("remittances")
+      .select("*, remittance_partners(name)")
+      .eq("direction", "outbound")
+      .eq("sender_email", user.email)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (status) fallbackQuery = fallbackQuery.eq("status", status);
+    const { data: fbData, error: fbErr } = await fallbackQuery;
+    if (fbErr) return json({ error: fbErr.message }, 500);
+    return json({ transfers: fbData || [] });
+  }
   return json({ transfers: data || [] });
+}
+
+// ─── Compliance Decision (admin) ─────────────────────────────
+async function complianceDecision(supabase: any, user: any, body: any) {
+  const { check_id, decision, note, remittance_id } = body;
+  if (!check_id || !decision || !remittance_id) {
+    return json({ error: "check_id, decision, and remittance_id required" }, 400);
+  }
+  if (!["approved", "rejected"].includes(decision)) {
+    return json({ error: "decision must be approved or rejected" }, 400);
+  }
+
+  // Verify admin role
+  const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+  if (!isAdmin) return json({ error: "Admin access required" }, 403);
+
+  // Get remittance
+  const { data: rem } = await supabase.from("remittances").select("*").eq("id", remittance_id).single();
+  if (!rem) return json({ error: "Remittance not found" }, 404);
+
+  // Update compliance check
+  await supabase.from("remittance_compliance_checks").update({
+    status: decision,
+    notes: note || null,
+    resolved_at: new Date().toISOString(),
+    resolved_by: user.id,
+  }).eq("id", check_id);
+
+  // Update remittance status
+  if (decision === "approved") {
+    await supabase.from("remittances").update({
+      status: "pending",
+      compliance_status: "cleared",
+      compliance_cleared_at: new Date().toISOString(),
+    }).eq("id", remittance_id);
+  } else {
+    await supabase.from("remittances").update({
+      status: "failed",
+      compliance_status: "rejected",
+      cancellation_reason: note || "Compliance review rejected",
+      cancelled_at: new Date().toISOString(),
+    }).eq("id", remittance_id);
+  }
+
+  // Log event
+  await supabase.from("remittance_events").insert({
+    remittance_id,
+    event_type: decision === "approved" ? "compliance_approved" : "compliance_rejected",
+    payload_raw: JSON.stringify({ decision, note, reviewed_by: user.id }),
+    signature_valid: true,
+  });
+
+  // Audit log
+  await supabase.from("audit_logs").insert({
+    action_type: `remittance_compliance_${decision}`,
+    entity_type: "remittance",
+    entity_id: remittance_id,
+    performed_by: user.id,
+    details: { check_id, decision, note, partner_reference: rem.partner_reference, amount: rem.amount_in },
+  });
+
+  // Notify sender
+  const senderId = rem.sender_user_id;
+  if (senderId) {
+    await supabase.from("app_notifications").insert({
+      user_id: senderId,
+      type: decision === "approved" ? "success" : "warning",
+      title: decision === "approved" ? "Transfer Approved" : "Transfer Rejected",
+      message: decision === "approved"
+        ? `Your outbound transfer ${rem.partner_reference} has been approved and is being processed.`
+        : `Your outbound transfer ${rem.partner_reference} has been rejected. ${note || "Contact support for details."}`,
+      icon: decision === "approved" ? "check-circle" : "x-circle",
+      metadata: { remittance_id },
+    });
+
+    // Email notification
+    const senderEmail = await getUserEmail(supabase, senderId);
+    const senderName = await getUserName(supabase, senderId);
+    if (senderEmail) {
+      await sendManagedEmail(supabase, {
+        email_key: decision === "approved" ? "remittance_outbound_approved" : "remittance_outbound_rejected",
+        recipient_email: senderEmail,
+        variables: {
+          customer_name: senderName,
+          partner_reference: rem.partner_reference,
+          amount_in: new Intl.NumberFormat("fr-CM").format(rem.amount_in),
+          currency_in: rem.currency_in,
+          receiver_name: rem.receiver_name,
+          rejection_reason: note || "Compliance review",
+        },
+      });
+    }
+  }
+
+  return json({ success: true, decision });
 }
