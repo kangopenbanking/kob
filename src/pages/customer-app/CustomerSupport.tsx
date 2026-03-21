@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ListChecks, PenLine, MessageCircle, Paperclip } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useCustomerAuth } from '@/hooks/useCustomerAuth';
 import { DepartmentPicker, type Department } from '@/components/support/DepartmentPicker';
 import { ChatThread } from '@/components/support/ChatThread';
 import { ChatInput } from '@/components/support/ChatInput';
 import { ConversationList } from '@/components/support/ConversationList';
+import { HowItWorksFlow, type FlowStep } from '@/components/customer-app/HowItWorksFlow';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
