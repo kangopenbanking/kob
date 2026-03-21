@@ -71,9 +71,20 @@ export function HomepageHeroSlider({ fallback }: { fallback?: ReactNode }) {
         >
           {slide.media_type === "video" ? (
             <video
+              key={slide.media_url}
               src={slide.media_url}
               className="w-full h-full object-cover"
-              autoPlay loop muted playsInline
+              autoPlay
+              loop
+              muted
+              playsInline
+              preload="auto"
+              onEnded={(e) => {
+                // Fallback: restart if loop attr fails
+                const v = e.currentTarget;
+                v.currentTime = 0;
+                v.play();
+              }}
             />
           ) : (
             <img
