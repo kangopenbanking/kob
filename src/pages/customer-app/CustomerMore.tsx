@@ -21,6 +21,7 @@ const allQuickActions = [
 ];
 
 const utilityItems = [
+  { label: 'Send Abroad', icon: Globe, path: 'send-money', color: 'bg-[hsl(200,70%,92%)]', iconColor: 'text-[hsl(200,60%,40%)]' },
   { label: 'My Orders', icon: Package, path: 'orders', color: 'bg-[hsl(270,60%,92%)]', iconColor: 'text-[hsl(270,50%,45%)]' },
   { label: 'Disputes', icon: ShieldAlert, path: 'disputes', color: 'bg-[hsl(0,60%,92%)]', iconColor: 'text-[hsl(0,50%,45%)]' },
   { label: 'Settings', icon: Settings, path: 'settings', color: 'bg-muted', iconColor: 'text-foreground' },
