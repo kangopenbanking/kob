@@ -305,9 +305,8 @@ function SendForm() {
     const timer = setTimeout(async () => {
       setNameSearching(true);
       try {
-        const { data } = await supabase.from("profiles").select("id, full_name, phone_number")
-          .ilike("full_name", `%${trimmed}%`).not("full_name", "is", null).limit(6);
-        const results = (data || []).filter((p) => p.full_name).map((p) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_number || "" }));
+        const { data } = await supabase.rpc("search_profiles_by_name", { _query: trimmed, _limit: 6 });
+        const results = (data || []).map((p: any) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_masked || "" }));
         setNameSuggestions(results);
         setShowNameSuggestions(results.length > 0);
       } catch { setNameSuggestions([]); setShowNameSuggestions(false); }
