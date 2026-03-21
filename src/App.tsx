@@ -273,6 +273,8 @@ const AdminInterbankPayments = lazy(() => import("./pages/admin/AdminInterbankPa
 const AdminBankDirectory = lazy(() => import("./pages/admin/AdminBankDirectory"));
 const RemittanceOverview = lazy(() => import("./pages/admin/RemittanceOverview"));
 const RemittanceSettlement = lazy(() => import("./pages/admin/RemittanceSettlement"));
+const RemittancePartners = lazy(() => import("./pages/admin/RemittancePartners"));
+const RemittanceBankConfirmations = lazy(() => import("./pages/admin/RemittanceBankConfirmations"));
 
 // Developer Portal — Identity & Onboarding Guides
 const GettingStartedByType = lazy(() => import("./pages/developer/GettingStartedByType"));
