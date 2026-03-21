@@ -135,6 +135,13 @@ export const adminNavigation: AdminNavSection[] = [
     ],
   },
   {
+    title: "Remittance (RaaS)",
+    items: [
+      { title: "Remittance Overview", path: "/admin/remittance-overview", icon: Globe },
+      { title: "Remittance Settlements", path: "/admin/remittance-settlements", icon: ArrowLeftRight },
+    ],
+  },
+  {
     title: "Interbank Engine",
     items: [
       { title: "Interbank Payments", path: "/admin/interbank-payments", icon: ArrowLeftRight },
