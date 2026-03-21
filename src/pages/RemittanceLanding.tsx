@@ -266,28 +266,41 @@ function SendForm() {
   }, [supportedCountries]);
 
   const destCountries = useMemo(() => {
-    const base = [
+    const cMap: Record<string, { currency: string; country: string; flag: string }> = {
+      Cameroon: { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
+      Nigeria: { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
+      Ghana: { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
+      Kenya: { currency: "KES", country: "Kenya", flag: "🇰🇪" },
+      Gabon: { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
+      Congo: { currency: "XAF", country: "Congo", flag: "🇨🇬" },
+      Chad: { currency: "XAF", country: "Chad", flag: "🇹🇩" },
+      USA: { currency: "USD", country: "USA", flag: "🇺🇸" },
+      Canada: { currency: "CAD", country: "Canada", flag: "🇨🇦" },
+      France: { currency: "EUR", country: "France", flag: "🇫🇷" },
+      UK: { currency: "GBP", country: "UK", flag: "🇬🇧" },
+      Germany: { currency: "EUR", country: "Germany", flag: "🇩🇪" },
+      China: { currency: "CNY", country: "China", flag: "🇨🇳" },
+      India: { currency: "INR", country: "India", flag: "🇮🇳" },
+      Turkey: { currency: "TRY", country: "Turkey", flag: "🇹🇷" },
+      Rwanda: { currency: "RWF", country: "Rwanda", flag: "🇷🇼" },
+      "South Africa": { currency: "ZAR", country: "South Africa", flag: "🇿🇦" },
+      Mali: { currency: "XOF", country: "Mali", flag: "🇲🇱" },
+      "Burkina Faso": { currency: "XOF", country: "Burkina Faso", flag: "🇧🇫" },
+      UAE: { currency: "AED", country: "UAE", flag: "🇦🇪" },
+    };
+    if (supportedCountries && supportedCountries.length > 0) {
+      const seen = new Set<string>();
+      return supportedCountries
+        .filter((c) => c.enabled_consumer_app)
+        .map((c) => cMap[c.country] || { currency: "XAF", country: c.country, flag: c.flag })
+        .filter((d) => { const k = `${d.currency}-${d.country}`; if (seen.has(k)) return false; seen.add(k); return true; });
+    }
+    return [
       { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
       { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
       { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
       { currency: "KES", country: "Kenya", flag: "🇰🇪" },
     ];
-    if (supportedCountries && supportedCountries.length > 0) {
-      const cMap: Record<string, { currency: string; country: string; flag: string }> = {
-        Cameroon: { currency: "XAF", country: "Cameroon", flag: "🇨🇲" },
-        Nigeria: { currency: "NGN", country: "Nigeria", flag: "🇳🇬" },
-        Ghana: { currency: "GHS", country: "Ghana", flag: "🇬🇭" },
-        Kenya: { currency: "KES", country: "Kenya", flag: "🇰🇪" },
-        Gabon: { currency: "XAF", country: "Gabon", flag: "🇬🇦" },
-        Congo: { currency: "XAF", country: "Congo", flag: "🇨🇬" },
-        Chad: { currency: "XAF", country: "Chad", flag: "🇹🇩" },
-      };
-      const seen = new Set<string>();
-      return supportedCountries.filter((c) => c.enabled_consumer_app)
-        .map((c) => cMap[c.country] || { currency: "XAF", country: c.country, flag: c.flag })
-        .filter((d) => { const k = `${d.currency}-${d.country}`; if (seen.has(k)) return false; seen.add(k); return true; });
-    }
-    return base;
   }, [supportedCountries]);
 
   useEffect(() => {
@@ -305,9 +318,8 @@ function SendForm() {
     const timer = setTimeout(async () => {
       setNameSearching(true);
       try {
-        const { data } = await supabase.from("profiles").select("id, full_name, phone_number")
-          .ilike("full_name", `%${trimmed}%`).not("full_name", "is", null).limit(6);
-        const results = (data || []).filter((p) => p.full_name).map((p) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_number || "" }));
+        const { data } = await supabase.rpc("search_profiles_by_name", { _query: trimmed, _limit: 6 });
+        const results = (data || []).map((p: any) => ({ id: p.id, full_name: p.full_name || "", phone: p.phone_masked || "" }));
         setNameSuggestions(results);
         setShowNameSuggestions(results.length > 0);
       } catch { setNameSuggestions([]); setShowNameSuggestions(false); }
@@ -339,15 +351,29 @@ function SendForm() {
     return true;
   }, [recipientName, recipientPhone, deliveryMethod, bankCode, accountNumber, billPurpose, billReference]);
 
-  const selectSuggestion = (s: { id: string; full_name: string; phone: string }) => {
+  const selectSuggestion = async (s: { id: string; full_name: string; phone: string }) => {
     setRecipientName(s.full_name);
-    if (s.phone && deliveryMethod === "wallet") {
-      const phoneStr = s.phone.replace(/\s/g, "");
-      const matched = phoneCountries.find((c) => phoneStr.startsWith(c.code));
-      if (matched) { setSelectedCountryCode(matched.code); setRecipientPhone(phoneStr.slice(matched.code.length)); }
-      else { setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, "")); }
-    }
     setShowNameSuggestions(false);
+    if (deliveryMethod === "wallet") {
+      // Fetch the full phone number via secure RPC
+      try {
+        const { data: fullPhone } = await supabase.rpc("get_profile_phone", { _profile_id: s.id });
+        if (fullPhone) {
+          const phoneStr = (fullPhone as string).replace(/\s/g, "");
+          // Sort by longest dial code first to match +237 before +2
+          const sorted = [...phoneCountries].sort((a, b) => b.code.length - a.code.length);
+          const matched = sorted.find((c) => phoneStr.startsWith(c.code));
+          if (matched) {
+            setSelectedCountryCode(matched.code);
+            setRecipientPhone(phoneStr.slice(matched.code.length));
+          } else {
+            setRecipientPhone(phoneStr.replace(/^\+\d{1,4}/, ""));
+          }
+        }
+      } catch {
+        // If RPC fails, just use the masked phone display
+      }
+    }
   };
 
   const handleGetQuote = async () => {

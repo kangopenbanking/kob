@@ -20826,6 +20826,7 @@ export type Database = {
           transaction_type: string
         }[]
       }
+      get_profile_phone: { Args: { _profile_id: string }; Returns: string }
       get_role_hierarchy_level: {
         Args: { _role: Database["public"]["Enums"]["operational_role_type"] }
         Returns: number
@@ -20959,6 +20960,14 @@ export type Database = {
           _transaction_type: string
         }
         Returns: undefined
+      }
+      search_profiles_by_name: {
+        Args: { _limit?: number; _query: string }
+        Returns: {
+          full_name: string
+          id: string
+          phone_masked: string
+        }[]
       }
       trigger_webhooks: {
         Args: { _client_id?: string; _event_data: Json; _event_type: string }
